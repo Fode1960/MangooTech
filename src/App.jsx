@@ -1,22 +1,18 @@
 import React, { Suspense, useEffect, useState } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { HelmetProvider } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import { supabase, auth } from './lib/supabase'
 
-// Composants de layout
+// Composants de layout (chargés immédiatement)
 import Navbar from './components/layout/Navbar'
 import Footer from './components/layout/Footer'
-import LoadingSpinner from './components/ui/LoadingSpinner'
+import ScrollToTop from './components/ui/ScrollToTop'
+import BackToTop from './components/ui/BackToTop'
 
-// Pages
-import Home from './pages/Home'
-import Services from './pages/Services'
-import About from './pages/About'
-import Contact from './pages/Contact'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import Dashboard from './pages/Dashboard'
-import AdminDashboard from './pages/admin/AdminDashboard'
+// Composants de fallback
+import { PageLoadingFallback, LoadingErrorFallback } from './components/ui/LoadingFallback'
+import { LazyPages, RoutePreloader } from './utils/performance'
 
 // Contextes
 import { AuthProvider } from './contexts/AuthContext'
@@ -24,6 +20,24 @@ import { ThemeProvider } from './contexts/ThemeContext'
 
 // Composant de protection des routes
 import ProtectedRoute from './components/auth/ProtectedRoute'
+
+// SEO
+import SEOHead from './components/seo/SEOHead'
+
+// Pages avec lazy loading
+const Home = LazyPages.Home
+const Services = LazyPages.Services
+const About = LazyPages.About
+const Contact = LazyPages.Contact
+const Login = LazyPages.Login
+const Register = LazyPages.Register
+const ForgotPassword = LazyPages.ForgotPassword
+const ResetPassword = LazyPages.ResetPassword
+const EmailConfirmation = LazyPages.EmailConfirmation
+const AuthCallback = LazyPages.AuthCallback
+const Dashboard = LazyPages.Dashboard
+const AdminDashboard = LazyPages.AdminDashboard
+const NotFound = LazyPages.NotFound
 
 function App() {
   const { i18n } = useTranslation()
@@ -63,25 +77,24 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <LoadingSpinner size="lg" />
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <PageLoadingFallback message="Initialisation de l'application..." />
       </div>
     )
   }
 
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-          <Navbar />
+    <HelmetProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <ScrollToTop />
+            <SEOHead pageKey="home" />
+            <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+              <Navbar />
           
           <main className="flex-grow">
-            <Suspense fallback={
-              <div className="min-h-screen flex items-center justify-center">
-                <LoadingSpinner size="lg" />
-              </div>
-            }>
+            <Suspense fallback={<PageLoadingFallback />}>
               <Routes>
                 {/* Routes publiques */}
                 <Route path="/" element={<Home />} />
@@ -90,6 +103,10 @@ function App() {
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/email-confirmation" element={<EmailConfirmation />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
                 
                 {/* Routes protégées - Client */}
                 <Route 
@@ -112,29 +129,23 @@ function App() {
                 />
                 
                 {/* Route 404 */}
-                <Route path="*" element={
-                  <div className="min-h-screen flex items-center justify-center">
-                    <div className="text-center">
-                      <h1 className="text-6xl font-bold text-gray-300 mb-4">404</h1>
-                      <p className="text-xl text-gray-600 mb-8">Page non trouvée</p>
-                      <a 
-                        href="/" 
-                        className="btn-primary"
-                      >
-                        Retour à l'accueil
-                      </a>
-                    </div>
-                  </div>
-                } />
+                <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
+            
+            {/* Préchargement intelligent des routes */}
+            <RoutePreloader routes={['About', 'Services', 'Contact']} />
           </main>
           
           <Footer />
-        </div>
-        </Router>
-      </AuthProvider>
-    </ThemeProvider>
+            </div>
+            
+            {/* Bouton retour en haut disponible sur toutes les pages */}
+            <BackToTop />
+          </Router>
+        </AuthProvider>
+      </ThemeProvider>
+    </HelmetProvider>
   )
 }
 

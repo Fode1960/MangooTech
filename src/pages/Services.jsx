@@ -240,7 +240,7 @@ const Services = () => {
   })
 
   return (
-    <div className="min-h-screen pt-20">
+    <div className="min-h-screen pt-24">
       {/* Hero Section */}
       <section className="bg-gradient-primary text-white py-16">
         <div className="container">
@@ -414,7 +414,7 @@ const Services = () => {
             </p>
           </motion.div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
             {packs.map((pack, index) => (
               <motion.div
                 key={pack.name}
@@ -424,15 +424,14 @@ const Services = () => {
                 viewport={{ once: true }}
                 className={`card hover-lift relative ${pack.color} ${pack.popular ? 'ring-2 ring-green-500' : ''}`}
               >
-                {pack.popular && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <div className="bg-green-500 text-white px-4 py-1 rounded-full text-sm font-medium">
-                      Recommandé
-                    </div>
-                  </div>
-                )}
-                
                 <div className="card-body text-center">
+                  {pack.popular && (
+                    <div className="mb-4">
+                      <div className="inline-block bg-green-500 text-white px-4 py-2 rounded-full text-sm font-medium">
+                        Recommandé
+                      </div>
+                    </div>
+                  )}
                   <h3 className="text-2xl font-bold mb-2 dark:text-gray-100">
                     {pack.name}
                   </h3>

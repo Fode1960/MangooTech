@@ -60,7 +60,7 @@ const About = () => {
   ]
 
   return (
-    <div className="min-h-screen pt-20">
+    <div className="min-h-screen pt-24">
       {/* Hero Section */}
       <section className="bg-gradient-primary text-white py-16">
         <div className="container">

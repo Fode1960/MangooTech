@@ -81,7 +81,7 @@ export const AuthProvider = ({ children }) => {
       setError(null)
       
       const { data, error } = await auth.signUp(email, password, userData)
-      if (error) throw error
+      if (error) {throw error}
       
       // Créer le profil utilisateur dans la base de données
       if (data.user) {
@@ -116,7 +116,7 @@ export const AuthProvider = ({ children }) => {
       setError(null)
       
       const { data, error } = await auth.signIn(email, password)
-      if (error) throw error
+      if (error) {throw error}
       
       return { data, error: null }
     } catch (error) {
@@ -133,7 +133,7 @@ export const AuthProvider = ({ children }) => {
       setError(null)
       
       const { error } = await auth.signOut()
-      if (error) throw error
+      if (error) {throw error}
       
       setUser(null)
       setUserProfile(null)
@@ -152,14 +152,14 @@ export const AuthProvider = ({ children }) => {
       setLoading(true)
       setError(null)
       
-      if (!user) throw new Error('Utilisateur non connecté')
+      if (!user) {throw new Error('Utilisateur non connecté')}
       
       const { data, error } = await db.users.update(user.id, {
         ...updates,
         updated_at: new Date().toISOString()
       })
       
-      if (error) throw error
+      if (error) {throw error}
       
       setUserProfile(data[0])
       return { data, error: null }
@@ -172,7 +172,11 @@ export const AuthProvider = ({ children }) => {
   }
 
   const isAdmin = () => {
-    return userProfile?.role === 'admin' || userProfile?.account_type === 'admin'
+    return userProfile?.role === 'admin' || userProfile?.role === 'super_admin' || userProfile?.account_type === 'admin'
+  }
+
+  const isSuperAdmin = () => {
+    return userProfile?.role === 'super_admin'
   }
 
   const isProfessional = () => {
@@ -193,6 +197,7 @@ export const AuthProvider = ({ children }) => {
     signOut,
     updateProfile,
     isAdmin,
+    isSuperAdmin,
     isProfessional,
     clearError
   }

@@ -22,7 +22,7 @@ const Login = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
-  const { login, user } = useAuth()
+  const { signIn, user } = useAuth()
   
   const [formData, setFormData] = useState({
     email: '',
@@ -55,7 +55,7 @@ const Login = () => {
       [name]: value
     }))
     // Effacer les erreurs lors de la saisie
-    if (error) setError('')
+    if (error) {setError('')}
   }
 
   const handleSubmit = async (e) => {
@@ -65,7 +65,7 @@ const Login = () => {
     setSuccess('')
 
     try {
-      await login(formData.email, formData.password)
+      await signIn(formData.email, formData.password)
       // La redirection sera gérée par l'useEffect
     } catch (err) {
       console.error('Erreur de connexion:', err)
@@ -76,7 +76,7 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen pt-20 bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen pt-24 bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <motion.div

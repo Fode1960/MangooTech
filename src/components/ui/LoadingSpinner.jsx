@@ -51,12 +51,12 @@ const LoadingSpinner = ({
 // Composant de spinner en pleine page
 export const FullPageSpinner = ({ text = 'Chargement...' }) => {
   return (
-    <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm flex items-center justify-center z-50">
       <LoadingSpinner 
         size="xl" 
         text={text} 
         variant="mango"
-        className="bg-white rounded-xl shadow-lg p-8"
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8"
       />
     </div>
   )

@@ -140,7 +140,7 @@ const Contact = () => {
   ]
 
   return (
-    <div className="min-h-screen pt-20">
+    <div className="min-h-screen pt-24">
       {/* Hero Section */}
       <section className="bg-gradient-primary text-white py-16">
         <div className="container">
@@ -162,15 +162,16 @@ const Contact = () => {
 
       <div className="py-16">
         <div className="container">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
             {/* Formulaire de contact */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
+              className="h-full"
             >
-              <div className="card">
+              <div className="card h-full">
                 <div className="card-body">
                   <h2 className="text-2xl font-bold mb-6 flex items-center text-gray-900 dark:text-gray-100">
                     <MessageCircle className="w-6 h-6 mr-3 text-primary-600" />
@@ -357,7 +358,7 @@ const Contact = () => {
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
-              className="space-y-8"
+              className="space-y-6"
             >
               {/* Coordonnées */}
               <div className="card">
@@ -437,22 +438,7 @@ const Contact = () => {
                 </div>
               </div>
 
-              {/* Support d'urgence */}
-              <div className="card bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-red-200 dark:border-red-800">
-                <div className="card-body">
-                  <h3 className="text-xl font-bold mb-4 text-red-800 dark:text-red-400">Support d'urgence</h3>
-                  <p className="text-red-700 dark:text-red-300 mb-4">
-                    Pour les urgences techniques en dehors des heures d'ouverture :
-                  </p>
-                  <a
-                    href="tel:+22507XXXXXXXX"
-                    className="inline-flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-                  >
-                    <Phone className="w-4 h-4" />
-                    <span>+225 07 XX XX XX XX</span>
-                  </a>
-                </div>
-              </div>
+
             </motion.div>
           </div>
         </div>

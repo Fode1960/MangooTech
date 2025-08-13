@@ -25,7 +25,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 const Register = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { register, user } = useAuth()
+  const { signUp, user } = useAuth()
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -75,11 +75,11 @@ const Register = () => {
 
   const calculatePasswordStrength = (password) => {
     let strength = 0
-    if (password.length >= 8) strength += 1
-    if (/[a-z]/.test(password)) strength += 1
-    if (/[A-Z]/.test(password)) strength += 1
-    if (/[0-9]/.test(password)) strength += 1
-    if (/[^A-Za-z0-9]/.test(password)) strength += 1
+    if (password.length >= 8) {strength += 1}
+    if (/[a-z]/.test(password)) {strength += 1}
+    if (/[A-Z]/.test(password)) {strength += 1}
+    if (/[0-9]/.test(password)) {strength += 1}
+    if (/[^A-Za-z0-9]/.test(password)) {strength += 1}
     return strength
   }
 
@@ -105,12 +105,12 @@ const Register = () => {
     const newErrors = {}
 
     // Validation des champs requis
-    if (!formData.firstName.trim()) newErrors.firstName = 'Le prénom est requis'
-    if (!formData.lastName.trim()) newErrors.lastName = 'Le nom est requis'
-    if (!formData.email.trim()) newErrors.email = 'L\'email est requis'
-    if (!formData.password) newErrors.password = 'Le mot de passe est requis'
-    if (!formData.confirmPassword) newErrors.confirmPassword = 'La confirmation est requise'
-    if (!formData.acceptTerms) newErrors.acceptTerms = 'Vous devez accepter les conditions'
+    if (!formData.firstName.trim()) {newErrors.firstName = 'Le prénom est requis'}
+    if (!formData.lastName.trim()) {newErrors.lastName = 'Le nom est requis'}
+    if (!formData.email.trim()) {newErrors.email = 'L\'email est requis'}
+    if (!formData.password) {newErrors.password = 'Le mot de passe est requis'}
+    if (!formData.confirmPassword) {newErrors.confirmPassword = 'La confirmation est requise'}
+    if (!formData.acceptTerms) {newErrors.acceptTerms = 'Vous devez accepter les conditions'}
 
     // Validation email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -119,7 +119,7 @@ const Register = () => {
     }
 
     // Validation téléphone
-    if (formData.phone && !/^[+]?[0-9\s-()]{8,}$/.test(formData.phone)) {
+    if (formData.phone && !/^[+]?[1-9]\d{1,14}$/.test(formData.phone.replace(/[\s-()]/g, ''))) {
       newErrors.phone = 'Format de téléphone invalide'
     }
 
@@ -175,21 +175,22 @@ const Register = () => {
     setIsLoading(true)
 
     try {
-      await register({
-        email: formData.email,
-        password: formData.password,
+      await signUp(formData.email, formData.password, {
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone,
         company: formData.company,
-        userType: formData.userType,
+        accountType: formData.userType,
         acceptNewsletter: formData.acceptNewsletter
       })
       
-      // Rediriger vers la page de connexion avec un message de succès
-      navigate('/login', {
+      // Sauvegarder l'email pour le renvoi de confirmation
+      localStorage.setItem('pendingConfirmationEmail', formData.email)
+      
+      // Rediriger vers la page de confirmation d'email
+      navigate('/email-confirmation', {
         state: {
-          message: 'Compte créé avec succès ! Veuillez vérifier votre email et vous connecter.'
+          email: formData.email
         }
       })
     } catch (err) {
@@ -203,7 +204,7 @@ const Register = () => {
   const strengthInfo = getPasswordStrengthText(passwordStrength)
 
   return (
-    <div className="min-h-screen pt-20 bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-gray-900 dark:to-gray-800 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen pt-24 bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-gray-900 dark:to-gray-800 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <motion.div

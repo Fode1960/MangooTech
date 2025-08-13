@@ -23,14 +23,17 @@ import {
   Activity,
   DollarSign,
   Package,
-  Clock
+  Clock,
+  Crown,
+  Shield,
+  Phone
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 
 const Dashboard = () => {
   const { t } = useTranslation()
-  const { user, isAdmin, isProfessional } = useAuth()
+  const { user, isAdmin, isSuperAdmin, isProfessional } = useAuth()
   const [isLoading, setIsLoading] = useState(true)
   const [stats, setStats] = useState({
     totalVisits: 0,
@@ -188,7 +191,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen pt-20 bg-gray-50">
+    <div className="min-h-screen pt-24 bg-gray-50">
       <div className="container py-8">
         {/* Header */}
         <motion.div
@@ -199,9 +202,23 @@ const Dashboard = () => {
         >
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Bonjour, {user?.user_metadata?.firstName || user?.email} 👋
-              </h1>
+              <div className="flex items-center space-x-3 mb-2">
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Bonjour, {user?.user_metadata?.firstName || user?.email} 👋
+                </h1>
+                {isSuperAdmin() && (
+                  <div className="flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                    <Crown className="w-4 h-4" />
+                    <span>Super Admin</span>
+                  </div>
+                )}
+                {isAdmin() && !isSuperAdmin() && (
+                  <div className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                    <Shield className="w-4 h-4" />
+                    <span>Administrateur</span>
+                  </div>
+                )}
+              </div>
               <p className="text-gray-600">
                 Voici un aperçu de vos activités et services.
               </p>
@@ -481,6 +498,23 @@ const Dashboard = () => {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Support d'urgence */}
+            <div className="card bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-red-200 dark:border-red-800">
+              <div className="card-body">
+                <h3 className="text-lg font-semibold text-red-800 dark:text-red-400 mb-4">Support d'urgence</h3>
+                <p className="text-red-700 dark:text-red-300 mb-4 text-sm">
+                  Pour les urgences techniques en dehors des heures d'ouverture :
+                </p>
+                <a
+                  href="tel:+22507XXXXXXXX"
+                  className="inline-flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors w-full justify-center"
+                >
+                  <Phone className="w-4 h-4" />
+                  <span>+225 07 XX XX XX XX</span>
+                </a>
               </div>
             </div>
           </motion.div>

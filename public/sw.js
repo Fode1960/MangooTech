@@ -1,9 +1,7 @@
 // Service Worker pour Mangoo Tech
 const CACHE_NAME = 'mangoo-tech-v1';
 const urlsToCache = [
-  '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css'
+  '/'
 ];
 
 // Installation du service worker
@@ -33,6 +31,16 @@ self.addEventListener('activate', (event) => {
 
 // Interception des requêtes
 self.addEventListener('fetch', (event) => {
+  // Ignorer les requêtes vers les modules Vite et les WebSockets
+  if (event.request.url.includes('/@vite/') || 
+      event.request.url.includes('/__vite_ping') ||
+      event.request.url.includes('.js?') ||
+      event.request.url.includes('.css?') ||
+      event.request.url.includes('ws://') ||
+      event.request.url.includes('wss://')) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
@@ -40,9 +48,19 @@ self.addEventListener('fetch', (event) => {
         if (response) {
           return response;
         }
-        // Sinon, faire la requête réseau
+        // Sinon, faire la requête réseau avec gestion d'erreur
+        return fetch(event.request).catch((error) => {
+          console.log('Service Worker: Fetch failed for', event.request.url, error);
+          // Retourner une réponse par défaut pour les erreurs de réseau
+          if (event.request.destination === 'document') {
+            return caches.match('/');
+          }
+          throw error;
+        });
+      })
+      .catch((error) => {
+        console.log('Service Worker: Cache match failed', error);
         return fetch(event.request);
-      }
-    )
+      })
   );
 });
