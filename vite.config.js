@@ -3,15 +3,12 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { resolve } from 'path'
 import { visualizer } from 'rollup-plugin-visualizer'
-import { splitVendorChunkPlugin } from 'vite'
-
 export default defineConfig({
   // Configuration pour GitHub Pages
   base: process.env.NODE_ENV === 'production' ? '/MangooTech/' : '/',
   
   plugins: [
     react(),
-    splitVendorChunkPlugin(),
     // Analyseur de bundle (généré seulement en build)
     process.env.ANALYZE && visualizer({
       filename: 'dist/stats.html',
