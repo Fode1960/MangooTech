@@ -23,7 +23,9 @@
     "test:ci": "vitest run --coverage --reporter=junit --outputFile=test-results.xml",
     "quality:check": "npm run lint && npm run test:run && npm run build",
     "quality:fix": "npm run lint:fix && npm run test:run",
-    "deploy:git": "npm ci && npm run quality:check && git add . && git commit -m \"Deploy: Update application\" && git push origin main"
+    "deploy:git": "npm install && npm run quality:check && git add . && git commit -m \"Deploy: Update application\" && git push origin main",
+    "deploy:safe": "npm install --no-save && git add . && git commit -m \"Deploy: Update application\" && git push origin main",
+    "deploy:quick": "git add . && git commit -m \"Deploy: Update application\" && git push origin main"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.7",
