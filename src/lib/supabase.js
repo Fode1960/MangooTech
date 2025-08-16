@@ -3,7 +3,19 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = 'https://ptrqhtwstldphjaraufi.supabase.co'
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB0cnFodHdzdGxkcGhqYXJhdWZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MzI0OTIsImV4cCI6MjA3MDUwODQ5Mn0.Wc-dKWVMpAyFoAPFGejzhD0o1rodyEGrBlZK5X3muyA'
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Configuration principale avec persistance locale
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    storage: window.localStorage,
+    storageKey: 'mangoo-tech-auth',
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+})
+
+// Alias pour compatibilité (utilise la même instance)
+export const supabaseSession = supabase
 
 // Configuration pour l'authentification
 export const authConfig = {
@@ -20,18 +32,22 @@ export const auth = {
       email,
       password,
       options: {
-        data: userData,
-        emailRedirectTo: authConfig.redirectTo
+        data: userData
+        // Confirmation d'email désactivée pour éviter les conflits avec le système de paiement
       }
     })
     return { data, error }
   },
 
-  signIn: async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
+  signIn: async (email, password, rememberMe = false) => {
+    // Utiliser l'instance appropriée selon l'option "Se souvenir de moi"
+    const clientToUse = rememberMe ? supabase : supabaseSession
+    
+    const { data, error } = await clientToUse.auth.signInWithPassword({
       email,
       password
     })
+    
     return { data, error }
   },
 

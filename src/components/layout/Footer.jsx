@@ -56,25 +56,25 @@ const Footer = () => {
   const socialLinks = [
     { 
       name: 'Facebook', 
-      href: 'https://facebook.com/mangootech', 
+      href: 'https://www.facebook.com/profile.php?id=61573902873873', 
       icon: Facebook,
       color: 'hover:text-blue-600'
     },
     { 
       name: 'Twitter', 
-      href: 'https://twitter.com/mangootech', 
+      href: 'https://x.com/mangootech75', 
       icon: Twitter,
       color: 'hover:text-blue-400'
     },
     { 
       name: 'LinkedIn', 
-      href: 'https://linkedin.com/company/mangootech', 
+      href: 'https://www.linkedin.com/in/dansoko-mohamed-fod%C3%A9-627316355/', 
       icon: Linkedin,
       color: 'hover:text-blue-700'
     },
     { 
       name: 'Instagram', 
-      href: 'https://instagram.com/mangootech', 
+      href: 'https://www.instagram.com/mangootechnology/', 
       icon: Instagram,
       color: 'hover:text-pink-600'
     }
@@ -115,13 +115,13 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-3 text-gray-300">
                 <Phone className="w-5 h-5 text-primary-400" />
-                <a href="tel:+221123456789" className="hover:text-primary-400 transition-colors">
-                  +221 12 345 67 89
+                <a href="tel:+33962014080" className="hover:text-primary-400 transition-colors">
+                  +33 962014080
                 </a>
               </div>
               <div className="flex items-center space-x-3 text-gray-300">
                 <MapPin className="w-5 h-5 text-primary-400" />
-                <span>Dakar, Sénégal</span>
+                <span>3 Rue de Cambrai, 75019 Paris, France</span>
               </div>
               <div className="flex items-center space-x-3 text-gray-300">
                 <Globe className="w-5 h-5 text-primary-400" />

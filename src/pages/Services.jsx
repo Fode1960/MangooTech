@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
+import { useAuth } from '../contexts/AuthContext'
+import { assignPackToUser } from '../lib/services'
 import { 
   Globe, 
   ShoppingCart, 
@@ -33,9 +35,13 @@ import {
 
 const Services = () => {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { user } = useAuth()
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [isVisible, setIsVisible] = useState(false)
+  const [loadingPack, setLoadingPack] = useState(null)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     setIsVisible(true)
@@ -59,7 +65,7 @@ const Services = () => {
       icon: Globe,
       description: 'Vitrines web personnalisées pour PME, grandes entreprises, artisans et boutiques.',
       features: ['Templates responsive', 'Nom de domaine personnalisé', 'SEO intégré', 'Statistiques de visite'],
-      price: 'À partir de 15,000 FCFA/mois',
+      price: null,
       popular: true,
       gradient: 'from-blue-500 to-blue-600',
       targetAudience: ['PME', 'Grandes entreprises', 'Artisans', 'Boutiques']
@@ -71,7 +77,7 @@ const Services = () => {
       icon: Users,
       description: 'Pages personnalisées pour freelancers, consultants et auto-entrepreneurs.',
       features: ['Profil public complet', 'Module de rendez-vous', 'Contact direct', 'Liens réseaux sociaux'],
-      price: 'À partir de 8,000 FCFA/mois',
+      price: null,
       gradient: 'from-green-500 to-green-600',
       targetAudience: ['Freelancers', 'Consultants', 'Auto-entrepreneurs']
     },
@@ -84,7 +90,7 @@ const Services = () => {
       icon: ShoppingCart,
       description: 'Espaces e-commerce pour commerçants, marchands et revendeurs.',
       features: ['Catalogue avec filtres', 'Panier et paiement', 'Gestion des stocks', 'Intégration livraison'],
-      price: 'À partir de 25,000 FCFA/mois',
+      price: null,
       popular: true,
       gradient: 'from-purple-500 to-purple-600',
       targetAudience: ['Commerçants', 'Marchands', 'Revendeurs']
@@ -96,7 +102,7 @@ const Services = () => {
       icon: CreditCard,
       description: 'Services de paiement pour marchands et clients finaux.',
       features: ['Paiement sécurisé', 'Commissions faibles', 'Services financiers', 'Multi-devises'],
-      price: 'Commission de 2.5%',
+      price: null,
       gradient: 'from-yellow-500 to-yellow-600',
       targetAudience: ['Marchands', 'Clients finaux']
     },
@@ -107,7 +113,7 @@ const Services = () => {
       icon: Truck,
       description: 'Plateforme de livraison pour e-commerçants, boutiques et clients.',
       features: ['Demande en ligne', 'Suivi temps réel', 'Tarification dynamique', 'Réseau de livreurs'],
-      price: 'À partir de 1,500 FCFA/livraison',
+      price: null,
       gradient: 'from-orange-500 to-orange-600',
       targetAudience: ['E-commerçants', 'Boutiques', 'Clients']
     },
@@ -120,7 +126,7 @@ const Services = () => {
       icon: MessageCircle,
       description: 'Messagerie sécurisée pour tous les utilisateurs.',
       features: ['Chat individuel/groupe', 'Envoi de documents', 'Appels audio/vidéo', 'Chiffrement de bout en bout'],
-      price: 'Gratuit (Premium: 5,000 FCFA/mois)',
+      price: null,
       gradient: 'from-indigo-500 to-indigo-600',
       targetAudience: ['Tous les utilisateurs']
     },
@@ -131,7 +137,7 @@ const Services = () => {
       icon: TrendingUp,
       description: 'Solutions publicitaires pour entreprises, influenceurs et agences.',
       features: ['Campagnes ciblées', 'Tableau de bord', 'Analytics avancés', 'ROI optimisé'],
-      price: 'À partir de 20,000 FCFA/campagne',
+      price: null,
       gradient: 'from-pink-500 to-pink-600',
       targetAudience: ['Entreprises', 'Influenceurs', 'Agences']
     },
@@ -144,7 +150,7 @@ const Services = () => {
       icon: BarChart3,
       description: 'Statistiques détaillées pour entrepreneurs et entreprises.',
       features: ['Statistiques détaillées', 'Recommandations IA', 'Rapports personnalisés', 'Prédictions'],
-      price: 'À partir de 12,000 FCFA/mois',
+      price: null,
       gradient: 'from-teal-500 to-teal-600',
       targetAudience: ['Entrepreneurs', 'Entreprises']
     },
@@ -155,7 +161,7 @@ const Services = () => {
       icon: Users,
       description: 'Gestion avancée des relations clients.',
       features: ['Gestion contacts', 'Pipeline de ventes', 'Automatisation', 'Intégrations'],
-      price: 'À partir de 30,000 FCFA/mois',
+      price: null,
       gradient: 'from-cyan-500 to-cyan-600',
       targetAudience: ['Entreprises', 'Équipes commerciales']
     },
@@ -166,7 +172,7 @@ const Services = () => {
       icon: Building,
       description: 'Gestion intégrée des ressources de l\'entreprise.',
       features: ['Gestion complète', 'Modules intégrés', 'Reporting avancé', 'Multi-utilisateurs'],
-      price: 'À partir de 50,000 FCFA/mois',
+      price: null,
       gradient: 'from-slate-500 to-slate-600',
       targetAudience: ['Grandes entreprises', 'PME']
     },
@@ -179,7 +185,7 @@ const Services = () => {
       icon: Stethoscope,
       description: 'Téléconsultation et gestion de dossiers médicaux.',
       features: ['Téléconsultation', 'Dossiers médicaux', 'Prise de RDV', 'Prescriptions'],
-      price: 'À partir de 35,000 FCFA/mois',
+      price: null,
       gradient: 'from-red-500 to-red-600',
       targetAudience: ['Cliniques', 'Pharmacies', 'Patients']
     },
@@ -190,7 +196,7 @@ const Services = () => {
       icon: GraduationCap,
       description: 'E-learning pour formateurs, centres de formation et écoles.',
       features: ['Cours en ligne', 'Évaluations', 'Certificats', 'Suivi progrès'],
-      price: 'À partir de 25,000 FCFA/mois',
+      price: null,
       gradient: 'from-emerald-500 to-emerald-600',
       targetAudience: ['Formateurs', 'Centres de formation', 'Écoles']
     },
@@ -201,36 +207,114 @@ const Services = () => {
       icon: Wheat,
       description: 'Mise en relation pour agriculteurs, coopératives et commerçants.',
       features: ['Marketplace agricole', 'Prévisions météo', 'Conseils techniques', 'Financement'],
-      price: 'À partir de 18,000 FCFA/mois',
+      price: null,
       gradient: 'from-lime-500 to-lime-600',
       targetAudience: ['Agriculteurs', 'Coopératives', 'Commerçants']
     }
   ]
 
+  // IDs des packs correspondants à la base de données
+  const packIds = {
+    'Pack Découverte': '0a85e74a-4aec-480a-8af1-7b57391a80d2',
+    'Pack Visibilité': 'pack-visibilite-id', // À remplacer par l'ID réel
+    'Pack Professionnel': 'pack-professionnel-id', // À remplacer par l'ID réel
+    'Pack Premium': 'pack-premium-id' // À remplacer par l'ID réel
+  }
+
   const packs = [
     {
       name: 'Pack Découverte',
-      price: '25,000 FCFA/mois',
-      description: 'Parfait pour débuter',
-      features: ['Mini-site', 'Mangoo Connect+', 'Support de base'],
-      color: 'border-blue-200 bg-blue-50'
+      price: 'Gratuit',
+      description: 'Nouveaux artisans',
+      features: ['Mini-site', 'Mini-boutique', 'Espace personnel', 'Fiche visible', 'Accès Mangoo Connect+'],
+      color: 'border-blue-200 bg-blue-50',
+      gradient: 'from-blue-500 to-blue-600',
+      id: packIds['Pack Découverte'],
+      isFree: true
+    },
+    {
+      name: 'Pack Visibilité',
+      price: '5 000 FCFA/mois',
+      description: 'Artisans en phase de croissance',
+      features: ['Pack découverte', 'Référencement Mangoo Market', 'Showroom360 simplifié'],
+      color: 'border-green-200 bg-green-50',
+      gradient: 'from-green-500 to-green-600',
+      id: packIds['Pack Visibilité'],
+      isFree: false
     },
     {
       name: 'Pack Professionnel',
-      price: '75,000 FCFA/mois',
-      description: 'Pour les entreprises en croissance',
-      features: ['Mini-boutique', 'Mangoo Pay+', 'Mangoo Analytics+', 'Support prioritaire'],
-      color: 'border-green-200 bg-green-50',
-      popular: true
+      price: '10 000 FCFA/mois',
+      description: 'Artisans organisés, organisations, PME',
+      features: ['Pack Visibilité', 'Mangoo Express', 'Référencement pro'],
+      color: 'border-orange-200 bg-orange-50',
+      gradient: 'from-orange-500 to-orange-600',
+      popular: true,
+      id: packIds['Pack Professionnel'],
+      isFree: false
     },
     {
       name: 'Pack Premium',
-      price: '150,000 FCFA/mois',
-      description: 'Solution complète',
-      features: ['Tous les services', 'Support 24/7', 'Formation', 'Personnalisation'],
-      color: 'border-purple-200 bg-purple-50'
+      price: '15 000 FCFA/mois',
+      description: 'PME structurées et entrepreneurs avancés',
+      features: ['Pack Professionnel', 'CRM/ERP simplifié', 'Showroom360 complet', 'Support personnalisé'],
+      color: 'border-purple-200 bg-purple-50',
+      gradient: 'from-purple-500 to-purple-600',
+      id: packIds['Pack Premium'],
+      isFree: false
     }
   ]
+
+  // Fonction pour gérer la sélection d'un pack
+  const handlePackSelection = async (pack) => {
+    setError(null)
+    setLoadingPack(pack.id)
+
+    try {
+      if (!user) {
+        // Si l'utilisateur n'est pas connecté, rediriger vers l'inscription avec le pack sélectionné
+        navigate('/register', { 
+          state: { 
+            selectedPack: pack.id,
+            packName: pack.name,
+            isFree: pack.isFree
+          } 
+        })
+        return
+      }
+
+      // Si l'utilisateur est connecté, assigner directement le pack
+      await assignPackToUser({
+        user_id: user.id,
+        pack_id: pack.id,
+        status: 'active',
+        started_at: new Date().toISOString(),
+        expires_at: pack.isFree ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 jours pour les packs payants
+        next_billing_date: pack.isFree ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      })
+
+      // Rediriger vers le dashboard après attribution réussie
+      navigate('/dashboard', {
+        state: {
+          message: `Pack ${pack.name} activé avec succès !`,
+          type: 'success'
+        }
+      })
+    } catch (error) {
+      console.error('Erreur lors de la sélection du pack:', error)
+      setError(`Erreur lors de l'activation du pack: ${error.message}`)
+    } finally {
+      setLoadingPack(null)
+    }
+  }
+
+  // Fonction pour gérer le bouton "Commencer gratuitement"
+  const handleStartFree = () => {
+    const freePack = packs.find(pack => pack.isFree)
+    if (freePack) {
+      handlePackSelection(freePack)
+    }
+  }
 
   const filteredServices = services.filter(service => {
     const matchesCategory = selectedCategory === 'all' || service.category === selectedCategory
@@ -241,22 +325,46 @@ const Services = () => {
 
   return (
     <div className="min-h-screen pt-24">
-      {/* Hero Section */}
-      <section className="bg-gradient-primary text-white py-16">
-        <div className="container">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
-            transition={{ duration: 0.8 }}
-            className="text-center max-w-4xl mx-auto"
+      {/* Affichage des erreurs */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mx-4 mt-4" role="alert">
+          <strong className="font-bold">Erreur: </strong>
+          <span className="block sm:inline">{error}</span>
+          <button
+            onClick={() => setError(null)}
+            className="absolute top-0 bottom-0 right-0 px-4 py-3"
           >
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              {t('services.title')}
-            </h1>
-            <p className="text-xl text-white/90 mb-8">
-              {t('services.subtitle')}
-            </p>
-          </motion.div>
+            <span className="sr-only">Fermer</span>
+            ×
+          </button>
+        </div>
+      )}
+      
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-gradient-hero pt-24 pb-16 lg:pt-32 lg:pb-24">
+        <div className="absolute inset-0 bg-black/20"></div>
+        
+        {/* Éléments décoratifs */}
+        <div className="absolute top-20 left-10 w-20 h-20 bg-white/10 rounded-full animate-float"></div>
+        <div className="absolute top-40 right-20 w-16 h-16 bg-white/10 rounded-full animate-float delay-200"></div>
+        <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-white/10 rounded-full animate-float delay-400"></div>
+        
+        <div className="container relative z-10">
+          <div className="max-w-4xl mx-auto text-center text-white">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
+              transition={{ duration: 0.8 }}
+              className="mb-8"
+            >
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+                {t('services.title')}
+              </h1>
+              <p className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed">
+                {t('services.subtitle')}
+              </p>
+            </motion.div>
+          </div>
         </div>
       </section>
 
@@ -366,12 +474,12 @@ const Services = () => {
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
-                      <div className="text-lg font-bold text-primary-600">
-                        {service.price}
-                      </div>
-                      <button className="btn-primary text-sm px-4 py-2">
-                        En savoir plus
+                    <div className="flex items-center justify-center pt-4 border-t border-gray-100 dark:border-gray-700">
+                      <button 
+                        onClick={() => document.getElementById('packs')?.scrollIntoView({ behavior: 'smooth' })}
+                        className="btn-primary text-sm px-4 py-2 w-full text-center"
+                      >
+                        Voir les packs
                       </button>
                     </div>
                   </div>
@@ -397,7 +505,7 @@ const Services = () => {
       </section>
 
       {/* Packs */}
-      <section className="py-16 bg-white dark:bg-gray-900">
+      <section id="packs" className="py-16 bg-white dark:bg-gray-900">
         <div className="container">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -414,7 +522,7 @@ const Services = () => {
             </p>
           </motion.div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12">
             {packs.map((pack, index) => (
               <motion.div
                 key={pack.name}
@@ -422,9 +530,10 @@ const Services = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                className={`card hover-lift relative ${pack.color} ${pack.popular ? 'ring-2 ring-green-500' : ''}`}
+                className={`card hover-lift relative overflow-hidden flex flex-col ${pack.color} ${pack.popular ? 'ring-2 ring-orange-500' : ''}`}
               >
-                <div className="card-body text-center">
+                <div className={`h-2 bg-gradient-to-r ${pack.gradient}`}></div>
+                <div className="card-body text-center flex flex-col flex-1">
                   {pack.popular && (
                     <div className="mb-4">
                       <div className="inline-block bg-green-500 text-white px-4 py-2 rounded-full text-sm font-medium">
@@ -451,10 +560,21 @@ const Services = () => {
                     ))}
                   </ul>
                   
-                  <button className={`w-full ${
-                    pack.popular ? 'btn-primary' : 'btn-outline'
-                  }`}>
-                    Choisir ce pack
+                  <button 
+                    onClick={() => handlePackSelection(pack)}
+                    disabled={loadingPack === pack.id}
+                    className={`w-full mt-auto flex items-center justify-center space-x-2 ${
+                      pack.popular ? 'btn-primary' : 'btn-outline'
+                    } ${loadingPack === pack.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {loadingPack === pack.id ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span>Activation...</span>
+                      </>
+                    ) : (
+                      <span>Choisir ce pack</span>
+                    )}
                   </button>
                 </div>
               </motion.div>
@@ -487,13 +607,25 @@ const Services = () => {
                 Parler à un expert
                 <MessageCircle className="w-5 h-5 ml-2" />
               </Link>
-              <Link
-                to="/register"
-                className="btn-outline border-white text-white hover:bg-white hover:text-secondary-600 text-lg px-8 py-4"
+              <button
+                onClick={handleStartFree}
+                disabled={loadingPack !== null}
+                className={`btn-outline border-white text-white hover:bg-white hover:text-secondary-600 text-lg px-8 py-4 flex items-center justify-center space-x-2 ${
+                  loadingPack !== null ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               >
-                Commencer gratuitement
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Link>
+                {loadingPack !== null ? (
+                   <>
+                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                     <span>Activation...</span>
+                   </>
+                 ) : (
+                   <>
+                     <span>Commencer gratuitement</span>
+                     <ArrowRight className="w-5 h-5 ml-2" />
+                   </>
+                 )}
+               </button>
             </div>
           </motion.div>
         </div>

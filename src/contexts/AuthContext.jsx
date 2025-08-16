@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { auth, db } from '../lib/supabase'
+import { auth, db, supabase } from '../lib/supabase'
+import { assignPackToUser, getUserPack } from '../lib/services'
 
 const AuthContext = createContext({})
 
@@ -49,8 +50,8 @@ export const AuthProvider = ({ children }) => {
 
     checkUser()
 
-    // Écouter les changements d'état d'authentification
-    const { data: { subscription } } = auth.onAuthStateChange(async (event, session) => {
+    // Écouter les changements d'état d'authentification sur l'instance principale
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null)
       
       if (session?.user) {
@@ -61,6 +62,34 @@ export const AuthProvider = ({ children }) => {
             console.error('Erreur lors de la récupération du profil:', error)
           } else {
             setUserProfile(profile)
+            
+            // Vérifier si l'utilisateur a un pack assigné, sinon assigner le pack gratuit
+            try {
+              const userPack = await getUserPack(session.user.id)
+              if (!userPack) {
+                console.log('Aucun pack trouvé pour l\'utilisateur, assignation du pack gratuit...')
+                await assignPackToUser({
+                  user_id: session.user.id,
+                  pack_id: '0a85e74a-4aec-480a-8af1-7b57391a80d2', // Pack Découverte (gratuit)
+                  status: 'active'
+                })
+                console.log('Pack gratuit assigné avec succès')
+              }
+            } catch (packError) {
+              console.error('Erreur lors de la vérification du pack:', packError)
+              // Si la vérification échoue (ex: problème RLS), tenter quand même l'assignation
+              try {
+                console.log('Tentative d\'assignation du pack gratuit malgré l\'erreur de vérification...')
+                await assignPackToUser({
+                  user_id: session.user.id,
+                  pack_id: '0a85e74a-4aec-480a-8af1-7b57391a80d2', // Pack Découverte (gratuit)
+                  status: 'active'
+                })
+                console.log('Pack gratuit assigné avec succès après erreur de vérification')
+              } catch (assignError) {
+                console.error('Erreur lors de l\'assignation du pack:', assignError)
+              }
+            }
           }
         } catch (error) {
           console.error('Erreur lors de la récupération du profil:', error)
@@ -90,7 +119,10 @@ export const AuthProvider = ({ children }) => {
           email: data.user.email,
           first_name: userData.firstName || '',
           last_name: userData.lastName || '',
+          phone: userData.phone || '',
+          company: userData.company || '',
           account_type: userData.accountType || 'individual',
+          selected_pack: userData.selectedPack || 'free',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }
@@ -98,6 +130,30 @@ export const AuthProvider = ({ children }) => {
         const { error: profileError } = await db.users.create(profileData)
         if (profileError) {
           console.error('Erreur lors de la création du profil:', profileError)
+        } else {
+          // Assigner automatiquement le pack sélectionné
+          // Mapper les IDs des packs de Register.jsx vers les vrais IDs de la base de données
+          const packMapping = {
+            'free': '0a85e74a-4aec-480a-8af1-7b57391a80d2', // Pack Découverte
+            'visibility': 'pack-visibilite-id', // Pack Visibilité - À remplacer par l'ID réel
+            'professional': 'pack-professionnel-id', // Pack Professionnel - À remplacer par l'ID réel
+            'premium': 'pack-premium-id' // Pack Premium - À remplacer par l'ID réel
+          }
+          
+          let packIdToAssign = packMapping[userData.selectedPack] || packMapping['free']
+          
+          if (packIdToAssign) {
+            try {
+              await assignPackToUser({
+                user_id: data.user.id,
+                pack_id: packIdToAssign,
+                status: 'active'
+              })
+              console.log('Pack assigné avec succès:', packIdToAssign)
+            } catch (packError) {
+              console.error('Erreur lors de l\'assignation du pack:', packError)
+            }
+          }
         }
       }
       
@@ -110,12 +166,12 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const signIn = async (email, password) => {
+  const signIn = async (email, password, rememberMe = false) => {
     try {
       setLoading(true)
       setError(null)
       
-      const { data, error } = await auth.signIn(email, password)
+      const { data, error } = await auth.signIn(email, password, rememberMe)
       if (error) {throw error}
       
       return { data, error: null }

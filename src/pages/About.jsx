@@ -62,22 +62,31 @@ const About = () => {
   return (
     <div className="min-h-screen pt-24">
       {/* Hero Section */}
-      <section className="bg-gradient-primary text-white py-16">
-        <div className="container">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center max-w-4xl mx-auto"
-          >
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              À propos de <span className="text-white">Mangoo Tech</span>
-            </h1>
-            <p className="text-xl text-white/90 mb-8">
-              Nous démocratisons l'accès aux technologies numériques en Afrique 
-              avec des solutions innovantes, accessibles et adaptées aux réalités locales.
-            </p>
-          </motion.div>
+      <section className="relative overflow-hidden bg-gradient-hero pt-24 pb-16 lg:pt-32 lg:pb-24">
+        <div className="absolute inset-0 bg-black/20"></div>
+        
+        {/* Éléments décoratifs */}
+        <div className="absolute top-20 left-10 w-20 h-20 bg-white/10 rounded-full animate-float"></div>
+        <div className="absolute top-40 right-20 w-16 h-16 bg-white/10 rounded-full animate-float delay-200"></div>
+        <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-white/10 rounded-full animate-float delay-400"></div>
+        
+        <div className="container relative z-10">
+          <div className="max-w-4xl mx-auto text-center text-white">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="mb-8"
+            >
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+                À propos de <span className="text-white">Mangoo Tech</span>
+              </h1>
+              <p className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed">
+                Nous démocratisons l'accès aux technologies numériques en Afrique 
+                avec des solutions innovantes, accessibles et adaptées aux réalités locales.
+              </p>
+            </motion.div>
+          </div>
         </div>
       </section>
 

@@ -95,13 +95,13 @@ const Contact = () => {
     {
       icon: Phone,
       title: 'Téléphone',
-      value: '+225 07 XX XX XX XX',
-      link: 'tel:+22507XXXXXXXX'
+      value: '+33 962014080',
+      link: 'tel:+33962014080'
     },
     {
       icon: MapPin,
       title: 'Adresse',
-      value: 'Abidjan, Côte d\'Ivoire',
+      value: '3 Rue de Cambrai, 75019 Paris, France',
       link: null
     },
     {
@@ -116,25 +116,25 @@ const Contact = () => {
     {
       icon: Facebook,
       name: 'Facebook',
-      url: 'https://facebook.com/mangootech',
+      url: 'https://www.facebook.com/profile.php?id=61573902873873',
       color: 'text-blue-600 hover:text-blue-700'
     },
     {
       icon: Twitter,
       name: 'Twitter',
-      url: 'https://twitter.com/mangootech',
+      url: 'https://x.com/mangootech75',
       color: 'text-sky-500 hover:text-sky-600'
     },
     {
       icon: Linkedin,
       name: 'LinkedIn',
-      url: 'https://linkedin.com/company/mangootech',
+      url: 'https://www.linkedin.com/in/dansoko-mohamed-fod%C3%A9-627316355/',
       color: 'text-blue-700 hover:text-blue-800'
     },
     {
       icon: Instagram,
       name: 'Instagram',
-      url: 'https://instagram.com/mangootech',
+      url: 'https://www.instagram.com/mangootechnology/',
       color: 'text-pink-600 hover:text-pink-700'
     }
   ]
@@ -142,21 +142,30 @@ const Contact = () => {
   return (
     <div className="min-h-screen pt-24">
       {/* Hero Section */}
-      <section className="bg-gradient-primary text-white py-16">
-        <div className="container">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center max-w-4xl mx-auto"
-          >
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              {t('contact.title')}
-            </h1>
-            <p className="text-xl text-white/90 mb-8">
-              {t('contact.subtitle')}
-            </p>
-          </motion.div>
+      <section className="relative overflow-hidden bg-gradient-hero pt-24 pb-16 lg:pt-32 lg:pb-24">
+        <div className="absolute inset-0 bg-black/20"></div>
+        
+        {/* Éléments décoratifs */}
+        <div className="absolute top-20 left-10 w-20 h-20 bg-white/10 rounded-full animate-float"></div>
+        <div className="absolute top-40 right-20 w-16 h-16 bg-white/10 rounded-full animate-float delay-200"></div>
+        <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-white/10 rounded-full animate-float delay-400"></div>
+        
+        <div className="container relative z-10">
+          <div className="max-w-4xl mx-auto text-center text-white">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="mb-8"
+            >
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+                {t('contact.title')}
+              </h1>
+              <p className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed">
+                {t('contact.subtitle')}
+              </p>
+            </motion.div>
+          </div>
         </div>
       </section>
 

@@ -237,7 +237,7 @@ export const generateOrganizationSchema = () => {
     logo: `${defaultSEO.url}/logo.png`,
     contactPoint: {
       '@type': 'ContactPoint',
-      telephone: '+33-1-23-45-67-89',
+      telephone: '+33-9-62-01-40-80',
       contactType: 'customer service',
       availableLanguage: ['French', 'English']
     },
@@ -247,8 +247,10 @@ export const generateOrganizationSchema = () => {
       addressLocality: 'Paris'
     },
     sameAs: [
-      'https://www.linkedin.com/company/mangootech',
-      'https://twitter.com/mangootech',
+      'https://www.linkedin.com/in/dansoko-mohamed-fod%C3%A9-627316355/',
+      'https://x.com/mangootech75',
+      'https://www.facebook.com/profile.php?id=61573902873873',
+      'https://www.instagram.com/mangootechnology/',
       'https://github.com/mangootech'
     ]
   }

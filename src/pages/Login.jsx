@@ -28,6 +28,7 @@ const Login = () => {
     email: '',
     password: ''
   })
+  const [rememberMe, setRememberMe] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
@@ -65,7 +66,7 @@ const Login = () => {
     setSuccess('')
 
     try {
-      await signIn(formData.email, formData.password)
+      await signIn(formData.email, formData.password, rememberMe)
       // La redirection sera gérée par l'useEffect
     } catch (err) {
       console.error('Erreur de connexion:', err)
@@ -174,6 +175,8 @@ const Login = () => {
                     id="remember-me"
                     name="remember-me"
                     type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
                     className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-600 rounded"
                   />
                   <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">

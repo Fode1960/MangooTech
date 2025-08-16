@@ -1,183 +1,125 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
 
-// Configuration Supabase
-const supabaseUrl = 'https://ptrqhtwstldphjaraufi.supabase.co'
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB0cnFodHdzdGxkcGhqYXJhdWZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MzI0OTIsImV4cCI6MjA3MDUwODQ5Mn0.Wc-dKWVMpAyFoAPFGejzhD0o1rodyEGrBlZK5X3muyA'
+const supabaseUrl = 'https://ptrqhtwstldphjaraufi.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB0cnFodHdzdGxkcGhqYXJhdWZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MzI0OTIsImV4cCI6MjA3MDUwODQ5Mn0.Wc-dKWVMpAyFoAPFGejzhD0o1rodyEGrBlZK5X3muyA';
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Test de vérification de la structure de la base de données
-async function testDatabaseStructure() {
-  console.log('🔍 Vérification de la structure de la base de données...')
-  
-  try {
-    // Test de connexion à la table users
-    console.log('\n📋 Test de la table users...')
-    const { data: usersData, error: usersError } = await supabase
-      .from('users')
-      .select('*')
-      .limit(1)
-    
-    if (usersError) {
-      console.error('❌ Erreur lors de l\'accès à la table users:')
-      console.error('  Message:', usersError.message)
-      console.error('  Code:', usersError.code)
-      console.error('  Détails:', usersError.details)
-      console.error('  Hint:', usersError.hint)
-    } else {
-      console.log('✅ Table users accessible!')
-      console.log('📊 Nombre d\'utilisateurs existants:', usersData?.length || 0)
-      if (usersData && usersData.length > 0) {
-        console.log('📝 Structure d\'un utilisateur:', Object.keys(usersData[0]))
-      }
-    }
-    
-    // Test des autres tables
-    const tables = ['services', 'subscriptions', 'contacts']
-    
-    for (const table of tables) {
-      console.log(`\n📋 Test de la table ${table}...`)
-      try {
-        const { data, error } = await supabase
-          .from(table)
-          .select('*')
-          .limit(1)
-        
-        if (error) {
-          console.log(`⚠️  Table ${table}: ${error.message}`)
-        } else {
-          console.log(`✅ Table ${table}: accessible (${data?.length || 0} enregistrements)`)
-          if (data && data.length > 0) {
-            console.log(`📝 Structure:`, Object.keys(data[0]))
-          }
-        }
-      } catch (err) {
-        console.log(`❌ Table ${table}: erreur - ${err.message}`)
-      }
-    }
-    
-  } catch (error) {
-    console.error('💥 Erreur lors de la vérification:', error.message)
-  }
-}
-
-// Test de création d'un compte client
 async function testSignup() {
-  console.log('\n🧪 Test de création d\'un compte client...')
-  
   try {
-    // Données de test
-    const testUser = {
-      email: `test-client-${Date.now()}@mangootech.com`,
-      password: 'TestPassword123!',
-      firstName: 'Test',
-      lastName: 'Client',
-      phone: '+225 01 02 03 04 05',
-      company: '',
-      accountType: 'individual'
+    console.log('=== TEST D\'INSCRIPTION ===');
+    
+    const testEmail = 'testuser@gmail.com';
+    const testPassword = 'TestPassword123!';
+    
+    // 1. Essayer de s'inscrire
+    console.log('1. Tentative d\'inscription...');
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email: testEmail,
+      password: testPassword
+    });
+    
+    if (signUpError) {
+      console.error('Erreur lors de l\'inscription:', signUpError);
+      return;
     }
     
-    console.log('📧 Tentative d\'inscription avec:', testUser.email)
+    console.log('Inscription réussie:', signUpData);
     
-    // Test de l'inscription
-    const { data, error } = await supabase.auth.signUp({
-      email: testUser.email,
-      password: testUser.password,
-      options: {
-        data: {
-          firstName: testUser.firstName,
-          lastName: testUser.lastName,
-          phone: testUser.phone,
-          company: testUser.company,
-          accountType: testUser.accountType
-        }
-      }
-    })
-    
-    if (error) {
-      console.error('❌ Erreur lors de l\'inscription:', error.message)
-      return
-    }
-    
-    console.log('✅ Inscription réussie!')
-    console.log('👤 Utilisateur créé:', {
-      id: data.user?.id,
-      email: data.user?.email,
-      confirmed: data.user?.email_confirmed_at ? 'Oui' : 'Non',
-      metadata: data.user?.user_metadata
-    })
-    
-    // Test de création du profil
-    if (data.user) {
-      console.log('\n📝 Création du profil utilisateur...')
+    // 2. Créer le profil utilisateur
+    if (signUpData.user) {
+      console.log('2. Création du profil utilisateur...');
       
       const profileData = {
-        id: data.user.id,
-        email: data.user.email,
-        first_name: testUser.firstName,
-        last_name: testUser.lastName,
-        phone: testUser.phone,
-        company: testUser.company,
-        account_type: testUser.accountType,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
+        id: signUpData.user.id,
+        email: signUpData.user.email,
+        first_name: 'Test',
+        last_name: 'User',
+        phone: '+1234567890',
+        company: 'Test Company',
+        account_type: 'individual'
+      };
       
       const { data: profileResult, error: profileError } = await supabase
         .from('users')
         .insert([profileData])
-        .select()
+        .select();
       
       if (profileError) {
-        console.error('❌ Erreur lors de la création du profil:')
-        console.error('  Message:', profileError.message)
-        console.error('  Code:', profileError.code)
-        console.error('  Détails:', profileError.details)
-        console.error('  Hint:', profileError.hint)
+        console.error('Erreur lors de la création du profil:', profileError);
       } else {
-        console.log('✅ Profil créé avec succès!')
-        console.log('📋 Données du profil:', profileResult)
+        console.log('Profil créé avec succès:', profileResult);
+        
+        // 3. Assigner le pack découverte
+        console.log('3. Assignation du pack découverte...');
+        
+        const packData = {
+          user_id: signUpData.user.id,
+          pack_id: '0a85e74a-4aec-480a-8af1-7b57391a80d2', // Pack Découverte
+          status: 'active',
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 jours
+          next_billing_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        };
+        
+        const { data: packResult, error: packError } = await supabase
+          .from('user_packs')
+          .insert([packData])
+          .select(`
+            *,
+            packs(
+              id,
+              name,
+              description,
+              price,
+              currency,
+              billing_period
+            )
+          `);
+        
+        if (packError) {
+          console.error('Erreur lors de l\'assignation du pack:', packError);
+        } else {
+          console.log('Pack assigné avec succès:', packResult);
+        }
       }
     }
     
-  } catch (error) {
-    console.error('💥 Erreur inattendue:', error.message)
-    console.error('Stack:', error.stack)
-  }
-}
-
-// Test de connexion
-async function testSignin() {
-  console.log('\n🔐 Test de connexion...')
-  
-  try {
-    // Essayer de se connecter avec un utilisateur existant
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: 'test@example.com',
-      password: 'password123'
-    })
+    // 4. Vérifier les données finales
+    console.log('4. Vérification des données finales...');
     
-    if (error) {
-      console.log('ℹ️  Aucun utilisateur de test trouvé (normal):', error.message)
+    const { data: finalUsers, error: finalUsersError } = await supabase
+      .from('users')
+      .select('*');
+    
+    if (finalUsersError) {
+      console.error('Erreur lors de la vérification des utilisateurs:', finalUsersError);
     } else {
-      console.log('✅ Connexion réussie!')
-      console.log('👤 Utilisateur connecté:', data.user?.email)
+      console.log('Utilisateurs dans la base:', finalUsers);
+    }
+    
+    const { data: finalPacks, error: finalPacksError } = await supabase
+      .from('user_packs')
+      .select(`
+        *,
+        packs(
+          id,
+          name,
+          description,
+          price,
+          currency,
+          billing_period
+        )
+      `);
+    
+    if (finalPacksError) {
+      console.error('Erreur lors de la vérification des packs:', finalPacksError);
+    } else {
+      console.log('Packs utilisateur dans la base:', finalPacks);
     }
     
   } catch (error) {
-    console.error('💥 Erreur lors de la connexion:', error.message)
+    console.error('Erreur générale:', error);
   }
 }
 
-// Exécution des tests
-async function runTests() {
-  console.log('🚀 Démarrage des tests Supabase...\n')
-  
-  await testDatabaseStructure()
-  await testSignup()
-  await testSignin()
-  
-  console.log('\n🏁 Tests terminés!')
-}
-
-runTests().catch(console.error)
+testSignup();

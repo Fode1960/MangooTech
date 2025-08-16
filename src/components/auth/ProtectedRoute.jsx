@@ -55,7 +55,6 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
             >
               Retour
             </button>
-            <Navigate to="/dashboard" replace />
           </div>
         </div>
       </div>

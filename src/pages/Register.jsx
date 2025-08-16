@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { 
@@ -25,6 +25,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 const Register = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const { signUp, user } = useAuth()
   
   const [formData, setFormData] = useState({
@@ -36,6 +37,7 @@ const Register = () => {
     password: '',
     confirmPassword: '',
     userType: 'individual', // individual, professional, enterprise
+    selectedPack: '', // Pack sélectionné (obligatoire)
     acceptTerms: false,
     acceptNewsletter: false
   })
@@ -51,6 +53,26 @@ const Register = () => {
       navigate('/dashboard', { replace: true })
     }
   }, [user, navigate])
+
+  // Récupérer le pack sélectionné depuis l'état de navigation
+  useEffect(() => {
+    if (location.state?.selectedPack) {
+      // Mapper les IDs des packs de Home.jsx vers les IDs de Register.jsx
+      const packMapping = {
+        'free': 'free', // Pack Découverte
+        'visibility': 'visibility', // Pack Visibilité
+        'professional': 'professional', // Pack Professionnel
+        'premium': 'premium' // Pack Premium
+      }
+      
+      const mappedPackId = packMapping[location.state.selectedPack] || 'free'
+      
+      setFormData(prev => ({
+        ...prev,
+        selectedPack: mappedPackId
+      }))
+    }
+  }, [location.state])
 
   const userTypes = [
     {
@@ -70,6 +92,68 @@ const Register = () => {
       name: 'Entreprise',
       description: 'PME, grande entreprise',
       icon: Building
+    }
+  ]
+
+  // Packs disponibles
+  const availablePacks = [
+    {
+      id: 'free',
+      name: 'Pack Gratuit',
+      price: 'Gratuit',
+      priceUnit: '',
+      description: 'Idéal pour commencer',
+      features: [
+        'Site web basique',
+        'Support communautaire',
+        'Bande passante limitée'
+      ],
+      popular: false
+    },
+    {
+      id: 'visibility',
+      name: 'Pack Visibilité',
+      price: '5 000',
+      priceUnit: 'FCFA/mois',
+      description: 'Pour améliorer votre présence en ligne',
+      features: [
+        'Site web professionnel',
+        'SEO de base',
+        'Support par email',
+        'Analytics basiques'
+      ],
+      popular: true
+    },
+    {
+      id: 'professional',
+      name: 'Pack Professionnel',
+      price: '10 000',
+      priceUnit: 'FCFA/mois',
+      description: 'Pour les entreprises en croissance',
+      features: [
+        'Site web avancé',
+        'E-commerce intégré',
+        'SEO avancé',
+        'Support prioritaire',
+        'Analytics détaillées'
+      ],
+      popular: false
+    },
+    {
+      id: 'premium',
+      name: 'Pack Premium',
+      price: '15 000',
+      priceUnit: 'FCFA/mois',
+      description: 'Solution complète pour les grandes entreprises',
+      features: [
+        'Sites illimités',
+        'E-commerce avancé',
+        'Marketing automation',
+        'Support 24/7',
+        'Analytics avancées',
+        'API personnalisée'
+      ],
+      popular: false
     }
   ]
 
@@ -110,6 +194,7 @@ const Register = () => {
     if (!formData.email.trim()) {newErrors.email = 'L\'email est requis'}
     if (!formData.password) {newErrors.password = 'Le mot de passe est requis'}
     if (!formData.confirmPassword) {newErrors.confirmPassword = 'La confirmation est requise'}
+    if (!formData.selectedPack) {newErrors.selectedPack = 'Vous devez sélectionner un pack'}
     if (!formData.acceptTerms) {newErrors.acceptTerms = 'Vous devez accepter les conditions'}
 
     // Validation email
@@ -181,16 +266,15 @@ const Register = () => {
         phone: formData.phone,
         company: formData.company,
         accountType: formData.userType,
+        selectedPack: formData.selectedPack,
         acceptNewsletter: formData.acceptNewsletter
       })
       
-      // Sauvegarder l'email pour le renvoi de confirmation
-      localStorage.setItem('pendingConfirmationEmail', formData.email)
-      
-      // Rediriger vers la page de confirmation d'email
-      navigate('/email-confirmation', {
+      // Rediriger directement vers le dashboard après inscription réussie
+      // (La confirmation d'email a été désactivée pour éviter les conflits avec le système de paiement)
+      navigate('/dashboard', {
         state: {
-          email: formData.email
+          message: 'Inscription réussie ! Bienvenue sur MangooTech.'
         }
       })
     } catch (err) {
@@ -275,6 +359,78 @@ const Register = () => {
                     )
                   })}
                 </div>
+              </div>
+
+              {/* Sélection de pack */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  Choisissez votre pack *
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {availablePacks.map((pack) => (
+                    <label
+                      key={pack.id}
+                      className={`relative flex flex-col p-6 border-2 rounded-lg cursor-pointer transition-all ${
+                        formData.selectedPack === pack.id
+                          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                          : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                      } ${
+                        pack.popular ? 'ring-2 ring-primary-200 dark:ring-primary-800' : ''
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="selectedPack"
+                        value={pack.id}
+                        checked={formData.selectedPack === pack.id}
+                        onChange={handleInputChange}
+                        className="sr-only"
+                      />
+                      {pack.popular && (
+                        <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                          <span className="bg-primary-500 text-white text-xs font-medium px-3 py-1 rounded-full">
+                            Populaire
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className={`font-semibold text-lg flex-1 mr-2 ${
+                          formData.selectedPack === pack.id ? 'text-primary-600' : 'text-gray-900 dark:text-gray-100'
+                        }`}>
+                          {pack.name}
+                        </h3>
+                        <div className="text-right flex-shrink-0 min-w-0">
+                          <div className={`text-xl font-bold leading-tight ${
+                            formData.selectedPack === pack.id ? 'text-primary-600' : 'text-gray-900 dark:text-gray-100'
+                          }`}>
+                            {pack.price}
+                          </div>
+                          {pack.priceUnit && (
+                            <div className="text-xs text-gray-500 dark:text-gray-400 leading-tight">
+                              {pack.priceUnit}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                        {pack.description}
+                      </p>
+                      <ul className="space-y-2 flex-1">
+                        {pack.features.map((feature, index) => (
+                          <li key={index} className="flex items-center text-sm">
+                            <Check className={`w-4 h-4 mr-2 flex-shrink-0 ${
+                              formData.selectedPack === pack.id ? 'text-primary-500' : 'text-green-500'
+                            }`} />
+                            <span className="text-gray-600 dark:text-gray-300">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </label>
+                  ))}
+                </div>
+                {errors.selectedPack && (
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.selectedPack}</p>
+                )}
               </div>
 
               {/* Informations personnelles */}

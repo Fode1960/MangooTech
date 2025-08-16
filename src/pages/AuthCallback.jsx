@@ -37,35 +37,27 @@ const AuthCallback = () => {
         }
 
         if (session && session.user) {
-          // L'utilisateur est maintenant connecté, email confirmé
-          localStorage.removeItem('pendingConfirmationEmail')
-          
+          // L'utilisateur est connecté (OAuth ou autre)
           setStatus('success')
-          setMessage('Votre email a été confirmé avec succès ! Vous êtes maintenant connecté.')
+          setMessage('Authentification réussie ! Redirection en cours...')
           
           // Rediriger vers le dashboard après 2 secondes
           setTimeout(() => {
             navigate('/dashboard')
           }, 2000)
         } else {
-          // Pas de session, mais pas d'erreur non plus
-          // Cela peut signifier que l'email a été confirmé mais l'utilisateur doit se connecter
-          setStatus('success')
-          setMessage('Votre email a été confirmé avec succès ! Vous pouvez maintenant vous connecter.')
+          // Pas de session, rediriger vers la connexion
+          setStatus('error')
+          setMessage('Aucune session trouvée. Redirection vers la page de connexion...')
           
-          // Rediriger vers la page de connexion après 3 secondes
           setTimeout(() => {
-            navigate('/login', {
-              state: {
-                message: 'Email confirmé ! Vous pouvez maintenant vous connecter.'
-              }
-            })
+            navigate('/login')
           }, 3000)
         }
       } catch (error) {
-        console.error('Erreur lors de la confirmation:', error)
+        console.error('Erreur lors de l\'authentification:', error)
         setStatus('error')
-        setMessage(error.message || 'Une erreur est survenue lors de la confirmation de votre email')
+        setMessage(error.message || 'Une erreur est survenue lors de l\'authentification')
       }
     }
 

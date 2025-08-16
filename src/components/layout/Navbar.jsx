@@ -119,7 +119,6 @@ const Navbar = () => {
               >
                 <Globe className="w-4 h-4" aria-hidden="true" />
                 <span className="text-sm">{currentLanguage.flag}</span>
-                <span className="text-sm font-medium">{currentLanguage.code.toUpperCase()}</span>
               </button>
               
               {isLangMenuOpen && (
@@ -196,15 +195,7 @@ const Navbar = () => {
                     role="menu"
                     aria-labelledby="user-menu-button"
                   >
-                    <Link
-                      to="/dashboard"
-                      className="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                      role="menuitem"
-                    >
-                      <Settings className="w-4 h-4" aria-hidden="true" />
-                      <span>{t('nav.dashboard')}</span>
-                    </Link>
-                    {(isAdmin() || isSuperAdmin()) && (
+                    {(isAdmin() || isSuperAdmin()) ? (
                       <Link
                         to="/admin"
                         className="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -216,6 +207,15 @@ const Navbar = () => {
                           <Shield className="w-4 h-4 text-blue-600" aria-hidden="true" />
                         )}
                         <span>Administration</span>
+                      </Link>
+                    ) : (
+                      <Link
+                        to="/dashboard"
+                        className="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        role="menuitem"
+                      >
+                        <Settings className="w-4 h-4" aria-hidden="true" />
+                        <span>{t('nav.dashboard')}</span>
                       </Link>
                     )}
                     <button
@@ -318,14 +318,29 @@ const Navbar = () => {
                 {/* Actions Mobile */}
                 {user ? (
                   <div className="px-4 py-2 space-y-2">
-                    <Link
-                      to="/dashboard"
-                      className="flex items-center space-x-3 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                      aria-label="Accéder au tableau de bord"
-                    >
-                      <Settings className="w-4 h-4" aria-hidden="true" />
-                      <span>{t('nav.dashboard')}</span>
-                    </Link>
+                    {(isAdmin() || isSuperAdmin()) ? (
+                      <Link
+                        to="/admin"
+                        className="flex items-center space-x-3 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                        aria-label="Accéder à l'administration"
+                      >
+                        {isSuperAdmin() ? (
+                          <Crown className="w-4 h-4 text-yellow-600" aria-hidden="true" />
+                        ) : (
+                          <Shield className="w-4 h-4 text-blue-600" aria-hidden="true" />
+                        )}
+                        <span>Administration</span>
+                      </Link>
+                    ) : (
+                      <Link
+                        to="/dashboard"
+                        className="flex items-center space-x-3 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                        aria-label="Accéder au tableau de bord"
+                      >
+                        <Settings className="w-4 h-4" aria-hidden="true" />
+                        <span>{t('nav.dashboard')}</span>
+                      </Link>
+                    )}
                     <button
                       onClick={handleSignOut}
                       className="w-full flex items-center space-x-3 px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400"

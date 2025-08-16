@@ -9,6 +9,7 @@ import Navbar from './components/layout/Navbar'
 import Footer from './components/layout/Footer'
 import ScrollToTop from './components/ui/ScrollToTop'
 import BackToTop from './components/ui/BackToTop'
+import CookieBanner from './components/ui/CookieBanner'
 
 // Composants de fallback
 import { PageLoadingFallback, LoadingErrorFallback } from './components/ui/LoadingFallback'
@@ -17,6 +18,7 @@ import { LazyPages, RoutePreloader } from './utils/performance'
 // Contextes
 import { AuthProvider } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
+import { ServicesProvider } from './contexts/ServicesContext'
 
 // Composant de protection des routes
 import ProtectedRoute from './components/auth/ProtectedRoute'
@@ -29,11 +31,14 @@ const Home = LazyPages.Home
 const Services = LazyPages.Services
 const About = LazyPages.About
 const Contact = LazyPages.Contact
+const Terms = LazyPages.Terms
+const Privacy = LazyPages.Privacy
+const Cookies = LazyPages.Cookies
 const Login = LazyPages.Login
 const Register = LazyPages.Register
 const ForgotPassword = LazyPages.ForgotPassword
 const ResetPassword = LazyPages.ResetPassword
-const EmailConfirmation = LazyPages.EmailConfirmation
+// EmailConfirmation supprimée - confirmation d'email désactivée
 const AuthCallback = LazyPages.AuthCallback
 const Dashboard = LazyPages.Dashboard
 const AdminDashboard = LazyPages.AdminDashboard
@@ -87,7 +92,8 @@ function App() {
     <HelmetProvider>
       <ThemeProvider>
         <AuthProvider>
-          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <ServicesProvider>
+            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <ScrollToTop />
             <SEOHead pageKey="home" />
             <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
@@ -101,11 +107,14 @@ function App() {
                 <Route path="/services" element={<Services />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/cookies" element={<Cookies />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/email-confirmation" element={<EmailConfirmation />} />
+                {/* Route EmailConfirmation supprimée - confirmation d'email désactivée */}
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 
                 {/* Routes protégées - Client */}
@@ -142,7 +151,11 @@ function App() {
             
             {/* Bouton retour en haut disponible sur toutes les pages */}
             <BackToTop />
-          </Router>
+            
+            {/* Bannière de cookies */}
+            <CookieBanner />
+            </Router>
+          </ServicesProvider>
         </AuthProvider>
       </ThemeProvider>
     </HelmetProvider>

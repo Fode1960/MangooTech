@@ -486,11 +486,11 @@ const CreateAdminModal = ({ onClose, onSubmit, availablePermissions }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Créer un Administrateur</h3>
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Créer un Administrateur</h3>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Email de l'utilisateur existant
             </label>
             <input
@@ -498,26 +498,26 @@ const CreateAdminModal = ({ onClose, onSubmit, availablePermissions }) => {
               required
               value={formData.email}
               onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               placeholder="utilisateur@example.com"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Rôle
             </label>
             <select
               value={formData.role}
               onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
               <option value="admin">Administrateur</option>
             </select>
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Permissions
             </label>
             <div className="space-y-2 max-h-40 overflow-y-auto scrollbar-thin">
@@ -530,8 +530,8 @@ const CreateAdminModal = ({ onClose, onSubmit, availablePermissions }) => {
                     className="mt-1"
                   />
                   <div>
-                    <div className="text-sm font-medium">{permission.name}</div>
-                    <div className="text-xs text-gray-500">{permission.description}</div>
+                    <div className="text-sm font-medium text-gray-900 dark:text-white">{permission.name}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{permission.description}</div>
                   </div>
                 </label>
               ))}
@@ -548,7 +548,7 @@ const CreateAdminModal = ({ onClose, onSubmit, availablePermissions }) => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark"
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 transition-colors"
             >
               Créer
             </button>
