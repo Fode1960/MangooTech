@@ -3,7 +3,7 @@
 -- Table des services disponibles
 CREATE TABLE IF NOT EXISTS services (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
+  name VARCHAR(255) NOT NULL UNIQUE,
   description TEXT,
   service_type VARCHAR(100) NOT NULL, -- 'website', 'ecommerce', 'marketplace', 'showroom', 'crm', etc.
   base_url VARCHAR(500),
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS services (
 -- Table des packs
 CREATE TABLE IF NOT EXISTS packs (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
+  name VARCHAR(255) NOT NULL UNIQUE,
   description TEXT,
   price DECIMAL(10,2) DEFAULT 0,
   currency VARCHAR(10) DEFAULT 'FCFA',
@@ -81,14 +81,16 @@ INSERT INTO services (name, description, service_type, icon) VALUES
 ('Référencement pro', 'SEO et visibilité avancée', 'seo', 'TrendingUp'),
 ('CRM/ERP simplifié', 'Gestion client et ressources', 'crm', 'Database'),
 ('Showroom360 complet', 'Présentation virtuelle avancée', 'showroom', 'VrHeadset'),
-('Support personnalisé', 'Assistance dédiée', 'support', 'Headphones');
+('Support personnalisé', 'Assistance dédiée', 'support', 'Headphones')
+ON CONFLICT (name) DO NOTHING;
 
 -- Insertion des packs de base
 INSERT INTO packs (name, description, price, is_popular, sort_order) VALUES
 ('Pack Découverte', 'Nouveaux artisans', 0, false, 1),
 ('Pack Visibilité', 'Artisans en phase de croissance', 5000, true, 2),
 ('Pack Professionnel', 'Artisans organisés, organisations, PME', 10000, false, 3),
-('Pack Premium', 'PME structurées et entrepreneurs avancés', 15000, false, 4);
+('Pack Premium', 'PME structurées et entrepreneurs avancés', 15000, false, 4)
+ON CONFLICT (name) DO NOTHING;
 
 -- Configuration des services par pack
 -- Pack Découverte (gratuit)
@@ -96,27 +98,31 @@ INSERT INTO pack_services (pack_id, service_id)
 SELECT p.id, s.id
 FROM packs p, services s
 WHERE p.name = 'Pack Découverte'
-AND s.name IN ('Mini-site', 'Mini-boutique', 'Espace personnel', 'Fiche visible', 'Mangoo Connect+');
+AND s.name IN ('Mini-site', 'Mini-boutique', 'Espace personnel', 'Fiche visible', 'Mangoo Connect+')
+ON CONFLICT (pack_id, service_id) DO NOTHING;
 
 -- Pack Visibilité
 INSERT INTO pack_services (pack_id, service_id)
 SELECT p.id, s.id
 FROM packs p, services s
 WHERE p.name = 'Pack Visibilité'
-AND s.name IN ('Mini-site', 'Mini-boutique', 'Espace personnel', 'Fiche visible', 'Mangoo Connect+', 'Référencement Mangoo Market', 'Showroom360 simplifié');
+AND s.name IN ('Mini-site', 'Mini-boutique', 'Espace personnel', 'Fiche visible', 'Mangoo Connect+', 'Référencement Mangoo Market', 'Showroom360 simplifié')
+ON CONFLICT (pack_id, service_id) DO NOTHING;
 
 -- Pack Professionnel
 INSERT INTO pack_services (pack_id, service_id)
 SELECT p.id, s.id
 FROM packs p, services s
 WHERE p.name = 'Pack Professionnel'
-AND s.name IN ('Mini-site', 'Mini-boutique', 'Espace personnel', 'Fiche visible', 'Mangoo Connect+', 'Référencement Mangoo Market', 'Showroom360 simplifié', 'Mangoo Express', 'Référencement pro');
+AND s.name IN ('Mini-site', 'Mini-boutique', 'Espace personnel', 'Fiche visible', 'Mangoo Connect+', 'Référencement Mangoo Market', 'Showroom360 simplifié', 'Mangoo Express', 'Référencement pro')
+ON CONFLICT (pack_id, service_id) DO NOTHING;
 
 -- Pack Premium
 INSERT INTO pack_services (pack_id, service_id)
 SELECT p.id, s.id
 FROM packs p, services s
-WHERE p.name = 'Pack Premium';
+WHERE p.name = 'Pack Premium'
+ON CONFLICT (pack_id, service_id) DO NOTHING;
 
 -- Index pour optimiser les performances
 CREATE INDEX IF NOT EXISTS idx_pack_services_pack_id ON pack_services(pack_id);

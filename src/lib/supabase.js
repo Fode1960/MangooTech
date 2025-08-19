@@ -40,15 +40,39 @@ export const auth = {
   },
 
   signIn: async (email, password, rememberMe = false) => {
-    // Utiliser l'instance appropriée selon l'option "Se souvenir de moi"
-    const clientToUse = rememberMe ? supabase : supabaseSession
-    
-    const { data, error } = await clientToUse.auth.signInWithPassword({
-      email,
-      password
-    })
-    
-    return { data, error }
+    // Validate input parameters
+    if (!email || !password) {
+      return { 
+        data: null, 
+        error: { message: 'Email et mot de passe sont requis' } 
+      }
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return { 
+        data: null, 
+        error: { message: 'Format d\'email invalide' } 
+      }
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password
+      })
+      
+      return { data, error }
+    } catch (err) {
+      console.error('Erreur lors de la connexion:', err)
+      return { 
+        data: null, 
+        error: { 
+          message: err.message || 'Erreur de connexion. Vérifiez vos identifiants.' 
+        } 
+      }
+    }
   },
 
   signOut: async () => {

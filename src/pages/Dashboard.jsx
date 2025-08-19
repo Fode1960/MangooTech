@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useServices, useServiceStats } from '../contexts/ServicesContext'
 import { migrateUserPack } from '../lib/services'
+import { supabase } from '../lib/supabase'
 import {
   Eye,
   Users,
@@ -164,25 +165,45 @@ const Dashboard = () => {
   const availablePacksForMigration = getAvailablePacksForMigration()
 
   // Fonction pour gérer la migration de pack
-  const handlePackMigration = async (newPackId) => {
-    if (!user?.id) return;
-    
-    setMigrationLoading(true);
-    setMigrationError('');
+  // Dans la fonction handlePackMigration, remplacer par :
+  const handlePackMigration = async (newPackDbId) => {
+    setMigrationLoading(true)
+    setMigrationError(null)
     
     try {
-      await migrateUserPack(user.id, newPackId);
-      // Rafraîchir les données utilisateur
-      await refreshUserServices();
-      setMigrationError(''); // Effacer les erreurs précédentes
-      setShowPackManagement(false); // Fermer la popup après succès
+      const targetPack = allPacks.find(p => p.dbId === newPackDbId)
+      if (!targetPack) {
+        throw new Error('Pack cible non trouvé')
+      }
+  
+      const changeType = currentPack.id === 0 ? 'new' : 
+                    targetPack.id > currentPack.id ? 'upgrade' : 'downgrade'
+  
+      // Utiliser le nouveau composant PaymentButton ou la logique de paiement
+      const { data, error } = await supabase.functions.invoke('change-pack-with-payment', {
+        body: {
+          newPackId: newPackDbId,
+          changeType,
+          successUrl: `${window.location.origin}/dashboard?success=true&pack=${newPackDbId}`,
+          cancelUrl: `${window.location.origin}/dashboard?canceled=true`,
+        },
+      })
+  
+      if (error) throw error
+  
+      if (data.direct_migration) {
+        // Migration directe réussie (downgrade vers gratuit)
+        window.location.reload()
+      } else if (data.url) {
+        // Redirection vers Stripe
+        window.location.href = data.url
+      }
     } catch (error) {
-      console.error('Erreur lors de la migration du pack:', error);
-      setMigrationError('Erreur lors de la migration du pack. Veuillez réessayer.');
+      setMigrationError(error.message)
     } finally {
-      setMigrationLoading(false);
+      setMigrationLoading(false)
     }
-  };
+  }
 
   // Auto-retry logic to reload data if no pack is detected after a delay
    useEffect(() => {

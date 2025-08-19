@@ -172,12 +172,31 @@ export const AuthProvider = ({ children }) => {
       setError(null)
       
       const { data, error } = await auth.signIn(email, password, rememberMe)
-      if (error) {throw error}
+      
+      if (error) {
+        // Map common Supabase errors to user-friendly messages
+        let userMessage = error.message
+        
+        if (error.message.includes('Invalid login credentials')) {
+          userMessage = 'Email ou mot de passe incorrect'
+        } else if (error.message.includes('Email not confirmed')) {
+          userMessage = 'Veuillez confirmer votre email avant de vous connecter'
+        } else if (error.message.includes('Too many requests')) {
+          userMessage = 'Trop de tentatives de connexion. Veuillez réessayer plus tard'
+        } else if (error.message.includes('Network error') || error.message.includes('Failed to fetch')) {
+          userMessage = 'Problème de connexion réseau. Vérifiez votre connexion internet'
+        } else if (error.message.includes('400')) {
+          userMessage = 'Données de connexion invalides. Vérifiez votre email et mot de passe'
+        }
+        
+        throw new Error(userMessage)
+      }
       
       return { data, error: null }
     } catch (error) {
-      setError(error.message)
-      return { data: null, error }
+      const errorMessage = error.message || 'Une erreur est survenue lors de la connexion'
+      setError(errorMessage)
+      return { data: null, error: { message: errorMessage } }
     } finally {
       setLoading(false)
     }

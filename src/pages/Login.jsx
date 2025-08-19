@@ -65,12 +65,46 @@ const Login = () => {
     setError('')
     setSuccess('')
 
+    // Client-side validation
+    if (!formData.email.trim()) {
+      setError('L\'adresse email est requise')
+      setIsLoading(false)
+      return
+    }
+
+    if (!formData.password) {
+      setError('Le mot de passe est requis')
+      setIsLoading(false)
+      return
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      setError('Format d\'email invalide')
+      setIsLoading(false)
+      return
+    }
+
     try {
-      await signIn(formData.email, formData.password, rememberMe)
-      // La redirection sera gérée par l'useEffect
+      const result = await signIn(formData.email, formData.password, rememberMe)
+      
+      if (result.error) {
+        // Handle specific error types
+        if (result.error.message.includes('Invalid login credentials')) {
+          setError('Email ou mot de passe incorrect')
+        } else if (result.error.message.includes('Email not confirmed')) {
+          setError('Veuillez confirmer votre email avant de vous connecter')
+        } else if (result.error.message.includes('Too many requests')) {
+          setError('Trop de tentatives de connexion. Veuillez réessayer plus tard')
+        } else {
+          setError(result.error.message || 'Une erreur est survenue lors de la connexion')
+        }
+      }
+      // Success case will be handled by the useEffect that watches for user changes
     } catch (err) {
       console.error('Erreur de connexion:', err)
-      setError(err.message || 'Une erreur est survenue lors de la connexion')
+      setError('Une erreur inattendue est survenue. Veuillez réessayer.')
     } finally {
       setIsLoading(false)
     }

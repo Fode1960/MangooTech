@@ -14,8 +14,11 @@ CREATE TABLE IF NOT EXISTS public.users (
 -- Création de la table services
 CREATE TABLE IF NOT EXISTS public.services (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL UNIQUE,
     description TEXT,
+    service_type VARCHAR(100) NOT NULL,
+    base_url VARCHAR(500),
+    icon VARCHAR(100),
     price DECIMAL(10,2),
     duration INTEGER, -- en minutes
     category VARCHAR(100),
@@ -60,15 +63,20 @@ END;
 $$ language 'plpgsql';
 
 -- Triggers pour mettre à jour updated_at automatiquement
+-- Supprimer les triggers existants avant de les recréer
+DROP TRIGGER IF EXISTS update_users_updated_at ON public.users;
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON public.users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_services_updated_at ON public.services;
 CREATE TRIGGER update_services_updated_at BEFORE UPDATE ON public.services
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_subscriptions_updated_at ON public.subscriptions;
 CREATE TRIGGER update_subscriptions_updated_at BEFORE UPDATE ON public.subscriptions
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_contacts_updated_at ON public.contacts;
 CREATE TRIGGER update_contacts_updated_at BEFORE UPDATE ON public.contacts
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -91,6 +99,8 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Trigger pour créer automatiquement un profil lors de l'inscription
+-- Supprimer le trigger existant avant de le recréer
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
@@ -102,24 +112,31 @@ ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contacts ENABLE ROW LEVEL SECURITY;
 
 -- Politique pour la table users : les utilisateurs peuvent voir et modifier leur propre profil
+-- Supprimer les politiques existantes avant de les recréer
+DROP POLICY IF EXISTS "Users can view own profile" ON public.users;
 CREATE POLICY "Users can view own profile" ON public.users
     FOR SELECT USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON public.users;
 CREATE POLICY "Users can update own profile" ON public.users
     FOR UPDATE USING (auth.uid() = id);
 
 -- Politique pour la table services : lecture publique
+DROP POLICY IF EXISTS "Services are viewable by everyone" ON public.services;
 CREATE POLICY "Services are viewable by everyone" ON public.services
     FOR SELECT USING (true);
 
 -- Politique pour la table subscriptions : les utilisateurs peuvent voir leurs propres abonnements
+DROP POLICY IF EXISTS "Users can view own subscriptions" ON public.subscriptions;
 CREATE POLICY "Users can view own subscriptions" ON public.subscriptions
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can create own subscriptions" ON public.subscriptions;
 CREATE POLICY "Users can create own subscriptions" ON public.subscriptions
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Politique pour la table contacts : insertion publique, lecture restreinte
+DROP POLICY IF EXISTS "Anyone can create contacts" ON public.contacts;
 CREATE POLICY "Anyone can create contacts" ON public.contacts
     FOR INSERT WITH CHECK (true);
 
