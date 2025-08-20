@@ -17,6 +17,7 @@ import type {
   UserServiceResponse,
   ServicesContextType
 } from '../types/services';
+import { supabase } from '../lib/supabase';
 
 const ServicesContext = createContext<ServicesContextType | undefined>(undefined);
 
@@ -37,13 +38,42 @@ export function ServicesProvider({ children }: ServicesProviderProps) {
   // Fonction pour créer la liste de tous les services avec leur statut
   const createAllServicesWithStatus = async (userPackData: UserPack | null, userServicesData: UserServiceResponse[]) => {
     if (!user?.id) return [];
-
+  
     // Récupérer tous les services disponibles
     const allServices = await getAllServices();
     
-    // Récupérer les services du pack actuel de l'utilisateur
-    const userPackServices = userPackData ? 
-      packs.find(pack => pack.id === userPackData.pack_id)?.services || [] : [];
+    // Récupérer les services du pack actuel de l'utilisateur DIRECTEMENT depuis la DB
+    let userPackServices: any[] = [];
+    if (userPackData) {
+      try {
+        const { data, error } = await supabase
+          .from('packs')
+          .select(`
+            pack_services!inner(
+              service_id,
+              is_included,
+              services(
+                id,
+                name,
+                description,
+                service_type,
+                icon,
+                is_active
+              )
+            )
+          `)
+          .eq('id', userPackData.pack_id)
+          .eq('pack_services.is_included', true)
+          .eq('pack_services.services.is_active', true)
+          .single();
+        
+        if (!error && data) {
+          userPackServices = data.pack_services?.map(ps => ps.services).filter(Boolean) || [];
+        }
+      } catch (err) {
+        console.error('Erreur lors de la récupération des services du pack:', err);
+      }
+    }
     
     // Créer un map des services utilisateur pour un accès rapide
     const userServiceMap = new Map(

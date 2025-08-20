@@ -329,17 +329,18 @@ export async function getUserServices(userId: string): Promise<UserServiceRespon
  * Assigne un pack à un utilisateur
  */
 export async function assignPackToUser(assignmentData: AssignPackToUserRequest): Promise<UserPack> {
-  // Désactiver l'ancien pack s'il existe
-  await supabase
-    .from('user_packs')
-    .update({ status: 'cancelled', updated_at: new Date().toISOString() })
-    .eq('user_id', assignmentData.user_id)
-    .eq('status', 'active');
-
-  // Créer le nouveau pack
+  // Utiliser UPSERT au lieu d'INSERT pour éviter les conflits
   const { data: userPack, error: packError } = await supabase
     .from('user_packs')
-    .insert([assignmentData])
+    .upsert([
+      {
+        ...assignmentData,
+        updated_at: new Date().toISOString()
+      }
+    ], { 
+      onConflict: 'user_id,pack_id',
+      ignoreDuplicates: false 
+    })
     .select()
     .single();
 

@@ -165,10 +165,16 @@ const Dashboard = () => {
   const availablePacksForMigration = getAvailablePacksForMigration()
 
   // Fonction pour gérer la migration de pack
-  // Dans la fonction handlePackMigration, remplacer par :
+  // Fonction pour gérer la migration de pack
   const handlePackMigration = async (newPackDbId) => {
     setMigrationLoading(true)
     setMigrationError(null)
+    
+    // Timeout de sécurité pour éviter un chargement infini
+    const timeoutId = setTimeout(() => {
+      setMigrationLoading(false)
+      setMigrationError('Timeout: La migration prend trop de temps')
+    }, 30000) // 30 secondes
     
     try {
       const targetPack = allPacks.find(p => p.dbId === newPackDbId)
@@ -179,7 +185,7 @@ const Dashboard = () => {
       const changeType = currentPack.id === 0 ? 'new' : 
                     targetPack.id > currentPack.id ? 'upgrade' : 'downgrade'
   
-      // Utiliser le nouveau composant PaymentButton ou la logique de paiement
+      // Appel à la fonction Edge
       const { data, error } = await supabase.functions.invoke('change-pack-with-payment', {
         body: {
           newPackId: newPackDbId,
@@ -189,18 +195,36 @@ const Dashboard = () => {
         },
       })
   
-      if (error) throw error
+      // Nettoyer le timeout
+      clearTimeout(timeoutId)
   
-      if (data.direct_migration) {
+      if (error) {
+        console.error('Erreur API:', error)
+        throw new Error(error.message || 'Erreur lors du changement de pack')
+      }
+  
+      if (data?.direct_migration) {
         // Migration directe réussie (downgrade vers gratuit)
+        alert('Pack changé avec succès !')
         window.location.reload()
-      } else if (data.url) {
+        return
+      }
+  
+      if (data?.url) {
+        // Avant la redirection, réinitialiser l'état de chargement
+        setMigrationLoading(false)
         // Redirection vers Stripe
         window.location.href = data.url
+      } else {
+        throw new Error('Réponse invalide du serveur')
       }
     } catch (error) {
+      clearTimeout(timeoutId)
+      console.error('Erreur lors du changement de pack:', error)
       setMigrationError(error.message)
+      alert(`Erreur: ${error.message}`)
     } finally {
+      // S'assurer que l'état de chargement est toujours réinitialisé
       setMigrationLoading(false)
     }
   }

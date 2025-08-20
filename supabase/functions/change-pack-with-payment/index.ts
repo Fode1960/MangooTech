@@ -137,7 +137,7 @@ serve(async (req) => {
               name: newPack.name,
               description: newPack.description || `Abonnement ${newPack.name}`,
             },
-            unit_amount: newPack.price * 100,
+            unit_amount: newPack.price, // SUPPRIMÉ: * 100
             recurring: {
               interval: 'month',
             },
