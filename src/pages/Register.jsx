@@ -21,6 +21,8 @@ import MangoLogo from '../components/ui/MangoLogo'
 import { Button } from '../components/ui/Button'
 import { Input, Label } from '../components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card'
+import { useAuthError } from '../hooks/useAuthError'
+import AuthAlert from '../components/ui/AuthAlert'
 
 const Register = () => {
   const { t } = useTranslation()
@@ -46,6 +48,7 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState({})
   const [passwordStrength, setPasswordStrength] = useState(0)
+  const { authAlert, checkAuthError, hideAuthError, handleReconnect } = useAuthError()
 
   // Rediriger si déjà connecté
   useEffect(() => {
@@ -745,6 +748,15 @@ const Register = () => {
           </Card>
         </motion.div>
       </div>
+      
+      {/* Alerte d'authentification */}
+      <AuthAlert
+        isVisible={authAlert.isVisible}
+        message={authAlert.message}
+        type={authAlert.type}
+        onReconnect={handleReconnect}
+        onClose={hideAuthError}
+      />
     </div>
   )
 }

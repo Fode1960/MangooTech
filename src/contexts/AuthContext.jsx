@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { auth, db, supabase } from '../lib/supabase'
 import { assignPackToUser, getUserPack } from '../lib/services'
+import { changePackSmart, showPackChangeSuccess, showPackChangeError } from '../lib/packChangeUtils'
 
 const AuthContext = createContext({})
 
@@ -131,27 +132,58 @@ export const AuthProvider = ({ children }) => {
         if (profileError) {
           console.error('Erreur lors de la création du profil:', profileError)
         } else {
-          // Assigner automatiquement le pack sélectionné
+          // Assigner automatiquement le pack sélectionné avec smart-pack-change
           // Mapper les IDs des packs de Register.jsx vers les vrais IDs de la base de données
           const packMapping = {
             'free': '0a85e74a-4aec-480a-8af1-7b57391a80d2', // Pack Découverte
-            'visibility': 'pack-visibilite-id', // Pack Visibilité - À remplacer par l'ID réel
-            'professional': 'pack-professionnel-id', // Pack Professionnel - À remplacer par l'ID réel
-            'premium': 'pack-premium-id' // Pack Premium - À remplacer par l'ID réel
+            'visibility': '209a0b0e-7888-41a3-9cd1-45907705261a', // Pack Visibilité
+            'professional': 'e444b213-6a11-4793-b30d-e55a8fbf3403', // Pack Professionnel
+            'premium': '9e026c33-1c2a-49aa-8cc2-e2c9d392c303' // Pack Premium
           }
           
           let packIdToAssign = packMapping[userData.selectedPack] || packMapping['free']
           
           if (packIdToAssign) {
             try {
-              await assignPackToUser({
-                user_id: data.user.id,
-                pack_id: packIdToAssign,
-                status: 'active'
+              // Utiliser smart-pack-change pour l'assignation intelligente
+              await changePackSmart(packIdToAssign, {
+                successUrl: `${window.location.origin}/dashboard?success=true&pack=${packIdToAssign}&registration=true`,
+                cancelUrl: `${window.location.origin}/register?canceled=true`,
+                onSuccess: (result) => {
+                  const notification = showPackChangeSuccess(result, userData.selectedPack)
+                  console.log('✅ Pack assigné lors de l\'inscription:', notification)
+                },
+                onError: (error) => {
+                  const notification = showPackChangeError(error)
+                  console.error('❌ Erreur assignation pack inscription:', notification)
+                  // Fallback vers assignPackToUser en cas d'erreur
+                  assignPackToUser({
+                    user_id: data.user.id,
+                    pack_id: packIdToAssign,
+                    status: 'active'
+                  }).catch(fallbackError => {
+                    console.error('❌ Erreur fallback assignation pack:', fallbackError)
+                  })
+                },
+                onRequiresPayment: (result) => {
+                  console.log('💳 Pack payant sélectionné lors de l\'inscription, redirection vers paiement')
+                  // La redirection vers Stripe est gérée automatiquement
+                }
               })
-              console.log('Pack assigné avec succès:', packIdToAssign)
+              console.log('🔄 Smart-pack-change utilisé pour l\'inscription avec pack:', packIdToAssign)
             } catch (packError) {
-              console.error('Erreur lors de l\'assignation du pack:', packError)
+              console.error('❌ Erreur lors de l\'assignation du pack avec smart-pack-change:', packError)
+              // Fallback vers l'ancienne méthode
+              try {
+                await assignPackToUser({
+                  user_id: data.user.id,
+                  pack_id: packIdToAssign,
+                  status: 'active'
+                })
+                console.log('✅ Pack assigné avec fallback:', packIdToAssign)
+              } catch (fallbackError) {
+                console.error('❌ Erreur fallback assignation pack:', fallbackError)
+              }
             }
           }
         }

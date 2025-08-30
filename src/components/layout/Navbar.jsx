@@ -218,6 +218,14 @@ const Navbar = () => {
                         <span>{t('nav.dashboard')}</span>
                       </Link>
                     )}
+                    <Link
+                      to="/logout-debug"
+                      className="flex items-center space-x-3 px-4 py-2 text-sm text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                      role="menuitem"
+                    >
+                      <Settings className="w-4 h-4" aria-hidden="true" />
+                      <span>Diagnostic Déconnexion</span>
+                    </Link>
                     <button
                       onClick={handleSignOut}
                       className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"

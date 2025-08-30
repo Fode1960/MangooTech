@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useServices, useServiceStats } from '../contexts/ServicesContext'
 import { migrateUserPack } from '../lib/services'
 import { supabase } from '../lib/supabase'
+import { 
+  changePackSmart, 
+  showPackChangeSuccess, 
+  showPackChangeError 
+} from '../lib/packChangeUtils'
+import { useCreditNotification } from '../hooks/useCreditNotification'
+import CreditNotification from '../components/ui/CreditNotification'
+import { useAuthError } from '../hooks/useAuthError'
+import AuthAlert from '../components/ui/AuthAlert'
 import {
   Eye,
   Users,
@@ -27,10 +36,13 @@ const Dashboard = () => {
   const { userServices, allServicesWithStatus, userPack, loading: servicesLoading, error: servicesError, refreshUserServices } = useServices();
   const serviceStats = useServiceStats()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [showPackManagement, setShowPackManagement] = useState(false)
   const [migrationLoading, setMigrationLoading] = useState(false)
   const [migrationError, setMigrationError] = useState('')
   const [retryCount, setRetryCount] = useState(0)
+  const creditNotification = useCreditNotification()
+  const { authAlert, checkAuthError, hideAuthError, handleReconnect } = useAuthError()
 
   // Rediriger automatiquement les admins vers leur dashboard spécialisé
   useEffect(() => {
@@ -38,6 +50,47 @@ const Dashboard = () => {
       navigate('/admin', { replace: true })
     }
   }, [user, isAdmin, isSuperAdmin, navigate])
+
+  // Gérer les paramètres de query de paiement Stripe
+  useEffect(() => {
+    const payment = searchParams.get('payment')
+    const packId = searchParams.get('pack')
+    const success = searchParams.get('success')
+    const canceled = searchParams.get('canceled')
+
+    if (payment === 'success' || success === 'true') {
+      // Paiement réussi
+      creditNotification.showPackChangeSuccess(
+        packId ? `Pack ${packId}` : 'Nouveau pack',
+        'upgrade'
+      )
+      
+      // Nettoyer les paramètres de l'URL
+      const newSearchParams = new URLSearchParams(searchParams)
+      newSearchParams.delete('payment')
+      newSearchParams.delete('pack')
+      newSearchParams.delete('success')
+      setSearchParams(newSearchParams, { replace: true })
+      
+      // Recharger les services pour refléter le changement
+      setTimeout(() => {
+        refreshUserServices()
+      }, 1000)
+    } else if (payment === 'cancelled' || canceled === 'true') {
+      // Paiement annulé
+      creditNotification.showPackChangeError(
+        'Paiement annulé',
+        'Le paiement a été annulé. Votre pack n\'a pas été modifié.'
+      )
+      
+      // Nettoyer les paramètres de l'URL
+      const newSearchParams = new URLSearchParams(searchParams)
+      newSearchParams.delete('payment')
+      newSearchParams.delete('pack')
+      newSearchParams.delete('canceled')
+      setSearchParams(newSearchParams, { replace: true })
+    }
+  }, [searchParams, setSearchParams, creditNotification, refreshUserServices])
   
   // Utiliser les statistiques réelles des services
   const stats = {
@@ -165,16 +218,9 @@ const Dashboard = () => {
   const availablePacksForMigration = getAvailablePacksForMigration()
 
   // Fonction pour gérer la migration de pack
-  // Fonction pour gérer la migration de pack
   const handlePackMigration = async (newPackDbId) => {
     setMigrationLoading(true)
     setMigrationError(null)
-    
-    // Timeout de sécurité pour éviter un chargement infini
-    const timeoutId = setTimeout(() => {
-      setMigrationLoading(false)
-      setMigrationError('Timeout: La migration prend trop de temps')
-    }, 30000) // 30 secondes
     
     try {
       const targetPack = allPacks.find(p => p.dbId === newPackDbId)
@@ -182,49 +228,102 @@ const Dashboard = () => {
         throw new Error('Pack cible non trouvé')
       }
   
-      const changeType = currentPack.id === 0 ? 'new' : 
-                    targetPack.id > currentPack.id ? 'upgrade' : 'downgrade'
-  
-      // Appel à la fonction Edge
-      const { data, error } = await supabase.functions.invoke('change-pack-with-payment', {
+      // Utiliser smart-pack-change avec les utilitaires
+      const result = await changePackSmart(newPackDbId, {
+        successUrl: `${window.location.origin}/dashboard?success=true&pack=${newPackDbId}`,
+        cancelUrl: `${window.location.origin}/dashboard?canceled=true`,
+        onSuccess: (data) => {
+          const notification = showPackChangeSuccess(data, targetPack.name)
+          console.log('✅ Migration réussie:', notification)
+          
+          // Afficher la notification de crédit si applicable
+          if (notification.creditAmount && notification.creditAmount > 0) {
+            creditNotification.showDowngradeCredit(
+              notification.creditAmount,
+              notification.packName,
+              notification.changeType
+            )
+          } else {
+            creditNotification.showPackChangeSuccess(
+              notification.packName,
+              notification.changeType
+            )
+          }
+          
+          // Fermer la modal et recharger
+          setMigrationError(null)
+          setShowPackManagement(false)
+          window.location.reload()
+        },
+        onError: (error) => {
+          const notification = showPackChangeError(error)
+          console.error('❌ Erreur migration:', notification)
+          
+          // Vérifier si c'est une erreur d'authentification
+          if (!checkAuthError(error)) {
+            // Si ce n'est pas une erreur d'auth, afficher l'erreur normalement
+            setMigrationError(notification.message)
+          }
+        },
+        onRequiresPayment: (data) => {
+          console.log('💳 Redirection vers paiement pour:', targetPack.name)
+          // La redirection vers Stripe est gérée automatiquement
+          setMigrationLoading(false)
+        }
+      })
+      
+      console.log('🔄 Résultat migration pack:', result)
+      
+    } catch (error) {
+      console.error('❌ Erreur lors du changement de pack:', error)
+      const notification = showPackChangeError(error)
+      setMigrationError(notification.message)
+    } finally {
+      setMigrationLoading(false)
+    }
+  }
+
+  // État pour la modal d'annulation
+  const [showCancelModal, setShowCancelModal] = useState(false)
+
+  // Fonction pour gérer l'annulation d'abonnement
+  const handleCancelSubscription = () => {
+    setShowCancelModal(true)
+  }
+
+  // Fonction pour confirmer l'annulation avec le type choisi
+  const confirmCancellation = async (cancelType) => {
+    setShowCancelModal(false)
+    setMigrationLoading(true)
+    setMigrationError(null)
+
+    try {
+      const { data, error } = await supabase.functions.invoke('cancel-subscription', {
         body: {
-          newPackId: newPackDbId,
-          changeType,
-          successUrl: `${window.location.origin}/dashboard?success=true&pack=${newPackDbId}`,
-          cancelUrl: `${window.location.origin}/dashboard?canceled=true`,
+          cancelImmediately: cancelType === 'immediate',
+          reason: 'User requested cancellation from dashboard'
         },
       })
-  
-      // Nettoyer le timeout
-      clearTimeout(timeoutId)
-  
+
       if (error) {
-        console.error('Erreur API:', error)
-        throw new Error(error.message || 'Erreur lors du changement de pack')
+        console.error('Erreur lors de l\'annulation:', error)
+        throw new Error(error.message || 'Erreur lors de l\'annulation de l\'abonnement')
       }
-  
-      if (data?.direct_migration) {
-        // Migration directe réussie (downgrade vers gratuit)
-        alert('Pack changé avec succès !')
+
+      if (data?.success) {
+        alert(cancelType === 'immediate' 
+          ? 'Abonnement annulé avec succès ! Vous avez été migré vers le pack gratuit.'
+          : 'Abonnement programmé pour annulation à la fin de la période de facturation.'
+        )
         window.location.reload()
-        return
-      }
-  
-      if (data?.url) {
-        // Avant la redirection, réinitialiser l'état de chargement
-        setMigrationLoading(false)
-        // Redirection vers Stripe
-        window.location.href = data.url
       } else {
         throw new Error('Réponse invalide du serveur')
       }
     } catch (error) {
-      clearTimeout(timeoutId)
-      console.error('Erreur lors du changement de pack:', error)
+      console.error('Erreur lors de l\'annulation:', error)
       setMigrationError(error.message)
       alert(`Erreur: ${error.message}`)
     } finally {
-      // S'assurer que l'état de chargement est toujours réinitialisé
       setMigrationLoading(false)
     }
   }
@@ -799,9 +898,16 @@ const Dashboard = () => {
               
               {/* Actions */}
               <div className="mt-8 flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
-                <button className="text-red-600 hover:text-red-700 font-medium">
-                  Annuler mon abonnement
-                </button>
+                {/* Masquer le bouton d'annulation pour le Pack Découverte gratuit */}
+                {currentPack && currentPack.price !== 'Gratuit' && currentPack.price !== '0' && (
+                  <button 
+                    onClick={handleCancelSubscription}
+                    disabled={migrationLoading}
+                    className="text-red-600 hover:text-red-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {migrationLoading ? 'Annulation en cours...' : 'Annuler mon abonnement'}
+                  </button>
+                )}
                 <div className="space-x-3">
                   <button 
                     onClick={() => setShowPackManagement(false)}
@@ -817,7 +923,80 @@ const Dashboard = () => {
             </div>
           </div>
         )}
+
+        {/* Modal d'annulation d'abonnement */}
+        {showCancelModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                Annuler votre abonnement
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Êtes-vous sûr de vouloir annuler votre abonnement ? Cette action est irréversible.
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                Choisissez quand vous souhaitez que l'annulation prenne effet :
+              </p>
+              
+              <div className="space-y-3 mb-6">
+                <button
+                  onClick={() => confirmCancellation('immediate')}
+                  disabled={migrationLoading}
+                  className="w-full p-3 text-left border border-red-200 dark:border-red-700 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div className="font-medium text-red-600 dark:text-red-400">
+                    Annuler immédiatement
+                  </div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    Votre abonnement sera annulé maintenant et vous passerez au pack gratuit
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => confirmCancellation('end_of_period')}
+                  disabled={migrationLoading}
+                  className="w-full p-3 text-left border border-orange-200 dark:border-orange-700 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div className="font-medium text-orange-600 dark:text-orange-400">
+                    Annuler à la fin de la période
+                  </div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    Votre abonnement continuera jusqu'à la fin de votre période de facturation
+                  </div>
+                </button>
+              </div>
+              
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowCancelModal(false)}
+                  disabled={migrationLoading}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+      
+      {/* Notification de crédit */}
+      <CreditNotification
+        isVisible={creditNotification.isVisible}
+        creditAmount={creditNotification.creditAmount}
+        packName={creditNotification.packName}
+        changeType={creditNotification.changeType}
+        duration={creditNotification.duration}
+        onClose={creditNotification.hideNotification}
+      />
+      
+      <AuthAlert
+        isVisible={authAlert.isVisible}
+        message={authAlert.message}
+        type={authAlert.type}
+        onReconnect={handleReconnect}
+        onClose={hideAuthError}
+      />
     </motion.div>
   )
 }

@@ -1,51 +1,98 @@
--- Script pour corriger les politiques RLS et permettre la création de profils
--- À exécuter dans l'éditeur SQL de Supabase Dashboard
+-- Script pour corriger les politiques RLS et permettre la migration vers le pack gratuit
+-- À exécuter dans l'interface Supabase : https://supabase.com/dashboard/project/ptrqhtwstldphjaraufi/sql
 
--- 1. Supprimer les politiques existantes pour la table users
-DROP POLICY IF EXISTS "Users can view own profile" ON public.users;
-DROP POLICY IF EXISTS "Users can update own profile" ON public.users;
+-- =====================================================
+-- CORRECTION DES POLITIQUES RLS POUR USER_PACKS
+-- =====================================================
 
--- 2. Créer de nouvelles politiques plus permissives pour la table users
--- Permettre aux utilisateurs de voir leur propre profil
-CREATE POLICY "Users can view own profile" ON public.users
-    FOR SELECT USING (auth.uid() = id);
+-- Supprimer les anciennes politiques restrictives
+DROP POLICY IF EXISTS "Users can insert own packs" ON user_packs;
+DROP POLICY IF EXISTS "Users can view own packs" ON user_packs;
+DROP POLICY IF EXISTS "Users can update own packs" ON user_packs;
 
--- Permettre aux utilisateurs de mettre à jour leur propre profil
-CREATE POLICY "Users can update own profile" ON public.users
-    FOR UPDATE USING (auth.uid() = id);
+-- Créer les nouvelles politiques plus permissives
 
--- Permettre l'insertion de nouveaux profils (pour le trigger automatique)
-CREATE POLICY "Enable insert for authenticated users" ON public.users
-    FOR INSERT WITH CHECK (true);
-
--- 3. Vérifier que le trigger fonctionne correctement
--- Si le trigger automatique ne fonctionne pas, on peut aussi permettre l'insertion manuelle
-CREATE POLICY "Users can insert own profile" ON public.users
-    FOR INSERT WITH CHECK (auth.uid() = id);
-
--- 4. Politique pour permettre aux services d'être gérés par des administrateurs
--- (optionnel, pour plus tard)
-DROP POLICY IF EXISTS "Services are viewable by everyone" ON public.services;
-CREATE POLICY "Services are viewable by everyone" ON public.services
-    FOR SELECT USING (true);
-
--- Permettre l'insertion de services (pour les administrateurs ou le système)
-CREATE POLICY "Enable insert for services" ON public.services
-    FOR INSERT WITH CHECK (true);
-
--- 5. Corriger les politiques pour les subscriptions
-DROP POLICY IF EXISTS "Users can view own subscriptions" ON public.subscriptions;
-DROP POLICY IF EXISTS "Users can create own subscriptions" ON public.subscriptions;
-
-CREATE POLICY "Users can view own subscriptions" ON public.subscriptions
-    FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can create own subscriptions" ON public.subscriptions
+-- Politique d'insertion : permettre aux utilisateurs d'insérer leurs propres packs
+CREATE POLICY "Users can insert own packs" ON user_packs
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
--- 6. Corriger les politiques pour les contacts
-DROP POLICY IF EXISTS "Anyone can create contacts" ON public.contacts;
-CREATE POLICY "Anyone can create contacts" ON public.contacts
-    FOR INSERT WITH CHECK (true);
+-- Politique de lecture : permettre aux utilisateurs de voir leurs propres packs
+CREATE POLICY "Users can view own packs" ON user_packs
+    FOR SELECT USING (auth.uid() = user_id);
 
--- Script terminé - Les politiques RLS sont maintenant corrigées !
+-- Politique de mise à jour : permettre aux utilisateurs de modifier leurs propres packs
+CREATE POLICY "Users can update own packs" ON user_packs
+    FOR UPDATE USING (auth.uid() = user_id);
+
+-- =====================================================
+-- VÉRIFICATION DES POLITIQUES
+-- =====================================================
+
+-- Afficher les politiques actuelles pour vérification
+SELECT 
+    schemaname,
+    tablename,
+    policyname,
+    permissive,
+    roles,
+    cmd,
+    qual,
+    with_check
+FROM pg_policies 
+WHERE tablename = 'user_packs';
+
+-- =====================================================
+-- TEST D'INSERTION (OPTIONNEL)
+-- =====================================================
+
+-- Tester l'insertion d'un pack gratuit pour l'utilisateur actuel
+-- (Décommentez les lignes suivantes pour tester)
+
+/*
+-- Récupérer l'ID du pack gratuit
+DO $$
+DECLARE
+    free_pack_id UUID;
+    current_user_id UUID;
+BEGIN
+    -- Récupérer l'ID du pack gratuit
+    SELECT id INTO free_pack_id FROM packs WHERE price = 0 LIMIT 1;
+    
+    -- Récupérer l'ID de l'utilisateur actuel
+    SELECT auth.uid() INTO current_user_id;
+    
+    -- Afficher les informations
+    RAISE NOTICE 'Pack gratuit ID: %', free_pack_id;
+    RAISE NOTICE 'Utilisateur actuel ID: %', current_user_id;
+    
+    -- Tenter l'insertion (sera annulée par ROLLBACK)
+    IF free_pack_id IS NOT NULL AND current_user_id IS NOT NULL THEN
+        INSERT INTO user_packs (
+            user_id,
+            pack_id,
+            status,
+            started_at
+        ) VALUES (
+            current_user_id,
+            free_pack_id,
+            'active',
+            NOW()
+        );
+        
+        RAISE NOTICE 'Test d''insertion réussi !';
+        
+        -- Annuler l'insertion de test
+        ROLLBACK;
+    ELSE
+        RAISE NOTICE 'Impossible de tester : pack gratuit ou utilisateur non trouvé';
+    END IF;
+END $$;
+*/
+
+-- =====================================================
+-- RÉSUMÉ
+-- =====================================================
+
+SELECT '✅ Politiques RLS corrigées pour user_packs' as message;
+SELECT 'ℹ️ La fonction cancel-subscription devrait maintenant pouvoir migrer vers le pack gratuit' as info;
+SELECT 'ℹ️ Testez l''annulation immédiate depuis l''interface utilisateur' as next_step;

@@ -285,6 +285,37 @@ serve(async (req) => {
           }
         }
     
+        
+        // Mettre à jour le selected_pack dans la table users
+        console.log('\n=== 🔄 MISE À JOUR SELECTED_PACK ===');
+        
+        // Récupérer le nom du pack pour créer le slug
+        const { data: packInfo, error: packInfoError } = await supabaseClient
+          .from('packs')
+          .select('name')
+          .eq('id', packId)
+          .single();
+        
+        if (packInfoError) {
+          console.error('❌ Erreur récupération info pack:', packInfoError);
+        } else if (packInfo) {
+          // Convertir le nom du pack en slug
+          const packSlug = packInfo.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+          console.log('Pack slug généré:', packSlug);
+          
+          // Mettre à jour le selected_pack de l'utilisateur
+          const { error: updateSelectedPackError } = await supabaseClient
+            .from('users')
+            .update({ selected_pack: packSlug })
+            .eq('id', userId);
+          
+          if (updateSelectedPackError) {
+            console.error('❌ Erreur mise à jour selected_pack:', updateSelectedPackError);
+          } else {
+            console.log('✅ selected_pack mis à jour:', packSlug);
+          }
+        }
+
         console.log(`\n🎉 SUCCÈS: Pack ${packId} activé pour l'utilisateur ${userId}`)
         break
       }

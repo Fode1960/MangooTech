@@ -65,14 +65,22 @@ serve(async (req) => {
               name: pack.name,
               description: pack.description,
             },
-            unit_amount: pack.price * 100, // Stripe utilise les centimes
+            unit_amount: pack.price, // XOF n'utilise pas de centimes
           },
           quantity: 1,
         },
       ],
       mode: pack.is_recurring ? 'subscription' : 'payment',
-      success_url: successUrl || `${req.headers.get('origin')}/dashboard?success=true`,
-      cancel_url: cancelUrl || `${req.headers.get('origin')}/dashboard?canceled=true`,
+      success_url: successUrl || (() => {
+        const origin = req.headers.get('origin') || 'http://localhost:3000'
+        const basePath = origin.includes('github.io') ? '/MangooTech' : ''
+        return `${origin}${basePath}/dashboard?success=true`
+      })(),
+      cancel_url: cancelUrl || (() => {
+        const origin = req.headers.get('origin') || 'http://localhost:3000'
+        const basePath = origin.includes('github.io') ? '/MangooTech' : ''
+        return `${origin}${basePath}/dashboard?canceled=true`
+      })(),
       metadata: {
         user_id: user.id,
         pack_id: packId,

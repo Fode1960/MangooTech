@@ -44,6 +44,9 @@ const Dashboard = LazyPages.Dashboard
 const AdminDashboard = LazyPages.AdminDashboard
 const NotFound = LazyPages.NotFound
 
+// Page de diagnostic (chargement direct pour le debug)
+import LogoutDebug from './pages/LogoutDebug'
+
 function App() {
   const { i18n } = useTranslation()
   const [loading, setLoading] = useState(true)
@@ -94,66 +97,76 @@ function App() {
         <AuthProvider>
           <ServicesProvider>
             <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-            <ScrollToTop />
-            <SEOHead pageKey="home" />
-            <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-              <Navbar />
-          
-          <main className="flex-grow">
-            <Suspense fallback={<PageLoadingFallback />}>
-              <Routes>
-                {/* Routes publiques */}
-                <Route path="/" element={<Home />} />
-                <Route path="/services" element={<Services />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/cookies" element={<Cookies />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                {/* Route EmailConfirmation supprimée - confirmation d'email désactivée */}
-                <Route path="/auth/callback" element={<AuthCallback />} />
+              <ScrollToTop />
+              <SEOHead pageKey="home" />
+              <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+                <Navbar />
                 
-                {/* Routes protégées - Client */}
-                <Route 
-                  path="/dashboard" 
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  } 
-                />
+                <main className="flex-grow">
+                  <Suspense fallback={<PageLoadingFallback />}>
+                    <Routes>
+                      {/* Routes publiques */}
+                      <Route path="/" element={<Home />} />
+                      <Route path="/services" element={<Services />} />
+                      <Route path="/about" element={<About />} />
+                      <Route path="/contact" element={<Contact />} />
+                      <Route path="/terms" element={<Terms />} />
+                      <Route path="/privacy" element={<Privacy />} />
+                      <Route path="/cookies" element={<Cookies />} />
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/register" element={<Register />} />
+                      <Route path="/forgot-password" element={<ForgotPassword />} />
+                      <Route path="/reset-password" element={<ResetPassword />} />
+                      {/* Route EmailConfirmation supprimée - confirmation d'email désactivée */}
+                      <Route path="/auth/callback" element={<AuthCallback />} />
+                      
+                      {/* Routes protégées - Client */}
+                      <Route 
+                        path="/dashboard" 
+                        element={
+                          <ProtectedRoute>
+                            <Dashboard />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      
+                      {/* Route de diagnostic de déconnexion */}
+                      <Route 
+                        path="/logout-debug" 
+                        element={
+                          <ProtectedRoute>
+                            <LogoutDebug />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      
+                      {/* Routes protégées - Admin */}
+                      <Route 
+                        path="/admin" 
+                        element={
+                          <ProtectedRoute requireAdmin>
+                            <AdminDashboard />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      
+                      {/* Route 404 */}
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </Suspense>
+                  
+                  {/* Préchargement intelligent des routes */}
+                  <RoutePreloader routes={['About', 'Services', 'Contact']} />
+                </main>
                 
-                {/* Routes protégées - Admin */}
-                <Route 
-                  path="/admin" 
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <AdminDashboard />
-                    </ProtectedRoute>
-                  } 
-                />
-                
-                {/* Route 404 */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-            
-            {/* Préchargement intelligent des routes */}
-            <RoutePreloader routes={['About', 'Services', 'Contact']} />
-          </main>
-          
-          <Footer />
-            </div>
-            
-            {/* Bouton retour en haut disponible sur toutes les pages */}
-            <BackToTop />
-            
-            {/* Bannière de cookies */}
-            <CookieBanner />
+                <Footer />
+              </div>
+              
+              {/* Bouton retour en haut disponible sur toutes les pages */}
+              <BackToTop />
+              
+              {/* Bannière de cookies */}
+              <CookieBanner />
             </Router>
           </ServicesProvider>
         </AuthProvider>

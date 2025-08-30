@@ -114,8 +114,16 @@ serve(async (req) => {
     // Configuration de session pour tous les paiements
     let sessionConfig: any = {
       customer_email: user.email,
-      success_url: successUrl || `${req.headers.get('origin')}/dashboard?success=true&pack=${newPackId}`,
-      cancel_url: cancelUrl || `${req.headers.get('origin')}/dashboard?canceled=true`,
+      success_url: successUrl || (() => {
+        const origin = req.headers.get('origin') || 'http://localhost:3000'
+        const basePath = origin.includes('github.io') ? '/MangooTech' : ''
+        return `${origin}${basePath}/dashboard?success=true&pack=${newPackId}`
+      })(),
+      cancel_url: cancelUrl || (() => {
+        const origin = req.headers.get('origin') || 'http://localhost:3000'
+        const basePath = origin.includes('github.io') ? '/MangooTech' : ''
+        return `${origin}${basePath}/dashboard?canceled=true`
+      })(),
       metadata: {
         user_id: user.id,
         pack_id: newPackId,

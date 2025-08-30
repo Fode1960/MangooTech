@@ -210,9 +210,6 @@ const Privacy = () => {
           </div>
         </div>
       </section>
-          </motion.div>
-        </div>
-      </section>
 
       {/* Introduction */}
       <section className="py-12 bg-white dark:bg-gray-800">

@@ -147,10 +147,4 @@ CREATE INDEX IF NOT EXISTS idx_subscriptions_service_id ON public.subscriptions(
 CREATE INDEX IF NOT EXISTS idx_contacts_email ON public.contacts(email);
 CREATE INDEX IF NOT EXISTS idx_contacts_created_at ON public.contacts(created_at);
 
--- Insertion de quelques services par défaut
-INSERT INTO public.services (name, description, price, duration, category) VALUES
-('Consultation Technique', 'Consultation technique personnalisée', 150.00, 60, 'Consultation'),
-('Développement Web', 'Développement d''applications web sur mesure', 2500.00, null, 'Développement'),
-('Maintenance Système', 'Maintenance et support technique', 200.00, 120, 'Support'),
-('Formation Technique', 'Formation sur les technologies web', 300.00, 180, 'Formation')
-ON CONFLICT DO NOTHING;
+-- Les services par défaut sont insérés dans la migration 20250813140000_create_services_and_packs.sql

@@ -5,6 +5,16 @@ import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { assignPackToUser } from '../lib/services'
 import { 
+  changePackSmart, 
+  showPackChangeSuccess, 
+  showPackChangeError,
+  validatePackChange 
+} from '../lib/packChangeUtils'
+import { useCreditNotification } from '../hooks/useCreditNotification'
+import CreditNotification from '../components/ui/CreditNotification'
+import { useAuthError } from '../hooks/useAuthError'
+import AuthAlert from '../components/ui/AuthAlert'
+import { 
   Globe, 
   ShoppingCart, 
   CreditCard, 
@@ -42,6 +52,8 @@ const Services = () => {
   const [isVisible, setIsVisible] = useState(false)
   const [loadingPack, setLoadingPack] = useState(null)
   const [error, setError] = useState(null)
+  const creditNotification = useCreditNotification()
+  const { authAlert, checkAuthError, hideAuthError, handleReconnect } = useAuthError()
 
   useEffect(() => {
     setIsVisible(true)
@@ -265,7 +277,7 @@ const Services = () => {
     }
   ]
 
-  // Fonction pour gérer la sélection d'un pack
+  // Fonction pour gérer la sélection d'un pack avec smart-pack-change
   const handlePackSelection = async (pack) => {
     setError(null)
     setLoadingPack(pack.id)
@@ -283,26 +295,60 @@ const Services = () => {
         return
       }
 
-      // Si l'utilisateur est connecté, assigner directement le pack
-      await assignPackToUser({
-        user_id: user.id,
-        pack_id: pack.id,
-        status: 'active',
-        started_at: new Date().toISOString(),
-        expires_at: pack.isFree ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 jours pour les packs payants
-        next_billing_date: pack.isFree ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-      })
-
-      // Rediriger vers le dashboard après attribution réussie
-      navigate('/dashboard', {
-        state: {
-          message: `Pack ${pack.name} activé avec succès !`,
-          type: 'success'
+      // Utiliser smart-pack-change pour gérer intelligemment le changement
+      const result = await changePackSmart(pack.id, {
+        successUrl: `${window.location.origin}/dashboard?success=true&pack=${pack.id}`,
+        cancelUrl: `${window.location.origin}/services?canceled=true`,
+        onSuccess: (data) => {
+          const notification = showPackChangeSuccess(data, pack.name)
+          console.log('✅ Pack activé avec succès:', notification)
+          
+          // Afficher la notification de crédit si applicable
+          if (notification.creditAmount && notification.creditAmount > 0) {
+            creditNotification.showDowngradeCredit(
+              notification.creditAmount,
+              notification.packName,
+              notification.changeType
+            )
+          } else {
+            creditNotification.showPackChangeSuccess(
+              notification.packName,
+              notification.changeType
+            )
+          }
+          
+          // Rediriger vers le dashboard
+          setTimeout(() => {
+            navigate('/dashboard')
+          }, 2000) // Laisser le temps de voir la notification
+        },
+        onError: (error) => {
+          const notification = showPackChangeError(error)
+          console.error('❌ Erreur activation pack:', notification)
+          
+          // Vérifier si c'est une erreur d'authentification
+          if (!checkAuthError(error)) {
+            // Si ce n'est pas une erreur d'auth, afficher l'erreur normalement
+            setError(notification.message)
+          }
+        },
+        onRequiresPayment: (data) => {
+          console.log('💳 Redirection vers paiement pour:', pack.name)
+          // La redirection vers Stripe est gérée automatiquement
         }
       })
+      
+      console.log('🔄 Résultat sélection pack:', result)
+      
     } catch (error) {
-      console.error('Erreur lors de la sélection du pack:', error)
-      setError(`Erreur lors de l'activation du pack: ${error.message}`)
+      console.error('❌ Erreur lors de la sélection du pack:', error)
+      const notification = showPackChangeError(error)
+      
+      // Vérifier si c'est une erreur d'authentification
+      if (!checkAuthError(error)) {
+        // Si ce n'est pas une erreur d'auth, afficher l'erreur normalement
+        setError(notification.message)
+      }
     } finally {
       setLoadingPack(null)
     }
@@ -630,6 +676,25 @@ const Services = () => {
           </motion.div>
         </div>
       </section>
+      
+      {/* Notification de crédit */}
+      <CreditNotification
+        isVisible={creditNotification.isVisible}
+        creditAmount={creditNotification.creditAmount}
+        packName={creditNotification.packName}
+        changeType={creditNotification.changeType}
+        duration={creditNotification.duration}
+        onClose={creditNotification.hideNotification}
+      />
+      
+      {/* Alerte d'authentification */}
+      <AuthAlert
+        isVisible={authAlert.isVisible}
+        message={authAlert.message}
+        type={authAlert.type}
+        onReconnect={handleReconnect}
+        onClose={hideAuthError}
+      />
     </div>
   )
 }

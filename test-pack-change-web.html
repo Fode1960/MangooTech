@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Pack Change - Reproduction d'erreur</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 25px 0;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .error {
+            color: #d32f2f;
+            background: #ffebee;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid #d32f2f;
+            margin: 10px 0;
+        }
+        .success {
+            color: #388e3c;
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid #388e3c;
+            margin: 10px 0;
+        }
+        .info {
+            color: #1976d2;
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid #1976d2;
+            margin: 10px 0;
+        }
+        .warning {
+            color: #f57c00;
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid #f57c00;
+            margin: 10px 0;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #1565c0;
+            transform: translateY(-1px);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        button.danger {
+            background: #d32f2f;
+        }
+        button.danger:hover {
+            background: #c62828;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+            border: 1px solid #e9ecef;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .log-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+        .log-entry {
+            margin: 0;
+            padding: 8px 12px;
+            border-bottom: 1px solid #eee;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        .log-entry.error {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+        .log-entry.success {
+            background: #e8f5e8;
+            color: #388e3c;
+        }
+        .log-entry.warning {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        .step-indicator {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #ddd;
+            color: white;
+            text-align: center;
+            line-height: 30px;
+            margin-right: 15px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .step-indicator.active {
+            background: #1976d2;
+            animation: pulse 2s infinite;
+        }
+        .step-indicator.success {
+            background: #388e3c;
+        }
+        .step-indicator.error {
+            background: #d32f2f;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status-badge.connected {
+            background: #e8f5e8;
+            color: #388e3c;
+        }
+        .status-badge.disconnected {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+        .pack-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            background: white;
+        }
+        .pack-card.current {
+            border-color: #1976d2;
+            background: #e3f2fd;
+        }
+        .pack-card.target {
+            border-color: #f57c00;
+            background: #fff3e0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Test Smart Pack Change - Diagnostic Complet</h1>
+        <p><strong>Objectif:</strong> Reproduire et diagnostiquer l'erreur "Edge Function returned a non-2xx status code" lors du changement de pack.</p>
+        
+        <div class="test-section">
+            <h2><span class="step-indicator" id="step1">1</span>État de l'authentification</h2>
+            <div id="auth-status">Vérification en cours...</div>
+            <button onclick="checkAuth()">🔍 Vérifier l'authentification</button>
+            <button onclick="signOut()">🚪 Se déconnecter</button>
+        </div>
+        
+        <div class="test-section">
+            <h2><span class="step-indicator" id="step2">2</span>Informations utilisateur</h2>
+            <div id="user-info">Non chargé</div>
+            <button onclick="loadUserInfo()">👤 Charger les infos utilisateur</button>
+        </div>
+        
+        <div class="test-section">
+            <h2><span class="step-indicator" id="step3">3</span>Packs disponibles</h2>
+            <div id="packs-list">Non chargé</div>
+            <button onclick="loadPacks()">📦 Charger les packs</button>
+        </div>
+        
+        <div class="test-section">
+            <h2><span class="step-indicator" id="step4">4</span>Pack actuel de l'utilisateur</h2>
+            <div id="current-pack">Non vérifié</div>
+            <button onclick="checkCurrentPack()">🎯 Vérifier le pack actuel</button>
+        </div>
+        
+        <div class="test-section">
+            <h2><span class="step-indicator" id="step5">5</span>Test calculate-pack-difference</h2>
+            <div id="calc-result">Prêt pour le test</div>
+            <button onclick="testCalculatePackDifference()">🧮 Tester calculate-pack-difference</button>
+        </div>
+        
+        <div class="test-section">
+            <h2><span class="step-indicator" id="step6">6</span>Test smart-pack-change</h2>
+            <div id="pack-change-result">Prêt pour le test</div>
+            <button onclick="testSmartPackChange()">🎯 Tester smart-pack-change</button>
+            <button onclick="testSmartPackChangeWithDifferentPack()" class="danger">⚠️ Test avec pack différent</button>
+        </div>
+        
+        <div class="test-section">
+            <h2>📋 Logs détaillés</h2>
+            <div class="log-container" id="detailed-logs"></div>
+            <button onclick="clearLogs()">🗑️ Effacer les logs</button>
+            <button onclick="exportLogs()">💾 Exporter les logs</button>
+            <button onclick="runFullTest()">🚀 Test complet automatique</button>
+        </div>
+    </div>
+
+    <script>
+        // Configuration Supabase
+        const supabaseUrl = 'https://ptrqhtwstldphjaraufi.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB0cnFodHdzdGxkcGhqYXJhdWZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MzI0OTIsImV4cCI6MjA3MDUwODQ5Mn0.Wc-dKWVMpAyFoAPFGejzhD0o1rodyEGrBlZK5X3muyA';
+        
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+        
+        let currentUser = null;
+        let availablePacks = [];
+        let currentUserPack = null;
+        let targetPackId = null;
+        let logCount = 0;
+        
+        function log(message, type = 'info') {
+            logCount++;
+            const timestamp = new Date().toLocaleTimeString();
+            const logDiv = document.getElementById('detailed-logs');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            logDiv.appendChild(logEntry);
+            console.log(`[${timestamp}] ${message}`);
+            
+            // Auto-scroll vers le bas
+            logDiv.scrollTop = logDiv.scrollHeight;
+            
+            // Limiter le nombre de logs affichés
+            if (logCount > 100) {
+                logDiv.removeChild(logDiv.firstChild);
+                logCount--;
+            }
+        }
+        
+        function clearLogs() {
+            document.getElementById('detailed-logs').innerHTML = '';
+            logCount = 0;
+            log('🗑️ Logs effacés');
+        }
+        
+        function exportLogs() {
+            const logs = document.getElementById('detailed-logs').innerText;
+            const blob = new Blob([logs], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pack-change-debug-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            log('💾 Logs exportés');
+        }
+        
+        function updateStepIndicator(stepId, status) {
+            const indicator = document.getElementById(stepId);
+            if (indicator) {
+                indicator.className = `step-indicator ${status}`;
+            }
+        }
+        
+        async function checkAuth() {
+            try {
+                log('🔍 Vérification de l\'authentification...');
+                updateStepIndicator('step1', 'active');
+                
+                const { data: { user }, error } = await supabase.auth.getUser();
+                
+                if (error) {
+                    log(`❌ Erreur d'authentification: ${error.message}`, 'error');
+                    document.getElementById('auth-status').innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+                    updateStepIndicator('step1', 'error');
+                    return false;
+                }
+                
+                if (user) {
+                    currentUser = user;
+                    log(`✅ Utilisateur connecté: ${user.email}`);
+                    document.getElementById('auth-status').innerHTML = `
+                        <div class="success">
+                            ✅ <span class="status-badge connected">Connecté</span><br>
+                            <strong>Email:</strong> ${user.email}<br>
+                            <strong>ID:</strong> <code>${user.id}</code><br>
+                            <strong>Dernière connexion:</strong> ${new Date(user.last_sign_in_at).toLocaleString()}
+                        </div>
+                    `;
+                    updateStepIndicator('step1', 'success');
+                    return true;
+                } else {
+                    log('⚠️ Aucun utilisateur connecté', 'warning');
+                    document.getElementById('auth-status').innerHTML = `
+                        <div class="warning">
+                            ⚠️ <span class="status-badge disconnected">Non connecté</span><br>
+                            Veuillez vous connecter via l'application principale
+                        </div>
+                    `;
+                    updateStepIndicator('step1', 'error');
+                    return false;
+                }
+            } catch (error) {
+                log(`❌ Erreur lors de la vérification: ${error.message}`, 'error');
+                document.getElementById('auth-status').innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+                updateStepIndicator('step1', 'error');
+                return false;
+            }
+        }
+        
+        async function signOut() {
+            try {
+                log('🚪 Déconnexion...');
+                await supabase.auth.signOut();
+                currentUser = null;
+                log('✅ Déconnexion réussie');
+                await checkAuth();
+            } catch (error) {
+                log(`❌ Erreur lors de la déconnexion: ${error.message}`, 'error');
+            }
+        }
+        
+        async function loadUserInfo() {
+            try {
+                if (!currentUser) {
+                    log('❌ Utilisateur non connecté', 'error');
+                    document.getElementById('user-info').innerHTML = `<div class="error">❌ Veuillez vous connecter d'abord</div>`;
+                    return;
+                }
+                
+                log('👤 Chargement des informations utilisateur...');
+                updateStepIndicator('step2', 'active');
+                
+                // Récupérer les informations du profil
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', currentUser.id)
+                    .single();
+                
+                if (profileError) {
+                    log(`⚠️ Erreur profil: ${profileError.message}`, 'warning');
+                }
+                
+                // Récupérer la session actuelle
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                
+                if (sessionError) {
+                    log(`❌ Erreur de session: ${sessionError.message}`, 'error');
+                    document.getElementById('user-info').innerHTML = `<div class="error">❌ Erreur de session: ${sessionError.message}</div>`;
+                    updateStepIndicator('step2', 'error');
+                    return;
+                }
+                
+                log('✅ Informations utilisateur chargées');
+                
+                const userInfoHtml = `
+                    <div class="success">
+                        <h4>👤 Informations utilisateur</h4>
+                        <strong>Email:</strong> ${currentUser.email}<br>
+                        <strong>ID:</strong> <code>${currentUser.id}</code><br>
+                        <strong>Créé le:</strong> ${new Date(currentUser.created_at).toLocaleString()}<br>
+                        ${profile ? `<strong>Nom:</strong> ${profile.full_name || 'Non défini'}<br>` : ''}
+                        <strong>Token valide:</strong> ${session ? '✅ Oui' : '❌ Non'}<br>
+                        ${session ? `<strong>Expire le:</strong> ${new Date(session.expires_at * 1000).toLocaleString()}<br>` : ''}
+                    </div>
+                `;
+                
+                document.getElementById('user-info').innerHTML = userInfoHtml;
+                updateStepIndicator('step2', 'success');
+                
+            } catch (error) {
+                log(`❌ Erreur lors du chargement: ${error.message}`, 'error');
+                document.getElementById('user-info').innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+                updateStepIndicator('step2', 'error');
+            }
+        }
+        
+        async function loadPacks() {
+            try {
+                log('📦 Chargement des packs...');
+                updateStepIndicator('step3', 'active');
+                
+                const { data: packs, error } = await supabase
+                    .from('packs')
+                    .select('id, name, price, description')
+                    .order('price', { ascending: true });
+                
+                if (error) {
+                    log(`❌ Erreur lors du chargement des packs: ${error.message}`, 'error');
+                    document.getElementById('packs-list').innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+                    updateStepIndicator('step3', 'error');
+                    return;
+                }
+                
+                availablePacks = packs;
+                log(`✅ ${packs.length} packs chargés`);
+                
+                const packsHtml = packs.map(pack => `
+                    <div class="pack-card">
+                        <strong>${pack.name}</strong><br>
+                        <strong>Prix:</strong> ${pack.price} FCFA<br>
+                        <strong>ID:</strong> <code>${pack.id}</code><br>
+                        ${pack.description ? `<strong>Description:</strong> ${pack.description}<br>` : ''}
+                    </div>
+                `).join('');
+                
+                document.getElementById('packs-list').innerHTML = `
+                    <div class="success">
+                        <h4>📦 Packs disponibles (${packs.length})</h4>
+                        ${packsHtml}
+                    </div>
+                `;
+                
+                // Définir le pack cible (Pack Visibilité)
+                const visibilityPack = packs.find(p => p.name === 'Pack Visibilité');
+                if (visibilityPack) {
+                    targetPackId = visibilityPack.id;
+                    log(`🎯 Pack cible défini: ${visibilityPack.name} (${targetPackId})`);
+                } else {
+                    log('⚠️ Pack Visibilité non trouvé', 'warning');
+                    // Prendre le premier pack comme cible
+                    if (packs.length > 0) {
+                        targetPackId = packs[0].id;
+                        log(`🎯 Pack cible par défaut: ${packs[0].name} (${targetPackId})`);
+                    }
+                }
+                
+                updateStepIndicator('step3', 'success');
+                
+            } catch (error) {
+                log(`❌ Erreur lors du chargement: ${error.message}`, 'error');
+                document.getElementById('packs-list').innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+                updateStepIndicator('step3', 'error');
+            }
+        }
+        
+        async function checkCurrentPack() {
+            try {
+                if (!currentUser) {
+                    log('❌ Utilisateur non connecté', 'error');
+                    document.getElementById('current-pack').innerHTML = `<div class="error">❌ Veuillez vous connecter d'abord</div>`;
+                    return;
+                }
+                
+                log('🎯 Vérification du pack actuel...');
+                updateStepIndicator('step4', 'active');
+                
+                const { data: userPacks, error } = await supabase
+                    .from('user_packs')
+                    .select(`
+                        *,
+                        packs!inner(*)
+                    `)
+                    .eq('user_id', currentUser.id)
+                    .eq('status', 'active');
+                
+                if (error) {
+                    log(`❌ Erreur lors de la vérification du pack: ${error.message}`, 'error');
+                    document.getElementById('current-pack').innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+                    updateStepIndicator('step4', 'error');
+                    return;
+                }
+                
+                if (userPacks && userPacks.length > 0) {
+                    currentUserPack = userPacks[0];
+                    log(`✅ Pack actuel: ${currentUserPack.packs.name} (${currentUserPack.packs.price} FCFA)`);
+                    
+                    document.getElementById('current-pack').innerHTML = `
+                        <div class="success">
+                            <div class="pack-card current">
+                                <h4>🎯 Pack actuel</h4>
+                                <strong>Nom:</strong> ${currentUserPack.packs.name}<br>
+                                <strong>Prix:</strong> ${currentUserPack.packs.price} FCFA<br>
+                                <strong>ID:</strong> <code>${currentUserPack.packs.id}</code><br>
+                                <strong>Statut:</strong> ${currentUserPack.status}<br>
+                                <strong>Activé le:</strong> ${new Date(currentUserPack.created_at).toLocaleString()}
+                            </div>
+                        </div>
+                    `;
+                    updateStepIndicator('step4', 'success');
+                } else {
+                    log('⚠️ Aucun pack actif trouvé', 'warning');
+                    document.getElementById('current-pack').innerHTML = `<div class="warning">⚠️ Aucun pack actif trouvé</div>`;
+                    updateStepIndicator('step4', 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Erreur lors de la vérification: ${error.message}`, 'error');
+                document.getElementById('current-pack').innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+                updateStepIndicator('step4', 'error');
+            }
+        }
+        
+        async function testCalculatePackDifference() {
+            try {
+                if (!currentUser) {
+                    log('❌ Utilisateur non connecté', 'error');
+                    document.getElementById('calc-result').innerHTML = `<div class="error">❌ Veuillez vous connecter d'abord</div>`;
+                    return;
+                }
+                
+                if (!targetPackId) {
+                    log('❌ Pack cible non défini', 'error');
+                    document.getElementById('calc-result').innerHTML = `<div class="error">❌ Veuillez charger les packs d'abord</div>`;
+                    return;
+                }
+                
+                log('🧮 Test de calculate-pack-difference...');
+                updateStepIndicator('step5', 'active');
+                document.getElementById('calc-result').innerHTML = `<div class="info">🧮 Test en cours...</div>`;
+                
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                if (sessionError || !session) {
+                    log(`❌ Erreur de session: ${sessionError?.message || 'Pas de session'}`, 'error');
+                    document.getElementById('calc-result').innerHTML = `<div class="error">❌ Erreur de session</div>`;
+                    updateStepIndicator('step5', 'error');
+                    return;
+                }
+                
+                log(`📞 Appel à calculate-pack-difference avec newPackId: ${targetPackId}`);
+                log(`🔑 Token: ${session.access_token.substring(0, 20)}...`);
+                
+                const startTime = Date.now();
+                const response = await fetch(`${supabaseUrl}/functions/v1/calculate-pack-difference`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${session.access_token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        newPackId: targetPackId
+                    })
+                });
+                const endTime = Date.now();
+                
+                log(`📊 Réponse calculate-pack-difference: Status ${response.status} (${endTime - startTime}ms)`);
+                log(`📋 Headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}`);
+                
+                const responseText = await response.text();
+                log(`📄 Réponse brute (${responseText.length} caractères): ${responseText}`);
+                
+                if (!response.ok) {
+                    log(`❌ ERREUR calculate-pack-difference (${response.status})`, 'error');
+                    log(`Détails: ${responseText}`, 'error');
+                    
+                    document.getElementById('calc-result').innerHTML = `
+                        <div class="error">
+                            <h4>❌ Erreur calculate-pack-difference</h4>
+                            <strong>Status:</strong> ${response.status}<br>
+                            <strong>Temps de réponse:</strong> ${endTime - startTime}ms<br>
+                            <strong>Détails:</strong><br>
+                            <pre>${responseText}</pre>
+                        </div>
+                    `;
+                    updateStepIndicator('step5', 'error');
+                    return;
+                }
+                
+                try {
+                    const result = JSON.parse(responseText);
+                    log(`✅ calculate-pack-difference réussi`);
+                    log(`📋 Type de changement: ${result.changeType}`);
+                    log(`💰 Paiement requis: ${result.requiresPayment}`);
+                    log(`⚡ Changement immédiat: ${result.canChangeImmediately}`);
+                    
+                    document.getElementById('calc-result').innerHTML = `
+                        <div class="success">
+                            <h4>✅ calculate-pack-difference réussi</h4>
+                            <strong>Temps de réponse:</strong> ${endTime - startTime}ms<br>
+                            <pre>${JSON.stringify(result, null, 2)}</pre>
+                        </div>
+                    `;
+                    updateStepIndicator('step5', 'success');
+                    
+                } catch (parseError) {
+                    log(`❌ Erreur de parsing: ${parseError.message}`, 'error');
+                    updateStepIndicator('step5', 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Erreur générale calculate-pack-difference: ${error.message}`, 'error');
+                log(`📋 Stack: ${error.stack}`, 'error');
+                document.getElementById('calc-result').innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+                updateStepIndicator('step5', 'error');
+            }
+        }
+        
+        async function testSmartPackChange() {
+            try {
+                if (!currentUser) {
+                    log('❌ Utilisateur non connecté', 'error');
+                    document.getElementById('pack-change-result').innerHTML = `<div class="error">❌ Veuillez vous connecter d'abord</div>`;
+                    return;
+                }
+                
+                if (!targetPackId) {
+                    log('❌ Pack cible non défini', 'error');
+                    document.getElementById('pack-change-result').innerHTML = `<div class="error">❌ Veuillez charger les packs d'abord</div>`;
+                    return;
+                }
+                
+                log('🎯 Test de smart-pack-change...');
+                updateStepIndicator('step6', 'active');
+                document.getElementById('pack-change-result').innerHTML = `<div class="info">🎯 Test en cours...</div>`;
+                
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                if (sessionError || !session) {
+                    log(`❌ Erreur de session: ${sessionError?.message || 'Pas de session'}`, 'error');
+                    document.getElementById('pack-change-result').innerHTML = `<div class="error">❌ Erreur de session</div>`;
+                    updateStepIndicator('step6', 'error');
+                    return;
+                }
+                
+                log(`📞 Appel à smart-pack-change avec packId: ${targetPackId}`);
+                log(`🔑 Token: ${session.access_token.substring(0, 20)}...`);
+                
+                const startTime = Date.now();
+                const response = await fetch(`${supabaseUrl}/functions/v1/smart-pack-change`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${session.access_token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        packId: targetPackId
+                    })
+                });
+                const endTime = Date.now();
+                
+                log(`🎯 Réponse smart-pack-change: Status ${response.status} (${endTime - startTime}ms)`);
+                log(`📋 Headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}`);
+                
+                const responseText = await response.text();
+                log(`📄 Réponse brute (${responseText.length} caractères): ${responseText}`);
+                
+                if (!response.ok) {
+                    log(`❌ ERREUR: Edge Function returned a non-2xx status code (${response.status})`, 'error');
+                    log(`Détails: ${responseText}`, 'error');
+                    
+                    document.getElementById('pack-change-result').innerHTML = `
+                        <div class="error">
+                            <h4>❌ ERREUR: Edge Function returned a non-2xx status code</h4>
+                            <strong>Status:</strong> ${response.status}<br>
+                            <strong>Temps de réponse:</strong> ${endTime - startTime}ms<br>
+                            <strong>Détails:</strong><br>
+                            <pre>${responseText}</pre>
+                        </div>
+                    `;
+                    updateStepIndicator('step6', 'error');
+                    
+                    // Essayer de parser comme JSON pour plus de détails
+                    try {
+                        const errorData = JSON.parse(responseText);
+                        log(`📋 Erreur parsée: ${JSON.stringify(errorData, null, 2)}`, 'error');
+                    } catch (parseError) {
+                        log('⚠️ Impossible de parser la réponse comme JSON', 'warning');
+                    }
+                    
+                    return;
+                }
+                
+                try {
+                    const result = JSON.parse(responseText);
+                    log(`✅ smart-pack-change réussi!`, 'success');
+                    
+                    document.getElementById('pack-change-result').innerHTML = `
+                        <div class="success">
+                            <h4>✅ smart-pack-change réussi!</h4>
+                            <strong>Temps de réponse:</strong> ${endTime - startTime}ms<br>
+                            <pre>${JSON.stringify(result, null, 2)}</pre>
+                        </div>
+                    `;
+                    updateStepIndicator('step6', 'success');
+                    
+                } catch (parseError) {
+                    log(`✅ smart-pack-change réussi (réponse texte): ${responseText}`, 'success');
+                    document.getElementById('pack-change-result').innerHTML = `
+                        <div class="success">
+                            <h4>✅ smart-pack-change réussi!</h4>
+                            <strong>Temps de réponse:</strong> ${endTime - startTime}ms<br>
+                            <strong>Réponse:</strong> ${responseText}
+                        </div>
+                    `;
+                    updateStepIndicator('step6', 'success');
+                }
+                
+            } catch (error) {
+                log(`❌ Erreur générale smart-pack-change: ${error.message}`, 'error');
+                log(`📋 Stack: ${error.stack}`, 'error');
+                document.getElementById('pack-change-result').innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+                updateStepIndicator('step6', 'error');
+            }
+        }
+        
+        async function testSmartPackChangeWithDifferentPack() {
+            if (availablePacks.length < 2) {
+                log('⚠️ Pas assez de packs pour tester avec un pack différent', 'warning');
+                return;
+            }
+            
+            // Choisir un pack différent du pack cible actuel
+            const differentPack = availablePacks.find(p => p.id !== targetPackId);
+            if (!differentPack) {
+                log('⚠️ Aucun pack différent trouvé', 'warning');
+                return;
+            }
+            
+            const originalTargetPackId = targetPackId;
+            targetPackId = differentPack.id;
+            
+            log(`⚠️ Test avec pack différent: ${differentPack.name} (${differentPack.id})`, 'warning');
+            
+            await testSmartPackChange();
+            
+            // Restaurer le pack cible original
+            targetPackId = originalTargetPackId;
+        }
+        
+        async function runFullTest() {
+            log('🚀 Début du test complet automatique...', 'info');
+            
+            try {
+                // Étape 1: Vérifier l'authentification
+                const authOk = await checkAuth();
+                if (!authOk) {
+                    log('❌ Test arrêté: authentification échouée', 'error');
+                    return;
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Étape 2: Charger les infos utilisateur
+                await loadUserInfo();
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Étape 3: Charger les packs
+                await loadPacks();
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Étape 4: Vérifier le pack actuel
+                await checkCurrentPack();
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Étape 5: Tester calculate-pack-difference
+                await testCalculatePackDifference();
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Étape 6: Tester smart-pack-change
+                await testSmartPackChange();
+                
+                log('🏁 Test complet terminé', 'info');
+                
+            } catch (error) {
+                log(`💥 Erreur durant le test complet: ${error.message}`, 'error');
+            }
+        }
+        
+        // Initialisation
+        window.addEventListener('load', async () => {
+            log('🚀 Page chargée, initialisation...');
+            await checkAuth();
+        });
+        
+        // Écouter les changements d'authentification
+        supabase.auth.onAuthStateChange((event, session) => {
+            log(`🔄 Changement d'authentification: ${event}`);
+            if (event === 'SIGNED_IN') {
+                log('✅ Utilisateur connecté');
+                checkAuth();
+            } else if (event === 'SIGNED_OUT') {
+                log('🚪 Utilisateur déconnecté');
+                currentUser = null;
+                checkAuth();
+            }
+        });
+    </script>
+</body>
+</html>
