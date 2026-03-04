@@ -1441,7 +1441,8 @@
             }
         ];
 
-        let VENDORS = JSON.parse(localStorage.getItem('mangoo_vendors')) || DEFAULT_VENDORS;
+        let localVendors = JSON.parse(localStorage.getItem('mangoo_vendors'));
+        let VENDORS = (localVendors && localVendors.length > 0) ? localVendors : DEFAULT_VENDORS;
 
         let map;
         let activeVendor = null;

@@ -1029,8 +1029,9 @@ const { useState, useEffect, useRef } = React;
         // Charger les produits de la boutique simulée
         useEffect(() => {
           const storedShop = localStorage.getItem('mangoo_shop_data');
-          // Utiliser les vendeurs par défaut si localStorage est vide
-          const vendorsList = JSON.parse(localStorage.getItem('mangoo_vendors')) || DEFAULT_VENDORS;
+          // Utiliser les vendeurs par défaut si localStorage est vide ou invalide
+          const localVendors = JSON.parse(localStorage.getItem('mangoo_vendors'));
+          const vendorsList = (localVendors && localVendors.length > 0) ? localVendors : DEFAULT_VENDORS;
           
           let shops = [];
 
