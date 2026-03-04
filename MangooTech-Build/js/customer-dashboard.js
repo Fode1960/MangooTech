@@ -736,9 +736,12 @@ const { useState, useEffect, useRef } = React;
                                          <button onClick={() => { setSubView('call_room'); setIsVideoOff(false); }} className="w-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors shadow-sm">
                                             <IconVideo /> Nouvel Appel Vidéo
                                          </button>
-                                         <button onClick={() => alert('Fonctionnalité Visioconférence à venir')} className="w-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors shadow-sm">
+                                         <button onClick={() => {
+                                             const phone = prompt("Entrez le Mangoo ID ou Numéro du client :");
+                                             if(phone) alert("Recherche de " + phone + "...");
+                                         }} className="w-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors shadow-sm">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                                            Visioconférence
+                                            Appeler un autre Client (P2P)
                                          </button>
                                     </div>
                                     <div>
