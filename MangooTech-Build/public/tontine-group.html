@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#6c5ce7">
+    <title>Tontine Shopping 👥</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        body { font-family: 'Poppins', sans-serif; }
+        
+        /* Chat Overlay Styles */
+        .chat-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #f0f2f5;
+            z-index: 50;
+            display: none;
+            flex-direction: column;
+        }
+        .chat-header {
+            background: #6c5ce7;
+            color: white;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .msg-bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 15px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            position: relative;
+        }
+        .msg-received {
+            background: white;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .msg-sent {
+            background: #dcf8c6;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .chat-input-area {
+            background: white;
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            border-top: 1px solid #dfe6e9;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+    <div class="bg-indigo-600 p-6 text-white rounded-b-3xl shadow-lg relative overflow-hidden">
+        <button onclick="history.back()" class="absolute top-6 left-6 text-2xl">←</button>
+        <div class="text-center mt-2">
+            <h1 class="text-2xl font-bold">Tontine Shopping</h1>
+            <p class="text-sm opacity-80">Achetez ensemble, économisez ensemble</p>
+        </div>
+        <div class="absolute -right-6 -bottom-10 w-32 h-32 bg-white opacity-10 rounded-full"></div>
+    </div>
+
+    <div class="p-6 -mt-6">
+        <!-- Product Card -->
+        <div class="bg-white rounded-2xl p-4 shadow-lg mb-6 flex gap-4 items-center">
+            <div class="w-20 h-20 bg-gray-200 rounded-xl flex items-center justify-center text-2xl">👟</div>
+            <div>
+                <h3 class="font-bold text-gray-800">Sneakers Air Pro</h3>
+                <div class="text-xs text-gray-500">Boutique de Prestige</div>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="text-indigo-600 font-bold">13 500 F</span>
+                    <span class="text-xs text-gray-400 line-through">15 000 F</span>
+                    <span class="text-[10px] bg-red-100 text-red-500 px-2 py-0.5 rounded-full">-10%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="mb-8">
+            <div class="flex justify-between text-sm mb-2 font-bold text-gray-700">
+                <span>Groupe #8392</span>
+                <span class="text-indigo-600">1/3 Participants</span>
+            </div>
+            <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-full bg-indigo-500 w-1/3 rounded-full transition-all duration-1000"></div>
+            </div>
+            <p class="text-xs text-center mt-2 text-gray-500">Invitez 2 amis pour débloquer la réduction !</p>
+        </div>
+
+        <!-- Participants -->
+        <div class="grid grid-cols-3 gap-4 mb-8">
+            <div class="flex flex-col items-center">
+                <div class="w-14 h-14 rounded-full border-2 border-indigo-500 p-0.5">
+                    <img src="https://ui-avatars.com/api/?name=Moi&background=random" class="w-full h-full rounded-full">
+                </div>
+                <span class="text-xs font-bold mt-1">Moi (Payé)</span>
+            </div>
+            <div class="flex flex-col items-center opacity-50">
+                <div class="w-14 h-14 rounded-full border-2 border-dashed border-gray-400 flex items-center justify-center bg-gray-50 text-gray-400 text-xl">
+                    +
+                </div>
+                <span class="text-xs mt-1">Libre</span>
+            </div>
+            <div class="flex flex-col items-center opacity-50">
+                <div class="w-14 h-14 rounded-full border-2 border-dashed border-gray-400 flex items-center justify-center bg-gray-50 text-gray-400 text-xl">
+                    +
+                </div>
+                <span class="text-xs mt-1">Libre</span>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <button onclick="shareLink()" class="w-full bg-mangoo-500 text-white font-bold py-4 rounded-xl shadow-lg mb-4 flex items-center justify-center gap-2 active:scale-95 transition" style="background-color: #1a5f3f;">
+            <span>💬</span> Inviter via Mangoo Connect+
+        </button>
+        
+        <button class="w-full bg-white text-gray-700 font-bold py-4 rounded-xl shadow-sm border border-gray-200" onclick="copyLink()">
+            📋 Copier le lien
+        </button>
+
+    </div>
+
+    <!-- CHAT OVERLAY -->
+    <div id="groupChat" class="chat-overlay">
+        <div class="chat-header">
+            <span onclick="closeChat()" style="font-size:1.5rem; cursor:pointer;">←</span>
+            <div style="flex:1; margin-left: 10px;">
+                <div style="font-weight:bold;">Groupe Tontine #8392</div>
+                <div style="font-size:0.75rem; opacity:0.8;">3 membres • En ligne</div>
+            </div>
+        </div>
+        <div class="chat-messages" id="chatHistory">
+            <div style="text-align:center; color:#95a5a6; font-size:0.8rem; margin:10px;">Groupe créé à l'instant</div>
+            <div class="msg-bubble msg-sent" style="background:#e1f5fe;">J'ai créé le groupe pour les Sneakers ! Rejoignez-vite pour qu'on ait les -10%.</div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" class="w-full p-3 rounded-full border border-gray-300" placeholder="Écrire au groupe..." id="msgInput">
+            <button class="bg-indigo-600 text-white w-10 h-10 rounded-full flex items-center justify-center ml-2" onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+
+    <script>
+        function shareLink() {
+            const btn = document.querySelector('button[onclick="shareLink()"]');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = "<span>⌛</span> Envoi des invitations...";
+            
+            setTimeout(() => {
+                alert("✅ Invitations envoyées ! Ouverture du chat de groupe...");
+                btn.innerHTML = originalText;
+                openChat();
+            }, 1500);
+        }
+
+        function copyLink() {
+            alert("Lien copié dans le presse-papier !");
+        }
+
+        function openChat() {
+            document.getElementById('groupChat').style.display = 'flex';
+            
+            // Simulation d'une réponse d'un ami après quelques secondes
+            setTimeout(() => {
+                const history = document.getElementById('chatHistory');
+                const reply = document.createElement('div');
+                reply.className = 'msg-bubble msg-received';
+                reply.innerHTML = "<strong>Jean:</strong> Top ! Je regarde ça tout de suite 🔥";
+                history.appendChild(reply);
+                history.scrollTop = history.scrollHeight;
+            }, 3000);
+        }
+
+        function closeChat() {
+            document.getElementById('groupChat').style.display = 'none';
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('msgInput');
+            const text = input.value;
+            if(!text) return;
+
+            const history = document.getElementById('chatHistory');
+            const msg = document.createElement('div');
+            msg.className = 'msg-bubble msg-sent';
+            msg.innerText = text;
+            history.appendChild(msg);
+            input.value = '';
+            history.scrollTop = history.scrollHeight;
+        }
+    </script>
+</body>
+</html>

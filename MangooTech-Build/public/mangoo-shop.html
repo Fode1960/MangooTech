@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a5f3f">
+    <title>🛍️ Mangoo Shop</title>
+    <!-- Tailwind CSS (via CDN for speed) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              mangoo: {
+                500: '#1a5f3f',
+                600: '#144a30',
+              },
+              orange: {
+                500: '#e17055',
+              }
+            },
+            animation: {
+              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'float': 'float 3s ease-in-out infinite',
+            },
+            keyframes: {
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-10px)' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        body { font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        /* Custom Audio Wave */
+        .bar {
+            width: 4px;
+            background: #e17055;
+            border-radius: 2px;
+            animation: sound 0ms -800ms linear infinite alternate;
+        }
+        @keyframes sound {
+            0% { opacity: .35; height: 3px; }
+            100% { opacity: 1; height: 20px; }
+        }
+        .bar:nth-child(1)  { animation-duration: 474ms; }
+        .bar:nth-child(2)  { animation-duration: 433ms; }
+        .bar:nth-child(3)  { animation-duration: 407ms; }
+        .bar:nth-child(4)  { animation-duration: 458ms; }
+        .bar:nth-child(5)  { animation-duration: 400ms; }
+        .bar:nth-child(6)  { animation-duration: 427ms; }
+        
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+
+    <!-- === HEADER IMMERSIF === -->
+    <div class="relative">
+        <div class="h-48 bg-gradient-to-br from-mangoo-500 to-green-800 rounded-b-[40px] shadow-lg overflow-hidden relative z-10">
+            <!-- Background Pattern -->
+            <div class="absolute inset-0 opacity-10" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+            
+            <!-- Top Nav -->
+            <div class="absolute top-0 left-0 w-full p-4 flex justify-between items-center z-20">
+                <button onclick="goBack()" class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/30 transition">
+                    ←
+                </button>
+                <div class="flex gap-3">
+                    <button onclick="toggleTheme()" class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white">
+                        🌓
+                    </button>
+                    <button onclick="shareShop()" class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white">
+                        🔗
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vendor Profile (Floating) - Moved outside overflow-hidden -->
+        <div class="absolute -bottom-12 left-0 w-full flex justify-center z-30">
+            <div class="relative">
+                <img id="sAvatar" src="" class="w-24 h-24 rounded-full border-4 border-white dark:border-gray-800 shadow-xl object-cover bg-gray-200">
+                <div id="liveBadge" class="hidden absolute bottom-0 right-0 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-white animate-pulse">
+                    LIVE
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- === SHOP INFO & VOICE === -->
+    <div class="mt-16 text-center px-4 pb-6">
+        <h1 id="sName" class="text-2xl font-bold text-gray-800 dark:text-white mb-1">Chargement...</h1>
+        <div class="flex items-center justify-center gap-2 mb-4">
+            <span id="sCategory" class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs rounded-full font-medium">...</span>
+            <span class="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 font-bold bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-full">
+                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Ouvert
+            </span>
+        </div>
+
+        <!-- VOICE PITCH PLAYER (INNOVATION) -->
+        <div onclick="playPitch()" class="mx-auto max-w-xs bg-white dark:bg-gray-800 rounded-2xl p-3 shadow-md border border-gray-100 dark:border-gray-700 flex items-center gap-3 cursor-pointer transform hover:scale-105 transition active:scale-95">
+            <div id="playIcon" class="w-10 h-10 bg-mangoo-500 rounded-full flex items-center justify-center text-white text-lg shadow-lg">
+                ▶
+            </div>
+            <div class="flex-1 text-left">
+                <div class="text-xs text-gray-400 uppercase font-bold tracking-wider">Mot de bienvenue</div>
+                <div class="flex items-center gap-1 h-5" id="audioWave">
+                    <div class="text-sm font-semibold text-gray-700 dark:text-gray-200">Écouter le vendeur</div>
+                </div>
+            </div>
+        </div>
+
+        <p id="sDesc" class="mt-4 text-sm text-gray-500 dark:text-gray-400 leading-relaxed max-w-md mx-auto">
+            Bienvenue dans ma boutique digitale. Ici on discute, on négocie et on livre rapidement !
+        </p>
+
+        <!-- ACTION BUTTONS -->
+        <div class="flex justify-center gap-3 mt-6">
+            <a id="btnLive" href="#" class="hidden bg-gradient-to-r from-red-500 to-pink-600 text-white px-6 py-3 rounded-full font-bold shadow-lg shadow-red-500/30 animate-float items-center gap-2">
+                📹 Voir le Live
+            </a>
+            <button onclick="openChat('Bonjour, je voudrais plus d\'infos sur vos produits.')" class="bg-white dark:bg-gray-800 text-mangoo-500 dark:text-green-400 border border-mangoo-500 dark:border-green-400 px-6 py-3 rounded-full font-bold shadow-sm flex items-center gap-2 hover:bg-green-50 dark:hover:bg-gray-700 transition">
+                💬 Discuter
+            </button>
+        </div>
+    </div>
+
+    <!-- === TONTINE & PROMO BANNER (INNOVATION) === -->
+    <div class="mx-4 mb-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-4 text-white shadow-lg flex items-center justify-between relative overflow-hidden">
+        <div class="relative z-10">
+            <h3 class="font-bold text-lg">👥 Tontine Shopping</h3>
+            <p class="text-xs opacity-90">Achetez à plusieurs, payez moins cher !</p>
+        </div>
+        <button onclick="startGlobalTontine()" class="relative z-10 bg-white text-indigo-600 px-4 py-2 rounded-xl text-xs font-bold shadow-md active:scale-95 transition">
+            Créer un groupe
+        </button>
+        <!-- Decor -->
+        <div class="absolute -right-4 -bottom-8 w-24 h-24 bg-white opacity-10 rounded-full"></div>
+    </div>
+
+    <!-- === PRODUITS === -->
+    <div class="bg-white dark:bg-gray-800 rounded-t-[30px] shadow-[0_-5px_20px_rgba(0,0,0,0.05)] min-h-screen pb-20">
+        <div class="p-6">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+                🔥 Les Pépites
+                <span class="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-md">Promo</span>
+            </h2>
+
+            <div class="grid grid-cols-2 gap-4" id="productsGrid">
+                <!-- Products Injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- === MANGOO CONNECT+ CHAT OVERLAY === -->
+    <div id="connectPlus" class="fixed inset-0 bg-gray-100 dark:bg-gray-900 z-50 hidden flex-col">
+        <!-- Chat Header -->
+        <div class="bg-mangoo-500 p-4 flex items-center gap-3 text-white shadow-md">
+            <button onclick="closeChat()" class="text-2xl">←</button>
+            <img id="chatAvatar" src="" class="w-10 h-10 rounded-full border-2 border-white">
+            <div class="flex-1">
+                <div id="chatName" class="font-bold text-sm">Vendeur</div>
+                <div class="text-xs opacity-80 flex items-center gap-1">
+                    <span class="w-2 h-2 bg-green-400 rounded-full"></span> En ligne
+                </div>
+            </div>
+            <button onclick="startAudioCall()" class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                📞
+            </button>
+        </div>
+
+        <!-- Chat History -->
+        <div id="chatHistory" class="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+            <div class="text-center text-xs text-gray-400 my-2">Aujourd'hui</div>
+            <!-- Messages -->
+        </div>
+
+        <!-- Chat Input -->
+        <div class="bg-white dark:bg-gray-800 p-3 border-t border-gray-200 dark:border-gray-700 flex items-center gap-2">
+            <button class="text-gray-500 text-xl">📷</button>
+            <input id="msgInput" type="text" class="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white rounded-full px-4 py-3 outline-none focus:ring-2 focus:ring-mangoo-500" placeholder="Votre message...">
+            <button onclick="sendMessage()" class="w-12 h-12 bg-mangoo-500 text-white rounded-full flex items-center justify-center shadow-lg transform active:scale-90 transition">
+                ➤
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // === DONNÉES ET ÉTAT ===
+        const params = new URLSearchParams(window.location.search);
+        // On initialise avec les params URL comme fallback
+        let shopData = {
+            id: params.get('id'),
+            name: params.get('name') || "Boutique Mode",
+            category: params.get('category') || "Mode & Accessoires",
+            avatar: params.get('avatar') || "https://ui-avatars.com/api/?name=Mangoo&background=random",
+            live: params.get('live') === 'true',
+            voicePitch: "Bienvenue ! Je suis disponible pour négocier tous les prix. N'hésitez pas à m'écrire sur WhatsApp.",
+            products: [],
+            audioBase64: null // Nouveau champ pour l'audio réel
+        };
+
+        // Charger depuis localStorage (PRIORITÉ ABSOLUE pour récupérer Logo HD et Audio)
+        try {
+            const vendorList = JSON.parse(localStorage.getItem('mangoo_vendors') || '[]');
+            
+            // 1. Recherche par ID (plus fiable)
+            let vendorFull = null;
+            if (shopData.id) {
+                vendorFull = vendorList.find(v => v.id == shopData.id);
+            }
+            
+            // 2. Recherche par Nom (Fallback)
+            if (!vendorFull && shopData.name) {
+                vendorFull = vendorList.find(v => v.name === shopData.name);
+            }
+
+            if (vendorFull) {
+                console.log("Données complètes chargées depuis localStorage", vendorFull);
+                shopData = { ...shopData, ...vendorFull };
+                // S'assurer que les produits sont init s'ils manquent
+                if (!shopData.products) shopData.products = [];
+            }
+        } catch (e) { console.log("Pas de données locales ou erreur", e); }
+
+        // Produits par défaut (Mock)
+        if (!shopData.products || shopData.products.length === 0) {
+            shopData.products = [
+                { name: "Sneakers Air Pro", price: 15000, image: "👟", promo: true },
+                { name: "Montre Connectée", price: 25000, image: "⌚", promo: false },
+                { name: "Sac à dos Urbain", price: 8000, image: "🎒", promo: false },
+                { name: "Casque Audio Bass", price: 10000, image: "🎧", promo: true },
+                { name: "Robe d'été", price: 12000, image: "👗", promo: false },
+                { name: "Lunettes Soleil", price: 5000, image: "🕶️", promo: true },
+            ];
+        }
+
+        // === INITIALISATION ===
+        window.onload = () => {
+            renderShop();
+            renderProducts();
+            initTheme();
+        };
+
+        function renderShop() {
+            document.title = "🛍️ " + shopData.name;
+            document.getElementById('sName').innerText = shopData.name;
+            document.getElementById('sCategory').innerText = shopData.category;
+            document.getElementById('sAvatar').src = shopData.avatar;
+            document.getElementById('chatAvatar').src = shopData.avatar;
+            document.getElementById('chatName').innerText = shopData.name;
+
+            if (shopData.live) {
+                const btnLive = document.getElementById('btnLive');
+                btnLive.classList.remove('hidden');
+                btnLive.classList.add('flex');
+                btnLive.href = `webrtc-parfait.html?role=viewer&userId=clientShop&roomId=${encodeURIComponent(shopData.name)}`;
+                document.getElementById('liveBadge').classList.remove('hidden');
+            }
+        }
+
+        function renderProducts() {
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = '';
+
+            shopData.products.forEach(p => {
+                const card = document.createElement('div');
+                card.className = "bg-gray-50 dark:bg-gray-700 rounded-2xl p-3 shadow-sm hover:shadow-md transition relative group";
+                
+                card.innerHTML = `
+                    ${p.promo ? '<span class="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-md z-10">-20%</span>' : ''}
+                    <div class="h-32 bg-white dark:bg-gray-600 rounded-xl flex items-center justify-center text-4xl mb-3 group-hover:scale-105 transition duration-300">
+                        ${p.image.includes('http') ? `<img src="${p.image}" class="w-full h-full object-cover rounded-xl">` : p.image}
+                    </div>
+                    <div class="space-y-1">
+                        <h4 class="font-bold text-gray-800 dark:text-gray-100 text-sm leading-tight truncate">${p.name}</h4>
+                        <div class="flex justify-between items-center">
+                            <span class="text-mangoo-500 dark:text-green-400 font-bold text-sm">${p.price.toLocaleString()} F</span>
+                            ${p.promo ? `<span class="text-xs text-gray-400 line-through">${(p.price * 1.2).toFixed(0)} F</span>` : ''}
+                        </div>
+                        
+                        <!-- Actions Innovantes -->
+                        <div class="flex gap-2 mt-3">
+                            <button onclick="bargain('${p.name}', ${p.price})" class="flex-1 bg-white border border-gray-200 dark:bg-gray-600 dark:border-gray-500 text-gray-600 dark:text-gray-200 text-xs font-bold py-2 rounded-lg hover:bg-orange-50 hover:text-orange-500 hover:border-orange-200 transition">
+                                🤝 Négocier
+                            </button>
+                            <button onclick="addToCart('${p.name}', ${p.price})" class="w-8 h-8 bg-mangoo-500 text-white rounded-lg flex items-center justify-center shadow-lg active:scale-90 transition">
+                                +
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // === FEATURES INNOVANTES ===
+
+        // 1. Audio Pitch
+        let isPlaying = false;
+        let currentAudio = null;
+
+        function playPitch() {
+            const icon = document.getElementById('playIcon');
+            const wave = document.getElementById('audioWave');
+            
+            if (!isPlaying) {
+                // A. Lecture Audio Enregistré (Base64)
+                if (shopData.audioBase64 || shopData.audioUrl) {
+                    const src = shopData.audioBase64 || shopData.audioUrl;
+                    currentAudio = new Audio(src);
+                    
+                    currentAudio.onended = () => {
+                        isPlaying = false;
+                        icon.innerText = "▶";
+                        wave.innerHTML = '<div class="text-sm font-semibold text-gray-700 dark:text-gray-200">Écouter le vendeur</div>';
+                    };
+
+                    currentAudio.play().catch(e => {
+                        console.error("Erreur lecture audio", e);
+                        playTTS(); // Fallback
+                    });
+                } 
+                // B. Fallback TTS
+                else {
+                    playTTS();
+                    return; // playTTS gère l'état isPlaying
+                }
+                
+                // UI Update pour Audio
+                isPlaying = true;
+                icon.innerText = "⏸";
+                wave.innerHTML = `
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    <span class="ml-2 text-xs text-orange-500 font-bold">En écoute...</span>
+                `;
+
+            } else {
+                // STOP
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio = null;
+                }
+                if (window.speechSynthesis) window.speechSynthesis.cancel();
+                
+                isPlaying = false;
+                icon.innerText = "▶";
+                wave.innerHTML = '<div class="text-sm font-semibold text-gray-700 dark:text-gray-200">Écouter le vendeur</div>';
+            }
+        }
+
+        function playTTS() {
+             const icon = document.getElementById('playIcon');
+             const wave = document.getElementById('audioWave');
+             
+             if (window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(shopData.voicePitch || "Bienvenue dans ma boutique !");
+                utterance.lang = "fr-FR";
+                
+                utterance.onstart = () => {
+                    isPlaying = true;
+                    icon.innerText = "⏸";
+                    wave.innerHTML = `
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                        <span class="ml-2 text-xs text-orange-500 font-bold">Synthèse Vocale...</span>
+                    `;
+                };
+
+                utterance.onend = () => {
+                    isPlaying = false;
+                    icon.innerText = "▶";
+                    wave.innerHTML = '<div class="text-sm font-semibold text-gray-700 dark:text-gray-200">Écouter le vendeur</div>';
+                };
+                
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 2. Négociation (Nego-Bot)
+        function bargain(product, price) {
+            // Ouvrir le chat avec un contexte de négociation
+            const offer = prompt(`Le prix est ${price} FCFA.\nQuel est votre "Dernier Prix" ? 😉`);
+            if (offer) {
+                openChat(`Bonjour, je suis intéressé par *${product}*. Le prix affiché est ${price} FCFA, mais je vous propose *${offer} FCFA*. On conclut ? 🤝`);
+            }
+        }
+
+        // 3. Tontine
+        function startGlobalTontine() {
+            // alert("🚀 Fonctionnalité Tontine :\n\nCréez un lien unique pour inviter 3 amis à acheter dans cette boutique.\n\nChacun paie sa part, et vous obtenez -10% ! (Simulation)");
+            // Redirection vers une vraie page de gestion de tontine (simulée)
+            window.location.href = `tontine-group.html?shop=${encodeURIComponent(shopData.name)}&product=Sneakers+Air+Pro&price=15000`;
+        }
+
+        // 4. Chat System (Mangoo Connect+)
+        function openChat(initialMsg) {
+            const modal = document.getElementById('connectPlus');
+            const history = document.getElementById('chatHistory');
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // Reset si vide
+            if (history.children.length < 2) {
+                history.innerHTML = `
+                    <div class="text-center text-xs text-gray-400 my-2">Aujourd'hui</div>
+                    <div class="self-start bg-white dark:bg-gray-700 p-3 rounded-2xl rounded-tl-none shadow-sm max-w-[80%] text-sm dark:text-white">
+                        Bienvenue chez ${shopData.name} ! 👋<br>Je suis là pour répondre à toutes vos questions.
+                    </div>
+                `;
+            }
+
+            if (initialMsg) {
+                setTimeout(() => {
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = "self-end bg-mangoo-500 text-white p-3 rounded-2xl rounded-tr-none shadow-sm max-w-[80%] text-sm animate-float";
+                    msgDiv.style.animation = "none"; // disable float for msg
+                    msgDiv.innerHTML = initialMsg.replace(/\n/g, '<br>');
+                    history.appendChild(msgDiv);
+                    history.scrollTop = history.scrollHeight;
+                }, 300);
+            }
+        }
+
+        function closeChat() {
+            document.getElementById('connectPlus').classList.add('hidden');
+            document.getElementById('connectPlus').classList.remove('flex');
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('msgInput');
+            const text = input.value;
+            if (!text) return;
+
+            const history = document.getElementById('chatHistory');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = "self-end bg-mangoo-500 text-white p-3 rounded-2xl rounded-tr-none shadow-sm max-w-[80%] text-sm";
+            msgDiv.innerText = text;
+            history.appendChild(msgDiv);
+            
+            input.value = '';
+            history.scrollTop = history.scrollHeight;
+
+            // Auto-reply
+            setTimeout(() => {
+                const reply = document.createElement('div');
+                reply.className = "self-start bg-white dark:bg-gray-700 p-3 rounded-2xl rounded-tl-none shadow-sm max-w-[80%] text-sm dark:text-white";
+                reply.innerHTML = "C'est noté ! Je vérifie mon stock et je vous reviens dans 2 minutes. ⏳";
+                history.appendChild(reply);
+                history.scrollTop = history.scrollHeight;
+            }, 1500);
+        }
+
+        function addToCart(product, price) {
+            openChat(`Bonjour, je souhaite commander : *${product}* à ${price.toLocaleString()} FCFA.`);
+        }
+
+        function startAudioCall() {
+            // Utilise webrtc-parfait.html en mode "Client" rejoignant la room du vendeur
+            window.open(`webrtc-parfait.html?role=viewer&roomId=${encodeURIComponent(shopData.name)}&userId=ClientAppel`, '_blank');
+        }
+
+        // === UTILS ===
+        function goBack() {
+            if (window.history.length > 1) window.history.back();
+            else window.close();
+        }
+
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.theme = 'light';
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.theme = 'dark';
+            }
+        }
+
+        function shareShop() {
+            if (navigator.share) {
+                navigator.share({
+                    title: shopData.name,
+                    text: `Découvre cette boutique incroyable sur Mangoo : ${shopData.name}`,
+                    url: window.location.href
+                });
+            } else {
+                alert("Lien copié dans le presse-papier !");
+            }
+        }
+
+        function initTheme() {
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+    </script>
+</body>
+</html>
