@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Authentification Mini-Boutique</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-step {
+            margin: 15px 0;
+            padding: 15px;
+            border-left: 4px solid #22c55e;
+            background: #f0fdf4;
+        }
+        .error-step {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+        .warning-step {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+        }
+        .button {
+            background: #22c55e;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #16a34a;
+        }
+        .mini-boutique-frame {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #22c55e;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #22c55e;
+        }
+        .status.error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+        .status.warning {
+            background: #fffbeb;
+            color: #92400e;
+            border: 1px solid #f59e0b;
+        }
+    </style>
+</head>
+<body>
+    <h1>🛍️ Test de l'Authentification Mini-Boutique</h1>
+    
+    <div class="test-container">
+        <h2>📋 Procédure de Test</h2>
+        
+        <div class="test-step">
+            <h3>Étape 1: Connexion au Compte 1</h3>
+            <p>Connectez-vous avec le compte testeur2025@example.com</p>
+            <button class="button" onclick="connectAccount1()">Se connecter Compte 1</button>
+        </div>
+
+        <div class="test-step">
+            <h3>Étape 2: Créer un Produit</h3>
+            <p>Créez un produit spécifique pour ce compte</p>
+            <button class="button" onclick="createProduct1()">Créer Produit Compte 1</button>
+        </div>
+
+        <div class="test-step">
+            <h3>Étape 3: Déconnexion</h3>
+            <p>Déconnectez-vous du compte 1</p>
+            <button class="button" onclick="logout()">Se déconnecter</button>
+        </div>
+
+        <div class="test-step">
+            <h3>Étape 4: Connexion au Compte 2</h3>
+            <p>Connectez-vous avec un autre compte</p>
+            <button class="button" onclick="connectAccount2()">Se connecter Compte 2</button>
+        </div>
+
+        <div class="test-step">
+            <h3>Étape 5: Vérifier l'Isolation</h3>
+            <p>Vérifiez que le compte 2 ne voit pas les produits du compte 1</p>
+            <button class="button" onclick="checkIsolation()">Vérifier Isolation</button>
+        </div>
+
+        <div class="test-step">
+            <h3>Étape 6: Test Complet</h3>
+            <p>Exécuter tous les tests automatiquement</p>
+            <button class="button" onclick="runFullTest()">Exécuter Test Complet</button>
+        </div>
+    </div>
+
+    <div id="status" class="status warning">
+        Statut: En attente de test...
+    </div>
+
+    <div class="test-container">
+        <h2>🖥️ Mini-Boutique</h2>
+        <iframe id="miniBoutiqueFrame" class="mini-boutique-frame" src="http://localhost:3009/" title="Mini-Boutique"></iframe>
+    </div>
+
+    <script>
+        let currentAccount = null;
+        let testResults = [];
+
+        function updateStatus(message, type = 'warning') {
+            const status = document.getElementById('status');
+            status.textContent = `Statut: ${message}`;
+            status.className = `status ${type}`;
+        }
+
+        function addTestResult(step, result, details = '') {
+            testResults.push({
+                step,
+                result,
+                details,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        async function connectAccount1() {
+            updateStatus('Connexion au compte testeur2025@example.com...', 'warning');
+            
+            try {
+                // Simulation de connexion via le pont d'authentification
+                const userData = {
+                    id: 'testeur2025-12345',
+                    email: 'testeur2025@example.com',
+                    name: 'Testeur 2025',
+                    avatar: null
+                };
+
+                // Envoyer les données au Mini-Boutique via postMessage
+                const iframe = document.getElementById('miniBoutiqueFrame');
+                iframe.contentWindow.postMessage({
+                    type: 'AUTH_LOGIN',
+                    user: userData
+                }, 'http://localhost:3009');
+
+                currentAccount = 'testeur2025@example.com';
+                updateStatus('✅ Connecté au compte testeur2025@example.com', 'success');
+                addTestResult('Connexion Compte 1', 'SUCCESS', 'Utilisateur connecté avec succès');
+                
+            } catch (error) {
+                updateStatus(`❌ Erreur connexion: ${error.message}`, 'error');
+                addTestResult('Connexion Compte 1', 'FAILED', error.message);
+            }
+        }
+
+        async function connectAccount2() {
+            updateStatus('Connexion au compte test2@example.com...', 'warning');
+            
+            try {
+                // Simulation de connexion via le pont d'authentification
+                const userData = {
+                    id: 'test2-67890',
+                    email: 'test2@example.com',
+                    name: 'Test 2',
+                    avatar: null
+                };
+
+                // Envoyer les données au Mini-Boutique via postMessage
+                const iframe = document.getElementById('miniBoutiqueFrame');
+                iframe.contentWindow.postMessage({
+                    type: 'AUTH_LOGIN',
+                    user: userData
+                }, 'http://localhost:3009');
+
+                currentAccount = 'test2@example.com';
+                updateStatus('✅ Connecté au compte test2@example.com', 'success');
+                addTestResult('Connexion Compte 2', 'SUCCESS', 'Utilisateur connecté avec succès');
+                
+            } catch (error) {
+                updateStatus(`❌ Erreur connexion: ${error.message}`, 'error');
+                addTestResult('Connexion Compte 2', 'FAILED', error.message);
+            }
+        }
+
+        async function createProduct1() {
+            if (!currentAccount) {
+                updateStatus('❌ Vous devez d\'abord vous connecter', 'error');
+                return;
+            }
+
+            updateStatus('Création d\'un produit pour le compte actuel...', 'warning');
+            
+            try {
+                const iframe = document.getElementById('miniBoutiqueFrame');
+                
+                // Naviguer vers la page de création
+                iframe.src = 'http://localhost:3009/create';
+                
+                // Attendre que la page charge
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Créer un produit spécifique au compte
+                const product = {
+                    name: `Produit ${currentAccount.split('@')[0]} - ${Date.now()}`,
+                    price: (Math.random() * 100).toFixed(2),
+                    description: `Produit créé par ${currentAccount}`
+                };
+
+                // Envoyer le produit via postMessage
+                iframe.contentWindow.postMessage({
+                    type: 'CREATE_PRODUCT',
+                    product: product
+                }, 'http://localhost:3009');
+
+                updateStatus(`✅ Produit créé pour ${currentAccount}`, 'success');
+                addTestResult('Création Produit', 'SUCCESS', `Produit créé: ${product.name}`);
+                
+            } catch (error) {
+                updateStatus(`❌ Erreur création: ${error.message}`, 'error');
+                addTestResult('Création Produit', 'FAILED', error.message);
+            }
+        }
+
+        async function logout() {
+            updateStatus('Déconnexion...', 'warning');
+            
+            try {
+                const iframe = document.getElementById('miniBoutiqueFrame');
+                iframe.contentWindow.postMessage({
+                    type: 'AUTH_LOGOUT'
+                }, 'http://localhost:3009');
+
+                currentAccount = null;
+                updateStatus('✅ Déconnecté avec succès', 'success');
+                addTestResult('Déconnexion', 'SUCCESS', 'Utilisateur déconnecté');
+                
+            } catch (error) {
+                updateStatus(`❌ Erreur déconnexion: ${error.message}`, 'error');
+                addTestResult('Déconnexion', 'FAILED', error.message);
+            }
+        }
+
+        async function checkIsolation() {
+            if (!currentAccount) {
+                updateStatus('❌ Vous devez d\'abord vous connecter', 'error');
+                return;
+            }
+
+            updateStatus('Vérification de l\'isolation des données...', 'warning');
+            
+            try {
+                const iframe = document.getElementById('miniBoutiqueFrame');
+                iframe.src = 'http://localhost:3009/';
+                
+                // Attendre le chargement
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Demander la liste des produits
+                iframe.contentWindow.postMessage({
+                    type: 'GET_PRODUCTS'
+                }, 'http://localhost:3009');
+
+                // Écouter la réponse
+                window.addEventListener('message', function handleMessage(event) {
+                    if (event.origin !== 'http://localhost:3009') return;
+                    
+                    if (event.data.type === 'PRODUCTS_LIST') {
+                        const products = event.data.products;
+                        const userProducts = products.filter(p => 
+                            p.description && p.description.includes(currentAccount)
+                        );
+                        
+                        const otherProducts = products.filter(p => 
+                            !p.description || !p.description.includes(currentAccount)
+                        );
+                        
+                        if (userProducts.length > 0 && otherProducts.length === 0) {
+                            updateStatus('✅ Isolation parfaite - Seuls vos produits sont visibles', 'success');
+                            addTestResult('Test Isolation', 'SUCCESS', `Produits utilisateur: ${userProducts.length}, Autres: ${otherProducts.length}`);
+                        } else {
+                            updateStatus(`⚠️ Isolation partielle - Vos: ${userProducts.length}, Autres: ${otherProducts.length}`, 'warning');
+                            addTestResult('Test Isolation', 'PARTIAL', `Produits utilisateur: ${userProducts.length}, Autres: ${otherProducts.length}`);
+                        }
+                        
+                        window.removeEventListener('message', handleMessage);
+                    }
+                });
+                
+            } catch (error) {
+                updateStatus(`❌ Erreur vérification: ${error.message}`, 'error');
+                addTestResult('Test Isolation', 'FAILED', error.message);
+            }
+        }
+
+        async function runFullTest() {
+            updateStatus('🚀 Lancement du test complet...', 'warning');
+            testResults = [];
+            
+            try {
+                // Étape 1: Connexion compte 1
+                await connectAccount1();
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                
+                // Étape 2: Créer produit
+                await createProduct1();
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                
+                // Étape 3: Déconnexion
+                await logout();
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Étape 4: Connexion compte 2
+                await connectAccount2();
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                
+                // Étape 5: Vérifier isolation
+                await checkIsolation();
+                
+                // Afficher le rapport
+                displayTestReport();
+                
+            } catch (error) {
+                updateStatus(`❌ Erreur test complet: ${error.message}`, 'error');
+            }
+        }
+
+        function displayTestReport() {
+            const successCount = testResults.filter(r => r.result === 'SUCCESS').length;
+            const failedCount = testResults.filter(r => r.result === 'FAILED').length;
+            const totalCount = testResults.length;
+            
+            let report = `📊 Rapport de Test\n\n`;
+            report += `✅ Succès: ${successCount}/${totalCount}\n`;
+            report += `❌ Échecs: ${failedCount}/${totalCount}\n\n`;
+            
+            testResults.forEach((result, index) => {
+                report += `${index + 1}. ${result.step}: ${result.result}\n`;
+                if (result.details) {
+                    report += `   Détails: ${result.details}\n`;
+                }
+            });
+            
+            console.log(report);
+            updateStatus(`Test terminé - Succès: ${successCount}/${totalCount}`, successCount === totalCount ? 'success' : 'warning');
+        }
+
+        // Écouter les messages de l'iframe
+        window.addEventListener('message', function(event) {
+            if (event.origin !== 'http://localhost:3009') return;
+            
+            console.log('📨 Message reçu de Mini-Boutique:', event.data);
+            
+            if (event.data.type === 'AUTH_SUCCESS') {
+                updateStatus('✅ Authentification réussie dans Mini-Boutique', 'success');
+            } else if (event.data.type === 'AUTH_ERROR') {
+                updateStatus(`❌ Erreur d'authentification: ${event.data.error}`, 'error');
+            } else if (event.data.type === 'PRODUCT_CREATED') {
+                updateStatus('✅ Produit créé avec succès', 'success');
+            }
+        });
+
+        // Vérifier la connexion au serveur
+        fetch('http://localhost:3009/')
+            .then(() => {
+                updateStatus('🟢 Serveur Mini-Boutique accessible', 'success');
+            })
+            .catch(() => {
+                updateStatus('🔴 Serveur Mini-Boutique inaccessible', 'error');
+            });
+    </script>
+</body>
+</html>

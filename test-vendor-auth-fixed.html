@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Système d'Authentification Vendeur - Version Corrigée</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #FF6B35 0%, #4CAF50 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .navigation {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .nav-btn {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            padding: 15px 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            border-color: #FF6B35;
+        }
+        
+        .nav-btn.active {
+            background: linear-gradient(135deg, #FF6B35 0%, #ff8c42 100%);
+            color: white;
+            border-color: #FF6B35;
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+        }
+        
+        .nav-btn.active:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(255, 107, 53, 0.5);
+        }
+        
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%n            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .nav-btn:hover::before {
+            left: 100%;
+        }
+        
+        .content {
+            padding: 30px;
+            min-height: 500px;
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeInUp 0.5s ease-out;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .boutique-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border-left: 5px solid #FF6B35;
+        }
+        
+        .boutique-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+        
+        .boutique-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .boutique-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0;
+        }
+        
+        .status-badge {
+            padding: 6px 16px;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status-suspended {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .boutique-description {
+            color: #6c757d;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .boutique-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #FF6B35 0%, #ff8c42 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+        }
+        
+        .auth-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .auth-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .auth-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .auth-label {
+            font-weight: 600;
+            color: #495057;
+            min-width: 120px;
+        }
+        
+        .auth-value {
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            flex: 1;
+            margin: 0 15px;
+            word-break: break-all;
+        }
+        
+        .qr-section {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border: 1px solid #ffcc80;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .qr-code {
+            background: white;
+            border: 2px solid #ff9800;
+            border-radius: 10px;
+            padding: 15px;
+            display: inline-block;
+            margin: 15px 0;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .empty-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+        
+        .empty-description {
+            color: #6c757d;
+            margin-bottom: 25px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .nav-btn {
+                justify-content: center;
+            }
+            
+            .boutique-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .boutique-actions {
+                flex-direction: column;
+            }
+            
+            .auth-item {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            
+            .auth-value {
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛍️ Test Système d'Authentification Vendeur</h1>
+            <p>Interface de test interactive pour vérifier le bouton "Accès & QR" et les paramètres d'authentification</p>
+        </div>
+
+        <div class="navigation">
+            <div class="nav-buttons">
+                <button class="nav-btn active" data-tab="list">
+                    <span>🏪</span>
+                    <span>Mes Boutiques</span>
+                </button>
+                <button class="nav-btn" data-tab="create">
+                    <span>➕</span>
+                    <span>Créer/Éditer</span>
+                </button>
+                <button class="nav-btn" data-tab="auth" id="authBtn">
+                    <span>🔑</span>
+                    <span>Accès & QR</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Onglet Liste des Boutiques -->
+            <div class="tab-content active" id="list">
+                <div id="boutiquesList"></div>
+            </div>
+
+            <!-- Onglet Création -->
+            <div class="tab-content" id="create">
+                <div class="empty-state">
+                    <div class="empty-icon">📝</div>
+                    <div class="empty-title">Formulaire de création</div>
+                    <div class="empty-description">Interface de création de boutique (simulée pour ce test)</div>
+                </div>
+            </div>
+
+            <!-- Onglet Authentification -->
+            <div class="tab-content" id="auth">
+                <div id="authContent">
+                    <div class="empty-state">
+                        <div class="empty-icon">🔑</div>
+                        <div class="empty-title">Paramètres d'accès</div>
+                        <div class="empty-description">Sélectionnez une boutique pour voir ses paramètres d'authentification uniques</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Données de test
+        const boutiquesData = [
+            {
+                id: 1,
+                name: "Boutique Élégance Africaine",
+                description: "Vêtements traditionnels wax avec touche moderne et élégante",
+                status: "approved",
+                vendor_login: "elegance_africaine_2024",
+                vendor_password: "EAF@2024!Secure#",
+                shop_url: "https://mangootech.com/shop/elegance-africaine",
+                qr_code: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+            },
+            {
+                id: 2,
+                name: "Tech & Gadgets CI",
+                description: "Électronique et accessoires tech de qualité supérieure",
+                status: "pending",
+                vendor_login: "tech_gadgets_ci",
+                vendor_password: "TGC@2024!Tech#",
+                shop_url: "https://mangootech.com/shop/tech-gadgets-ci",
+                qr_code: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+            },
+            {
+                id: 3,
+                name: "Saveurs d'Ivoire",
+                description: "Produits alimentaires traditionnels ivoiriens authentiques",
+                status: "approved",
+                vendor_login: "saveurs_ivoire",
+                vendor_password: "SDI@2024!Saveur#",
+                shop_url: "https://mangootech.com/shop/saveurs-ivoire",
+                qr_code: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+            }
+        ];
+
+        let currentTab = 'list';
+        let selectedBoutique = null;
+        let boutiques = [];
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 Interface de test avancée chargée');
+            initializeApp();
+        });
+
+        function initializeApp() {
+            boutiques = [...boutiquesData];
+            setupEventListeners();
+            renderBoutiquesList();
+            
+            // Animation du bouton Accès & QR
+            animateAuthButton();
+        }
+
+        function setupEventListeners() {
+            // Navigation par boutons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const tabName = this.dataset.tab;
+                    console.log(`🎯 Clic sur navigation: ${tabName}`);
+                    switchTab(tabName);
+                });
+            });
+
+            // Empêcher la soumission par défaut
+            document.addEventListener('submit', function(e) {
+                e.preventDefault();
+            });
+        }
+
+        function animateAuthButton() {
+            const authBtn = document.getElementById('authBtn');
+            if (authBtn) {
+                // Animation subtile pour attirer l'attention
+                setInterval(() => {
+                    authBtn.classList.add('pulse');
+                    setTimeout(() => {
+                        authBtn.classList.remove('pulse');
+                    }, 2000);
+                }, 8000);
+            }
+        }
+
+        function switchTab(tabName) {
+            console.log(`🔄 Changement d'onglet: ${currentTab} → ${tabName}`);
+            
+            // Vérification de sécurité
+            if (!tabName || typeof tabName !== 'string') {
+                console.error('❌ Nom d\'onglet invalide:', tabName);
+                return;
+            }
+
+            try {
+                // Retirer la classe active de tous les boutons
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+
+                // Cacher tous les contenus
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+
+                // Activer le bouton correspondant
+                const targetButton = document.querySelector(`[data-tab="${tabName}"]`);
+                if (targetButton) {
+                    targetButton.classList.add('active');
+                }
+
+                // Afficher le contenu correspondant
+                const targetContent = document.getElementById(tabName);
+                if (targetContent) {
+                    targetContent.classList.add('active');
+                }
+
+                currentTab = tabName;
+
+                // Actions spécifiques selon l'onglet
+                handleTabSpecificActions(tabName);
+
+                console.log(`✅ Navigation réussie vers: ${tabName}`);
+
+            } catch (error) {
+                console.error('❌ Erreur lors du changement d\'onglet:', error);
+                showError('Erreur de navigation. Veuillez réessayer.');
+            }
+        }
+
+        function handleTabSpecificActions(tabName) {
+            switch (tabName) {
+                case 'auth':
+                    handleAuthTab();
+                    break;
+                case 'list':
+                    renderBoutiquesList();
+                    selectedBoutique = null; // Réinitialiser la sélection
+                    break;
+                case 'create':
+                    // Rien de spécial pour l'instant
+                    break;
+                default:
+                    console.warn(`⚠️ Aucune action spécifique pour l'onglet: ${tabName}`);
+            }
+        }
+
+        function handleAuthTab() {
+            console.log('🔑 Affichage de l\'onglet authentification');
+            
+            if (selectedBoutique) {
+                renderAuthSettings(selectedBoutique);
+            } else {
+                renderEmptyAuthMessage();
+            }
+        }
+
+        function renderBoutiquesList() {
+            console.log('🏪 Rendu de la liste des boutiques');
+            
+            const container = document.getElementById('boutiquesList');
+            if (!container) {
+                console.error('❌ Conteneur boutiquesList non trouvé');
+                return;
+            }
+
+            if (boutiques.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🏪</div>
+                        <div class="empty-title">Aucune boutique créée</div>
+                        <div class="empty-description">Commencez par créer votre première mini-boutique</div>
+                        <button class="btn btn-primary" onclick="switchTab('create')">
+                            <span>➕</span>
+                            Créer une boutique
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = boutiques.map(boutique => `
+                <div class="boutique-card">
+                    <div class="boutique-header">
+                        <h3 class="boutique-title">${boutique.name}</h3>
+                        <span class="status-badge status-${boutique.status}">
+                            ${getStatusText(boutique.status)}
+                        </span>
+                    </div>
+                    <p class="boutique-description">${boutique.description}</p>
+                    <div class="boutique-actions">
+                        <button class="btn btn-primary" onclick="selectBoutiqueForAuth(${boutique.id})">
+                            <span>🔑</span>
+                            Voir accès & QR
+                        </button>
+                        <button class="btn btn-secondary" onclick="editBoutique(${boutique.id})">
+                            <span>✏️</span>
+                            Modifier
+                        </button>
+                        <button class="btn" style="background: #6c757d; color: white;" onclick="toggleBoutiqueStatus(${boutique.id})">
+                            <span>⚡</span>
+                            ${boutique.status === 'approved' ? 'Suspendre' : 'Activer'}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectBoutiqueForAuth(boutiqueId) {
+            console.log(`🎯 Sélection de la boutique ${boutiqueId} pour l'authentification`);
+            
+            const boutique = boutiques.find(b => b.id === boutiqueId);
+            if (!boutique) {
+                console.error(`❌ Boutique ${boutiqueId} non trouvée`);
+                showError('Boutique non trouvée');
+                return;
+            }
+
+            selectedBoutique = boutique;
+            console.log(`✅ Boutique sélectionnée: ${boutique.name}`);
+            
+            // Passer directement à l'onglet auth
+            switchTab('auth');
+        }
+
+        function renderAuthSettings(boutique) {
+            console.log(`🔑 Rendu des paramètres d'authentification pour: ${boutique.name}`);
+            
+            const container = document.getElementById('authContent');
+            if (!container) {
+                console.error('❌ Conteneur authContent non trouvé');
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="fade-in">
+                    <div class="auth-section">
+                        <h2 class="auth-title">
+                            <span>🔑</span>
+                            <span>Paramètres d'accès - ${boutique.name}</span>
+                        </h2>
+                        
+                        <div class="auth-item">
+                            <span class="auth-label">Login vendeur:</span>
+                            <span class="auth-value">${boutique.vendor_login}</span>
+                            <button class="btn btn-primary" onclick="copyToClipboard('${boutique.vendor_login}', 'Login')">
+                                <span>📋</span>
+                                Copier
+                            </button>
+                        </div>
+                        
+                        <div class="auth-item">
+                            <span class="auth-label">Mot de passe:</span>
+                            <span class="auth-value">${boutique.vendor_password}</span>
+                            <button class="btn btn-primary" onclick="copyToClipboard('${boutique.vendor_password}', 'Mot de passe')">
+                                <span>📋</span>
+                                Copier
+                            </button>
+                            <button class="btn btn-secondary" onclick="regeneratePassword(${boutique.id})">
+                                <span>🔄</span>
+                                Régénérer
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="auth-section" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-color: #2196f3;">
+                        <h2 class="auth-title" style="color: #1976d2;">
+                            <span>🌐</span>
+                            <span>URL de la boutique</span>
+                        </h2>
+                        
+                        <div class="auth-item">
+                            <span class="auth-label">URL publique:</span>
+                            <span class="auth-value">${boutique.shop_url}</span>
+                            <button class="btn btn-primary" onclick="copyToClipboard('${boutique.shop_url}', 'URL')">
+                                <span>📋</span>
+                                Copier
+                            </button>
+                            <a href="${boutique.shop_url}" target="_blank" class="btn btn-secondary">
+                                <span>🌐</span>
+                                Visiter
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="qr-section">
+                        <h2 class="auth-title" style="color: #e65100;">
+                            <span>📱</span>
+                            <span>Code QR d'accès rapide</span>
+                        </h2>
+                        <p style="margin-bottom: 20px; color: #666;">Scannez ce code QR pour accéder rapidement à votre boutique</p>
+                        
+                        <div class="qr-code">
+                            <img src="${boutique.qr_code}" alt="QR Code" style="width: 200px; height: 200px;">
+                        </div>
+                        
+                        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                            <button class="btn btn-primary" onclick="downloadQR('${boutique.qr_code}', '${boutique.name}')">
+                                <span>💾</span>
+                                Télécharger QR
+                            </button>
+                            <button class="btn btn-secondary" onclick="printQR('${boutique.qr_code}', '${boutique.name}')">
+                                <span>🖨️</span>
+                                Imprimer
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 30px;">
+                        <button class="btn" style="background: #6c757d; color: white;" onclick="switchTab('list')">
+                            <span>🏪</span>
+                            Retour à la liste
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderEmptyAuthMessage() {
+            const container = document.getElementById('authContent');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">🔑</div>
+                    <div class="empty-title">Paramètres d'accès</div>
+                    <div class="empty-description">Sélectionnez une boutique depuis la liste pour voir ses paramètres d'authentification uniques</div>
+                    <button class="btn btn-primary" onclick="switchTab('list')">
+                        <span>🏪</span>
+                        Choisir une boutique
+                    </button>
+                </div>
+            `;
+        }
+
+        function copyToClipboard(text, type = '') {
+            navigator.clipboard.writeText(text).then(() => {
+                showSuccess(`${type || 'Texte'} copié dans le presse-papiers !`);
+            }).catch(() => {
+                // Fallback pour les anciens navigateurs
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showSuccess(`${type || 'Texte'} copié dans le presse-papiers !`);
+            });
+        }
+
+        function regeneratePassword(boutiqueId) {
+            const boutique = boutiques.find(b => b.id === boutiqueId);
+            if (!boutique) return;
+
+            if (confirm(`🔄 Régénérer le mot de passe pour "${boutique.name}" ?`)) {
+                // Simuler la régénération
+                const newPassword = 'NEW_' + Math.random().toString(36).substring(2, 10).toUpperCase() + '@2024!';
+                boutique.vendor_password = newPassword;
+                renderAuthSettings(boutique);
+                showSuccess('✅ Mot de passe régénéré avec succès!');
+            }
+        }
+
+        function downloadQR(qrCode, boutiqueName) {
+            const link = document.createElement('a');
+            link.download = `qr-${boutiqueName.toLowerCase().replace(/\s+/g, '-')}.png`;
+            link.href = qrCode;
+            link.click();
+            showSuccess('✅ QR Code téléchargé!');
+        }
+
+        function printQR(qrCode, boutiqueName) {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>QR Code - ${boutiqueName}</title>
+                        <style>
+                            body { 
+                                font-family: Arial, sans-serif; 
+                                text-align: center; 
+                                padding: 50px; 
+                                background: #f5f5f5;
+                            }
+                            .container {
+                                background: white;
+                                padding: 40px;
+                                border-radius: 15px;
+                                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                                display: inline-block;
+                            }
+                            h2 { 
+                                color: #333; 
+                                margin-bottom: 20px;
+                                font-size: 1.8rem;
+                            }
+                            img { 
+                                width: 300px; 
+                                height: 300px; 
+                                border: 3px solid #FF6B35;
+                                border-radius: 15px;
+                                padding: 15px;
+                                background: white;
+                            }
+                            p { 
+                                margin-top: 25px; 
+                                color: #666; 
+                                font-size: 1.1rem;
+                            }
+                            .url {
+                                margin-top: 15px;
+                                padding: 10px;
+                                background: #f8f9fa;
+                                border-radius: 8px;
+                                font-family: monospace;
+                                word-break: break-all;
+                                border: 1px solid #dee2e6;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <h2>${boutiqueName}</h2>
+                            <img src="${qrCode}" alt="QR Code">
+                            <p>Scannez ce code QR pour accéder à la boutique</p>
+                            <div class="url">https://mangootech.com/shop/${boutiqueName.toLowerCase().replace(/\s+/g, '-')}</div>
+                        </div>
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        function editBoutique(boutiqueId) {
+            console.log(`✏️ Modification de la boutique ${boutiqueId}`);
+            switchTab('create');
+        }
+
+        function toggleBoutiqueStatus(boutiqueId) {
+            const boutique = boutiques.find(b => b.id === boutiqueId);
+            if (!boutique) return;
+
+            const newStatus = boutique.status === 'approved' ? 'suspended' : 'approved';
+            boutique.status = newStatus;
+            
+            renderBoutiquesList();
+            showSuccess(`✅ Boutique ${newStatus === 'approved' ? 'activée' : 'suspendue'} avec succès!`);
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'approved': 'Approuvée',
+                'pending': 'En attente',
+                'suspended': 'Suspendue',
+                'rejected': 'Rejetée'
+            };
+            return statusMap[status] || status;
+        }
+
+        function showError(message) {
+            showMessage(message, 'error');
+        }
+
+        function showSuccess(message) {
+            showMessage(message, 'success');
+        }
+
+        function showMessage(message, type) {
+            const existingMessage = document.querySelector('.error-message, .success-message');
+            if (existingMessage) {
+                existingMessage.remove();
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
+            messageDiv.textContent = message;
+            
+            const content = document.querySelector('.content');
+            content.insertBefore(messageDiv, content.firstChild);
+
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 4000);
+        }
+
+        // Débogage supplémentaire
+        window.addEventListener('error', function(e) {
+            console.error('❌ Erreur globale:', e.error);
+            showError('Une erreur est survenue. Vérifiez la console pour plus de détails.');
+        });
+
+        // Tests de navigation
+        window.testNavigation = function() {
+            console.log('🧪 Test de navigation automatique...');
+            setTimeout(() => switchTab('list'), 1000);
+            setTimeout(() => switchTab('auth'), 2000);
+            setTimeout(() => switchTab('create'), 3000);
+            setTimeout(() => switchTab('list'), 4000);
+            console.log('✅ Test de navigation terminé');
+        };
+
+        console.log('🚀 Application initialisée avec succès!');
+        console.log('💡 Astuce: Utilisez testNavigation() dans la console pour tester automatiquement la navigation');
+    </script>
+</body>
+</html>

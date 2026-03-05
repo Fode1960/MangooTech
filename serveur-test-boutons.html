@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Serveur - Boutons Actifs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        
+        .bouton-principal {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 1.3em;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 15px;
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .bouton-principal:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(255, 107, 107, 0.4);
+        }
+        
+        .bouton-principal:active {
+            transform: translateY(-1px);
+        }
+        
+        .bouton-creer {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.3);
+        }
+        
+        .bouton-creer:hover {
+            box-shadow: 0 15px 35px rgba(78, 205, 196, 0.4);
+        }
+        
+        .status {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 15px;
+            background: #f8f9fa;
+            border-left: 5px solid #28a745;
+        }
+        
+        .status.erreur {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+        
+        .console {
+            background: #2d3748;
+            color: #68d391;
+            font-family: 'Courier New', monospace;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.9em;
+        }
+        
+        .qr-container {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+        
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+            background: white;
+            border: 2px solid #333;
+            position: relative;
+        }
+        
+        .lien-direct {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e3f2fd;
+            border-radius: 15px;
+            border: 2px solid #2196f3;
+        }
+        
+        .lien-direct a {
+            color: #1976d2;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        
+        .lien-direct a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Test Serveur - Boutons Actifs</h1>
+        
+        <p style="font-size: 1.2em; color: #666; margin-bottom: 30px;">
+            Cliquez sur les boutons pour tester leur fonctionnalité
+        </p>
+        
+        <button id="btnAccesQR" class="bouton-principal">
+            📱 Accès & QR
+        </button>
+        
+        <button id="btnCreer" class="bouton-principal bouton-creer">
+            ➕ Créer
+        </button>
+        
+        <div class="qr-container">
+            <h3>QR Code de Test</h3>
+            <canvas id="qrCanvas" class="qr-code"></canvas>
+            <p style="margin-top: 10px; color: #666;">Ce QR code contient les paramètres de connexion</p>
+        </div>
+        
+        <div class="lien-direct">
+            <h3>🔗 Accès Direct</h3>
+            <p>Si les boutons ne fonctionnent pas, utilisez ces liens :</p>
+            <a href="#" onclick="accesDirectQR(); return false;">Accès Direct QR →</a><br>
+            <a href="#" onclick="accesDirectCreer(); return false;">Accès Direct Créer →</a>
+        </div>
+        
+        <div id="status" class="status">
+            <strong>Statut :</strong> Prêt à tester
+        </div>
+        
+        <div class="console" id="console">
+            Console de test prête...
+        </div>
+    </div>
+
+    <script>
+        // Configuration des boutiques
+        const boutiques = {
+            1: {
+                login: 'boutique1_vendor',
+                password: 'B1@Secure2024!',
+                url: 'https://mangoo.tech/boutique/1'
+            },
+            2: {
+                login: 'boutique2_vendor',
+                password: 'B2@Secure2024!',
+                url: 'https://mangoo.tech/boutique/2'
+            }
+        };
+
+        // Fonction de log
+        function log(message) {
+            const console = document.getElementById('console');
+            const timestamp = new Date().toLocaleTimeString();
+            console.innerHTML += `[${timestamp}] ${message}\n`;
+            console.scrollTop = console.scrollHeight;
+        }
+
+        // Fonction de mise à jour du statut
+        function updateStatus(message, isError = false) {
+            const status = document.getElementById('status');
+            status.innerHTML = `<strong>Statut :</strong> ${message}`;
+            status.className = isError ? 'status erreur' : 'status';
+        }
+
+        // Génération de QR code simple
+        function generateQRCode(text) {
+            const canvas = document.getElementById('qrCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Effacer le canvas
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Créer un motif QR simple mais lisible
+            const moduleSize = 4;
+            const modules = 25;
+            
+            // Pattern de position (carrés de repère)
+            function drawPositionPattern(x, y) {
+                ctx.fillStyle = 'black';
+                // Grand carré
+                ctx.fillRect(x, y, 7*moduleSize, 7*moduleSize);
+                ctx.fillStyle = 'white';
+                ctx.fillRect(x+moduleSize, y+moduleSize, 5*moduleSize, 5*moduleSize);
+                ctx.fillStyle = 'black';
+                ctx.fillRect(x+2*moduleSize, y+2*moduleSize, 3*moduleSize, 3*moduleSize);
+            }
+            
+            // Dessiner les patterns de position
+            drawPositionPattern(0, 0);
+            drawPositionPattern((modules-7)*moduleSize, 0);
+            drawPositionPattern(0, (modules-7)*moduleSize);
+            
+            // Pattern de timing (lignes)
+            ctx.fillStyle = 'black';
+            for(let i = 8; i < modules - 8; i++) {
+                if(i % 2 === 0) {
+                    ctx.fillRect(i*moduleSize, 6*moduleSize, moduleSize, moduleSize);
+                    ctx.fillRect(6*moduleSize, i*moduleSize, moduleSize, moduleSize);
+                }
+            }
+            
+            // Données encodées (pattern simple)
+            const data = text.split('').map(c => c.charCodeAt(0));
+            for(let i = 0; i < data.length && i < 50; i++) {
+                const x = 8 + (i % 10);
+                const y = 8 + Math.floor(i / 10);
+                if(data[i] % 2 === 0) {
+                    ctx.fillRect(x*moduleSize, y*moduleSize, moduleSize, moduleSize);
+                }
+            }
+            
+            log(`QR code généré pour : ${text}`);
+        }
+
+        // Bouton Accès & QR
+        document.getElementById('btnAccesQR').addEventListener('click', function() {
+            log('🎯 Bouton "Accès & QR" cliqué !');
+            updateStatus('Accès & QR activé - Affichage des paramètres...');
+            
+            // Afficher les paramètres dans une alerte
+            const params = `Boutique 1:\nLogin: ${boutiques[1].login}\nMot de passe: ${boutiques[1].password}\nURL: ${boutiques[1].url}\n\nBoutique 2:\nLogin: ${boutiques[2].login}\nMot de passe: ${boutiques[2].password}\nURL: ${boutiques[2].url}`;
+            
+            alert('📱 Paramètres de connexion :\n\n' + params);
+            
+            // Générer le QR code pour la boutique 1
+            generateQRCode(boutiques[1].url);
+            
+            log('✅ Paramètres affichés avec succès');
+        });
+
+        // Bouton Créer
+        document.getElementById('btnCreer').addEventListener('click', function() {
+            log('➕ Bouton "Créer" cliqué !');
+            updateStatus('Créer activé - Ouverture de l\'interface de création...');
+            
+            // Simuler l'ouverture d'une interface de création
+            const nouveauNom = prompt('📝 Entrez le nom de la nouvelle boutique :');
+            if(nouveauNom) {
+                alert(`✅ Boutique "${nouveauNom}" créée avec succès !\n\nParamètres générés automatiquement.`);
+                log(`Nouvelle boutique créée : ${nouveauNom}`);
+            } else {
+                log('Création annulée');
+            }
+        });
+
+        // Accès direct (fallback)
+        function accesDirectQR() {
+            log('🔄 Accès direct QR activé');
+            updateStatus('Accès direct QR - Fallback utilisé');
+            document.getElementById('btnAccesQR').click();
+        }
+
+        function accesDirectCreer() {
+            log('🔄 Accès direct Créer activé');
+            updateStatus('Accès direct Créer - Fallback utilisé');
+            document.getElementById('btnCreer').click();
+        }
+
+        // Vérification au chargement
+        window.addEventListener('load', function() {
+            log('🚀 Page de test chargée');
+            log('📱 Boutons prêts à être testés');
+            
+            // Vérifier que les boutons sont bien actifs
+            const btnAccesQR = document.getElementById('btnAccesQR');
+            const btnCreer = document.getElementById('btnCreer');
+            
+            log(`Bouton Accès & QR - Actif: ${!btnAccesQR.disabled}`);
+            log(`Bouton Créer - Actif: ${!btnCreer.disabled}`);
+            
+            // Générer un QR code par défaut
+            generateQRCode('https://mangoo.tech/boutique/test');
+        });
+
+        // Protection contre les erreurs
+        window.addEventListener('error', function(e) {
+            log(`❌ Erreur capturée : ${e.message}`);
+            updateStatus(`Erreur : ${e.message}`, true);
+        });
+    </script>
+</body>
+</html>

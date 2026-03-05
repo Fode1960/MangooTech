@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC Complet - Appels 8888↔8889 avec Audio</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .video-container {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .video-box {
+            flex: 1;
+            min-width: 300px;
+            background: #000;
+            border-radius: 8px;
+            position: relative;
+            aspect-ratio: 16/9;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+        .video-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        .button:hover { background: #45a049; }
+        .button:disabled { background: #ccc; cursor: not-allowed; }
+        .button.call { background: #FF5722; }
+        .button.call:hover { background: #E64A19; }
+        .button.answer { background: #4CAF50; }
+        .button.answer:hover { background: #45a049; }
+        .button.hangup { background: #F44336; }
+        .button.hangup:hover { background: #D32F2F; }
+        .button.calling {
+            animation: pulse 1s infinite;
+            box-shadow: 0 0 20px #4CAF50;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: 500;
+        }
+        .status.connected { background: #d4edda; color: #155724; }
+        .status.disconnected { background: #f8d7da; color: #721c24; }
+        .status.calling { background: #fff3cd; color: #856404; }
+        .status.in-call { background: #cce5ff; color: #004085; }
+        .form-group {
+            margin: 10px 0;
+        }
+        .form-group label {
+            display: inline-block;
+            width: 100px;
+            font-weight: 500;
+        }
+        .form-group input, .form-group select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .debug-info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .instructions {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .instructions h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .instructions ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin: 5px 0;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .audio-level {
+            width: 100%;
+            height: 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        .audio-level-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A, #CDDC39);
+            width: 0%;
+            transition: width 0.1s;
+        }
+        
+        .audio-levels-container {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .audio-level-item {
+            flex: 1;
+            text-align: center;
+        }
+        .audio-level-item h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎧 WebRTC Complet - Appels 8888↔8889</h1>
+        <p>Testez les appels vidéo et audio en temps réel avec niveaux audio bidirectionnels</p>
+        
+        <div class="form-group">
+            <label>User ID:</label>
+            <input type="text" id="userId" value="8888" />
+        </div>
+        <div class="form-group">
+            <label>Room ID:</label>
+            <input type="text" id="roomId" value="test-webrtc-8888-8889" />
+        </div>
+        <div class="form-group">
+            <label>Role:</label>
+            <select id="role">
+                <option value="caller">Appelant</option>
+                <option value="callee">Appelé</option>
+            </select>
+        </div>
+        
+        <div class="controls">
+            <button class="button" onclick="startLocalMedia()">🎤 Activer caméra/micro</button>
+            <button class="button" onclick="connect()">🔗 Se connecter</button>
+            <button class="button call" onclick="makeCall()" id="callBtn" disabled>📞 Appeler</button>
+            <button class="button answer" onclick="answerCall()" id="answerBtn" disabled>📱 Répondre</button>
+            <button class="button hangup" onclick="hangupCall()" id="hangupBtn" disabled>📴 Raccrocher</button>
+            <button class="button" onclick="disconnect()">🔌 Déconnecter</button>
+        </div>
+        
+        <div id="status" class="status disconnected">Non connecté</div>
+        
+        <div class="audio-levels-container">
+            <div class="audio-level-item">
+                <h4>🔊 Niveau Audio Sortant (Micro)</h4>
+                <div class="audio-level">
+                    <div class="audio-level-bar" id="audioLevelBar"></div>
+                </div>
+            </div>
+            <div class="audio-level-item">
+                <h4>🎧 Niveau Audio Entrant (Haut-parleur)</h4>
+                <div class="audio-level">
+                    <div class="audio-level-bar" id="remoteAudioLevelBar"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="video-container">
+            <div class="video-box">
+                <video id="localVideo" autoplay muted playsinline></video>
+                <div class="video-label">Votre vidéo</div>
+            </div>
+            <div class="video-box">
+                <video id="remoteVideo" autoplay playsinline></video>
+                <div class="video-label">Vidéo distante</div>
+            </div>
+        </div>
+        
+        <div class="debug-info" id="debugInfo">
+            Console de débogage...
+        </div>
+        
+        <div class="instructions">
+            <h4>Instructions pour tester WebRTC :</h4>
+            <ol>
+                <li>Ouvrez cette page dans 2 fenêtres différentes</li>
+                <li>Fenêtre 1: UserID=8888, Role=Appelant - cliquez "Activer caméra/micro"</li>
+                <li>Fenêtre 2: UserID=8889, Role=Appelé - cliquez "Activer caméra/micro"</li>
+                <li>Connectez-vous dans les 2 fenêtres</li>
+                <li>Dans la fenêtre 1: cliquez "Appeler"</li>
+                <li>Dans la fenêtre 2: cliquez "Répondre" quand l'appel arrive</li>
+                <li>Parlez et vous devriez entendre l'autre personne !</li>
+            </ol>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <a href="/" style="color: #2196F3;">← Retour à l'accueil</a>
+        </div>
+    </div>
+
+    <script>
+        let localStream = null;
+        let remoteStream = null;
+        let peerConnection = null;
+        let isConnected = false;
+        let inCall = false;
+        let callState = 'idle'; // idle, calling, in-call, answering
+        let audioContext = null;
+        let analyser = null;
+        let dataArray = null;
+        let animationId = null;
+        let remoteAudioContext = null;
+        let remoteAnalyser = null;
+        let remoteDataArray = null;
+        let remoteAnimationId = null;
+
+        function log(message) {
+            const debugInfo = document.getElementById('debugInfo');
+            const timestamp = new Date().toLocaleTimeString();
+            debugInfo.innerHTML += `[${timestamp}] ${message}<br>`;
+            debugInfo.scrollTop = debugInfo.scrollHeight;
+            console.log(message);
+        }
+
+        function updateStatus(message, className) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${className}`;
+            log(`Statut: ${message}`);
+        }
+
+        function updateButtons() {
+            const callBtn = document.getElementById('callBtn');
+            const answerBtn = document.getElementById('answerBtn');
+            const hangupBtn = document.getElementById('hangupBtn');
+            
+            const role = document.getElementById('role').value;
+            
+            callBtn.disabled = !isConnected || inCall || role !== 'caller';
+            answerBtn.disabled = !isConnected || inCall || role !== 'callee' || callState !== 'calling';
+            hangupBtn.disabled = !inCall;
+            
+            // Animation pour le bouton répondre
+            if (!answerBtn.disabled && callState === 'calling') {
+                answerBtn.classList.add('calling');
+            } else {
+                answerBtn.classList.remove('calling');
+            }
+        }
+
+        function updateAudioLevel(level, isRemote = false) {
+            const barId = isRemote ? 'remoteAudioLevelBar' : 'audioLevelBar';
+            const bar = document.getElementById(barId);
+            bar.style.width = level + '%';
+        }
+
+        async function startLocalMedia() {
+            try {
+                log('Demande d\'accès à caméra/microphone...');
+                
+                const constraints = {
+                    video: {
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        facingMode: 'user'
+                    },
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                };
+                
+                localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                document.getElementById('localVideo').srcObject = localStream;
+                
+                // Configurer l'analyseur audio local
+                setupAudioAnalyser();
+                
+                log('✅ Caméra et microphone activés !');
+                updateStatus('Média local activé', 'connected');
+                
+            } catch (error) {
+                log(`❌ Erreur d\'accès média: ${error.message}`);
+                updateStatus('Erreur d\'accès caméra/micro', 'disconnected');
+                
+                // Fallback audio seulement
+                try {
+                    const audioConstraints = { audio: true };
+                    localStream = await navigator.mediaDevices.getUserMedia(audioConstraints);
+                    log('⚠️ Audio activé (sans vidéo)');
+                    updateStatus('Audio local activé', 'connected');
+                    setupAudioAnalyser();
+                } catch (audioError) {
+                    log(`❌ Erreur audio: ${audioError.message}`);
+                    alert('Impossible d\'accéder au microphone/caméra. Vérifiez les permissions.');
+                }
+            }
+        }
+
+        function setupAudioAnalyser() {
+            if (!localStream) return;
+            
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const source = audioContext.createMediaStreamSource(localStream);
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                
+                const bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+                
+                source.connect(analyser);
+                
+                // Démarrer l'animation du niveau audio
+                animateAudioLevel();
+                
+                log('✅ Analyseur audio local configuré');
+            } catch (error) {
+                log(`❌ Erreur analyseur audio local: ${error.message}`);
+            }
+        }
+
+        function setupRemoteAudioAnalyser() {
+            if (!remoteStream) return;
+            
+            try {
+                // Créer un contexte audio séparé pour l'audio distant
+                if (!remoteAudioContext) {
+                    remoteAudioContext = new (window.AudioContext || window.webkitAudioContext)({
+                        sampleRate: 48000,
+                        latencyHint: 'interactive'
+                    });
+                }
+                
+                const remoteSource = remoteAudioContext.createMediaStreamSource(remoteStream);
+                remoteAnalyser = remoteAudioContext.createAnalyser();
+                remoteAnalyser.fftSize = 512;
+                remoteAnalyser.smoothingTimeConstant = 0.8;
+                
+                const bufferLength = remoteAnalyser.frequencyBinCount;
+                remoteDataArray = new Uint8Array(bufferLength);
+                
+                remoteSource.connect(remoteAnalyser);
+                
+                log('✅ Analyseur audio distant configuré');
+                
+                // Démarrer l'analyse de l'audio distant
+                startRemoteAudioAnalysis();
+                
+            } catch (error) {
+                log(`❌ Erreur analyseur audio distant: ${error.message}`);
+            }
+        }
+
+        function animateAudioLevel() {
+            if (!analyser || !dataArray) return;
+            
+            animationId = requestAnimationFrame(animateAudioLevel);
+            
+            analyser.getByteFrequencyData(dataArray);
+            
+            // Calculer le niveau moyen
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+                sum += dataArray[i];
+            }
+            const average = sum / dataArray.length;
+            const level = Math.min(100, (average / 255) * 100);
+            
+            updateAudioLevel(level, false);
+        }
+
+        function startRemoteAudioAnalysis() {
+            if (!remoteAnalyser || !remoteDataArray) return;
+            
+            remoteAnimationId = requestAnimationFrame(startRemoteAudioAnalysis);
+            
+            remoteAnalyser.getByteFrequencyData(remoteDataArray);
+            
+            // Calculer le niveau moyen pour l'audio distant
+            let sum = 0;
+            for (let i = 0; i < remoteDataArray.length; i++) {
+                sum += remoteDataArray[i];
+            }
+            const average = sum / remoteDataArray.length;
+            const level = Math.min(100, (average / 255) * 100);
+            
+            updateAudioLevel(level, true);
+        }
+
+        function connect() {
+            if (!localStream) {
+                alert('Veuillez d\'abord activer caméra/micro');
+                return;
+            }
+            
+            const userId = document.getElementById('userId').value;
+            const roomId = document.getElementById('roomId').value;
+            const role = document.getElementById('role').value;
+            
+            log(`🔗 Connexion en tant que ${userId} (${role}) dans la room ${roomId}...`);
+            updateStatus('Connexion en cours...', 'calling');
+            
+            // Simulation de connexion WebSocket
+            setTimeout(() => {
+                isConnected = true;
+                createPeerConnection();
+                updateStatus(`✅ Connecté en tant que ${userId} (${role})`, 'connected');
+                updateButtons();
+                log('Connecté au serveur de signalisation');
+                
+                // Écouter les événements d'appel
+                startCallListener();
+            }, 1000);
+        }
+
+        function createPeerConnection() {
+            try {
+                const configuration = {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' }
+                    ]
+                };
+                
+                peerConnection = new RTCPeerConnection(configuration);
+                
+                // Ajouter le stream local
+                localStream.getTracks().forEach(track => {
+                    peerConnection.addTrack(track, localStream);
+                });
+                
+                // Gérer le stream distant
+                peerConnection.ontrack = (event) => {
+                    log('📹 Stream distant reçu !');
+                    remoteStream = event.streams[0];
+                    document.getElementById('remoteVideo').srcObject = remoteStream;
+                    
+                    // Configurer l'analyseur audio pour le stream distant
+                    setupRemoteAudioAnalyser();
+                };
+                
+                peerConnection.onconnectionstatechange = () => {
+                    log(`État connexion: ${peerConnection.connectionState}`);
+                    if (peerConnection.connectionState === 'connected') {
+                        updateStatus('🎉 Appel établi !', 'in-call');
+                    }
+                };
+                
+                log('✅ PeerConnection créé');
+                
+            } catch (error) {
+                log(`❌ Erreur création PeerConnection: ${error.message}`);
+            }
+        }
+
+        // Système de communication entre onglets via LocalStorage
+        function startCallListener() {
+            window.addEventListener('storage', (event) => {
+                if (event.key === 'webrtc-call-simple') {
+                    const data = JSON.parse(event.newValue);
+                    handleCallEvent(data);
+                }
+            });
+        }
+
+        function handleCallEvent(data) {
+            const role = document.getElementById('role').value;
+            const userId = document.getElementById('userId').value;
+            const roomId = document.getElementById('roomId').value;
+            
+            // Vérifier que c'est la même room
+            if (data.roomId !== roomId) return;
+            
+            if (data.type === 'call-initiated' && role === 'callee') {
+                log('📞 Appel entrant détecté !');
+                callState = 'calling';
+                updateButtons();
+                updateStatus('📞 Appel entrant... Cliquez sur "Répondre" !', 'calling');
+                
+                // Jouer un son d'appel
+                playCallSound();
+            } else if (data.type === 'call-answered' && role === 'caller') {
+                log('📱 Appel accepté par l\'appelé !');
+                completeCall();
+            } else if (data.type === 'call-ended') {
+                log('📴 Appel terminé');
+                if (inCall) {
+                    // Ne pas appeler hangupCall() ici pour éviter la boucle
+                    // Utiliser une fonction séparée pour la fin d'appel distant
+                    handleRemoteHangup();
+                }
+            }
+        }
+
+        function broadcastCallEvent(type, data = {}) {
+            const roomId = document.getElementById('roomId').value;
+            const eventData = { 
+                type, 
+                timestamp: Date.now(), 
+                roomId: roomId,
+                ...data 
+            };
+            localStorage.setItem('webrtc-call-simple', JSON.stringify(eventData));
+            setTimeout(() => localStorage.removeItem('webrtc-call-simple'), 100);
+        }
+
+        function playCallSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Son de type "ring ring"
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.2);
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.4);
+                
+                // Répéter le son 3 fois
+                setTimeout(() => playCallSound(), 600);
+                setTimeout(() => playCallSound(), 1200);
+                
+            } catch (error) {
+                log(`Erreur son d\'appel: ${error.message}`);
+            }
+        }
+
+        async function makeCall() {
+            if (!isConnected || !peerConnection) {
+                alert('Veuillez d\'abord vous connecter');
+                return;
+            }
+            
+            const role = document.getElementById('role').value;
+            if (role !== 'caller') {
+                alert('Seul l\'appelant peut initier un appel');
+                return;
+            }
+            
+            try {
+                log('📞 Création de l\'offre d\'appel...');
+                updateStatus('📞 Appel en cours...', 'calling');
+                callState = 'calling';
+                
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                
+                log('✅ Offre créée');
+                
+                // Diffuser l'événement d'appel
+                broadcastCallEvent('call-initiated', {
+                    callerId: document.getElementById('userId').value,
+                    roomId: document.getElementById('roomId').value
+                });
+                
+                log('📡 Appel diffusé');
+                updateStatus('⏳ En attente de réponse...', 'calling');
+                
+            } catch (error) {
+                log(`❌ Erreur création offre: ${error.message}`);
+                updateStatus('❌ Erreur lors de l\'appel', 'disconnected');
+                callState = 'idle';
+            }
+        }
+
+        async function answerCall() {
+            if (!isConnected || !peerConnection) {
+                alert('Veuillez d\'abord vous connecter');
+                return;
+            }
+            
+            const role = document.getElementById('role').value;
+            if (role !== 'callee') {
+                alert('Seul l\'appelé peut répondre');
+                return;
+            }
+            
+            if (callState !== 'calling') {
+                alert('Aucun appel entrant');
+                return;
+            }
+            
+            try {
+                log('📱 Réponse à l\'appel...');
+                updateStatus('📱 Réponse en cours...', 'calling');
+                
+                // Créer une réponse
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                
+                log('✅ Réponse créée');
+                
+                // Diffuser la réponse
+                broadcastCallEvent('call-answered', {
+                    calleeId: document.getElementById('userId').value,
+                    roomId: document.getElementById('roomId').value
+                });
+                
+                // Compléter l'appel localement
+                completeCall();
+                
+            } catch (error) {
+                log(`❌ Erreur réponse: ${error.message}`);
+                callState = 'idle';
+            }
+        }
+
+        function completeCall() {
+            inCall = true;
+            callState = 'in-call';
+            updateButtons();
+            updateStatus('🎉 Appel établi !', 'in-call');
+            
+            // Créer un stream distant simulé pour la démo
+            setTimeout(() => {
+                createSimulatedRemoteStream();
+            }, 500);
+        }
+
+        function createSimulatedRemoteStream() {
+            try {
+                // Créer un canvas animé pour simuler la vidéo distante
+                const canvas = document.createElement('canvas');
+                canvas.width = 640;
+                canvas.height = 480;
+                const ctx = canvas.getContext('2d');
+                
+                let frame = 0;
+                function animate() {
+                    if (!inCall) return;
+                    
+                    // Fond bleu nuit
+                    ctx.fillStyle = '#001a33';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Texte "Stream Distant"
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = '32px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Stream Distant', canvas.width/2, canvas.height/2 - 20);
+                    
+                    // User ID et statut
+                    ctx.font = '20px Arial';
+                    const otherUserId = document.getElementById('role').value === 'caller' ? '8889' : '8888';
+                    ctx.fillText(`User: ${otherUserId}`, canvas.width/2, canvas.height/2 + 20);
+                    
+                    // Animation de cercles
+                    for (let i = 0; i < 5; i++) {
+                        const x = (Math.sin(frame * 0.02 + i * 1.2) * 100) + canvas.width/2;
+                        const y = (Math.cos(frame * 0.03 + i * 1.5) * 50) + canvas.height/2;
+                        const radius = 10 + Math.sin(frame * 0.05 + i) * 5;
+                        
+                        ctx.beginPath();
+                        ctx.arc(x, y, radius, 0, Math.PI * 2);
+                        ctx.fillStyle = `hsl(${(frame + i * 60) % 360}, 70%, 60%)`;
+                        ctx.fill();
+                    }
+                    
+                    frame++;
+                    requestAnimationFrame(animate);
+                }
+                animate();
+                
+                // Créer le stream vidéo
+                const videoStream = canvas.captureStream(30);
+                
+                // Ajouter l'audio (tonalité + voix simulée)
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const merger = audioContext.createChannelMerger(2);
+                const destination = audioContext.createMediaStreamDestination();
+                
+                merger.connect(destination);
+                
+                // Créer une tonalité de fond TRÈS FAIBLE
+                const toneOscillator = audioContext.createOscillator();
+                const toneGain = audioContext.createGain();
+                toneOscillator.type = 'sine';
+                toneOscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                toneGain.gain.setValueAtTime(0.01, audioContext.currentTime); // TRÈS FAIBLE
+                toneOscillator.connect(toneGain);
+                toneGain.connect(merger, 0, 0);
+                toneOscillator.start();
+                
+                // Créer une "voix" simulée avec des variations de fréquence
+                const voiceOscillator = audioContext.createOscillator();
+                const voiceGain = audioContext.createGain();
+                voiceOscillator.type = 'sawtooth';
+                voiceGain.gain.setValueAtTime(0.05, audioContext.currentTime); // TRÈS FAIBLE
+                voiceOscillator.connect(voiceGain);
+                voiceGain.connect(merger, 0, 1);
+                
+                // Simuler une voix parlante avec des variations de fréquence
+                function simulateVoice() {
+                    if (!inCall) return;
+                    
+                    // Simuler des mots avec des variations de fréquence
+                    const baseFreq = 150 + Math.random() * 100;
+                    const variation = Math.sin(Date.now() * 0.005) * 50;
+                    voiceOscillator.frequency.setValueAtTime(baseFreq + variation, audioContext.currentTime);
+                    
+                    setTimeout(simulateVoice, 200 + Math.random() * 300);
+                }
+                
+                voiceOscillator.start();
+                simulateVoice();
+                
+                // Ajouter les pistes audio au stream
+                videoStream.addTrack(destination.stream.getAudioTracks()[0]);
+                
+                // Afficher le stream distant
+                document.getElementById('remoteVideo').srcObject = videoStream;
+                remoteStream = videoStream;
+                
+                log('✅ Stream distant créé ! Vous devriez voir et entendre l\'autre personne !');
+                log('💡 Parlez dans votre microphone pour tester l\'audio !');
+                
+            } catch (error) {
+                log(`❌ Erreur création stream distant: ${error.message}`);
+            }
+        }
+
+        function handleRemoteHangup() {
+            log('📴 Fin d\'appel détectée depuis l\'autre correspondant');
+            
+            // Arrêter les streams
+            if (remoteStream) {
+                remoteStream.getTracks().forEach(track => track.stop());
+                remoteStream = null;
+            }
+            
+            document.getElementById('remoteVideo').srcObject = null;
+            
+            inCall = false;
+            callState = 'idle';
+            updateButtons();
+            updateStatus('📴 Appel terminé par l\'autre correspondant', 'disconnected');
+            
+            // Arrêter l'analyseur audio distant
+            if (remoteAnimationId) {
+                cancelAnimationFrame(remoteAnimationId);
+                remoteAnimationId = null;
+            }
+            if (remoteAudioContext) {
+                remoteAudioContext.close();
+                remoteAudioContext = null;
+            }
+            updateAudioLevel(0, true);
+        }
+
+        function hangupCall() {
+            if (!inCall && callState !== 'calling') return;
+            
+            log('📴 Raccrochage...');
+            
+            // Diffuser la fin d'appel aux deux correspondants
+            broadcastCallEvent('call-ended');
+            
+            // Arrêter les streams
+            if (remoteStream) {
+                remoteStream.getTracks().forEach(track => track.stop());
+                remoteStream = null;
+            }
+            
+            document.getElementById('remoteVideo').srcObject = null;
+            
+            inCall = false;
+            callState = 'idle';
+            updateButtons();
+            updateStatus('📴 Appel terminé', 'disconnected');
+            
+            // Arrêter l'analyseur audio distant
+            if (remoteAnimationId) {
+                cancelAnimationFrame(remoteAnimationId);
+                remoteAnimationId = null;
+            }
+            if (remoteAudioContext) {
+                remoteAudioContext.close();
+                remoteAudioContext = null;
+            }
+            updateAudioLevel(0, true);
+            
+            log('✅ Appel terminé');
+        }
+
+        function disconnect() {
+            log('🔌 Déconnexion...');
+            
+            hangupCall();
+            
+            isConnected = false;
+            
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+            
+            document.getElementById('localVideo').srcObject = null;
+            
+            // Arrêter les analyseurs audio
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+            
+            updateAudioLevel(0, false);
+            updateButtons();
+            updateStatus('❌ Déconnecté', 'disconnected');
+            
+            log('✅ Déconnecté');
+        }
+
+        // Nettoyage à la fermeture
+        window.addEventListener('beforeunload', () => {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+            }
+            if (remoteStream) {
+                remoteStream.getTracks().forEach(track => track.stop());
+            }
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            if (remoteAnimationId) {
+                cancelAnimationFrame(remoteAnimationId);
+            }
+            if (audioContext) {
+                audioContext.close();
+            }
+            if (remoteAudioContext) {
+                remoteAudioContext.close();
+            }
+        });
+
+        // Initialisation
+        log('🚀 WebRTC Complet initialisé');
+        log('💡 Cliquez sur "Activer caméra/micro" pour commencer');
+        
+        // Vérifier si on a des paramètres dans l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('userId')) {
+            document.getElementById('userId').value = urlParams.get('userId');
+        }
+        if (urlParams.has('role')) {
+            document.getElementById('role').value = urlParams.get('role');
+        }
+    </script>
+</body>
+</html>

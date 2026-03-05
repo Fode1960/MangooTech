@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Diagnostic Logo - Pourquoi pas visible ?</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .test-section {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .logo-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+            margin: 5px;
+        }
+        .boutique-card {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .warning { color: #fbbf24; }
+        button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        .data-box {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        .problem-box {
+            background: rgba(255,0,0,0.2);
+            border: 2px solid #f87171;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .solution-box {
+            background: rgba(0,255,0,0.2);
+            border: 2px solid #4ade80;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Diagnostic Logo - Pourquoi pas visible ?</h1>
+        
+        <div class="test-section">
+            <h2>🎯 Objectif</h2>
+            <p>Comprendre pourquoi les logos ne s'affichent pas dans le composant React malgré la bonne méthode</p>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Étape 1: Vérifier le stockage React</h2>
+            <button onclick="checkReactStorage()">📦 Vérifier demo_boutiques (React)</button>
+            <div id="react-storage-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Étape 2: Simuler le rendu React</h2>
+            <button onclick="simulateReactRender()">⚛️ Simuler le rendu exact du composant</button>
+            <div id="render-simulation"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Étape 3: Tester la logique de logo</h2>
+            <button onclick="testLogoLogic()">🧪 Tester boutique.logo || boutique.logo_url</button>
+            <div id="logo-logic-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 Étape 4: Corriger les données</h2>
+            <button onclick="fixLogoData()">✅ Corriger les données des boutiques</button>
+            <div id="fix-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Étape 5: Vérifier la correction</h2>
+            <button onclick="verifyFix()">✅ Vérifier que les logos sont maintenant visibles</button>
+            <div id="verification-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🚀 Final</h2>
+            <button onclick="openMainSite()">🚀 Ouvrir le site principal pour tester</button>
+        </div>
+    </div>
+
+    <script>
+        // 🔍 Vérifier le stockage React
+        function checkReactStorage() {
+            const resultsDiv = document.getElementById('react-storage-results');
+            
+            const demo_boutiques = JSON.parse(localStorage.getItem('demo_boutiques') || '[]');
+            
+            let html = '<h3>📦 Contenu de demo_boutiques :</h3>';
+            html += `<p>Total: ${demo_boutiques.length} boutiques</p>`;
+            
+            if (demo_boutiques.length === 0) {
+                html += '<div class="problem-box">⚠️ Aucune boutique trouvée !</div>';
+                html += '<button onclick="createTestBoutiques()">➕ Créer des boutiques de test</button>';
+            } else {
+                html += '<h4>Détail des boutiques :</h4>';
+                demo_boutiques.forEach((boutique, index) => {
+                    const hasLogo = !!(boutique.logo || boutique.logo_url);
+                    const logoValue = boutique.logo || 'VIDE';
+                    const logoUrlValue = boutique.logo_url || 'VIDE';
+                    
+                    html += `
+                        <div class="boutique-card">
+                            <div>
+                                <strong>${index + 1}. ${boutique.name}</strong><br>
+                                <small>logo: ${logoValue}</small><br>
+                                <small>logo_url: ${logoUrlValue}</small><br>
+                                <small>Résultat: ${hasLogo ? '<span class="success">✅ Logo présent</span>' : '<span class="error">❌ Logo manquant</span>'}</small>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        // ⚛️ Simuler le rendu React exact
+        function simulateReactRender() {
+            const renderDiv = document.getElementById('render-simulation');
+            
+            const demo_boutiques = JSON.parse(localStorage.getItem('demo_boutiques') || '[]');
+            
+            let html = '<h3>⚛️ Simulation du rendu React :</h3>';
+            
+            if (demo_boutiques.length === 0) {
+                html += '<div class="problem-box">⚠️ Aucune boutique à simuler</div>';
+            } else {
+                html += '<h4>Cartes de boutiques simulées :</h4>';
+                
+                demo_boutiques.forEach((boutique, index) => {
+                    // Simulation EXACTE du code React ligne 722
+                    const imgSrc = boutique.logo_url || boutique.logo || 'https://via.placeholder.com/60';
+                    const hasRealLogo = !!(boutique.logo || boutique.logo_url);
+                    
+                    html += `
+                        <div class="boutique-card">
+                            <img src="${imgSrc}" class="logo-preview" alt="Logo ${boutique.name}">
+                            <div>
+                                <strong>${boutique.name}</strong><br>
+                                <small>src utilisé: ${imgSrc}</small><br>
+                                <small>Résultat: ${hasRealLogo ? '<span class="success">✅ Vrai logo</span>' : '<span class="warning">⚠️ Placeholder utilisé</span>'}</small>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            renderDiv.innerHTML = html;
+        }
+
+        // 🧪 Tester la logique de logo
+        function testLogoLogic() {
+            const logicDiv = document.getElementById('logo-logic-results');
+            
+            const demo_boutiques = JSON.parse(localStorage.getItem('demo_boutiques') || '[]');
+            
+            let html = '<h3>🧪 Test de la logique logo_url || logo :</h3>';
+            
+            if (demo_boutiques.length === 0) {
+                html += '<div class="problem-box">⚠️ Aucune boutique à tester</div>';
+            } else {
+                demo_boutiques.forEach((boutique, index) => {
+                    const test1 = boutique.logo_url || boutique.logo;
+                    const test2 = boutique.logo || boutique.logo_url;
+                    const finalResult = test1 || 'https://via.placeholder.com/60';
+                    
+                    html += `
+                        <div class="data-box">
+                            <strong>${boutique.name}</strong><br>
+                            boutique.logo_url: "${boutique.logo_url || 'undefined'}"<br>
+                            boutique.logo: "${boutique.logo || 'undefined'}"<br>
+                            logo_url || logo: "${test1 || 'undefined'}"<br>
+                            logo || logo_url: "${test2 || 'undefined'}"<br>
+                            <strong>Résultat final: "${finalResult}"</strong>
+                        </div>
+                    `;
+                });
+            }
+            
+            logicDiv.innerHTML = html;
+        }
+
+        // ✅ Corriger les données
+        function fixLogoData() {
+            const fixDiv = document.getElementById('fix-results');
+            
+            const demo_boutiques = JSON.parse(localStorage.getItem('demo_boutiques') || '[]');
+            
+            if (demo_boutiques.length === 0) {
+                fixDiv.innerHTML = '<div class="problem-box">⚠️ Aucune boutique à corriger</div>';
+                return;
+            }
+            
+            // Corriger les données
+            const fixedBoutiques = demo_boutiques.map(boutique => {
+                // Si pas de logo, en créer un
+                if (!boutique.logo && !boutique.logo_url) {
+                    return {
+                        ...boutique,
+                        logo: `https://via.placeholder.com/100x100/${Math.floor(Math.random()*16777215).toString(16)}/white?text=${boutique.name.charAt(0)}`,
+                        logo_url: `https://via.placeholder.com/100x100/${Math.floor(Math.random()*16777215).toString(16)}/white?text=${boutique.name.charAt(0)}`
+                    };
+                }
+                
+                // Si logo_url manque mais logo présent
+                if (boutique.logo && !boutique.logo_url) {
+                    return {
+                        ...boutique,
+                        logo_url: boutique.logo
+                    };
+                }
+                
+                // Si logo manque mais logo_url présent
+                if (boutique.logo_url && !boutique.logo) {
+                    return {
+                        ...boutique,
+                        logo: boutique.logo_url
+                    };
+                }
+                
+                return boutique;
+            });
+            
+            // Sauvegarder les corrections
+            localStorage.setItem('demo_boutiques', JSON.stringify(fixedBoutiques));
+            
+            let html = '<div class="solution-box">✅ Données corrigées !</div>';
+            html += '<h4>Aperçu des corrections :</h4>';
+            
+            fixedBoutiques.forEach((boutique, index) => {
+                html += `
+                    <div class="boutique-card">
+                        <img src="${boutique.logo}" class="logo-preview" alt="Logo">
+                        <div>
+                            <strong>${boutique.name}</strong><br>
+                            <small class="success">✅ Logo maintenant présent</small>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            fixDiv.innerHTML = html;
+        }
+
+        // ✅ Vérifier la correction
+        function verifyFix() {
+            const verifyDiv = document.getElementById('verification-results');
+            
+            const demo_boutiques = JSON.parse(localStorage.getItem('demo_boutiques') || '[]');
+            
+            const withLogos = demo_boutiques.filter(b => !!(b.logo || b.logo_url)).length;
+            const total = demo_boutiques.length;
+            
+            let html = '<h3>✅ Vérification finale :</h3>';
+            html += `<p>Total: ${total} boutiques</p>`;
+            html += `<p>Avec logos: ${withLogos} boutiques</p>`;
+            
+            if (withLogos === total && total > 0) {
+                html += '<div class="solution-box">🎯 Toutes les boutiques ont maintenant des logos !</div>';
+                html += '<p>Les logos devraient être visibles dans le site principal.</p>';
+            } else if (total === 0) {
+                html += '<div class="problem-box">⚠️ Aucune boutique trouvée</div>';
+                html += '<button onclick="createTestBoutiques()">➕ Créer des boutiques</button>';
+            } else {
+                html += '<div class="problem-box">⚠️ Certaines boutiques n\'ont pas de logos</div>';
+                html += '<button onclick="fixLogoData()">🔧 Corriger à nouveau</button>';
+            }
+            
+            verifyDiv.innerHTML = html;
+        }
+
+        // ➕ Créer des boutiques de test
+        function createTestBoutiques() {
+            const testBoutiques = [
+                {
+                    id: 'test-' + Date.now(),
+                    name: 'Boutique Mode Élégante',
+                    description: 'Mode africaine moderne et élégante',
+                    logo: 'https://via.placeholder.com/100x100/FF6B35/white?text=MODE',
+                    logo_url: 'https://via.placeholder.com/100x100/FF6B35/white?text=MODE',
+                    slug: 'boutique-mode-' + Date.now(),
+                    is_demo: true,
+                    isActive: true,
+                    categories: ['fashion'],
+                    primaryColor: '#FF6B35',
+                    secondaryColor: '#4CAF50',
+                    socialLinks: { instagram: '', facebook: '', whatsapp: '' },
+                    createdAt: new Date().toISOString(),
+                    status: 'approved'
+                },
+                {
+                    id: 'test-' + Date.now() + '-2',
+                    name: 'Tech Afro Digital',
+                    description: 'Électronique et accessoires high-tech',
+                    logo: 'https://via.placeholder.com/100x100/2196F3/white?text=TECH',
+                    logo_url: 'https://via.placeholder.com/100x100/2196F3/white?text=TECH',
+                    slug: 'tech-afro-' + Date.now(),
+                    is_demo: true,
+                    isActive: true,
+                    categories: ['electronics'],
+                    primaryColor: '#2196F3',
+                    secondaryColor: '#FF9800',
+                    socialLinks: { instagram: '', facebook: '', whatsapp: '' },
+                    createdAt: new Date().toISOString(),
+                    status: 'approved'
+                }
+            ];
+            
+            localStorage.setItem('demo_boutiques', JSON.stringify(testBoutiques));
+            alert('✅ Boutiques de test créées !');
+            checkReactStorage();
+        }
+
+        // 🚀 Ouvrir le site principal
+        function openMainSite() {
+            window.open('http://localhost:3015', '_blank');
+            setTimeout(() => {
+                alert('🎯 Site principal ouvert !\\n\\nVérifiez que les logos sont maintenant visibles dans la liste des boutiques.');
+            }, 1000);
+        }
+
+        // Initialisation
+        window.onload = function() {
+            checkReactStorage();
+        };
+    </script>
+</body>
+</html>

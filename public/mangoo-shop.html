@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🛍️ Mangoo Shop</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        /* === HEADER === */
+        .header {
+            background: linear-gradient(135deg, #1a5f3f 0%, #2e7d32 100%);
+            color: white;
+            padding: 1rem 1rem 2rem 1rem;
+            text-align: center;
+            border-bottom-left-radius: 25px;
+            border-bottom-right-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .btn-back {
+            position: absolute;
+            left: 15px;
+            top: 15px;
+            color: white;
+            text-decoration: none;
+            font-size: 1.2rem;
+            background: rgba(255,255,255,0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        /* === SHOP CARD === */
+        .shop-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            padding: 2rem 1.5rem;
+            text-align: center;
+            margin: -30px 1.5rem 2rem 1.5rem; /* Overlap header */
+            position: relative;
+            z-index: 10;
+        }
+        .shop-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-top: -60px; /* Pull up */
+            object-fit: cover;
+            background: white;
+        }
+        h1 { margin: 10px 0 5px 0; color: #2d3436; font-size: 1.5rem; }
+        .category {
+            color: #636e72;
+            font-size: 0.9rem;
+            background: #f1f2f6;
+            padding: 4px 12px;
+            border-radius: 15px;
+            display: inline-block;
+        }
+        .description {
+            margin-top: 1rem;
+            color: #636e72;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .btn-live {
+            background: linear-gradient(135deg, #e17055 0%, #d63031 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 1.5rem;
+            width: 80%;
+            box-shadow: 0 4px 10px rgba(225, 112, 85, 0.3);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(225, 112, 85, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(225, 112, 85, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(225, 112, 85, 0); }
+        }
+
+        /* === PRODUCTS === */
+        .section-title {
+            padding: 0 1.5rem;
+            color: #2d3436;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            padding: 0 1.5rem 2rem 1.5rem;
+        }
+        .product-item {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: transform 0.1s;
+        }
+        .product-item:active { transform: scale(0.98); }
+        .product-img {
+            width: 100%;
+            height: 120px;
+            background: #f1f2f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+        }
+        .product-info { padding: 10px; }
+        .product-info h4 { margin: 0 0 5px 0; font-size: 0.9rem; color: #2d3436; }
+        .product-price { color: #1a5f3f; font-weight: bold; font-size: 0.95rem; }
+        
+        .btn-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .btn-add {
+            background: #25D366; /* WhatsApp Green */
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 5px rgba(37, 211, 102, 0.4);
+        }
+        
+        .btn-bargain {
+            background: #f0f2f5;
+            color: #636e72;
+            border: 1px solid #dfe6e9;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-bargain:active { background: #e17055; color: white; border-color: #e17055; }
+
+        /* === MANGOO CONNECT+ (Chat) === */
+        .chat-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #f0f2f5;
+            z-index: 5000;
+            display: none;
+            flex-direction: column;
+        }
+        .chat-header {
+            background: #1a5f3f;
+            color: white;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .msg-bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 15px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            position: relative;
+        }
+        .msg-received {
+            background: white;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .msg-sent {
+            background: #dcf8c6;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .chat-input-area {
+            background: white;
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            border-top: 1px solid #dfe6e9;
+        }
+        .chat-input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 20px;
+            border: 1px solid #dfe6e9;
+            outline: none;
+        }
+        .btn-send {
+            background: #1a5f3f;
+            color: white;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            border: none;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .btn-tontine {
+            background: #6c5ce7;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-tontine:active { transform: scale(0.95); }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><span style="cursor:pointer;" onclick="goBack()">←</span> <span id="sNameHeader">Boutique</span></h1>
+        <p><span id="sCategoryHeader">Chargement...</span> • Ouvert</p>
+    </div>
+
+    <!-- MANGOO CONNECT+ CHAT -->
+    <div id="connectPlus" class="chat-overlay">
+        <div class="chat-header">
+            <span onclick="closeChat()" style="font-size:1.5rem; cursor:pointer;">←</span>
+            <img id="chatAvatar" src="" style="width:40px; height:40px; border-radius:50%; border:2px solid white;">
+            <div style="flex:1;">
+                <div id="chatName" style="font-weight:bold;">Vendeur</div>
+                <div style="font-size:0.75rem; opacity:0.8;">En ligne sur Mangoo Connect+</div>
+            </div>
+            <span onclick="startAudioCall()" style="cursor:pointer; font-size:1.2rem; background:rgba(255,255,255,0.2); padding:8px; border-radius:50%;">📞</span>
+        </div>
+        <div class="chat-messages" id="chatHistory">
+            <!-- Messages -->
+        </div>
+        <div class="chat-input-area">
+            <span style="font-size:1.5rem; color:#636e72;">📷</span>
+            <input type="text" class="chat-input" placeholder="Écrire un message..." id="msgInput">
+            <button class="btn-send" onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+
+    <div class="shop-card">
+        <img id="sAvatar" src="" class="shop-avatar">
+        <h1 id="sName">Chargement...</h1>
+        <div id="sCategory" class="category">...</div>
+        <p class="description">
+            Bienvenue dans ma boutique officielle sur Mangoo.
+            Profitez de nos offres exclusives et de la livraison rapide !
+        </p>
+
+        <a href="#" id="btnLive" class="btn-live">
+            📹 Rejoindre le Live
+        </a>
+    </div>
+
+    <h2 class="section-title">🔥 Produits en vedette</h2>
+    <div class="products-grid">
+        <!-- Mock Products -->
+        <div class="product-item">
+            <div class="product-img">👟</div>
+            <div class="product-info">
+                <h4>Sneakers Pro</h4>
+                <p class="product-price">15 000 FCFA <span style="font-size:0.7rem; color:#6c5ce7; background:#e6e6fa; padding:2px 4px; border-radius:4px;">ou 3x 5000</span></p>
+                <div class="btn-group">
+                    <button class="btn-tontine" onclick="startTontine('Sneakers Pro', 15000)">👥 Tontine</button>
+                    <button class="btn-add" onclick="orderWhatsApp('Sneakers Pro', '15 000 FCFA')">🛒</button>
+                </div>
+            </div>
+        </div>
+        <div class="product-item">
+            <div class="product-img">⌚</div>
+            <div class="product-info">
+                <h4>Montre Connectée</h4>
+                <p class="product-price">25 000 FCFA</p>
+                <div class="btn-group">
+                    <button class="btn-tontine" onclick="startTontine('Montre Connectée', 25000)">👥 Tontine</button>
+                    <button class="btn-add" onclick="orderWhatsApp('Montre Connectée', '25 000 FCFA')">🛒</button>
+                </div>
+            </div>
+        </div>
+        <div class="product-item">
+            <div class="product-img">🎒</div>
+            <div class="product-info">
+                <h4>Sac à dos</h4>
+                <p class="product-price">8 000 FCFA</p>
+                <div class="btn-group">
+                    <button class="btn-bargain" onclick="bargainWhatsApp('Sac à dos', '8 000 FCFA')">🤝 Marchander</button>
+                    <button class="btn-add" onclick="orderWhatsApp('Sac à dos', '8 000 FCFA')">🛒</button>
+                </div>
+            </div>
+        </div>
+        <div class="product-item">
+            <div class="product-img">🎧</div>
+            <div class="product-info">
+                <h4>Casque Audio</h4>
+                <p class="product-price">10 000 FCFA</p>
+                <div class="btn-group">
+                    <button class="btn-bargain" onclick="bargainWhatsApp('Casque Audio', '10 000 FCFA')">🤝 Marchander</button>
+                    <button class="btn-add" onclick="orderWhatsApp('Casque Audio', '10 000 FCFA')">🛒</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Parse URL params
+        const params = new URLSearchParams(window.location.search);
+        // Initial defaults
+        let name = params.get('name') || "Boutique Inconnue";
+        let category = params.get('category') || "Divers";
+        let avatar = params.get('avatar') || "https://ui-avatars.com/api/?name=Mangoo&background=random";
+        const live = params.get('live') === 'true';
+        const theme = params.get('theme');
+
+        // Apply Theme
+        if (theme === 'dark') {
+            document.body.style.backgroundColor = '#1a202c'; // gray-900
+            document.body.style.color = 'white';
+            // Add more dark mode styles dynamically if needed
+            const style = document.createElement('style');
+            style.innerHTML = `
+                .shop-card { background: #2d3748; color: white; }
+                .product-item { background: #2d3748; color: white; }
+                .product-info h4 { color: white; }
+                h1 { color: white; }
+                .section-title { color: white; }
+                .category { background: #4a5568; color: #cbd5e0; }
+                .description { color: #a0aec0; }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Try to load from localStorage (Sync with Vendor Dashboard)
+        try {
+            const storedShop = localStorage.getItem('mangoo_shop_data');
+            if (storedShop) {
+                const parsed = JSON.parse(storedShop);
+                if (parsed.name) name = parsed.name;
+                // If we had more fields in localStorage we would use them
+                
+                // Render Dynamic Products
+                if (parsed.products && parsed.products.length > 0) {
+                    const productsGrid = document.querySelector('.products-grid');
+                    productsGrid.innerHTML = ''; // Clear mock data
+                    
+                    parsed.products.forEach(p => {
+                        const productEl = document.createElement('div');
+                        productEl.className = 'product-item';
+                        productEl.innerHTML = `
+                            <div class="product-img">
+                                ${p.image ? `<img src="${p.image}" style="width:100%; height:100%; object-fit:cover;">` : '📦'}
+                            </div>
+                            <div class="product-info">
+                                <h4>${p.name}</h4>
+                                <p class="product-price">${p.price.toLocaleString()} FCFA</p>
+                                <div class="btn-group">
+                                    <button class="btn-tontine" onclick="startTontine('${p.name.replace(/'/g, "\\'")}', ${p.price})">👥 Tontine</button>
+                                    <button class="btn-add" onclick="orderWhatsApp('${p.name.replace(/'/g, "\\'")}', '${p.price.toLocaleString()} FCFA')">🛒</button>
+                                </div>
+                            </div>
+                        `;
+                        productsGrid.appendChild(productEl);
+                    });
+                }
+            }
+        } catch (e) {
+            console.error("Error loading shop data", e);
+        }
+
+        // Update UI with final values
+        document.title = `🛍️ ${name}`;
+        document.getElementById('sName').innerText = name;
+        document.getElementById('sNameHeader').innerText = name;
+        document.getElementById('sCategory').innerText = category;
+        document.getElementById('sCategoryHeader').innerText = category;
+        document.getElementById('sAvatar').src = avatar;
+
+        const btnLive = document.getElementById('btnLive');
+        if (live) {
+            btnLive.href = `webrtc-parfait.html?role=viewer&userId=clientShop&roomId=${encodeURIComponent(name)}`;
+            btnLive.style.display = 'inline-flex';
+        } else {
+            btnLive.style.display = 'none';
+        }
+
+        // === BACK BUTTON LOGIC ===
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.close(); // Try to close if opened as new tab
+                // Fallback if close is blocked
+                setTimeout(() => {
+                    window.location.href = '../index.html'; 
+                }, 100);
+            }
+        }
+
+        // === AUDIO CALL ===
+        function startAudioCall() {
+            const url = `test-webrtc-audio.html?role=caller&callee=${encodeURIComponent(name)}`;
+            window.open(url, '_blank');
+        }
+
+        // === MANGOO CONNECT+ LOGIC ===
+        function openChat(message) {
+            document.getElementById('chatAvatar').src = avatar;
+            document.getElementById('chatName').innerText = name;
+            
+            // Mock History
+            const history = document.getElementById('chatHistory');
+            history.innerHTML = `
+                <div style="text-align:center; color:#95a5a6; font-size:0.8rem; margin:10px;">Aujourd'hui</div>
+                <div class="msg-bubble msg-received">Bonjour ! Bienvenue chez ${name}. Comment puis-je vous aider ?</div>
+            `;
+            
+            if (message) {
+                const userMsg = document.createElement('div');
+                userMsg.className = 'msg-bubble msg-sent';
+                userMsg.innerText = message;
+                history.appendChild(userMsg);
+            }
+            
+            document.getElementById('connectPlus').style.display = 'flex';
+        }
+
+        function closeChat() {
+            document.getElementById('connectPlus').style.display = 'none';
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('msgInput');
+            const text = input.value;
+            if (!text) return;
+
+            const history = document.getElementById('chatHistory');
+            
+            const userMsg = document.createElement('div');
+            userMsg.className = 'msg-bubble msg-sent';
+            userMsg.innerText = text;
+            history.appendChild(userMsg);
+            
+            input.value = '';
+            history.scrollTop = history.scrollHeight;
+
+            setTimeout(() => {
+                const reply = document.createElement('div');
+                reply.className = 'msg-bubble msg-received';
+                reply.innerText = "C'est noté ! Je regarde ça et je reviens vers vous.";
+                history.appendChild(reply);
+                history.scrollTop = history.scrollHeight;
+            }, 1500);
+        }
+
+        // === ORDER & BARGAIN via CONNECT+ ===
+        function orderWhatsApp(product, price) {
+            const text = `Bonjour ${name}, je suis intéressé par votre produit *${product}* à ${price} vu sur Mangoo. Est-il disponible ?`;
+            openChat(text);
+        }
+
+        function bargainWhatsApp(product, price) {
+            const offer = prompt(`Le prix actuel est ${price}. Quel est votre prix proposé ?`);
+            if (offer) {
+                const text = `Bonjour ${name}, je suis intéressé par votre produit *${product}* affiché à ${price}. Je vous propose *${offer}*. On conclut ?`;
+                openChat(text);
+            }
+        }
+
+        // === TONTINE LOGIC ===
+        function startTontine(product, price) {
+            const participants = prompt("Combien de personnes dans la tontine (ex: 3) ?");
+            if (participants && participants > 1) {
+                const part = Math.round(price / participants);
+                const text = `👋 Bonjour ${name}, je veux lancer une Tontine Shopping pour *${product}* (${price} FCFA).\n\n👥 Nous sommes ${participants} personnes.\n💰 Chacun paie ${part} FCFA.\n\nEnvoyez-nous le lien de paiement groupé !`;
+                openChat(text);
+            }
+        }
+    </script>
+
+</body>
+</html>

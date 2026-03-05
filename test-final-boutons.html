@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 TEST FINAL - Boutons Accès & QR et Créer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .header {
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        
+        .test-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            min-width: 200px;
+        }
+        
+        .test-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+        
+        .test-button.success {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+        }
+        
+        .test-button.danger {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .console {
+            background: #2d3748;
+            color: #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: left;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.85em;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .console-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+        
+        .console-entry.success { color: #68d391; }
+        .console-entry.error { color: #fc8181; }
+        .console-entry.info { color: #63b3ed; }
+        
+        .emergency-links {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .emergency-link {
+            background: #007bff;
+            color: white;
+            padding: 12px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .emergency-link:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        
+        .force-test {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .force-test:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 TEST FINAL</h1>
+            <p>Test ultime des boutons Accès & QR et Créer</p>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">🧪 Test Bouton ACCÈS & QR</div>
+            <button class="test-button" onclick="testAccesQR()">
+                📱 TESTER ACCÈS & QR
+            </button>
+            <button class="test-button success" onclick="testAccesQRAlternative()">
+                🔄 Méthode Alternative
+            </button>
+            <button class="test-button danger" onclick="forceAccesQR()">
+                🔥 Forcer Accès & QR
+            </button>
+            <div id="statusAccesQR" class="status info" style="display: none;">
+                Prêt pour le test
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">➕ Test Bouton CRÉER</div>
+            <button class="test-button" onclick="testCreer()">
+                ➕ TESTER CRÉER BOUTIQUE
+            </button>
+            <button class="test-button success" onclick="testCreerAlternative()">
+                🔄 Méthode Alternative
+            </button>
+            <button class="test-button danger" onclick="forceCreer()">
+                🔥 Forcer CRÉER
+            </button>
+            <div id="statusCreer" class="status info" style="display: none;">
+                Prêt pour le test
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">🛠️ Solutions d'Urgence</div>
+            <div class="emergency-links">
+                <a href="/vendor-access-qr" class="emergency-link" target="_self">📱 Accès & QR Direct</a>
+                <a href="/admin/shops/create" class="emergency-link" target="_self">🏪 Créer Direct</a>
+                <a href="/solution-ultime-boutons-actifs.html" class="emergency-link" target="_self">🚀 Solution Ultime</a>
+                <a href="/test-button-acces-qr-simple.html" class="emergency-link" target="_self">🧪 Test Simple</a>
+            </div>
+            <div style="margin-top: 15px;">
+                <button class="force-test" onclick="createEmergencyButtons()">🚨 Créer Boutons d'Urgence</button>
+                <button class="force-test" onclick="forceReload()">🔄 Recharger Page</button>
+                <button class="force-test" onclick="verifyAllButtons()">🔍 Vérifier Tous Boutons</button>
+            </div>
+        </div>
+        
+        <div class="console" id="console">
+            <div class="console-entry info">🚀 Test final démarré</div>
+            <div class="console-entry info">📱 Prêt à tester les boutons</div>
+        </div>
+    </div>
+
+    <script src="button-verification-system.js"></script>
+    <script>
+        function log(message, type = 'info') {
+            const consoleDiv = document.getElementById('console');
+            const entry = document.createElement('div');
+            entry.className = `console-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            consoleDiv.appendChild(entry);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+        
+        function showStatus(elementId, message, type = 'info') {
+            const statusDiv = document.getElementById(elementId);
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+        }
+        
+        // Tests pour ACCÈS & QR
+        function testAccesQR() {
+            log('🎯 Test bouton ACCÈS & QR - Méthode principale', 'info');
+            showStatus('statusAccesQR', 'Test en cours...', 'info');
+            
+            try {
+                // Méthode 1: Navigation directe
+                log('🚀 Tentative: window.location.href = "/vendor-access-qr"', 'info');
+                window.location.href = '/vendor-access-qr';
+                
+                setTimeout(() => {
+                    log('⚠️ Méthode principale échouée', 'warning');
+                    showStatus('statusAccesQR', 'Méthode principale échouée', 'error');
+                }, 2000);
+                
+            } catch (error) {
+                log(`❌ Erreur: ${error.message}`, 'error');
+                showStatus('statusAccesQR', `Erreur: ${error.message}`, 'error');
+            }
+        }
+        
+        function testAccesQRAlternative() {
+            log('🔄 Test ACCÈS & QR - Méthode alternative', 'info');
+            showStatus('statusAccesQR', 'Test méthode alternative...', 'info');
+            
+            try {
+                // Méthode 2: window.location.assign
+                log('🔄 Tentative: window.location.assign("/vendor-access-qr")', 'info');
+                window.location.assign('/vendor-access-qr');
+                
+                setTimeout(() => {
+                    log('⚠️ Méthode alternative échouée', 'warning');
+                    testAccesQREmergency();
+                }, 2000);
+                
+            } catch (error) {
+                log(`❌ Erreur alternative: ${error.message}`, 'error');
+                testAccesQREmergency();
+            }
+        }
+        
+        function forceAccesQR() {
+            log('🔥 FORÇAGE ACCÈS & QR - Méthode ultime', 'warning');
+            showStatus('statusAccesQR', 'Forçage en cours...', 'info');
+            
+            try {
+                // Sauvegarder l'intention
+                sessionStorage.setItem('forceNavigation', '/vendor-access-qr');
+                
+                // Forcer avec History API
+                if (window.history && window.history.pushState) {
+                    window.history.pushState({ path: '/vendor-access-qr' }, '', '/vendor-access-qr');
+                    log('✅ History API utilisée', 'success');
+                }
+                
+                // Recharger et naviguer
+                setTimeout(() => {
+                    log('🔄 Rechargement forcé...', 'info');
+                    window.location.reload();
+                }, 500);
+                
+            } catch (error) {
+                log(`❌ Erreur forçage: ${error.message}`, 'error');
+                showStatus('statusAccesQR', `Erreur forçage: ${error.message}`, 'error');
+            }
+        }
+        
+        function testAccesQREmergency() {
+            log('🚨 ACCÈS & QR - Solution d\'urgence', 'warning');
+            showStatus('statusAccesQR', 'Solution d\'urgence...', 'warning');
+            
+            // Créer un bouton d'urgence
+            const emergencyBtn = document.createElement('button');
+            emergencyBtn.textContent = '📱 BOUTON D\'URGENCE ACCÈS & QR';
+            emergencyBtn.style.cssText = `
+                background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+                color: white;
+                border: none;
+                padding: 15px 30px;
+                font-size: 1.1em;
+                font-weight: bold;
+                border-radius: 50px;
+                cursor: pointer;
+                margin: 10px;
+                animation: pulse 1s infinite;
+            `;
+            emergencyBtn.onclick = () => {
+                log('🎯 BOUTON D\'URGENCE ACCÈS & QR CLIQUÉ', 'success');
+                window.location.href = '/vendor-access-qr';
+            };
+            
+            document.querySelector('.test-section').appendChild(emergencyBtn);
+            log('✅ Bouton d\'urgence créé', 'success');
+        }
+        
+        // Tests pour CRÉER
+        function testCreer() {
+            log('➕ Test bouton CRÉER - Méthode principale', 'info');
+            showStatus('statusCreer', 'Test en cours...', 'info');
+            
+            try {
+                log('🚀 Tentative: window.location.href = "/admin/shops/create"', 'info');
+                window.location.href = '/admin/shops/create';
+                
+                setTimeout(() => {
+                    log('⚠️ Méthode principale échouée', 'warning');
+                    showStatus('statusCreer', 'Méthode principale échouée', 'error');
+                }, 2000);
+                
+            } catch (error) {
+                log(`❌ Erreur: ${error.message}`, 'error');
+                showStatus('statusCreer', `Erreur: ${error.message}`, 'error');
+            }
+        }
+        
+        function testCreerAlternative() {
+            log('🔄 Test CRÉER - Méthode alternative', 'info');
+            showStatus('statusCreer', 'Test méthode alternative...', 'info');
+            
+            try {
+                log('🔄 Tentative: window.location.assign("/admin/shops/create")', 'info');
+                window.location.assign('/admin/shops/create');
+                
+                setTimeout(() => {
+                    log('⚠️ Méthode alternative échouée', 'warning');
+                    testCreerEmergency();
+                }, 2000);
+                
+            } catch (error) {
+                log(`❌ Erreur alternative: ${error.message}`, 'error');
+                testCreerEmergency();
+            }
+        }
+        
+        function forceCreer() {
+            log('🔥 FORÇAGE CRÉER - Méthode ultime', 'warning');
+            showStatus('statusCreer', 'Forçage en cours...', 'info');
+            
+            try {
+                // Sauvegarder l'intention
+                sessionStorage.setItem('forceNavigation', '/admin/shops/create');
+                
+                // Forcer avec History API
+                if (window.history && window.history.pushState) {
+                    window.history.pushState({ path: '/admin/shops/create' }, '', '/admin/shops/create');
+                    log('✅ History API utilisée', 'success');
+                }
+                
+                // Recharger et naviguer
+                setTimeout(() => {
+                    log('🔄 Rechargement forcé...', 'info');
+                    window.location.reload();
+                }, 500);
+                
+            } catch (error) {
+                log(`❌ Erreur forçage: ${error.message}`, 'error');
+                showStatus('statusCreer', `Erreur forçage: ${error.message}`, 'error');
+            }
+        }
+        
+        function testCreerEmergency() {
+            log('🚨 CRÉER - Solution d\'urgence', 'warning');
+            showStatus('statusCreer', 'Solution d\'urgence...', 'warning');
+            
+            // Créer un bouton d'urgence
+            const emergencyBtn = document.createElement('button');
+            emergencyBtn.textContent = '➕ BOUTON D\'URGENCE CRÉER BOUTIQUE';
+            emergencyBtn.style.cssText = `
+                background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+                color: white;
+                border: none;
+                padding: 15px 30px;
+                font-size: 1.1em;
+                font-weight: bold;
+                border-radius: 50px;
+                cursor: pointer;
+                margin: 10px;
+                animation: pulse 1s infinite;
+            `;
+            emergencyBtn.onclick = () => {
+                log('🎯 BOUTON D\'URGENCE CRÉER CLIQUÉ', 'success');
+                window.location.href = '/admin/shops/create';
+            };
+            
+            document.querySelectorAll('.test-section')[1].appendChild(emergencyBtn);
+            log('✅ Bouton d\'urgence créé', 'success');
+        }
+        
+        // Fonctions utilitaires
+        function createEmergencyButtons() {
+            log('🚨 CRÉATION: Boutons d\'urgence permanents', 'warning');
+            
+            const container = document.createElement('div');
+            container.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                z-index: 999999;
+                background: rgba(255, 255, 255, 0.95);
+                padding: 15px;
+                border-radius: 10px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                border: 2px solid #dc3545;
+            `;
+            
+            const title = document.createElement('div');
+            title.textContent = '🚨 BOUTONS D\'URGENCE';
+            title.style.cssText = 'color: #dc3545; font-weight: bold; margin-bottom: 10px; text-align: center;';
+            
+            // Bouton Accès & QR
+            const btnQR = document.createElement('button');
+            btnQR.textContent = '📱 ACCÈS & QR';
+            btnQR.style.cssText = `
+                display: block;
+                width: 100%;
+                margin: 5px 0;
+                padding: 10px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-weight: bold;
+                cursor: pointer;
+            `;
+            btnQR.onclick = () => {
+                log('🎯 BOUTON D\'URGENCE ACCÈS & QR', 'success');
+                window.location.href = '/vendor-access-qr';
+            };
+            
+            // Bouton Créer
+            const btnCreer = document.createElement('button');
+            btnCreer.textContent = '➕ CRÉER BOUTIQUE';
+            btnCreer.style.cssText = `
+                display: block;
+                width: 100%;
+                margin: 5px 0;
+                padding: 10px;
+                background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-weight: bold;
+                cursor: pointer;
+            `;
+            btnCreer.onclick = () => {
+                log('🎯 BOUTON D\'URGENCE CRÉER', 'success');
+                window.location.href = '/admin/shops/create';
+            };
+            
+            container.appendChild(title);
+            container.appendChild(btnQR);
+            container.appendChild(btnCreer);
+            document.body.appendChild(container);
+            
+            log('✅ Boutons d\'urgence permanents créés', 'success');
+        }
+        
+        function forceReload() {
+            log('🔄 RECHARGEMENT FORCE DE LA PAGE', 'warning');
+            sessionStorage.setItem('emergencyButtons', 'true');
+            window.location.reload();
+        }
+        
+        function verifyAllButtons() {
+            log('🔍 VÉRIFICATION DE TOUS LES BOUTONS', 'info');
+            if (window.verifyButtons) {
+                window.verifyButtons();
+            } else {
+                log('⚠️ Système de vérification non chargé', 'warning');
+            }
+        }
+        
+        // Vérification après rechargement
+        window.addEventListener('load', () => {
+            if (sessionStorage.getItem('emergencyButtons')) {
+                sessionStorage.removeItem('emergencyButtons');
+                setTimeout(createEmergencyButtons, 1000);
+            }
+        });
+        
+        // Log initial
+        log('🚀 TEST FINAL: Système de test démarré', 'success');
+        log('📱 Bouton Accès & QR: prêt pour test', 'info');
+        log('➕ Bouton Créer: prêt pour test', 'info');
+        log('🛠️ Solutions d\'urgence: disponibles', 'info');
+        
+        // Test automatique
+        setTimeout(() => {
+            log('✅ Système complètement opérationnel', 'success');
+            log('🎯 Cliquez sur un bouton pour commencer le test', 'info');
+        }, 2000);
+    </script>
+</body>
+</html>

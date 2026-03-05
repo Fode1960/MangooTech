@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Audio Isolé - Vérification Bidirectionnelle</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .audio-level {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .audio-level-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A, #CDDC39, #FFC107, #FF5722);
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary { background: #2196F3; color: white; }
+        .btn-success { background: #4CAF50; color: white; }
+        .btn-danger { background: #f44336; color: white; }
+        .log {
+            background: #f8f8f8;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.success { background: #e8f5e8; color: #2e7d2e; }
+        .status.error { background: #ffeaea; color: #d32f2f; }
+        .status.info { background: #e3f2fd; color: #1565c0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎧 Test Audio Isolé - Vérification Bidirectionnelle</h1>
+        <p>Ce test vérifie le système audio sans WebRTC complexe</p>
+        
+        <div class="status info" id="status">Prêt pour le test</div>
+        
+        <h3>🔊 Capture Microphone</h3>
+        <div class="audio-level">
+            <div class="audio-level-bar" id="microLevelBar"></div>
+        </div>
+        <button class="btn-primary" onclick="startMicrophoneTest()">Démarrer Test Micro</button>
+        <button class="btn-danger" onclick="stopMicrophoneTest()">Arrêter Test Micro</button>
+        
+        <h3>🎧 Audio de Test (Simulation Distant)</h3>
+        <div class="audio-level">
+            <div class="audio-level-bar" id="remoteLevelBar"></div>
+        </div>
+        <button class="btn-success" onclick="playTestAudio()">Jouer Audio Test</button>
+        <button class="btn-primary" onclick="testHeadphoneRouting()">Tester Sortie Casque</button>
+        
+        <h3>📊 Test Audio Bidirectionnel (Simulation)</h3>
+        <button class="btn-primary" onclick="simulateBidirectionalAudio()">Simuler Audio Bidirectionnel</button>
+        <button class="btn-danger" onclick="stopSimulation()">Arrêter Simulation</button>
+        
+        <h3>📝 Journal</h3>
+        <div class="log" id="log">Cliquez sur les boutons pour commencer les tests...</div>
+    </div>
+
+    <script>
+        let localStream = null;
+        let audioContext = null;
+        let analyser = null;
+        let dataArray = null;
+        let animationId = null;
+        let remoteAudioContext = null;
+        let remoteAnalyser = null;
+        let remoteDataArray = null;
+        let remoteAnimationId = null;
+        let testAudioElement = null;
+        let simulationInterval = null;
+
+        function log(message) {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(message);
+        }
+
+        function updateStatus(message, type = 'info') {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+        }
+
+        function updateAudioLevel(level, isRemote = false) {
+            const bar = document.getElementById(isRemote ? 'remoteLevelBar' : 'microLevelBar');
+            bar.style.width = level + '%';
+        }
+
+        // Test 1: Capture Microphone
+        async function startMicrophoneTest() {
+            try {
+                log('🎤 Démarrage capture microphone...');
+                
+                // Arrêter le test précédent si actif
+                stopMicrophoneTest();
+                
+                // Obtenir l'accès au microphone
+                localStream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    } 
+                });
+                
+                // Créer le contexte audio et l'analyseur
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const source = audioContext.createMediaStreamSource(localStream);
+                
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 512;
+                analyser.smoothingTimeConstant = 0.8;
+                
+                const bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+                
+                source.connect(analyser);
+                
+                // Démarrer l'analyse
+                analyzeMicrophoneLevel();
+                
+                updateStatus('✅ Microphone actif - Parlez pour voir la barre bouger', 'success');
+                log('✅ Capture microphone démarrée');
+                
+            } catch (error) {
+                updateStatus(`❌ Erreur microphone: ${error.message}`, 'error');
+                log(`❌ Erreur microphone: ${error.message}`);
+            }
+        }
+
+        function analyzeMicrophoneLevel() {
+            if (!analyser || !dataArray) return;
+            
+            analyser.getByteFrequencyData(dataArray);
+            
+            // Calculer le niveau moyen
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+                sum += dataArray[i];
+            }
+            const average = sum / dataArray.length;
+            const level = Math.min(100, (average / 255) * 200);
+            
+            updateAudioLevel(level, false);
+            
+            // Continuer l'analyse
+            animationId = requestAnimationFrame(analyzeMicrophoneLevel);
+        }
+
+        function stopMicrophoneTest() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+            
+            updateAudioLevel(0, false);
+            updateStatus('Microphone arrêté', 'info');
+            log('🛑 Test microphone arrêté');
+        }
+
+        // Test 2: Audio de Test avec Analyse
+        function playTestAudio() {
+            try {
+                log('🔊 Lecture audio de test...');
+                
+                // Créer un contexte audio pour l'audio de test
+                if (!remoteAudioContext) {
+                    remoteAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                
+                // Créer un oscillateur pour générer un son test
+                const oscillator = remoteAudioContext.createOscillator();
+                const gainNode = remoteAudioContext.createGain();
+                const analyserNode = remoteAudioContext.createAnalyser();
+                
+                analyserNode.fftSize = 512;
+                analyserNode.smoothingTimeConstant = 0.8;
+                
+                const bufferLength = analyserNode.frequencyBinCount;
+                remoteDataArray = new Uint8Array(bufferLength);
+                
+                // Connecter les nœuds
+                oscillator.connect(gainNode);
+                gainNode.connect(analyserNode);
+                analyserNode.connect(remoteAudioContext.destination);
+                
+                // Configurer le son
+                oscillator.frequency.setValueAtTime(440, remoteAudioContext.currentTime); // La440
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.3, remoteAudioContext.currentTime);
+                
+                // Démarrer l'analyse
+                analyzeRemoteLevel();
+                
+                // Jouer le son pendant 2 secondes
+                oscillator.start();
+                oscillator.stop(remoteAudioContext.currentTime + 2);
+                
+                updateStatus('🔊 Audio test en cours...', 'success');
+                log('✅ Audio test démarré');
+                
+                // Arrêter l'analyse après 2 secondes
+                setTimeout(() => {
+                    if (remoteAnimationId) {
+                        cancelAnimationFrame(remoteAnimationId);
+                        remoteAnimationId = null;
+                    }
+                    updateAudioLevel(0, true);
+                    updateStatus('Audio test terminé', 'info');
+                    log('✅ Audio test terminé');
+                }, 2000);
+                
+            } catch (error) {
+                updateStatus(`❌ Erreur audio test: ${error.message}`, 'error');
+                log(`❌ Erreur audio test: ${error.message}`);
+            }
+        }
+
+        function analyzeRemoteLevel() {
+            if (!remoteAnalyser || !remoteDataArray) return;
+            
+            remoteAnalyser.getByteFrequencyData(remoteDataArray);
+            
+            // Calculer le niveau moyen
+            let sum = 0;
+            for (let i = 0; i < remoteDataArray.length; i++) {
+                sum += remoteDataArray[i];
+            }
+            const average = sum / remoteDataArray.length;
+            const level = Math.min(100, (average / 255) * 200);
+            
+            updateAudioLevel(level, true);
+            
+            // Continuer l'analyse
+            remoteAnimationId = requestAnimationFrame(analyzeRemoteLevel);
+        }
+
+        // Test 3: Test Sortie Casque
+        async function testHeadphoneRouting() {
+            try {
+                log('🎧 Test routage vers casque...');
+                
+                // Créer un élément audio
+                if (!testAudioElement) {
+                    testAudioElement = new Audio();
+                    testAudioElement.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmFgU7k9n1unEiBC13yO/eizEIHWq+8+OWT';
+                    document.body.appendChild(testAudioElement);
+                }
+                
+                // Tester le routage vers le casque
+                if ('setSinkId' in testAudioElement) {
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
+                    
+                    log(`📱 Périphériques audio trouvés: ${audioOutputs.length}`);
+                    
+                    if (audioOutputs.length > 0) {
+                        // Chercher un casque
+                        let targetDevice = audioOutputs[0];
+                        for (const device of audioOutputs) {
+                            if (device.label.toLowerCase().includes('headphone') || 
+                                device.label.toLowerCase().includes('casque') ||
+                                device.label.toLowerCase().includes('headset')) {
+                                targetDevice = device;
+                                break;
+                            }
+                        }
+                        
+                        log(`🎯 Cible: ${targetDevice.label} (${targetDevice.deviceId})`);
+                        
+                        await testAudioElement.setSinkId(targetDevice.deviceId);
+                        testAudioElement.volume = 1.0;
+                        
+                        // Jouer un son test
+                        testAudioElement.play().then(() => {
+                            log(`✅ Audio dirigé vers: ${targetDevice.label}`);
+                            updateStatus('✅ Audio test joué dans le casque', 'success');
+                            
+                            // Arrêter après 1 seconde
+                            setTimeout(() => {
+                                testAudioElement.pause();
+                                testAudioElement.currentTime = 0;
+                            }, 1000);
+                        });
+                    } else {
+                        log('⚠️ Aucun périphérique audio trouvé');
+                        updateStatus('⚠️ Aucun périphérique audio trouvé', 'error');
+                    }
+                } else {
+                    log('⚠️ setSinkId non supporté');
+                    updateStatus('⚠️ Routage casque non supporté', 'error');
+                }
+                
+            } catch (error) {
+                updateStatus(`❌ Erreur routage: ${error.message}`, 'error');
+                log(`❌ Erreur routage: ${error.message}`);
+            }
+        }
+
+        // Test 4: Simulation Bidirectionnelle
+        function simulateBidirectionalAudio() {
+            log('🔄 Démarrage simulation bidirectionnelle...');
+            
+            // Simuler l'envoi et la réception d'audio
+            let sendLevel = 0;
+            let receiveLevel = 0;
+            
+            simulationInterval = setInterval(() => {
+                // Simuler l'envoi (micro)
+                sendLevel = Math.random() * 80 + 20; // 20-100%
+                updateAudioLevel(sendLevel, false);
+                
+                // Simuler la réception (audio distant) avec délai
+                setTimeout(() => {
+                    receiveLevel = sendLevel * 0.8 + (Math.random() * 20 - 10); // 80% du niveau envoyé + bruit
+                    receiveLevel = Math.max(0, Math.min(100, receiveLevel));
+                    updateAudioLevel(receiveLevel, true);
+                    
+                    log(`📤 Envoyé: ${sendLevel.toFixed(1)}% → 📥 Reçu: ${receiveLevel.toFixed(1)}%`);
+                }, 200); // Délai de 200ms pour simuler la transmission
+            }, 500); // Nouvelle donnée toutes les 500ms
+            
+            updateStatus('🔄 Simulation bidirectionnelle active', 'success');
+        }
+
+        function stopSimulation() {
+            if (simulationInterval) {
+                clearInterval(simulationInterval);
+                simulationInterval = null;
+            }
+            
+            updateAudioLevel(0, false);
+            updateAudioLevel(0, true);
+            updateStatus('Simulation arrêtée', 'info');
+            log('🛑 Simulation bidirectionnelle arrêtée');
+        }
+
+        // Nettoyage à la fermeture
+        window.addEventListener('beforeunload', () => {
+            stopMicrophoneTest();
+            stopSimulation();
+        });
+    </script>
+</body>
+</html>

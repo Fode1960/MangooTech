@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test VoIP Ultra Simple - 8888 vs 8889</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .user-panel { width: 45%; display: inline-block; margin: 10px; padding: 20px; border: 2px solid #ddd; border-radius: 10px; vertical-align: top; }
+        .user-panel.active { border-color: #28a745; background: #f8fff8; }
+        .user-panel.receiving-call { border-color: #ffc107; background: #fffbf0; }
+        .user-panel.in-call { border-color: #17a2b8; background: #f0f8ff; }
+        h2 { margin-top: 0; color: #333; }
+        .button { padding: 12px 24px; margin: 8px 4px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; min-width: 120px; }
+        .button-connect { background: #007bff; color: white; }
+        .button-register { background: #6c757d; color: white; }
+        .button-call { background: #28a745; color: white; }
+        .button-answer { background: #28a745; color: white; animation: pulse 1s infinite; }
+        .button-reject { background: #dc3545; color: white; }
+        .button-hangup { background: #dc3545; color: white; }
+        .button:disabled { background: #ccc; cursor: not-allowed; opacity: 0.6; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; font-weight: bold; }
+        .status-connected { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status-disconnected { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status-incoming { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; animation: pulse 1s infinite; }
+        .status-in-call { background: #cce5ff; color: #004085; border: 1px solid #b8daff; }
+        .call-controls { margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: center; }
+        .log { background: #000; color: #0f0; padding: 10px; font-family: monospace; font-size: 12px; max-height: 150px; overflow-y: auto; margin: 10px 0; border-radius: 5px; }
+        .log-entry { margin: 2px 0; }
+        .clear-log { background: #6c757d; color: white; padding: 5px 10px; font-size: 12px; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Test VoIP Ultra Simple: 8888 ↔ 8889</h1>
+        <p style="text-align: center; color: #666;">Testez les appels VoIP avec les boutons Répondre, Raccrocher, Refuser</p>
+
+        <div style="text-align: center; margin: 20px 0;">
+            <button id="connectBtn" class="button button-connect">🔗 Se connecter au serveur</button>
+        </div>
+
+        <!-- Panneau 8888 (Vendeur) -->
+        <div id="panel8888" class="user-panel">
+            <h2>🏪 Vendeur 8888</h2>
+            <div id="status8888" class="status status-disconnected">Déconnecté</div>
+            
+            <div style="text-align: center; margin: 20px 0;">
+                <button id="register8888" class="button button-register" disabled>👤 S'enregistrer</button>
+            </div>
+
+            <div class="call-controls" id="callControls8888" style="display: none;">
+                <h3>📞 Contrôles d'appel</h3>
+                <button id="call8889" class="button button-call" disabled>📱 Appeler 8889</button>
+                <button id="hangup8888" class="button button-hangup" style="display: none;">📵 Raccrocher</button>
+            </div>
+
+            <div class="log" id="log8888"></div>
+        </div>
+
+        <!-- Panneau 8889 (Client) -->
+        <div id="panel8889" class="user-panel">
+            <h2>👤 Client 8889</h2>
+            <div id="status8889" class="status status-disconnected">Déconnecté</div>
+            
+            <div style="text-align: center; margin: 20px 0;">
+                <button id="register8889" class="button button-register" disabled>👤 S'enregistrer</button>
+            </div>
+
+            <div class="call-controls" id="callControls8889" style="display: none;">
+                <h3>📱 Réception d'appels</h3>
+                <div id="incomingCallControls" style="display: none;">
+                    <div id="incomingInfo" class="status status-incoming" style="margin: 10px 0;">Appel entrant...</div>
+                    <button id="answer8889" class="button button-answer">✅ Répondre</button>
+                    <button id="reject8889" class="button button-reject">❌ Refuser</button>
+                </div>
+                <button id="hangup8889" class="button button-hangup" style="display: none;">📵 Raccrocher</button>
+            </div>
+
+            <div class="log" id="log8889"></div>
+        </div>
+
+        <div style="text-align: center; margin: 20px 0;">
+            <button id="clearAllLogs" class="button clear-log">🗑️ Effacer tous les journaux</button>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let user8888 = { registered: false, inCall: false };
+        let user8889 = { registered: false, inCall: false, incomingCall: null };
+
+        function log(user, message) {
+            const logDiv = document.getElementById('log' + user);
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `<div class="log-entry">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateStatus(user, status, text) {
+            const statusDiv = document.getElementById('status' + user);
+            statusDiv.className = 'status status-' + status;
+            statusDiv.textContent = text;
+        }
+
+        function updatePanel(user, state) {
+            const panel = document.getElementById('panel' + user);
+            panel.className = 'user-panel ' + state;
+        }
+
+        // Connexion WebSocket
+        document.getElementById('connectBtn').addEventListener('click', function() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                log('8888', 'Déjà connecté');
+                log('8889', 'Déjà connecté');
+                return;
+            }
+
+            log('8888', 'Connexion au serveur WebSocket...');
+            log('8889', 'Connexion au serveur WebSocket...');
+            
+            ws = new WebSocket('ws://localhost:3008');
+
+            ws.onopen = function() {
+                log('8888', '✅ Connecté au serveur WebSocket');
+                log('8889', '✅ Connecté au serveur WebSocket');
+                updateStatus('8888', 'connected', 'Connecté');
+                updateStatus('8889', 'connected', 'Connecté');
+                document.getElementById('register8888').disabled = false;
+                document.getElementById('register8889').disabled = false;
+                document.getElementById('connectBtn').textContent = '✅ Connecté';
+                document.getElementById('connectBtn').disabled = true;
+            };
+
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                handleMessage(data);
+            };
+
+            ws.onclose = function() {
+                log('8888', '🔌 Déconnecté du serveur');
+                log('8889', '🔌 Déconnecté du serveur');
+                updateStatus('8888', 'disconnected', 'Déconnecté');
+                updateStatus('8889', 'disconnected', 'Déconnecté');
+                document.getElementById('connectBtn').textContent = '🔗 Se connecter';
+                document.getElementById('connectBtn').disabled = false;
+            };
+
+            ws.onerror = function(error) {
+                log('8888', '❌ Erreur WebSocket');
+                log('8889', '❌ Erreur WebSocket');
+            };
+        });
+
+        function handleMessage(data) {
+            console.log('Message reçu:', data);
+            
+            switch (data.type) {
+                case 'joined-room':
+                    if (data.userId === 'vendor-8888') {
+                        user8888.registered = true;
+                        log('8888', `✅ Enregistré dans la room ${data.roomId}`);
+                        document.getElementById('callControls8888').style.display = 'block';
+                        document.getElementById('call8889').disabled = false;
+                        updatePanel('8888', 'active');
+                    } else if (data.userId === 'client-8889') {
+                        user8889.registered = true;
+                        log('8889', `✅ Enregistré dans la room ${data.roomId}`);
+                        document.getElementById('callControls8889').style.display = 'block';
+                        updatePanel('8889', 'active');
+                    }
+                    break;
+
+                case 'other-users':
+                    if (data.users.length > 0) {
+                        data.users.forEach(user => {
+                            log('8888', `👤 Utilisateur connecté: ${user.userId} (${user.role})`);
+                            log('8889', `👤 Utilisateur connecté: ${user.userId} (${user.role})`);
+                        });
+                    }
+                    break;
+
+                case 'incoming-call':
+                    if (data.from === 'vendor-8888') {
+                        user8889.incomingCall = data;
+                        log('8889', `📞 Appel entrant de ${data.from}`);
+                        document.getElementById('incomingCallControls').style.display = 'block';
+                        document.getElementById('incomingInfo').textContent = `📞 Appel de ${data.from}`;
+                        updatePanel('8889', 'receiving-call');
+                        updateStatus('8889', 'incoming', 'Appel entrant...');
+                    }
+                    break;
+
+                case 'call-answered':
+                    if (data.from === 'client-8889') {
+                        log('8888', `✅ Appel accepté par 8889`);
+                        user8888.inCall = true;
+                        document.getElementById('call8889').style.display = 'none';
+                        document.getElementById('hangup8888').style.display = 'inline-block';
+                        updatePanel('8888', 'in-call');
+                        updateStatus('8888', 'in-call', 'En appel');
+                        
+                        log('8889', `✅ Vous avez accepté l'appel`);
+                        user8889.inCall = true;
+                        document.getElementById('incomingCallControls').style.display = 'none';
+                        document.getElementById('hangup8889').style.display = 'inline-block';
+                        updatePanel('8889', 'in-call');
+                        updateStatus('8889', 'in-call', 'En appel');
+                    }
+                    break;
+
+                case 'call-ended':
+                    const endedBy = data.from || 'Inconnu';
+                    log('8888', `📵 Appel terminé par ${endedBy}`);
+                    log('8889', `📵 Appel terminé par ${endedBy}`);
+                    
+                    // Réinitialiser l'état des appels
+                    user8888.inCall = false;
+                    user8889.inCall = false;
+                    user8889.incomingCall = null;
+                    
+                    // Réinitialiser l'interface
+                    document.getElementById('call8889').style.display = 'inline-block';
+                    document.getElementById('hangup8888').style.display = 'none';
+                    document.getElementById('incomingCallControls').style.display = 'none';
+                    document.getElementById('hangup8889').style.display = 'none';
+                    
+                    updatePanel('8888', 'active');
+                    updatePanel('8889', 'active');
+                    updateStatus('8888', 'connected', 'Connecté');
+                    updateStatus('8889', 'connected', 'Connecté');
+                    break;
+            }
+        }
+
+        function sendMessage(message) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify(message));
+                console.log('Message envoyé:', message);
+            } else {
+                alert('Non connecté au serveur WebSocket');
+            }
+        }
+
+        // Enregistrement 8888
+        document.getElementById('register8888').addEventListener('click', function() {
+            sendMessage({
+                type: 'join-room',
+                roomId: 'voip-test-room',
+                userId: 'vendor-8888',
+                role: 'vendor'
+            });
+        });
+
+        // Enregistrement 8889
+        document.getElementById('register8889').addEventListener('click', function() {
+            sendMessage({
+                type: 'join-room',
+                roomId: 'voip-test-room',
+                userId: 'client-8889',
+                role: 'client'
+            });
+        });
+
+        // Appeler 8889
+        document.getElementById('call8889').addEventListener('click', function() {
+            sendMessage({
+                type: 'call-notification',
+                roomId: 'voip-test-room',
+                from: 'vendor-8888',
+                message: 'Appel de 8888'
+            });
+            log('8888', '📞 Appel en cours vers 8889...');
+        });
+
+        // Répondre à l'appel (8889)
+        document.getElementById('answer8889').addEventListener('click', function() {
+            sendMessage({
+                type: 'answer',
+                roomId: 'voip-test-room',
+                from: 'client-8889',
+                data: { type: 'answer', sdp: 'fake-sdp-for-test' }
+            });
+            log('8889', '✅ Appel accepté');
+        });
+
+        // Refuser l'appel (8889)
+        document.getElementById('reject8889').addEventListener('click', function() {
+            sendMessage({
+                type: 'call-ended',
+                roomId: 'voip-test-room',
+                from: 'client-8889'
+            });
+            log('8889', '❌ Appel refusé');
+            document.getElementById('incomingCallControls').style.display = 'none';
+            updatePanel('8889', 'active');
+            updateStatus('8889', 'connected', 'Connecté');
+        });
+
+        // Raccrocher (8888)
+        document.getElementById('hangup8888').addEventListener('click', function() {
+            sendMessage({
+                type: 'call-ended',
+                roomId: 'voip-test-room',
+                from: 'vendor-8888'
+            });
+            log('8888', '📵 Appel raccroché');
+        });
+
+        // Raccrocher (8889)
+        document.getElementById('hangup8889').addEventListener('click', function() {
+            sendMessage({
+                type: 'call-ended',
+                roomId: 'voip-test-room',
+                from: 'client-8889'
+            });
+            log('8889', '📵 Appel raccroché');
+        });
+
+        // Effacer les journaux
+        document.getElementById('clearAllLogs').addEventListener('click', function() {
+            document.getElementById('log8888').innerHTML = '';
+            document.getElementById('log8889').innerHTML = '';
+        });
+
+        // Message initial
+        log('8888', '🎯 Prêt - Connectez-vous et enregistrez-vous');
+        log('8889', '🎯 Prêt - Connectez-vous et enregistrez-vous');
+    </script>
+</body>
+</html>

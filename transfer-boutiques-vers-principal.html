@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔄 Transférer Boutiques vers Site Principal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .test-section {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .logo-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+            margin: 5px;
+        }
+        .boutique-card {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .warning { color: #fbbf24; }
+        button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        .data-box {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Transférer Boutiques vers Site Principal</h1>
+        
+        <div class="test-section">
+            <h2>🎯 Objectif</h2>
+            <p>Transférer les boutiques avec logos des tests (3020/3021) vers le site principal (3017)</p>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 État Actuel</h2>
+            <button onclick="checkAllStorage()">🔍 Vérifier tous les stockages</button>
+            <div id="current-state"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔄 Transfert</h2>
+            <button onclick="transferFromTests()">📥 Importer depuis les tests</button>
+            <button onclick="transferToMain()">📤 Exporter vers site principal</button>
+            <div id="transfer-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Création Rapide</h2>
+            <button onclick="createTestBoutiqueWithLogo()">➕ Créer boutique test avec logo</button>
+            <button onclick="createMultipleTestBoutiques()">➕ Créer 3 boutiques de test</button>
+            <div id="creation-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Finalisation</h2>
+            <button onclick="verifyFinalState()">✅ Vérifier état final</button>
+            <button onclick="openMainSite()">🚀 Ouvrir site principal</button>
+            <div id="final-results"></div>
+        </div>
+    </div>
+
+    <script>
+        // 🔍 Vérifier tous les stockages
+        function checkAllStorage() {
+            const stateDiv = document.getElementById('current-state');
+            
+            // Vérifier tous les stockages possibles
+            const demoBoutiques_v1 = JSON.parse(localStorage.getItem('demoBoutiques') || '[]');
+            const demo_boutiques = JSON.parse(localStorage.getItem('demo_boutiques') || '[]');
+            const testBoutiques = JSON.parse(localStorage.getItem('testBoutiques') || '[]');
+            const realBoutiques = JSON.parse(localStorage.getItem('realBoutiques') || '[]');
+            
+            let html = '<h3>📦 Stockages trouvés :</h3>';
+            
+            html += `<p>demoBoutiques (ancien): ${demoBoutiques_v1.length} boutiques</p>`;
+            html += `<p>demo_boutiques (principal): ${demo_boutiques.length} boutiques</p>`;
+            html += `<p>testBoutiques (test): ${testBoutiques.length} boutiques</p>`;
+            html += `<p>realBoutiques (réel): ${realBoutiques.length} boutiques</p>`;
+            
+            // Afficher les détails des boutiques principales
+            if (demo_boutiques.length > 0) {
+                html += '<h4>🛍️ Boutiques principales (demo_boutiques) :</h4>';
+                demo_boutiques.forEach((boutique, index) => {
+                    const hasLogo = !!(boutique.logo || boutique.logo_url);
+                    html += `
+                        <div class="boutique-card">
+                            ${hasLogo ? `<img src="${boutique.logo || boutique.logo_url}" class="logo-preview" alt="Logo">` : '<div style="width:60px;height:60px;background:#ccc;border-radius:50%;display:flex;align-items:center;justify-content:center;">❓</div>'}
+                            <div>
+                                <strong>${boutique.name || 'Sans nom'}</strong><br>
+                                <small>Logo: ${hasLogo ? '<span class="success">✅ Présent</span>' : '<span class="error">❌ Manquant</span>'}</small><br>
+                                <small>Slug: ${boutique.slug || '<span class="error">❌ Manquant</span>'}</small>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            stateDiv.innerHTML = html;
+        }
+
+        // 📥 Importer depuis les tests
+        function transferFromTests() {
+            const transferDiv = document.getElementById('transfer-results');
+            
+            // Récupérer depuis les tests
+            const testBoutiques = JSON.parse(localStorage.getItem('testBoutiques') || '[]');
+            const demoBoutiques_v1 = JSON.parse(localStorage.getItem('demoBoutiques') || '[]');
+            
+            let allBoutiques = [...testBoutiques, ...demoBoutiques_v1];
+            
+            if (allBoutiques.length === 0) {
+                transferDiv.innerHTML = '<p class="warning">⚠️ Aucune boutique trouvée dans les tests</p>';
+                return;
+            }
+            
+            // Convertir au format principal
+            const convertedBoutiques = allBoutiques.map(boutique => ({
+                ...boutique,
+                id: boutique.id || 'test-' + Date.now() + '-' + Math.random(),
+                name: boutique.name || 'Boutique Importée',
+                description: boutique.description || 'Importée depuis les tests',
+                logo: boutique.logo || boutique.logo_url || '',
+                logo_url: boutique.logo_url || boutique.logo || '',
+                slug: boutique.slug || 'boutique-' + Date.now(),
+                is_demo: true,
+                isActive: boutique.isActive !== undefined ? boutique.isActive : true,
+                categories: boutique.categories || [],
+                primaryColor: boutique.primaryColor || '#FF6B35',
+                secondaryColor: boutique.secondaryColor || '#4CAF50',
+                socialLinks: boutique.socialLinks || { instagram: '', facebook: '', whatsapp: '' }
+            }));
+            
+            // Sauvegarder dans le stockage principal
+            localStorage.setItem('demo_boutiques', JSON.stringify(convertedBoutiques));
+            
+            transferDiv.innerHTML = `
+                <h3>✅ Transfert réussi :</h3>
+                <p class="success">✅ ${convertedBoutiques.length} boutiques importées et converties</p>
+                <div class="data-box">
+                    ${convertedBoutiques.map(b => `${b.name} - Logo: ${!!(b.logo || b.logo_url) ? '✅' : '❌'}`).join('<br>')}
+                </div>
+            `;
+        }
+
+        // 📤 Exporter vers le format du site principal
+        function transferToMain() {
+            const transferDiv = document.getElementById('transfer-results');
+            
+            const demo_boutiques = JSON.parse(localStorage.getItem('demo_boutiques') || '[]');
+            
+            if (demo_boutiques.length === 0) {
+                transferDiv.innerHTML = '<p class="warning">⚠️ Aucune boutique à exporter</p>';
+                return;
+            }
+            
+            // Le site principal utilise déjà le bon format
+            transferDiv.innerHTML = `
+                <h3>✅ Prêt pour le site principal :</h3>
+                <p class="success">✅ ${demo_boutiques.length} boutiques prêtes</p>
+                <p>Les boutiques sont déjà dans le bon format pour le site principal !</p>
+            `;
+        }
+
+        // ➕ Créer boutique test avec logo
+        function createTestBoutiqueWithLogo() {
+            const creationDiv = document.getElementById('creation-results');
+            
+            const testBoutique = {
+                id: 'test-' + Date.now(),
+                name: 'Boutique Logo Test ' + new Date().toLocaleTimeString(),
+                description: 'Boutique de test avec logo pour vérifier la persistance',
+                logo: 'https://via.placeholder.com/100x100/4CAF50/white?text=TEST' + Date.now().toString().slice(-2),
+                logo_url: 'https://via.placeholder.com/100x100/4CAF50/white?text=TEST' + Date.now().toString().slice(-2),
+                slug: 'boutique-test-' + Date.now(),
+                is_demo: true,
+                isActive: true,
+                categories: ['fashion'],
+                primaryColor: '#FF6B35',
+                secondaryColor: '#4CAF50',
+                socialLinks: { instagram: '', facebook: '', whatsapp: '' },
+                createdAt: new Date().toISOString(),
+                status: 'approved'
+            };
+            
+            // Ajouter aux boutiques principales
+            let demo_boutiques = JSON.parse(localStorage.getItem('demo_boutiques') || '[]');
+            demo_boutiques.push(testBoutique);
+            localStorage.setItem('demo_boutiques', JSON.stringify(demo_boutiques));
+            
+            creationDiv.innerHTML = `
+                <h3>✅ Boutique créée :</h3>
+                <div class="boutique-card">
+                    <img src="${testBoutique.logo}" class="logo-preview" alt="Logo">
+                    <div>
+                        <strong>${testBoutique.name}</strong><br>
+                        <small class="success">✅ Logo inclus</small><br>
+                        <small>Slug: ${testBoutique.slug}</small>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ➕ Créer plusieurs boutiques
+        function createMultipleTestBoutiques() {
+            const creationDiv = document.getElementById('creation-results');
+            
+            const boutiques = [
+                {
+                    name: 'Boutique Mode Élégante',
+                    description: 'Mode africaine moderne',
+                    logo: 'https://via.placeholder.com/100x100/FF6B35/white?text=MODE',
+                    categories: ['fashion']
+                },
+                {
+                    name: 'Tech Afro Digital',
+                    description: 'Électronique et accessoires',
+                    logo: 'https://via.placeholder.com/100x100/2196F3/white?text=TECH',
+                    categories: ['electronics']
+                },
+                {
+                    name: 'Artisanat Local Plus',
+                    description: 'Artisanat traditionnel',
+                    logo: 'https://via.placeholder.com/100x100/9C27B0/white?text=ART',
+                    categories: ['handicraft']
+                }
+            ];
+            
+            const createdBoutiques = boutiques.map(boutique => ({
+                id: 'test-' + Date.now() + '-' + Math.random(),
+                name: boutique.name,
+                description: boutique.description,
+                logo: boutique.logo,
+                logo_url: boutique.logo,
+                slug: 'boutique-' + boutique.name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
+                is_demo: true,
+                isActive: true,
+                categories: boutique.categories,
+                primaryColor: '#FF6B35',
+                secondaryColor: '#4CAF50',
+                socialLinks: { instagram: '', facebook: '', whatsapp: '' },
+                createdAt: new Date().toISOString(),
+                status: 'approved'
+            }));
+            
+            // Sauvegarder
+            let demo_boutiques = JSON.parse(localStorage.getItem('demo_boutiques') || '[]');
+            demo_boutiques.push(...createdBoutiques);
+            localStorage.setItem('demo_boutiques', JSON.stringify(demo_boutiques));
+            
+            creationDiv.innerHTML = `
+                <h3>✅ ${createdBoutiques.length} boutiques créées :</h3>
+                ${createdBoutiques.map(boutique => `
+                    <div class="boutique-card">
+                        <img src="${boutique.logo}" class="logo-preview" alt="Logo">
+                        <div>
+                            <strong>${boutique.name}</strong><br>
+                            <small class="success">✅ Logo inclus</small>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        // ✅ Vérifier état final
+        function verifyFinalState() {
+            const finalDiv = document.getElementById('final-results');
+            
+            const demo_boutiques = JSON.parse(localStorage.getItem('demo_boutiques') || '[]');
+            
+            let html = '<h3>✅ État final vérifié :</h3>';
+            
+            if (demo_boutiques.length === 0) {
+                html += '<p class="warning">⚠️ Aucune boutique dans le site principal</p>';
+                html += '<button onclick="createTestBoutiqueWithLogo()">🛍️ Créer une boutique de test</button>';
+            } else {
+                html += `<p class="success">✅ ${demo_boutiques.length} boutiques prêtes pour le site principal</p>`;
+                
+                // Vérifier que toutes ont des logos
+                const withLogos = demo_boutiques.filter(b => !!(b.logo || b.logo_url)).length;
+                html += `<p>✅ ${withLogos}/${demo_boutiques.length} boutiques avec logos</p>`;
+                
+                if (withLogos === demo_boutiques.length) {
+                    html += '<p class="success">🎯 Toutes les boutiques ont des logos !</p>';
+                }
+            }
+            
+            finalDiv.innerHTML = html;
+        }
+
+        // 🚀 Ouvrir site principal
+        function openMainSite() {
+            window.open('http://localhost:3017', '_blank');
+            setTimeout(() => {
+                alert('🎯 Site principal ouvert !\\n\\nLes boutiques avec logos devraient maintenant être visibles dans la liste.');
+            }, 1000);
+        }
+
+        // Initialisation
+        window.onload = function() {
+            checkAllStorage();
+        };
+    </script>
+</body>
+</html>

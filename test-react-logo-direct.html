@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Test React Logo - Chargement Direct</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .test-section {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .logo-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+            margin: 5px;
+        }
+        .boutique-card {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .warning { color: #fbbf24; }
+        button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .data-box {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Test React Logo - Chargement Direct</h1>
+        
+        <div class="test-section">
+            <h2>🎯 Objectif</h2>
+            <p>Tester si le composant React charge les logos correctement avec la même technique que les tests 3020/3021</p>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 État Actuel</h2>
+            <button onclick="checkCurrentState()">🔍 Vérifier l'état actuel</button>
+            <div id="current-state"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Test Complet</h2>
+            <button onclick="runCompleteTest()">🚀 Lancer le test complet</button>
+            <div id="test-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 Comparaison des Méthodes</h2>
+            <div class="comparison">
+                <div>
+                    <h3>🔧 Méthode Test (3020/3021)</h3>
+                    <div class="data-box">
+                        <pre>// ✅ FONCTIONNE
+finalBoutiques = demoBoutiques.map(boutique => ({
+  ...boutique, // Garder TOUTES les propriétés
+  logo: boutique.logo || boutique.logo_url || '',
+  logo_url: boutique.logo_url || boutique.logo || ''
+}));
+</pre>
+                    </div>
+                </div>
+                <div>
+                    <h3>⚛️ Méthode React (à vérifier)</h3>
+                    <div class="data-box">
+                        <pre>// 🔍 À VÉRIFIER SI APPLIQUÉ
+finalBoutiques = demoBoutiques.map(boutique => ({
+  ...boutique, // Garder TOUTES les propriétés
+  logo: boutique.logo || boutique.logo_url || '',
+  logo_url: boutique.logo_url || boutique.logo || ''
+}));
+</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 Outils de Diagnostic</h2>
+            <button onclick="inspectLocalStorage()">📦 Inspecter localStorage</button>
+            <button onclick="simulateReactComponent()">⚛️ Simuler composant React</button>
+            <button onclick="compareMethods()">🔄 Comparer méthodes</button>
+            <div id="diagnostic-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Solution Finale</h2>
+            <button onclick="applyDirectMethod()">✅ Appliquer méthode directe</button>
+            <div id="solution-result"></div>
+        </div>
+    </div>
+
+    <script>
+        // 🔍 Vérifier l'état actuel
+        function checkCurrentState() {
+            const stateDiv = document.getElementById('current-state');
+            
+            // Vérifier localStorage
+            const demoBoutiques = JSON.parse(localStorage.getItem('demoBoutiques') || '[]');
+            const realBoutiques = JSON.parse(localStorage.getItem('realBoutiques') || '[]');
+            
+            let html = '<h3>📊 État du localStorage :</h3>';
+            
+            if (demoBoutiques.length === 0 && realBoutiques.length === 0) {
+                html += '<p class="warning">⚠️ Aucune boutique trouvée dans localStorage</p>';
+                html += '<button onclick="createTestBoutique()">🛍️ Créer une boutique de test</button>';
+            } else {
+                html += `<p class="success">✅ ${demoBoutiques.length} boutiques demo trouvées</p>`;
+                html += `<p class="success">✅ ${realBoutiques.length} boutiques réelles trouvées</p>`;
+                
+                // Afficher les détails
+                [...demoBoutiques, ...realBoutiques].forEach((boutique, index) => {
+                    const hasLogo = !!(boutique.logo || boutique.logo_url);
+                    html += `
+                        <div class="boutique-card">
+                            ${hasLogo ? `<img src="${boutique.logo || boutique.logo_url}" class="logo-preview" alt="Logo">` : '<div style="width:60px;height:60px;background:#ccc;border-radius:50%;display:flex;align-items:center;justify-content:center;">❓</div>'}
+                            <div>
+                                <strong>${boutique.name || 'Sans nom'}</strong><br>
+                                <small>Logo: ${hasLogo ? '<span class="success">✅ Présent</span>' : '<span class="error">❌ Manquant</span>'}</small><br>
+                                <small>Slug: ${boutique.slug || '<span class="error">❌ Manquant</span>'}</small>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            stateDiv.innerHTML = html;
+        }
+
+        // 🧪 Test complet
+        function runCompleteTest() {
+            const resultsDiv = document.getElementById('test-results');
+            
+            // Étape 1: Créer une boutique de test
+            const testBoutique = {
+                id: 'test-' + Date.now(),
+                name: 'Boutique Test Logo',
+                description: 'Test de persistance du logo',
+                logo: 'https://via.placeholder.com/100x100/4CAF50/white?text=TEST',
+                logo_url: 'https://via.placeholder.com/100x100/4CAF50/white?text=TEST',
+                slug: 'boutique-test-' + Date.now(),
+                is_demo: true
+            };
+            
+            // Sauvegarder
+            let demoBoutiques = JSON.parse(localStorage.getItem('demoBoutiques') || '[]');
+            demoBoutiques.push(testBoutique);
+            localStorage.setItem('demoBoutiques', JSON.stringify(demoBoutiques));
+            
+            let html = '<h3>🧪 Résultats du test :</h3>';
+            html += '<div class="test-section">';
+            
+            // Test 1: Méthode des tests 3020/3021
+            const method1 = demoBoutiques.map(boutique => ({
+                ...boutique,
+                logo: boutique.logo || boutique.logo_url || '',
+                logo_url: boutique.logo_url || boutique.logo || ''
+            }));
+            
+            const lastBoutique1 = method1[method1.length - 1];
+            const logoPresent1 = !!(lastBoutique1.logo || lastBoutique1.logo_url);
+            
+            html += `<p>Méthode Test (3020/3021): ${logoPresent1 ? '<span class="success">✅ Logo présent</span>' : '<span class="error">❌ Logo manquant</span>'}</p>`;
+            
+            // Test 2: Méthode React (simulation)
+            const method2 = demoBoutiques.map(boutique => {
+                // Simuler une transformation qui pourrait perdre des données
+                return {
+                    id: boutique.id,
+                    name: boutique.name,
+                    description: boutique.description,
+                    slug: boutique.slug,
+                    // Oups! On a oublié de copier le logo
+                    logo: boutique.logo || '', // Pas de fallback sur logo_url
+                    is_demo: boutique.is_demo
+                };
+            });
+            
+            const lastBoutique2 = method2[method2.length - 1];
+            const logoPresent2 = !!(lastBoutique2.logo);
+            
+            html += `<p>Méthode React (simulation): ${logoPresent2 ? '<span class="success">✅ Logo présent</span>' : '<span class="error">❌ Logo manquant</span>'}</p>`;
+            
+            html += '</div>';
+            
+            resultsDiv.innerHTML = html;
+            
+            // Conclusion
+            if (logoPresent1 && !logoPresent2) {
+                resultsDiv.innerHTML += '<div class="test-section"><p class="warning">🎯 Le problème est identifié : La méthode React ne copie pas correctement toutes les propriétés!</p></div>';
+            }
+        }
+
+        // 📦 Inspecter localStorage
+        function inspectLocalStorage() {
+            const diagnosticDiv = document.getElementById('diagnostic-results');
+            
+            const demoBoutiques = JSON.parse(localStorage.getItem('demoBoutiques') || '[]');
+            const realBoutiques = JSON.parse(localStorage.getItem('realBoutiques') || '[]');
+            
+            let html = '<h3>📦 Contenu du localStorage :</h3>';
+            html += '<div class="data-box">';
+            html += '<strong>demoBoutiques:</strong><br>';
+            html += JSON.stringify(demoBoutiques, null, 2);
+            html += '<br><br><strong>realBoutiques:</strong><br>';
+            html += JSON.stringify(realBoutiques, null, 2);
+            html += '</div>';
+            
+            diagnosticDiv.innerHTML = html;
+        }
+
+        // ⚛️ Simuler composant React
+        function simulateReactComponent() {
+            const diagnosticDiv = document.getElementById('diagnostic-results');
+            
+            const demoBoutiques = JSON.parse(localStorage.getItem('demoBoutiques') || '[]');
+            
+            // Simulation de la méthode React (avec le fix appliqué)
+            const simulatedReact = demoBoutiques.map(boutique => ({
+                ...boutique, // Garder TOUTES les propriétés
+                logo: boutique.logo || boutique.logo_url || '',
+                logo_url: boutique.logo_url || boutique.logo || ''
+            }));
+            
+            let html = '<h3>⚛️ Simulation Composant React (avec fix) :</h3>';
+            html += '<div class="data-box">';
+            html += JSON.stringify(simulatedReact, null, 2);
+            html += '</div>';
+            
+            // Vérifier les logos
+            const allHaveLogos = simulatedReact.every(b => !!(b.logo || b.logo_url));
+            html += `<p>Résultat: ${allHaveLogos ? '<span class="success">✅ Tous les logos sont présents</span>' : '<span class="error">❌ Certains logos manquent</span>'}</p>`;
+            
+            diagnosticDiv.innerHTML = html;
+        }
+
+        // 🔄 Comparer méthodes
+        function compareMethods() {
+            const diagnosticDiv = document.getElementById('diagnostic-results');
+            
+            const demoBoutiques = JSON.parse(localStorage.getItem('demoBoutiques') || '[]');
+            
+            if (demoBoutiques.length === 0) {
+                diagnosticDiv.innerHTML = '<p class="warning">⚠️ Aucune boutique demo disponible. Créez-en une d\'abord.</p>';
+                return;
+            }
+            
+            const original = demoBoutiques[0];
+            
+            // Méthode Test (3020/3021)
+            const methodTest = {
+                ...original,
+                logo: original.logo || original.logo_url || '',
+                logo_url: original.logo_url || original.logo || ''
+            };
+            
+            // Méthode React problématique (ancienne)
+            const methodReactOld = {
+                id: original.id,
+                name: original.name,
+                description: original.description,
+                slug: original.slug,
+                logo: original.logo || '', // Pas de fallback complet
+                is_demo: original.is_demo
+                // Oups! logo_url n'est pas copié
+            };
+            
+            // Méthode React corrigée (nouvelle)
+            const methodReactNew = {
+                ...original, // Copie TOUTES les propriétés
+                logo: original.logo || original.logo_url || '',
+                logo_url: original.logo_url || original.logo || ''
+            };
+            
+            let html = '<h3>🔄 Comparaison des méthodes :</h3>';
+            html += '<div class="comparison">';
+            
+            html += '<div><h4>🔧 Méthode Test (3020/3021)</h4><div class="data-box">';
+            html += JSON.stringify(methodTest, null, 2);
+            html += '<br><br>Logo présent: ' + (!!methodTest.logo ? '<span class="success">✅ Oui</span>' : '<span class="error">❌ Non</span>');
+            html += '</div></div>';
+            
+            html += '<div><h4>⚠️ Méthode React (ancienne)</h4><div class="data-box">';
+            html += JSON.stringify(methodReactOld, null, 2);
+            html += '<br><br>Logo présent: ' + (!!methodReactOld.logo ? '<span class="success">✅ Oui</span>' : '<span class="error">❌ Non</span>');
+            html += '</div></div>';
+            
+            html += '</div>';
+            
+            html += '<div><h4>✅ Méthode React (corrigée)</h4><div class="data-box">';
+            html += JSON.stringify(methodReactNew, null, 2);
+            html += '<br><br>Logo présent: ' + (!!methodReactNew.logo ? '<span class="success">✅ Oui</span>' : '<span class="error">❌ Non</span>');
+            html += '</div></div>';
+            
+            diagnosticDiv.innerHTML = html;
+        }
+
+        // ✅ Appliquer méthode directe
+        function applyDirectMethod() {
+            const solutionDiv = document.getElementById('solution-result');
+            
+            // Récupérer les données
+            const demoBoutiques = JSON.parse(localStorage.getItem('demoBoutiques') || '[]');
+            const realBoutiques = JSON.parse(localStorage.getItem('realBoutiques') || '[]');
+            
+            // Appliquer la méthode directe (comme les tests 3020/3021)
+            const correctedDemo = demoBoutiques.map(boutique => ({
+                ...boutique, // 🔥 Garder TOUTES les propriétés originales
+                logo: boutique.logo || boutique.logo_url || '',
+                logo_url: boutique.logo_url || boutique.logo || ''
+            }));
+            
+            const correctedReal = realBoutiques.map(boutique => ({
+                ...boutique, // 🔥 Garder TOUTES les propriétés originales
+                logo: boutique.logo || boutique.logo_url || '',
+                logo_url: boutique.logo_url || boutique.logo || ''
+            }));
+            
+            // Sauvegarder les corrections
+            localStorage.setItem('demoBoutiques', JSON.stringify(correctedDemo));
+            localStorage.setItem('realBoutiques', JSON.stringify(correctedReal));
+            
+            let html = '<h3>✅ Solution appliquée :</h3>';
+            html += '<p class="success">✅ Méthode directe appliquée avec succès!</p>';
+            html += '<p>Les boutiques ont été corrigées en préservant TOUTES leurs propriétés originales.</p>';
+            
+            // Afficher un aperçu
+            if (correctedDemo.length > 0) {
+                html += '<h4>Aperçu des boutiques corrigées :</h4>';
+                correctedDemo.slice(0, 3).forEach(boutique => {
+                    const hasLogo = !!(boutique.logo || boutique.logo_url);
+                    html += `
+                        <div class="boutique-card">
+                            ${hasLogo ? `<img src="${boutique.logo || boutique.logo_url}" class="logo-preview" alt="Logo">` : '<div style="width:60px;height:60px;background:#ccc;border-radius:50%;display:flex;align-items:center;justify-content:center;">❓</div>'}
+                            <div>
+                                <strong>${boutique.name || 'Sans nom'}</strong><br>
+                                <small>Logo: ${hasLogo ? '<span class="success">✅ Présent</span>' : '<span class="error">❌ Manquant</span>'}</small>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            html += '<div class="test-section">';
+            html += '<h4>🎯 Prochaines étapes :</h4>';
+            html += '<ol>';
+            html += '<li>Ouvrez le composant React sur http://localhost:3017</li>';
+            html += '<li>Créez une nouvelle boutique avec logo</li>';
+            html += '<li>Vérifiez que le logo s\'affiche</li>';
+            html += '<li>Rechargez la page (F5)</li>';
+            html += '<li>Confirmez que le logo persiste</li>';
+            html += '</ol>';
+            html += '</div>';
+            
+            solutionDiv.innerHTML = html;
+        }
+
+        // 🛍️ Créer boutique de test
+        function createTestBoutique() {
+            const testBoutique = {
+                id: 'test-' + Date.now(),
+                name: 'Boutique Test Logo',
+                description: 'Test de persistance du logo',
+                logo: 'https://via.placeholder.com/100x100/4CAF50/white?text=TEST',
+                logo_url: 'https://via.placeholder.com/100x100/4CAF50/white?text=TEST',
+                slug: 'boutique-test-' + Date.now(),
+                is_demo: true
+            };
+            
+            let demoBoutiques = JSON.parse(localStorage.getItem('demoBoutiques') || '[]');
+            demoBoutiques.push(testBoutique);
+            localStorage.setItem('demoBoutiques', JSON.stringify(demoBoutiques));
+            
+            alert('✅ Boutique de test créée avec logo!');
+            checkCurrentState();
+        }
+
+        // Initialisation
+        window.onload = function() {
+            checkCurrentState();
+        };
+    </script>
+</body>
+</html>

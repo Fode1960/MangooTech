@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Système Admin Permanent</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { 
+            color: #333; 
+            text-align: center; 
+            margin-bottom: 30px;
+        }
+        .test-button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 12px 24px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            margin: 10px; 
+            transition: background 0.3s;
+        }
+        .test-button:hover { 
+            background: #0056b3; 
+        }
+        .test-button:disabled { 
+            background: #ccc; 
+            cursor: not-allowed;
+        }
+        .success { 
+            background: #28a745; 
+        }
+        .error { 
+            background: #dc3545; 
+        }
+        .warning { 
+            background: #ffc107; 
+            color: #333;
+        }
+        .result { 
+            margin: 10px 0; 
+            padding: 15px; 
+            border-radius: 5px; 
+            background: #f8f9fa; 
+            border-left: 4px solid #007bff;
+        }
+        .result.success { 
+            border-left-color: #28a745; 
+            background: #d4edda;
+        }
+        .result.error { 
+            border-left-color: #dc3545; 
+            background: #f8d7da;
+        }
+        .result.warning { 
+            border-left-color: #ffc107; 
+            background: #fff3cd;
+        }
+        .console { 
+            background: #2d3748; 
+            color: #e2e8f0; 
+            padding: 15px; 
+            border-radius: 5px; 
+            font-family: 'Courier New', monospace; 
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .button-group {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .status {
+            text-align: center;
+            font-size: 18px;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .status.ready { 
+            background: #d1ecf1; 
+            color: #0c5460; 
+            border: 1px solid #bee5eb;
+        }
+        .status.testing { 
+            background: #fff3cd; 
+            color: #856404; 
+            border: 1px solid #ffeaa7;
+        }
+        .status.complete { 
+            background: #d4edda; 
+            color: #155724; 
+            border: 1px solid #c3e6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Système Admin Permanent</h1>
+        
+        <div id="status" class="status ready">
+            Prêt à tester le système admin permanent
+        </div>
+        
+        <div class="button-group">
+            <button id="testComplet" class="test-button success">
+                🧪 TEST SYSTÈME COMPLET
+            </button>
+            <button id="testPermissions" class="test-button">
+                🔍 Tester Permissions
+            </button>
+            <button id="ajouterAdmin" class="test-button warning">
+                🎯 Ajouter Admin Actuel
+            </button>
+            <button id="creerBoutique" class="test-button">
+                🏪 Créer Boutique Test
+            </button>
+            <button id="effacerResultats" class="test-button error">
+                🗑️ Effacer Résultats
+            </button>
+        </div>
+        
+        <div id="results"></div>
+        
+        <div class="console" id="console">
+            Console de test - Les résultats apparaîtront ici...
+        </div>
+    </div>
+
+    <script type="module">
+        class AdminSystemTester {
+            constructor() {
+                this.supabase = null;
+                this.currentUser = null;
+                this.results = [];
+                this.initializeSupabase();
+            }
+
+            async initializeSupabase() {
+                try {
+                    // Importer Supabase depuis l'application
+                    const module = await import('/src/lib/supabase.js');
+                    this.supabase = module.supabase;
+                    this.log('✅ Supabase initialisé avec succès');
+                    await this.loadCurrentUser();
+                } catch (error) {
+                    this.log('❌ Erreur initialisation Supabase: ' + error.message);
+                    this.showResult('Erreur', 'Impossible d\'initialiser Supabase', false);
+                }
+            }
+
+            async loadCurrentUser() {
+                try {
+                    const { data } = await this.supabase.auth.getUser();
+                    this.currentUser = data.user;
+                    if (this.currentUser) {
+                        this.log('✅ Utilisateur connecté: ' + this.currentUser.email);
+                        this.updateStatus('Connecté comme: ' + this.currentUser.email, 'complete');
+                    } else {
+                        this.log('⚠️ Aucun utilisateur connecté');
+                        this.updateStatus('Aucun utilisateur connecté', 'error');
+                    }
+                } catch (error) {
+                    this.log('❌ Erreur chargement utilisateur: ' + error.message);
+                }
+            }
+
+            log(message) {
+                const console = document.getElementById('console');
+                const timestamp = new Date().toLocaleTimeString();
+                console.innerHTML += `[${timestamp}] ${message}\n`;
+                console.scrollTop = console.scrollHeight;
+            }
+
+            showResult(title, message, success = true) {
+                const resultsDiv = document.getElementById('results');
+                const resultDiv = document.createElement('div');
+                resultDiv.className = `result ${success ? 'success' : 'error'}`;
+                resultDiv.innerHTML = `
+                    <strong>${title}:</strong> ${message}
+                `;
+                resultsDiv.appendChild(resultDiv);
+            }
+
+            updateStatus(message, type = 'ready') {
+                const statusDiv = document.getElementById('status');
+                statusDiv.textContent = message;
+                statusDiv.className = `status ${type}`;
+            }
+
+            async testPermissions() {
+                if (!this.currentUser) {
+                    this.showResult('Permissions', 'Aucun utilisateur connecté', false);
+                    return;
+                }
+
+                this.updateStatus('Test des permissions...', 'testing');
+                this.log('🔍 Test des permissions admin...');
+
+                try {
+                    // Importer le service admin
+                    const { adminService } = await import('/src/services/admin/adminService.js');
+                    
+                    const isAdmin = await adminService.isUserAdmin(this.currentUser.id);
+                    this.log('✅ Vérification admin: ' + (isAdmin ? 'OUI' : 'NON'));
+                    
+                    if (isAdmin) {
+                        const permissions = await adminService.getUserPermissions(this.currentUser.id);
+                        this.log('✅ Permissions: ' + JSON.stringify(permissions));
+                        this.showResult('Permissions', `Admin: OUI, Permissions: ${permissions.join(', ')}`, true);
+                    } else {
+                        this.showResult('Permissions', 'Admin: NON', false);
+                    }
+                    
+                    this.updateStatus('Test permissions terminé', 'complete');
+                } catch (error) {
+                    this.log('❌ Erreur test permissions: ' + error.message);
+                    this.showResult('Permissions', 'Erreur: ' + error.message, false);
+                    this.updateStatus('Erreur test permissions', 'error');
+                }
+            }
+
+            async addCurrentUserAsAdmin() {
+                if (!this.currentUser) {
+                    this.showResult('Ajout Admin', 'Aucun utilisateur connecté', false);
+                    return;
+                }
+
+                this.updateStatus('Ajout utilisateur comme admin...', 'testing');
+                this.log('🎯 Ajout de l\'utilisateur actuel comme admin...');
+
+                try {
+                    const { addCurrentUserAsAdminSimple } = await import('/src/services/admin/addCurrentUserAsAdmin.js');
+                    const result = await addCurrentUserAsAdminSimple();
+                    
+                    this.log('✅ Résultat: ' + JSON.stringify(result));
+                    
+                    if (result.success) {
+                        this.showResult('Ajout Admin', result.message, true);
+                    } else {
+                        this.showResult('Ajout Admin', 'Erreur: ' + result.error, false);
+                    }
+                    
+                    this.updateStatus('Ajout admin terminé', result.success ? 'complete' : 'error');
+                } catch (error) {
+                    this.log('❌ Erreur ajout admin: ' + error.message);
+                    this.showResult('Ajout Admin', 'Erreur: ' + error.message, false);
+                    this.updateStatus('Erreur ajout admin', 'error');
+                }
+            }
+
+            async createTestShop() {
+                if (!this.currentUser) {
+                    this.showResult('Création Boutique', 'Aucun utilisateur connecté', false);
+                    return;
+                }
+
+                this.updateStatus('Création boutique de test...', 'testing');
+                this.log('🏪 Création d\'une boutique de test...');
+
+                try {
+                    const { shopService } = await import('/src/services/shop/shopService.js');
+                    
+                    const testShop = {
+                        name: 'Boutique Test ' + new Date().toLocaleTimeString(),
+                        slug: 'test-' + Date.now(),
+                        description: 'Boutique créée pour tester le système admin permanent',
+                        business_type: 'retail',
+                        contact_email: this.currentUser.email,
+                        contact_phone: '771234567',
+                        user_id: this.currentUser.id,
+                        address: {
+                            first_name: 'Test',
+                            last_name: 'Admin',
+                            address_line1: '123 Rue Test',
+                            city: 'Dakar',
+                            postal_code: '12345',
+                            country: 'SN'
+                        }
+                    };
+                    
+                    this.log('📋 Données boutique: ' + JSON.stringify(testShop, null, 2));
+                    
+                    const { data: createdShop, error } = await shopService.createShop(testShop);
+                    
+                    if (error) {
+                        this.log('❌ Erreur création boutique: ' + error);
+                        this.showResult('Création Boutique', 'Erreur: ' + error, false);
+                    } else {
+                        this.log('✅ Boutique créée avec succès!');
+                        this.log('🏪 ID: ' + createdShop.id);
+                        this.log('📛 Nom: ' + createdShop.name);
+                        this.log('📊 Statut: ' + createdShop.status);
+                        this.showResult('Création Boutique', `Boutique créée: ${createdShop.name} (ID: ${createdShop.id})`, true);
+                    }
+                    
+                    this.updateStatus('Création boutique terminée', error ? 'error' : 'complete');
+                } catch (error) {
+                    this.log('❌ Erreur création boutique: ' + error.message);
+                    this.showResult('Création Boutique', 'Erreur: ' + error.message, false);
+                    this.updateStatus('Erreur création boutique', 'error');
+                }
+            }
+
+            async testComplet() {
+                this.updateStatus('Test système complet en cours...', 'testing');
+                this.log('🧪 DÉBUT DU TEST SYSTÈME COMPLET');
+                this.log('='.repeat(50));
+                
+                try {
+                    // Étape 1: Vérifier utilisateur
+                    if (!this.currentUser) {
+                        this.showResult('Test Complet', 'Aucun utilisateur connecté', false);
+                        this.updateStatus('Test échoué - Pas d\'utilisateur', 'error');
+                        return;
+                    }
+                    
+                    this.log('✅ Étape 1: Utilisateur connecté - ' + this.currentUser.email);
+                    
+                    // Étape 2: Ajouter comme admin
+                    this.log('🎯 Étape 2: Ajout utilisateur comme admin...');
+                    const { addCurrentUserAsAdminSimple } = await import('/src/services/admin/addCurrentUserAsAdmin.js');
+                    const addResult = await addCurrentUserAsAdminSimple();
+                    
+                    if (!addResult.success) {
+                        this.showResult('Test Complet', 'Échec ajout admin: ' + addResult.error, false);
+                        this.updateStatus('Test échoué - Ajout admin', 'error');
+                        return;
+                    }
+                    
+                    this.log('✅ Étape 2: Admin ajouté avec succès');
+                    
+                    // Étape 3: Vérifier permissions
+                    this.log('🔍 Étape 3: Vérification permissions admin...');
+                    const { adminService } = await import('/src/services/admin/adminService.js');
+                    const isAdmin = await adminService.isUserAdmin(this.currentUser.id);
+                    
+                    if (!isAdmin) {
+                        this.showResult('Test Complet', 'Permissions admin non accordées', false);
+                        this.updateStatus('Test échoué - Pas admin', 'error');
+                        return;
+                    }
+                    
+                    this.log('✅ Étape 3: Permissions admin confirmées');
+                    
+                    // Étape 4: Créer boutique
+                    this.log('🏪 Étape 4: Création boutique de test...');
+                    const { shopService } = await import('/src/services/shop/shopService.js');
+                    
+                    const testShop = {
+                        name: 'Boutique Test Système Complet',
+                        slug: 'test-complet-' + Date.now(),
+                        description: 'Boutique test système admin permanent',
+                        business_type: 'retail',
+                        contact_email: this.currentUser.email,
+                        contact_phone: '771234567',
+                        user_id: this.currentUser.id,
+                        address: {
+                            first_name: 'Test',
+                            last_name: 'Complet',
+                            address_line1: '123 Rue Test',
+                            city: 'Dakar',
+                            postal_code: '12345',
+                            country: 'SN'
+                        }
+                    };
+                    
+                    const { data: createdShop, error: createError } = await shopService.createShop(testShop);
+                    
+                    if (createError) {
+                        this.showResult('Test Complet', 'Échec création boutique: ' + createError, false);
+                        this.updateStatus('Test échoué - Création boutique', 'error');
+                        return;
+                    }
+                    
+                    this.log('✅ Étape 4: Boutique créée - ' + createdShop.name);
+                    
+                    // Étape 5: Approuver boutique
+                    this.log('👍 Étape 5: Approbation boutique...');
+                    const { data: approvedShop, error: approveError } = await shopService.approveShop(createdShop.id);
+                    
+                    if (approveError) {
+                        this.showResult('Test Complet', 'Échec approbation: ' + approveError, false);
+                        this.updateStatus('Test échoué - Approbation', 'error');
+                        return;
+                    }
+                    
+                    this.log('✅ Étape 5: Boutique approuvée avec succès');
+                    
+                    // Succès total
+                    this.log('='.repeat(50));
+                    this.log('🎉 SUCCÈS TOTAL!');
+                    this.log('✅ Système admin permanent: FONCTIONNEL');
+                    this.log('✅ Boutique créée: ' + createdShop.name);
+                    this.log('✅ Boutique approuvée: ' + approvedShop.status);
+                    this.log('✅ Permissions: ADMIN');
+                    this.log('='.repeat(50));
+                    
+                    this.showResult('Test Complet', 
+                        `🎉 SUCCÈS TOTAL!\n\n` +
+                        `✅ Système admin: FONCTIONNEL\n` +
+                        `✅ Boutique créée: ${createdShop.name}\n` +
+                        `✅ Boutique approuvée: ${approvedShop.status}\n` +
+                        `✅ Permissions: ADMIN\n\n` +
+                        `Le système admin permanent est opérationnel!`, true);
+                    
+                    this.updateStatus('Test réussi - Système opérationnel!', 'complete');
+                    
+                } catch (error) {
+                    this.log('❌ ERREUR CRITIQUE: ' + error.message);
+                    this.showResult('Test Complet', 'Erreur critique: ' + error.message, false);
+                    this.updateStatus('Test échoué - Erreur critique', 'error');
+                }
+            }
+
+            clearResults() {
+                document.getElementById('results').innerHTML = '';
+                document.getElementById('console').innerHTML = 'Console de test - Les résultats apparaîtront ici...';
+                this.updateStatus('Prêt à tester le système admin permanent', 'ready');
+            }
+        }
+
+        // Initialiser le testeur
+        const tester = new AdminSystemTester();
+
+        // Attacher les événements
+        document.getElementById('testComplet').addEventListener('click', () => tester.testComplet());
+        document.getElementById('testPermissions').addEventListener('click', () => tester.testPermissions());
+        document.getElementById('ajouterAdmin').addEventListener('click', () => tester.addCurrentUserAsAdmin());
+        document.getElementById('creerBoutique').addEventListener('click', () => tester.createTestShop());
+        document.getElementById('effacerResultats').addEventListener('click', () => tester.clearResults());
+
+        // Message de bienvenue
+        console.log('🧪 Testeur système admin initialisé!');
+        console.log('Cliquez sur "TEST SYSTÈME COMPLET" pour lancer le test complet');
+    </script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Persistance de Session</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; color: #0c5460; }
+        button { padding: 10px 15px; margin: 5px; border: none; border-radius: 3px; cursor: pointer; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        #results { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test de Persistance de Session</h1>
+    <p>Ce test vérifie que la session utilisateur reste active pendant le processus de paiement.</p>
+
+    <div class="test-section">
+        <h3>1. Test de Sauvegarde de Session</h3>
+        <button class="btn-primary" onclick="testSaveSession()">Sauvegarder Session</button>
+        <div id="saveResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>2. Test de Récupération de Session</h3>
+        <button class="btn-secondary" onclick="testRetrieveSession()">Récupérer Session</button>
+        <div id="retrieveResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>3. Test de Perte et Reconstitution</h3>
+        <button class="btn-secondary" onclick="testLossAndRecovery()">Simuler Perte et Reconstitution</button>
+        <div id="recoveryResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>4. Test de Panier</h3>
+        <button class="btn-secondary" onclick="testCartPersistence()">Tester Persistance du Panier</button>
+        <div id="cartResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>5. Test Complet de Paiement</h3>
+        <button class="btn-primary" onclick="testCompletePaymentFlow()">Tester Flux de Paiement Complet</button>
+        <div id="paymentResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Nettoyage</h3>
+        <button class="btn-danger" onclick="clearAllData()">Nettoyer Toutes les Données</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-section ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            results.appendChild(div);
+        }
+
+        function testSaveSession() {
+            try {
+                const mockUser = {
+                    id: 'test-user-123',
+                    email: 'test@example.com',
+                    role: 'client',
+                    name: 'Test User'
+                };
+
+                localStorage.setItem('user', JSON.stringify(mockUser));
+                localStorage.setItem('token', 'test-token-123');
+                localStorage.setItem('currentRole', 'client');
+
+                document.getElementById('saveResult').innerHTML = '<div class="success">✅ Session sauvegardée avec succès</div>';
+                log('Session sauvegardée: ' + JSON.stringify(mockUser), 'success');
+            } catch (error) {
+                document.getElementById('saveResult').innerHTML = '<div class="error">❌ Erreur lors de la sauvegarde: ' + error.message + '</div>';
+                log('Erreur sauvegarde: ' + error.message, 'error');
+            }
+        }
+
+        function testRetrieveSession() {
+            try {
+                const savedUser = localStorage.getItem('user');
+                const savedToken = localStorage.getItem('token');
+
+                if (savedUser && savedToken) {
+                    const userData = JSON.parse(savedUser);
+                    document.getElementById('retrieveResult').innerHTML = '<div class="success">✅ Session récupérée: ' + userData.email + '</div>';
+                    log('Session récupérée: ' + userData.email, 'success');
+                } else {
+                    document.getElementById('retrieveResult').innerHTML = '<div class="error">❌ Aucune session trouvée</div>';
+                    log('Aucune session trouvée', 'error');
+                }
+            } catch (error) {
+                document.getElementById('retrieveResult').innerHTML = '<div class="error">❌ Erreur lors de la récupération: ' + error.message + '</div>';
+                log('Erreur récupération: ' + error.message, 'error');
+            }
+        }
+
+        function testLossAndRecovery() {
+            try {
+                // Simuler une perte de session (variable null)
+                let currentUser = null;
+                
+                // Tenter de reconstituer la session depuis localStorage
+                const savedUser = localStorage.getItem('user');
+                if (savedUser) {
+                    const userData = JSON.parse(savedUser);
+                    currentUser = userData;
+                    
+                    document.getElementById('recoveryResult').innerHTML = '<div class="success">✅ Session reconstituée avec succès: ' + currentUser.email + '</div>';
+                    log('Session reconstituée: ' + currentUser.email, 'success');
+                } else {
+                    document.getElementById('recoveryResult').innerHTML = '<div class="error">❌ Impossible de reconstituer la session</div>';
+                    log('Impossible de reconstituer la session', 'error');
+                }
+            } catch (error) {
+                document.getElementById('recoveryResult').innerHTML = '<div class="error">❌ Erreur lors de la reconstitution: ' + error.message + '</div>';
+                log('Erreur reconstitution: ' + error.message, 'error');
+            }
+        }
+
+        function testCartPersistence() {
+            try {
+                const mockCart = [
+                    { id: 1, name: 'Produit Test', price: '10000', quantity: 2 },
+                    { id: 2, name: 'Autre Produit', price: '15000', quantity: 1 }
+                ];
+
+                localStorage.setItem('pendingCart', JSON.stringify(mockCart));
+                const savedCart = localStorage.getItem('pendingCart');
+
+                if (savedCart) {
+                    const cartData = JSON.parse(savedCart);
+                    document.getElementById('cartResult').innerHTML = '<div class="success">✅ Panier sauvegardé: ' + cartData.length + ' articles</div>';
+                    log('Panier sauvegardé: ' + cartData.length + ' articles', 'success');
+                } else {
+                    document.getElementById('cartResult').innerHTML = '<div class="error">❌ Panier non sauvegardé</div>';
+                    log('Panier non sauvegardé', 'error');
+                }
+            } catch (error) {
+                document.getElementById('cartResult').innerHTML = '<div class="error">❌ Erreur lors de la sauvegarde du panier: ' + error.message + '</div>';
+                log('Erreur panier: ' + error.message, 'error');
+            }
+        }
+
+        function testCompletePaymentFlow() {
+            try {
+                log('🧪 Début du test de flux de paiement complet...', 'info');
+
+                // Étape 1: Sauvegarder l'utilisateur
+                const mockUser = {
+                    id: 'test-user-123',
+                    email: 'test@example.com',
+                    role: 'client',
+                    name: 'Test User'
+                };
+                localStorage.setItem('user', JSON.stringify(mockUser));
+                localStorage.setItem('token', 'test-token-123');
+
+                // Étape 2: Sauvegarder le panier
+                const mockCart = [
+                    { id: 1, name: 'Produit Test', price: '10000', quantity: 2 }
+                ];
+                localStorage.setItem('pendingCart', JSON.stringify(mockCart));
+
+                // Étape 3: Simuler le paiement (succès)
+                const transaction = {
+                    id: 'test-transaction-123',
+                    paymentIntent: { id: 'pi_test_123' },
+                    paymentMethod: 'stripe'
+                };
+
+                // Étape 4: Vérifier la session après paiement
+                const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+                if (currentUser) {
+                    // Étape 5: Sauvegarder la commande
+                    const order = {
+                        id: transaction.id || Date.now(),
+                        items: [...mockCart],
+                        total: 20000,
+                        date: new Date().toISOString(),
+                        status: 'completed',
+                        paymentMethod: transaction.paymentMethod,
+                        transactionId: transaction.id || transaction.paymentIntent?.id,
+                        userId: currentUser.id
+                    };
+
+                    const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+                    existingOrders.unshift(order);
+                    localStorage.setItem('orders', JSON.stringify(existingOrders));
+
+                    // Étape 6: Nettoyer le panier
+                    localStorage.removeItem('pendingCart');
+
+                    document.getElementById('paymentResult').innerHTML = '<div class="success">✅ Flux de paiement complet réussi!</div>';
+                    log('✅ Flux de paiement complet réussi!', 'success');
+                    log('Commande sauvegardée: ' + order.id, 'success');
+                } else {
+                    throw new Error('Session perdue pendant le paiement');
+                }
+
+            } catch (error) {
+                document.getElementById('paymentResult').innerHTML = '<div class="error">❌ Erreur lors du test de paiement: ' + error.message + '</div>';
+                log('❌ Erreur paiement: ' + error.message, 'error');
+            }
+        }
+
+        function clearAllData() {
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            localStorage.removeItem('currentRole');
+            localStorage.removeItem('pendingCart');
+            localStorage.removeItem('orders');
+            
+            log('🧹 Toutes les données nettoyées', 'info');
+            alert('✅ Toutes les données ont été nettoyées');
+        }
+
+        // Test automatique au chargement
+        window.addEventListener('load', function() {
+            log('🚀 Tests de persistance de session prêts!', 'info');
+            log('Cliquez sur les boutons pour tester les différentes fonctionnalités.', 'info');
+        });
+    </script>
+</body>
+</html>

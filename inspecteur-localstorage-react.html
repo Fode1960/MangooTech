@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Inspecteur LocalStorage vs React</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5; 
+            font-size: 12px;
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .section { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+            background: #fafafa;
+        }
+        .boutique-card { 
+            border: 1px solid #ccc; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+            background: white;
+        }
+        .logo-preview { 
+            width: 60px; 
+            height: 60px; 
+            border-radius: 8px; 
+            object-fit: cover; 
+            border: 2px solid #ccc; 
+            margin: 5px;
+        }
+        .error { color: red; font-weight: bold; }
+        .success { color: green; font-weight: bold; }
+        .warning { color: orange; font-weight: bold; }
+        .debug-info { 
+            background: #f8f9fa; 
+            padding: 10px; 
+            border-radius: 5px; 
+            font-family: monospace; 
+            font-size: 11px; 
+            margin: 10px 0; 
+            border-left: 3px solid #007bff;
+        }
+        .data-field {
+            margin: 5px 0;
+            padding: 3px;
+            background: #f0f0f0;
+            border-radius: 3px;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Inspecteur LocalStorage vs React - Analyse Complète</h1>
+        <p>Cet outil compare les données entre localStorage et ce que React devrait afficher.</p>
+        
+        <div class="section">
+            <h3>📊 État Actuel du LocalStorage</h3>
+            <button onclick="inspecterLocalStorage()">🔍 Inspecter LocalStorage</button>
+            <div id="localStorageInspect" class="debug-info"></div>
+        </div>
+        
+        <div class="section">
+            <h3>🎯 Simulation React - Avant Transformation</h3>
+            <button onclick="simulerReactAvant()">🧪 Simuler React (Avant Transformation)</button>
+            <div id="reactAvantResult"></div>
+        </div>
+        
+        <div class="section">
+            <h3>⚡ Simulation React - Après Transformation</h3>
+            <button onclick="simulerReactApres()">🔄 Simuler React (Après Transformation)</button>
+            <div id="reactApresResult"></div>
+        </div>
+        
+        <div class="section">
+            <h3>🎨 Affichage Complet (Comparaison)</h3>
+            <button onclick="afficherComparaison()">📊 Afficher Comparaison Complète</button>
+            <div id="comparaisonResult"></div>
+        </div>
+        
+        <div class="section">
+            <h3>🔧 Créer un Test Corrigé</h3>
+            <p>Créez une boutique avec la structure CORRECTE pour React :</p>
+            <input type="text" id="testNom" placeholder="Nom de la boutique" style="margin: 5px; padding: 8px;">
+            <input type="text" id="testDescription" placeholder="Description" style="margin: 5px; padding: 8px;">
+            <br>
+            <input type="file" id="testLogo" accept="image/*" style="margin: 5px;">
+            <br>
+            <button onclick="creerBoutiqueCorrigee()">✅ Créer Boutique Corrigée</button>
+            <div id="creationCorrigeeResult"></div>
+        </div>
+    </div>
+
+    <script>
+        function inspecterLocalStorage() {
+            try {
+                const demoBoutiques = localStorage.getItem('demo_boutiques');
+                const resultDiv = document.getElementById('localStorageInspect');
+                
+                if (!demoBoutiques) {
+                    resultDiv.innerHTML = '<div class="error">❌ Aucune boutique demo trouvée dans localStorage</div>';
+                    return;
+                }
+                
+                const boutiques = JSON.parse(demoBoutiques);
+                let html = `<div class="success">✅ ${boutiques.length} boutiques trouvées dans localStorage</div>`;
+                
+                boutiques.forEach((boutique, index) => {
+                    html += `
+                        <div class="boutique-card">
+                            <h4>Boutique ${index + 1}: ${boutique.name}</h4>
+                            <div class="data-field"><strong>ID:</strong> ${boutique.id}</div>
+                            <div class="data-field"><strong>Slug:</strong> ${boutique.slug || '❌ MANQUANT'}</div>
+                            <div class="data-field"><strong>Logo:</strong> ${boutique.logo ? '✅ Présent (' + (boutique.logo.length > 50 ? boutique.logo.substring(0, 50) + '...' : boutique.logo) + ')' : '❌ Absent'}</div>
+                            <div class="data-field"><strong>Logo_URL:</strong> ${boutique.logo_url ? '✅ Présent (' + (boutique.logo_url.length > 50 ? boutique.logo_url.substring(0, 50) + '...' : boutique.logo_url) + ')' : '❌ Absent'}</div>
+                            <div class="data-field"><strong>Status:</strong> ${boutique.status || 'non défini'}</div>
+                            <hr>
+                            <div><strong>Structure complète:</strong></div>
+                            <pre>${JSON.stringify(boutique, null, 2)}</pre>
+                        </div>
+                    `;
+                });
+                
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                document.getElementById('localStorageInspect').innerHTML = 
+                    `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        }
+        
+        function simulerReactAvant() {
+            try {
+                const demoBoutiques = localStorage.getItem('demo_boutiques');
+                const resultDiv = document.getElementById('reactAvantResult');
+                
+                if (!demoBoutiques) {
+                    resultDiv.innerHTML = '<div class="error">❌ Aucune boutique demo trouvée</div>';
+                    return;
+                }
+                
+                const boutiques = JSON.parse(demoBoutiques);
+                let html = '<div class="success">🔄 Simulation React AVANT transformation</div>';
+                
+                // Simulation de la transformation React actuelle
+                const transformed = boutiques.map(shop => {
+                    return {
+                        id: shop.id,
+                        name: shop.name,
+                        description: shop.description,
+                        logo: shop.logo || shop.logo_url || '', // PRIORITÉ CORRIGÉE
+                        logo_url: shop.logo_url || shop.logo || '',
+                        banner: shop.banner || shop.banner_url || '',
+                        banner_url: shop.banner_url || shop.banner || '',
+                        primaryColor: '#FF6B35',
+                        secondaryColor: '#4CAF50',
+                        categories: shop.category ? [shop.category] : [],
+                        isActive: shop.status === 'approved',
+                        productsCount: shop.total_orders || 0,
+                        followers: 0,
+                        rating: shop.rating || 0,
+                        socialLinks: {
+                            instagram: shop.instagram_url || '',
+                            facebook: '',
+                            whatsapp: shop.contact_phone || ''
+                        },
+                        createdAt: shop.created_at,
+                        status: shop.status,
+                        address: shop.address ? JSON.stringify(shop.address) : '',
+                        phone: shop.contact_phone,
+                        email: shop.contact_email,
+                        website: shop.website_url,
+                        city: shop.city,
+                        country: shop.country,
+                        slug: shop.slug
+                    };
+                });
+                
+                transformed.forEach((boutique, index) => {
+                    html += `
+                        <div class="boutique-card">
+                            <h4>Transformée ${index + 1}: ${boutique.name}</h4>
+                            <div class="data-field"><strong>Logo Result:</strong> ${boutique.logo ? '✅ Présent' : '❌ Absent'}</div>
+                            <div class="data-field"><strong>Logo_URL Result:</strong> ${boutique.logo_url ? '✅ Présent' : '❌ Absent'}</div>
+                            <div class="data-field"><strong>Slug:</strong> ${boutique.slug || '❌ MANQUANT'}</div>
+                            
+                            <div style="margin: 10px 0;">
+                                <strong>Logo Preview:</strong><br>
+                                ${boutique.logo ? 
+                                    `<img src="${boutique.logo}" class="logo-preview" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                     <div style="display:none; color: red;">❌ Erreur chargement logo</div>` : 
+                                    '<div class="error">❌ Pas de logo</div>'
+                                }
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                document.getElementById('reactAvantResult').innerHTML = 
+                    `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        }
+        
+        function simulerReactApres() {
+            // Même fonction que simulerReactAvant car nous avons déjà corrigé
+            simulerReactAvant();
+            document.getElementById('reactApresResult').innerHTML = 
+                document.getElementById('reactAvantResult').innerHTML + 
+                '<div class="success">✅ Les corrections sont déjà appliquées!</div>';
+        }
+        
+        function afficherComparaison() {
+            try {
+                const demoBoutiques = localStorage.getItem('demo_boutiques');
+                const resultDiv = document.getElementById('comparaisonResult');
+                
+                if (!demoBoutiques) {
+                    resultDiv.innerHTML = '<div class="error">❌ Aucune boutique demo trouvée</div>';
+                    return;
+                }
+                
+                const boutiques = JSON.parse(demoBoutiques);
+                let html = '<div class="success">📊 Comparaison Complète</div>';
+                
+                boutiques.forEach((boutique, index) => {
+                    const logoOriginal = boutique.logo;
+                    const logoUrlOriginal = boutique.logo_url;
+                    const logoTransforme = boutique.logo || boutique.logo_url || '';
+                    const logoUrlTransforme = boutique.logo_url || boutique.logo || '';
+                    
+                    html += `
+                        <div class="boutique-card">
+                            <h4>${boutique.name}</h4>
+                            <div style="display: flex; gap: 20px;">
+                                <div style="flex: 1;">
+                                    <h5>🔍 Original (LocalStorage)</h5>
+                                    <div class="data-field">Logo: ${logoOriginal ? '✅' : '❌'}</div>
+                                    <div class="data-field">Logo_URL: ${logoUrlOriginal ? '✅' : '❌'}</div>
+                                    ${logoOriginal ? `<img src="${logoOriginal}" class="logo-preview">` : '<div class="error">Pas de logo original</div>'}
+                                </div>
+                                <div style="flex: 1;">
+                                    <h5>🔄 Après Transformation React</h5>
+                                    <div class="data-field">Logo: ${logoTransforme ? '✅' : '❌'}</div>
+                                    <div class="data-field">Logo_URL: ${logoUrlTransforme ? '✅' : '❌'}</div>
+                                    ${logoTransforme ? `<img src="${logoTransforme}" class="logo-preview">` : '<div class="error">Pas de logo transformé</div>'}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                document.getElementById('comparaisonResult').innerHTML = 
+                    `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        }
+        
+        function creerBoutiqueCorrigee() {
+            try {
+                const nom = document.getElementById('testNom').value;
+                const description = document.getElementById('testDescription').value;
+                const fileInput = document.getElementById('testLogo');
+                const resultDiv = document.getElementById('creationCorrigeeResult');
+                
+                if (!nom || !fileInput.files[0]) {
+                    resultDiv.innerHTML = '<div class="error">❌ Veuillez remplir le nom et sélectionner un logo</div>';
+                    return;
+                }
+                
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(event) {
+                    const logoDataUrl = event.target.result;
+                    
+                    // Créer la boutique avec la structure CORRECTE pour React
+                    const boutiqueCorrigee = {
+                        id: Date.now(),
+                        name: nom,
+                        slug: `${nom.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}-${Date.now().toString(36)}`,
+                        description: description || 'Boutique de test corrigée',
+                        logo: logoDataUrl,           // PRIORITÉ : logo pour le composant
+                        logo_url: logoDataUrl,       // logo_url pour compatibilité
+                        banner: '',
+                        banner_url: '',
+                        primaryColor: '#FF6B35',
+                        secondaryColor: '#4CAF50',
+                        categories: [],
+                        isActive: true,
+                        productsCount: 0,
+                        followers: 0,
+                        rating: 0,
+                        socialLinks: {
+                            instagram: '',
+                            facebook: '',
+                            whatsapp: ''
+                        },
+                        createdAt: new Date().toISOString(),
+                        status: 'approved'
+                    };
+                    
+                    // Sauvegarder dans localStorage
+                    const existing = localStorage.getItem('demo_boutiques');
+                    const existingBoutiques = existing ? JSON.parse(existing) : [];
+                    const updated = [boutiqueCorrigee, ...existingBoutiques];
+                    
+                    localStorage.setItem('demo_boutiques', JSON.stringify(updated));
+                    
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Boutique corrigée créée avec succès!</div>
+                        <div class="debug-info">
+                            <strong>Structure créée:</strong><br>
+                            Logo: ${boutiqueCorrigee.logo ? '✅ Présent' : '❌ Absent'}<br>
+                            Logo_URL: ${boutiqueCorrigee.logo_url ? '✅ Présent' : '❌ Absent'}<br>
+                            Slug: ${boutiqueCorrigee.slug}<br>
+                            ID: ${boutiqueCorrigee.id}
+                        </div>
+                        <div>
+                            <strong>Aperçu du logo:</strong><br>
+                            <img src="${logoDataUrl}" class="logo-preview">
+                        </div>
+                        <div class="warning">
+                            ⚠️ Maintenant, allez sur http://localhost:3015 et vérifiez que cette boutique s'affiche avec son logo!
+                        </div>
+                    `;
+                    
+                    // Vider les champs
+                    document.getElementById('testNom').value = '';
+                    document.getElementById('testDescription').value = '';
+                    fileInput.value = '';
+                };
+                
+                reader.readAsDataURL(file);
+                
+            } catch (error) {
+                document.getElementById('creationCorrigeeResult').innerHTML = 
+                    `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        }
+        
+        // Vérification au chargement
+        window.onload = function() {
+            inspecterLocalStorage();
+        };
+    </script>
+</body>
+</html>

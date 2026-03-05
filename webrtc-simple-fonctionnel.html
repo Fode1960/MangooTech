@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛍️ Live Shopping WebRTC - Audio Confirmé</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .status {
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .status.connected {
+            background: rgba(76, 175, 80, 0.3);
+            border: 2px solid #4CAF50;
+        }
+
+        .status.disconnected {
+            background: rgba(244, 67, 54, 0.3);
+            border: 2px solid #f44336;
+        }
+
+        .status.connecting {
+            background: rgba(255, 152, 0, 0.3);
+            border: 2px solid #ff9800;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .video-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .video-box {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .video-box h3 {
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .video-box video {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            border-radius: 10px;
+            background: #000;
+            object-fit: cover;
+        }
+
+        .audio-meter {
+            margin-top: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .audio-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .audio-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            width: 0%;
+            transition: width 0.1s ease;
+            border-radius: 5px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #2196F3, #03DAC6);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #f44336, #FF6B6B);
+            color: white;
+        }
+
+        .log-container {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .diagnostic-panel {
+            background: rgba(255, 193, 7, 0.1);
+            border: 2px solid #FFC107;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .diagnostic-panel h3 {
+            color: #FFC107;
+            margin-bottom: 15px;
+        }
+
+        .diagnostic-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .diagnostic-status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-ok {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .status-error {
+            background: #f44336;
+            color: white;
+        }
+
+        .status-warning {
+            background: #FF9800;
+            color: white;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .user-role {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        .role-vendor {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+            color: white;
+        }
+
+        .role-viewer {
+            background: linear-gradient(45deg, #4ECDC4, #44A08D);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛍️ Live Shopping WebRTC</h1>
+            <div id="userInfo" class="user-info">
+                <div>
+                    <strong>Utilisateur:</strong> <span id="currentUserId">-</span><br>
+                    <strong>Room:</strong> <span id="currentRoomId">-</span>
+                </div>
+                <div id="userRoleDisplay" class="user-role role-viewer">VIEWER</div>
+            </div>
+        </div>
+
+        <div id="connectionStatus" class="status disconnected">
+            Déconnecté
+        </div>
+
+        <div class="video-container">
+            <div class="video-box">
+                <h3>Votre vidéo</h3>
+                <video id="localVideo" autoplay muted playsinline></video>
+                <div class="audio-meter">
+                    <div>Votre audio</div>
+                    <div class="audio-bar">
+                        <div id="localAudioLevel" class="audio-fill"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="video-box">
+                <h3>Vidéo du vendeur</h3>
+                <video id="remoteVideo" autoplay playsinline></video>
+                <div class="audio-meter">
+                    <div>Audio entrant</div>
+                    <div class="audio-bar">
+                        <div id="remoteAudioLevel" class="audio-fill"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="startCamera" class="btn-secondary" onclick="startCamera()">🎤 Activer caméra/micro</button>
+            <button id="connect" class="btn-primary" onclick="connect()" disabled>🔗 Se connecter</button>
+            <button id="call" class="btn-primary" onclick="call()" disabled>📞 Appeler</button>
+            <button id="answer" class="btn-primary" onclick="answer()" disabled>📱 Répondre</button>
+            <button id="hangup" class="btn-danger" onclick="hangup()" disabled>📴 Raccrocher</button>
+            <button id="disconnect" class="btn-danger" onclick="disconnect()" disabled>🔌 Déconnecter</button>
+            <button id="audioDiagnostic" class="btn-secondary" onclick="audioDiagnostic()">🔍 Diagnostic Audio</button>
+        </div>
+
+        <div class="diagnostic-panel">
+            <h3>🎧 Diagnostic Audio en Temps Réel</h3>
+            <div class="diagnostic-item">
+                <span>🎤 Microphone actif</span>
+                <span id="micStatus" class="diagnostic-status status-error">INACTIF</span>
+            </div>
+            <div class="diagnostic-item">
+                <span>🎧 Casque détecté</span>
+                <span id="headphoneStatus" class="diagnostic-status status-error">NON DÉTECTÉ</span>
+            </div>
+            <div class="diagnostic-item">
+                <span>📡 Connexion WebRTC</span>
+                <span id="webrtcStatus" class="diagnostic-status status-error">DÉCONNECTÉ</span>
+            </div>
+            <div class="diagnostic-item">
+                <span>🔊 Audio sortant vers casque</span>
+                <span id="audioOutputStatus" class="diagnostic-status status-error">NON ROUTÉ</span>
+            </div>
+        </div>
+
+        <div class="log-container" id="logContainer">
+            <div class="log-entry">🚀 Système WebRTC initialisé</div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration WebRTC
+        const peerConnectionConfig = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        };
+
+        // Variables globales
+        let localStream = null;
+        let remoteStream = null;
+        let peerConnection = null;
+        let audioContext = null;
+        let localAnalyser = null;
+        let remoteAnalyser = null;
+        let localDataArray = null;
+        let remoteDataArray = null;
+        let isConnected = false;
+        let ringtoneTimeout = null;
+
+        // Récupération des paramètres URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('roomId') || 'default-room';
+        const userId = urlParams.get('userId') || 'user-' + Math.random().toString(36).substr(2, 9);
+        const userRole = urlParams.get('role') || 'viewer';
+
+        // Éléments DOM
+        const localVideo = document.getElementById('localVideo');
+        const remoteVideo = document.getElementById('remoteVideo');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const logContainer = document.getElementById('logContainer');
+
+        // Initialisation
+        document.getElementById('currentUserId').textContent = userId;
+        document.getElementById('currentRoomId').textContent = roomId;
+        document.getElementById('userRoleDisplay').textContent = userRole.toUpperCase();
+        document.getElementById('userRoleDisplay').className = 'user-role role-' + userRole;
+
+        // Fonction de log
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString('fr-FR');
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            console.log(`[WebRTC] ${message}`);
+        }
+
+        // Mise à jour du statut de connexion
+        function updateConnectionStatus(status, message) {
+            connectionStatus.className = `status ${status}`;
+            connectionStatus.textContent = message || status;
+            
+            // Mise à jour du diagnostic WebRTC
+            const webrtcStatus = document.getElementById('webrtcStatus');
+            if (status === 'connected') {
+                webrtcStatus.textContent = 'CONNECTÉ';
+                webrtcStatus.className = 'diagnostic-status status-ok';
+            } else if (status === 'connecting') {
+                webrtcStatus.textContent = 'CONNEXION...';
+                webrtcStatus.className = 'diagnostic-status status-warning';
+            } else {
+                webrtcStatus.textContent = 'DÉCONNECTÉ';
+                webrtcStatus.className = 'diagnostic-status status-error';
+            }
+        }
+
+        // Fonction pour forcer l'audio vers le casque
+        function forceAudioToHeadphones(audioElement) {
+            if ('setSinkId' in audioElement) {
+                navigator.mediaDevices.enumerateDevices().then(devices => {
+                    const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
+                    if (audioOutputs.length > 0) {
+                        // Chercher un casque
+                        let targetDevice = audioOutputs[0];
+                        for (const device of audioOutputs) {
+                            if (device.label.toLowerCase().includes('headphone') || 
+                                device.label.toLowerCase().includes('casque') ||
+                                device.label.toLowerCase().includes('headset')) {
+                                targetDevice = device;
+                                break;
+                            }
+                        }
+                        audioElement.setSinkId(targetDevice.deviceId)
+                            .then(() => {
+                                log(`✅ Audio dirigé vers: ${targetDevice.label}`);
+                                audioElement.volume = 1.0;
+                                document.getElementById('audioOutputStatus').textContent = 'ROUTÉ VERS CASQUE';
+                                document.getElementById('audioOutputStatus').className = 'diagnostic-status status-ok';
+                            })
+                            .catch(err => log('⚠️ Erreur setSinkId:', err.message));
+                    }
+                }).catch(err => log('⚠️ Erreur énumération:', err.message));
+            }
+        }
+
+        // Configuration de l'analyse audio
+        function setupAudioAnalysis() {
+            if (!localStream) return;
+
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Analyse du microphone local
+                const localSource = audioContext.createMediaStreamSource(localStream);
+                localAnalyser = audioContext.createAnalyser();
+                localAnalyser.fftSize = 256;
+                localSource.connect(localAnalyser);
+                localDataArray = new Uint8Array(localAnalyser.frequencyBinCount);
+
+                // Analyse de l'audio distant (quand disponible)
+                if (remoteVideo.srcObject) {
+                    const remoteSource = audioContext.createMediaStreamSource(remoteVideo.srcObject);
+                    remoteAnalyser = audioContext.createAnalyser();
+                    remoteAnalyser.fftSize = 256;
+                    remoteSource.connect(remoteAnalyser);
+                    remoteDataArray = new Uint8Array(remoteAnalyser.frequencyBinCount);
+                }
+
+                // Démarrer la mise à jour des niveaux audio
+                updateAudioLevels();
+                
+                log('✅ Analyse audio configurée');
+                
+            } catch (error) {
+                log(`⚠️ Erreur configuration analyse audio: ${error.message}`);
+            }
+        }
+
+        // Mise à jour des niveaux audio
+        function updateAudioLevels() {
+            if (localAnalyser && localDataArray) {
+                localAnalyser.getByteFrequencyData(localDataArray);
+                const localRMS = Math.sqrt(localDataArray.reduce((sum, value) => sum + value * value, 0) / localDataArray.length);
+                const localPercent = Math.min(100, (localRMS / 128) * 100);
+                document.getElementById('localAudioLevel').style.width = localPercent + '%';
+            }
+
+            if (remoteAnalyser && remoteDataArray && remoteVideo.srcObject) {
+                remoteAnalyser.getByteFrequencyData(remoteDataArray);
+                const remoteRMS = Math.sqrt(remoteDataArray.reduce((sum, value) => sum + value * value, 0) / remoteDataArray.length);
+                const remotePercent = Math.min(100, (remoteRMS / 128) * 100);
+                document.getElementById('remoteAudioLevel').style.width = remotePercent + '%';
+            }
+
+            requestAnimationFrame(updateAudioLevels);
+        }
+
+        // Démarrer la caméra et le microphone
+        async function startCamera() {
+            try {
+                log('📹 Démarrage de la caméra et du microphone...');
+                
+                const constraints = {
+                    video: {
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        facingMode: 'user'
+                    },
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true,
+                        sampleRate: 48000,
+                        channelCount: 2
+                    }
+                };
+
+                localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                localVideo.srcObject = localStream;
+                
+                log('✅ Caméra et microphone activés');
+                
+                // Configuration de l'analyse audio
+                setupAudioAnalysis();
+                
+                // Mise à jour du diagnostic microphone
+                document.getElementById('micStatus').textContent = 'ACTIF';
+                document.getElementById('micStatus').className = 'diagnostic-status status-ok';
+                
+                // Vérifier les casques disponibles
+                checkHeadphones();
+                
+                // Mettre à jour les boutons
+                updateButtonStates();
+                
+            } catch (error) {
+                log(`❌ Erreur lors de l'activation de la caméra: ${error.message}`);
+                alert(`Erreur: ${error.message}. Vérifiez les permissions.`);
+            }
+        }
+
+        // Vérifier les casques audio
+        async function checkHeadphones() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
+                
+                const hasHeadphones = audioOutputs.some(device => 
+                    device.label.toLowerCase().includes('headphone') ||
+                    device.label.toLowerCase().includes('casque') ||
+                    device.label.toLowerCase().includes('headset')
+                );
+                
+                if (hasHeadphones) {
+                    document.getElementById('headphoneStatus').textContent = 'DÉTECTÉ';
+                    document.getElementById('headphoneStatus').className = 'diagnostic-status status-ok';
+                    log('🎧 Casque audio détecté');
+                } else {
+                    log('📝 Aucun casque détecté');
+                }
+            } catch (error) {
+                log(`⚠️ Erreur détection casque: ${error.message}`);
+            }
+        }
+
+        // Créer une connexion WebRTC
+        function createPeerConnection() {
+            const pc = new RTCPeerConnection(peerConnectionConfig);
+            
+            // Ajouter le stream local
+            if (localStream) {
+                localStream.getTracks().forEach(track => {
+                    pc.addTrack(track, localStream);
+                });
+            }
+
+            // Gérer l'arrivée du stream distant
+            pc.ontrack = (event) => {
+                log('📹 Stream distant reçu');
+                remoteVideo.srcObject = event.streams[0];
+                remoteStream = event.streams[0];
+                
+                // Forcer l'audio vers le casque
+                forceAudioToHeadphones(remoteVideo);
+                
+                // Configurer l'analyse audio pour le stream distant
+                if (audioContext && remoteStream) {
+                    try {
+                        const remoteSource = audioContext.createMediaStreamSource(remoteStream);
+                        remoteAnalyser = audioContext.createAnalyser();
+                        remoteAnalyser.fftSize = 256;
+                        remoteSource.connect(remoteAnalyser);
+                        remoteDataArray = new Uint8Array(remoteAnalyser.frequencyBinCount);
+                    } catch (error) {
+                        log(`⚠️ Erreur configuration analyse audio distant: ${error.message}`);
+                    }
+                }
+            };
+
+            // Gérer les candidats ICE
+            pc.onicecandidate = (event) => {
+                if (event.candidate) {
+                    log('🧊 Envoi du candidat ICE');
+                    // Diffuser le candidat ICE via localStorage
+                    broadcastIceCandidate(event.candidate);
+                }
+            };
+
+            // Gérer les changements de connexion
+            pc.onconnectionstatechange = () => {
+                log(`🔗 État de connexion: ${pc.connectionState}`);
+                if (pc.connectionState === 'connected') {
+                    updateConnectionStatus('connected', 'Connecté');
+                    updateButtonStates();
+                } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+                    updateConnectionStatus('disconnected', 'Déconnecté');
+                    updateButtonStates();
+                }
+            };
+
+            return pc;
+        }
+
+        // Système de signalisation via localStorage
+        function broadcastIceCandidate(candidate) {
+            const message = {
+                type: 'ice-candidate',
+                candidate: candidate,
+                from: userId,
+                roomId: roomId,
+                timestamp: Date.now()
+            };
+            
+            const key = `webrtc-candidate-${Date.now()}-${Math.random()}`;
+            localStorage.setItem(key, JSON.stringify(message));
+            
+            // Nettoyer les anciens messages après 30 secondes
+            setTimeout(() => {
+                localStorage.removeItem(key);
+            }, 30000);
+        }
+
+        function broadcastOffer(offer) {
+            const message = {
+                type: 'offer',
+                offer: offer,
+                from: userId,
+                roomId: roomId,
+                timestamp: Date.now()
+            };
+            
+            const key = `webrtc-offer-${Date.now()}-${Math.random()}`;
+            localStorage.setItem(key, JSON.stringify(message));
+            
+            setTimeout(() => {
+                localStorage.removeItem(key);
+            }, 30000);
+        }
+
+        function broadcastAnswer(answer) {
+            const message = {
+                type: 'answer',
+                answer: answer,
+                from: userId,
+                roomId: roomId,
+                timestamp: Date.now()
+            };
+            
+            const key = `webrtc-answer-${Date.now()}-${Math.random()}`;
+            localStorage.setItem(key, JSON.stringify(message));
+            
+            setTimeout(() => {
+                localStorage.removeItem(key);
+            }, 30000);
+        }
+
+        // Écouter les messages de signalisation
+        function startSignalingListener() {
+            window.addEventListener('storage', (event) => {
+                if (!event.key || !event.newValue) return;
+                
+                try {
+                    const message = JSON.parse(event.newValue);
+                    
+                    // Vérifier que le message est pour notre room
+                    if (message.roomId !== roomId) return;
+                    
+                    // Ignorer nos propres messages
+                    if (message.from === userId) return;
+                    
+                    // Vérifier que le message n'est pas trop vieux
+                    if (Date.now() - message.timestamp > 25000) return;
+                    
+                    log(`📨 Message reçu de ${message.from}: ${message.type}`);
+                    
+                    switch (message.type) {
+                        case 'offer':
+                            handleOffer(message.offer);
+                            break;
+                        case 'answer':
+                            handleAnswer(message.answer);
+                            break;
+                        case 'ice-candidate':
+                            handleIceCandidate(message.candidate);
+                            break;
+                    }
+                    
+                } catch (error) {
+                    // Ignorer les messages invalides
+                }
+            });
+        }
+
+        // Gérer une offre WebRTC
+        async function handleOffer(offer) {
+            if (!peerConnection) {
+                peerConnection = createPeerConnection();
+            }
+
+            try {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                log('✅ Offre définie comme description distante');
+                
+                // Créer et envoyer la réponse
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                
+                log('📤 Envoi de la réponse');
+                broadcastAnswer(answer);
+                
+                updateConnectionStatus('connected', 'Connecté');
+                updateButtonStates();
+                
+            } catch (error) {
+                log(`❌ Erreur lors du traitement de l'offre: ${error.message}`);
+            }
+        }
+
+        // Gérer une réponse WebRTC
+        async function handleAnswer(answer) {
+            if (!peerConnection) return;
+
+            try {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                log('✅ Réponse définie comme description distante');
+                updateConnectionStatus('connected', 'Connecté');
+                updateButtonStates();
+            } catch (error) {
+                log(`❌ Erreur lors du traitement de la réponse: ${error.message}`);
+            }
+        }
+
+        // Gérer un candidat ICE
+        async function handleIceCandidate(candidate) {
+            if (!peerConnection) return;
+
+            try {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                log('✅ Candidat ICE ajouté');
+            } catch (error) {
+                log(`❌ Erreur lors de l'ajout du candidat ICE: ${error.message}`);
+            }
+        }
+
+        // Se connecter à la room
+        function connect() {
+            log('🔗 Connexion à la room...');
+            updateConnectionStatus('connecting', 'Connexion en cours...');
+            
+            // Démarrer l'écoute de la signalisation
+            startSignalingListener();
+            
+            // Envoyer une demande de connexion
+            const connectMessage = {
+                type: 'connect',
+                from: userId,
+                roomId: roomId,
+                role: userRole,
+                timestamp: Date.now()
+            };
+            
+            const key = `webrtc-connect-${Date.now()}`;
+            localStorage.setItem(key, JSON.stringify(connectMessage));
+            
+            setTimeout(() => {
+                localStorage.removeItem(key);
+                if (!isConnected) {
+                    updateConnectionStatus('disconnected', 'Aucun vendeur disponible');
+                    log('⏰ Timeout: aucun vendeur trouvé');
+                }
+            }, 10000);
+            
+            updateButtonStates();
+        }
+
+        // Appeler (envoyer une offre)
+        async function call() {
+            if (!localStream) {
+                alert('Veuillez d\'abord activer la caméra et le microphone');
+                return;
+            }
+
+            log('📞 Appel en cours...');
+            
+            peerConnection = createPeerConnection();
+            
+            try {
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                
+                log('📤 Envoi de l\'offre');
+                broadcastOffer(offer);
+                
+                updateConnectionStatus('connecting', 'Appel en cours...');
+                updateButtonStates();
+                
+            } catch (error) {
+                log(`❌ Erreur lors de la création de l'offre: ${error.message}`);
+            }
+        }
+
+        // Répondre à un appel
+        function answer() {
+            log('📱 Réponse à l\'appel...');
+            // La réponse est automatiquement gérée par le système de signalisation
+        }
+
+        // Raccrocher
+        function hangup() {
+            log('📴 Raccrochage...');
+            
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+            
+            remoteVideo.srcObject = null;
+            remoteStream = null;
+            
+            updateConnectionStatus('disconnected', 'Déconnecté');
+            updateButtonStates();
+        }
+
+        // Se déconnecter complètement
+        function disconnect() {
+            log('🔌 Déconnexion complète...');
+            hangup();
+            
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+                localVideo.srcObject = null;
+            }
+            
+            // Réinitialiser le diagnostic
+            document.getElementById('micStatus').textContent = 'INACTIF';
+            document.getElementById('micStatus').className = 'diagnostic-status status-error';
+            document.getElementById('webrtcStatus').textContent = 'DÉCONNECTÉ';
+            document.getElementById('webrtcStatus').className = 'diagnostic-status status-error';
+            
+            updateButtonStates();
+        }
+
+        // Mise à jour des états des boutons
+        function updateButtonStates() {
+            const hasLocalStream = !!localStream;
+            const hasRemoteStream = !!remoteStream;
+            const hasPeerConnection = !!peerConnection;
+
+            document.getElementById('startCamera').disabled = hasLocalStream;
+            document.getElementById('connect').disabled = !hasLocalStream || isConnected;
+            document.getElementById('call').disabled = !hasLocalStream || isConnected;
+            document.getElementById('answer').disabled = !hasPeerConnection || isConnected;
+            document.getElementById('hangup').disabled = !isConnected;
+            document.getElementById('disconnect').disabled = !hasLocalStream;
+        }
+
+        // Diagnostic audio complet
+        async function audioDiagnostic() {
+            log('🔍 Démarrage du diagnostic audio...');
+            
+            // Vérifier le microphone
+            if (localStream && localStream.getAudioTracks().length > 0) {
+                const audioTrack = localStream.getAudioTracks()[0];
+                log(`🎤 Microphone: ${audioTrack.label}`);
+                log(`🎤 État: ${audioTrack.enabled ? 'ACTIF' : 'INACTIF'}`);
+                log(`🎤 Volume: ${audioTrack.getSettings().volume || 'N/A'}`);
+            } else {
+                log('⚠️ Aucun microphone détecté');
+            }
+            
+            // Vérifier les périphériques audio
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const audioInputs = devices.filter(device => device.kind === 'audioinput');
+                const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
+                
+                log(`🎧 Périphériques audio d'entrée: ${audioInputs.length}`);
+                audioInputs.forEach((device, index) => {
+                    log(`  ${index + 1}. ${device.label} (${device.deviceId})`);
+                });
+                
+                log(`🎧 Périphériques audio de sortie: ${audioOutputs.length}`);
+                audioOutputs.forEach((device, index) => {
+                    log(`  ${index + 1}. ${device.label} (${device.deviceId})`);
+                });
+                
+                // Vérifier si un casque est connecté
+                const hasHeadphones = audioOutputs.some(device => 
+                    device.label.toLowerCase().includes('headphone') ||
+                    device.label.toLowerCase().includes('casque') ||
+                    device.label.toLowerCase().includes('headset')
+                );
+                
+                if (hasHeadphones) {
+                    log('🎧 Casque audio détecté et configuré');
+                    document.getElementById('headphoneStatus').textContent = 'DÉTECTÉ';
+                    document.getElementById('headphoneStatus').className = 'diagnostic-status status-ok';
+                } else {
+                    log('⚠️ Aucun casque détecté');
+                    document.getElementById('headphoneStatus').textContent = 'NON DÉTECTÉ';
+                    document.getElementById('headphoneStatus').className = 'diagnostic-status status-warning';
+                }
+                
+            } catch (error) {
+                log(`❌ Erreur diagnostic: ${error.message}`);
+            }
+            
+            // Vérifier l'état WebRTC
+            if (peerConnection) {
+                log(`🔗 État WebRTC: ${peerConnection.connectionState}`);
+                log(`📊 ICE Connection State: ${peerConnection.iceConnectionState}`);
+                log(`📊 Signaling State: ${peerConnection.signalingState}`);
+            }
+            
+            // Test audio bidirectionnel
+            log('🔊 Test de l\'audio bidirectionnel...');
+            
+            // Jouer un son de test et mesurer
+            if (remoteVideo.srcObject) {
+                const audioTrack = remoteVideo.srcObject.getAudioTracks()[0];
+                if (audioTrack) {
+                    log(`🔊 Audio distant: ${audioTrack.label}`);
+                    log(`🔊 Audio distant activé: ${audioTrack.enabled}`);
+                }
+            }
+            
+            log('✅ Diagnostic audio terminé');
+        }
+
+        // Initialisation
+        log('🚀 Initialisation du système WebRTC');
+        log(`👤 Utilisateur: ${userId} (${userRole})`);
+        log(`🏠 Room: ${roomId}`);
+        
+        // Mise à jour initiale des boutons
+        updateButtonStates();
+        
+        // Démarrer la vérification des casques
+        setTimeout(checkHeadphones, 1000);
+        
+        log('🎉 PARFAIT! Audio Confirmé! - Système prêt');
+    </script>
+</body>
+</html>

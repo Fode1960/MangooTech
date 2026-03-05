@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Accès Boutique Jules</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .url-test {
+            background-color: #e8f4fd;
+            border-color: #2196F3;
+        }
+        .direct-access {
+            background-color: #f3e5f5;
+            border-color: #9C27B0;
+        }
+        .api-test {
+            background-color: #e8f5e8;
+            border-color: #4CAF50;
+        }
+        button {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #1976D2;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .link-direct {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin: 5px;
+        }
+        .link-direct:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test d'Accès à Jules Boutique</h1>
+        <p>Ce test permet de vérifier l'accès direct à la boutique sans redirection.</p>
+
+        <div class="test-section url-test">
+            <h3>🔗 Test d'URL Directe</h3>
+            <p>Cliquez sur le lien pour ouvrir la boutique dans un nouvel onglet :</p>
+            <a href="http://localhost:3016/shop/jules-boutique-mksbfsb8" 
+               target="_blank" 
+               class="link-direct">
+               📱 Ouvrir Jules Boutique (Nouvel onglet)
+            </a>
+            <a href="http://localhost:3016/shop/jules-boutique-mksbfsb8" 
+               class="link-direct">
+               📱 Ouvrir Jules Boutique (Même onglet)
+            </a>
+        </div>
+
+        <div class="test-section direct-access">
+            <h3>🚀 Accès Direct avec Paramètres</h3>
+            <p>Test avec différents paramètres pour éviter toute redirection :</p>
+            <button onclick="testDirectAccess()">Tester Accès Direct</button>
+            <button onclick="testWithNoAuth()">Tester sans Authentification</button>
+            <button onclick="testInPrivateMode()">Tester en Mode Privé</button>
+            <div id="directResult" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="test-section api-test">
+            <h3>📡 Test API Backend</h3>
+            <p>Vérifier si la boutique existe dans la base de données :</p>
+            <button onclick="testAPI()">Tester API Backend</button>
+            <div id="apiResult" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📝 Journal des Tests</h3>
+            <div id="logResult" class="result info" style="max-height: 200px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('logResult');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'success' ? '🟢' : type === 'error' ? '🔴' : '🔵';
+            logDiv.innerHTML += `${color} [${timestamp}] ${message}\\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function testDirectAccess() {
+            log('Test accès direct en cours...');
+            const result = document.getElementById('directResult');
+            
+            try {
+                // Créer une URL avec paramètre pour forcer le chargement de la page publique
+                const url = new URL('http://localhost:3016/shop/jules-boutique-mksbfsb8');
+                url.searchParams.set('mode', 'public');
+                url.searchParams.set('no_redirect', 'true');
+                
+                log(`URL générée: ${url.toString()}`);
+                
+                result.innerHTML = `✅ URL directe créée: <a href="${url}" target="_blank" style="color: blue;">${url}</a>`;
+                result.className = 'result success';
+                result.style.display = 'block';
+                
+                // Ouvrir automatiquement dans un nouvel onglet
+                window.open(url, '_blank');
+                log('Nouvel onglet ouvert avec URL directe', 'success');
+                
+            } catch (error) {
+                result.innerHTML = `❌ Erreur: ${error.message}`;
+                result.className = 'result error';
+                result.style.display = 'block';
+                log(`Erreur lors du test direct: ${error.message}`, 'error');
+            }
+        }
+
+        function testWithNoAuth() {
+            log('Test sans authentification...');
+            
+            // Supprimer tout token d'authentification local
+            localStorage.removeItem('sb_user');
+            localStorage.removeItem('sb_token');
+            sessionStorage.clear();
+            
+            log('Tokens d\'authentification supprimés');
+            log('Redirection vers la boutique...');
+            
+            // Rediriger avec un délai pour permettre le nettoyage
+            setTimeout(() => {
+                window.open('http://localhost:3016/shop/jules-boutique-mksbfsb8?auth=false', '_blank');
+            }, 500);
+        }
+
+        function testInPrivateMode() {
+            log('Test en mode privé (simulation)...');
+            
+            // Instructions pour l'utilisateur
+            alert(`🕵️ Mode Privé Simulation\\n\\n` +
+                  `Pour tester en mode privé réel :\\n` +
+                  `1. Ouvrez une fenêtre de navigation privée/incognito\\n` +
+                  `2. Allez à: http://localhost:3016/shop/jules-boutique-mksbfsb8\\n` +
+                  `3. Cela évitera toute session ou cookie existant`);
+            
+            log('Instructions pour mode privé affichées', 'info');
+        }
+
+        async function testAPI() {
+            log('Test API backend en cours...');
+            const result = document.getElementById('apiResult');
+            
+            try {
+                // Test API simple
+                const response = await fetch('http://localhost:3010/api/health');
+                const health = await response.json();
+                
+                log(`API Health: ${health.message}`);
+                
+                // Test recherche boutique
+                const shopResponse = await fetch('http://localhost:3010/api/shops/simple/shops/simple');
+                const shopData = await shopResponse.json();
+                
+                if (shopData.success && shopData.data) {
+                    const julesShop = shopData.data.find(shop => shop.slug === 'jules-boutique-mksbfsb8');
+                    
+                    if (julesShop) {
+                        result.innerHTML = `✅ Boutique Jules trouvée!\\n` +
+                                         `   - Nom: ${julesShop.name}\\n` +
+                                         `   - Statut: ${julesShop.status}\\n` +
+                                         `   - Vérifié: ${julesShop.is_verified ? 'Oui' : 'Non'}\\n` +
+                                         `   - Total boutiques: ${shopData.data.length}`;
+                        result.className = 'result success';
+                        log('Boutique Jules trouvée via API', 'success');
+                    } else {
+                        result.innerHTML = `⚠️ Boutique Jules non trouvée dans la liste\\n` +
+                                         `   - Total boutiques: ${shopData.data.length}\\n` +
+                                         `   - Slugs disponibles: ${shopData.data.map(s => s.slug).join(', ')}`;
+                        result.className = 'result info';
+                        log('Boutique Jules non trouvée via API', 'info');
+                    }
+                } else {
+                    result.innerHTML = `❌ Erreur API: ${shopData.error || 'Données invalides'}`;
+                    result.className = 'result error';
+                    log('Erreur lors de l\'appel API', 'error');
+                }
+                
+            } catch (error) {
+                result.innerHTML = `❌ Erreur API: ${error.message}`;
+                result.className = 'result error';
+                log(`Erreur API: ${error.message}`, 'error');
+            }
+            
+            result.style.display = 'block';
+        }
+
+        // Log initial
+        log('Page de test chargée');
+        log('Prêt à tester l\'accès à Jules Boutique');
+    </script>
+</body>
+</html>

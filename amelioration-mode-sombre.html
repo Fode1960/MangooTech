@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✅ Amélioration Mode Sombre - Test de Contraste</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #1a5f3f, #0f172a);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .test-result { 
+            margin: 20px 0; 
+            padding: 20px; 
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .success { 
+            background: rgba(76, 175, 80, 0.2);
+            border-color: rgba(76, 175, 80, 0.5);
+        }
+        .info { 
+            background: rgba(33, 150, 243, 0.2);
+            border-color: rgba(33, 150, 243, 0.5);
+        }
+        .access-link { 
+            display: inline-block; 
+            margin: 20px 0; 
+            padding: 20px 40px; 
+            background: linear-gradient(45deg, #ff6b35, #ff8c42);
+            color: white; 
+            text-decoration: none; 
+            border-radius: 15px; 
+            font-weight: bold; 
+            font-size: 1.2em;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+        }
+        .access-link:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.6);
+        }
+        .demo-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px; 
+            border-radius: 15px; 
+            margin: 20px 0;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        .demo-section h3 {
+            margin-top: 0; 
+            color: #fff;
+            font-size: 1.5em;
+        }
+        .form-demo {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .form-column {
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        .light-mode {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+        .dark-mode {
+            background: rgba(31, 41, 55, 0.9);
+            color: #fff;
+        }
+        .form-field {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: 2px solid;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .light-mode .form-field {
+            background: #fff;
+            border-color: #d1d5db;
+            color: #111827;
+        }
+        .light-mode .form-field::placeholder {
+            color: #6b7280;
+        }
+        .dark-mode .form-field {
+            background: #374151;
+            border-color: #4b5563;
+            color: #fff;
+        }
+        .dark-mode .form-field::placeholder {
+            color: #9ca3af;
+        }
+        .form-field:focus {
+            outline: none;
+            border-color: #ff6b35;
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .feature-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+        .emoji {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        .before-after {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+        }
+        .before, .after {
+            flex: 1;
+            padding: 15px;
+            margin: 0 10px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .before {
+            background: rgba(244, 67, 54, 0.2);
+            border: 2px solid rgba(244, 67, 54, 0.5);
+        }
+        .after {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid rgba(76, 175, 80, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌓 Amélioration du Mode Sombre</h1>
+        
+        <div class="test-result info">
+            <strong>ℹ️ Statut des Corrections :</strong> ✅ Les champs de formulaire ont été améliorés pour le mode sombre
+            <br><strong>🔄 Dernière mise à jour :</strong> 16:28 - Correction du contraste des formulaires
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="http://localhost:3009" target="_blank" class="access-link">
+                🚀 TESTER LA PLATEFORME
+            </a>
+        </div>
+
+        <div class="demo-section">
+            <h3>🎯 Corrections Apportées</h3>
+            <div class="before-after">
+                <div class="before">
+                    <strong>❌ AVANT</strong><br>
+                    <small>Fonds gris foncé<br>Texte gris clair<br>Peu lisible</small>
+                </div>
+                <div class="after">
+                    <strong>✅ APRÈS</strong><br>
+                    <small>Fonds gris moyen<br>Texte blanc<br>Très lisible</small>
+                </div>
+            </div>
+        </div>
+
+        <h2>🎨 Aperçu des Améliorations</h2>
+        
+        <div class="form-demo">
+            <div class="form-column light-mode">
+                <h4>☀️ Mode Jour</h4>
+                <input type="text" class="form-field" placeholder="Nom du produit" value="Cocomm DT740">
+                <textarea class="form-field" rows="3" placeholder="Description">Téléphone intelligent haut de gamme</textarea>
+                <input type="number" class="form-field" placeholder="Prix (FCFA)" value="150000">
+                <select class="form-field">
+                    <option>Électronique</option>
+                    <option>Mode</option>
+                    <option>Alimentation</option>
+                </select>
+            </div>
+            
+            <div class="form-column dark-mode">
+                <h4>🌙 Mode Nuit (CORRIGÉ)</h4>
+                <input type="text" class="form-field" placeholder="Nom du produit" value="Cocomm DT740">
+                <textarea class="form-field" rows="3" placeholder="Description">Téléphone intelligent haut de gamme</textarea>
+                <input type="number" class="form-field" placeholder="Prix (FCFA)" value="150000">
+                <select class="form-field">
+                    <option>Électronique</option>
+                    <option>Mode</option>
+                    <option>Alimentation</option>
+                </select>
+            </div>
+        </div>
+
+        <h2>✨ Améliorations Spécifiques</h2>
+        <div class="feature-grid">
+            <div class="feature-item">
+                <div class="emoji">🎨</div>
+                <strong>Fonds Améliorés</strong><br>
+                <small>bg-gray-700 → bg-gray-800<br>Pour meilleur contraste</small>
+            </div>
+            <div class="feature-item">
+                <div class="emoji">📝</div>
+                <strong>Texte Clair</strong><br>
+                <small>text-gray-900 → text-white<br>Parfaitement lisible</small>
+            </div>
+            <div class="feature-item">
+                <div class="emoji">🎯</div>
+                <strong>Bordures Visibles</strong><br>
+                <small>border-gray-300 → border-gray-600<br>Nettement définies</small>
+            </div>
+            <div class="feature-item">
+                <div class="emoji">⚡</div>
+                <strong>Transitions Fluides</strong><br>
+                <small>duration-300<br>Changements en douceur</small>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3>🛍️ Autres Corrections</h3>
+            <ul>
+                <li>✅ Cartes de statistiques avec fonds adaptés</li>
+                <li>✅ Cartes de produits avec meilleur contraste</li>
+                <li>✅ Boutons avec dégradés Orange/Vert MangooTech</li>
+                <li>✅ Textes descriptifs en gris clair (mode sombre)</li>
+                <li>✅ Badges d'état avec couleurs adaptées</li>
+            </ul>
+        </div>
+
+        <h2>🎯 Instructions de Test</h2>
+        <div class="test-result success">
+            <ol>
+                <li><strong>Connectez-vous</strong> avec un compte vendeur</li>
+                <li><strong>Activez le mode sombre</strong> (bouton en haut à droite)</li>
+                <li><strong>Allez dans "Ajouter un Produit"</strong></li>
+                <li><strong>Vérifiez la lisibilité</strong> des champs de formulaire</li>
+                <li><strong>Testez aussi les autres sections</strong> du tableau de bord</li>
+            </ol>
+        </div>
+
+        <div class="test-result info">
+            <strong>💡 Astuce :</strong> Les champs sont maintenant parfaitement visibles avec :<br>
+            • Fond gris moyen (#374151) sur fond sombre<br>
+            • Texte blanc pour maximum de contraste<br>
+            • Bordures grises visibles (#4b5563)<br>
+            • Placeholders en gris clair (#9ca3af)
+        </div>
+    </div>
+</body>
+</html>

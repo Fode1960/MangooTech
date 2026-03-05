@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test VoIP 8888 ↔ 8889</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background: #fafafa; }
+        .button { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; }
+        .button-primary { background: #007bff; color: white; }
+        .button-success { background: #28a745; color: white; }
+        .button-danger { background: #dc3545; color: white; }
+        .button:disabled { background: #ccc; cursor: not-allowed; }
+        .log { background: #000; color: #0f0; padding: 10px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; margin: 10px 0; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .status-connected { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status-disconnected { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .call-controls { display: none; margin: 15px 0; padding: 15px; background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; }
+        .call-controls.active { display: block; }
+        .call-controls h4 { margin: 0 0 10px 0; color: #856404; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Test VoIP: 8888 ↔ 8889</h1>
+        <p>Ce test vérifie que 8888 peut appeler 8889 et que les boutons Répondre/Raccrocher fonctionnent.</p>
+
+        <div class="test-section">
+            <h3>Étape 1: Connexion WebSocket</h3>
+            <button id="connectBtn" class="button button-primary">Se connecter</button>
+            <div id="connectionStatus" class="status status-disconnected">Déconnecté</div>
+        </div>
+
+        <div class="test-section">
+            <h3>Étape 2: Enregistrement des utilisateurs</h3>
+            <button id="register8888" class="button button-primary" disabled>S'enregistrer comme 8888 (Vendeur)</button>
+            <button id="register8889" class="button button-primary" disabled>S'enregistrer comme 8889 (Client)</button>
+            <div id="registrationStatus"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Étape 3: Test d'appel</h3>
+            <button id="call8889" class="button button-success" disabled>📞 8888 appelle 8889</button>
+            <div id="callControls8889" class="call-controls">
+                <h4>📱 8889 reçoit un appel:</h4>
+                <button id="answerCall" class="button button-success">✅ Répondre</button>
+                <button id="rejectCall" class="button button-danger">❌ Refuser</button>
+            </div>
+            <div id="callControls8888" class="call-controls">
+                <h4>📞 8888 est en appel:</h4>
+                <button id="hangupCall" class="button button-danger">📵 Raccrocher</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Journal des événements</h3>
+            <div id="log" class="log"></div>
+            <button id="clearLog" class="button">Effacer le journal</button>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let currentUser = null;
+        let currentCall = null;
+
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateConnectionStatus(connected) {
+            const status = document.getElementById('connectionStatus');
+            if (connected) {
+                status.className = 'status status-connected';
+                status.textContent = 'Connecté au serveur WebSocket';
+            } else {
+                status.className = 'status status-disconnected';
+                status.textContent = 'Déconnecté';
+            }
+        }
+
+        document.getElementById('connectBtn').addEventListener('click', function() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                log('Déjà connecté');
+                return;
+            }
+
+            log('Connexion au serveur WebSocket...');
+            ws = new WebSocket('ws://localhost:3008');
+
+            ws.onopen = function() {
+                log('✅ Connecté au serveur WebSocket');
+                updateConnectionStatus(true);
+                document.getElementById('register8888').disabled = false;
+                document.getElementById('register8889').disabled = false;
+            };
+
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                log(`📨 Message reçu: ${JSON.stringify(data)}`);
+                handleMessage(data);
+            };
+
+            ws.onclose = function() {
+                log('🔌 Déconnecté du serveur WebSocket');
+                updateConnectionStatus(false);
+                document.getElementById('register8888').disabled = true;
+                document.getElementById('register8889').disabled = true;
+            };
+
+            ws.onerror = function(error) {
+                log('❌ Erreur WebSocket: ' + error);
+            };
+        });
+
+        function handleMessage(data) {
+            switch (data.type) {
+                case 'joined-room':
+                    log(`✅ Enregistré avec succès: ${data.userId}`);
+                    document.getElementById('registrationStatus').innerHTML = 
+                        `<div class="status status-connected">Enregistré comme ${data.userId}</div>`;
+                    break;
+
+                case 'incoming-call':
+                    log(`📞 Appel entrant de ${data.from}`);
+                    currentCall = data;
+                    // Afficher les boutons de contrôle pour le destinataire
+                    if (currentUser === 'client-8889') {
+                        document.getElementById('callControls8889').classList.add('active');
+                        log('🎯 Boutons Répondre/Refuser affichés pour 8889');
+                    }
+                    break;
+
+                case 'call-answered':
+                    log(`✅ Appel accepté par ${data.by}`);
+                    if (currentUser === 'vendor-8888') {
+                        document.getElementById('callControls8888').classList.add('active');
+                        log('🎯 Bouton Raccrocher affiché pour 8888');
+                    }
+                    break;
+
+                case 'call-ended':
+                    log(`📵 Appel terminé par ${data.by}`);
+                    endCall();
+                    break;
+
+                case 'call-rejected':
+                    log(`❌ Appel refusé par ${data.by}`);
+                    endCall();
+                    break;
+            }
+        }
+
+        function sendMessage(message) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify(message));
+                log(`📤 Message envoyé: ${JSON.stringify(message)}`);
+            } else {
+                log('❌ Non connecté au serveur WebSocket');
+            }
+        }
+
+        document.getElementById('register8888').addEventListener('click', function() {
+            currentUser = 'vendor-8888';
+            sendMessage({
+                type: 'join-room',
+                roomId: 'voip-test-room',
+                userId: 'vendor-8888',
+                role: 'vendor'
+            });
+            document.getElementById('call8889').disabled = false;
+            log('✅ Enregistré comme vendeur 8888');
+        });
+
+        document.getElementById('register8889').addEventListener('click', function() {
+            currentUser = 'client-8889';
+            sendMessage({
+                type: 'join-room',
+                roomId: 'voip-test-room',
+                userId: 'client-8889',
+                role: 'client'
+            });
+            log('✅ Enregistré comme client 8889');
+        });
+
+        document.getElementById('call8889').addEventListener('click', function() {
+            if (currentUser !== 'vendor-8888') {
+                log('❌ Seul 8888 peut passer un appel');
+                return;
+            }
+            
+            sendMessage({
+                type: 'call-notification',
+                roomId: 'voip-test-room',
+                from: 'vendor-8888',
+                message: 'Appel de 8888'
+            });
+            log('📞 Appel en cours de connexion vers 8889...');
+        });
+
+        document.getElementById('answerCall').addEventListener('click', function() {
+            if (currentCall) {
+                sendMessage({
+                    type: 'answer',
+                    from: 'client-8889',
+                    to: 'vendor-8888',
+                    roomId: 'voip-test-room',
+                    callId: currentCall.callId
+                });
+                document.getElementById('callControls8889').classList.remove('active');
+                log('✅ Appel accepté');
+            }
+        });
+
+        document.getElementById('rejectCall').addEventListener('click', function() {
+            if (currentCall) {
+                sendMessage({
+                    type: 'call-ended',
+                    from: 'client-8889',
+                    to: 'vendor-8888',
+                    callId: currentCall.callId
+                });
+                document.getElementById('callControls8889').classList.remove('active');
+                currentCall = null;
+                log('❌ Appel refusé');
+            }
+        });
+
+        document.getElementById('hangupCall').addEventListener('click', function() {
+            if (currentCall) {
+                sendMessage({
+                    type: 'call-ended',
+                    from: 'vendor-8888',
+                    to: 'client-8889',
+                    callId: currentCall.callId
+                });
+                endCall();
+                log('📵 Appel raccroché');
+            }
+        });
+
+        function endCall() {
+            currentCall = null;
+            document.getElementById('callControls8888').classList.remove('active');
+            document.getElementById('callControls8889').classList.remove('active');
+        }
+
+        document.getElementById('clearLog').addEventListener('click', function() {
+            document.getElementById('log').innerHTML = '';
+        });
+
+        log('🎯 Test VoIP prêt - cliquez sur "Se connecter" pour commencer');
+    </script>
+</body>
+</html>

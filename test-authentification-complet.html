@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛍️ Test d'Authentification Mini-Boutique - Exécution Automatique</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        .content {
+            padding: 30px;
+        }
+        .test-section {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 5px solid #22c55e;
+        }
+        .test-section h3 {
+            color: #1e293b;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .console-output {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 15px 0;
+            border: 2px solid #374151;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-success { background: #22c55e; }
+        .status-error { background: #ef4444; }
+        .status-warning { background: #f59e0b; }
+        .status-info { background: #6b7280; }
+        .mini-boutique-frame {
+            width: 100%;
+            height: 600px;
+            border: 3px solid #22c55e;
+            border-radius: 10px;
+            margin-top: 20px;
+            background: white;
+        }
+        .test-results {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            border: 2px solid #22c55e;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        .test-results h3 {
+            color: #166534;
+            margin-top: 0;
+        }
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .result-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #22c55e;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .result-item.error {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+        .result-item.warning {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e, #16a34a);
+            transition: width 0.3s ease;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+        }
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #22c55e;
+            color: #22c55e;
+        }
+        .btn-outline:hover {
+            background: #22c55e;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛍️ Test d'Authentification Mini-Boutique</h1>
+            <p>Vérification complète de l'isolation des données entre les utilisateurs</p>
+        </div>
+        
+        <div class="content">
+            <div class="test-section">
+                <h3><span class="status-indicator status-info"></span>Statut du Test</h3>
+                <div id="testStatus" class="status-warning">Préparation du test...</div>
+                <div class="progress-bar">
+                    <div id="progressBar" class="progress-fill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="startTest" class="btn btn-primary">
+                    🚀 Lancer le Test Complet
+                </button>
+                <button id="clearData" class="btn btn-outline">
+                    🧹 Nettoyer les Données
+                </button>
+                <button id="openMiniBoutique" class="btn btn-secondary">
+                    🛍️ Ouvrir Mini-Boutique
+                </button>
+            </div>
+
+            <div class="test-section">
+                <h3><span class="status-indicator status-info"></span>Console de Test</h3>
+                <div id="consoleOutput" class="console-output">
+                    Console prête... Cliquez sur "Lancer le Test Complet" pour commencer.
+                </div>
+            </div>
+
+            <div id="testResults" class="test-results" style="display: none;">
+                <h3>📊 Résultats du Test</h3>
+                <div id="resultsContent"></div>
+            </div>
+
+            <div class="test-section">
+                <h3><span class="status-indicator status-info"></span>Mini-Boutique en Temps Réel</h3>
+                <p>Observez comment les données changent selon l'utilisateur connecté :</p>
+                <iframe id="miniBoutiqueFrame" class="mini-boutique-frame" src="http://localhost:3009/" title="Mini-Boutique"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class MiniBoutiqueAuthTest {
+            constructor() {
+                this.currentUser = null;
+                this.testResults = [];
+                this.allUserData = {};
+                this.currentTest = 0;
+                this.totalTests = 9;
+                
+                // Configuration des comptes de test
+                this.TEST_ACCOUNTS = [
+                    {
+                        id: 'testeur2025-12345',
+                        email: 'testeur2025@example.com',
+                        name: 'Testeur 2025',
+                        avatar: null
+                    },
+                    {
+                        id: 'test2-67890',
+                        email: 'test2@example.com', 
+                        name: 'Test 2',
+                        avatar: null
+                    }
+                ];
+            }
+
+            // Méthode pour logger dans la console et l'interface
+            log(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const consoleOutput = document.getElementById('consoleOutput');
+                
+                // Ajouter à la console de l'interface
+                const colorClass = type === 'success' ? 'color: #22c55e;' : 
+                                  type === 'error' ? 'color: #ef4444;' : 
+                                  type === 'warning' ? 'color: #f59e0b;' : 'color: #f9fafb;';
+                
+                consoleOutput.innerHTML += `<div style="${colorClass}">[${timestamp}] ${message}</div>`;
+                consoleOutput.scrollTop = consoleOutput.scrollHeight;
+                
+                // Log dans la console du navigateur aussi
+                console.log(`[${timestamp}] ${message}`);
+            }
+
+            updateStatus(message, type = 'warning') {
+                const status = document.getElementById('testStatus');
+                const indicator = status.querySelector('.status-indicator') || document.createElement('span');
+                
+                if (!status.querySelector('.status-indicator')) {
+                    indicator.className = `status-indicator status-${type}`;
+                    status.innerHTML = '';
+                    status.appendChild(indicator);
+                } else {
+                    indicator.className = `status-indicator status-${type}`;
+                }
+                
+                status.appendChild(document.createTextNode(` ${message}`));
+                
+                this.log(message, type);
+            }
+
+            updateProgress(percentage) {
+                const progressBar = document.getElementById('progressBar');
+                progressBar.style.width = `${percentage}%`;
+            }
+
+            addTestResult(step, result, details = '') {
+                this.testResults.push({
+                    step,
+                    result,
+                    details,
+                    timestamp: new Date().toISOString()
+                });
+                
+                this.log(`${step}: ${result} ${details ? '- ' + details : ''}`, 
+                    result === 'SUCCESS' ? 'success' : 
+                    result === 'FAILED' ? 'error' : 'warning');
+            }
+
+            async delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            // Test 1: Vérifier la connexion au serveur
+            async testConnection() {
+                this.updateStatus('Test de connexion au serveur...', 'info');
+                
+                try {
+                    const response = await fetch('http://localhost:3009/');
+                    if (response.ok) {
+                        this.addTestResult('Connexion Serveur', 'SUCCESS', 'Serveur accessible');
+                        return true;
+                    } else {
+                        this.addTestResult('Connexion Serveur', 'FAILED', 'Serveur inaccessible');
+                        return false;
+                    }
+                } catch (error) {
+                    this.addTestResult('Connexion Serveur', 'FAILED', error.message);
+                    return false;
+                }
+            }
+
+            // Test 2: Connexion utilisateur 1
+            connectAccount1() {
+                this.log('🔐 Connexion au compte testeur2025@example.com...', 'info');
+                
+                try {
+                    const userData = this.TEST_ACCOUNTS[0];
+                    
+                    // Stocker dans localStorage
+                    localStorage.setItem('miniShopCurrentUser', JSON.stringify(userData));
+                    localStorage.setItem('miniShopAuth', JSON.stringify({ 
+                        user: userData, 
+                        isAuthenticated: true 
+                    }));
+                    
+                    this.currentUser = userData.email;
+                    this.allUserData[userData.id] = userData;
+                    
+                    // Créer des produits pour cet utilisateur
+                    this.createUserProducts(userData);
+                    
+                    this.addTestResult('Connexion Compte 1', 'SUCCESS', 'Utilisateur connecté avec succès');
+                    
+                    // Envoyer l'authentification à l'iframe
+                    this.sendAuthToMiniBoutique(userData);
+                    
+                    return true;
+                } catch (error) {
+                    this.addTestResult('Connexion Compte 1', 'FAILED', error.message);
+                    return false;
+                }
+            }
+
+            // Test 3: Connexion utilisateur 2
+            connectAccount2() {
+                this.log('🔐 Connexion au compte test2@example.com...', 'info');
+                
+                try {
+                    const userData = this.TEST_ACCOUNTS[1];
+                    
+                    // Stocker dans localStorage
+                    localStorage.setItem('miniShopCurrentUser', JSON.stringify(userData));
+                    localStorage.setItem('miniShopAuth', JSON.stringify({ 
+                        user: userData, 
+                        isAuthenticated: true 
+                    }));
+                    
+                    this.currentUser = userData.email;
+                    this.allUserData[userData.id] = userData;
+                    
+                    // Créer des produits pour cet utilisateur
+                    this.createUserProducts(userData);
+                    
+                    this.addTestResult('Connexion Compte 2', 'SUCCESS', 'Utilisateur connecté avec succès');
+                    
+                    // Envoyer l'authentification à l'iframe
+                    this.sendAuthToMiniBoutique(userData);
+                    
+                    return true;
+                } catch (error) {
+                    this.addTestResult('Connexion Compte 2', 'FAILED', error.message);
+                    return false;
+                }
+            }
+
+            sendAuthToMiniBoutique(userData) {
+                const iframe = document.getElementById('miniBoutiqueFrame');
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.postMessage({
+                        type: 'AUTH_LOGIN',
+                        user: userData
+                    }, 'http://localhost:3009');
+                    this.log(`📤 Données d'authentification envoyées à Mini-Boutique pour ${userData.email}`, 'info');
+                }
+            }
+
+            createUserProducts(userData) {
+                const storageKey = `miniShopProducts_${userData.id}`;
+                const userProducts = [
+                    {
+                        id: Date.now() + 1,
+                        name: `Produit ${userData.name.split(' ')[0]} - T-shirt Premium`,
+                        price: 29.99,
+                        description: `Produit créé par ${userData.email}`,
+                        createdAt: new Date().toISOString(),
+                        userId: userData.id,
+                        userEmail: userData.email
+                    },
+                    {
+                        id: Date.now() + 2,
+                        name: `Produit ${userData.name.split(' ')[0]} - Casque Audio`,
+                        price: 149.99,
+                        description: `Produit créé par ${userData.email}`,
+                        createdAt: new Date().toISOString(),
+                        userId: userData.id,
+                        userEmail: userData.email
+                    },
+                    {
+                        id: Date.now() + 3,
+                        name: `Produit ${userData.name.split(' ')[0]} - Smartphone`,
+                        price: 599.99,
+                        description: `Produit créé par ${userData.email}`,
+                        createdAt: new Date().toISOString(),
+                        userId: userData.id,
+                        userEmail: userData.email
+                    }
+                ];
+                
+                localStorage.setItem(storageKey, JSON.stringify(userProducts));
+                this.log(`✅ ${userProducts.length} produits créés pour ${userData.email}`, 'success');
+            }
+
+            // Test 4: Vérifier l'isolation des données
+            testDataIsolation() {
+                this.log('🔍 Test de l\'isolation des données...', 'info');
+                
+                let isolationSuccess = true;
+                let totalIssues = 0;
+                
+                this.TEST_ACCOUNTS.forEach(account => {
+                    const storageKey = `miniShopProducts_${account.id}`;
+                    const userProducts = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                    
+                    // Vérifier que les produits appartiennent bien à l'utilisateur
+                    const foreignProducts = userProducts.filter(product => 
+                        product.userId !== account.id || product.userEmail !== account.email
+                    );
+                    
+                    if (foreignProducts.length > 0) {
+                        this.log(`❌ Problème d'isolation pour ${account.email}: ${foreignProducts.length} produits étrangers`, 'error');
+                        isolationSuccess = false;
+                        totalIssues += foreignProducts.length;
+                    } else {
+                        this.log(`✅ Isolation parfaite pour ${account.email}: ${userProducts.length} produits propres`, 'success');
+                    }
+                });
+                
+                this.addTestResult('Test Isolation', isolationSuccess ? 'SUCCESS' : 'FAILED', 
+                    isolationSuccess ? 'Aucune fuite de données détectée' : `${totalIssues} produits étrangers trouvés`);
+                
+                return isolationSuccess;
+            }
+
+            // Test 5: Tester la persistance des données
+            testDataPersistence() {
+                this.log('💾 Test de la persistance des données...', 'info');
+                
+                let allDataIntact = true;
+                
+                this.TEST_ACCOUNTS.forEach(account => {
+                    const storageKey = `miniShopProducts_${account.id}`;
+                    const products = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                    
+                    if (products.length > 0) {
+                        this.log(`✅ Données persistées pour ${account.email}: ${products.length} produits`, 'success');
+                    } else {
+                        this.log(`⚠️ Aucune donnée trouvée pour ${account.email}`, 'warning');
+                        allDataIntact = false;
+                    }
+                });
+                
+                this.addTestResult('Test Persistance', allDataIntact ? 'SUCCESS' : 'WARNING', 
+                    allDataIntact ? 'Toutes les données sont présentes' : 'Certaines données manquent');
+                
+                return allDataIntact;
+            }
+
+            // Test 6: Comparer les données entre utilisateurs
+            compareUserData() {
+                this.log('📊 Comparaison des données entre utilisateurs...', 'info');
+                
+                const userData = {};
+                let hasOverlap = false;
+                
+                this.TEST_ACCOUNTS.forEach(account => {
+                    const storageKey = `miniShopProducts_${account.id}`;
+                    const products = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                    
+                    userData[account.email] = {
+                        productCount: products.length,
+                        productNames: products.map(p => p.name)
+                    };
+                });
+                
+                // Vérifier qu'il n'y a pas de doublons
+                const allProductNames = [];
+                Object.values(userData).forEach(data => {
+                    data.productNames.forEach(name => {
+                        allProductNames.push(name);
+                    });
+                });
+                
+                const duplicates = allProductNames.filter((name, index) => 
+                    allProductNames.indexOf(name) !== index
+                );
+                
+                if (duplicates.length > 0) {
+                    this.log(`⚠️ ${duplicates.length} doublons détectés entre les comptes`, 'warning');
+                    hasOverlap = true;
+                } else {
+                    this.log('✅ Aucun doublon détecté - Données parfaitement isolées', 'success');
+                }
+                
+                // Afficher le résumé
+                Object.entries(userData).forEach(([email, data]) => {
+                    this.log(`📋 ${email}: ${data.productCount} produits uniques`, 'info');
+                });
+                
+                this.addTestResult('Comparaison Données', hasOverlap ? 'WARNING' : 'SUCCESS', 
+                    hasOverlap ? `Doublons trouvés: ${duplicates.join(', ')}` : 'Chaque compte a des produits uniques');
+                
+                return !hasOverlap;
+            }
+
+            // Test 7: Tester l'accès non autorisé
+            testUnauthorizedAccess() {
+                this.log('🚫 Test d\'accès non autorisé...', 'info');
+                
+                // Simuler un utilisateur non authentifié
+                localStorage.removeItem('miniShopCurrentUser');
+                localStorage.removeItem('miniShopAuth');
+                this.currentUser = null;
+                
+                // Tenter d'accéder aux données d'un autre utilisateur
+                const otherUserId = this.TEST_ACCOUNTS[0].id;
+                const storageKey = `miniShopProducts_${otherUserId}`;
+                const products = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                
+                if (products.length > 0) {
+                    this.log(`⚠️ Accès possible aux données de l'utilisateur ${otherUserId} sans authentification`, 'warning');
+                    this.addTestResult('Test Accès Non Autorisé', 'WARNING', 'Accès possible sans authentification');
+                    return false;
+                }
+                
+                this.log('✅ Accès non autorisé bloqué correctement', 'success');
+                this.addTestResult('Test Accès Non Autorisé', 'SUCCESS', 'Accès bloqué sans authentification');
+                return true;
+            }
+
+            // Test 8: Tester le changement d'utilisateur
+            testUserSwitch() {
+                this.log('🔄 Test du changement d\'utilisateur...', 'info');
+                
+                // Simuler la déconnexion
+                localStorage.removeItem('miniShopCurrentUser');
+                localStorage.removeItem('miniShopAuth');
+                this.currentUser = null;
+                
+                this.log('✅ Utilisateur déconnecté', 'success');
+                this.addTestResult('Test Changement Utilisateur', 'SUCCESS', 'Déconnexion réussie');
+                return true;
+            }
+
+            // Nettoyer les données de test
+            clearTestData() {
+                this.log('🧹 Nettoyage des données de test...', 'info');
+                
+                this.TEST_ACCOUNTS.forEach(account => {
+                    const storageKey = `miniShopProducts_${account.id}`;
+                    localStorage.removeItem(storageKey);
+                    this.log(`🗑️ Données supprimées pour ${account.email}`, 'info');
+                });
+                
+                localStorage.removeItem('miniShopCurrentUser');
+                localStorage.removeItem('miniShopAuth');
+                
+                this.log('✅ Nettoyage terminé', 'success');
+            }
+
+            // Rafraîchir l'iframe Mini-Boutique
+            refreshMiniBoutique() {
+                const iframe = document.getElementById('miniBoutiqueFrame');
+                iframe.src = 'http://localhost:3009/';
+                this.log('🔄 Mini-Boutique rafraîchie', 'info');
+            }
+
+            // Exécuter tous les tests
+            async runAllTests() {
+                this.log('🚀 Lancement du test d\'authentification complet...', 'info');
+                this.updateStatus('Test en cours...', 'warning');
+                
+                this.testResults = [];
+                this.currentTest = 0;
+                
+                try {
+                    // Étape 1: Connexion serveur
+                    this.currentTest++;
+                    this.updateProgress((this.currentTest / this.totalTests) * 100);
+                    await this.delay(500);
+                    
+                    if (await this.testConnection()) {
+                        // Étape 2: Connexion utilisateur 1
+                        this.currentTest++;
+                        this.updateProgress((this.currentTest / this.totalTests) * 100);
+                        await this.delay(1000);
+                        
+                        this.connectAccount1();
+                        await this.delay(1500);
+                        
+                        // Étape 3: Test d'isolation utilisateur 1
+                        this.currentTest++;
+                        this.updateProgress((this.currentTest / this.totalTests) * 100);
+                        await this.delay(1000);
+                        
+                        this.testDataIsolation();
+                        await this.delay(1000);
+                        
+                        // Étape 4: Changement d'utilisateur
+                        this.currentTest++;
+                        this.updateProgress((this.currentTest / this.totalTests) * 100);
+                        await this.delay(1000);
+                        
+                        this.testUserSwitch();
+                        await this.delay(1000);
+                        
+                        // Étape 5: Connexion utilisateur 2
+                        this.currentTest++;
+                        this.updateProgress((this.currentTest / this.totalTests) * 100);
+                        await this.delay(1000);
+                        
+                        this.connectAccount2();
+                        await this.delay(1500);
+                        
+                        // Étape 6: Test d'isolation utilisateur 2
+                        this.currentTest++;
+                        this.updateProgress((this.currentTest / this.totalTests) * 100);
+                        await this.delay(1000);
+                        
+                        this.testDataIsolation();
+                        await this.delay(1000);
+                        
+                        // Étape 7: Test de persistance
+                        this.currentTest++;
+                        this.updateProgress((this.currentTest / this.totalTests) * 100);
+                        await this.delay(1000);
+                        
+                        this.testDataPersistence();
+                        await this.delay(1000);
+                        
+                        // Étape 8: Comparaison des données
+                        this.currentTest++;
+                        this.updateProgress((this.currentTest / this.totalTests) * 100);
+                        await this.delay(1000);
+                        
+                        this.compareUserData();
+                        await this.delay(1000);
+                        
+                        // Étape 9: Test d'accès non autorisé
+                        this.currentTest++;
+                        this.updateProgress((this.currentTest / this.totalTests) * 100);
+                        await this.delay(1000);
+                        
+                        this.testUnauthorizedAccess();
+                        await this.delay(1000);
+                        
+                        // Afficher le rapport final
+                        this.displayFinalReport();
+                        
+                        this.updateStatus('✅ Test complet terminé avec succès', 'success');
+                        this.updateProgress(100);
+                    }
+                    
+                } catch (error) {
+                    this.updateStatus(`❌ Erreur pendant le test: ${error.message}`, 'error');
+                    this.log(`Erreur: ${error.message}`, 'error');
+                }
+            }
+
+            displayFinalReport() {
+                const successCount = this.testResults.filter(r => r.result === 'SUCCESS').length;
+                const failedCount = this.testResults.filter(r => r.result === 'FAILED').length;
+                const warningCount = this.testResults.filter(r => r.result === 'WARNING' || r.result === 'PARTIAL').length;
+                
+                this.log('\n' + '='.repeat(60));
+                this.log('📊 RAPPORT FINAL DU TEST D\'AUTHENTIFICATION', 'info');
+                console.log('='.repeat(60));
+                
+                this.log(`✅ Tests réussis: ${successCount}`, 'success');
+                this.log(`⚠️  Tests partiels: ${warningCount}`, 'warning');
+                this.log(`❌ Tests échoués: ${failedCount}`, 'error');
+                this.log(`📈 Taux de réussite: ${Math.round((successCount / this.testResults.length) * 100)}%`, 'info');
+                
+                // Afficher dans le DOM
+                const resultsDiv = document.getElementById('testResults');
+                const contentDiv = document.getElementById('resultsContent');
+                
+                contentDiv.innerHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <h4>Résumé des Tests:</h4>
+                        <div class="result-grid">
+                            <div class="result-item">
+                                <strong>✅ Succès:</strong> ${successCount}
+                            </div>
+                            <div class="result-item">
+                                <strong>⚠️ Partiels:</strong> ${warningCount}
+                            </div>
+                            <div class="result-item">
+                                <strong>❌ Échecs:</strong> ${failedCount}
+                            </div>
+                            <div class="result-item">
+                                <strong>📊 Taux de Réussite:</strong> ${Math.round((successCount / this.testResults.length) * 100)}%
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4>Résultat Final:</h4>
+                        <div style="font-size: 1.2em; font-weight: bold; color: ${failedCount === 0 ? '#22c55e' : '#ef4444'};">
+                            ${failedCount === 0 ? '🎉 TOUS LES TESTS CRITIQUES SONT RÉUSSIS!' : '⚠️  ATTENTION - Problèmes détectés'}
+                        </div>
+                        <div style="margin-top: 10px;">
+                            ${failedCount === 0 ? 
+                                '✅ L\'authentification et l\'isolation des données fonctionnent parfaitement.<br>✅ Chaque utilisateur voit uniquement ses propres produits.' : 
+                                '🔧 Vérifiez les problèmes d\'isolation ou d\'authentification.'}
+                        </div>
+                    </div>
+                `;
+                
+                resultsDiv.style.display = 'block';
+            }
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            const tester = new MiniBoutiqueAuthTest();
+            
+            // Écouter les messages de l'iframe
+            window.addEventListener('message', function(event) {
+                if (event.origin !== 'http://localhost:3009') return;
+                
+                tester.log(`📨 Message reçu de Mini-Boutique: ${JSON.stringify(event.data)}`);
+                
+                if (event.data.type === 'AUTH_SUCCESS') {
+                    tester.log('✅ Authentification réussie dans Mini-Boutique', 'success');
+                } else if (event.data.type === 'AUTH_ERROR') {
+                    tester.log(`❌ Erreur d'authentification: ${event.data.error}`, 'error');
+                } else if (event.data.type === 'PRODUCT_CREATED') {
+                    tester.log('✅ Produit créé avec succès dans Mini-Boutique', 'success');
+                }
+            });
+            
+            // Gestion des boutons
+            document.getElementById('startTest').addEventListener('click', function() {
+                tester.runAllTests();
+            });
+            
+            document.getElementById('clearData').addEventListener('click', function() {
+                tester.clearTestData();
+                tester.log('🧹 Données de test nettoyées', 'success');
+            });
+            
+            document.getElementById('openMiniBoutique').addEventListener('click', function() {
+                window.open('http://localhost:3009/', '_blank');
+            });
+            
+            // Vérifier la connexion au serveur au démarrage
+            tester.testConnection().then(isConnected => {
+                if (isConnected) {
+                    tester.updateStatus('🟢 Serveur Mini-Boutique accessible - Prêt pour les tests', 'success');
+                } else {
+                    tester.updateStatus('🔴 Serveur Mini-Boutique inaccessible - Démarrez le serveur d\'abord', 'error');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

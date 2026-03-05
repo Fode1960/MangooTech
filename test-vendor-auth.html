@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Vendor Authentication System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .tab:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+        .tab.active {
+            background: #FF6B35;
+            color: white;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        }
+        .boutique-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #FF6B35;
+            transition: all 0.3s ease;
+        }
+        .boutique-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .auth-info {
+            background: #e8f5e8;
+            border: 1px solid #4CAF50;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        .qr-code {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            display: inline-block;
+            margin: 10px 0;
+        }
+        .btn {
+            background: #FF6B35;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #e55a2b;
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background: #4CAF50;
+        }
+        .btn-secondary:hover {
+            background: #45a049;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status-approved { background: #d4edda; color: #155724; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-suspended { background: #f8d7da; color: #721c24; }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛍️ Test Système d'Authentification Vendeur</h1>
+            <p>Interface de test pour vérifier le bouton "Accès & QR" et les paramètres d'authentification</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('list')">Mes Boutiques</button>
+            <button class="tab" onclick="showTab('create')">Créer/Éditer</button>
+            <button class="tab" id="authTab" onclick="showTab('auth')">Accès & QR</button>
+        </div>
+
+        <div id="listTab" class="tab-content fade-in">
+            <h2>Liste des Mini-Boutiques</h2>
+            <div id="boutiquesList"></div>
+        </div>
+
+        <div id="createTab" class="tab-content" style="display: none;">
+            <h2>Créer une nouvelle boutique</h2>
+            <p>Formulaire de création de boutique (simulé)</p>
+        </div>
+
+        <div id="authTab" class="tab-content" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>Paramètres d'accès de mes boutiques</h2>
+                <button class="btn btn-secondary" onclick="showTab('list')">
+                    <span>🏪</span> Retour aux boutiques
+                </button>
+            </div>
+            <div id="authContent">
+                <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 12px;">
+                    <div style="font-size: 60px; margin-bottom: 20px;">🔑</div>
+                    <h3>Aucune boutique disponible</h3>
+                    <p style="color: #666; margin: 20px 0;">Vous devez d'abord créer une boutique pour voir ses paramètres d'accès uniques</p>
+                    <button class="btn" onclick="showTab('create')">Créer une boutique</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Données de test
+        const testBoutiques = [
+            {
+                id: 1,
+                name: "Boutique Élégance Africaine",
+                description: "Vêtements traditionnels wax avec touche moderne",
+                status: "approved",
+                vendor_login: "elegance_africaine",
+                vendor_password: "EAF2024!Secure",
+                shop_url: "https://mangootech.com/shop/elegance-africaine",
+                qr_code: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+            },
+            {
+                id: 2,
+                name: "Tech & Gadgets CI",
+                description: "Électronique et accessoires tech de qualité",
+                status: "pending",
+                vendor_login: "tech_gadgets_ci",
+                vendor_password: "TGC2024!Tech",
+                shop_url: "https://mangootech.com/shop/tech-gadgets-ci",
+                qr_code: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+            }
+        ];
+
+        let currentTab = 'list';
+        let currentBoutiques = [];
+
+        function showTab(tabName) {
+            console.log(`🎯 Changement d'onglet: ${currentTab} → ${tabName}`);
+            
+            // Cacher tous les onglets
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+                content.classList.remove('fade-in');
+            });
+            
+            // Retirer la classe active de tous les boutons
+            document.querySelectorAll('.tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Afficher l'onglet sélectionné
+            const targetContent = document.getElementById(tabName + 'Tab');
+            if (targetContent) {
+                targetContent.style.display = 'block';
+                setTimeout(() => targetContent.classList.add('fade-in'), 10);
+            }
+            
+            // Activer le bouton correspondant
+            const targetButton = Array.from(document.querySelectorAll('.tab')).find(btn => 
+                btn.textContent.includes(getTabLabel(tabName))
+            );
+            if (targetButton) {
+                targetButton.classList.add('active');
+            }
+            
+            currentTab = tabName;
+            
+            // Actions spécifiques selon l'onglet
+            if (tabName === 'auth') {
+                // Si on n'a pas de boutique sélectionnée, afficher le message par défaut
+                if (!window.selectedBoutique) {
+                    showDefaultAuthMessage();
+                } else {
+                    displayAuthSettings(window.selectedBoutique);
+                }
+            } else if (tabName === 'list') {
+                loadBoutiquesList();
+                window.selectedBoutique = null; // Réinitialiser la sélection quand on quitte l'onglet auth
+            }
+        }
+
+        function getTabLabel(tabName) {
+            const labels = {
+                'list': 'Mes Boutiques',
+                'create': 'Créer/Éditer',
+                'auth': 'Accès & QR'
+            };
+            return labels[tabName] || tabName;
+        }
+
+        function loadBoutiquesList() {
+            currentBoutiques = testBoutiques;
+            const listContainer = document.getElementById('boutiquesList');
+            
+            if (currentBoutiques.length === 0) {
+                listContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <div style="font-size: 60px; margin-bottom: 20px;">🏪</div>
+                        <h3>Aucune boutique créée</h3>
+                        <p style="color: #666; margin: 20px 0;">Commencez par créer votre première mini-boutique</p>
+                        <button class="btn" onclick="showTab('create')">Créer une boutique</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            listContainer.innerHTML = currentBoutiques.map(boutique => `
+                <div class="boutique-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="margin: 0; color: #333;">${boutique.name}</h3>
+                        <span class="status-badge status-${boutique.status}">
+                            ${boutique.status === 'approved' ? 'Approuvée' : 
+                              boutique.status === 'pending' ? 'En attente' : 
+                              boutique.status === 'suspended' ? 'Suspendue' : 'Rejetée'}
+                        </span>
+                    </div>
+                    <p style="color: #666; margin-bottom: 15px;">${boutique.description}</p>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn" onclick="selectBoutiqueForAuth(${boutique.id})">
+                            🔑 Voir accès & QR
+                        </button>
+                        <button class="btn btn-secondary" onclick="editBoutique(${boutique.id})">
+                            ✏️ Modifier
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectBoutiqueForAuth(boutiqueId) {
+            console.log(`🎯 Sélection de la boutique ${boutiqueId} pour l'authentification`);
+            const boutique = currentBoutiques.find(b => b.id === boutiqueId);
+            if (boutique) {
+                window.selectedBoutique = boutique;
+                displayAuthSettings(boutique);
+                showTab('auth');
+            }
+        }
+
+        function showDefaultAuthMessage() {
+            const authContent = document.getElementById('authContent');
+            authContent.innerHTML = `
+                <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 12px;">
+                    <div style="font-size: 60px; margin-bottom: 20px;">🔑</div>
+                    <h3>Aucune boutique sélectionnée</h3>
+                    <p style="color: #666; margin: 20px 0;">Sélectionnez une boutique depuis la liste pour voir ses paramètres d'accès</p>
+                    <button class="btn" onclick="showTab('list')">Retour à la liste</button>
+                </div>
+            `;
+        }
+
+        function displayAuthSettings(boutique) {
+            window.selectedBoutique = boutique; // Stocker la boutique sélectionnée
+            const authContent = document.getElementById('authContent');
+            authContent.innerHTML = `
+                <div class="fade-in">
+                    <div class="boutique-card">
+                        <h3 style="margin-top: 0; color: #333;">
+                            ${boutique.name}
+                            <span class="status-badge status-${boutique.status}">
+                                ${boutique.status === 'approved' ? 'Approuvée' : 
+                                  boutique.status === 'pending' ? 'En attente' : 
+                                  boutique.status === 'suspended' ? 'Suspendue' : 'Rejetée'}
+                            </span>
+                        </h3>
+                        <p style="color: #666; margin-bottom: 20px;">${boutique.description}</p>
+                    </div>
+                    
+                    <div class="auth-info">
+                        <h4 style="margin-top: 0; color: #2d5a2d;">🔐 Paramètres de connexion</h4>
+                        <div style="margin: 15px 0;">
+                            <strong>Login vendeur:</strong> 
+                            <code style="background: white; padding: 5px 10px; border-radius: 4px; margin-left: 10px;">${boutique.vendor_login}</code>
+                            <button class="btn" style="margin-left: 10px; padding: 5px 10px; font-size: 12px;" onclick="copyToClipboard('${boutique.vendor_login}')">📋</button>
+                        </div>
+                        <div style="margin: 15px 0;">
+                            <strong>Mot de passe:</strong> 
+                            <code style="background: white; padding: 5px 10px; border-radius: 4px; margin-left: 10px;">${boutique.vendor_password}</code>
+                            <button class="btn" style="margin-left: 10px; padding: 5px 10px; font-size: 12px;" onclick="copyToClipboard('${boutique.vendor_password}')">📋</button>
+                            <button class="btn btn-secondary" style="margin-left: 5px; padding: 5px 10px; font-size: 12px;" onclick="regeneratePassword(${boutique.id})">🔄 Régénérer</button>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #e3f2fd; border: 1px solid #2196F3; border-radius: 8px; padding: 15px; margin: 20px 0;">
+                        <h4 style="margin-top: 0; color: #1976d2;">🌐 URL de la boutique</h4>
+                        <div style="margin: 15px 0;">
+                            <strong>URL publique:</strong> 
+                            <code style="background: white; padding: 5px 10px; border-radius: 4px; margin-left: 10px; word-break: break-all;">${boutique.shop_url}</code>
+                            <button class="btn" style="margin-left: 10px; padding: 5px 10px; font-size: 12px;" onclick="copyToClipboard('${boutique.shop_url}')">📋</button>
+                            <a href="${boutique.shop_url}" target="_blank" class="btn btn-secondary" style="margin-left: 5px; padding: 5px 10px; font-size: 12px;">🌐 Visiter</a>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #fff3e0; border: 1px solid #ff9800; border-radius: 8px; padding: 15px; margin: 20px 0;">
+                        <h4 style="margin-top: 0; color: #e65100;">📱 Code QR</h4>
+                        <p style="color: #666; margin-bottom: 15px;">Scannez ce code QR pour accéder rapidement à votre boutique</p>
+                        <div class="qr-code">
+                            <img src="${boutique.qr_code}" alt="QR Code" style="width: 150px; height: 150px;">
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <button class="btn" onclick="downloadQR('${boutique.qr_code}', '${boutique.name}')">💾 Télécharger QR</button>
+                            <button class="btn btn-secondary" onclick="printQR('${boutique.qr_code}', '${boutique.name}')">🖨️ Imprimer</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ Copié dans le presse-papiers: ' + text);
+            }).catch(() => {
+                // Fallback pour les anciens navigateurs
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('✅ Copié dans le presse-papiers: ' + text);
+            });
+        }
+
+        function regeneratePassword(boutiqueId) {
+            const boutique = currentBoutiques.find(b => b.id === boutiqueId);
+            if (boutique && confirm(`🔄 Régénérer le mot de passe pour ${boutique.name} ?`)) {
+                // Simuler la régénération
+                const newPassword = 'NEW_' + Math.random().toString(36).substring(2, 10).toUpperCase() + '2024!';
+                boutique.vendor_password = newPassword;
+                displayAuthSettings(boutique);
+                alert('✅ Mot de passe régénéré avec succès!');
+            }
+        }
+
+        function downloadQR(qrCode, boutiqueName) {
+            const link = document.createElement('a');
+            link.download = `qr-${boutiqueName.toLowerCase().replace(/\s+/g, '-')}.png`;
+            link.href = qrCode;
+            link.click();
+        }
+
+        function printQR(qrCode, boutiqueName) {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                    <head><title>QR Code - ${boutiqueName}</title></head>
+                    <body style="text-align: center; padding: 50px;">
+                        <h2>${boutiqueName}</h2>
+                        <img src="${qrCode}" style="width: 300px; height: 300px;">
+                        <p>Scannez ce code QR pour accéder à la boutique</p>
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        function editBoutique(boutiqueId) {
+            console.log(`🎯 Modification de la boutique ${boutiqueId}`);
+            showTab('create');
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 Interface de test chargée');
+            loadBoutiquesList();
+            
+            // Ajouter des effets visuels supplémentaires
+            const authTab = document.getElementById('authTab');
+            if (authTab) {
+                authTab.addEventListener('click', function() {
+                    console.log('🎯 Clic sur le bouton "Accès & QR" - navigation active!');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

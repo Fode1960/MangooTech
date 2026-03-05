@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Logo LocalStorage</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .logo-preview { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 2px solid #ccc; }
+        .error { color: red; font-weight: bold; }
+        .success { color: green; font-weight: bold; }
+        .debug-info { background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Test Logo LocalStorage</h1>
+        <p>Ce test vérifie si les logos des boutiques sont correctement stockés et récupérés du localStorage.</p>
+        
+        <div class="test-section">
+            <h3>📦 Données LocalStorage Actuelles</h3>
+            <button onclick="checkLocalStorage()">Vérifier le localStorage</button>
+            <div id="localStorageResult" class="debug-info"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🖼️ Logos des Boutiques</h3>
+            <button onclick="displayBoutiques()">Afficher les boutiques avec logos</button>
+            <div id="boutiquesResult"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🧪 Créer une Boutique Test</h3>
+            <input type="file" id="logoInput" accept="image/*">
+            <input type="text" id="nomBoutique" placeholder="Nom de la boutique" style="margin: 10px 0; padding: 5px;">
+            <br>
+            <button onclick="createTestBoutique()">Créer Boutique Test</button>
+            <div id="createResult"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🗑️ Nettoyer</h3>
+            <button onclick="clearLocalStorage()">Vider le localStorage</button>
+            <div id="clearResult"></div>
+        </div>
+    </div>
+
+    <script>
+        function checkLocalStorage() {
+            try {
+                const demoBoutiques = localStorage.getItem('demo_boutiques');
+                const resultDiv = document.getElementById('localStorageResult');
+                
+                if (!demoBoutiques) {
+                    resultDiv.innerHTML = '<span class="error">❌ Aucune boutique demo trouvée dans localStorage</span>';
+                    return;
+                }
+                
+                const boutiques = JSON.parse(demoBoutiques);
+                resultDiv.innerHTML = `<span class="success">✅ ${boutiques.length} boutiques trouvées</span><br>`;
+                
+                boutiques.forEach((boutique, index) => {
+                    resultDiv.innerHTML += `
+                        <strong>Boutique ${index + 1}: ${boutique.name}</strong><br>
+                        Logo: ${boutique.logo ? '✅ Présent (' + boutique.logo.substring(0, 50) + '...)' : '❌ Absent'}<br>
+                        Logo URL: ${boutique.logo_url || '❌ Absent'}<br>
+                        <hr style="margin: 10px 0;">
+                    `;
+                });
+                
+            } catch (error) {
+                document.getElementById('localStorageResult').innerHTML = 
+                    `<span class="error">❌ Erreur: ${error.message}</span>`;
+            }
+        }
+        
+        function displayBoutiques() {
+            try {
+                const demoBoutiques = localStorage.getItem('demo_boutiques');
+                const resultDiv = document.getElementById('boutiquesResult');
+                
+                if (!demoBoutiques) {
+                    resultDiv.innerHTML = '<span class="error">❌ Aucune boutique demo trouvée</span>';
+                    return;
+                }
+                
+                const boutiques = JSON.parse(demoBoutiques);
+                resultDiv.innerHTML = '';
+                
+                boutiques.forEach((boutique, index) => {
+                    const logoSrc = boutique.logo || boutique.logo_url || 'https://via.placeholder.com/60?text=Pas+de+logo';
+                    
+                    resultDiv.innerHTML += `
+                        <div style="border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 5px;">
+                            <strong>${boutique.name}</strong><br>
+                            <img src="${logoSrc}" alt="Logo" class="logo-preview" onerror="this.src='https://via.placeholder.com/60?text=Erreur+logo'"><br>
+                            Description: ${boutique.description || 'Sans description'}<br>
+                            Logo présent: ${boutique.logo ? '✅ Oui' : '❌ Non'}
+                        </div>
+                    `;
+                });
+                
+            } catch (error) {
+                document.getElementById('boutiquesResult').innerHTML = 
+                    `<span class="error">❌ Erreur: ${error.message}</span>`;
+            }
+        }
+        
+        function createTestBoutique() {
+            try {
+                const fileInput = document.getElementById('logoInput');
+                const nomInput = document.getElementById('nomBoutique');
+                const resultDiv = document.getElementById('createResult');
+                
+                if (!fileInput.files[0] || !nomInput.value) {
+                    resultDiv.innerHTML = '<span class="error">❌ Veuillez sélectionner un logo et entrer un nom</span>';
+                    return;
+                }
+                
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(event) {
+                    const logoDataUrl = event.target.result;
+                    
+                    // Créer la boutique comme dans le composant React
+                    const newBoutique = {
+                        id: Date.now(),
+                        name: nomInput.value,
+                        slug: `${nomInput.value.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}-${Date.now().toString(36)}`,
+                        description: 'Boutique test créée via le test',
+                        logo: logoDataUrl,
+                        banner: '',
+                        primaryColor: '#FF6B35',
+                        secondaryColor: '#4CAF50',
+                        categories: [],
+                        isActive: true,
+                        productsCount: 0,
+                        followers: 0,
+                        rating: 0,
+                        socialLinks: {
+                            instagram: '',
+                            facebook: '',
+                            whatsapp: ''
+                        },
+                        createdAt: new Date().toISOString(),
+                        status: 'approved'
+                    };
+                    
+                    // Sauvegarder dans localStorage
+                    const existing = localStorage.getItem('demo_boutiques');
+                    const existingBoutiques = existing ? JSON.parse(existing) : [];
+                    const updated = [newBoutique, ...existingBoutiques];
+                    
+                    localStorage.setItem('demo_boutiques', JSON.stringify(updated));
+                    
+                    resultDiv.innerHTML = `
+                        <span class="success">✅ Boutique créée avec succès!</span><br>
+                        Logo stocké: ${logoDataUrl ? '✅ Oui (' + logoDataUrl.substring(0, 50) + '...)' : '❌ Non'}
+                    `;
+                    
+                    // Vider les champs
+                    fileInput.value = '';
+                    nomInput.value = '';
+                };
+                
+                reader.readAsDataURL(file);
+                
+            } catch (error) {
+                document.getElementById('createResult').innerHTML = 
+                    `<span class="error">❌ Erreur: ${error.message}</span>`;
+            }
+        }
+        
+        function clearLocalStorage() {
+            try {
+                localStorage.removeItem('demo_boutiques');
+                document.getElementById('clearResult').innerHTML = 
+                    '<span class="success">✅ LocalStorage vidé avec succès</span>';
+            } catch (error) {
+                document.getElementById('clearResult').innerHTML = 
+                    `<span class="error">❌ Erreur: ${error.message}</span>`;
+            }
+        }
+        
+        // Vérifier au chargement
+        window.onload = function() {
+            checkLocalStorage();
+        };
+    </script>
+</body>
+</html>

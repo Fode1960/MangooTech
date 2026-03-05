@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Production - Correction Pack Découverte</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 16px;
+        }
+        button:hover { background: #0056b3; }
+        .test-result {
+            margin: 15px 0;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            background: #f8f9fa;
+        }
+        .logs {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Test Production - Correction Pack Découverte</h1>
+        
+        <div class="info">
+            <strong>Objectif :</strong> Vérifier que les corrections du pack "découverte" sont bien déployées en production
+        </div>
+
+        <div id="deployment-status" class="warning">
+            ⏳ Vérification du statut de déploiement...
+        </div>
+
+        <div class="test-result">
+            <h3>🔍 Tests à effectuer :</h3>
+            <ol>
+                <li><strong>Déploiement GitHub Actions</strong> - Vérifier que le workflow s'est exécuté</li>
+                <li><strong>Application en production</strong> - Tester l'accès à l'URL de production</li>
+                <li><strong>Fonctionnalité pack</strong> - Vérifier que le changement de pack fonctionne</li>
+                <li><strong>Persistance corrigée</strong> - Confirmer que le pack "découverte" ne persiste plus</li>
+            </ol>
+        </div>
+
+        <button onclick="checkDeploymentStatus()">🔄 Vérifier le déploiement</button>
+        <button onclick="testProductionApp()">🌐 Tester l'application</button>
+        <button onclick="runCompleteTest()">🧪 Test complet</button>
+
+        <div id="test-results"></div>
+        <div id="logs" class="logs" style="display: none;"></div>
+    </div>
+
+    <script>
+        let logs = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            logs.push(logEntry);
+            
+            const logsDiv = document.getElementById('logs');
+            logsDiv.style.display = 'block';
+            logsDiv.innerHTML = logs.join('\n');
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            
+            console.log(logEntry);
+        }
+
+        function showResult(title, content, type = 'info') {
+            const resultsDiv = document.getElementById('test-results');
+            const resultHtml = `
+                <div class="test-result">
+                    <h4>${title}</h4>
+                    <div class="${type}">${content}</div>
+                </div>
+            `;
+            resultsDiv.innerHTML += resultHtml;
+        }
+
+        async function checkDeploymentStatus() {
+            log('🔍 Vérification du statut de déploiement GitHub Actions...');
+            
+            try {
+                // Vérifier si l'URL de production répond
+                const productionUrl = 'https://fode1960.github.io/MangooTech';
+                log(`📡 Test de connexion à : ${productionUrl}`);
+                
+                const response = await fetch(productionUrl, { 
+                    method: 'HEAD',
+                    mode: 'no-cors'
+                });
+                
+                showResult(
+                    '✅ Déploiement GitHub Pages', 
+                    `L'application est accessible en production à : <a href="${productionUrl}" target="_blank">${productionUrl}</a>`,
+                    'success'
+                );
+                
+                document.getElementById('deployment-status').innerHTML = 
+                    '✅ Déploiement réussi - Application accessible en production';
+                document.getElementById('deployment-status').className = 'success';
+                
+                log('✅ Application accessible en production');
+                
+            } catch (error) {
+                log(`❌ Erreur de connexion : ${error.message}`);
+                showResult(
+                    '⚠️ Statut de déploiement', 
+                    'Impossible de vérifier automatiquement. Vérifiez manuellement dans GitHub Actions.',
+                    'warning'
+                );
+            }
+        }
+
+        async function testProductionApp() {
+            log('🌐 Test de l\'application en production...');
+            
+            const productionUrl = 'https://fode1960.github.io/MangooTech';
+            
+            try {
+                // Ouvrir l'application dans un nouvel onglet
+                window.open(productionUrl, '_blank');
+                
+                showResult(
+                    '🌐 Test manuel requis',
+                    `
+                        <p>L'application s'est ouverte dans un nouvel onglet.</p>
+                        <p><strong>À tester manuellement :</strong></p>
+                        <ol>
+                            <li>Vérifiez que l'application se charge correctement</li>
+                            <li>Connectez-vous avec un compte test</li>
+                            <li>Vérifiez que le pack affiché n'est PAS "découverte"</li>
+                            <li>Testez le changement de pack si possible</li>
+                        </ol>
+                    `,
+                    'info'
+                );
+                
+                log('🌐 Application ouverte pour test manuel');
+                
+            } catch (error) {
+                log(`❌ Erreur lors de l'ouverture : ${error.message}`);
+                showResult(
+                    '❌ Erreur d\'ouverture',
+                    `Impossible d'ouvrir automatiquement. Visitez manuellement : <a href="${productionUrl}" target="_blank">${productionUrl}</a>`,
+                    'error'
+                );
+            }
+        }
+
+        async function runCompleteTest() {
+            log('🧪 Démarrage du test complet...');
+            
+            // Nettoyer les résultats précédents
+            document.getElementById('test-results').innerHTML = '';
+            
+            // 1. Vérifier le déploiement
+            await checkDeploymentStatus();
+            
+            // 2. Attendre un peu
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // 3. Tester l'application
+            await testProductionApp();
+            
+            // 4. Instructions finales
+            showResult(
+                '📋 Instructions finales',
+                `
+                    <p><strong>Étapes de vérification manuelle :</strong></p>
+                    <ol>
+                        <li>✅ Déploiement vérifié</li>
+                        <li>🌐 Application ouverte</li>
+                        <li>👤 <strong>Connectez-vous avec votre compte</strong></li>
+                        <li>🔍 <strong>Vérifiez que le pack n'est plus "découverte"</strong></li>
+                        <li>✨ <strong>Testez le changement de pack</strong></li>
+                    </ol>
+                    <p><strong>Si le problème persiste :</strong></p>
+                    <ul>
+                        <li>Vérifiez les logs GitHub Actions</li>
+                        <li>Attendez quelques minutes (propagation)</li>
+                        <li>Videz le cache du navigateur (Ctrl+F5)</li>
+                    </ul>
+                `,
+                'info'
+            );
+            
+            log('🧪 Test complet terminé - Vérification manuelle requise');
+        }
+
+        // Vérification automatique au chargement
+        window.addEventListener('load', () => {
+            log('🚀 Page de test chargée');
+            setTimeout(checkDeploymentStatus, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appel Audio - Mangoo Connect+</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        mangoo: { 500: '#1a5f3f', 600: '#144a31' }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'ping-slow': 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .visualizer-bar {
+            width: 6px;
+            background: #4ade80;
+            border-radius: 99px;
+            animation: sound 0s -0.4s linear infinite alternate;
+        }
+        @keyframes sound {
+            0% { height: 10px; opacity: 0.35; }
+            100% { height: 60px; opacity: 1; }
+        }
+        .visualizer-bar:nth-child(1)  { animation-duration: 474ms; }
+        .visualizer-bar:nth-child(2)  { animation-duration: 433ms; }
+        .visualizer-bar:nth-child(3)  { animation-duration: 407ms; }
+        .visualizer-bar:nth-child(4)  { animation-duration: 458ms; }
+        .visualizer-bar:nth-child(5)  { animation-duration: 400ms; }
+        .visualizer-bar:nth-child(6)  { animation-duration: 427ms; }
+        .visualizer-bar:nth-child(7)  { animation-duration: 441ms; }
+        .visualizer-bar:nth-child(8)  { animation-duration: 419ms; }
+        .visualizer-bar:nth-child(9)  { animation-duration: 487ms; }
+        .visualizer-bar:nth-child(10) { animation-duration: 442ms; }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white h-screen flex flex-col items-center justify-between transition-colors duration-300">
+
+    <!-- Header info -->
+    <div class="mt-12 text-center">
+        <div class="text-sm uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-2">Appel Audio Mangoo</div>
+        <h1 class="text-3xl font-bold" id="calleeName">Correspondant</h1>
+        <div class="mt-2 text-xl font-mono text-mangoo-500 dark:text-green-400" id="timer">Connexion...</div>
+    </div>
+
+    <!-- Avatar & Visualizer -->
+    <div class="relative flex flex-col items-center justify-center w-full flex-1">
+        <!-- Pulse Rings -->
+        <div class="absolute w-64 h-64 bg-mangoo-500/20 rounded-full animate-ping-slow"></div>
+        <div class="absolute w-48 h-48 bg-mangoo-500/30 rounded-full animate-pulse-slow"></div>
+        
+        <!-- Avatar -->
+        <div class="relative z-10 w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 shadow-2xl overflow-hidden bg-gray-300">
+            <img id="avatarImg" src="https://ui-avatars.com/api/?name=Mangoo&background=1a5f3f&color=fff" class="w-full h-full object-cover">
+        </div>
+
+        <!-- Visualizer -->
+        <div class="flex items-center justify-center gap-1 h-16 mt-8" id="visualizer">
+            <div class="visualizer-bar"></div><div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div><div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div><div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div><div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div><div class="visualizer-bar"></div>
+        </div>
+        <div class="text-sm text-gray-500 mt-4" id="statusText">Sonnerie en cours...</div>
+    </div>
+
+    <!-- Controls -->
+    <div class="w-full max-w-sm px-8 pb-12">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-6 flex justify-between items-center">
+            
+            <!-- Mute -->
+            <button class="p-4 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition" onclick="toggleMute(this)">
+                <i class="fas fa-microphone text-xl"></i>
+            </button>
+
+            <!-- Hangup -->
+            <button class="w-16 h-16 rounded-full bg-red-500 text-white shadow-lg shadow-red-500/40 flex items-center justify-center transform hover:scale-105 transition" onclick="endCall()">
+                <i class="fas fa-phone-slash text-2xl"></i>
+            </button>
+
+            <!-- Speaker -->
+            <button class="p-4 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition" onclick="toggleSpeaker(this)">
+                <i class="fas fa-volume-up text-xl"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Init Params
+        const params = new URLSearchParams(window.location.search);
+        const name = params.get('callee') || 'Service Client';
+        const theme = params.get('theme');
+
+        // Apply Theme
+        if (theme === 'dark') document.documentElement.classList.add('dark');
+
+        // Set UI
+        document.getElementById('calleeName').innerText = name;
+        document.getElementById('avatarImg').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff`;
+
+        // Timer Logic
+        let seconds = 0;
+        let callActive = false;
+        const timerEl = document.getElementById('timer');
+        const statusEl = document.getElementById('statusText');
+        const visualizer = document.getElementById('visualizer');
+
+        // Simulate Connection
+        setTimeout(() => {
+            statusEl.innerText = "Appel en cours";
+            timerEl.innerText = "00:00";
+            callActive = true;
+            startTimer();
+        }, 2500);
+
+        function startTimer() {
+            setInterval(() => {
+                if(!callActive) return;
+                seconds++;
+                const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const s = (seconds % 60).toString().padStart(2, '0');
+                timerEl.innerText = `${m}:${s}`;
+            }, 1000);
+        }
+
+        function toggleMute(btn) {
+            const icon = btn.querySelector('i');
+            if (icon.classList.contains('fa-microphone')) {
+                icon.className = 'fas fa-microphone-slash text-xl';
+                btn.classList.add('text-red-500');
+            } else {
+                icon.className = 'fas fa-microphone text-xl';
+                btn.classList.remove('text-red-500');
+            }
+        }
+
+        function toggleSpeaker(btn) {
+            btn.classList.toggle('bg-blue-100');
+            btn.classList.toggle('dark:bg-blue-900');
+            btn.classList.toggle('text-blue-600');
+        }
+
+        function endCall() {
+            callActive = false;
+            statusEl.innerText = "Appel terminé";
+            timerEl.innerText = "Fin";
+            visualizer.style.opacity = '0';
+            setTimeout(() => {
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.close();
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

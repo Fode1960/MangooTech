@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Video Appel - Ultra Simple</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #111827;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+            color: #60a5fa;
+        }
+        
+        .status {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+            color: #9ca3af;
+        }
+        
+        .video-container {
+            width: 100%;
+            height: 400px;
+            background-color: #374151;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .video-placeholder {
+            text-align: center;
+            font-size: 24px;
+            color: #9ca3af;
+        }
+        
+        .video-element {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-start {
+            background-color: #10b981;
+            color: white;
+        }
+        
+        .btn-start:hover {
+            background-color: #059669;
+        }
+        
+        .btn-stop {
+            background-color: #ef4444;
+            color: white;
+        }
+        
+        .btn-stop:hover {
+            background-color: #dc2626;
+        }
+        
+        .instructions {
+            background-color: #1f2937;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 15px;
+            color: #60a5fa;
+        }
+        
+        .instructions ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .instructions li:before {
+            content: "•";
+            color: #10b981;
+            position: absolute;
+            left: 0;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .canvas-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎥 Test Appel Vidéo Ultra Simple</h1>
+        
+        <div class="status" id="status">Prêt</div>
+        
+        <div class="video-container" id="videoContainer">
+            <div class="video-placeholder" id="placeholder">
+                📹<br>Caméra désactivée
+            </div>
+            <video class="video-element hidden" id="localVideo" autoplay muted playsinline></video>
+            <canvas class="canvas-animation hidden" id="canvas"></canvas>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-start" id="startBtn" onclick="startCall()">Démarrer l'appel de test</button>
+            <button class="btn btn-stop hidden" id="stopBtn" onclick="stopCall()">Arrêter l'appel</button>
+        </div>
+        
+        <div class="instructions">
+            <h3>Instructions</h3>
+            <ul>
+                <li>Cliquez sur "Démarrer l'appel de test"</li>
+                <li>Autorisez l'accès à la caméra si demandé</li>
+                <li>Si la caméra échoue, le mode démo s'active automatiquement</li>
+                <li>Cliquez sur "Arrêter l'appel" pour terminer</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let localStream = null;
+        let animationId = null;
+        let canvas = null;
+        let ctx = null;
+
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        function createCanvasAnimation() {
+            canvas = document.getElementById('canvas');
+            canvas.width = 640;
+            canvas.height = 480;
+            ctx = canvas.getContext('2d');
+            
+            let frame = 0;
+            function animate() {
+                frame++;
+                
+                // Fond dégradé
+                const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                gradient.addColorStop(0, '#1e40af');
+                gradient.addColorStop(1, '#7c3aed');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Animation de cercles
+                for (let i = 0; i < 5; i++) {
+                    const x = (Math.sin(frame * 0.01 + i) * 100) + canvas.width / 2;
+                    const y = (Math.cos(frame * 0.015 + i) * 80) + canvas.height / 2;
+                    const radius = 20 + Math.sin(frame * 0.02 + i) * 10;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + Math.sin(frame * 0.01 + i) * 0.2})`;
+                    ctx.fill();
+                }
+                
+                // Texte
+                ctx.fillStyle = 'white';
+                ctx.font = '24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Flux Vidéo Simulé', canvas.width / 2, 50);
+                ctx.font = '16px Arial';
+                ctx.fillText(`Mode Démo - Frame: ${frame}`, canvas.width / 2, 80);
+                
+                animationId = requestAnimationFrame(animate);
+            }
+            
+            animate();
+        }
+
+        function startCall() {
+            updateStatus('Démarrage...');
+            
+            // Cacher le bouton start, montrer stop
+            document.getElementById('startBtn').classList.add('hidden');
+            document.getElementById('stopBtn').classList.remove('hidden');
+            
+            // Tenter d'obtenir le flux caméra
+            navigator.mediaDevices.getUserMedia({
+                video: { width: 640, height: 480 },
+                audio: true
+            })
+            .then(stream => {
+                localStream = stream;
+                const video = document.getElementById('localVideo');
+                video.srcObject = stream;
+                
+                // Afficher la vidéo, cacher le placeholder
+                document.getElementById('placeholder').classList.add('hidden');
+                video.classList.remove('hidden');
+                
+                updateStatus('Appel actif');
+            })
+            .catch(error => {
+                console.log('Erreur caméra, utilisation simulation:', error);
+                
+                // Utiliser le canvas comme fallback
+                createCanvasAnimation();
+                
+                // Afficher le canvas, cacher le placeholder
+                document.getElementById('placeholder').classList.add('hidden');
+                canvas.classList.remove('hidden');
+                
+                updateStatus('Appel actif (mode démo)');
+            });
+        }
+
+        function stopCall() {
+            updateStatus('Arrêté');
+            
+            // Cacher le bouton stop, montrer start
+            document.getElementById('stopBtn').classList.add('hidden');
+            document.getElementById('startBtn').classList.remove('hidden');
+            
+            // Arrêter l'animation
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
+            // Arrêter tous les flux
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            
+            // Cacher vidéo et canvas, montrer placeholder
+            document.getElementById('localVideo').classList.add('hidden');
+            document.getElementById('canvas').classList.add('hidden');
+            document.getElementById('placeholder').classList.remove('hidden');
+            
+            // Réinitialiser la vidéo
+            const video = document.getElementById('localVideo');
+            video.srcObject = null;
+        }
+    </script>
+</body>
+</html>

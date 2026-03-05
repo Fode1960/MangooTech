@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Création Compte & Boutique</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .step {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn-success {
+            background-color: #28a745;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .credentials {
+            background-color: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Création Compte & Boutique</h1>
+        
+        <div class="step">
+            <h3>Étape 1: Accéder au site</h3>
+            <p>Ouvrez le site: <a href="http://localhost:3002" target="_blank">http://localhost:3002</a></p>
+        </div>
+        
+        <div class="step">
+            <h3>Étape 2: Ouvrir la console</h3>
+            <p>Appuyez sur F12 pour ouvrir les outils de développement, puis allez dans l'onglet "Console"</p>
+        </div>
+        
+        <div class="step">
+            <h3>Étape 3: Créer le compte et la boutique</h3>
+            <button class="btn" onclick="createTestAccount()">🚀 Créer compte & boutique</button>
+            <button class="btn btn-success" onclick="showCredentials()">📋 Afficher identifiants</button>
+        </div>
+        
+        <div id="result" class="result" style="display: none;"></div>
+        
+        <div id="credentials" class="credentials" style="display: none;">
+            <h4>📋 Identifiants de test:</h4>
+            <p><strong>Email:</strong> testeur2025@example.com</p>
+            <p><strong>Mot de passe:</strong> Test12345!</p>
+            <p><strong>Nom de la boutique:</strong> Boutique Testeur 2025</p>
+        </div>
+    </div>
+
+    <script>
+        let testData = null;
+        
+        async function createTestAccount() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            resultDiv.textContent = '🚀 Création du compte et de la boutique en cours...\n\n';
+            
+            const email = 'testeur2025@example.com';
+            const password = 'Test12345!';
+            
+            try {
+                // 1. Créer le compte utilisateur
+                resultDiv.textContent += '📧 Création du compte avec email: ' + email + '\n';
+                const { data: authData, error: authError } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                });
+                
+                if (authError) {
+                    throw new Error('Erreur création compte: ' + authError.message);
+                }
+                
+                resultDiv.textContent += '✅ Compte créé avec succès!\n';
+                resultDiv.textContent += '📋 User ID: ' + authData.user.id + '\n\n';
+                
+                // 2. Créer le profil utilisateur
+                resultDiv.textContent += '👤 Création du profil utilisateur...\n';
+                const { error: profileError } = await supabase
+                    .from('profiles')
+                    .insert([{
+                        id: authData.user.id,
+                        email: email,
+                        first_name: 'Testeur',
+                        last_name: '2025',
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    }]);
+                
+                if (profileError) {
+                    throw new Error('Erreur création profil: ' + profileError.message);
+                }
+                
+                resultDiv.textContent += '✅ Profil créé avec succès!\n\n';
+                
+                // 3. Créer une boutique de test
+                resultDiv.textContent += '🏪 Création de la boutique de test...\n';
+                const shopData = {
+                    user_id: authData.user.id,
+                    name: 'Boutique Testeur 2025',
+                    description: 'Boutique de test créée pour déboguer le système',
+                    slug: 'boutique-testeur-2025',
+                    category_id: 1,
+                    status: 'pending',
+                    address: '123 Rue de Test',
+                    phone: '+1234567890',
+                    email: email,
+                    website: 'https://testeur2025.example.com',
+                    social_media: {},
+                    business_hours: {},
+                    settings: {},
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+                
+                const { data: shopResult, error: shopError } = await supabase
+                    .from('shops')
+                    .insert([shopData])
+                    .select();
+                
+                if (shopError) {
+                    throw new Error('Erreur création boutique: ' + shopError.message);
+                }
+                
+                resultDiv.textContent += '✅ Boutique créée avec succès!\n';
+                resultDiv.textContent += '🏪 Shop ID: ' + shopResult[0].id + '\n';
+                resultDiv.textContent += '🏪 Shop Name: ' + shopResult[0].name + '\n';
+                resultDiv.textContent += '🏪 Shop Status: ' + shopResult[0].status + '\n\n';
+                
+                testData = {
+                    email: email,
+                    password: password,
+                    userId: authData.user.id,
+                    shopId: shopResult[0].id,
+                    shopName: shopResult[0].name
+                };
+                
+                resultDiv.textContent += '🎉 Processus terminé avec succès!\n';
+                resultDiv.textContent += '\n✅ Le compte et la boutique ont été créés.\n';
+                resultDiv.textContent += '🔍 Maintenant, connectez-vous avec cet utilisateur et vérifiez si la boutique apparaît correctement.\n';
+                resultDiv.textContent += '👨‍💼 Demandez à l\'administrateur d\'approuver la boutique, puis testez à nouveau.';
+                
+                resultDiv.className = 'result success';
+                
+            } catch (error) {
+                resultDiv.textContent += '\n❌ Erreur: ' + error.message;
+                resultDiv.className = 'result error';
+                console.error('Erreur complète:', error);
+            }
+        }
+        
+        function showCredentials() {
+            document.getElementById('credentials').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

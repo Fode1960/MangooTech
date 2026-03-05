@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Diagnostique Logos React - Analyse Complète</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .logo-item { display: flex; align-items: center; margin: 10px 0; padding: 10px; background: #f9f9f9; border-radius: 5px; }
+        .logo-img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-right: 15px; border: 2px solid #ddd; }
+        .logo-placeholder { width: 60px; height: 60px; background: #eee; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; margin-right: 15px; border-radius: 8px; font-size: 10px; text-align: center; color: #666; }
+        .error { color: red; background: #ffe6e6; }
+        .success { color: green; background: #e6ffe6; }
+        .warning { color: orange; background: #fff3e6; }
+        .code { background: #f4f4f4; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; white-space: pre-wrap; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        .tabs { display: flex; margin-bottom: 20px; }
+        .tab { padding: 10px 20px; background: #ddd; border: none; cursor: pointer; margin-right: 5px; border-radius: 5px 5px 0 0; }
+        .tab.active { background: #007bff; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Diagnostique Complet des Logos</h1>
+        <p>Analyse détaillée du problème de logos non affichés dans le composant React</p>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('localStorage')">LocalStorage</button>
+            <button class="tab" onclick="showTab('analysis')">Analyse</button>
+            <button class="tab" onclick="showTab('react')">React Component</button>
+            <button class="tab" onclick="showTab('solution')">Solution</button>
+        </div>
+
+        <div id="localStorage" class="tab-content active">
+            <div class="section">
+                <h2>📦 Contenu LocalStorage</h2>
+                <button onclick="analyzeLocalStorage()">Analyser LocalStorage</button>
+                <button onclick="clearLocalStorage()">Vider LocalStorage</button>
+                <button onclick="createTestBoutique()">Créer Boutique Test</button>
+                <div id="localStorage-content"></div>
+            </div>
+        </div>
+
+        <div id="analysis" class="tab-content">
+            <div class="section">
+                <h2>🔍 Analyse du Problème</h2>
+                <div id="analysis-content"></div>
+            </div>
+        </div>
+
+        <div id="react" class="tab-content">
+            <div class="section">
+                <h2>⚛️ Composant React</h2>
+                <div id="react-content"></div>
+            </div>
+        </div>
+
+        <div id="solution" class="tab-content">
+            <div class="section">
+                <h2>✅ Solution</h2>
+                <div id="solution-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        function analyzeLocalStorage() {
+            const content = document.getElementById('localStorage-content');
+            
+            try {
+                const demoBoutiques = localStorage.getItem('demo_boutiques');
+                
+                if (!demoBoutiques) {
+                    content.innerHTML = '<div class="warning">⚠️ Aucune boutique trouvée dans localStorage</div>';
+                    return;
+                }
+
+                const boutiques = JSON.parse(demoBoutiques);
+                let html = `<div class="success">✅ ${boutiques.length} boutiques trouvées</div>`;
+
+                boutiques.forEach((boutique, index) => {
+                    html += `<div class="logo-item">`;
+                    
+                    // Vérifier si le logo est présent
+                    const hasLogo = boutique.logo || boutique.logo_url;
+                    const logoData = boutique.logo || boutique.logo_url;
+                    
+                    if (hasLogo) {
+                        // Vérifier si c'est une URL base64 valide
+                        if (logoData.startsWith('data:image')) {
+                            html += `<img src="${logoData}" class="logo-img" alt="Logo ${boutique.name}">`;
+                        } else if (logoData.startsWith('http')) {
+                            html += `<img src="${logoData}" class="logo-img" alt="Logo ${boutique.name}">`;
+                        } else {
+                            html += `<div class="logo-placeholder error">Logo invalide</div>`;
+                        }
+                        
+                        html += `<div>`;
+                        html += `<strong>${boutique.name}</strong><br>`;
+                        html += `<span class="success">✅ Logo présent (${logoData.length} caractères)</span><br>`;
+                        html += `<small>Type: ${logoData.startsWith('data:image') ? 'Base64' : 'URL'}</small><br>`;
+                        html += `<small>Preview: ${logoData.substring(0, 50)}...</small>`;
+                        html += `</div>`;
+                    } else {
+                        html += `<div class="logo-placeholder error">Pas de logo</div>`;
+                        html += `<div>`;
+                        html += `<strong>${boutique.name}</strong><br>`;
+                        html += `<span class="error">❌ Aucun logo trouvé</span><br>`;
+                        html += `<small>Propriétés disponibles: ${Object.keys(boutique).join(', ')}</small>`;
+                        html += `</div>`;
+                    }
+                    
+                    html += `</div>`;
+                });
+
+                content.innerHTML = html;
+                
+                // Analyser automatiquement le problème
+                analyzeProblem(boutiques);
+                
+            } catch (error) {
+                content.innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        }
+
+        function analyzeProblem(boutiques) {
+            const analysis = document.getElementById('analysis-content');
+            
+            if (!boutiques || boutiques.length === 0) {
+                analysis.innerHTML = '<div class="error">❌ Aucune boutique à analyser</div>';
+                return;
+            }
+
+            let html = '<h3>🔍 Analyse du Problème</h3>';
+            
+            // Compter les boutiques avec et sans logos
+            const withLogo = boutiques.filter(b => b.logo || b.logo_url).length;
+            const withoutLogo = boutiques.filter(b => !b.logo && !b.logo_url).length;
+            
+            html += `<div class="section">`;
+            html += `<p><strong>Total boutiques:</strong> ${boutiques.length}</p>`;
+            html += `<p><strong>Avec logo:</strong> ${withLogo}</p>`;
+            html += `<p><strong>Sans logo:</strong> ${withoutLogo}</p>`;
+            html += `</div>`;
+
+            // Vérifier chaque boutique
+            boutiques.forEach((boutique, index) => {
+                html += `<div class="section">`;
+                html += `<h4>${boutique.name}</h4>`;
+                
+                const logoData = boutique.logo || boutique.logo_url;
+                
+                if (logoData) {
+                    html += `<div class="code">Logo data: ${logoData.substring(0, 100)}...</div>`;
+                    
+                    // Vérifier si c'est une data URL valide
+                    if (logoData.startsWith('data:image')) {
+                        html += `<div class="success">✅ C'est une data URL base64 valide</div>`;
+                        
+                        // Extraire le type MIME
+                        const mimeType = logoData.split(';')[0].split(':')[1];
+                        html += `<p><strong>Type MIME:</strong> ${mimeType}</p>`;
+                        
+                        // Vérifier la taille
+                        const sizeInKB = Math.round(logoData.length * 0.001);
+                        html += `<p><strong>Taille:</strong> ${sizeInKB} KB</p>`;
+                        
+                    } else {
+                        html += `<div class="warning">⚠️ Ce n'est pas une data URL standard</div>`;
+                    }
+                } else {
+                    html += `<div class="error">❌ Aucune donnée logo trouvée</div>`;
+                }
+                
+                // Vérifier les propriétés
+                html += `<p><strong>Propriétés disponibles:</strong></p>`;
+                html += `<div class="code">${JSON.stringify(Object.keys(boutique), null, 2)}</div>`;
+                
+                html += `</div>`;
+            });
+
+            analysis.innerHTML = html;
+        }
+
+        function createTestBoutique() {
+            const testBoutique = {
+                id: Date.now(),
+                name: 'Boutique Test Diagnostique',
+                description: 'Test pour vérifier le logo',
+                logo: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgIDxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjQwIiBmaWxsPSIjRkY2QjM1Ii8+CiAgICA8dGV4dCB4PSI1MCIgeT0iNTUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjE2Ij5URVNUPC90ZXh0Pgo8L3N2Zz4=',
+                logo_url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgIDxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjQwIiBmaWxsPSIjRkY2QjM1Ii8+CiAgICA8dGV4dCB4PSI1MCIgeT0iNTUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjE2Ij5URVNUPC90ZXh0Pgo8L3N2Zz4=',
+                primaryColor: '#FF6B35',
+                secondaryColor: '#4CAF50',
+                categories: ['fashion'],
+                isActive: true,
+                productsCount: 0,
+                followers: 0,
+                rating: 0,
+                socialLinks: { instagram: '', facebook: '', whatsapp: '' },
+                createdAt: new Date().toISOString(),
+                status: 'approved'
+            };
+
+            // Sauvegarder dans localStorage
+            const existing = JSON.parse(localStorage.getItem('demo_boutiques') || '[]');
+            existing.push(testBoutique);
+            localStorage.setItem('demo_boutiques', JSON.stringify(existing));
+            
+            alert('✅ Boutique test créée ! Cliquez sur "Analyser LocalStorage" pour voir.');
+        }
+
+        function clearLocalStorage() {
+            if (confirm('Voulez-vous vraiment vider toutes les boutiques demo ?')) {
+                localStorage.removeItem('demo_boutiques');
+                alert('LocalStorage vidé !');
+                document.getElementById('localStorage-content').innerHTML = '';
+            }
+        }
+
+        // Analyser automatiquement au chargement
+        window.onload = function() {
+            analyzeLocalStorage();
+        };
+    </script>
+</body>
+</html>

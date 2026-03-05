@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✅ Plateforme MangooTech - Test Final</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #ff6b35, #1a5f3f);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .test-result { 
+            margin: 20px 0; 
+            padding: 20px; 
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .success { 
+            background: rgba(76, 175, 80, 0.2);
+            border-color: rgba(76, 175, 80, 0.5);
+        }
+        .error { 
+            background: rgba(244, 67, 54, 0.2);
+            border-color: rgba(244, 67, 54, 0.5);
+        }
+        .info { 
+            background: rgba(33, 150, 243, 0.2);
+            border-color: rgba(33, 150, 243, 0.5);
+        }
+        .access-link { 
+            display: inline-block; 
+            margin: 20px 0; 
+            padding: 20px 40px; 
+            background: linear-gradient(45deg, #ff6b35, #ff8c42);
+            color: white; 
+            text-decoration: none; 
+            border-radius: 15px; 
+            font-weight: bold; 
+            font-size: 1.2em;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+        }
+        .access-link:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.6);
+        }
+        .credentials { 
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px; 
+            border-radius: 15px; 
+            margin: 20px 0;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        .credentials h3 { 
+            margin-top: 0; 
+            color: #fff;
+            font-size: 1.5em;
+        }
+        .user-card { 
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 20px; 
+            margin: 15px 0; 
+            border-radius: 12px;
+            border-left: 5px solid #ff6b35;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .user-card:hover {
+            transform: translateX(5px);
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .feature-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+        .emoji {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        .warning {
+            background: rgba(255, 193, 7, 0.2);
+            border-color: rgba(255, 193, 7, 0.5);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛍️ Plateforme MangooTech Multi-Tenant</h1>
+        
+        <div class="test-result info">
+            <strong>ℹ️ Statut du Serveur :</strong> ✅ Le serveur est en cours d'exécution sur le port 3009
+            <br><strong>🔄 Dernière mise à jour :</strong> Correction de la boucle infinie du thème
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="http://localhost:3009" target="_blank" class="access-link">
+                🚀 ACCÉDER À LA PLATEFORME
+            </a>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Important :</strong> Le bug du mode Jour/Nuit a été corrigé ! 
+            <br>Le bouton de basculement fonctionne maintenant sans provoquer d'erreur de boucle infinie.
+        </div>
+
+        <h2>🔐 Comptes de Démonstration</h2>
+        <div class="credentials">
+            <div class="feature-grid">
+                <div class="user-card">
+                    <div class="emoji">👨‍💼</div>
+                    <strong>Administrateur</strong><br>
+                    <code>admin@mangoo.tech</code><br>
+                    <code>admin123</code><br>
+                    <small>Gestion complète de la plateforme</small>
+                </div>
+
+                <div class="user-card">
+                    <div class="emoji">👨‍🎨</div>
+                    <strong>Commerçant/Vendeur</strong><br>
+                    <code>vendor@example.com</code><br>
+                    <code>vendor123</code><br>
+                    <small>Gestion de la mini-boutique</small>
+                </div>
+
+                <div class="user-card">
+                    <div class="emoji">🛒</div>
+                    <strong>Client/Acheteur</strong><br>
+                    <code>client@example.com</code><br>
+                    <code>client123</code><br>
+                    <small>Accès marketplace</small>
+                </div>
+            </div>
+        </div>
+
+        <h2>✨ Fonctionnalités Disponibles</h2>
+        <div class="feature-grid">
+            <div class="feature-item">
+                <div class="emoji">🏪</div>
+                <strong>Multi-Tenant</strong><br>
+                <small>Chaque vendeur a sa propre interface</small>
+            </div>
+            <div class="feature-item">
+                <div class="emoji">🌓</div>
+                <strong>Mode Jour/Nuit</strong><br>
+                <small>Basculement fluide entre thèmes</small>
+            </div>
+            <div class="feature-item">
+                <div class="emoji">📱</div>
+                <strong>Responsive</strong><br>
+                <small>Optimisé mobile & desktop</small>
+            </div>
+            <div class="feature-item">
+                <div class="emoji">🎨</div>
+                <strong>Charte MangooTech</strong><br>
+                <small>Orange #ff6b35 & Vert #1a5f3f</small>
+            </div>
+        </div>
+
+        <h2>🎯 Instructions de Test</h2>
+        <div class="test-result success">
+            <ol>
+                <li><strong>Cliquez sur le bouton ci-dessus</strong> pour ouvrir la plateforme</li>
+                <li><strong>Testez les trois types de comptes</strong> (Admin, Vendeur, Client)</li>
+                <li><strong>Vérifiez le mode Jour/Nuit</strong> - bouton en haut à droite</li>
+                <li><strong>Explorez les interfaces</strong> selon chaque rôle</li>
+                <li><strong>Le chargement initial</strong> dure 1.5 seconde puis disparaît</li>
+            </ol>
+        </div>
+
+        <h2>🛠️ Commandes PowerShell</h2>
+        <div class="credentials">
+            <strong>Pour lancer le serveur :</strong><br>
+            <code>cd "C:\Users\mdans\Documents\MangooTech\mangootech-platform-complete"</code><br>
+            <code>npm run dev</code>
+        </div>
+
+        <div class="test-result info">
+            <strong>💡 Note :</strong> La plateforme est maintenant stable avec la correction du bug de thème !
+        </div>
+    </div>
+</body>
+</html>

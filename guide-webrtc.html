@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Guide WebRTC - Test Rapide 8888↔8889</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .title {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        .step {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #4CAF50;
+        }
+        .step-number {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .step-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .step-content {
+            margin-left: 40px;
+            line-height: 1.6;
+        }
+        .button {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #856404;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #155724;
+        }
+        .quick-buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .quick-buttons h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🚀 Guide WebRTC</h1>
+        <p class="subtitle">Test Rapide des Appels 8888↔8889 avec Audio & Vidéo</p>
+        
+        <div class="quick-buttons">
+            <h3>🎯 Démarrage Rapide</h3>
+            <a href="webrtc-simple.html?userId=8888&role=caller" class="button" target="_blank">📞 Ouvrir 8888 (Appelant)</a>
+            <a href="webrtc-simple.html?userId=8889&role=callee" class="button" target="_blank">📱 Ouvrir 8889 (Appelé)</a>
+        </div>
+        
+        <div class="step">
+            <div class="step-title">
+                <span class="step-number">1</span>
+                Préparation - Test Audio
+            </div>
+            <div class="step-content">
+                <p>Avant de tester les appels, vérifiez votre matériel :</p>
+                <a href="test-webrtc-audio.html" class="button" target="_blank">🎤 Tester Micro & Haut-parleurs</a>
+            </div>
+        </div>
+        
+        <div class="step">
+            <div class="step-title">
+                <span class="step-number">2</span>
+                Configuration des Fenêtres
+            </div>
+            <div class="step-content">
+                <p>Ouvrez DEUX fenêtres différentes :</p>
+                <a href="webrtc-simple.html?userId=8888&role=caller" class="button" target="_blank">8888 - Appelant</a>
+                <a href="webrtc-simple.html?userId=8889&role=callee" class="button" target="_blank">8889 - Appelé</a>
+                <div class="warning">
+                    <strong>⚠️ Important :</strong> Les deux fenêtres doivent rester ouvertes. Utilisez Ctrl+N pour une nouvelle fenêtre.
+                </div>
+            </div>
+        </div>
+        
+        <div class="step">
+            <div class="step-title">
+                <span class="step-number">3</span>
+                Activation du Matériel
+            </div>
+            <div class="step-content">
+                <p>Dans CHAQUE fenêtre :</p>
+                <ol>
+                    <li><strong>Cliquez sur "Activer caméra/micro"</strong></li>
+                    <li><strong>Acceptez les permissions</strong> du navigateur</li>
+                    <li><strong>Vérifiez que votre vidéo s'affiche</strong></li>
+                    <li><strong>Cliquez sur "Se connecter"</strong></li>
+                </ol>
+                <div class="success">
+                    <strong>✅ Succès :</strong> Les deux fenêtres doivent montrer "Connecté" et votre vidéo doit être visible.
+                </div>
+            </div>
+        </div>
+        
+        <div class="step">
+            <div class="step-title">
+                <span class="step-number">4</span>
+                Passage de l'Appel
+            </div>
+            <div class="step-content">
+                <p><strong>Dans la fenêtre 8888 (Appelant) :</strong></p>
+                <ol>
+                    <li>Cliquez sur <strong>"📞 Appeler"</strong></li>
+                    <li>Le statut passe à "⏳ En attente de réponse..."</li>
+                </ol>
+                
+                <p><strong>Dans la fenêtre 8889 (Appelé) :</strong></p>
+                <ol>
+                    <li>Vous entendez un <strong>son d'appel</strong></li>
+                    <li>Le bouton <strong>"📱 Répondre"</strong> s'active</li>
+                    <li>Cliquez sur <strong>"📱 Répondre"</strong></li>
+                </ol>
+                
+                <div class="success">
+                    <strong>✅ Succès :</strong> Les deux fenêtres montrent "🎉 Appel établi !" et vous voyez/entendez l'autre personne.
+                </div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="/" class="button">← Retour à l'accueil</a>
+        </div>
+    </div>
+</body>
+</html>

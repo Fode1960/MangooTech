@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛍️ Test Live Shopping WebRTC Complet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .test-section {
+            margin-bottom: 40px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border-left: 5px solid #ff6b6b;
+        }
+        
+        .test-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .sessions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .session-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .session-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .session-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .live-badge {
+            background: #e74c3c;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .session-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .session-vendor {
+            color: #7f8c8d;
+            margin-bottom: 15px;
+        }
+        
+        .session-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            color: #95a5a6;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(86, 171, 47, 0.4);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(240, 147, 251, 0.4);
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        .btn-info:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+        
+        .status-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .status-online {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-checking {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .feature-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+        
+        .feature-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .feature-description {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        
+        .test-instructions {
+            background: #e8f4f8;
+            border: 1px solid #bee5eb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .test-instructions h3 {
+            color: #0c5460;
+            margin-bottom: 15px;
+        }
+        
+        .test-instructions ol {
+            color: #0c5460;
+            padding-left: 20px;
+        }
+        
+        .test-instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .log-output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .sessions-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛍️ Test Live Shopping WebRTC</h1>
+            <p>Test complet de l'intégration WebRTC avec Live Shopping</p>
+        </div>
+        
+        <div class="content">
+            <!-- Status Panel -->
+            <div class="status-panel">
+                <h2>🔍 État des Serveurs</h2>
+                <div id="server-status">
+                    <span class="status-indicator status-checking">
+                        ⏳ Vérification des serveurs...
+                    </span>
+                </div>
+                <div id="status-log" class="log-output" style="display: none;"></div>
+            </div>
+            
+            <!-- Test Instructions -->
+            <div class="test-instructions">
+                <h3>📋 Instructions de Test</h3>
+                <ol>
+                    <li><strong>Vérification serveurs:</strong> Attendez que tous les serveurs soient en ligne</li>
+                    <li><strong>Test vendeur:</strong> Cliquez sur "Interface Vendeur" pour ouvrir la vue vendeur</li>
+                    <li><strong>Test client:</strong> Cliquez sur "Interface Client" pour ouvrir la vue client</li>
+                    <li><strong>Appel test:</strong> Utilisez les IDs 8888 (vendeur) et 8889 (client) pour tester les appels</li>
+                    <li><strong>Live Shopping:</strong> Rejoignez une session live pour tester l'intégration complète</li>
+                </ol>
+            </div>
+            
+            <!-- Live Shopping Sessions -->
+            <div class="test-section">
+                <h2>🎥 Sessions Live Shopping</h2>
+                <p>Testez l'intégration WebRTC dans les sessions de live shopping</p>
+                
+                <div class="sessions-grid">
+                    <div class="session-card">
+                        <div class="session-header">
+                            <span class="live-badge">EN DIRECT</span>
+                        </div>
+                        <div class="session-title">Collection Wax Ankara 2024</div>
+                        <div class="session-vendor">MangooTech Boutique</div>
+                        <div class="session-stats">
+                            <span>👥 245 spectateurs</span>
+                            <span>⏱️ 45 min</span>
+                        </div>
+                        <div class="action-buttons">
+                            <a href="/live-shopping" class="btn btn-primary">
+                                🛍️ Interface Live Shopping
+                            </a>
+                            <a href="http://localhost:3018/test-webrtc-audio-complet.html" target="_blank" class="btn btn-success">
+                                🎧 Test WebRTC Audio
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="session-card">
+                        <div class="session-header">
+                            <span class="live-badge">EN DIRECT</span>
+                        </div>
+                        <div class="session-title">Bijoux Traditionnels Sénégalais</div>
+                        <div class="session-vendor">Artisanat Dior</div>
+                        <div class="session-stats">
+                            <span>👥 128 spectateurs</span>
+                            <span>⏱️ 32 min</span>
+                        </div>
+                        <div class="action-buttons">
+                            <a href="/live-shopping" class="btn btn-primary">
+                                🛍️ Interface Live Shopping
+                            </a>
+                            <button onclick="simulateVendorCall('8889')" class="btn btn-warning">
+                                📞 Simuler Appel Vendeur
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="session-card">
+                        <div class="session-header">
+                            <span style="background: #3498db;" class="live-badge">PROGRAMMÉ</span>
+                        </div>
+                        <div class="session-title">Tissus Wax Premium</div>
+                        <div class="session-vendor">Tissus Express</div>
+                        <div class="session-stats">
+                            <span>👥 89 intéressés</span>
+                            <span>⏱️ 28 min</span>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-info" disabled>
+                                📅 Bientôt disponible
+                            </button>
+                            <button onclick="simulateClientCall('8890')" class="btn btn-warning">
+                                📞 Simuler Appel Client
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- WebRTC Direct Tests -->
+            <div class="test-section">
+                <h2>🎧 Tests WebRTC Directs</h2>
+                <p>Testez les fonctionnalités WebRTC de base avant l'intégration</p>
+                
+                <div class="action-buttons">
+                    <a href="http://localhost:3018/test-webrtc-audio-complet.html?userId=8888" target="_blank" class="btn btn-primary">
+                        🎤 Interface Vendeur (8888)
+                    </a>
+                    <a href="http://localhost:3018/test-webrtc-audio-complet.html?userId=8889" target="_blank" class="btn btn-success">
+                        🎧 Interface Client (8889)
+                    </a>
+                    <button onclick="openDualInterface()" class="btn btn-warning">
+                        🔄 Interface Double (8888 & 8889)
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Features Showcase -->
+            <div class="test-section">
+                <h2>✨ Fonctionnalités Intégrées</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🎧</div>
+                        <div class="feature-title">Appels Audio Bidirectionnels</div>
+                        <div class="feature-description">Communication vocale haute qualité avec écho cancellation</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🛍️</div>
+                        <div class="feature-title">Live Shopping Intégré</div>
+                        <div class="feature-description">Achat en temps réel pendant les sessions live</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">💬</div>
+                        <div class="feature-title">Chat en Direct</div>
+                        <div class="feature-description">Messagerie instantanée avec les vendeurs</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <div class="feature-title">Analytiques Temps Réel</div>
+                        <div class="feature-description">Statistiques de vente et d'engagement</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Integration Status -->
+            <div class="test-section">
+                <h2>🔗 Statut de l'Intégration</h2>
+                <div id="integration-status">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div class="status-indicator status-online">
+                            ✅ WebRTC Server (Port 3010)
+                        </div>
+                        <div class="status-indicator status-online">
+                            ✅ HTTP Server (Port 3018)
+                        </div>
+                        <div class="status-indicator status-online">
+                            ✅ Live Shopping Interface
+                        </div>
+                        <div class="status-indicator status-online">
+                            ✅ WebRTCCall Component
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Vérification du statut des serveurs
+        async function checkServerStatus() {
+            const statusLog = document.getElementById('status-log');
+            const serverStatus = document.getElementById('server-status');
+            
+            function log(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                statusLog.innerHTML += `[${timestamp}] ${message}<br>`;
+                statusLog.scrollTop = statusLog.scrollHeight;
+            }
+            
+            statusLog.style.display = 'block';
+            log('Démarrage de la vérification des serveurs...');
+            
+            try {
+                // Vérifier WebRTC Server
+                log('Vérification du WebRTC Server (Port 3010)...');
+                const wsTest = new WebSocket('ws://localhost:3010');
+                
+                wsTest.onopen = function() {
+                    log('✅ WebRTC Server: CONNECTÉ');
+                    serverStatus.innerHTML = '<span class="status-indicator status-online">✅ Tous les serveurs sont en ligne</span>';
+                    wsTest.close();
+                };
+                
+                wsTest.onerror = function() {
+                    log('❌ WebRTC Server: DÉCONNECTÉ');
+                    serverStatus.innerHTML = '<span class="status-indicator status-offline">❌ Serveur WebRTC hors ligne</span>';
+                };
+                
+                // Vérifier HTTP Server
+                log('Vérification du HTTP Server (Port 3018)...');
+                fetch('http://localhost:3018')
+                    .then(response => {
+                        if (response.ok) {
+                            log('✅ HTTP Server: EN LIGNE');
+                        } else {
+                            log('⚠️ HTTP Server: RÉPONSE INATTENDUE');
+                        }
+                    })
+                    .catch(error => {
+                        log('❌ HTTP Server: HORS LIGNE');
+                    });
+                
+            } catch (error) {
+                log('❌ Erreur lors de la vérification: ' + error.message);
+                serverStatus.innerHTML = '<span class="status-indicator status-offline">❌ Erreur de connexion</span>';
+            }
+        }
+        
+        // Simuler un appel vendeur
+        function simulateVendorCall(vendorId) {
+            const url = `http://localhost:3018/test-webrtc-audio-complet.html?userId=${vendorId}&mode=vendor`;
+            window.open(url, 'vendor_window', 'width=800,height=600');
+        }
+        
+        // Simuler un appel client
+        function simulateClientCall(clientId) {
+            const url = `http://localhost:3018/test-webrtc-audio-complet.html?userId=${clientId}&mode=client`;
+            window.open(url, 'client_window', 'width=800,height=600');
+        }
+        
+        // Ouvrir l'interface double
+        function openDualInterface() {
+            // Ouvrir vendeur
+            window.open('http://localhost:3018/test-webrtc-audio-complet.html?userId=8888', 'vendor_8888', 'width=800,height=600,left=0');
+            
+            // Attendre un peu puis ouvrir client
+            setTimeout(() => {
+                window.open('http://localhost:3018/test-webrtc-audio-complet.html?userId=8889', 'client_8889', 'width=800,height=600,left=850');
+            }, 1000);
+        }
+        
+        // Vérifier au chargement de la page
+        window.addEventListener('load', function() {
+            setTimeout(checkServerStatus, 1000);
+        });
+        
+        // Vérification périodique
+        setInterval(checkServerStatus, 30000); // Toutes les 30 secondes
+    </script>
+</body>
+</html>

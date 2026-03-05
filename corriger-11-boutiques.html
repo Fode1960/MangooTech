@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Corriger les 11 Boutiques - Ajouter les Logos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .test-section {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .logo-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+            margin: 5px;
+        }
+        .boutique-card {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .warning { color: #fbbf24; }
+        button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        .data-box {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        .problem-box {
+            background: rgba(255,0,0,0.2);
+            border: 2px solid #f87171;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .solution-box {
+            background: rgba(0,255,0,0.2);
+            border: 2px solid #4ade80;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Corriger les 11 Boutiques - Ajouter les Logos</h1>
+        
+        <div class="test-section">
+            <h2>🎯 Objectif</h2>
+            <p>Corriger spécifiquement les 11 boutiques que vous voyez sur le port 3015 en ajoutant des logos</p>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Étape 1: Voir les boutiques actuelles</h2>
+            <button onclick="checkCurrentBoutiques()">📦 Vérifier les boutiques du port 3015</button>
+            <div id="current-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 Étape 2: Ajouter des logos aux 11 boutiques</h2>
+            <button onclick="addLogosToBoutiques()">✨ Ajouter des logos personnalisés</button>
+            <div id="add-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>✅ Étape 3: Vérifier la correction</h2>
+            <button onclick="verifyLogosAdded()">🔍 Vérifier que tous les logos sont présents</button>
+            <div id="verification-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🚀 Final</h2>
+            <button onclick="openMainSite()">🚀 Ouvrir le site principal pour tester</button>
+        </div>
+    </div>
+
+    <script>
+        // Les 11 boutiques que vous avez vues
+        const BOUTIQUES_DATA = [
+            {
+                name: 'Boutique Télécom',
+                description: 'Vente en gros de téléphone',
+                logoColor: '#FF6B35',
+                logoText: 'TEL'
+            },
+            {
+                name: 'Logo_6',
+                description: 'Test_6',
+                logoColor: '#2196F3',
+                logoText: 'L6'
+            },
+            {
+                name: 'logo de test_3_',
+                description: 'Logo de présentation de test',
+                logoColor: '#9C27B0',
+                logoText: 'L3'
+            },
+            {
+                name: 'Logo de test_2_de boutique',
+                description: 'Test_2_de persistance du logo',
+                logoColor: '#4CAF50',
+                logoText: 'L2'
+            },
+            {
+                name: 'Logo de test de boutique',
+                description: 'Test de persistance du logo',
+                logoColor: '#FF9800',
+                logoText: 'LT'
+            },
+            {
+                name: 'Succès Boutique',
+                description: 'Vente de produits alimentaires',
+                logoColor: '#F44336',
+                logoText: 'SUC'
+            },
+            {
+                name: 'Boutique Soko',
+                description: 'Vente de produits vintage',
+                logoColor: '#795548',
+                logoText: 'SOK'
+            },
+            {
+                name: 'Boutique de Luxe',
+                description: 'Prêt à porter',
+                logoColor: '#E91E63',
+                logoText: 'LUX'
+            },
+            {
+                name: 'Boutique de style',
+                description: 'Prêt à porter',
+                logoColor: '#607D8B',
+                logoText: 'STY'
+            },
+            {
+                name: 'Super Tech Boutique',
+                description: 'Vente de produits informatiques et télécom',
+                logoColor: '#00BCD4',
+                logoText: 'TEC'
+            },
+            {
+                name: 'Ivoire Boutique',
+                description: 'Vente de produits de beauté',
+                logoColor: '#8BC34A',
+                logoText: 'IVO'
+            }
+        ];
+
+        // 🔍 Voir les boutiques actuelles
+        function checkCurrentBoutiques() {
+            const resultsDiv = document.getElementById('current-results');
+            
+            const demo_boutiques = JSON.parse(localStorage.getItem('demo_boutiques') || '[]');
+            
+            let html = '<h3>📦 Boutiques actuelles :</h3>';
+            html += `<p>Total trouvé: ${demo_boutiques.length} boutiques</p>`;
+            
+            if (demo_boutiques.length === 0) {
+                html += '<div class="problem-box">⚠️ Aucune boutique trouvée !</div>';
+                html += '<button onclick="createAllBoutiques()">➕ Créer les 11 boutiques</button>';
+            } else {
+                html += '<h4>Détail des boutiques :</h4>';
+                demo_boutiques.forEach((boutique, index) => {
+                    const hasLogo = !!(boutique.logo || boutique.logo_url);
+                    html += `
+                        <div class="boutique-card">
+                            <div style="width:60px;height:60px;background:#ccc;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                                ${hasLogo ? '✅' : '❓'}
+                            </div>
+                            <div>
+                                <strong>${index + 1}. ${boutique.name}</strong><br>
+                                <small>${boutique.description}</small><br>
+                                <small>Logo: ${hasLogo ? '<span class="success">✅ Présent</span>' : '<span class="error">❌ Manquant</span>'}</small>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        // 🔧 Ajouter des logos aux boutiques
+        function addLogosToBoutiques() {
+            const addDiv = document.getElementById('add-results');
+            
+            const currentBoutiques = JSON.parse(localStorage.getItem('demo_boutiques') || '[]');
+            
+            if (currentBoutiques.length === 0) {
+                addDiv.innerHTML = '<div class="problem-box">⚠️ Aucune boutique à corriger</div>';
+                return;
+            }
+            
+            // Corriger les boutiques avec des logos personnalisés
+            const correctedBoutiques = currentBoutiques.map((boutique, index) => {
+                // Trouver la correspondance dans nos données
+                const template = BOUTIQUES_DATA.find(b => 
+                    b.name === boutique.name || 
+                    b.description === boutique.description ||
+                    b.name.includes(boutique.name.split(' ')[0])
+                ) || BOUTIQUES_DATA[index] || {
+                    logoColor: '#FF6B35',
+                    logoText: 'B' + (index + 1)
+                };
+                
+                const logoUrl = `https://via.placeholder.com/100x100/${template.logoColor}/white?text=${template.logoText}`;
+                
+                return {
+                    ...boutique,
+                    logo: logoUrl,
+                    logo_url: logoUrl,
+                    slug: boutique.slug || 'boutique-' + boutique.name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now()
+                };
+            });
+            
+            // Sauvegarder les corrections
+            localStorage.setItem('demo_boutiques', JSON.stringify(correctedBoutiques));
+            
+            let html = '<div class="solution-box">✅ Logos ajoutés avec succès !</div>';
+            html += '<h4>Aperçu des corrections :</h4>';
+            
+            correctedBoutiques.forEach((boutique, index) => {
+                html += `
+                    <div class="boutique-card">
+                        <img src="${boutique.logo}" class="logo-preview" alt="Logo">
+                        <div>
+                            <strong>${boutique.name}</strong><br>
+                            <small class="success">✅ Logo maintenant présent</small>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            addDiv.innerHTML = html;
+        }
+
+        // ✅ Vérifier la correction
+        function verifyLogosAdded() {
+            const verifyDiv = document.getElementById('verification-results');
+            
+            const demo_boutiques = JSON.parse(localStorage.getItem('demo_boutiques') || '[]');
+            
+            const withLogos = demo_boutiques.filter(b => !!(b.logo || b.logo_url)).length;
+            const total = demo_boutiques.length;
+            
+            let html = '<h3>✅ Vérification finale :</h3>';
+            html += `<p>Total: ${total} boutiques</p>`;
+            html += `<p>Avec logos: ${withLogos} boutiques</p>`;
+            
+            if (withLogos === total && total > 0) {
+                html += '<div class="solution-box">🎯 Toutes les boutiques ont maintenant des logos !</div>';
+                html += '<p>Les logos devraient être visibles dans le site principal.</p>';
+            } else if (total === 0) {
+                html += '<div class="problem-box">⚠️ Aucune boutique trouvée</div>';
+                html += '<button onclick="createAllBoutiques()">➕ Créer les 11 boutiques</button>';
+            } else {
+                html += '<div class="warning">⚠️ Certaines boutiques n\'ont pas de logos</div>';
+                html += '<button onclick="addLogosToBoutiques()">🔧 Corriger à nouveau</button>';
+            }
+            
+            verifyDiv.innerHTML = html;
+        }
+
+        // ➕ Créer toutes les boutiques si elles n'existent pas
+        function createAllBoutiques() {
+            const newBoutiques = BOUTIQUES_DATA.map((template, index) => ({
+                id: 'boutique-' + Date.now() + '-' + index,
+                name: template.name,
+                description: template.description,
+                logo: `https://via.placeholder.com/100x100/${template.logoColor}/white?text=${template.logoText}`,
+                logo_url: `https://via.placeholder.com/100x100/${template.logoColor}/white?text=${template.logoText}`,
+                slug: 'boutique-' + template.name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
+                is_demo: true,
+                isActive: true,
+                categories: ['fashion'],
+                primaryColor: template.logoColor,
+                secondaryColor: '#4CAF50',
+                socialLinks: { instagram: '', facebook: '', whatsapp: '' },
+                createdAt: new Date().toISOString(),
+                status: 'approved'
+            }));
+            
+            localStorage.setItem('demo_boutiques', JSON.stringify(newBoutiques));
+            alert('✅ 11 boutiques créées avec logos !');
+            verifyLogosAdded();
+        }
+
+        // 🚀 Ouvrir le site principal
+        function openMainSite() {
+            window.open('http://localhost:3015', '_blank');
+            setTimeout(() => {
+                alert('🎯 Site principal ouvert !\\n\\nVérifiez que les logos sont maintenant visibles dans la liste des 11 boutiques.');
+            }, 1000);
+        }
+
+        // Initialisation
+        window.onload = function() {
+            checkCurrentBoutiques();
+        };
+    </script>
+</body>
+</html>

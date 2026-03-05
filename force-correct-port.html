@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirection Automatique - Port 3001</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid white;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .btn {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            background: #45a049;
+        }
+        .error {
+            color: #ff6b6b;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Correction du Port</h1>
+        <p id="status">Redirection automatique vers le port 3001...</p>
+        <div class="spinner" id="spinner"></div>
+        
+        <div id="manual-actions" style="display: none;">
+            <p class="error">Redirection automatique échouée</p>
+            <p>Cliquez sur le lien ci-dessous :</p>
+            <a href="http://localhost:3001/dashboard?payment=success&pack=9e026c33-1c2a-49aa-8cc2-e25d392c303" class="btn" target="_blank">
+                🎯 Ouvrir sur Port 3001
+            </a>
+            <br><br>
+            <button onclick="clearCache()" class="btn">🧹 Vider le Cache</button>
+            <button onclick="forceRedirect()" class="btn">🔄 Forcer la Redirection</button>
+        </div>
+        
+        <div id="instructions" style="margin-top: 20px; font-size: 0.9em; opacity: 0.8;">
+            <p><strong>Instructions :</strong></p>
+            <p>1. Fermez tous les onglets du navigateur</p>
+            <p>2. Redémarrez le navigateur</p>
+            <p>3. Utilisez toujours http://localhost:3001</p>
+        </div>
+    </div>
+
+    <script>
+        console.log('🔧 === CORRECTION FORCÉE DU PORT ===');
+        
+        // Configuration
+        const CORRECT_PORT = '3002';
+        const WRONG_PORTS = ['3001', '3003'];
+        const TARGET_URL = 'http://localhost:3001/dashboard?payment=success&pack=9e026c33-1c2a-49aa-8cc2-e25d392c303';
+        
+        // Fonction de redirection forcée
+        function forceRedirect() {
+            console.log('🎯 Redirection forcée vers:', TARGET_URL);
+            
+            // Méthode 1: Redirection directe
+            try {
+                window.location.replace(TARGET_URL);
+            } catch (e) {
+                console.error('Erreur redirection replace:', e);
+                
+                // Méthode 2: Redirection href
+                try {
+                    window.location.href = TARGET_URL;
+                } catch (e2) {
+                    console.error('Erreur redirection href:', e2);
+                    
+                    // Méthode 3: Ouverture dans nouvel onglet
+                    window.open(TARGET_URL, '_blank');
+                }
+            }
+        }
+        
+        // Fonction de nettoyage du cache
+        function clearCache() {
+            console.log('🧹 Nettoyage du cache...');
+            
+            // Vider le localStorage
+            try {
+                localStorage.clear();
+                console.log('✅ localStorage vidé');
+            } catch (e) {
+                console.error('Erreur localStorage:', e);
+            }
+            
+            // Vider le sessionStorage
+            try {
+                sessionStorage.clear();
+                console.log('✅ sessionStorage vidé');
+            } catch (e) {
+                console.error('Erreur sessionStorage:', e);
+            }
+            
+            // Forcer le rechargement sans cache
+            setTimeout(() => {
+                window.location.reload(true);
+            }, 1000);
+        }
+        
+        // Surveillance des redirections
+        function monitorRedirections() {
+            const currentUrl = window.location.href;
+            console.log('URL actuelle:', currentUrl);
+            
+            // Vérifier si on est sur un mauvais port
+            for (const wrongPort of WRONG_PORTS) {
+                if (currentUrl.includes(':' + wrongPort)) {
+                    console.warn('🚫 Mauvais port détecté:', wrongPort);
+                    document.getElementById('status').textContent = 
+                        `Mauvais port détecté (${wrongPort}). Redirection...`;
+                    
+                    setTimeout(forceRedirect, 2000);
+                    return;
+                }
+            }
+            
+            // Si on est déjà sur le bon port
+            if (currentUrl.includes(':' + CORRECT_PORT)) {
+                console.log('✅ Bon port détecté');
+                document.getElementById('status').textContent = 'Port correct détecté!';
+                document.getElementById('spinner').style.display = 'none';
+                return;
+            }
+            
+            // Redirection par défaut
+            setTimeout(forceRedirect, 3000);
+        }
+        
+        // Intercepter les changements d'historique
+        function interceptHistory() {
+            const originalPushState = history.pushState;
+            const originalReplaceState = history.replaceState;
+            
+            history.pushState = function(state, title, url) {
+                if (url) {
+                    for (const wrongPort of WRONG_PORTS) {
+                        if (url.includes(':' + wrongPort)) {
+                            console.warn('🚫 Redirection bloquée vers:', url);
+                            url = url.replace(':' + wrongPort, ':' + CORRECT_PORT);
+                            console.log('✅ Corrigée vers:', url);
+                        }
+                    }
+                }
+                return originalPushState.call(this, state, title, url);
+            };
+            
+            history.replaceState = function(state, title, url) {
+                if (url) {
+                    for (const wrongPort of WRONG_PORTS) {
+                        if (url.includes(':' + wrongPort)) {
+                            console.warn('🚫 Redirection bloquée vers:', url);
+                            url = url.replace(':' + wrongPort, ':' + CORRECT_PORT);
+                            console.log('✅ Corrigée vers:', url);
+                        }
+                    }
+                }
+                return originalReplaceState.call(this, state, title, url);
+            };
+        }
+        
+        // Initialisation
+        function init() {
+            console.log('🚀 Initialisation de la correction de port...');
+            
+            interceptHistory();
+            monitorRedirections();
+            
+            // Afficher les actions manuelles après 10 secondes
+            setTimeout(() => {
+                document.getElementById('manual-actions').style.display = 'block';
+                document.getElementById('spinner').style.display = 'none';
+            }, 10000);
+        }
+        
+        // Démarrage automatique
+        document.addEventListener('DOMContentLoaded', init);
+        
+        // Redirection immédiate si on détecte un mauvais port
+        if (window.location.href.includes(':3001') || window.location.href.includes(':3003')) {
+            console.log('🔄 Redirection immédiate détectée');
+            setTimeout(forceRedirect, 1000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Bouton Accès & QR - Interface Simple</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .header {
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1em;
+        }
+        
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        .test-button:active {
+            transform: translateY(0);
+        }
+        
+        .test-button.secondary {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+        }
+        
+        .test-button.danger {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+        }
+        
+        .status {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .console {
+            background: #2d3748;
+            color: #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: left;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.85em;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .console-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+        
+        .console-entry.error {
+            color: #fc8181;
+        }
+        
+        .console-entry.success {
+            color: #68d391;
+        }
+        
+        .console-entry.info {
+            color: #63b3ed;
+        }
+        
+        .alternatives {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            text-align: left;
+        }
+        
+        .alternatives h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .alternatives ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .alternatives li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .alternatives li:last-child {
+            border-bottom: none;
+        }
+        
+        .alternatives a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .alternatives a:hover {
+            text-decoration: underline;
+        }
+        
+        .instructions {
+            background: #f0f4f8;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        
+        .instructions h3 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .instructions ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+            color: #4a5568;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Test Bouton Accès & QR</h1>
+            <p>Interface de test ultime pour garantir le fonctionnement</p>
+        </div>
+        
+        <div>
+            <button class="test-button" onclick="testNavigationDirect()">
+                🚀 Navigation Directe
+            </button>
+            
+            <button class="test-button secondary" onclick="testViaReactApp()">
+                ⚛️ Via App React
+            </button>
+            
+            <button class="test-button" onclick="testWindowLocation()">
+                📍 window.location
+            </button>
+            
+            <button class="test-button danger" onclick="testForceRedirect()">
+                🔥 Redirection Forcée
+            </button>
+        </div>
+        
+        <div id="status" class="status info">
+            Prêt pour les tests
+        </div>
+        
+        <div class="console" id="console">
+            <div class="console-entry info">🚀 Console de test prête...</div>
+        </div>
+        
+        <div class="instructions">
+            <h3>📋 Instructions</h3>
+            <ol>
+                <li>Cliquez sur "Navigation Directe" pour tester la méthode principale</li>
+                <li>Si ça ne fonctionne pas, essayez "Via App React"</li>
+                <li>"window.location" est la méthode la plus basique</li>
+                <li>"Redirection Forcée" rechargera complètement la page</li>
+            </ol>
+        </div>
+        
+        <div class="alternatives">
+            <h3>🛠️ Solutions de Secours</h3>
+            <ul>
+                <li>📱 <a href="/vendor-access-qr" target="_blank">Ouvrir dans nouvel onglet</a></li>
+                <li>🏠 <a href="/" target="_self">Retour accueil principal</a></li>
+                <li>🔄 <a href="#" onclick="reloadAndTest()">Recharger et tester</a></li>
+                <li>📊 <a href="/test-button-acces-qr-solution-robuste.html" target="_self">Interface avancée</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let testCount = 0;
+        
+        function log(message, type = 'info') {
+            const consoleDiv = document.getElementById('console');
+            const entry = document.createElement('div');
+            entry.className = `console-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            consoleDiv.appendChild(entry);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            
+            // Log dans la console du navigateur aussi
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+        
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+        }
+        
+        function testNavigationDirect() {
+            testCount++;
+            log(`Test ${testCount}: Navigation directe vers /vendor-access-qr`, 'info');
+            showStatus('🚀 Navigation en cours...', 'info');
+            
+            try {
+                log('Tentative de navigation par window.location.href...', 'info');
+                window.location.href = '/vendor-access-qr';
+                
+                // Si on arrive ici après 2 secondes, la navigation a échoué
+                setTimeout(() => {
+                    log('⚠️ Timeout: La navigation semble avoir échoué', 'error');
+                    showStatus('❌ Navigation échouée - essayez une autre méthode', 'error');
+                }, 2000);
+                
+            } catch (error) {
+                log(`❌ Erreur critique: ${error.message}`, 'error');
+                showStatus(`💥 Erreur: ${error.message}`, 'error');
+            }
+        }
+        
+        function testViaReactApp() {
+            testCount++;
+            log(`Test ${testCount}: Navigation via l\'application React`, 'info');
+            showStatus('⚛️ Navigation via React...', 'info');
+            
+            try {
+                // Tenter d'abord d'accéder à l'app principale
+                log('Redirection vers l\'application principale...', 'info');
+                window.location.href = '/';
+                
+                // Après un court délai, naviguer vers la page cible
+                setTimeout(() => {
+                    log('Navigation vers /vendor-access-qr depuis l\'app...', 'info');
+                    window.location.href = '/vendor-access-qr';
+                }, 1500);
+                
+            } catch (error) {
+                log(`❌ Erreur React App: ${error.message}`, 'error');
+                showStatus(`💥 Erreur React: ${error.message}`, 'error');
+            }
+        }
+        
+        function testWindowLocation() {
+            testCount++;
+            log(`Test ${testCount}: Test basique window.location`, 'info');
+            showStatus('📍 Test window.location...', 'info');
+            
+            try {
+                log('Utilisation de window.location.assign()...', 'info');
+                window.location.assign('/vendor-access-qr');
+                
+                setTimeout(() => {
+                    log('⚠️ window.location.assign() n\'a pas fonctionné', 'error');
+                    showStatus('❌ window.location échoué', 'error');
+                }, 2000);
+                
+            } catch (error) {
+                log(`❌ Erreur window.location: ${error.message}`, 'error');
+                showStatus(`💥 Erreur: ${error.message}`, 'error');
+            }
+        }
+        
+        function testForceRedirect() {
+            testCount++;
+            log(`Test ${testCount}: Redirection forcée complète`, 'info');
+            showStatus('🔥 Redirection forcée...', 'info');
+            
+            try {
+                log('Rechargement complet de la page...', 'info');
+                
+                // Sauvegarder l'intention de navigation
+                sessionStorage.setItem('forceRedirect', '/vendor-access-qr');
+                
+                // Recharger la page
+                window.location.reload();
+                
+            } catch (error) {
+                log(`❌ Erreur redirection: ${error.message}`, 'error');
+                showStatus(`💥 Erreur: ${error.message}`, 'error');
+            }
+        }
+        
+        function reloadAndTest() {
+            log('Rechargement de la page avec intention de test...', 'info');
+            showStatus('🔄 Rechargement...', 'info');
+            
+            sessionStorage.setItem('testAfterReload', 'true');
+            window.location.reload();
+        }
+        
+        // Vérifier s'il y a des actions en attente après rechargement
+        window.addEventListener('load', () => {
+            const forceRedirect = sessionStorage.getItem('forceRedirect');
+            const testAfterReload = sessionStorage.getItem('testAfterReload');
+            
+            if (forceRedirect) {
+                sessionStorage.removeItem('forceRedirect');
+                log('Redirection forcée détectée après rechargement', 'info');
+                setTimeout(() => {
+                    window.location.href = forceRedirect;
+                }, 500);
+            }
+            
+            if (testAfterReload) {
+                sessionStorage.removeItem('testAfterReload');
+                log('Test après rechargement détecté', 'info');
+                showStatus('✅ Page rechargée - prête pour les tests', 'success');
+            }
+        });
+        
+        // Écouter les changements d'URL
+        window.addEventListener('popstate', (event) => {
+            log(`🔄 URL changée: ${window.location.pathname}`, 'info');
+        });
+        
+        // Écouter les changements de hash
+        window.addEventListener('hashchange', () => {
+            log(`# Hash changé: ${window.location.hash}`, 'info');
+        });
+        
+        // Log initial
+        log('🎯 Interface de test chargée', 'info');
+        log(`📍 URL actuelle: ${window.location.href}`, 'info');
+        log('✅ Système de test prêt', 'success');
+        
+        // Test automatique de la console
+        setTimeout(() => {
+            console.log('=== TEST CONSOLE ===');
+            console.log('🎯 Bouton Accès & QR - Test de console');
+            console.log('📍 URL:', window.location.href);
+            console.log('⏰ Timestamp:', new Date().toISOString());
+            log('📝 Console testée avec succès', 'success');
+        }, 1000);
+        
+        // Vérification finale
+        setTimeout(() => {
+            log('🔍 Vérification finale des systèmes...', 'info');
+            showStatus('✅ Interface prête - sélectionnez un test', 'success');
+        }, 2000);
+    </script>
+</body>
+</html>

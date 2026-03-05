@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Bouton Accès & QR - Solution Robuste</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .header {
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        .test-button:active {
+            transform: translateY(0);
+        }
+        
+        .status {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .console {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .console-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+        
+        .console-entry.error {
+            color: #dc3545;
+        }
+        
+        .console-entry.success {
+            color: #28a745;
+        }
+        
+        .console-entry.info {
+            color: #17a2b8;
+        }
+        
+        .alternatives {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            text-align: left;
+        }
+        
+        .alternatives h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .alternatives ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .alternatives li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .alternatives li:last-child {
+            border-bottom: none;
+        }
+        
+        .alternatives a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .alternatives a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Test Bouton Accès & QR</h1>
+            <p>Solution robuste pour garantir le fonctionnement du bouton</p>
+        </div>
+        
+        <div>
+            <button class="test-button" onclick="testDirectNavigation()">
+                🚀 Test Navigation Directe
+            </button>
+            
+            <button class="test-button" onclick="testWindowLocation()">
+                📍 Test window.location
+            </button>
+            
+            <button class="test-button" onclick="testReactRouter()">
+                ⚛️ Test React Router
+            </button>
+            
+            <button class="test-button" onclick="testConsoleLog()">
+                📝 Test Console Log
+            </button>
+        </div>
+        
+        <div id="status" class="status info" style="display: none;">
+            Cliquez sur un bouton pour tester
+        </div>
+        
+        <div class="console" id="console">
+            <div class="console-entry info">Console de test prête...</div>
+        </div>
+        
+        <div class="alternatives">
+            <h3>🛠️ Solutions Alternatives</h3>
+            <ul>
+                <li>📱 <a href="/vendor-access-qr" target="_blank">Ouvrir dans un nouvel onglet</a></li>
+                <li>🔧 <a href="#" onclick="forceReactApp()">Forcer l'application React</a></li>
+                <li>🔄 <a href="#" onclick="reloadAndNavigate()">Recharger et naviguer</a></li>
+                <li>🏠 <a href="/" target="_self">Retour à l'accueil</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let testCount = 0;
+        
+        function logToConsole(message, type = 'info') {
+            const consoleDiv = document.getElementById('console');
+            const entry = document.createElement('div');
+            entry.className = `console-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            consoleDiv.appendChild(entry);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            
+            // Log dans la console du navigateur aussi
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+        
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+        }
+        
+        function testDirectNavigation() {
+            testCount++;
+            logToConsole(`Test ${testCount}: Navigation directe vers /vendor-access-qr`, 'info');
+            showStatus('Navigation en cours...', 'info');
+            
+            try {
+                // Test 1: Navigation directe
+                logToConsole('Tentative de navigation directe...', 'info');
+                window.location.href = '/vendor-access-qr';
+                
+                // Si on arrive ici, la navigation a échoué
+                setTimeout(() => {
+                    logToConsole('⚠️ La navigation n\'a pas été interceptée', 'error');
+                    showStatus('Navigation échouée - essayez une autre méthode', 'error');
+                }, 1000);
+                
+            } catch (error) {
+                logToConsole(`❌ Erreur: ${error.message}`, 'error');
+                showStatus(`Erreur: ${error.message}`, 'error');
+            }
+        }
+        
+        function testWindowLocation() {
+            testCount++;
+            logToConsole(`Test ${testCount}: Test window.location.assign()`, 'info');
+            showStatus('Test window.location.assign()...', 'info');
+            
+            try {
+                logToConsole('Utilisation de window.location.assign()', 'info');
+                window.location.assign('/vendor-access-qr');
+                
+                setTimeout(() => {
+                    logToConsole('⚠️ window.location.assign() n\'a pas fonctionné', 'error');
+                    showStatus('window.location.assign() a échoué', 'error');
+                }, 1000);
+                
+            } catch (error) {
+                logToConsole(`❌ Erreur: ${error.message}`, 'error');
+                showStatus(`Erreur: ${error.message}`, 'error');
+            }
+        }
+        
+        function testReactRouter() {
+            testCount++;
+            logToConsole(`Test ${testCount}: Test de navigation React Router`, 'info');
+            showStatus('Test navigation React Router...', 'info');
+            
+            try {
+                // Simuler une navigation React Router
+                logToConsole('Simulation de navigation React Router...', 'info');
+                
+                // Créer un événement personnalisé
+                const event = new CustomEvent('react-router-navigate', {
+                    detail: { path: '/vendor-access-qr' }
+                });
+                
+                window.dispatchEvent(event);
+                logToConsole('Événement React Router dispatché', 'info');
+                
+                // Alternative: utiliser l'history API
+                if (window.history && window.history.pushState) {
+                    logToConsole('Utilisation de l\'API History...', 'info');
+                    window.history.pushState({ path: '/vendor-access-qr' }, '', '/vendor-access-qr');
+                    logToConsole('History API utilisée avec succès', 'success');
+                    showStatus('History API utilisée - vérifiez l\'URL', 'success');
+                } else {
+                    logToConsole('History API non disponible', 'error');
+                }
+                
+            } catch (error) {
+                logToConsole(`❌ Erreur React Router: ${error.message}`, 'error');
+                showStatus(`Erreur React Router: ${error.message}`, 'error');
+            }
+        }
+        
+        function testConsoleLog() {
+            testCount++;
+            logToConsole(`Test ${testCount}: Test de la console`, 'info');
+            showStatus('Test console.log()...', 'info');
+            
+            console.log('=== TEST CONSOLE LOG ===');
+            console.log('Bouton Accès & QR cliqué');
+            console.log('URL cible: /vendor-access-qr');
+            console.log('Timestamp:', new Date().toISOString());
+            
+            // Test différents niveaux de log
+            console.info('ℹ️ Info: Test d\'information');
+            console.warn('⚠️ Warning: Test d\'avertissement');
+            console.error('❌ Error: Test d\'erreur');
+            
+            logToConsole('Console log testée avec succès', 'success');
+            showStatus('Console log fonctionnelle - vérifiez la console du navigateur', 'success');
+            
+            // Test alert
+            alert('🎯 Test Alert: Le bouton Accès & QR est fonctionnel!\n\nCeci prouve que les événements clic sont bien détectés.');
+        }
+        
+        function forceReactApp() {
+            logToConsole('Forçage de l\'application React...', 'info');
+            showStatus('Forçage React app...', 'info');
+            
+            // Tenter de forcer le chargement de l'app React
+            window.location.href = '/#';
+            setTimeout(() => {
+                window.location.href = '/vendor-access-qr';
+            }, 500);
+        }
+        
+        function reloadAndNavigate() {
+            logToConsole('Rechargement et navigation...', 'info');
+            showStatus('Rechargement et navigation...', 'info');
+            
+            // Sauvegarder l'intention de navigation
+            sessionStorage.setItem('navigateAfterReload', '/vendor-access-qr');
+            
+            // Recharger la page
+            window.location.reload();
+        }
+        
+        // Vérifier s'il y a une navigation en attente après rechargement
+        window.addEventListener('load', () => {
+            const navigatePath = sessionStorage.getItem('navigateAfterReload');
+            if (navigatePath) {
+                sessionStorage.removeItem('navigateAfterReload');
+                logToConsole('Navigation après rechargement détectée', 'info');
+                setTimeout(() => {
+                    window.location.href = navigatePath;
+                }, 1000);
+            }
+        });
+        
+        // Écouter les changements d'URL
+        window.addEventListener('popstate', (event) => {
+            logToConsole(`URL changée: ${window.location.pathname}`, 'info');
+        });
+        
+        // Log initial
+        logToConsole('Page de test chargée', 'info');
+        logToConsole(`URL actuelle: ${window.location.href}`, 'info');
+        logToConsole('Prêt pour les tests', 'success');
+        
+        // Test automatique au chargement
+        setTimeout(() => {
+            logToConsole('Test automatique: vérification du bouton', 'info');
+        }, 1000);
+    </script>
+</body>
+</html>

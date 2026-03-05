@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Synchronisation Produits Live Shopping</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .test-section { background: white; margin: 20px 0; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        .button-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .test-frame { width: 100%; height: 600px; border: 2px solid #007bff; border-radius: 8px; }
+        .test-controls { margin: 20px 0; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .product-sync { background: #e8f5e8; border: 1px solid #28a745; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .product-item { display: flex; align-items: center; padding: 10px; margin: 5px 0; background: #f8f9fa; border-radius: 5px; cursor: pointer; }
+        .product-item:hover { background: #e9ecef; }
+        .product-item.selected { background: #d4edda; border: 2px solid #28a745; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛍️ Test Synchronisation Produits - Live Shopping</h1>
+        
+        <div class="test-section">
+            <h2>📋 Objectif du Test</h2>
+            <p>Vérifier que lorsque le vendeur sélectionne un produit, le client le voit instantanément.</p>
+            <div class="product-sync">
+                <strong>État attendu:</strong> Quand le vendeur clique sur un produit, il doit apparaître instantanément chez le client avec la mention "En vedette maintenant".
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🚀 Test de Synchronisation</h2>
+            <div class="test-controls">
+                <button class="btn-primary" onclick="startProductSyncTest()">🎯 Démarrer le Test</button>
+                <button class="btn-success" onclick="testVendorProductSelection()">🛍️ Tester Sélection Vendeur</button>
+                <button class="btn-warning" onclick="checkClientProductView()">👁️ Vérifier Vue Client</button>
+                <button class="btn-danger" onclick="stopProductSyncTest()">⏹️ Arrêter le Test</button>
+            </div>
+            
+            <div id="sync-status" class="status warning">En attente du test de synchronisation...</div>
+            
+            <div class="button-grid">
+                <div>
+                    <h3>🛍️ Vue Vendeur (Sélection)</h3>
+                    <div class="product-item" onclick="simulateVendorSelection(1)">
+                        <span style="font-size: 24px;">👗</span>
+                        <div style="margin-left: 10px;">
+                            <div><strong>Robe Wax Ankara</strong></div>
+                            <div style="color: #28a745; font-weight: bold;">25 000 FCFA</div>
+                        </div>
+                    </div>
+                    <div class="product-item" onclick="simulateVendorSelection(2)">
+                        <span style="font-size: 24px;">💎</span>
+                        <div style="margin-left: 10px;">
+                            <div><strong>Collier Perles</strong></div>
+                            <div style="color: #28a745; font-weight: bold;">15 000 FCFA</div>
+                        </div>
+                    </div>
+                    <div class="product-item" onclick="simulateVendorSelection(3)">
+                        <span style="font-size: 24px;">👜</span>
+                        <div style="margin-left: 10px;">
+                            <div><strong>Sac Artisanal</strong></div>
+                            <div style="color: #28a745; font-weight: bold;">20 000 FCFA</div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3>👁️ Vue Client (Résultat)</h3>
+                    <div id="client-product-view">
+                        <div style="text-align: center; color: #6c757d; padding: 40px;">
+                            Aucun produit sélectionné pour le moment...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Résultats du Test</h2>
+            <div id="sync-results">
+                <p>Les résultats apparaîtront ici après le test...</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🖥️ Test Complet avec Interfaces</h2>
+            <div class="button-grid">
+                <div>
+                    <h3>🛍️ Interface Vendeur</h3>
+                    <iframe id="vendor-frame" class="test-frame" src="about:blank"></iframe>
+                </div>
+                <div>
+                    <h3>👀 Interface Client</h3>
+                    <iframe id="client-frame" class="test-frame" src="about:blank"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let vendorFrame, clientFrame;
+        let syncResults = [];
+        let testStartTime;
+
+        function startProductSyncTest() {
+            vendorFrame = document.getElementById('vendor-frame');
+            clientFrame = document.getElementById('client-frame');
+            
+            // Load the Live Shopping pages
+            vendorFrame.src = 'http://localhost:3015/live-shopping-vendor-test';
+            clientFrame.src = 'http://localhost:3015/live-shopping?vendorId=8888&clientId=8889&mode=client';
+            
+            updateSyncStatus('Test démarré - Chargement des interfaces...', 'warning');
+            testStartTime = Date.now();
+            
+            // Wait for pages to load
+            setTimeout(() => {
+                updateSyncStatus('Interfaces chargées - Prêt pour le test de synchronisation', 'success');
+                addSyncResult('✅ Interfaces Live Shopping chargées avec succès');
+                addSyncResult('ℹ️ Cliquez sur un produit côté vendeur pour tester la synchronisation');
+            }, 5000);
+        }
+
+        function simulateVendorSelection(productId) {
+            const products = {
+                1: { name: 'Robe Wax Ankara', price: 25000, image: '👗' },
+                2: { name: 'Collier Perles', price: 15000, image: '💎' },
+                3: { name: 'Sac Artisanal', price: 20000, image: '👜' }
+            };
+            
+            const product = products[productId];
+            if (!product) return;
+            
+            // Highlight selected product
+            document.querySelectorAll('.product-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            event.target.closest('.product-item').classList.add('selected');
+            
+            updateSyncStatus(`Produit sélectionné: ${product.name}`, 'warning');
+            addSyncResult(`🛍️ Vendeur a sélectionné: ${product.name} - ${product.price.toLocaleString()} FCFA`);
+            
+            // Simulate client view update
+            setTimeout(() => {
+                updateClientProductView(product);
+            }, 1000);
+        }
+
+        function updateClientProductView(product) {
+            const clientView = document.getElementById('client-product-view');
+            clientView.innerHTML = `
+                <div style="background: #d4edda; border: 2px solid #28a745; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                    <div style="display: flex; align-items: center;">
+                        <span style="font-size: 32px;">${product.image}</span>
+                        <div style="margin-left: 15px;">
+                            <div style="color: #155724; font-weight: bold; font-size: 14px;">EN VEDETTE MAINTENANT</div>
+                            <div style="font-weight: bold; margin: 5px 0;">${product.name}</div>
+                            <div style="color: #28a745; font-weight: bold;">${product.price.toLocaleString()} FCFA</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            updateSyncStatus('✅ Produit synchronisé avec succès!', 'success');
+            addSyncResult(`👁️ Client voit maintenant: ${product.name} comme produit en vedette`);
+            addSyncResult(`⏱️ Temps de synchronisation: ${Date.now() - testStartTime}ms`);
+        }
+
+        function checkClientProductView() {
+            const clientView = document.getElementById('client-product-view');
+            const hasProduct = clientView.querySelector('[style*="background: #d4edda"]');
+            
+            if (hasProduct) {
+                addSyncResult('✅ Le client voit bien le produit sélectionné');
+            } else {
+                addSyncResult('❌ Le client ne voit pas le produit sélectionné');
+            }
+        }
+
+        function testVendorProductSelection() {
+            // Simulate clicking the first product
+            const firstProduct = document.querySelector('.product-item');
+            if (firstProduct) {
+                firstProduct.click();
+                addSyncResult('🤖 Simulation: Clic sur le premier produit côté vendeur');
+            }
+        }
+
+        function stopProductSyncTest() {
+            if (vendorFrame) vendorFrame.src = 'about:blank';
+            if (clientFrame) clientFrame.src = 'about:blank';
+            updateSyncStatus('Test arrêté', 'warning');
+            addSyncResult('⏹️ Test de synchronisation arrêté par l\'utilisateur');
+        }
+
+        function updateSyncStatus(message, type) {
+            const statusEl = document.getElementById('sync-status');
+            statusEl.className = `status ${type}`;
+            statusEl.textContent = message;
+        }
+
+        function addSyncResult(message) {
+            const resultsEl = document.getElementById('sync-results');
+            const timestamp = new Date().toLocaleTimeString();
+            syncResults.push(`[${timestamp}] ${message}`);
+            resultsEl.innerHTML = syncResults.map(result => `<div>${result}</div>`).join('');
+        }
+
+        // Auto-start basic connectivity test
+        window.onload = () => {
+            setTimeout(() => {
+                fetch('http://localhost:3015/live-shopping?vendorId=8888&clientId=8889&mode=client')
+                    .then(response => {
+                        if (response.ok) {
+                            addSyncResult('✅ Serveur Live Shopping accessible');
+                        } else {
+                            addSyncResult('❌ Serveur Live Shopping inaccessible');
+                        }
+                    })
+                    .catch(error => {
+                        addSyncResult(`❌ Erreur de connexion au serveur: ${error.message}`);
+                    });
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

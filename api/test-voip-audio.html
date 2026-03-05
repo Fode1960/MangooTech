@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Audio VoIP - MangooTech</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .audio-levels {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .audio-level {
+            margin: 15px 0;
+        }
+        
+        .audio-level h3 {
+            color: #495057;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .level-bar {
+            width: 100%;
+            height: 30px;
+            background: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid #dee2e6;
+        }
+        
+        .level-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997, #17a2b8, #ffc107, #fd7e14, #dc3545);
+            border-radius: 13px;
+            transition: width 0.1s ease;
+            width: 0%;
+            position: relative;
+        }
+        
+        .level-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+            font-size: 14px;
+        }
+        
+        .controls {
+            margin: 30px 0;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #28a745;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .call-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #fff3cd;
+            border-radius: 15px;
+            border: 2px solid #ffeaa7;
+        }
+        
+        .call-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .call-button {
+            background: #28a745;
+            padding: 12px 24px;
+            font-size: 14px;
+        }
+        
+        .call-button.answer {
+            background: #28a745;
+        }
+        
+        .call-button.hangup {
+            background: #dc3545;
+        }
+        
+        .call-button:hover {
+            transform: translateY(-1px);
+        }
+        
+        #connectionStatus {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        
+        #audioLevelLocal, #audioLevelRemote {
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .logo {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🥭</div>
+        <h1>Test Audio VoIP</h1>
+        <p style="color: #666; margin-bottom: 30px; font-size: 1.1em;">
+            Testez votre microphone et les appels VoIP avec MangooTech
+        </p>
+        
+        <div id="connectionStatus" class="status disconnected">
+            🔴 Déconnecté du serveur
+        </div>
+        
+        <div class="audio-levels">
+            <div class="audio-level">
+                <h3>🔊 Niveau Audio Local</h3>
+                <div class="level-bar">
+                    <div id="localLevelFill" class="level-fill">
+                        <div class="level-text">0%</div>
+                    </div>
+                </div>
+                <div id="audioLevelLocal">En attente...</div>
+            </div>
+            
+            <div class="audio-level">
+                <h3>🎧 Niveau Audio Distant</h3>
+                <div class="level-bar">
+                    <div id="remoteLevelFill" class="level-fill">
+                        <div class="level-text">0%</div>
+                    </div>
+                </div>
+                <div id="audioLevelRemote">En attente...</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="testAudioBtn" onclick="testAudio()">🎤 Tester Audio</button>
+            <button id="stopTestBtn" onclick="stopAudioTest()" disabled>⏹️ Arrêter Test</button>
+        </div>
+        
+        <div id="testResult" class="info hidden">
+            Cliquez sur "Tester Audio" pour vérifier votre microphone
+        </div>
+        
+        <div class="call-section">
+            <h3>📞 Test d'Appel VoIP</h3>
+            <div class="call-controls">
+                <button class="call-button" onclick="makeTestCall()">📞 Appel Test</button>
+                <button class="call-button answer" onclick="answerCall()" disabled>✅ Répondre</button>
+                <button class="call-button hangup" onclick="hangupCall()" disabled>❌ Raccrocher</button>
+            </div>
+            <div id="callStatus">Aucun appel en cours</div>
+        </div>
+        
+        <div class="info">
+            <strong>💡 Instructions :</strong><br>
+            1. Autorisez l'accès à votre microphone<br>
+            2. Cliquez sur "Tester Audio" pour vérifier le niveau<br>
+            3. Testez les appels VoIP avec les boutons ci-dessus<br>
+            4. Les niveaux doivent bouger quand vous parlez
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let socket;
+        let localStream = null;
+        let remoteStream = null;
+        let peerConnection = null;
+        let audioContext = null;
+        let analyser = null;
+        let dataArray = null;
+        let animationId = null;
+        let currentCall = null;
+
+        // Configuration WebRTC
+        const RTC_CONFIG = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        };
+
+        // Connexion au serveur
+        function connectToServer() {
+            try {
+                socket = io('http://localhost:8080', {
+                    transports: ['websocket', 'polling']
+                });
+
+                socket.on('connect', () => {
+                    console.log('✅ Connecté au serveur WebRTC-SIP');
+                    updateConnectionStatus(true);
+                    
+                    // S'enregistrer avec un ID de test
+                    socket.emit('register', { 
+                        userId: 'test-user-' + Math.random().toString(36).substr(2, 9) 
+                    });
+                });
+
+                socket.on('disconnect', () => {
+                    console.log('🔴 Déconnecté du serveur');
+                    updateConnectionStatus(false);
+                });
+
+                socket.on('incoming-call', (data) => {
+                    console.log('📞 Appel entrant:', data);
+                    currentCall = data;
+                    document.getElementById('callStatus').innerHTML = 
+                        `📞 Appel entrant de ${data.caller}`;
+                    document.querySelector('.call-button.answer').disabled = false;
+                });
+
+                socket.on('call-answered', async (data) => {
+                    console.log('✅ Appel répondu:', data);
+                    document.getElementById('callStatus').innerHTML = '✅ Appel en cours';
+                    document.querySelector('.call-button.hangup').disabled = false;
+                    
+                    // Établir la connexion WebRTC
+                    await establishWebRTCConnection(data);
+                });
+
+                socket.on('call-ended', () => {
+                    console.log('📴 Appel terminé');
+                    endCall();
+                });
+
+                socket.on('webrtc-answer', async (data) => {
+                    console.log('🔄 Réponse WebRTC reçue');
+                    if (peerConnection && data.sdp) {
+                        await peerConnection.setRemoteDescription(
+                            new RTCSessionDescription(data.sdp)
+                        );
+                    }
+                });
+
+                socket.on('webrtc-ice-candidate', async (data) => {
+                    console.log('🧊 Candidat ICE reçu');
+                    if (peerConnection && data.candidate) {
+                        await peerConnection.addIceCandidate(
+                            new RTCIceCandidate(data.candidate)
+                        );
+                    }
+                });
+
+            } catch (error) {
+                console.error('❌ Erreur de connexion:', error);
+                showError('Erreur de connexion au serveur: ' + error.message);
+            }
+        }
+
+        function updateConnectionStatus(connected) {
+            const statusEl = document.getElementById('connectionStatus');
+            if (connected) {
+                statusEl.className = 'status connected';
+                statusEl.innerHTML = '🟢 Connecté au serveur';
+            } else {
+                statusEl.className = 'status disconnected';
+                statusEl.innerHTML = '🔴 Déconnecté du serveur';
+            }
+        }
+
+        // Test audio
+        async function testAudio() {
+            try {
+                console.log('🎤 Début du test audio...');
+                
+                // Demander l'accès au microphone
+                localStream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: true, 
+                    video: false 
+                });
+                
+                console.log('✅ Microphone accessible');
+                
+                // Créer le contexte audio pour l'analyse
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                const source = audioContext.createMediaStreamSource(localStream);
+                source.connect(analyser);
+                
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+                
+                // Afficher le résultat
+                document.getElementById('testResult').className = 'success';
+                document.getElementById('testResult').innerHTML = 
+                    '✅ Microphone détecté! Parlez pour voir les niveaux audio.';
+                document.getElementById('testResult').classList.remove('hidden');
+                
+                // Désactiver le bouton test et activer stop
+                document.getElementById('testAudioBtn').disabled = true;
+                document.getElementById('stopTestBtn').disabled = false;
+                
+                // Démarrer l'analyse audio
+                analyzeAudio();
+                
+            } catch (error) {
+                console.error('❌ Erreur lors du test audio:', error);
+                let errorMsg = 'Erreur: ';
+                
+                if (error.name === 'NotAllowedError') {
+                    errorMsg += 'Accès microphone refusé. Veuillez autoriser l\'accès.';
+                } else if (error.name === 'NotFoundError') {
+                    errorMsg += 'Aucun microphone détecté.';
+                } else {
+                    errorMsg += error.message;
+                }
+                
+                document.getElementById('testResult').className = 'error';
+                document.getElementById('testResult').innerHTML = errorMsg;
+                document.getElementById('testResult').classList.remove('hidden');
+            }
+        }
+
+        function analyzeAudio() {
+            if (!analyser || !dataArray) return;
+            
+            analyser.getByteFrequencyData(dataArray);
+            
+            // Calculer le niveau RMS (Root Mean Square)
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+                const normalized = dataArray[i] / 255.0;
+                sum += normalized * normalized;
+            }
+            const rms = Math.sqrt(sum / dataArray.length);
+            const level = Math.min(100, Math.round(rms * 100 * 1.5)); // Amplifier pour meilleure visibilité
+            
+            // Mettre à jour l'affichage
+            updateAudioLevelDisplay('local', level);
+            document.getElementById('audioLevelLocal').innerHTML = `Niveau: ${level}%`;
+            
+            // Continuer l'analyse
+            animationId = requestAnimationFrame(analyzeAudio);
+        }
+
+        function updateAudioLevelDisplay(type, level) {
+            const fillEl = document.getElementById(type + 'LevelFill');
+            const textEl = fillEl.querySelector('.level-text');
+            
+            fillEl.style.width = level + '%';
+            textEl.textContent = level + '%';
+            
+            // Changer la couleur selon le niveau
+            if (level < 20) {
+                fillEl.style.background = '#28a745';
+            } else if (level < 40) {
+                fillEl.style.background = 'linear-gradient(90deg, #28a745, #20c997)';
+            } else if (level < 60) {
+                fillEl.style.background = 'linear-gradient(90deg, #28a745, #20c997, #17a2b8)';
+            } else if (level < 80) {
+                fillEl.style.background = 'linear-gradient(90deg, #28a745, #20c997, #17a2b8, #ffc107)';
+            } else {
+                fillEl.style.background = 'linear-gradient(90deg, #28a745, #20c997, #17a2b8, #ffc107, #dc3545)';
+            }
+        }
+
+        function stopAudioTest() {
+            console.log('⏹️ Arrêt du test audio');
+            
+            // Arrêter l'animation
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
+            // Arrêter le flux audio
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            
+            // Fermer le contexte audio
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+            
+            analyser = null;
+            dataArray = null;
+            
+            // Réinitialiser l'affichage
+            document.getElementById('localLevelFill').style.width = '0%';
+            document.getElementById('localLevelFill').querySelector('.level-text').textContent = '0%';
+            document.getElementById('audioLevelLocal').innerHTML = 'En attente...';
+            
+            // Réactiver les boutons
+            document.getElementById('testAudioBtn').disabled = false;
+            document.getElementById('stopTestBtn').disabled = true;
+            
+            document.getElementById('testResult').className = 'info';
+            document.getElementById('testResult').innerHTML = 'Test arrêté. Cliquez sur "Tester Audio" pour recommencer.';
+        }
+
+        // Appel de test
+        function makeTestCall() {
+            if (!socket || !socket.connected) {
+                showError('Non connecté au serveur');
+                return;
+            }
+            
+            const targetUser = prompt('Entrez l\'ID de l\'utilisateur cible (ex: test-user-123):', 'test-user');
+            if (!targetUser) return;
+            
+            console.log('📞 Appel de test vers:', targetUser);
+            
+            socket.emit('make-call', {
+                targetUserId: targetUser,
+                callId: 'test-call-' + Date.now()
+            });
+            
+            document.getElementById('callStatus').innerHTML = `📞 Appel en cours vers ${targetUser}...`;
+        }
+
+        async function answerCall() {
+            if (!currentCall) return;
+            
+            console.log('✅ Réponse à l\'appel:', currentCall.callId);
+            
+            socket.emit('answer-call', {
+                callId: currentCall.callId,
+                targetUserId: currentCall.caller
+            });
+            
+            document.getElementById('callStatus').innerHTML = '✅ Appel accepté';
+            document.querySelector('.call-button.answer').disabled = true;
+            document.querySelector('.call-button.hangup').disabled = false;
+            
+            // Préparer la connexion WebRTC
+            await prepareWebRTCConnection();
+        }
+
+        function hangupCall() {
+            console.log('📴 Raccrochage');
+            
+            if (currentCall && socket) {
+                socket.emit('end-call', {
+                    callId: currentCall.callId
+                });
+            }
+            
+            endCall();
+        }
+
+        async function prepareWebRTCConnection() {
+            try {
+                // Créer la connexion WebRTC
+                peerConnection = new RTCPeerConnection(RTC_CONFIG);
+                
+                // Ajouter le flux local
+                if (localStream) {
+                    localStream.getTracks().forEach(track => {
+                        peerConnection.addTrack(track, localStream);
+                    });
+                } else {
+                    // Obtenir le flux audio si pas déjà fait
+                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    localStream.getTracks().forEach(track => {
+                        peerConnection.addTrack(track, localStream);
+                    });
+                }
+                
+                // Gérer le flux distant
+                peerConnection.ontrack = (event) => {
+                    console.log('🎧 Flux distant reçu');
+                    remoteStream = event.streams[0];
+                    
+                    // Analyser l'audio distant
+                    analyzeRemoteAudio();
+                };
+                
+                // Gérer les candidats ICE
+                peerConnection.onicecandidate = (event) => {
+                    if (event.candidate && socket) {
+                        socket.emit('webrtc-ice-candidate', {
+                            targetUserId: currentCall.caller,
+                            candidate: event.candidate
+                        });
+                    }
+                };
+                
+                // Créer l'offre WebRTC
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                
+                // Envoyer l'offre
+                if (socket) {
+                    socket.emit('webrtc-offer', {
+                        targetUserId: currentCall.caller,
+                        offer: offer
+                    });
+                }
+                
+            } catch (error) {
+                console.error('❌ Erreur WebRTC:', error);
+                showError('Erreur WebRTC: ' + error.message);
+            }
+        }
+
+        async function establishWebRTCConnection(data) {
+            try {
+                if (!peerConnection) {
+                    peerConnection = new RTCPeerConnection(RTC_CONFIG);
+                    
+                    // Ajouter le flux local
+                    if (localStream) {
+                        localStream.getTracks().forEach(track => {
+                            peerConnection.addTrack(track, localStream);
+                        });
+                    }
+                    
+                    // Gérer le flux distant
+                    peerConnection.ontrack = (event) => {
+                        console.log('🎧 Flux distant reçu');
+                        remoteStream = event.streams[0];
+                        analyzeRemoteAudio();
+                    };
+                    
+                    // Gérer les candidats ICE
+                    peerConnection.onicecandidate = (event) => {
+                        if (event.candidate && socket) {
+                            socket.emit('webrtc-ice-candidate', {
+                                targetUserId: data.caller,
+                                candidate: event.candidate
+                            });
+                        }
+                    };
+                }
+                
+                // Définir la description distante
+                if (data.sdp) {
+                    await peerConnection.setRemoteDescription(
+                        new RTCSessionDescription(data.sdp)
+                    );
+                    
+                    // Créer la réponse
+                    const answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+                    
+                    // Envoyer la réponse
+                    if (socket) {
+                        socket.emit('webrtc-answer', {
+                            targetUserId: data.caller,
+                            answer: answer
+                        });
+                    }
+                }
+                
+            } catch (error) {
+                console.error('❌ Erreur connexion WebRTC:', error);
+                showError('Erreur connexion WebRTC: ' + error.message);
+            }
+        }
+
+        function analyzeRemoteAudio() {
+            if (!remoteStream || !audioContext) return;
+            
+            try {
+                const remoteSource = audioContext.createMediaStreamSource(remoteStream);
+                const remoteAnalyser = audioContext.createAnalyser();
+                remoteSource.connect(remoteAnalyser);
+                
+                remoteAnalyser.fftSize = 256;
+                const bufferLength = remoteAnalyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                
+                function updateRemoteLevel() {
+                    if (!remoteStream || !remoteAnalyser) return;
+                    
+                    remoteAnalyser.getByteFrequencyData(dataArray);
+                    
+                    // Calculer le niveau RMS
+                    let sum = 0;
+                    for (let i = 0; i < dataArray.length; i++) {
+                        const normalized = dataArray[i] / 255.0;
+                        sum += normalized * normalized;
+                    }
+                    const rms = Math.sqrt(sum / dataArray.length);
+                    const level = Math.min(100, Math.round(rms * 100 * 1.5));
+                    
+                    // Mettre à jour l'affichage
+                    updateAudioLevelDisplay('remote', level);
+                    document.getElementById('audioLevelRemote').innerHTML = `Niveau: ${level}%`;
+                    
+                    // Continuer l'analyse
+                    if (remoteStream) {
+                        requestAnimationFrame(updateRemoteLevel);
+                    }
+                }
+                
+                updateRemoteLevel();
+                
+            } catch (error) {
+                console.error('❌ Erreur analyse audio distant:', error);
+            }
+        }
+
+        function endCall() {
+            console.log('📴 Fin de l\'appel');
+            
+            // Fermer la connexion WebRTC
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+            
+            // Arrêter le flux distant
+            if (remoteStream) {
+                remoteStream.getTracks().forEach(track => track.stop());
+                remoteStream = null;
+            }
+            
+            // Réinitialiser l'affichage
+            document.getElementById('callStatus').innerHTML = 'Aucun appel en cours';
+            document.querySelector('.call-button.answer').disabled = true;
+            document.querySelector('.call-button.hangup').disabled = true;
+            
+            // Réinitialiser le niveau audio distant
+            document.getElementById('remoteLevelFill').style.width = '0%';
+            document.getElementById('remoteLevelFill').querySelector('.level-text').textContent = '0%';
+            document.getElementById('audioLevelRemote').innerHTML = 'En attente...';
+            
+            currentCall = null;
+        }
+
+        function showError(message) {
+            const errorEl = document.createElement('div');
+            errorEl.className = 'error';
+            errorEl.innerHTML = message;
+            document.querySelector('.container').appendChild(errorEl);
+            
+            setTimeout(() => {
+                errorEl.remove();
+            }, 5000);
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Initialisation du test audio VoIP...');
+            connectToServer();
+        });
+
+        // Nettoyage à la fermeture
+        window.addEventListener('beforeunload', () => {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+            }
+            if (remoteStream) {
+                remoteStream.getTracks().forEach(track => track.stop());
+            }
+            if (audioContext) {
+                audioContext.close();
+            }
+            if (socket) {
+                socket.disconnect();
+            }
+        });
+    </script>
+</body>
+</html>
