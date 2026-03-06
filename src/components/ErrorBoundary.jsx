@@ -1,5 +1,4 @@
 import React from 'react';
-import { useThemeStore } from '../stores/themeStore';
 
 export class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -29,7 +28,8 @@ export class ErrorBoundary extends React.Component {
 }
 
 const ErrorFallback = ({ error, onReset }) => {
-  const { isDark } = useThemeStore();
+  // Simple check for dark mode to avoid store dependencies in error boundary
+  const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   
   return (
     <div className={`min-h-screen flex items-center justify-center p-4 ${

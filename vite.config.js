@@ -6,7 +6,10 @@ export default defineConfig({
   server: {
     port: 3007,
     strictPort: true,
-    host: '0.0.0.0'
+    host: true, // Listen on all local IPs
+    // hmr: {
+    //   clientPort: 3007 // Force client to connect to this port
+    // }
   },
   resolve: {
     alias: {}

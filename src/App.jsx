@@ -19,6 +19,7 @@ import ProductCard from './components/OptimizedProductCard';
 import MarketplaceFilters from './components/MarketplaceFilters';
 import PerformanceMonitor from './components/PerformanceMonitor';
 import AfricanInnovationHub from './components/AfricanInnovationHub';
+import LandingPage from './components/LandingPage';
 
 // Store optimisé avec Zustand
 const useStore = create((set, get) => ({
@@ -764,26 +765,54 @@ const AdminLayout = () => {
   );
 };
 
+// Composant optimisé pour l'iframe Mangoo Local+
+const MangooLocalFrame = React.memo(({ user, onBack }) => (
+  <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
+    <div className="absolute top-4 right-4 z-50">
+      <button 
+        onClick={onBack} 
+        className="bg-white text-gray-800 px-4 py-2 rounded-full shadow-lg font-bold hover:bg-gray-100 transition-colors"
+        style={{ position: 'absolute', right: '20px', top: '20px' }}
+      >
+        {user ? 'Retour Dashboard' : 'Retour Accueil'}
+      </button>
+    </div>
+    <iframe 
+      src="/mangoo-local.html" 
+      style={{ width: '100%', height: '100%', border: 'none' }}
+      title="Mangoo Local+"
+    />
+  </div>
+));
+
 // Composant principal avec optimisation
 function App() {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // DISABLED LOADING DELAY
+  const [currentView, setCurrentView] = useState('landing');
   const { isDark } = useThemeStore();
+
+  console.log('App Rendering. User:', user, 'View:', currentView);
 
   // Optimisation du changement de thème
   useEffect(() => {
-    localStorage.setItem('mangoo-theme', isDark ? 'dark' : 'light');
-    document.body.classList.toggle('dark', isDark);
+    try {
+      localStorage.setItem('mangoo-theme', isDark ? 'dark' : 'light');
+      document.body.classList.toggle('dark', isDark);
+    } catch (e) {
+      console.warn('Theme storage error', e);
+    }
   }, [isDark]);
 
   // Chargement initial optimisé
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000); // Réduit de 1500ms à 1000ms
-
-    return () => clearTimeout(timer);
+    // REMOVED ARTIFICIAL DELAY
   }, []);
+
+  // Handler pour le retour de Mangoo Local+
+  const handleBackFromLocal = useCallback(() => {
+    setCurrentView(user ? 'marketplace' : 'landing');
+  }, [user]);
 
   // Gestion de la connexion optimisée
   const handleLogin = useCallback(async (userData) => {
@@ -866,82 +895,99 @@ function App() {
     useStore.getState().setOrders(mockOrders);
   }, []);
 
+  // Auto-login effect for marketplace view REMOVED to prevent loops
+  // User state is now handled directly in navigation logic
+  
   if (loading) {
-    return (
-      <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${
-        isDark 
-          ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
-          : 'bg-gradient-to-br from-orange-50 to-green-50'
-      }`}>
-        <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce">🛍️</div>
-          <div className={`text-xl font-semibold transition-colors duration-300 ${
-            isDark ? 'text-gray-300' : 'text-gray-700'
-          }`}>
-            Chargement de la plateforme...
-          </div>
-        </div>
-      </div>
-    );
+    // Should be unreachable if loading starts at false
+    return <div>Loading forced...</div>;
+  }
+
+  // Ensure currentView is never undefined or null
+  const safeCurrentView = currentView || 'landing';
+
+  // 1. Mangoo Local+ (Map Interface via iframe DIRECTEMENT)
+  if (safeCurrentView === 'innovation') {
+    return <MangooLocalFrame user={user} onBack={handleBackFromLocal} />;
   }
 
   if (!user) {
-    // Si pas d'utilisateur, montrer le Hub d'Innovation qui contient les fonctionnalités publiques
-    // avec un bouton pour se connecter au dashboard
+
+
+
+    if (currentView === 'landing') {
+      return (
+        <LandingPage 
+          onNavigate={(view) => {
+            if (view === 'marketplace') {
+              // Mode Invité: On définit un utilisateur invité pour accéder au dashboard client
+              setUser({ role: 'client', name: 'Invité', avatar: '👤' });
+              // Important: setCurrentView is not needed because user state change triggers re-render
+              // But we set it for consistency
+              setCurrentView('marketplace');
+            } else if (view === 'innovation') {
+               setCurrentView('innovation');
+            } else {
+              setCurrentView(view);
+            }
+          }} 
+          onLogin={setUser} 
+        />
+      );
+    }
+  }
+
+  // Utilisateur connecté
+
+
+
+    if (user.role === 'login_request') {
+      return <Login onLogin={handleLogin} />;
+    }
+
+    // Admin avec React Router
+    if (user.role === 'admin') {
+      return (
+        <Router>
+          <Routes>
+            <Route path="/*" element={<AdminLayout />} />
+          </Routes>
+        </Router>
+      );
+    }
+
+    // Interface pour vendeurs et clients
     return (
-      <>
-        <div className="absolute top-4 right-4 z-50">
-          <button 
-            onClick={() => setUser({ role: 'login_request' })}
-            className="bg-white text-orange-600 px-4 py-2 rounded-full font-bold shadow-lg hover:bg-gray-100 transition-colors"
-          >
-            Connexion Dashboard
-          </button>
-        </div>
-        <AfricanInnovationHub />
-      </>
-    );
-  }
-
-  if (user.role === 'login_request') {
-    return <Login onLogin={handleLogin} />;
-  }
-
-  // Admin avec React Router
-  if (user.role === 'admin') {
-    return (
-      <Router>
-        <Routes>
-          <Route path="/*" element={<AdminLayout />} />
-        </Routes>
-      </Router>
-    );
-  }
-
-  // Interface pour vendeurs et clients
-  return (
-    <div className={`min-h-screen transition-colors duration-300 ${
-      isDark 
-        ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
-        : 'bg-gray-50'
-    }`}>
-      {/* Navigation optimisée */}
-      <nav className={`shadow-lg border-b-4 border-orange-500 transition-colors duration-300 ${
+      <div className={`min-h-screen transition-colors duration-300 ${
         isDark 
-          ? 'bg-gray-800 border-gray-700' 
-          : 'bg-white'
+          ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
+          : 'bg-gray-50'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <div className="text-2xl">🛍️</div>
-              <h1 className={`text-xl font-bold bg-gradient-to-r from-orange-500 to-green-600 bg-clip-text text-transparent`}>
-                MangooTech
-              </h1>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors duration-300 ${
+        {/* Navigation optimisée */}
+        <nav className={`shadow-lg border-b-4 border-orange-500 transition-colors duration-300 ${
+          isDark 
+            ? 'bg-gray-800 border-gray-700' 
+            : 'bg-white'
+        }`}>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center space-x-4 cursor-pointer" onClick={() => { setCurrentView('landing'); setUser(null); }}>
+                <div className="text-2xl">🛍️</div>
+                <h1 className={`text-xl font-bold bg-gradient-to-r from-orange-500 to-green-600 bg-clip-text text-transparent`}>
+                  MangooTech
+                </h1>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                {/* Bouton Local+ ajouté */}
+                <button
+                  onClick={() => setCurrentView('innovation')}
+                  className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold hover:bg-green-200 transition-colors"
+                >
+                  Local+ 🌍
+                </button>
+                
+                <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors duration-300 ${
                 isDark 
                   ? 'bg-gray-700 text-white' 
                   : 'bg-gray-100 text-gray-900'
@@ -974,11 +1020,11 @@ function App() {
       {/* Contenu principal */}
       <main className="max-w-7xl mx-auto">
         {user.role === 'vendor' && <VendorDashboard />}
-        {user.role === 'client' && <ClientMarketplace />}
+        {(user.role === 'client' || safeCurrentView === 'marketplace') && <ClientMarketplace />}
       </main>
       
-      {/* Moniteur de performance */}
-      <PerformanceMonitor />
+      {/* Moniteur de performance - Désactivé pour test */}
+      {/* <PerformanceMonitor /> */}
     </div>
   );
 }

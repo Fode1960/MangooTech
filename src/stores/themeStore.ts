@@ -15,7 +15,7 @@ export const useThemeStore = create<ThemeState>()(
       setTheme: (dark: boolean) => set({ isDark: dark }),
     }),
     {
-      name: 'theme-storage',
+      name: 'mangoo-theme-storage', // Changed name to avoid conflict
     }
   )
 );

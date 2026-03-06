@@ -23,10 +23,18 @@ import AfricanMarketplace from './AfricanMarketplace';
 import AfricanDigitalEducation from './AfricanDigitalEducation';
 import AfricanAgriculturalWeather from './AfricanAgriculturalWeather';
 
-const AfricanInnovationHub: React.FC = () => {
-  const [activeFeature, setActiveFeature] = useState<string>('payment');
+const AfricanInnovationHub: React.FC<{ initialFeature?: string }> = ({ initialFeature = 'payment' }) => {
+  const [activeFeature, setActiveFeature] = useState<string>(initialFeature);
 
   const features = [
+    {
+      id: 'local_map',
+      name: 'Mangoo Local+ (Carte)',
+      icon: MapPin,
+      description: 'Trouvez les commerces autour de vous (Géolocalisation & Voix)',
+      color: 'bg-green-600',
+      gradient: 'from-green-500 to-teal-400'
+    },
     {
       id: 'payment',
       name: 'Paiement Mobile Africain',
@@ -87,6 +95,16 @@ const AfricanInnovationHub: React.FC = () => {
 
   const renderActiveComponent = () => {
     switch (activeFeature) {
+      case 'local_map':
+        return (
+          <div className="w-full h-[600px] rounded-lg overflow-hidden border border-gray-200">
+            <iframe 
+              src="/mangoo-local.html" 
+              className="w-full h-full border-0"
+              title="Mangoo Local+"
+            />
+          </div>
+        );
       case 'payment':
         return <AfricanMobilePayment />;
       case 'microcredit':
