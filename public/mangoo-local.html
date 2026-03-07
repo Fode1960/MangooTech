@@ -22,6 +22,142 @@
           }
         } catch(e) {}
       })();
+        // === GPS LOCATION LOGIC ===
+        function captureShopLocation() {
+            const btn = document.getElementById('btnCaptureGPS');
+            const submitBtn = document.getElementById('btnSubmitShop');
+            const latInput = document.getElementById('shopLat');
+            const lngInput = document.getElementById('shopLng');
+            
+            btn.innerHTML = '<div class="spinner" style="width:15px; height:15px; border-width:2px; border-left-color:#1a5f3f; display:inline-block; margin-right:5px;"></div> Recherche Satellites...';
+            btn.disabled = true;
+            
+            // Simulate GPS Acquisition
+            setTimeout(() => {
+                // In real app: navigator.geolocation.getCurrentPosition(...)
+                // Here: Use user position or random near user
+                const lat = USER_POS[0] + (Math.random() * 0.002 - 0.001);
+                const lng = USER_POS[1] + (Math.random() * 0.002 - 0.001);
+                
+                latInput.value = lat;
+                lngInput.value = lng;
+                
+                btn.innerHTML = `✅ Position Validée (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+                btn.style.background = '#e8f5e9';
+                btn.style.border = '2px solid #27ae60';
+                btn.style.color = '#27ae60';
+                
+                // Enable Submit
+                submitBtn.disabled = false;
+                submitBtn.style.background = '#1a5f3f';
+                submitBtn.style.cursor = 'pointer';
+                submitBtn.style.opacity = '1';
+                
+                // Toast
+                const toast = document.createElement('div');
+                toast.style.cssText = "position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#333; color:white; padding:10px 20px; border-radius:20px; font-size:0.8rem; z-index:9999;";
+                toast.innerHTML = "📍 Coordonnées GPS ajoutées à la base Mangoo Maps";
+                document.body.appendChild(toast);
+                setTimeout(()=>toast.remove(), 3000);
+                
+            }, 2000);
+        }
+
+        // === VENDOR TRUST PROFILE ===
+        function showVendorProfile(vendorName) {
+            const overlay = document.createElement('div');
+            overlay.id = 'vendorProfileOverlay';
+            overlay.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.85); z-index: 9900;
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                font-family: sans-serif; animation: slideUp 0.3s ease-out; padding: 20px; box-sizing: border-box;
+            `;
+            
+            overlay.innerHTML = `
+                <div style="background: white; width: 100%; max-width: 380px; border-radius: 20px; overflow: hidden; max-height: 90vh; display: flex; flex-direction: column; position: relative;">
+                    <!-- Cover & Header -->
+                    <div style="height: 100px; background: linear-gradient(135deg, #0984e3, #6c5ce7); position: relative;">
+                        <button onclick="document.getElementById('vendorProfileOverlay').remove()" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.2); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer;">✕</button>
+                    </div>
+                    
+                    <div style="padding: 0 20px; text-align: center; margin-top: -40px; position: relative;">
+                        <div style="width: 80px; height: 80px; background: white; border-radius: 50%; padding: 3px; margin: 0 auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                            <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(vendorName)}&background=random&size=128" style="width: 100%; height: 100%; border-radius: 50%;">
+                        </div>
+                        <h2 style="margin: 10px 0 5px 0; color: #2d3436; font-size: 1.4rem;">${vendorName}</h2>
+                        <div style="color: #00b894; font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                            <span>✅ Vendeur Vérifié</span> • <span>⭐ 4.8/5</span>
+                        </div>
+                    </div>
+                    
+                    <div style="flex: 1; overflow-y: auto; padding: 20px;">
+                        <!-- TRUST METRICS -->
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 12px;">
+                            <div style="text-align: center;">
+                                <div style="font-weight: bold; color: #2d3436; font-size: 1.1rem;">3 ans</div>
+                                <div style="font-size: 0.75rem; color: #636e72;">Ancienneté</div>
+                            </div>
+                            <div style="text-align: center; border-left: 1px solid #dfe6e9; border-right: 1px solid #dfe6e9; padding: 0 15px;">
+                                <div style="font-weight: bold; color: #2d3436; font-size: 1.1rem;">100%</div>
+                                <div style="font-size: 0.75rem; color: #636e72;">Réponse</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-weight: bold; color: #2d3436; font-size: 1.1rem;">154</div>
+                                <div style="font-size: 0.75rem; color: #636e72;">Ventes</div>
+                            </div>
+                        </div>
+
+                        <!-- VERIFICATIONS -->
+                        <h3 style="font-size: 1rem; color: #2d3436; margin-bottom: 10px;">Badges de Confiance</h3>
+                        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px;">
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #e2e8f0; border-radius: 10px;">
+                                <span style="font-size: 1.2rem;">🆔</span>
+                                <div>
+                                    <div style="font-weight: bold; font-size: 0.9rem; color: #2d3436;">Identité (KYC)</div>
+                                    <div style="font-size: 0.75rem; color: #00b894;">Validé par IA • CNI Camerounaise</div>
+                                </div>
+                                <span style="margin-left: auto; color: #00b894;">✓</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #e2e8f0; border-radius: 10px;">
+                                <span style="font-size: 1.2rem;">🏢</span>
+                                <div>
+                                    <div style="font-weight: bold; font-size: 0.9rem; color: #2d3436;">Entreprise (KYB)</div>
+                                    <div style="font-size: 0.75rem; color: #00b894;">RCCM Validé • Kbis Vérifié</div>
+                                </div>
+                                <span style="margin-left: auto; color: #00b894;">✓</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #e2e8f0; border-radius: 10px;">
+                                <span style="font-size: 1.2rem;">📍</span>
+                                <div>
+                                    <div style="font-weight: bold; font-size: 0.9rem; color: #2d3436;">Localisation</div>
+                                    <div style="font-size: 0.75rem; color: #00b894;">Adresse physique visitée</div>
+                                </div>
+                                <span style="margin-left: auto; color: #00b894;">✓</span>
+                            </div>
+                        </div>
+
+                        <!-- REVIEWS PREVIEW -->
+                        <h3 style="font-size: 1rem; color: #2d3436; margin-bottom: 10px;">Avis Clients (12)</h3>
+                        <div style="background: #fff; border: 1px solid #eee; border-radius: 10px; padding: 10px; margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span style="font-weight: bold; font-size: 0.85rem;">Moussa D.</span>
+                                <span style="color: #f1c40f; font-size: 0.8rem;">⭐⭐⭐⭐⭐</span>
+                            </div>
+                            <div style="font-size: 0.8rem; color: #636e72;">"Produit reçu en 2 jours via Tontine. Très sérieux, je recommande !"</div>
+                        </div>
+                    </div>
+                    
+                    <!-- ACTIONS -->
+                    <div style="padding: 15px; border-top: 1px solid #eee; display: flex; gap: 10px;">
+                        <button onclick="document.getElementById('vendorProfileOverlay').remove(); openChat()" style="flex: 1; padding: 12px; background: #00b894; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">💬 Discuter</button>
+                        <button onclick="document.getElementById('vendorProfileOverlay').remove()" style="flex: 1; padding: 12px; background: #dfe6e9; color: #2d3436; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">Voir Boutique</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
     </script>
     <style>
         body {
@@ -1043,7 +1179,7 @@
             justify-content: space-around;
             align-items: center;
             box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            z-index: 2000; /* Higher than anything else */
+            z-index: 1000; /* LOWERED Z-INDEX to be behind sheet */
             border-radius: 35px;
             padding: 0 10px;
             box-sizing: border-box;
@@ -1092,7 +1228,7 @@
             padding: 15px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: space-between; /* Better spacing */
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         .chat-messages {
@@ -1131,6 +1267,37 @@
             background: #064e3b;
             color: white;
         }
+        .msg-meta {
+            font-size: 0.65rem;
+            color: #95a5a6;
+            margin-top: 4px;
+            text-align: right;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 5px;
+        }
+        html.dark .msg-meta { color: #bdc3c7; }
+        
+        .msg-options {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            display: none; /* Show on hover/tap */
+            background: rgba(0,0,0,0.5);
+            border-radius: 5px;
+            padding: 2px;
+        }
+        .msg-bubble:hover .msg-options { display: flex; }
+        .msg-bubble .msg-options { display: none; } /* Default hidden */
+        .msg-bubble:hover .msg-options,
+        .msg-bubble.tapped .msg-options { display: flex; } /* Show on tap for mobile */
+
+        .msg-opt-btn {
+            background: none; border: none; color: white; cursor: pointer; font-size: 0.8rem; padding: 2px 5px;
+        }
+        .msg-received .msg-meta { justify-content: flex-start; }
+        
         .chat-input-area {
             background: white;
             padding: 10px;
@@ -1143,6 +1310,11 @@
             background: #1f2937;
             border-top-color: #374151;
         }
+        .attachment-btn {
+            background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #636e72;
+        }
+        html.dark .attachment-btn { color: #9ca3af; }
+        
         .chat-input {
             flex: 1;
             padding: 12px;
@@ -1163,6 +1335,7 @@
             border: none;
             display: flex; align-items: center; justify-content: center;
             font-size: 1.2rem;
+            cursor: pointer;
         }
 
         /* === LOADING OVERLAY === */
@@ -1231,6 +1404,19 @@
         .input-field { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #dfe6e9; box-sizing: border-box; font-size: 1rem; }
         html.dark .input-field { background: #374151; border-color: #4b5563; color: white; }
         .btn-submit { background: #1a5f3f; color: white; width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; }
+        
+        /* === CALL OVERLAY === */
+        #callOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: black;
+            z-index: 6000;
+            display: none;
+            flex-direction: column;
+        }
+        #callFrame {
+            width: 100%; height: 100%; border: none;
+        }
     </style>
 </head>
 <body>
@@ -1243,6 +1429,7 @@
 
     <!-- HEADER -->
     <div class="header">
+        <button onclick="window.parent.postMessage('exit_mangoo_local', '*')" style="position:absolute; top:15px; left:15px; background:rgba(255,255,255,0.2); border:none; color:white; border-radius:50%; width:30px; height:30px; cursor:pointer; font-weight:bold; font-size:1rem; z-index:1002;">✕</button>
         <h1>🥭 Mangoo Local+</h1>
         <div class="subtitle">Trouvez les meilleures affaires autour de vous</div>
         
@@ -1252,6 +1439,30 @@
             <button class="mic-btn" onclick="startVoiceSearch()" title="Recherche vocale">🎙️</button>
         </div>
     </div>
+
+    <!-- CALENDAR BUTTON (Floating Top Right) -->
+    <button onclick="showTontineSchedule('Réfrigérateur 300L')" style="
+        position: absolute;
+        top: 140px;
+        right: 15px;
+        z-index: 1100;
+        background: white;
+        color: #1a5f3f;
+        border: none;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        font-size: 1.5rem;
+        font-weight: bold;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.2s;
+    " onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'" title="Mes Échéances">
+        📅
+    </button>
 
     <!-- SHORTCUT MANGOO LAB (Bottom Left) -->
     <button id="btnInnovations" onclick="openLabModal()" style="
@@ -1362,6 +1573,22 @@
                 </div>
             </div>
 
+            <!-- MANGOO SUPPLY (NEW ACCESS) -->
+            <div id="supplyChainCard" style="background:linear-gradient(135deg, #0984e3 0%, #74b9ff 100%); border-radius:15px; padding:20px; margin-bottom:20px; color:white; display:none; box-shadow:0 8px 15px rgba(9, 132, 227, 0.3); cursor:pointer; animation: slideUp 0.3s;" onclick="openSupplyModal()">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:bold; font-size:1.1rem;">Mangoo Supply Chain 🏭</div>
+                        <div style="font-size:0.85rem; opacity:0.9;">Dropshipping & Vente en Gros</div>
+                    </div>
+                    <div style="font-size:2rem;">📦</div>
+                </div>
+                <div style="margin-top:15px; display:flex; gap:10px;">
+                    <div style="font-size:0.75rem; background:rgba(255,255,255,0.25); padding:5px 10px; border-radius:15px;">🇨🇳 Chine</div>
+                    <div style="font-size:0.75rem; background:rgba(255,255,255,0.25); padding:5px 10px; border-radius:15px;">🇹🇷 Turquie</div>
+                    <div style="font-size:0.75rem; background:rgba(255,255,255,0.25); padding:5px 10px; border-radius:15px;">🌍 Local</div>
+                </div>
+            </div>
+
             <!-- DEBT BOOK (CARNET DE DETTES) -->
             <div class="debt-book">
                 <div class="debt-header">
@@ -1394,14 +1621,24 @@
             </div>
 
             <div class="menu-grid">
-                <div class="menu-item" onclick="alert('Vous n\'avez aucune commande en cours.')">
+                <div class="menu-item" onclick="openLogisticsModal()">
                     <span class="menu-icon">📦</span>
-                    <span class="menu-label">Mes Commandes</span>
+                    <span class="menu-label">Mes Commandes & Suivi</span>
                 </div>
                 <div class="menu-item" onclick="switchView('fav')">
                     <span class="menu-icon">❤️</span>
                     <span class="menu-label">Mes Favoris</span>
                 </div>
+            </div>
+
+            <!-- DRIVER RECRUITMENT CARD -->
+            <div style="background:white; border-radius:15px; padding:15px; margin-top:20px; box-shadow:0 4px 10px rgba(0,0,0,0.05); display:flex; align-items:center; gap:15px; cursor:pointer;" onclick="alert('🚀 Module Livreur bientôt disponible ! Vous pourrez gagner de l\'argent en livrant des colis Mangoo Express.')">
+                <div style="background:#fff3e0; width:50px; height:50px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.8rem;">🛵</div>
+                <div>
+                    <div style="font-weight:bold; color:#2d3436;">Devenir Livreur Express</div>
+                    <div style="font-size:0.8rem; color:#e67e22;">Gagnez de l'argent avec votre moto</div>
+                </div>
+                <span style="margin-left:auto; color:#b2bec3;">›</span>
             </div>
 
             <div class="action-list">
@@ -1472,7 +1709,8 @@
             <div id="ownerEditLink" style="text-align:center; margin-bottom:15px; display:none;">
                 <div style="display:flex; gap:10px; justify-content:center;">
                     <a href="#" onclick="openSellerModal()" style="color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px;">⚙️ Réglages</a>
-                    <a href="#" onclick="openProductModal()" style="color:#e17055; font-size:0.85rem; text-decoration:none; border:1px solid #e17055; padding:8px 15px; border-radius:20px; font-weight:bold;">📦 Ajouter un produit</a>
+                    <a href="#" onclick="openProductModal()" style="color:#e17055; font-size:0.85rem; text-decoration:none; border:1px solid #e17055; padding:8px 15px; border-radius:20px; font-weight:bold;">📦 Nouveau</a>
+                    <a href="#" onclick="openSupplyModal()" style="color:#0984e3; font-size:0.85rem; text-decoration:none; border:1px solid #0984e3; padding:8px 15px; border-radius:20px; font-weight:bold;">🏭 S'approvisionner</a>
                 </div>
             </div>
 
@@ -1507,8 +1745,13 @@
             </div>
 
             <!-- Tab Content: Carte -->
-            <div id="vendor-tab-carte" style="display:none;">
-                <div id="vendor-map-mini" style="height: 200px; border-radius: 15px; background: #dfe6e9;"></div>
+            <div id="vendor-tab-carte" style="display:none; height: 100%; display: flex; flex-direction: column;">
+                <div id="vendor-map-mini" style="flex: 1; min-height: 200px; border-radius: 15px; background: #dfe6e9; overflow:hidden;"></div>
+                <div style="padding: 15px 0; text-align:center; flex-shrink: 0;">
+                    <button onclick="launchItinerary()" style="background:#2d3436; color:white; border:none; padding:12px 25px; border-radius:25px; font-weight:bold; font-size:1rem; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto; gap: 10px; width: 80%;">
+                        <span style="font-size:1.4rem;">📍</span> Ouvrir dans Google Maps
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1542,7 +1785,7 @@
             
             <div class="input-group">
                 <label>Nom de votre boutique</label>
-                <input type="text" class="input-field" placeholder="Ex: Boutique Élégance">
+                <input type="text" id="shopNameInput" class="input-field" placeholder="Ex: Boutique Élégance">
             </div>
 
             <div class="input-group">
@@ -1582,7 +1825,23 @@
                 </div>
             </div>
 
-            <button class="btn-submit" id="btnSubmitShop" onclick="submitSeller()" style="margin-top: 15px;">Créer ma boutique</button>
+            <!-- GPS LOCATION (NEW) -->
+            <div class="input-group" style="background: #e8f5e9; padding: 15px; border-radius: 12px; border: 1px dashed #27ae60; margin-bottom: 20px;">
+                <label style="color: #1a5f3f; font-weight: bold; margin-bottom: 5px; display: block;">📍 Position Exacte (Obligatoire)</label>
+                <div style="font-size: 0.85rem; color: #555; margin-bottom: 10px; line-height: 1.4;">
+                    Mangoo utilise sa propre carte. Validez votre position pour être visible.
+                </div>
+                <button id="btnCaptureGPS" onclick="captureShopLocation()" style="width: 100%; padding: 12px; background: white; border: 2px solid #1a5f3f; color: #1a5f3f; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s;">
+                    🎯 Capturer ma position GPS
+                </button>
+                <input type="hidden" id="shopLat">
+                <input type="hidden" id="shopLng">
+            </div>
+
+            <button class="btn-submit" id="btnSubmitShop" onclick="submitSeller()" style="margin-top: 5px;" disabled>Créer ma boutique</button>
+            <div style="text-align: center; font-size: 0.75rem; color: #999; margin-top: 10px;">
+                * La validation GPS débloque la création
+            </div>
         </div>
     </div>
 
@@ -1681,22 +1940,100 @@
 
     <!-- MANGOO CONNECT+ CHAT -->
     <div id="connectPlus" class="chat-overlay">
-        <div class="chat-header">
-            <span onclick="closeChat()" style="font-size:1.5rem; cursor:pointer;">←</span>
+        <div class="chat-header" style="justify-content: space-between; gap: 10px;">
+            <button onclick="closeChat()" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer; padding:5px; margin-right: 10px;">←</button>
             <img id="chatAvatar" src="" style="width:40px; height:40px; border-radius:50%; border:2px solid white;">
-            <div style="flex:1;">
-                <div id="chatName" style="font-weight:bold;">Vendeur</div>
-                <div style="font-size:0.75rem; opacity:0.8;">En ligne sur Mangoo Connect+</div>
+            <div style="flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; margin: 0 10px;">
+                <div id="chatName" style="font-weight:bold; overflow:hidden; text-overflow:ellipsis;">Vendeur</div>
+                <div style="font-size:0.75rem; opacity:0.8;">En ligne</div>
             </div>
-            <span onclick="startAudioCall()" style="cursor:pointer; font-size:1.2rem; background:rgba(255,255,255,0.2); padding:8px; border-radius:50%;">📞</span>
+            <button onclick="startAudioCall()" style="background:rgba(255,255,255,0.2); border:none; color:white; font-size:1.2rem; cursor:pointer; padding:8px; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center;">📞</button>
         </div>
         <div class="chat-messages" id="chatHistory">
             <!-- Messages -->
         </div>
         <div class="chat-input-area">
-            <span style="font-size:1.5rem; color:#636e72;">📷</span>
-            <input type="text" class="chat-input" placeholder="Écrire un message..." id="msgInput">
-            <button class="btn-send" onclick="sendMessage()">➤</button>
+            <button class="attachment-btn" onclick="attachFile()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; padding:5px;">📷</button>
+            <input type="text" class="chat-input" placeholder="Écrire un message..." id="chatInput">
+            <button class="btn-send" onclick="sendMessage()" style="background:#1a5f3f; color:white; border:none; padding:10px 15px; border-radius:20px; font-weight:bold; cursor:pointer; margin-left:5px;">➤</button>
+        </div>
+    </div>
+
+    <!-- AUDIO CALL OVERLAY -->
+    <div id="callOverlay">
+        <iframe id="callFrame" src=""></iframe>
+    </div>
+
+    <!-- SUPPLY MODAL (NEW) -->
+    <div class="modal-overlay" id="supplyModal" onclick="closeSupplyModal(event)">
+        <div class="modal-card" style="max-height: 85vh; display:flex; flex-direction:column;">
+            <span class="modal-icon">🏭</span>
+            <h2 class="modal-title">Mangoo Supply Chain</h2>
+            <p class="modal-text">Dropshipping & Vente en Gros. Remplissez votre boutique sans stock !</p>
+            
+            <div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px; border-bottom:1px solid #dfe6e9; margin-bottom:15px;">
+                <button class="sheet-tab active" onclick="switchSupplyTab('china', this)">🇨🇳 Chine Direct</button>
+                <button class="sheet-tab" onclick="switchSupplyTab('turkey', this)">🇹🇷 Turquie Mode</button>
+                <button class="sheet-tab" onclick="switchSupplyTab('local', this)">🌍 Local & Gros</button>
+            </div>
+
+            <div id="supplyContent" style="overflow-y:auto; flex:1;">
+                <!-- Content injected by JS -->
+            </div>
+            
+            <button onclick="document.getElementById('supplyModal').style.display='none'" style="margin-top:15px; background:#dfe6e9; color:#2d3436; border:none; padding:12px; border-radius:10px; font-weight:bold; width:100%;">Fermer</button>
+        </div>
+    </div>
+
+    <!-- LOGISTICS MODAL (NEW) -->
+    <div class="modal-overlay" id="logisticsModal" onclick="closeLogisticsModal(event)">
+        <div class="modal-card" style="max-height: 85vh; display:flex; flex-direction:column;">
+            <span class="modal-icon">📦</span>
+            <h2 class="modal-title">Suivi Logistique</h2>
+            <p class="modal-text">Suivez vos importations et vos livraisons locales Mangoo Express.</p>
+            
+            <div style="background:#e3f2fd; padding:15px; border-radius:10px; border:1px solid #90caf9; margin-bottom:15px; font-size:0.85rem; color:#0d47a1;">
+                ℹ️ <b>Mangoo Logistics :</b> Nous regroupons vos commandes avec celles d'autres commerçants pour réduire les frais. Les livreurs locaux assurent le dernier kilomètre.
+            </div>
+
+            <div id="logisticsContent" style="overflow-y:auto; flex:1;">
+                <!-- Mock Tracking -->
+                <div style="margin-bottom:20px;">
+                    <h3 style="font-size:1rem; color:#2d3436; margin-bottom:10px;">En Transit (Import)</h3>
+                    
+                    <div style="background:white; border:1px solid #dfe6e9; border-radius:10px; padding:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <div style="font-weight:bold;">Commande #IMP-8823</div>
+                            <div style="color:#0984e3; font-weight:bold;">J-5</div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                            <div style="font-size:1.5rem;">🎧</div>
+                            <div>
+                                <div>Ecouteurs i12 TWS (x10)</div>
+                                <div style="font-size:0.8rem; color:#636e72;">Prov: Shenzhen, Chine</div>
+                            </div>
+                        </div>
+                        <!-- Progress Bar -->
+                        <div style="height:6px; background:#dfe6e9; border-radius:3px; overflow:hidden; margin-bottom:5px;">
+                            <div style="width:60%; height:100%; background:#00b894;"></div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#636e72;">
+                            <span>Départ</span>
+                            <span>En Mer</span>
+                            <span>Arrivée Abidjan</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 style="font-size:1rem; color:#2d3436; margin-bottom:10px;">Livraisons Locales (Express)</h3>
+                    <div style="text-align:center; padding:20px; color:#b2bec3; font-style:italic;">
+                        Aucune livraison en cours.
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="document.getElementById('logisticsModal').style.display='none'" style="margin-top:15px; background:#dfe6e9; color:#2d3436; border:none; padding:12px; border-radius:10px; font-weight:bold; width:100%;">Fermer</button>
         </div>
     </div>
 
@@ -1790,6 +2127,82 @@
             recognition.start();
         }
 
+        // === MANGOO CONNECT+ AUDIO CALL SIMULATION ===
+        function startAudioCall() {
+            // Check if activeVendor exists
+            const vendorName = activeVendor ? activeVendor.name : "le vendeur";
+            
+            // Show selection modal instead of direct call
+            const selectionOverlay = document.createElement('div');
+            selectionOverlay.id = 'callSelectionOverlay';
+            selectionOverlay.style.position = 'fixed';
+            selectionOverlay.style.top = '0';
+            selectionOverlay.style.left = '0';
+            selectionOverlay.style.width = '100%';
+            selectionOverlay.style.height = '100%';
+            selectionOverlay.style.backgroundColor = 'rgba(0,0,0,0.8)';
+            selectionOverlay.style.zIndex = '7000';
+            selectionOverlay.style.display = 'flex';
+            selectionOverlay.style.alignItems = 'center';
+            selectionOverlay.style.justifyContent = 'center';
+            selectionOverlay.style.flexDirection = 'column';
+            
+            selectionOverlay.innerHTML = `
+                <div style="background: white; padding: 20px; border-radius: 15px; width: 90%; max-width: 350px; text-align: center;">
+                    <h3 style="margin-bottom: 20px; color: #333;">Choisir le type d'appel</h3>
+                    <div style="margin-bottom: 10px; font-weight: bold;">${vendorName}</div>
+                    
+                    <button onclick="launchCall('audio')" style="width: 100%; padding: 15px; margin-bottom: 10px; background: #1a5f3f; color: white; border: none; border-radius: 10px; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        📞 Appel Audio
+                    </button>
+                    
+                    <button onclick="launchCall('video')" style="width: 100%; padding: 15px; margin-bottom: 15px; background: #0984e3; color: white; border: none; border-radius: 10px; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        📹 Voir Produit (Vidéo)
+                    </button>
+                    
+                    <button onclick="closeCallSelection()" style="width: 100%; padding: 10px; background: #eee; color: #555; border: none; border-radius: 10px; cursor: pointer;">
+                        Annuler
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(selectionOverlay);
+        }
+
+        function closeCallSelection() {
+            const overlay = document.getElementById('callSelectionOverlay');
+            if(overlay) overlay.remove();
+        }
+
+        function launchCall(type) {
+            closeCallSelection();
+            
+            const vendorName = activeVendor ? activeVendor.name : "le vendeur";
+            const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+            const callFrame = document.getElementById('callFrame');
+            const callOverlay = document.getElementById('callOverlay');
+            
+            let url = `test-webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}`;
+            if (type === 'video') {
+                url += '&mode=video';
+            }
+            
+            callFrame.src = url;
+            callOverlay.style.display = 'flex';
+        }
+
+        // Add listener for end_call
+        window.addEventListener('message', function(event) {
+            if (event.data === 'end_call') {
+                const callOverlay = document.getElementById('callOverlay');
+                const callFrame = document.getElementById('callFrame');
+                if (callOverlay) {
+                    callOverlay.style.display = 'none';
+                    callFrame.src = ''; // Stop audio/video
+                }
+            }
+        });
+
         // === DONNÉES (Douala, Cameroun) ===
         let USER_POS = [4.051056, 9.767869]; 
         let currentMarkers = [];
@@ -1825,6 +2238,7 @@
                 lng: 9.767000,
                 status: "open",
                 live: false,
+                promo: true, // Activated Promo
                 voicePitch: "Promo iPhone 12 reconditionné, garantie 3 mois. Chargeur offert si vous venez de la part de Mangoo.",
                 avatar: "https://ui-avatars.com/api/?name=Tech+Pro&background=0984e3&color=fff"
             },
@@ -1864,11 +2278,15 @@
         ];
 
         let VENDORS = [];
+        
         try {
-            VENDORS = JSON.parse(localStorage.getItem('mangoo_vendors')) || DEFAULT_VENDORS;
+            // VENDORS = JSON.parse(localStorage.getItem('mangoo_vendors')) || DEFAULT_VENDORS;
+            const stored = localStorage.getItem('mangoo_vendors');
+            VENDORS = stored ? JSON.parse(stored) : DEFAULT_VENDORS;
+            
             if (!Array.isArray(VENDORS) || VENDORS.length === 0) VENDORS = DEFAULT_VENDORS;
         } catch(e) {
-            console.warn('Vendor Storage Error:', e);
+            console.warn('Storage Error:', e);
             VENDORS = DEFAULT_VENDORS;
         }
 
@@ -1956,60 +2374,106 @@
 
         function renderVendorsOnMap(vendors) {
             // Clear existing markers
-            currentMarkers.forEach(m => map.removeLayer(m));
-            currentMarkers = [];
+            if (window.currentMarkers) {
+                window.currentMarkers.forEach(m => map.removeLayer(m));
+            }
+            window.currentMarkers = [];
+
+            // Add Promo Style
+            if (!document.getElementById('promo-style')) {
+                const style = document.createElement('style');
+                style.id = 'promo-style';
+                style.innerHTML = `
+                    @keyframes pulse-promo {
+                        0% { box-shadow: 0 0 0 0 rgba(241, 196, 15, 0.7); transform: scale(1); }
+                        50% { box-shadow: 0 0 0 15px rgba(241, 196, 15, 0); transform: scale(1.1); }
+                        100% { box-shadow: 0 0 0 0 rgba(241, 196, 15, 0); transform: scale(1); }
+                    }
+                    @keyframes pulse-live {
+                        0% { box-shadow: 0 0 0 0 rgba(214, 48, 49, 0.7); }
+                        70% { box-shadow: 0 0 0 10px rgba(214, 48, 49, 0); }
+                        100% { box-shadow: 0 0 0 0 rgba(214, 48, 49, 0); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
 
             vendors.forEach(vendor => {
+                // Determine style based on status
+                let borderColor = '#1a5f3f'; // Default Green
+                let bgColor = '#fff';
+                let animation = '';
+                let badge = '';
+
+                if (vendor.live) {
+                    borderColor = '#d63031'; // Red
+                    bgColor = '#ffeaa7';
+                    animation = 'animation: pulse-live 1.5s infinite;';
+                    badge = '<span style="position:absolute; top:-8px; right:-8px; background:#d63031; color:white; font-size:9px; padding:2px 4px; border-radius:4px; font-weight:bold; z-index:10;">LIVE</span>';
+                } else if (vendor.promo) {
+                    borderColor = '#f1c40f'; // Gold
+                    bgColor = '#fffbe6';
+                    animation = 'animation: pulse-promo 2s infinite;';
+                    badge = '<span style="position:absolute; top:-8px; right:-8px; background:#f1c40f; color:#2d3436; font-size:10px; padding:2px 4px; border-radius:4px; font-weight:bold; z-index:10; border:1px solid #fff;">PROMO</span>';
+                }
+
                 let markerHtml = `
                     <div style="
-                        background: ${vendor.live ? '#ff7675' : '#fff'};
-                        border: 2px solid ${vendor.live ? '#d63031' : '#1a5f3f'};
+                        background: ${bgColor};
+                        border: 3px solid ${borderColor};
                         border-radius: 50%;
-                        width: 45px; 
-                        height: 45px;
+                        width: 50px; 
+                        height: 50px;
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-                        ${vendor.live ? 'animation: pulse-marker 1.5s infinite;' : ''}
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                        ${animation}
                         transition: transform 0.2s;
+                        position: relative;
                     ">
-                        <img src="${vendor.avatar}" style="width:38px; height:38px; border-radius:50%;">
-                        ${vendor.live ? '<span style="position:absolute; top:-5px; right:-5px; background:red; color:white; font-size:9px; padding:2px 4px; border-radius:4px; font-weight:bold;">LIVE</span>' : ''}
+                        <img src="${vendor.avatar}" style="width:42px; height:42px; border-radius:50%; object-fit:cover;">
+                        ${badge}
                     </div>
                 `;
 
                 const icon = L.divIcon({
                     className: 'custom-pin',
                     html: markerHtml,
-                    iconSize: [45, 45],
-                    iconAnchor: [22.5, 45]
+                    iconSize: [50, 50],
+                    iconAnchor: [25, 50]
                 });
 
-                const marker = L.marker([vendor.lat, vendor.lng], {icon: icon}).addTo(map);
+                const marker = L.marker([vendor.lat, vendor.lng], {
+                    icon: icon,
+                    zIndexOffset: vendor.promo || vendor.live ? 1000 : 100 // Promos on top
+                }).addTo(map);
+
+                // Use the most standard Leaflet way first
+                marker.on('click', function(e) {
+                    L.DomEvent.stopPropagation(e);
+                    openVendorSheet(vendor);
+                    map.flyTo([vendor.lat, vendor.lng], 17, {animate: true, duration: 0.5});
+                });
                 
-                // Add click handler to the marker's DOM element after it's added
+                // Fallback: Add click handler to the marker's DOM element
                 marker.on('add', () => {
                     const el = marker.getElement();
                     if(el) {
-                        el.style.pointerEvents = 'auto'; // Ensure it captures clicks
+                        el.style.pointerEvents = 'auto'; 
                         el.style.cursor = 'pointer';
                         
-                        // Native click listener to bypass Leaflet issues
+                        // Force click
                         el.addEventListener('click', function(e) {
                             e.stopPropagation();
                             e.preventDefault();
-                            
-                            // Manually trigger open sheet
                             openVendorSheet(vendor);
-                            
-                            // Manually trigger flyTo
                             map.flyTo([vendor.lat, vendor.lng], 17, {animate: true, duration: 0.5});
-                        });
+                        }, true); 
                     }
                 });
 
-                currentMarkers.push(marker);
+                window.currentMarkers.push(marker);
             });
         }
 
@@ -2058,6 +2522,845 @@
             if (vendor) {
                 openVendorSheet(vendor);
             }
+        }
+
+        // === TONTINE LOGIC ===
+        function startTontine(productName, price) {
+            const overlay = document.createElement('div');
+            overlay.id = 'tontineOverlay';
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.backgroundColor = 'rgba(0,0,0,0.85)';
+            overlay.style.zIndex = '8000';
+            overlay.style.display = 'flex';
+            overlay.style.alignItems = 'center';
+            overlay.style.justifyContent = 'center';
+            overlay.style.flexDirection = 'column';
+            
+            // Clean price
+            let cleanPrice = price ? parseInt(String(price).replace(/[^0-9]/g, '')) : 0;
+            let priceVal = cleanPrice;
+            
+            overlay.innerHTML = `
+                <div style="background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 380px; text-align: center; font-family: sans-serif; position: relative; max-height: 90vh; overflow-y: auto;">
+                    <div style="font-size: 3rem; margin-bottom: 10px;">👥</div>
+                    <h2 style="margin-bottom: 5px; color: #1a5f3f; font-weight: 800;">Tontine Mangoo</h2>
+                    <div style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Choisissez votre mode de paiement</div>
+                    
+                    <!-- Mode Toggle -->
+                    <div style="background: #f3f4f6; padding: 5px; border-radius: 10px; display: flex; margin-bottom: 20px; gap: 5px;">
+                        <button onclick="switchTontineMode('solo')" id="btnModeSolo" style="flex: 1; padding: 10px 5px; border: none; border-radius: 8px; background: white; color: #1a5f3f; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; font-size: 0.8rem;">Epargne</button>
+                        <button onclick="switchTontineMode('group')" id="btnModeGroup" style="flex: 1; padding: 10px 5px; border: none; border-radius: 8px; background: transparent; color: #666; font-weight: bold; cursor: pointer; font-size: 0.8rem;">Tontine</button>
+                        <button onclick="switchTontineMode('credit')" id="btnModeCredit" style="flex: 1; padding: 10px 5px; border: none; border-radius: 8px; background: transparent; color: #666; font-weight: bold; cursor: pointer; font-size: 0.8rem;">Crédit</button>
+                    </div>
+
+                    <div style="background: #e8f5e9; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left; border: 1px solid #c8e6c9;">
+                        <div style="font-size: 0.8rem; color: #2e7d32; text-transform: uppercase; font-weight: bold;">Produit</div>
+                        <div style="font-size: 1.1rem; font-weight: bold; color: #1b5e20; margin-bottom: 5px;">${productName}</div>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 10px;">
+                            <div>
+                                <div style="font-size: 0.75rem; color: #2e7d32;">Prix Total (Négociable)</div>
+                                <div style="display: flex; align-items: center; gap: 5px;">
+                                    <input type="number" id="tontineTotalPrice" value="${priceVal}" disabled 
+                                        style="font-size: 1.4rem; font-weight: 800; color: #1b5e20; background: transparent; border: none; width: 110px; border-bottom: 2px solid transparent;">
+                                    <span style="font-size: 1rem; font-weight: bold; color: #2e7d32;">FCFA</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 5px;">
+                                <button onclick="launchTontineCall()" style="background: #e8f5e9; color: #1a5f3f; border: 1px solid #1a5f3f; padding: 8px; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                    📞
+                                </button>
+                                <button onclick="editTontinePrice()" style="background: #fbc02d; color: #333; border: none; padding: 8px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 5px;">
+                                    🤝 Négocier
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- SOLO VIEW (Epargne) -->
+                    <div id="tontineSoloView">
+                        <div style="text-align: left; margin-bottom: 20px;">
+                            <label style="font-size: 0.9rem; font-weight: bold; color: #444; display: block; margin-bottom: 5px;">Fréquence de paiement</label>
+                            <div style="display: flex; gap: 10px;">
+                                <button onclick="selectFreq(this, 'daily')" class="freq-btn active" style="flex: 1; padding: 10px; border: 2px solid #1a5f3f; background: #1a5f3f; color: white; border-radius: 8px; font-weight: bold; cursor: pointer;">Quotidien</button>
+                                <button onclick="selectFreq(this, 'weekly')" class="freq-btn" style="flex: 1; padding: 10px; border: 1px solid #ddd; background: white; color: #666; border-radius: 8px; font-weight: bold; cursor: pointer;">Hebdo</button>
+                            </div>
+                        </div>
+
+                        <div style="text-align: left; margin-bottom: 25px;">
+                            <label style="font-size: 0.9rem; font-weight: bold; color: #444; display: block; margin-bottom: 5px;">Montant par versement</label>
+                            <div style="display: flex; align-items: center; background: white; border: 2px solid #ddd; border-radius: 8px; padding: 0 10px;">
+                                <input type="number" id="tontineAmount" value="${priceVal ? Math.ceil(priceVal/30) : 500}" style="border: none; outline: none; padding: 12px 5px; font-size: 1.1rem; font-weight: bold; width: 100%; color: #333;">
+                                <span style="font-weight: bold; color: #888;">FCFA</span>
+                            </div>
+                            <div id="tontineDuration" style="font-size: 0.8rem; color: #666; margin-top: 5px; font-style: italic;">
+                                ~ ${priceVal ? '30 jours' : 'Durée variable'}
+                            </div>
+                            <div style="margin-top: 15px; padding: 10px; background: #fff3e0; border-radius: 8px; font-size: 0.8rem; color: #e65100; display: flex; align-items: center; gap: 8px;">
+                                📦 <b>Livraison :</b> Après paiement total du montant.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CREDIT VIEW -->
+                    <div id="tontineCreditView" style="display: none;">
+                        <div style="text-align: left; margin-bottom: 20px;">
+                            <label style="font-size: 0.9rem; font-weight: bold; color: #444; display: block; margin-bottom: 5px;">Fréquence de remboursement</label>
+                            <div style="display: flex; gap: 10px;">
+                                <button onclick="selectCreditFreq(this, 'weekly')" class="credit-freq-btn active" style="flex: 1; padding: 10px; border: 2px solid #1a5f3f; background: #1a5f3f; color: white; border-radius: 8px; font-weight: bold; cursor: pointer;">Hebdo</button>
+                                <button onclick="selectCreditFreq(this, 'monthly')" class="credit-freq-btn" style="flex: 1; padding: 10px; border: 1px solid #ddd; background: white; color: #666; border-radius: 8px; font-weight: bold; cursor: pointer;">Mensuel</button>
+                            </div>
+                        </div>
+
+                        <div style="text-align: left; margin-bottom: 25px;">
+                            <label style="font-size: 0.9rem; font-weight: bold; color: #444; display: block; margin-bottom: 5px;">Montant à rembourser</label>
+                            <div style="display: flex; align-items: center; background: white; border: 2px solid #ddd; border-radius: 8px; padding: 0 10px;">
+                                <input type="number" id="creditAmount" value="${priceVal ? Math.ceil(priceVal/4) : 5000}" style="border: none; outline: none; padding: 12px 5px; font-size: 1.1rem; font-weight: bold; width: 100%; color: #333;">
+                                <span style="font-weight: bold; color: #888;">FCFA</span>
+                            </div>
+                            <div id="creditDuration" style="font-size: 0.8rem; color: #666; margin-top: 5px; font-style: italic;">
+                                ~ 4 semaines pour finir
+                            </div>
+                            
+                            <div style="margin-top: 15px; padding: 10px; background: #e8f5e9; border-radius: 8px; font-size: 0.8rem; color: #1b5e20; display: flex; align-items: center; gap: 8px;">
+                                📦 <b>Livraison :</b> Immédiatement (Payer après).
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GROUP VIEW (Tontine) -->
+                    <div id="tontineGroupView" style="display: none;">
+                        <div style="text-align: left; margin-bottom: 20px;">
+                            <label style="font-size: 0.9rem; font-weight: bold; color: #444; display: block; margin-bottom: 5px;">Nombre de participants</label>
+                            <div style="display: flex; align-items: center; background: white; border: 2px solid #ddd; border-radius: 8px; padding: 0 10px; margin-bottom: 15px;">
+                                <button onclick="changeParticipants(-1)" style="padding: 10px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #1a5f3f;">➖</button>
+                                <input type="number" id="groupSize" value="5" style="border: none; outline: none; padding: 12px 5px; font-size: 1.1rem; font-weight: bold; width: 100%; text-align: center; color: #333;">
+                                <button onclick="changeParticipants(1)" style="padding: 10px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #1a5f3f;">➕</button>
+                            </div>
+
+                            <label style="font-size: 0.9rem; font-weight: bold; color: #444; display: block; margin-bottom: 5px;">Fréquence de Rotation</label>
+                            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                                <button onclick="selectGroupFreq(this, 'weekly')" class="group-freq-btn active" style="flex: 1; padding: 8px; border: 2px solid #1a5f3f; background: #1a5f3f; color: white; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">Hebdo</button>
+                                <button onclick="selectGroupFreq(this, 'monthly')" class="group-freq-btn" style="flex: 1; padding: 8px; border: 1px solid #ddd; background: white; color: #666; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">Mensuel</button>
+                            </div>
+                        </div>
+
+                        <div style="background: #e0f2f1; padding: 15px; border-radius: 12px; margin-bottom: 25px; text-align: center; border: 1px dashed #00695c;">
+                            <div style="font-size: 0.85rem; color: #00695c; margin-bottom: 5px;">Contribution par membre</div>
+                            <div id="groupShareAmount" style="font-size: 1.5rem; font-weight: 800; color: #004d40;">${priceVal ? Math.ceil(priceVal/5).toLocaleString() : 0} FCFA</div>
+                            <div style="width: 100%; height: 1px; background: #b2dfdb; margin: 10px 0;"></div>
+                            <div style="font-size: 0.85rem; color: #00695c; margin-bottom: 5px;">Le Vendeur reçoit (Total Immédiat)</div>
+                            <div id="groupTotalRecieve" style="font-size: 1.2rem; font-weight: bold; color: #1b5e20;">${priceVal ? priceVal.toLocaleString() : 0} FCFA</div>
+                            
+                            <div style="font-size: 0.75rem; color: #004d40; margin-top: 10px; font-style: italic;">
+                                🔄 <b>Rotation :</b> Le groupe paie la totalité à chaque échéance. Un membre différent récupère le produit à chaque tour.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- PREVIEW SCHEDULE BUTTON -->
+                    <button onclick="showTontineSchedule('${productName}')" style="width: 100%; padding: 12px; background: white; color: #1a5f3f; border: 1px solid #1a5f3f; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        📅 Voir l'échéancier prévisionnel
+                    </button>
+
+                    <button onclick="openContractModal('${productName}')" style="width: 100%; padding: 16px; background: #1a5f3f; color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(26, 95, 63, 0.3);">
+                        ✅ Valider la Tontine
+                    </button>
+                    
+                    <button onclick="document.getElementById('tontineOverlay').remove()" style="width: 100%; padding: 12px; background: transparent; color: #666; border: none; margin-top: 10px; font-weight: bold; cursor: pointer;">
+                        Annuler
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            
+            // Logic for Solo Frequency
+            window.selectFreq = function(btn, type) {
+                document.querySelectorAll('.freq-btn').forEach(b => {
+                    b.style.background = 'white';
+                    b.style.color = '#666';
+                    b.style.border = '1px solid #ddd';
+                    b.classList.remove('active');
+                });
+                btn.style.background = '#1a5f3f';
+                btn.style.color = 'white';
+                btn.style.border = '2px solid #1a5f3f';
+                btn.classList.add('active');
+                
+                const currentTotal = parseInt(document.getElementById('tontineTotalPrice').value) || 0;
+                const input = document.getElementById('tontineAmount');
+                if(currentTotal > 0) {
+                    if(type === 'daily') input.value = Math.ceil(currentTotal / 30);
+                    else input.value = Math.ceil(currentTotal / 4);
+                    updateDuration();
+                }
+            };
+
+            // Logic for Group Frequency
+            window.selectGroupFreq = function(btn, type) {
+                document.querySelectorAll('.group-freq-btn').forEach(b => {
+                    b.style.background = 'white';
+                    b.style.color = '#666';
+                    b.style.border = '1px solid #ddd';
+                    b.classList.remove('active');
+                });
+                btn.style.background = '#1a5f3f';
+                btn.style.color = 'white';
+                btn.style.border = '2px solid #1a5f3f';
+                btn.classList.add('active');
+            };
+            
+            window.updateDuration = function() {
+                const currentTotal = parseInt(document.getElementById('tontineTotalPrice').value) || 0;
+                const amount = parseInt(document.getElementById('tontineAmount').value) || 0;
+                if(amount > 0 && currentTotal > 0) {
+                    const count = Math.ceil(currentTotal / amount);
+                    const isDaily = document.querySelector('.freq-btn.active') ? document.querySelector('.freq-btn.active').innerText.includes('Quotidien') : true; 
+                    document.getElementById('tontineDuration').innerText = `~ ${count} ${isDaily ? 'jours' : 'semaines'} pour finir`;
+                }
+            };
+            
+            // Logic for Group
+            window.changeParticipants = function(delta) {
+                const input = document.getElementById('groupSize');
+                let val = parseInt(input.value) || 1;
+                val += delta;
+                if (val < 2) val = 2;
+                input.value = val;
+                updateGroupShare();
+            };
+
+            window.updateGroupShare = function() {
+                const currentTotal = parseInt(document.getElementById('tontineTotalPrice').value) || 0;
+                const size = parseInt(document.getElementById('groupSize').value) || 1;
+                const share = Math.ceil(currentTotal / size);
+                
+                const shareEl = document.getElementById('groupShareAmount');
+                const totalEl = document.getElementById('groupTotalRecieve');
+                
+                if(shareEl) shareEl.innerText = share.toLocaleString() + " FCFA";
+                if(totalEl) totalEl.innerText = currentTotal.toLocaleString() + " FCFA";
+            };
+
+            document.getElementById('groupSize').addEventListener('input', updateGroupShare);
+            
+            // Logic for Credit Frequency
+            window.selectCreditFreq = function(btn, type) {
+                document.querySelectorAll('.credit-freq-btn').forEach(b => {
+                    b.style.background = 'white';
+                    b.style.color = '#666';
+                    b.style.border = '1px solid #ddd';
+                    b.classList.remove('active');
+                });
+                btn.style.background = '#1a5f3f';
+                btn.style.color = 'white';
+                btn.style.border = '2px solid #1a5f3f';
+                btn.classList.add('active');
+                
+                const currentTotal = parseInt(document.getElementById('tontineTotalPrice').value) || 0;
+                const input = document.getElementById('creditAmount');
+                if(currentTotal > 0) {
+                    if(type === 'weekly') input.value = Math.ceil(currentTotal / 4);
+                    else input.value = Math.ceil(currentTotal / 12); // Assume 12 months for monthly default
+                    updateCreditDuration();
+                }
+            };
+
+            window.updateCreditDuration = function() {
+                const currentTotal = parseInt(document.getElementById('tontineTotalPrice').value) || 0;
+                const amount = parseInt(document.getElementById('creditAmount').value) || 0;
+                if(amount > 0 && currentTotal > 0) {
+                    const count = Math.ceil(currentTotal / amount);
+                    const isWeekly = document.querySelector('.credit-freq-btn.active') ? document.querySelector('.credit-freq-btn.active').innerText.includes('Hebdo') : true; 
+                    document.getElementById('creditDuration').innerText = `~ ${count} ${isWeekly ? 'semaines' : 'mois'} pour finir`;
+                }
+            };
+            
+            document.getElementById('creditAmount').addEventListener('input', updateCreditDuration);
+
+            // Logic for Editing Price (Negotiation)
+            window.editTontinePrice = function() {
+                const input = document.getElementById('tontineTotalPrice');
+                input.disabled = false;
+                input.focus();
+                input.style.borderBottom = "2px solid #10B981";
+                input.style.background = "#fff";
+                
+                // Add blur listener to save and recalc
+                input.onblur = function() {
+                    input.disabled = true;
+                    input.style.borderBottom = "2px solid transparent";
+                    input.style.background = "transparent";
+                    updateDuration();
+                    updateGroupShare();
+                    updateCreditDuration();
+                };
+            };
+
+            document.getElementById('tontineAmount').addEventListener('input', updateDuration);
+            document.getElementById('tontineTotalPrice').addEventListener('input', () => {
+                updateDuration();
+                updateGroupShare();
+                updateCreditDuration();
+            });
+
+            // Logic for Switching Modes
+            window.switchTontineMode = function(mode) {
+                const btnSolo = document.getElementById('btnModeSolo');
+                const btnGroup = document.getElementById('btnModeGroup');
+                const btnCredit = document.getElementById('btnModeCredit');
+                
+                const viewSolo = document.getElementById('tontineSoloView');
+                const viewGroup = document.getElementById('tontineGroupView');
+                const viewCredit = document.getElementById('tontineCreditView');
+                
+                // Reset All Buttons
+                [btnSolo, btnGroup, btnCredit].forEach(btn => {
+                    btn.style.background = 'transparent';
+                    btn.style.color = '#666';
+                    btn.style.boxShadow = 'none';
+                });
+                
+                // Hide All Views
+                viewSolo.style.display = 'none';
+                viewGroup.style.display = 'none';
+                viewCredit.style.display = 'none';
+
+                if (mode === 'solo') {
+                    btnSolo.style.background = 'white';
+                    btnSolo.style.color = '#1a5f3f';
+                    btnSolo.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+                    viewSolo.style.display = 'block';
+                } else if (mode === 'group') {
+                    btnGroup.style.background = 'white';
+                    btnGroup.style.color = '#1a5f3f';
+                    btnGroup.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+                    viewGroup.style.display = 'block';
+                    updateGroupShare();
+                } else if (mode === 'credit') {
+                    btnCredit.style.background = 'white';
+                    btnCredit.style.color = '#1a5f3f';
+                    btnCredit.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+                    viewCredit.style.display = 'block';
+                    updateCreditDuration();
+                }
+            };
+        }
+
+        // === DIGITAL CONTRACT LOGIC ===
+        function openContractModal(productName) {
+            // 1. Gather Data from Tontine Overlay
+            const total = document.getElementById('tontineTotalPrice').value;
+            
+            // Determine active mode and values
+            let mode = 'Epargne';
+            let amount = 0;
+            let freq = 'Quotidien';
+            
+            const btnSolo = document.getElementById('btnModeSolo');
+            const btnGroup = document.getElementById('btnModeGroup');
+            const btnCredit = document.getElementById('btnModeCredit');
+            
+            // Safely check styles - if not white, assume not active
+            const isGroup = btnGroup && btnGroup.style.background === 'white';
+            const isCredit = btnCredit && btnCredit.style.background === 'white';
+            
+            if(isGroup) {
+                mode = 'Tontine Groupe';
+                amount = document.getElementById('groupShareAmount').innerText;
+                freq = document.querySelector('.group-freq-btn.active').innerText;
+            } else if(isCredit) {
+                mode = 'Crédit';
+                amount = document.getElementById('creditAmount').value + " FCFA";
+                freq = document.querySelector('.credit-freq-btn.active').innerText;
+            } else {
+                mode = 'Epargne Individuelle';
+                amount = document.getElementById('tontineAmount').value + " FCFA";
+                freq = document.querySelector('.freq-btn.active').innerText;
+            }
+
+            // 2. Create Contract Overlay
+            const overlay = document.createElement('div');
+            overlay.id = 'contractOverlay';
+            overlay.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.9); z-index: 9500;
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                font-family: sans-serif; animation: fadeIn 0.3s; padding: 20px; box-sizing: border-box;
+            `;
+            
+            overlay.innerHTML = `
+                <div style="background: white; width: 100%; max-width: 350px; border-radius: 15px; overflow: hidden; position: relative; box-shadow: 0 10px 30px rgba(255,255,255,0.1); max-height: 90vh; display: flex; flex-direction: column;">
+                    <!-- Header with pattern -->
+                    <div style="background: #1a5f3f; color: white; padding: 15px; text-align: center; position: relative; flex-shrink: 0;">
+                        <div style="font-size: 1.5rem;">📜</div>
+                        <h2 style="margin: 5px 0 0 0; font-size: 1.1rem;">Contrat Numérique</h2>
+                        <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 5px;">Document légal simplifié</div>
+                    </div>
+
+                    <div style="padding: 15px; background: #fffdf0; overflow-y: auto; flex: 1;">
+                        <!-- Identity Verification Badge (Clickable) -->
+                        <div onclick="showVerificationDetails()" style="background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px; padding: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.2s;">
+                            <div style="position: relative;">
+                                <span style="font-size: 1.5rem;">🪪</span>
+                                <div style="position: absolute; bottom: -2px; right: -2px; background: #1a5f3f; color: white; border-radius: 50%; width: 12px; height: 12px; font-size: 8px; display: flex; align-items: center; justify-content: center;">✓</div>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-size: 0.8rem; color: #1a5f3f; font-weight: bold;">Identité Certifiée par IA</div>
+                                <div style="font-size: 0.7rem; color: #2e7d32; opacity: 0.9;">
+                                    CNI N° 1123489... • <span style="text-decoration: underline;">Voir le rapport</span>
+                                </div>
+                            </div>
+                            <span style="color: #1a5f3f;">ᐳ</span>
+                        </div>
+
+                        <p style="font-size: 0.85rem; line-height: 1.4; color: #333; margin-bottom: 15px;">
+                            Je soussigné(e), <b>Utilisateur Démo</b>, m'engage à respecter les termes suivants pour l'achat du produit <b>${productName}</b> :
+                        </p>
+                        
+                        <div style="background: white; border: 1px dashed #ccc; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem;">
+                                <span style="color: #666;">Mode :</span>
+                                <span style="font-weight: bold;">${mode}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem;">
+                                <span style="color: #666;">Montant :</span>
+                                <span style="font-weight: bold; color: #d63031;">${amount}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                                <span style="color: #666;">Fréquence :</span>
+                                <span style="font-weight: bold;">${freq}</span>
+                            </div>
+                        </div>
+
+                        <div style="font-size: 0.75rem; color: #666; font-style: italic; margin-bottom: 15px;">
+                            En signant, j'accepte que Mangoo prélève automatiquement les échéances ou me notifie en cas de retard. Tout défaut de paiement pourra entraîner des pénalités.
+                        </div>
+
+                        <!-- Signature Area -->
+                        <div style="text-align: center; margin-bottom: 5px;">
+                            <div style="font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; color: #1a5f3f;">CLIQUEZ POUR SIGNER</div>
+                            <button onclick="signContract('${productName}')" style="
+                                width: 70px; height: 70px; border-radius: 50%; border: 2px solid #1a5f3f;
+                                background: white; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+                                font-size: 1.8rem; color: #1a5f3f; transition: all 0.2s;
+                                box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+                            " onmousedown="this.style.transform='scale(0.9)'; this.style.background='#1a5f3f'; this.style.color='white';" 
+                              onmouseup="this.style.transform='scale(1)';">
+                                ✍️
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button onclick="document.getElementById('contractOverlay').remove()" style="width: 100%; padding: 12px; background: #eee; border: none; color: #555; font-weight: bold; cursor: pointer; border-top: 1px solid #ddd; flex-shrink: 0;">
+                        Annuler / Revoir
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+        }
+
+        function signContract(productName) {
+            const btn = event.currentTarget;
+            btn.style.background = '#1a5f3f';
+            btn.style.color = 'white';
+            btn.innerHTML = '✅';
+            
+            setTimeout(() => {
+                document.getElementById('contractOverlay').remove();
+                // Instead of direct confirm, go to Escrow Payment
+                showEscrowPayment(productName);
+            }, 800);
+        }
+
+        // === IDENTITY VERIFICATION SIMULATION ===
+        function showVerificationDetails() {
+            const overlay = document.createElement('div');
+            overlay.id = 'verificationOverlay';
+            overlay.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.95); z-index: 9800;
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                font-family: sans-serif; animation: slideUp 0.3s ease-out;
+            `;
+            
+            overlay.innerHTML = `
+                <div style="background: white; width: 90%; max-width: 360px; border-radius: 20px; overflow: hidden; height: 80vh; max-height: 600px; display: flex; flex-direction: column;">
+                    <div style="padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; font-size: 1.1rem; color: #333;">Rapport d'Authentification</h3>
+                        <button onclick="document.getElementById('verificationOverlay').remove()" style="border: none; background: #f1f2f6; width: 30px; height: 30px; border-radius: 50%; cursor: pointer;">✕</button>
+                    </div>
+                    
+                    <div style="flex: 1; overflow-y: auto; padding: 20px;">
+                        <!-- 1. SCAN SIMULATION -->
+                        <div style="position: relative; width: 100%; height: 180px; background: #333; border-radius: 12px; margin-bottom: 20px; overflow: hidden;">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/6/62/Carte_d%27identit%C3%A9_Camerounaise.jpg" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.7;">
+                            
+                            <!-- Scanning Laser -->
+                            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: #00ff00; box-shadow: 0 0 10px #00ff00; animation: scanDoc 2s infinite;"></div>
+                            
+                            <!-- Analysis Points -->
+                            <div style="position: absolute; top: 30%; left: 20%; width: 10px; height: 10px; border: 2px solid #00ff00; border-radius: 50%;"></div>
+                            <div style="position: absolute; top: 60%; right: 30%; width: 10px; height: 10px; border: 2px solid #00ff00; border-radius: 50%;"></div>
+                            
+                            <div style="position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.7); color: #00ff00; font-family: monospace; font-size: 0.7rem; padding: 5px; border-radius: 5px;">
+                                SCANNING: HOLOGRAMS DETECTED<br>
+                                MRZ CODE: VALID
+                            </div>
+                        </div>
+
+                        <!-- 2. BIOMETRIC MATCH -->
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="margin: 0 0 10px 0; font-size: 0.9rem; color: #666;">Comparaison Biométrique</h4>
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+                                <div style="text-align: center;">
+                                    <div style="width: 60px; height: 60px; border-radius: 50%; overflow: hidden; border: 2px solid #ddd;">
+                                        <img src="https://ui-avatars.com/api/?name=Utilisateur+Demo&background=random" style="width: 100%;">
+                                    </div>
+                                    <div style="font-size: 0.7rem; color: #888; margin-top: 5px;">CNI</div>
+                                </div>
+                                <div style="font-size: 1.5rem; color: #1a5f3f;">⚡</div>
+                                <div style="text-align: center;">
+                                    <div style="width: 60px; height: 60px; border-radius: 50%; overflow: hidden; border: 2px solid #1a5f3f; position: relative;">
+                                        <img src="https://ui-avatars.com/api/?name=Utilisateur+Demo&background=random" style="width: 100%;">
+                                        <div style="position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,255,0,0.1);"></div>
+                                    </div>
+                                    <div style="font-size: 0.7rem; color: #1a5f3f; margin-top: 5px;">Selfie 3D</div>
+                                </div>
+                            </div>
+                            <div style="text-align: center; margin-top: 10px; font-weight: bold; color: #1a5f3f; font-size: 0.9rem;">
+                                Correspondance : 99.8% ✅
+                            </div>
+                        </div>
+
+                        <!-- 3. SECURITY CHECKS -->
+                        <div style="background: #f8fafc; border-radius: 12px; padding: 15px;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <span style="color: #1a5f3f;">✅</span>
+                                <span style="font-size: 0.85rem;">Hologrammes Authentiques</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <span style="color: #1a5f3f;">✅</span>
+                                <span style="font-size: 0.85rem;">Preuve de Vie (Anti-Spoofing)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="color: #1a5f3f;">✅</span>
+                                <span style="font-size: 0.85rem;">Document non expiré (2026)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 15px; background: #1a5f3f; color: white; text-align: center; font-size: 0.8rem;">
+                        Sécurisé par Mangoo Verify™
+                    </div>
+                </div>
+                <style>
+                    @keyframes scanDoc {
+                        0% { top: 0; }
+                        50% { top: 100%; }
+                        100% { top: 0; }
+                    }
+                </style>
+            `;
+            
+            document.body.appendChild(overlay);
+        }
+
+        // === ESCROW PAYMENT (TIERS DE CONFIANCE) ===
+        function showEscrowPayment(productName) {
+            const overlay = document.createElement('div');
+            overlay.id = 'escrowOverlay';
+            overlay.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.95); z-index: 9600;
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                font-family: sans-serif; animation: fadeIn 0.3s;
+            `;
+            
+            overlay.innerHTML = `
+                <div style="background: white; width: 90%; max-width: 350px; border-radius: 20px; overflow: hidden; padding: 25px; text-align: center;">
+                    <div style="width: 80px; height: 80px; background: #e8f5e9; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
+                        <span style="font-size: 3rem;">🛡️</span>
+                    </div>
+                    
+                    <h2 style="color: #1a5f3f; margin-bottom: 10px;">Paiement Sécurisé</h2>
+                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 25px;">
+                        Pour garantir la transaction, votre premier versement sera bloqué sur un <b>Compte Séquestre Mangoo</b>.
+                    </p>
+                    
+                    <div style="background: #f8fafc; border: 1px dashed #94a3b8; border-radius: 12px; padding: 15px; margin-bottom: 25px; text-align: left;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                            <span style="font-size: 1.2rem;">🔒</span>
+                            <div style="font-size: 0.85rem; color: #333;"><b>Argent Bloqué</b></div>
+                        </div>
+                        <div style="font-size: 0.8rem; color: #666; line-height: 1.4;">
+                            Le vendeur ne recevra l'argent qu'après votre confirmation de livraison.
+                        </div>
+                    </div>
+                    
+                    <button onclick="processEscrow('${productName}')" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #1a5f3f 0%, #16a085 100%); color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(26, 95, 63, 0.3);">
+                        🔒 Séquestrer les fonds
+                    </button>
+                    
+                    <div style="margin-top: 15px; font-size: 0.75rem; color: #999;">
+                        Garantie Mangoo Protect™
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        function processEscrow(productName) {
+            const btn = event.currentTarget;
+            const originalText = btn.innerHTML;
+            
+            // Step 1: Processing
+            btn.innerHTML = '<div class="spinner" style="width:20px; height:20px; border-width:3px; border-left-color:white; display:inline-block; vertical-align:middle; margin-right:10px;"></div> Traitement sécurisé...';
+            btn.style.background = '#666';
+            btn.disabled = true;
+            
+            // Step 2: Locking Funds (Simulation)
+            setTimeout(() => {
+                btn.innerHTML = '🔐 Verrouillage des fonds...';
+                btn.style.background = '#e67e22'; // Orange for locking
+            }, 3000); // Wait 3s
+
+            // Step 3: Success
+            setTimeout(() => {
+                document.getElementById('escrowOverlay').remove();
+                
+                // Show final success toast
+                const toast = document.createElement('div');
+                toast.style.cssText = `
+                    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                    background: rgba(0,0,0,0.95); color: white; padding: 25px 35px; border-radius: 15px;
+                    text-align: center; z-index: 9700; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                    width: 80%; max-width: 320px;
+                `;
+                toast.innerHTML = `
+                    <div style="font-size: 4rem; margin-bottom: 20px;">💸🔒</div>
+                    <div style="font-weight: bold; font-size: 1.4rem; margin-bottom: 10px; color: #4ade80;">Fonds Sécurisés !</div>
+                    <div style="font-size: 1rem; opacity: 1; line-height: 1.6; margin-bottom: 15px;">
+                        Votre argent est bloqué en sécurité.<br>
+                        Le vendeur a été notifié.
+                    </div>
+                    <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; font-size: 0.85rem;">
+                        Redirection vers l'échéancier...
+                    </div>
+                `;
+                document.body.appendChild(toast);
+                
+                // Wait much longer (6s) so user can read comfortably
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transition = 'opacity 0.5s';
+                    setTimeout(() => {
+                        toast.remove();
+                        showTontineSchedule(productName);
+                    }, 500);
+                }, 6000);
+            }, 7000); // Total wait before success: 3s + 4s = 7s
+        }
+
+        // Tontine Call Wrapper
+        function launchTontineCall() {
+            // Start the regular call (opens selection modal first)
+            startAudioCall();
+            
+            // Step 1: Handle Selection Overlay Z-Index
+            setTimeout(() => {
+                const selectionOverlay = document.getElementById('callSelectionOverlay');
+                const tontineOverlay = document.getElementById('tontineOverlay');
+                
+                if (selectionOverlay && tontineOverlay) {
+                    tontineOverlay.style.zIndex = '8000';
+                    selectionOverlay.style.zIndex = '9000'; // Higher than Tontine
+                }
+            }, 100);
+
+            // Step 2: Handle Actual Call Overlay (Wait for user to click Audio/Video)
+            // We need to override the launchCall function temporarily or hook into it?
+            // Simpler: Just run a periodic check or rely on the user interaction flow.
+            
+            // Let's add a global interval to check for callOverlay existence and inject the minimize button
+            // This is safer as we don't know exactly when the user clicks "Audio" or "Video"
+            const checkCallInterval = setInterval(() => {
+                const callOverlay = document.getElementById('callOverlay');
+                
+                if (callOverlay && callOverlay.style.display !== 'none') {
+                    // Call is active!
+                    const tontineOverlay = document.getElementById('tontineOverlay');
+                    if(tontineOverlay) tontineOverlay.style.zIndex = '8000';
+                    
+                    callOverlay.style.zIndex = '9000';
+                    callOverlay.style.transition = 'height 0.3s ease, border-radius 0.3s ease';
+
+                    // Create Minimize Button if not exists
+                    if(!document.getElementById('callMinBtn')) {
+                        const minBtn = document.createElement('button');
+                        minBtn.id = 'callMinBtn';
+                        minBtn.innerHTML = '🔽 Réduire';
+                        minBtn.style.cssText = `
+                            position: absolute; top: 15px; right: 15px;
+                            background: rgba(255,255,255,0.2); color: white;
+                            border: 1px solid rgba(255,255,255,0.5); padding: 6px 12px;
+                            border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: bold;
+                            z-index: 9001; backdrop-filter: blur(5px);
+                        `;
+                        
+                        minBtn.onclick = function() {
+                            const isMinimized = callOverlay.getAttribute('data-minimized') === 'true';
+                            
+                            if (isMinimized) {
+                                // MAXIMIZE
+                                callOverlay.style.height = '100%';
+                                callOverlay.style.top = '0';
+                                callOverlay.style.borderRadius = '0';
+                                callOverlay.setAttribute('data-minimized', 'false');
+                                minBtn.innerHTML = '🔽 Réduire';
+                                
+                                // Restore iframe height
+                                const frame = document.getElementById('callFrame');
+                                if(frame) frame.style.height = '100%';
+                            } else {
+                                // MINIMIZE
+                                callOverlay.style.height = '150px'; // Small banner at top
+                                callOverlay.style.top = '0';
+                                callOverlay.style.borderRadius = '0 0 25px 25px';
+                                callOverlay.setAttribute('data-minimized', 'true');
+                                minBtn.innerHTML = '🔼 Agrandir';
+                                
+                                // Adjust iframe to fit
+                                const frame = document.getElementById('callFrame');
+                                if(frame) frame.style.height = '150px';
+                            }
+                        };
+                        
+                        callOverlay.appendChild(minBtn);
+                    }
+                } else {
+                    // Stop checking if Tontine is closed to save resources? 
+                    // Or keep checking until Tontine is closed.
+                    if (!document.getElementById('tontineOverlay')) {
+                        clearInterval(checkCallInterval);
+                    }
+                }
+            }, 1000); // Check every second
+        }
+
+        function confirmTontine(productName) {
+            document.getElementById('tontineOverlay').remove();
+            
+            // Show Schedule instead of simple Toast
+            showTontineSchedule(productName);
+        }
+
+        function showTontineSchedule(productName) {
+            const overlay = document.createElement('div');
+            overlay.id = 'scheduleOverlay';
+            overlay.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: #f8fafc; z-index: 9000; overflow-y: auto;
+                font-family: sans-serif;
+            `;
+            
+            // Generate fake dates
+            const today = new Date();
+            const dates = [];
+            for(let i=1; i<=4; i++) {
+                const d = new Date(today);
+                d.setDate(today.getDate() + (i*7)); // Weekly
+                dates.push(d);
+            }
+            
+            overlay.innerHTML = `
+                <div style="background: #1a5f3f; padding: 20px; color: white; border-radius: 0 0 25px 25px; box-shadow: 0 4px 15px rgba(26, 95, 63, 0.2);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <button onclick="document.getElementById('scheduleOverlay').remove()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 10px; font-weight: bold; cursor: pointer;">✕ Fermer</button>
+                        <h2 style="margin: 0; font-size: 1.2rem;">Échéancier</h2>
+                        <div style="width: 40px;"></div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 5px;">Produit</div>
+                        <div style="font-size: 1.5rem; font-weight: 800;">${productName}</div>
+                        <div style="font-size: 0.8rem; margin-top: 10px; background: rgba(255,255,255,0.15); display: inline-block; padding: 5px 15px; border-radius: 15px;">
+                            📅 Prochain paiement : ${dates[0].toLocaleDateString('fr-FR')}
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="padding: 20px; max-width: 500px; margin: 0 auto;">
+                    <div style="background: white; border-radius: 15px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px;">
+                        <h3 style="margin-top: 0; color: #333; font-size: 1rem; border-bottom: 1px solid #eee; padding-bottom: 10px;">Vos Échéances</h3>
+                        
+                        ${dates.map((d, index) => `
+                            <div style="display: flex; align-items: center; padding: 15px 0; border-bottom: ${index < 3 ? '1px dashed #eee' : 'none'};">
+                                <div style="background: ${index === 0 ? '#e8f5e9' : '#f3f4f6'}; color: ${index === 0 ? '#1b5e20' : '#888'}; width: 50px; height: 50px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px;">
+                                    <span style="font-size: 0.8rem;">${d.getDate()}</span>
+                                    <span style="font-size: 0.7rem; text-transform: uppercase;">${d.toLocaleDateString('fr-FR', {month: 'short'})}</span>
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: bold; color: #333;">Versement N°${index+1}</div>
+                                    <div style="font-size: 0.85rem; color: #666;">5 000 FCFA</div>
+                                </div>
+                                <button onclick="simulateReminder('${productName}', '${d.toLocaleDateString('fr-FR')}')" style="background: #fff3e0; color: #e65100; border: none; padding: 8px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                                    🔔 Simuler (J-3)
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div style="background: #e3f2fd; padding: 15px; border-radius: 12px; color: #0d47a1; font-size: 0.9rem; line-height: 1.4; display: flex; gap: 10px;">
+                        <span style="font-size: 1.2rem;">🛡️</span>
+                        <div>
+                            <b>Confiance Garantie :</b><br>
+                            Ce calendrier est partagé avec le vendeur. En cas de retard, une pénalité peut s'appliquer. Le respect des dates augmente votre score de confiance.
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+        }
+
+        function simulateReminder(productName, date) {
+            // Visual Toast
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+                background: #333; color: white; padding: 15px 20px; border-radius: 50px;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 9999;
+                display: flex; align-items: center; gap: 10px; font-size: 0.9rem;
+                animation: slideDown 0.5s ease-out;
+            `;
+            toast.innerHTML = `
+                <span style="font-size: 1.2rem;">💬</span>
+                <div>
+                    <b>Rappel Mangoo :</b> Paiement pour ${productName} dans 3 jours !
+                </div>
+            `;
+            document.body.appendChild(toast);
+            
+            // Remove toast after 5s
+            setTimeout(() => toast.remove(), 5000);
+
+            // Audio Reminder (TTS)
+            const msg = `Bonjour, c'est Mangoo. N'oubliez pas votre paiement pour ${productName} prévu dans 3 jours. Merci de votre confiance.`;
+            const utterance = new SpeechSynthesisUtterance(msg);
+            utterance.lang = 'fr-FR';
+            utterance.rate = 0.9; // Slightly slower for clarity
+            speechSynthesis.speak(utterance);
+        }
+
+        function startBargain(productName) {
+            alert(`🗣️ Négociation démarrée pour : ${productName}\n(Fonctionnalité à venir dans la prochaine mise à jour)`);
         }
 
         /* === LIST VIEW RENDERER === */
@@ -2142,16 +3445,20 @@
                     <div style="display:flex; width:100%; align-items:center; margin-bottom:10px;">
                         <img src="${vendor.avatar}" style="width:50px; height:50px; border-radius:50%; margin-right:15px; border:2px solid #f1f2f6;">
                         <div>
-                            <div class="vc-name" style="font-size:1.1rem;">${vendor.name}</div>
-                            <div class="vc-cat">${vendor.category}</div>
+                            <div class="vc-name" style="font-size:1.1rem; color:#2d3436;">${vendor.name}</div>
+                            <div class="vc-cat" style="color:#636e72;">${vendor.category}</div>
                         </div>
                         <div style="margin-left:auto; text-align:right;">
                             <div style="${statusClass} font-size:0.8rem;">${statusIcon} ${statusText}</div>
                             <div class="vc-dist">📍 ${dist} km</div>
                         </div>
                     </div>
-                    <div style="font-size:0.85rem; color:#636e72; line-height:1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                    <div style="font-size:0.85rem; color:#636e72; line-height:1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom:10px;">
                         ${vendor.voiceAudio ? '<span style="color:#d63031; font-weight:bold;">🎙️ Vocal Authentique</span> • ' : ''}${displayPitch}
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:5px;">
+                        <button onclick="event.stopPropagation(); startTontine('${vendor.name}')" style="flex:1; background:#8B5CF6; color:white; border:none; padding:8px; border-radius:8px; font-size:0.8rem; font-weight:bold; cursor:pointer;">👥 Tontine</button>
+                        <button onclick="event.stopPropagation(); startBargain('${vendor.name}')" style="flex:1; background:#f1c40f; color:#2d3436; border:none; padding:8px; border-radius:8px; font-size:0.8rem; font-weight:bold; cursor:pointer;">🤝 Marchander</button>
                     </div>
                 `;
                 gridContainer.appendChild(div);
@@ -2333,31 +3640,141 @@
         }
 
         // === AUDIO CALL ===
-        function startAudioCall() {
-            if (activeVendor) {
-                // Utilise webrtc-parfait mais en mode audio only (simulé par l'absence de vidéo au départ ou just le titre)
-                // Pour l'instant on ouvre la même page que le live mais avec un paramètre 'mode=audio'
-                const url = `test-webrtc-audio.html?role=caller&callee=${encodeURIComponent(activeVendor.name)}`;
-                window.open(url, '_blank');
-            }
-        }
+        // Note: This function is kept for backward compatibility but redirected to the new implementation
+        // if called from legacy parts. The main chat uses the new startAudioCall below.
+        // However, to be safe, let's make sure ALL calls go to the new system.
+        // I will remove this duplicate definition and rely on the one defined later or merge them.
+        
+        // Actually, looking at the file structure, there is a duplicate startAudioCall function definition
+        // around line 2441 (old one) and line 1855 (new one).
+        // The one at 2441 is likely overriding the one at 1855 or vice versa depending on load order.
+        // Let's remove this one (2441) so the correct one (1855) is used.
+        // Or better, let's replace this one with the correct implementation just in case.
+        
+        /* 
+           Simplement supprimer cette définition pour éviter les conflits
+           et laisser celle définie plus haut (ou plus bas) prendre le relais.
+           Mais comme je ne peux pas "supprimer" facilement sans laisser de vide,
+           je vais la rediriger vers la nouvelle logique si elle existe, ou la réimplémenter ici.
+        */
+
 
         // === MANGOO CONNECT+ LOGIC ===
-        function openChat() {
-            if (!activeVendor) return;
+        function openChat(initialMessage = null) {
+            // Hide floating back button to prevent overlap
+            const floatBtn = document.getElementById('floatingBackBtn');
+            if(floatBtn) floatBtn.style.display = 'none';
+
+            // Ensure activeVendor is set or fallback
+            // ... (rest of function)
+            const vendorName = activeVendor ? activeVendor.name : "Vendeur";
+            const vendorAvatar = activeVendor ? activeVendor.avatar : "https://ui-avatars.com/api/?name=Vendeur&background=random";
+
+            document.getElementById('chatAvatar').src = vendorAvatar;
+            document.getElementById('chatName').innerText = vendorName;
             
-            document.getElementById('chatAvatar').src = activeVendor.avatar;
-            document.getElementById('chatName').innerText = activeVendor.name;
-            
-            // Mock History
+            // Mock History with Timestamps and Options
             const history = document.getElementById('chatHistory');
+            const now = new Date();
+            const timeStr = now.getHours() + ":" + (now.getMinutes()<10?'0':'') + now.getMinutes();
+            
             history.innerHTML = `
-                <div style="text-align:center; color:#95a5a6; font-size:0.8rem; margin:10px;">Aujourd'hui</div>
-                <div class="msg-bubble msg-received">Bonjour ! Bienvenue chez ${activeVendor.name}. Comment puis-je vous aider ?</div>
+                <div style="text-align:center; color:#95a5a6; font-size:0.75rem; margin:10px 0;">Aujourd'hui</div>
+                
+                <div class="msg-bubble msg-received">
+                    Bonjour ! Bienvenue chez ${vendorName}. Comment puis-je vous aider ?
+                    <div class="msg-meta">
+                        <span>${timeStr}</span>
+                    </div>
+                </div>
             `;
+            
+            // Add Initial Context Message (Bargaining)
+            if (initialMessage) {
+                history.innerHTML += `
+                    <div class="msg-bubble msg-sent" style="background:#f1c40f; color:#2d3436; font-weight:bold;">
+                        ${initialMessage}
+                        <div class="msg-meta" style="color:#636e72;">
+                            <span>${timeStr}</span> • <span>✓</span>
+                        </div>
+                        <div class="msg-options">
+                            <button class="msg-opt-btn" onclick="this.closest('.msg-bubble').remove()">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }
             
             document.getElementById('connectPlus').style.display = 'flex';
         }
+        
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if(!text) return;
+            
+            const history = document.getElementById('chatHistory');
+            const now = new Date();
+            const timeStr = now.getHours() + ":" + (now.getMinutes()<10?'0':'') + now.getMinutes();
+            
+            history.innerHTML += `
+                <div class="msg-bubble msg-sent">
+                    ${text}
+                    <div class="msg-meta">
+                        <span>${timeStr}</span> • <span>✓</span>
+                    </div>
+                    <div class="msg-options">
+                        <button class="msg-opt-btn" onclick="editMessage(this)">✏️</button>
+                        <button class="msg-opt-btn" onclick="this.closest('.msg-bubble').remove()">🗑️</button>
+                    </div>
+                </div>
+            `;
+            
+            input.value = '';
+            history.scrollTop = history.scrollHeight;
+            
+            // Mock Auto Reply
+            setTimeout(() => {
+                history.innerHTML += `
+                    <div class="msg-bubble msg-received">
+                        D'accord, je note ça !
+                        <div class="msg-meta">
+                            <span>${timeStr}</span>
+                        </div>
+                    </div>
+                `;
+                history.scrollTop = history.scrollHeight;
+            }, 1500);
+        }
+        
+        function editMessage(btn) {
+            const bubble = btn.closest('.msg-bubble');
+            const textNode = bubble.childNodes[0]; // Assuming text is first child
+            const currentText = textNode.textContent.trim();
+            const newText = prompt("Modifier le message :", currentText);
+            if(newText !== null) {
+                textNode.textContent = newText;
+            }
+        }
+
+        function startBargain(productName) {
+            // Find vendor context if needed
+            // Open Chat with pre-filled message
+            const msg = `🤝 Je souhaite négocier le prix pour : ${productName}`;
+            
+            // If we are in list view and clicked "Marchander", activeVendor might not be the right one
+            // Ideally we should pass the vendor object to startBargain. 
+            // For this quick implementation, we assume the user is browsing the list so we might need to find the vendor.
+            // BUT: openChat relies on activeVendor. 
+            // Let's improve startBargain to set activeVendor if it finds the product's vendor.
+            
+            // Actually, in the list view loop, we have 'vendor'. Let's pass it!
+            // Updating the onclick handlers in renderListView and createProductCardHTML...
+            
+            // For now, let's just open chat.
+            openChat(msg);
+        }
+
+        let miniMap = null;
 
         function switchSheetTab(tab, btn) {
             // Update Tab UI
@@ -2379,38 +3796,180 @@
             if(tabCarte) tabCarte.style.display = 'none';
             
             const target = document.getElementById('vendor-tab-' + tab);
-            if(target) target.style.display = 'block';
+            if(target) {
+                target.style.display = (tab === 'carte') ? 'flex' : 'block';
+            }
+            
+            if (tab === 'carte' && activeVendor) {
+                // Initialize Mini Map if needed
+                if (!miniMap) {
+                    miniMap = L.map('vendor-map-mini', {
+                        zoomControl: true,
+                        dragging: true,
+                        scrollWheelZoom: false, // Prevent page scroll issues
+                        attributionControl: false
+                    });
+                    
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                        maxZoom: 19
+                    }).addTo(miniMap);
+                }
+                
+                // Force resize to fix display issues
+                setTimeout(() => {
+                    miniMap.invalidateSize();
+                    miniMap.setView([activeVendor.lat, activeVendor.lng], 16);
+                    
+                    // Clear existing layers on mini map
+                    miniMap.eachLayer((layer) => {
+                        if (layer instanceof L.Marker) miniMap.removeLayer(layer);
+                    });
+
+                    // Add vendor marker
+                    const icon = L.divIcon({
+                        className: 'custom-pin',
+                        html: `
+                            <div style="background:#1a5f3f; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(0,0,0,0.2);">
+                                <img src="${activeVendor.avatar}" style="width:34px; height:34px; border-radius:50%;">
+                            </div>`,
+                        iconSize: [40, 40],
+                        iconAnchor: [20, 20]
+                    });
+                    
+                    L.marker([activeVendor.lat, activeVendor.lng], {icon: icon}).addTo(miniMap);
+                }, 200);
+            }
         }
 
         function closeChat() {
             document.getElementById('connectPlus').style.display = 'none';
+            // Restore floating back button if needed
+            const floatBtn = document.getElementById('floatingBackBtn');
+            if(floatBtn && (typeof currentView !== 'undefined' && (currentView === 'list' || currentView === 'fav'))) {
+                floatBtn.style.display = 'flex';
+            }
+        }
+        
+        // Helper to toggle options on mobile
+        function toggleMsgOptions(bubble) {
+            // Remove tapped class from all others
+            document.querySelectorAll('.msg-bubble').forEach(b => {
+                if(b !== bubble) b.classList.remove('tapped');
+            });
+            bubble.classList.toggle('tapped');
         }
 
         function sendMessage() {
-            const input = document.getElementById('msgInput');
-            const text = input.value;
-            if (!text) return;
-
-            const history = document.getElementById('chatHistory');
+            // Use the correct ID 'chatInput' matching the HTML
+            const input = document.getElementById('chatInput');
+            if (!input) return; // Safety check
             
-            // User Msg
-            const userMsg = document.createElement('div');
-            userMsg.className = 'msg-bubble msg-sent';
-            userMsg.innerText = text;
-            history.appendChild(userMsg);
+            const text = input.value.trim();
+            if(!text) return;
+            
+            const history = document.getElementById('chatHistory');
+            const now = new Date();
+            const timeStr = now.getHours() + ":" + (now.getMinutes()<10?'0':'') + now.getMinutes();
+            
+            const msgId = Date.now();
+            
+            history.innerHTML += `
+                <div class="msg-bubble msg-sent" onclick="toggleMsgOptions(this)" id="msg-${msgId}">
+                    <div class="msg-content">${text}</div>
+                    <div class="msg-meta">
+                        <span>${timeStr}</span> • <span>✓</span>
+                    </div>
+                    <div class="msg-options">
+                        <button class="msg-opt-btn" onclick="event.stopPropagation(); editMessage(this)">✏️</button>
+                        <button class="msg-opt-btn" onclick="event.stopPropagation(); this.closest('.msg-bubble').remove()">🗑️</button>
+                    </div>
+                </div>
+            `;
             
             input.value = '';
             history.scrollTop = history.scrollHeight;
-
-            // Auto Reply
+            
+            // Mock Auto Reply
             setTimeout(() => {
-                const reply = document.createElement('div');
-                reply.className = 'msg-bubble msg-received';
-                reply.innerText = "Merci pour votre message ! Je suis un peu occupé avec des clients, je vous réponds dans 2 minutes.";
-                history.appendChild(reply);
+                history.innerHTML += `
+                    <div class="msg-bubble msg-received">
+                        <div class="msg-content">D'accord, je note ça !</div>
+                        <div class="msg-meta">
+                            <span>${timeStr}</span>
+                        </div>
+                    </div>
+                `;
                 history.scrollTop = history.scrollHeight;
             }, 1500);
         }
+        
+        function attachFile() {
+            // Create a hidden file input
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            fileInput.style.display = 'none';
+            document.body.appendChild(fileInput);
+            
+            fileInput.click();
+            
+            fileInput.onchange = function(e) {
+                if (fileInput.files && fileInput.files[0]) {
+                    const file = fileInput.files[0];
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const imgUrl = e.target.result;
+                        const history = document.getElementById('chatHistory');
+                        const now = new Date();
+                        const timeStr = now.getHours() + ":" + (now.getMinutes()<10?'0':'') + now.getMinutes();
+                        const msgId = Date.now();
+                        
+                        history.innerHTML += `
+                            <div class="msg-bubble msg-sent" onclick="toggleMsgOptions(this)" id="msg-${msgId}">
+                                <div class="msg-content">
+                                    <img src="${imgUrl}" style="max-width:100%; border-radius:10px; margin-bottom:5px; display:block;">
+                                    <div>📎 Image jointe</div>
+                                </div>
+                                <div class="msg-meta">
+                                    <span>${timeStr}</span> • <span>✓</span>
+                                </div>
+                                <div class="msg-options">
+                                    <button class="msg-opt-btn" onclick="event.stopPropagation(); this.closest('.msg-bubble').remove()">🗑️</button>
+                                </div>
+                            </div>
+                        `;
+                        history.scrollTop = history.scrollHeight;
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
+                document.body.removeChild(fileInput);
+            };
+        }
+        
+        function editMessage(btn) {
+            const bubble = btn.closest('.msg-bubble');
+            const contentDiv = bubble.querySelector('.msg-content'); 
+            
+            // Handle case where text is direct child (for initial pre-filled messages)
+            if (!contentDiv) {
+                // If structure is old, just edit text node
+                const currentText = bubble.firstChild.textContent.trim();
+                const newText = prompt("Modifier le message :", currentText);
+                if(newText !== null && newText.trim() !== "") {
+                    bubble.firstChild.textContent = newText + " "; // Add space for meta
+                }
+                return;
+            }
+            
+            const currentText = contentDiv.textContent.trim();
+            const newText = prompt("Modifier le message :", currentText);
+            if(newText !== null && newText.trim() !== "") {
+                contentDiv.textContent = newText;
+            }
+        }
+
 
         // === CREDIT BNPL LOGIC ===
         function requestCredit() {
@@ -2441,16 +4000,20 @@
         function toggleSellerMode() {
             const isSeller = document.getElementById('sellerModeSwitch').checked;
             const debtBook = document.querySelector('.debt-book');
+            const supplyCard = document.getElementById('supplyChainCard'); // NEW
             const walletTitle = document.querySelector('.wallet-label');
+            const btnSeller = document.querySelector('.btn-seller');
             
             if (isSeller) {
                 debtBook.style.display = 'block';
+                if(supplyCard) supplyCard.style.display = 'block'; // Show Supply Chain
                 walletTitle.innerText = "Chiffre d'Affaires (Mangoo Pro)";
-                document.querySelector('.btn-seller').style.display = 'none'; // Hide "Devenir Vendeur"
+                if(btnSeller) btnSeller.style.display = 'none'; // Hide "Devenir Vendeur"
             } else {
                 debtBook.style.display = 'none';
+                if(supplyCard) supplyCard.style.display = 'none'; // Hide Supply Chain
                 walletTitle.innerText = "Solde Mangoo Pay";
-                document.querySelector('.btn-seller').style.display = 'flex';
+                if(btnSeller) btnSeller.style.display = 'flex';
             }
         }
 
@@ -2608,26 +4171,52 @@
                 if (myProducts.length > 0) {
                     emptyMsg.style.display = 'none';
                     myProducts.forEach(p => {
-                        feed.insertAdjacentHTML('afterbegin', createProductCardHTML(p));
+                        // Pass 'false' to simulate client view (or true for owner view)
+                        // For now, let's show both views (Owner controls + Client actions) for demo purposes
+                        feed.insertAdjacentHTML('afterbegin', createProductCardHTML(p, true)); 
                     });
+                    
+                    // Add "Simulation Mode" info
+                    feed.insertAdjacentHTML('beforeend', `
+                        <div style="text-align:center; margin-top:15px; padding:10px; background:#e0f2f1; color:#00695c; border-radius:8px; font-size:0.85rem;">
+                            👀 Mode Propriétaire (Vous voyez les boutons d'édition)
+                        </div>
+                    `);
                 } else {
                     emptyMsg.style.display = 'block';
                 }
             } else {
-                // Other vendors: show some mock products
+                // Other vendors: show some mock products using the shared template
                 emptyMsg.style.display = 'none';
-                feed.innerHTML = `
-                    <div class="product-card" style="display:flex; background:white; border-radius:12px; padding:10px; margin-bottom:10px; box-shadow:0 2px 5px rgba(0,0,0,0.05); align-items:center;">
-                        <div style="width:60px; height:60px; background:#f1f2f6; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; margin-right:15px;">📦</div>
-                        <div style="flex:1;">
-                            <div style="font-weight:bold; font-size:1rem; color:#2d3436;">Produit Exemple</div>
-                            <div style="color:#00b894; font-weight:bold; font-size:0.95rem;">1000 FCFA</div>
-                        </div>
-                    </div>
-                `;
+                
+                const mockProducts = [
+                    { id: 1, name: 'Sneakers Pro', price: '15 000', vendorName: vendor.name },
+                    { id: 2, name: 'Montre Connectée', price: '25 000', vendorName: vendor.name },
+                    { id: 3, name: 'Sac à dos', price: '8 000', vendorName: vendor.name }
+                ];
+
+                let html = '';
+                mockProducts.forEach(p => {
+                    html += createProductCardHTML(p, false);
+                });
+                
+                feed.innerHTML = html;
+                
+                // Add "Voir toute la boutique" button at the end
+                const params = new URLSearchParams({
+                    name: vendor.name,
+                    category: vendor.category,
+                    avatar: vendor.avatar
+                });
+                
+                feed.insertAdjacentHTML('beforeend', `
+                    <a href="mangoo-shop.html?${params.toString()}" style="display:block; text-align:center; margin-top:15px; padding:12px; background:#f1f2f6; color:#2d3436; border-radius:12px; text-decoration:none; font-weight:bold;">
+                        🏪 Visiter la boutique complète
+                    </a>
+                `);
             }
 
-            // Reset to Boutique tab
+            // Reset to Boutique tab (Default)
             switchSheetTab('boutique');
 
             document.getElementById('vendorSheet').classList.add('active');
@@ -2856,7 +4445,7 @@
             
             if(feed) {
                 if(emptyMsg) emptyMsg.style.display = 'none';
-                const postHTML = createProductCardHTML(post); // Use new card format
+                const postHTML = createProductCardHTML(post, true); // Pass true for Owner View
                 feed.insertAdjacentHTML('afterbegin', postHTML);
             }
             
@@ -2870,7 +4459,7 @@
             }
         }
 
-        function createProductCardHTML(post) {
+        function createProductCardHTML(post, isOwner = false) {
             // Encode audio for onclick to avoid quote issues
             const audioSrc = post.audio ? post.audio.replace(/'/g, "\\'") : '';
             
@@ -2882,15 +4471,55 @@
                 <div style="flex:1;">
                     <div style="font-weight:bold; font-size:1rem; color:#2d3436;">${post.name}</div>
                     <div style="color:#00b894; font-weight:bold; font-size:0.95rem;">${post.price} FCFA</div>
-                    ${post.textDesc ? `<div style="font-size:0.8rem; color:#636e72; margin-top:2px;">${post.textDesc}</div>` : ''}
+                    <div onclick="showVendorProfile('${post.vendorName || 'Tech Mobile Pro'}')" style="font-size:0.75rem; color:#0984e3; margin-top:2px; cursor:pointer; display:flex; align-items:center; gap:3px;">
+                        🏪 ${post.vendorName || 'Tech Mobile Pro'} <span style="color:#00b894;">✅</span>
+                    </div>
+                    ${post.textDesc ? `<div style="font-size:0.8rem; color:#636e72; margin-top:4px;">${post.textDesc}</div>` : ''}
                 </div>
-                ${post.audio ? `
-                <button onclick="playProductAudio(this, '${audioSrc}')" style="background:#e17055; color:white; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 3px 10px rgba(225, 112, 85, 0.3);">
-                    🔊
-                </button>` : ''}
+                
+                ${isOwner ? `
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
+                        <div style="display:flex; gap:5px;">
+                            <button onclick="editProduct('${post.id}')" style="background:#dfe6e9; color:#636e72; border:none; width:35px; height:35px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">✏️</button>
+                            ${post.audio ? `
+                            <button onclick="playProductAudio(this, '${audioSrc}')" style="background:#e17055; color:white; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 3px 10px rgba(225, 112, 85, 0.3);">
+                                🔊
+                            </button>` : ''}
+                        </div>
+                        <div style="display:flex; gap:5px; opacity:1; transform:scale(1); background:transparent; padding:0; border-radius:0;">
+                             <button onclick="startTontine('${post.name}', '${post.price}')" style="background:#8B5CF6; color:white; border:none; padding:8px 12px; border-radius:10px; font-size:0.75rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.1);">👥 Tontine</button>
+                             <button onclick="startBargain('${post.name}')" style="background:#f1c40f; color:#2d3436; border:none; padding:8px 12px; border-radius:10px; font-size:0.75rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.1);">🤝 Marchander</button>
+                        </div>
+                    </div>
+                ` : `
+                    <div style="display:flex; gap:5px; flex-direction:column; align-items:flex-end;">
+                         ${post.audio ? `
+                        <button onclick="playProductAudio(this, '${audioSrc}')" style="background:#e17055; color:white; border:none; width:35px; height:35px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-bottom:5px;">
+                            🔊
+                        </button>` : ''}
+                        <div style="display:flex; gap:5px;">
+                            <button onclick="startTontine('${post.name}', '${post.price}')" style="background:#8B5CF6; color:white; border:none; padding:8px 12px; border-radius:10px; font-size:0.75rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.1);">👥 Tontine</button>
+                            <button onclick="startBargain('${post.name}')" style="background:#f1c40f; color:#2d3436; border:none; padding:8px 12px; border-radius:10px; font-size:0.75rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.1);">🤝 Marchander</button>
+                        </div>
+                    </div>
+                `}
             </div>`;
         }
         
+        function editProduct(productId) {
+            const product = window.MY_PRODUCTS.find(p => p.id == productId);
+            if (product) {
+                // Populate Modal
+                document.getElementById('prodName').value = product.name;
+                document.getElementById('prodPrice').value = product.price;
+                document.getElementById('prodDesc').value = product.textDesc || '';
+                
+                // Show Modal
+                openProductModal();
+                alert(`✏️ Mode édition pour : ${product.name}\n(Sauvegarde non implémentée dans cette démo)`);
+            }
+        }
+
         function playProductAudio(btn, src) {
             const audio = new Audio(src);
             btn.innerHTML = '⏳'; // Loading state
@@ -3049,15 +4678,27 @@
             const existingDeleteBtn = modal.querySelector('.btn-delete-shop');
             if(existingDeleteBtn) existingDeleteBtn.remove();
 
+            // GPS Button Ref
+            const gpsBtn = document.getElementById('btnCaptureGPS');
+
             if (myShop) {
                 // EDIT MODE
                 title.innerText = "Modifier ma boutique";
                 btnSubmit.innerText = "Enregistrer les modifications";
+                btnSubmit.disabled = false; // Always enabled in edit mode
+                btnSubmit.style.opacity = '1';
                 btnSubmit.onclick = () => updateShop(myShop.id);
                 
                 nameInput.value = myShop.name;
                 categoryInput.value = myShop.category;
                 pitchInput.value = myShop.voicePitch || "";
+                
+                // Set GPS status to Valid
+                gpsBtn.innerHTML = `✅ Position Validée (${myShop.lat.toFixed(4)}, ${myShop.lng.toFixed(4)})`;
+                gpsBtn.style.background = '#e8f5e9';
+                gpsBtn.style.color = '#27ae60';
+                gpsBtn.style.border = '2px solid #27ae60';
+                gpsBtn.disabled = true; // Can't change location easily in edit (or maybe allow retake)
                 
                 // Load existing audio if present
                 if (myShop.voiceAudio) {
@@ -3157,19 +4798,28 @@
         }
 
         function submitSeller() {
-            const btn = document.querySelector('.btn-submit');
-            const nameInput = document.querySelector('.input-field[type="text"]');
+            const btn = document.getElementById('btnSubmitShop');
+            const nameInput = document.getElementById('shopNameInput');
             const categoryInput = document.getElementById('shopCategoryInput');
-            const langInput = document.getElementById('shopLangInput');
+            // const langInput = document.getElementById('shopLangInput'); // Removed as not in HTML
             const pitchInput = document.getElementById('shopPitchInput'); // New field
             
+            const latInput = document.getElementById('shopLat');
+            const lngInput = document.getElementById('shopLng');
+
             const shopName = nameInput.value;
             const category = categoryInput.value;
-            const language = langInput.value;
+            const language = 'Français'; // Default
             const pitch = pitchInput.value.trim() || ("Bienvenue dans ma nouvelle boutique " + shopName + " ! Venez découvrir mes produits.");
 
             if (!shopName) {
                 alert("Veuillez entrer un nom pour votre boutique.");
+                return;
+            }
+            
+            // Check GPS Capture
+            if (!latInput.value || !lngInput.value) {
+                alert("⚠️ Veuillez cliquer sur 'Capturer ma position GPS' pour valider l'emplacement de votre boutique.");
                 return;
             }
 
@@ -3177,17 +4827,21 @@
             btn.style.opacity = '0.7';
             
             setTimeout(() => {
+                const capturedLat = parseFloat(latInput.value);
+                const capturedLng = parseFloat(lngInput.value);
+
                 // Création du nouveau vendeur
                 const newVendor = {
                     id: Date.now(), // ID unique
                     name: shopName,
                     category: category,
                     language: language,
-                    lat: USER_POS[0] + (Math.random() - 0.5) * 0.005, // Position proche de l'user
-                    lng: USER_POS[1] + (Math.random() - 0.5) * 0.005,
+                    lat: capturedLat,
+                    lng: capturedLng,
                     status: "open",
                     live: false,
                     voicePitch: pitch,
+                    voiceAudio: currentAudioBase64, // Enregistrement vocal
                     avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(shopName)}&background=random&color=fff`
                 };
 
@@ -3202,10 +4856,32 @@
                 // Reset UI
                 document.getElementById('sellerModal').style.display = 'none';
                 alert('🎉 Félicitations ! Votre boutique "' + shopName + '" est en ligne !');
+                
+                // Reset Form
                 btn.innerHTML = 'Créer ma boutique';
                 btn.style.opacity = '1';
+                btn.disabled = true; // Reset to disabled
                 nameInput.value = '';
                 pitchInput.value = ''; // Reset pitch input
+                latInput.value = '';
+                lngInput.value = '';
+
+                // Reset Audio
+                currentAudioBase64 = null;
+                const audioPreviewContainer = document.getElementById('audioPreviewContainer');
+                if(audioPreviewContainer) audioPreviewContainer.style.display = 'none';
+                const btnRecordAudio = document.getElementById('btnRecordAudio');
+                if(btnRecordAudio) btnRecordAudio.style.display = 'flex';
+                
+                // Reset GPS Button
+                const gpsBtn = document.getElementById('btnCaptureGPS');
+                if(gpsBtn) {
+                    gpsBtn.disabled = false;
+                    gpsBtn.innerHTML = '🎯 Capturer ma position GPS';
+                    gpsBtn.style.background = 'white';
+                    gpsBtn.style.color = '#1a5f3f';
+                    gpsBtn.style.border = '2px solid #27ae60'; // Reset border color style if needed
+                }
 
                 // Mise à jour de la carte et passage en vue Carte pour voir le résultat
                 renderVendorsOnMap(VENDORS);
@@ -3274,12 +4950,121 @@
             btn.style.boxShadow = "0 8px 15px rgba(225, 112, 85, 0.3)";
         }
         
+        // === SUPPLY CHAIN LOGIC ===
+        function openSupplyModal() {
+            document.getElementById('supplyModal').style.display = 'flex';
+            switchSupplyTab('china', document.querySelector('#supplyModal .sheet-tab'));
+        }
+
+        function closeSupplyModal(e) {
+            if (e.target.id === 'supplyModal') {
+                document.getElementById('supplyModal').style.display = 'none';
+            }
+        }
+
+        const SUPPLY_CATALOG = {
+            china: [
+                { name: "Ecouteurs i12 TWS", price: 1500, retail: 5000, img: "🎧", min: "1 pc" },
+                { name: "Smart Watch Series 8", price: 4500, retail: 12000, img: "⌚", min: "1 pc" },
+                { name: "Ring Light Pro", price: 3000, retail: 8000, img: "💡", min: "5 pcs" }
+            ],
+            turkey: [
+                { name: "Robe Soirée Istanbul", price: 8000, retail: 25000, img: "👗", min: "10 pcs" },
+                { name: "Costume Slim Fit", price: 15000, retail: 45000, img: "👔", min: "5 pcs" },
+                { name: "Jean Denim Premium", price: 4000, retail: 12000, img: "👖", min: "20 pcs" }
+            ],
+            local: [
+                { name: "Savon Noir Bio", price: 500, retail: 1500, img: "🧼", min: "50 pcs" },
+                { name: "Beurre de Karité Pur", price: 1000, retail: 3000, img: "🧴", min: "20 pots" },
+                { name: "Jus de Gingembre (Pack)", price: 2000, retail: 5000, img: "🥤", min: "10 packs" }
+            ]
+        };
+
+        function switchSupplyTab(region, btn) {
+            // Update tabs
+            document.querySelectorAll('#supplyModal .sheet-tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const container = document.getElementById('supplyContent');
+            const products = SUPPLY_CATALOG[region];
+            
+            let html = '<div style="display:grid; grid-template-columns:1fr; gap:10px;">';
+            products.forEach(p => {
+                const margin = p.retail - p.price;
+                html += `
+                    <div style="display:flex; align-items:center; gap:10px; background:#f8f9fa; padding:10px; border-radius:10px; border:1px solid #eee;">
+                        <div style="width:50px; height:50px; background:white; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; border:1px solid #dfe6e9;">${p.img}</div>
+                        <div style="flex:1;">
+                            <div style="font-weight:bold; color:#2d3436;">${p.name}</div>
+                            <div style="font-size:0.8rem; color:#636e72;">Gros: <b style="color:#d63031;">${p.price} F</b> | Vente: ${p.retail} F</div>
+                            <div style="font-size:0.75rem; color:#00b894; font-weight:bold;">Marge: +${margin} F (${p.min})</div>
+                        </div>
+                        <button onclick="importProduct('${p.name}', ${p.retail}, '${p.img}')" style="background:#0984e3; color:white; border:none; width:35px; height:35px; border-radius:50%; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">+</button>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            if(region === 'china') {
+                html += `<div style="margin-top:10px; padding:10px; background:#e3f2fd; color:#0d47a1; font-size:0.8rem; border-radius:8px;">✈️ Livraison 7-10 jours via Mangoo Express</div>`;
+            } else if(region === 'turkey') {
+                html += `<div style="margin-top:10px; padding:10px; background:#fbe9e7; color:#bf360c; font-size:0.8rem; border-radius:8px;">✈️ Cargo Istanbul-Abidjan (Mardi/Vendredi)</div>`;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function importProduct(name, retailPrice, emoji) {
+            if(!confirm(`Importer "${name}" dans votre boutique ?\nPrix de vente suggéré : ${retailPrice} FCFA`)) return;
+
+            const newProd = {
+                id: Date.now(),
+                name: `${emoji} ${name}`, // Emoji in name
+                price: retailPrice,
+                vendorName: "Ma Boutique",
+                photo: null, 
+                textDesc: "📦 Importé via Mangoo Supply (Dropshipping)",
+                audio: null
+            };
+
+            // Add to MY_PRODUCTS
+            if (!window.MY_PRODUCTS) window.MY_PRODUCTS = [];
+            window.MY_PRODUCTS.unshift(newProd);
+            localStorage.setItem('mangoo_my_products', JSON.stringify(window.MY_PRODUCTS));
+
+            // Refresh if vendor sheet is open
+            const currentVendor = VENDORS.find(v => v.id == localStorage.getItem('mangoo_my_shop_id'));
+            if(currentVendor) {
+                // Re-open/Refresh vendor sheet logic
+                // For now just close supply modal and alert
+                document.getElementById('supplyModal').style.display = 'none';
+                
+                // Show toast
+                const toast = document.createElement('div');
+                toast.style.cssText = "position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#00b894; color:white; padding:10px 20px; border-radius:20px; font-size:0.9rem; z-index:9999; box-shadow:0 5px 15px rgba(0,0,0,0.2);";
+                toast.innerHTML = `✅ "${name}" ajouté à votre catalogue !`;
+                document.body.appendChild(toast);
+                setTimeout(()=>toast.remove(), 3000);
+                
+                // Refresh list if possible
+                openVendorSheet(currentVendor); 
+            }
+        }
+
+        // === LOGISTICS MODAL ===
+        function openLogisticsModal() {
+            document.getElementById('logisticsModal').style.display = 'flex';
+        }
+        
+        function closeLogisticsModal(e) {
+            if (e.target.id === 'logisticsModal') {
+                document.getElementById('logisticsModal').style.display = 'none';
+            }
+        }
+
         // Init check
         window.addEventListener('load', checkUserShop);
 
     </script>
 </body>
-</html>cript>
-</body>
-</html>
 </html>
