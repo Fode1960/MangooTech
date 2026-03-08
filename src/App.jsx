@@ -766,24 +766,28 @@ const AdminLayout = () => {
 };
 
 // Composant optimisé pour l'iframe Mangoo Local+
-const MangooLocalFrame = React.memo(({ user, onBack }) => (
-  <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
-    <div className="absolute top-4 right-4 z-50">
-      <button 
-        onClick={onBack} 
-        className="bg-white text-gray-800 px-4 py-2 rounded-full shadow-lg font-bold hover:bg-gray-100 transition-colors"
-        style={{ position: 'absolute', right: '20px', top: '20px' }}
-      >
-        {user ? 'Retour Dashboard' : 'Retour Accueil'}
-      </button>
+const MangooLocalFrame = React.memo(({ user, onBack }) => {
+  // Listen for exit messages from the iframe
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.data === 'exit_mangoo_local') {
+        onBack();
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [onBack]);
+
+  return (
+    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
+      <iframe 
+        src="/mangoo-local.html" 
+        style={{ width: '100%', height: '100%', border: 'none' }}
+        title="Mangoo Local+"
+      />
     </div>
-    <iframe 
-      src="/mangoo-local.html" 
-      style={{ width: '100%', height: '100%', border: 'none' }}
-      title="Mangoo Local+"
-    />
-  </div>
-));
+  );
+});
 
 // Composant principal avec optimisation
 function App() {
@@ -792,7 +796,7 @@ function App() {
   const [currentView, setCurrentView] = useState('landing');
   const { isDark } = useThemeStore();
 
-  console.log('App Rendering. User:', user, 'View:', currentView);
+  // console.log('App Rendering. User:', user, 'View:', currentView);
 
   // Optimisation du changement de thème
   useEffect(() => {
