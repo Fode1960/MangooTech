@@ -5345,6 +5345,7 @@
 
         function openPaymentModal(amount, callback) {
             currentPaymentAmount = amount;
+            window.pendingTotalAmount = amount; // Store Total for Comparison
             currentPaymentCallback = callback;
             
             // Init Balance
@@ -5483,6 +5484,7 @@
             currentPaymentMethod = null;
         }
 
+
         function processRealPayment() {
             const btn = document.getElementById('btnPayConfirm');
             const originalText = btn.innerText;
@@ -5515,6 +5517,15 @@
                     localStorage.setItem('mangoo_user_balance', userBalance);
                 }
 
+                // CHECK FOR FULL PAYMENT (Direct Buy)
+                // We consider it a "Full Payment" only if the amount being paid covers the TOTAL cost AND
+                // we are NOT in a context where we just want to pay a split part.
+                
+                // If currentPaymentCallback is defined, it means this payment is part of a larger flow (like splitting).
+                // In that case, we should strictly respect the callback and NOT assume it's a full order completion yet.
+                
+                const isFullPayment = !currentPaymentCallback && (currentPaymentAmount >= (window.pendingTotalAmount || 15000));
+
                 btn.innerText = 'Paiement Validé !';
                 btn.style.background = '#27ae60';
                 
@@ -5524,7 +5535,34 @@
 
                 setTimeout(() => {
                     document.getElementById('paymentModal').style.display = 'none';
-                    if(currentPaymentCallback) currentPaymentCallback(true);
+                    
+                    if (isFullPayment) {
+                        // SHOW SUCCESS MODAL (COMMANDE CONFIRMÉE)
+                        const successOverlay = document.createElement('div');
+                        successOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.3s;";
+                        successOverlay.innerHTML = `
+                            <div style="background:white; padding:30px; border-radius:20px; width:90%; max-width:400px; text-align:center; position:relative;">
+                                <div style="font-size:4rem; margin-bottom:15px;">🛍️</div>
+                                <h2 style="color:#2d3436; margin-bottom:10px;">Commande Confirmée !</h2>
+                                <p style="color:#636e72; margin-bottom:20px;">
+                                    Votre paiement de <b>${currentPaymentAmount.toLocaleString()} FCFA</b> a été reçu avec succès.
+                                </p>
+                                
+                                <div style="background:#e8f5e9; padding:15px; border-radius:10px; margin-bottom:20px; text-align:left;">
+                                    <div style="font-size:0.9rem; color:#1b5e20; font-weight:bold; margin-bottom:5px;">Statut : Payé (100%)</div>
+                                    <div style="font-size:0.8rem; color:#2e7d32;">Le vendeur va préparer votre commande pour expédition.</div>
+                                </div>
+                                
+                                <button onclick="window.location.reload()" style="width:100%; padding:15px; background:#00b894; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1rem;">
+                                Voir ma commande
+                            </button>
+                            </div>
+                        `;
+                        document.body.appendChild(successOverlay);
+                    } else {
+                        // PARTIAL PAYMENT -> CONTINUE TO CONTRACT OR CALLBACK
+                        if(currentPaymentCallback) currentPaymentCallback(true);
+                    }
                     
                     // Reset Button
                     btn.innerText = originalText;
@@ -5563,22 +5601,86 @@
                 totalNeeded: thirdPart,
                 currentRaised: 0
             };
+            
+            // SECURITY RESET: Ensure session storage is clean for new simulation
+            sessionStorage.setItem('mangoo_raised', 0);
+            sessionStorage.setItem('mangoo_total', thirdPart);
 
             if(myPart >= total) {
-                alert("Vous payez la totalité ! Utilisez l'onglet 'Moi-même'.");
+                if(!confirm(`Vous allez payer la totalité (${total.toLocaleString()} F) maintenant. Confirmer ?`)) return;
+                
+                // Direct Full Payment Simulation
+                setTimeout(() => {
+                    // Deduct if Mangoo Balance
+                    if(currentPaymentMethod === 'mangoo_balance') {
+                        userBalance -= total;
+                        localStorage.setItem('mangoo_user_balance', userBalance);
+                    }
+                    
+                    // Show Full Success Modal instead of Contract
+                    document.getElementById('paymentModal').style.display = 'none';
+                    
+                    const successOverlay = document.createElement('div');
+                    successOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.3s;";
+                    successOverlay.innerHTML = `
+                        <div style="background:white; padding:30px; border-radius:20px; width:90%; max-width:400px; text-align:center; position:relative;">
+                            <div style="font-size:4rem; margin-bottom:15px;">🛍️</div>
+                            <h2 style="color:#2d3436; margin-bottom:10px;">Commande Confirmée !</h2>
+                            <p style="color:#636e72; margin-bottom:20px;">
+                                Votre paiement de <b>${total.toLocaleString()} FCFA</b> a été reçu avec succès.
+                            </p>
+                            
+                            <div style="background:#e8f5e9; padding:15px; border-radius:10px; margin-bottom:20px; text-align:left;">
+                                <div style="font-size:0.9rem; color:#1b5e20; font-weight:bold; margin-bottom:5px;">Statut : Payé (100%)</div>
+                                <div style="font-size:0.8rem; color:#2e7d32;">Le vendeur va préparer votre commande pour expédition.</div>
+                            </div>
+                            
+                            <button onclick="this.parentElement.parentElement.remove(); document.getElementById('paymentModal').style.display='none'; document.getElementById('supplyModal').style.display='none'; document.getElementById('tontineModal').style.display='none'; document.getElementById('negotiationModal').style.display='none'; alert('Redirection vers la page Mes Commandes...');" style="width:100%; padding:15px; background:#00b894; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1rem;">
+                                Voir ma commande
+                            </button>
+                        </div>
+                    `;
+                    document.body.appendChild(successOverlay);
+                    
+                    // Play Sound
+                    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3'); 
+                    audio.play().catch(e => {});
+                    
+                }, 1000);
+                
                 return;
             }
             
             // Logic: If I pay a part, I pay it first, then link is generated
             if(myPart > 0) {
                  if(!confirm(`Vous allez d'abord payer votre part (${myPart.toLocaleString()} F) maintenant. Continuer ?`)) return;
-                 alert(`✅ Votre part (${myPart.toLocaleString()} F) a été débitée (Simulation). \nLe lien pour les ${thirdPart.toLocaleString()} F restants va être généré.`);
+                 
+                 // Open Payment Modal for the partial amount
+                 document.getElementById('paymentModal').style.display = 'none';
+                 
+                 // Wait a bit then open the payment modal for 'myPart'
+                 setTimeout(() => {
+                     // We need a callback that will be triggered AFTER this payment is successful
+                     // This callback will generate the link for the rest (thirdPart)
+                     openPaymentModal(myPart, (success) => {
+                         if(success) {
+                             alert(`✅ Votre part (${myPart.toLocaleString()} F) a été payée avec succès ! \nLe lien pour les ${thirdPart.toLocaleString()} F restants va maintenant être généré.`);
+                             
+                             // Generate Link Logic (The rest of the function)
+                             showShareSheet(thirdPart);
+                         }
+                     });
+                 }, 300);
+                 
+                 return; // Stop here, wait for payment
             }
             
+            // If myPart is 0, generate link immediately
+            showShareSheet(thirdPart);
+        }
+
+        function showShareSheet(amountNeeded) {
             const link = `https://mangoo.ci/pay/${Date.now()}`;
-            
-            // Close Payment Modal
-            document.getElementById('paymentModal').style.display = 'none';
             
             // Show Share Sheet
             const shareOverlay = document.createElement('div');
@@ -5588,7 +5690,7 @@
                 <div style="background:white; padding:25px; border-radius:15px; width:90%; max-width:350px; text-align:center;">
                     <div style="font-size:3rem;">🔗</div>
                     <h3 style="color:#2d3436;">Lien de Paiement (Cagnotte)</h3>
-                    <p style="color:#636e72; font-size:0.9rem;">Partagez ce lien avec vos proches. Plusieurs personnes peuvent cotiser pour atteindre les <b>${thirdPart.toLocaleString()} FCFA</b>.</p>
+                    <p style="color:#636e72; font-size:0.9rem;">Partagez ce lien avec vos proches. Plusieurs personnes peuvent cotiser pour atteindre les <b>${amountNeeded.toLocaleString()} FCFA</b>.</p>
                     
                     <div style="background:#f1f2f6; padding:10px; border-radius:8px; word-break:break-all; font-family:monospace; margin:15px 0; color:#0984e3;">
                         ${link}
@@ -5612,12 +5714,13 @@
                         Copier & Fermer
                     </button>
                     
-                    <button onclick="simulateThirdPartyPay(${thirdPart})" style="width:100%; padding:12px; background:#dfe6e9; color:#2d3436; border:none; border-radius:8px; font-weight:bold;">
+                    <button onclick="simulateThirdPartyPay(${amountNeeded})" style="width:100%; padding:12px; background:#dfe6e9; color:#2d3436; border:none; border-radius:8px; font-weight:bold;">
                         🧪 Simuler Paiement Tiers (Démo)
                     </button>
                 </div>
             `;
             document.body.appendChild(shareOverlay);
+
             
             window.copyToClip = (txt) => {
                 navigator.clipboard.writeText(txt);
@@ -5640,6 +5743,9 @@
 
                 const shareOverlay = document.getElementById('mangoo-share-overlay');
                 if(shareOverlay) shareOverlay.remove();
+
+                const successOverlay = document.getElementById('mangoo-checkout-overlay-success');
+                if(successOverlay) successOverlay.remove();
                 
                 // Create Third Party Checkout View
                 const checkout = document.createElement('div');
@@ -5824,102 +5930,152 @@
             };
 
             window.finishGatewaySimulation = (btn) => {
-                const contribution = window.pendingContributionAmount || parseInt(document.getElementById('contributionAmount')?.value) || 0;
-                crowdfundingState.currentRaised += contribution;
-                const remaining = crowdfundingState.totalNeeded - crowdfundingState.currentRaised;
-                const isComplete = remaining <= 0;
+                try {
+                    if(window.selectedMethod === 'mangoo_balance') {
+                        // 1. Check Phone Number
+                        const phoneInput = document.getElementById('mangooPayPhone');
+                        const phoneVal = phoneInput ? phoneInput.value.replace(/\s/g, '') : '';
+                        
+                        if(phoneInput) {
+                            const ciPhoneRegex = /^(01|05|07)\d{8}$/;
+                            if(!phoneVal || !ciPhoneRegex.test(phoneVal)) {
+                                alert("Veuillez entrer un numéro Mangoo valide (07xxxxxxxx, 05xxxxxxxx, 01xxxxxxxx) pour valider le compte.");
+                                return;
+                            }
+                        }
 
-                btn.innerHTML = "✅ Contribution Validée !";
-                btn.style.background = "#27ae60";
-                
-                setTimeout(() => {
-                    const overlay = document.getElementById('mangoo-checkout-overlay');
-                    if(overlay) {
-                        if(!isComplete) {
-                            // PARTIAL PAYMENT SUCCESS
-                             overlay.innerHTML = `
-                                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; animation:fadeIn 0.5s;">
-                                    <div style="font-size:4rem; margin-bottom:20px;">🎉</div>
-                                    <h2 style="color:#2d3436; margin-bottom:10px;">Merci pour votre contribution !</h2>
-                                    <div style="font-size:2rem; font-weight:bold; color:#00b894; margin-bottom:20px;">${contribution.toLocaleString()} FCFA</div>
-                                    
-                                    <div style="background:#f1f2f6; padding:15px; border-radius:10px; width:100%; max-width:350px; margin-bottom:30px;">
-                                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                                            <span>Reste à collecter :</span>
-                                            <span style="font-weight:bold; color:#d63031;">${remaining.toLocaleString()} FCFA</span>
-                                        </div>
-                                        <div class="progress-bar" style="height:10px; background:#dfe6e9; border-radius:5px;">
-                                            <div style="height:100%; background:#00b894; width:${(crowdfundingState.currentRaised / crowdfundingState.totalNeeded * 100)}%;"></div>
-                                        </div>
-                                    </div>
-                                    
-                                    <button onclick="simulateThirdPartyPay(0)" style="padding:15px 30px; background:#0984e3; color:white; border:none; border-radius:25px; font-weight:bold; cursor:pointer; margin-bottom:10px;">
-                                        🔄 Simuler une autre contribution
-                                    </button>
-                                    <button onclick="copyToClip('https://mangoo.ci/pay/cagnotte-shared')" style="padding:15px 30px; background:#dfe6e9; color:#2d3436; border:none; border-radius:25px; font-weight:bold; cursor:pointer; margin-bottom:10px;">
-                                        🔗 Copier le lien pour partager
-                                    </button>
-                                    <button onclick="document.getElementById('mangoo-checkout-overlay').remove()" style="padding:15px 30px; background:transparent; color:#636e72; border:none; cursor:pointer;">
-                                        Fermer
-                                    </button>
-                                </div>
-                            `;
-                        } else {
-                            // FULL PAYMENT SUCCESS (Original Flow)
-                            overlay.innerHTML = `
-                                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; animation:fadeIn 0.5s;">
-                                    <div style="font-size:4rem; margin-bottom:20px;">✅</div>
-                                    <h2 style="color:#2d3436; margin-bottom:10px;">Cagnotte Terminée !</h2>
-                                    <p style="color:#636e72; max-width:300px; margin-bottom:30px;">
-                                        La totalité du montant a été collectée. <br>
-                                        Le bénéficiaire va recevoir la notification pour signer le contrat.
-                                    </p>
-                                    <div style="padding:15px; background:#e8f5e9; color:#1b5e20; border-radius:10px; font-weight:bold;">
-                                        🔄 Retour à l'interface Bénéficiaire...
-                                    </div>
-                                </div>
-                            `;
-                            
-                            // Delay before switching back context
-                            setTimeout(() => {
-                                if(overlay) overlay.remove();
-                                
-                                // Success Toast for Beneficiary
-                                const toast = document.createElement('div');
-                                toast.style.cssText = "position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#27ae60; color:white; padding:15px 25px; border-radius:30px; z-index:12000; font-weight:bold; box-shadow:0 5px 20px rgba(0,0,0,0.3); display:flex; align-items:center; gap:10px; animation: slideUp 0.5s;";
-                                toast.innerHTML = "🎉 Cagnotte Complétée !";
-                                document.body.appendChild(toast);
-                                setTimeout(() => toast.remove(), 4000);
-                                
-                                // Call original callback
-                                if(typeof currentCheckoutCallback === 'function') {
-                                    currentCheckoutCallback(true);
-                                }
-                            }, 6000); 
+                        // 2. Check PIN
+                        if(btn.style.background !== 'rgb(39, 174, 96)' && btn.style.background !== '#27ae60') {
+                             const pin = prompt("🔐 Sécurité : Entrez votre code PIN (0000 par défaut) pour valider le débit :");
+                             if(pin !== '0000') {
+                                 alert("Code PIN incorrect ! Paiement annulé.");
+                                 return;
+                             }
                         }
                     }
-                }, 1000);
+
+                    const contribution = window.pendingContributionAmount || parseInt(document.getElementById('contributionAmount')?.value) || 0;
+                    
+                    // Prevent double counting if user clicks multiple times
+                    const isAlreadySuccess = (btn.style.background === 'rgb(39, 174, 96)' || btn.style.background === '#27ae60');
+                    
+                    if(!isAlreadySuccess) {
+                        crowdfundingState.currentRaised += contribution;
+                    }
+                    
+                    const remaining = crowdfundingState.totalNeeded - crowdfundingState.currentRaised;
+                    const isComplete = remaining <= 0;
+
+                    btn.innerHTML = "✅ Contribution Validée !";
+                    btn.style.background = "#27ae60";
+                    
+                    // Get phone number for display
+                    const phoneInput = document.getElementById('mangooPayPhone');
+                    const confirmPhone = phoneInput ? phoneInput.value : '07XXXXXXXX';
+
+                    // FORCE UPDATE - Remove old overlay and create new one to avoid DOM issues
+                    setTimeout(() => {
+                        try {
+                            // 1. Remove existing overlay(s)
+                            const oldOverlays = document.querySelectorAll('[id*="checkout-overlay"]');
+                            oldOverlays.forEach(el => el.remove());
+                            
+                            // 2. Calculate State
+                            const realRemaining = crowdfundingState.totalNeeded - crowdfundingState.currentRaised;
+                            const realIsComplete = realRemaining <= 0;
+                            
+                            // 3. Create New Overlay
+                            const newOverlay = document.createElement('div');
+                            newOverlay.id = 'mangoo-checkout-overlay-success';
+                            newOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:12000; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.3s;";
+                            
+                            let finalHtml = "";
+                            
+                            if(!realIsComplete) {
+                                 finalHtml = `
+                                    <div style="background:white; width:90%; max-width:400px; border-radius:20px; padding:30px; position:relative; max-height:90vh; overflow-y:auto; box-shadow:0 10px 30px rgba(0,0,0,0.3); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; animation:fadeIn 0.5s;">
+                                        <div style="font-size:4rem; margin-bottom:20px;">🎉</div>
+                                        <h2 style="color:#2d3436; margin-bottom:10px;">Merci pour votre contribution !</h2>
+                                        <div style="font-size:1.2rem; color:#636e72; margin-bottom:20px;">
+                                            Un SMS de confirmation a été envoyé au 
+                                            <b>${confirmPhone}</b>.
+                                        </div>
+                                        <div style="font-size:2rem; font-weight:bold; color:#00b894; margin-bottom:20px;">${contribution.toLocaleString()} FCFA</div>
+                                        
+                                        <div style="background:#f1f2f6; padding:15px; border-radius:10px; width:100%; max-width:350px; margin-bottom:30px;">
+                                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                                <span>Reste à collecter :</span>
+                                                <span style="font-weight:bold; color:#d63031;">${realRemaining.toLocaleString()} FCFA</span>
+                                            </div>
+                                            <div class="progress-bar" style="height:10px; background:#dfe6e9; border-radius:5px;">
+                                                <div style="height:100%; background:#00b894; width:${(crowdfundingState.currentRaised / crowdfundingState.totalNeeded * 100)}%;"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div style="display:flex; flex-direction:column; gap:10px; width:100%; max-width:300px;">
+                                            <button onclick="simulateThirdPartyPay(${realRemaining})" style="padding:15px; background:#0984e3; color:white; border:none; border-radius:25px; font-weight:bold; cursor:pointer;">
+                                                🔄 Payer le reste (${realRemaining.toLocaleString()} FCFA)
+                                            </button>
+                                            <button onclick="copyToClip('https://mangoo.ci/pay/cagnotte-shared')" style="padding:15px; background:#dfe6e9; color:#2d3436; border:none; border-radius:25px; font-weight:bold; cursor:pointer;">
+                                                🔗 Copier le lien pour partager
+                                            </button>
+                                            <button onclick="document.getElementById('mangoo-checkout-overlay-success').remove()" style="padding:15px; background:transparent; color:#636e72; border:none; cursor:pointer;">
+                                                Fermer
+                                            </button>
+                                        </div>
+                                    </div>
+                                `;
+                            } else {
+                                finalHtml = `
+                                    <div style="background:white; padding:30px; border-radius:20px; width:90%; max-width:400px; text-align:center; position:relative; animation:fadeIn 0.5s;">
+                                        <div style="font-size:4rem; margin-bottom:15px;">🎉</div>
+                                        <h2 style="color:#2d3436; margin-bottom:10px;">Cagnotte Terminée !</h2>
+                                        <p style="color:#636e72; margin-bottom:20px;">
+                                            La totalité du montant a été collectée. <br>
+                                            Veuillez procéder à la signature du contrat.
+                                        </p>
+                                        
+                                        <div style="background:#e8f5e9; padding:15px; border-radius:10px; margin-bottom:20px; text-align:left;">
+                                            <div style="font-size:0.9rem; color:#1b5e20; font-weight:bold; margin-bottom:5px;">Statut : Prêt (100%)</div>
+                                            <div style="font-size:0.8rem; color:#2e7d32;">Contrat numérique prêt pour signature.</div>
+                                        </div>
+                                        
+                                        <button onclick="document.getElementById('mangoo-checkout-overlay-success').remove(); openPostCagnotteContract();" style="width:100%; padding:15px; background:#0984e3; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1rem;">
+                                            ✍️ Signer le Contrat Numérique
+                                        </button>
+                                    </div>
+                                `;
+                            }
+                            
+                            newOverlay.innerHTML = finalHtml;
+                            document.body.appendChild(newOverlay);
+
+                        } catch(e) {
+                            console.error("Payment Error:", e);
+                            alert("Erreur lors de la finalisation du paiement: " + e.message);
+                        }
+                    }, 500);
+                } catch(e) {
+                    alert("Erreur Critique: " + e.message);
+                }
             };
 
+
+
+
             window.confirmThirdPartyPay = (amt, btn) => {
-                // Check if amount is passed from input (string) or number
                 let contributionAmount;
                 const inputEl = document.getElementById('contributionAmount');
                 
                 if(inputEl) {
                      contributionAmount = parseInt(inputEl.value);
                 } else {
-                     // Check global pending state if input is gone
                      contributionAmount = window.pendingContributionAmount || parseInt(amt);
                 }
                 
-                // Fallback and validation
                 if(!contributionAmount || isNaN(contributionAmount)) contributionAmount = parseInt(amt) || 0;
-                
-                // Always update global state for next steps
                 window.pendingContributionAmount = contributionAmount; 
 
-                // FIX: Ensure btn is a valid DOM element, otherwise find it
                 if(!btn || !btn.style) {
                     btn = document.getElementById('btnThirdPartyPay');
                 }
@@ -5928,138 +6084,109 @@
                     btn.style.opacity = '0.8';
                 }
                 
-                // Debug log
-                console.log("Confirming Pay:", contributionAmount, "Method:", window.selectedMethod);
-            
-            // USE requestAnimationFrame instead of setTimeout to avoid lag in heavy DOM updates
-            requestAnimationFrame(() => {
-                setTimeout(() => {
-                    const overlay = document.getElementById('checkout-card'); // Target the card directly for cleaner swap
-                    if(!overlay) return;
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        const overlay = document.getElementById('checkout-card'); 
+                        if(!overlay) return;
+                        
+                        let gatewayContent = '';
                     
-                    let gatewayContent = '';
-                
-                if(window.selectedMethod === 'paypal') {
-                    gatewayContent = `
-                        <div style="width:100%; height:100%; background:white; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; text-align:center; animation: fadeIn 0.5s;">
-                            <div style="font-size:3rem; color:#003087; margin-bottom:20px;">🅿️ PayPal</div>
-                            <div style="font-size:1.2rem; color:#2d3436; margin-bottom:10px;">Connectez-vous pour payer</div>
-                            <div style="font-size:1.5rem; font-weight:bold; margin-bottom:30px;">${(contributionAmount/655).toFixed(2)} EUR</div>
-                            <input type="email" value="tiers@email.com" style="padding:15px; width:100%; max-width:350px; border:1px solid #dfe6e9; border-radius:8px; margin-bottom:10px; font-size:1rem;">
-                            <input type="password" value="********" style="padding:15px; width:100%; max-width:350px; border:1px solid #dfe6e9; border-radius:8px; margin-bottom:20px; font-size:1rem;">
-                            <button onclick="finishGatewaySimulation(this)" style="padding:15px 40px; background:#0070ba; color:white; border:none; border-radius:25px; font-weight:bold; cursor:pointer; font-size:1.1rem; width:100%; max-width:350px;">Payer Maintenant</button>
-                        </div>`;
-                } else if(window.selectedMethod === 'mobile_money') {
-                    gatewayContent = `
-                        <div style="width:100%; max-width:500px; margin:auto; background:#f8f9fa; display:flex; flex-direction:column; padding:20px; font-family:sans-serif; animation: fadeIn 0.5s;">
-                            <h2 style="text-align:center; color:#2d3436; margin-bottom:30px;">📱 Paiement Mobile</h2>
-                            
-                            <div style="background:white; padding:20px; border-radius:15px; box-shadow:0 5px 15px rgba(0,0,0,0.05); margin-bottom:20px; text-align:center;">
-                                <div style="font-size:0.9rem; color:#636e72; margin-bottom:5px;">Montant à payer</div>
-                                <div style="font-size:2rem; font-weight:bold; color:#2d3436;">${contributionAmount.toLocaleString()} FCFA</div>
-                            </div>
-                            
-                            <div style="font-weight:bold; color:#2d3436; margin-bottom:15px;">Choisissez votre opérateur :</div>
-                            
-                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-                                <div onclick="triggerMomoPush(this, 'orange')" style="background:white; border:2px solid #dfe6e9; border-radius:12px; padding:15px; text-align:center; cursor:pointer; transition:all 0.2s;">
-                                    <div style="font-size:2rem; margin-bottom:5px;">🟠</div>
-                                    <div style="font-weight:bold; color:#ff7900;">Orange Money</div>
+                        if(window.selectedMethod === 'paypal') {
+                            gatewayContent = `
+                                <div style="width:100%; height:100%; background:white; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; text-align:center; animation: fadeIn 0.5s;">
+                                    <div style="font-size:3rem; color:#003087; margin-bottom:20px;">🅿️ PayPal</div>
+                                    <div style="font-size:1.2rem; color:#2d3436; margin-bottom:10px;">Connectez-vous pour payer</div>
+                                    <div style="font-size:1.5rem; font-weight:bold; margin-bottom:30px;">${(contributionAmount/655).toFixed(2)} EUR</div>
+                                    <button onclick="finishGatewaySimulation(this)" style="padding:15px 40px; background:#0070ba; color:white; border:none; border-radius:25px; font-weight:bold; cursor:pointer; font-size:1.1rem; width:100%; max-width:350px;">Payer Maintenant</button>
+                                </div>`;
+                        } else if(window.selectedMethod === 'mobile_money') {
+                            gatewayContent = `
+                                <div style="width:100%; max-width:500px; margin:auto; background:#f8f9fa; display:flex; flex-direction:column; padding:20px; font-family:sans-serif; animation: fadeIn 0.5s;">
+                                    <h2 style="text-align:center; color:#2d3436; margin-bottom:30px;">📱 Paiement Mobile</h2>
+                                    <div style="background:white; padding:20px; border-radius:15px; box-shadow:0 5px 15px rgba(0,0,0,0.05); margin-bottom:20px; text-align:center;">
+                                        <div style="font-size:0.9rem; color:#636e72; margin-bottom:5px;">Montant à payer</div>
+                                        <div style="font-size:2rem; font-weight:bold; color:#2d3436;">${contributionAmount.toLocaleString()} FCFA</div>
+                                    </div>
+                                    <div style="font-weight:bold; color:#2d3436; margin-bottom:15px;">Choisissez votre opérateur :</div>
+                                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                                        <div onclick="triggerMomoPush(this, 'orange')" style="background:white; border:2px solid #dfe6e9; border-radius:12px; padding:15px; text-align:center; cursor:pointer;">
+                                            <div style="font-size:2rem; margin-bottom:5px;">🟠</div>
+                                            <div style="font-weight:bold; color:#ff7900;">Orange Money</div>
+                                        </div>
+                                        <div onclick="triggerMomoPush(this, 'mtn')" style="background:white; border:2px solid #dfe6e9; border-radius:12px; padding:15px; text-align:center; cursor:pointer;">
+                                            <div style="font-size:2rem; margin-bottom:5px;">🟡</div>
+                                            <div style="font-weight:bold; color:#f1c40f;">MTN MoMo</div>
+                                        </div>
+                                        <div onclick="triggerMomoPush(this, 'wave')" style="background:white; border:2px solid #dfe6e9; border-radius:12px; padding:15px; text-align:center; cursor:pointer;">
+                                            <div style="font-size:2rem; margin-bottom:5px;">🔵</div>
+                                            <div style="font-weight:bold; color:#1da1f2;">Wave</div>
+                                        </div>
+                                        <div onclick="triggerMomoPush(this, 'moov')" style="background:white; border:2px solid #dfe6e9; border-radius:12px; padding:15px; text-align:center; cursor:pointer;">
+                                            <div style="font-size:2rem; margin-bottom:5px;">🟣</div>
+                                            <div style="font-weight:bold; color:#004e92;">Moov Money</div>
+                                        </div>
+                                    </div>
+                                    <div id="momoValidationArea" style="display:none; margin-top:30px; text-align:center; background:white; padding:20px; border-radius:15px;">
+                                        <div class="spin" style="font-size:2rem; margin-bottom:15px;">⏳</div>
+                                        <div style="margin-bottom:15px; font-weight:bold; color:#2d3436;">Veuillez valider le push sur votre téléphone</div>
+                                        <button id="btnConfirmMomo" onclick="finishGatewaySimulation(this)" style="padding:15px 40px; background:#0984e3; color:white; border:none; border-radius:25px; font-weight:bold; cursor:pointer; width:100%;">J'ai confirmé le paiement</button>
+                                    </div>
+                                </div>`;
+                        } else if(window.selectedMethod === 'mangoo_balance') {
+                            gatewayContent = `
+                                <div style="width:100%; height:100%; background:white; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; text-align:center; animation: fadeIn 0.5s;">
+                                    <div style="font-size:3rem; margin-bottom:20px;">🥭 Solde Mangoo</div>
+                                    <div style="font-size:1.2rem; color:#2d3436; margin-bottom:10px;">Paiement Instantané</div>
+                                    <div style="background:#e0f2f1; color:#00695c; padding:20px; border-radius:15px; margin-bottom:30px; width:100%; max-width:350px;">
+                                        <div style="font-size:0.9rem; opacity:0.8;">Votre solde disponible</div>
+                                        <div style="font-size:2rem; font-weight:bold;">${userBalance.toLocaleString()} FCFA</div>
+                                    </div>
+
+                            ${ userBalance < contributionAmount ? `
+                                <div style="background:#ffebee; color:#c62828; padding:15px; border-radius:10px; margin-bottom:20px; font-weight:bold;">
+                                    ⚠️ Solde insuffisant pour ce paiement.
                                 </div>
-                                
-                                <div onclick="triggerMomoPush(this, 'mtn')" style="background:white; border:2px solid #dfe6e9; border-radius:12px; padding:15px; text-align:center; cursor:pointer; transition:all 0.2s;">
-                                    <div style="font-size:2rem; margin-bottom:5px;">🟡</div>
-                                    <div style="font-weight:bold; color:#f1c40f;">MTN MoMo</div>
-                                </div>
-                                
-                                <div onclick="triggerMomoPush(this, 'wave')" style="background:white; border:2px solid #dfe6e9; border-radius:12px; padding:15px; text-align:center; cursor:pointer; transition:all 0.2s;">
-                                    <div style="font-size:2rem; margin-bottom:5px;">🔵</div>
-                                    <div style="font-weight:bold; color:#1da1f2;">Wave</div>
-                                </div>
-                                
-                                <div onclick="triggerMomoPush(this, 'moov')" style="background:white; border:2px solid #dfe6e9; border-radius:12px; padding:15px; text-align:center; cursor:pointer; transition:all 0.2s;">
-                                    <div style="font-size:2rem; margin-bottom:5px;">🟣</div>
-                                    <div style="font-weight:bold; color:#004e92;">Moov Money</div>
-                                </div>
-                            </div>
-                            
-                            <div id="momoValidationArea" style="display:none; margin-top:30px; text-align:center; background:white; padding:20px; border-radius:15px; animation: slideUp 0.3s;">
-                                <div class="spin" style="font-size:2rem; margin-bottom:15px;">⏳</div>
-                                <div style="margin-bottom:15px; font-weight:bold; color:#2d3436;">Veuillez valider le push sur votre téléphone (Composer #144# ou #150#)</div>
-                                <button id="btnConfirmMomo" onclick="finishGatewaySimulation(this)" style="padding:15px 40px; background:#27ae60; color:white; border:none; border-radius:25px; font-weight:bold; cursor:pointer; width:100%;">J'ai confirmé le paiement</button>
-                            </div>
-                        </div>`;
-                } else if(window.selectedMethod === 'mangoo_balance') {
-                    gatewayContent = `
-                        <div style="width:100%; height:100%; background:white; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; text-align:center; animation: fadeIn 0.5s;">
-                            <div style="font-size:3rem; margin-bottom:20px;">🥭 Solde Mangoo</div>
-                            <div style="font-size:1.2rem; color:#2d3436; margin-bottom:10px;">Paiement Instantané</div>
-                            
-                            <div style="background:#e0f2f1; color:#00695c; padding:20px; border-radius:15px; margin-bottom:30px; width:100%; max-width:350px;">
-                                <div style="font-size:0.9rem; opacity:0.8;">Votre solde disponible</div>
-                                <div style="font-size:2rem; font-weight:bold;">${userBalance.toLocaleString()} FCFA</div>
-                            </div>
-                            
-                            <div style="margin-bottom:30px; font-size:1.1rem;">
-                                Montant à débiter : <b style="color:#d63031;">${contributionAmount.toLocaleString()} FCFA</b>
-                            </div>
-                            
-                            <button onclick="finishGatewaySimulation(this)" style="padding:15px 40px; background:#00b894; color:white; border:none; border-radius:25px; font-weight:bold; cursor:pointer; box-shadow:0 5px 15px rgba(0,184,148,0.4); width:100%; max-width:350px;">Confirmer le débit</button>
-                            
-                            <div style="margin-top:20px; text-align:center;">
-                                <button style="background:#f1f2f6; color:#2d3436; border:none; padding:10px 20px; border-radius:20px; font-size:0.9rem; cursor:pointer; display:flex; align-items:center; gap:5px; margin:auto;" onclick="openP2PModal()">
-                                    <span>💸</span> Envoyer de l'argent à un ami (Gratuit)
+                                <button onclick="openP2PModal()" style="padding:15px 30px; background:#0984e3; color:white; border:none; border-radius:25px; font-weight:bold; cursor:pointer; width:100%; max-width:350px; margin-bottom:10px;">
+                                    💸 Demander un transfert (Recharger)
                                 </button>
-                            </div>
-                        </div>`;
-                } else {
-                    // Card
-                    gatewayContent = `
-                        <div style="width:100%; max-width:400px; margin:auto; background:white; display:flex; flex-direction:column; align-items:center; padding:20px; text-align:center; animation: fadeIn 0.5s;">
-                            <div style="font-size:3rem; margin-bottom:20px;">💳 Paiement CB</div>
-                            <div style="font-size:1.2rem; color:#2d3436; margin-bottom:30px;">Saisie sécurisée des coordonnées</div>
-                            
-                            <div style="width:100%; text-align:left;">
-                                <label style="display:block; margin-bottom:8px; font-weight:bold; color:#636e72;">Numéro de carte</label>
-                                <div style="position:relative; margin-bottom:20px;">
-                                    <input type="text" placeholder="0000 0000 0000 0000" style="width:100%; padding:15px; padding-left:50px; border:2px solid #dfe6e9; border-radius:10px; font-size:1.1rem; outline:none;">
-                                    <div style="position:absolute; left:15px; top:50%; transform:translateY(-50%); font-size:1.5rem;">💳</div>
-                                </div>
-                                
-                                <div style="display:flex; gap:15px; margin-bottom:20px;">
-                                    <div style="flex:1;">
-                                        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#636e72;">Expiration</label>
-                                        <input type="text" placeholder="MM/AA" style="width:100%; padding:15px; border:2px solid #dfe6e9; border-radius:10px; font-size:1.1rem; outline:none; text-align:center;">
-                                    </div>
-                                    <div style="flex:1;">
-                                        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#636e72;">CVC</label>
-                                        <input type="text" placeholder="123" style="width:100%; padding:15px; border:2px solid #dfe6e9; border-radius:10px; font-size:1.1rem; outline:none; text-align:center;">
+                                <button onclick="document.getElementById('mangoo-checkout-overlay').remove()" style="padding:15px 30px; background:transparent; color:#636e72; border:none; cursor:pointer;">Annuler</button>
+                            ` : `
+                                <div style="width:100%; max-width:350px; margin-bottom:20px; text-align:left;">
+                                    <label style="display:block; font-size:0.8rem; font-weight:bold; color:#2d3436; margin-bottom:8px;">Numéro de téléphone (Validation)</label>
+                                    <div style="position:relative;">
+                                        <input type="tel" placeholder="07 07 00 00 00" id="mangooPayPhone" style="width:100%; padding:15px; padding-left:45px; border:2px solid #dfe6e9; border-radius:10px; font-size:1rem; outline:none;">
+                                        <span style="position:absolute; left:15px; top:50%; transform:translateY(-50%);">🇨🇮</span>
                                     </div>
                                 </div>
-                                
-                                <label style="display:block; margin-bottom:8px; font-weight:bold; color:#636e72;">Nom du titulaire</label>
-                                <input type="text" placeholder="Ex: JEAN DUPONT" style="width:100%; padding:15px; border:2px solid #dfe6e9; border-radius:10px; margin-bottom:30px; font-size:1.1rem; outline:none;">
-                            </div>
-
-                            <button onclick="finishGatewaySimulation(this)" style="width:100%; padding:18px; background:#2d3436; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.1rem;">Payer ${contributionAmount.toLocaleString()} FCFA</button>
-                            
-                            <div style="margin-top:20px; font-size:0.8rem; color:#b2bec3; display:flex; align-items:center; justify-content:center; gap:5px;">
-                                🔒 Transaction sécurisée SSL 256-bit
-                            </div>
+                                <div style="margin-bottom:30px; font-size:1.1rem;">
+                                    Montant à débiter : <b style="color:#d63031;">${contributionAmount.toLocaleString()} FCFA</b>
+                                </div>
+                                <button onclick="finishGatewaySimulation(this)" style="padding:15px 40px; background:#00b894; color:white; border:none; border-radius:25px; font-weight:bold; cursor:pointer; box-shadow:0 5px 15px rgba(0,184,148,0.4); width:100%; max-width:350px;">Confirmer le débit</button>
+                            `}
                         </div>`;
-                }
-                
-                if(gatewayContent) overlay.innerHTML = gatewayContent;
-                
-                // Re-bind click event if needed (for safety)
-                const newBtn = document.getElementById('btnConfirmMomo');
-                if(newBtn) {
-                     newBtn.onclick = function() { finishGatewaySimulation(this); };
-                }
+                        } else {
+                            // Card
+                            gatewayContent = `
+                                <div style="width:100%; max-width:400px; margin:auto; background:white; display:flex; flex-direction:column; align-items:center; padding:20px; text-align:center; animation: fadeIn 0.5s;">
+                                    <div style="font-size:3rem; margin-bottom:20px;">💳 Paiement CB</div>
+                                    <div style="font-size:1.2rem; color:#2d3436; margin-bottom:30px;">Saisie sécurisée des coordonnées</div>
+                                    <button onclick="finishGatewaySimulation(this)" style="width:100%; padding:18px; background:#2d3436; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.1rem;">Payer ${contributionAmount.toLocaleString()} FCFA</button>
+                                    <div style="margin-top:20px; font-size:0.8rem; color:#b2bec3; display:flex; align-items:center; justify-content:center; gap:5px;">
+                                        🔒 Transaction sécurisée SSL 256-bit
+                                    </div>
+                                </div>`;
+                        }
+                        
+                        if(gatewayContent) overlay.innerHTML = gatewayContent;
+                        
+                        const newBtn = document.getElementById('btnConfirmMomo');
+                        if(newBtn) {
+                             newBtn.onclick = function() { finishGatewaySimulation(this); };
+                        }
+                    }, 1000);
+                });
+            };
 
-                }, 1000);
-            });
-        };
 
         // === P2P TRANSFER FEATURE ===
         function openP2PModal() {
@@ -6194,6 +6321,113 @@
 
         // Init check
         window.addEventListener('load', checkUserShop);
+
+        // === POST-CAGNOTTE CONTRACT LOGIC ===
+        function openPostCagnotteContract() {
+             const overlay = document.createElement('div');
+             overlay.id = 'contractOverlay';
+             overlay.style.cssText = `
+                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                 background: rgba(0,0,0,0.9); z-index: 13000;
+                 display: flex; flex-direction: column; align-items: center; justify-content: center;
+                 font-family: sans-serif; animation: fadeIn 0.3s; padding: 20px; box-sizing: border-box;
+             `;
+             
+             const total = crowdfundingState.totalNeeded || 15000;
+
+             overlay.innerHTML = `
+                 <div style="background: white; width: 100%; max-width: 350px; border-radius: 15px; overflow: hidden; position: relative; box-shadow: 0 10px 30px rgba(255,255,255,0.1); max-height: 90vh; display: flex; flex-direction: column;">
+                     <div style="background: #1a5f3f; color: white; padding: 15px; text-align: center; position: relative; flex-shrink: 0;">
+                         <div style="font-size: 1.5rem;">📜</div>
+                         <h2 style="margin: 5px 0 0 0; font-size: 1.1rem;">Contrat Numérique</h2>
+                         <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 5px;">Document légal simplifié</div>
+                     </div>
+
+                     <div style="padding: 15px; background: #fffdf0; overflow-y: auto; flex: 1;">
+                         <div onclick="showVerificationDetails()" style="background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px; padding: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.2s;">
+                             <div style="position: relative;">
+                                 <span style="font-size: 1.5rem;">🪪</span>
+                                 <div style="position: absolute; bottom: -2px; right: -2px; background: #1a5f3f; color: white; border-radius: 50%; width: 12px; height: 12px; font-size: 8px; display: flex; align-items: center; justify-content: center;">✓</div>
+                             </div>
+                             <div style="flex: 1;">
+                                 <div style="font-size: 0.8rem; color: #1a5f3f; font-weight: bold;">Identité Certifiée par IA</div>
+                                 <div style="font-size: 0.7rem; color: #2e7d32; opacity: 0.9;">
+                                     CNI N° 1123489... • <span style="text-decoration: underline;">Voir le rapport</span>
+                                 </div>
+                             </div>
+                             <span style="color: #1a5f3f;">ᐳ</span>
+                         </div>
+
+                         <p style="font-size: 0.85rem; line-height: 1.4; color: #333; margin-bottom: 15px;">
+                             Je soussigné(e), <b>Utilisateur Démo</b>, confirme la réception des fonds de la cagnotte (100%) pour l'achat du produit.
+                         </p>
+                         
+                         <div style="background: white; border: 1px dashed #ccc; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+                             <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem;">
+                                 <span style="color: #666;">Mode :</span>
+                                 <span style="font-weight: bold;">Cagnotte Participative</span>
+                             </div>
+                             <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem;">
+                                 <span style="color: #666;">Montant Total :</span>
+                                 <span style="font-weight: bold; color: #27ae60;">${total.toLocaleString()} FCFA</span>
+                             </div>
+                             <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                                 <span style="color: #666;">Statut :</span>
+                                 <span style="font-weight: bold; color: #27ae60;">Payé (100%)</span>
+                             </div>
+                         </div>
+
+                         <div style="font-size: 0.75rem; color: #666; font-style: italic; margin-bottom: 15px;">
+                             En signant, je valide la commande et autorise Mangoo à procéder à la livraison dès disponibilité.
+                         </div>
+
+                         <div style="text-align: center; margin-bottom: 5px;">
+                             <div style="font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; color: #1a5f3f;">CLIQUEZ POUR SIGNER</div>
+                             <button onclick="signPostCagnotteContract(this)" style="
+                                 width: 70px; height: 70px; border-radius: 50%; border: 2px solid #1a5f3f;
+                                 background: white; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+                                 font-size: 1.8rem; color: #1a5f3f; transition: all 0.2s;
+                                 box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+                             " onmousedown="this.style.transform='scale(0.9)'; this.style.background='#1a5f3f'; this.style.color='white';" 
+                               onmouseup="this.style.transform='scale(1)';">
+                                 ✍️
+                             </button>
+                         </div>
+                     </div>
+                     
+                     <button onclick="document.getElementById('contractOverlay').remove()" style="width: 100%; padding: 12px; background: #eee; border: none; color: #555; font-weight: bold; cursor: pointer; border-top: 1px solid #ddd; flex-shrink: 0;">
+                        Annuler / Revoir
+                    </button>
+                 </div>
+             `;
+             
+             document.body.appendChild(overlay);
+        }
+
+        function signPostCagnotteContract(btn) {
+            btn.style.background = '#1a5f3f';
+            btn.style.color = 'white';
+            btn.innerHTML = '✅';
+            
+            setTimeout(() => {
+                document.getElementById('contractOverlay').remove();
+                
+                // Show Final Success
+                const success = document.createElement('div');
+                success.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:14000; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.5s;";
+                success.innerHTML = `
+                    <div style="background:white; padding:30px; border-radius:20px; width:90%; max-width:400px; text-align:center;">
+                        <div style="font-size:4rem; margin-bottom:15px;">🚚</div>
+                        <h2 style="color:#2d3436; margin-bottom:10px;">Commande Validée !</h2>
+                        <p style="color:#636e72;">Votre contrat est signé. La livraison est programmée.</p>
+                        <button onclick="window.location.reload(); alert('Redirection vers Mes Commandes...')" style="margin-top:20px; padding:12px 24px; background:#0984e3; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">
+                            Voir mes commandes
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(success);
+            }, 800);
+        }
 
     </script>
 </body>
