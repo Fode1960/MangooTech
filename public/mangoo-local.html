@@ -741,7 +741,7 @@
             border-radius: 50%;
         }
         .wallet-label { font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px; }
-        .wallet-balance { font-size: 2rem; font-weight: bold; margin-bottom: 20px; }
+        .wallet-balance { font-size: 2rem; font-weight: bold; margin-bottom: 20px; cursor: pointer; text-decoration: underline; text-decoration-style: dotted; }
         /* === SELLER MODE CARD === */
         .seller-mode-card {
             background: white;
@@ -1579,7 +1579,7 @@
             <!-- WALLET SECTION -->
             <div class="wallet-card">
                 <div class="wallet-label">Solde Mangoo Pay</div>
-                <div class="wallet-balance">125 000 FCFA</div>
+                <div class="wallet-balance" onclick="rechargeBalance()" title="Cliquez pour recharger">150 000 FCFA</div>
                 
                 <div style="margin-bottom: 20px; font-size: 0.9rem; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; display: flex; justify-content: space-between;">
                     <span>⚡ Crédit Instantané</span>
@@ -1591,7 +1591,7 @@
                 </button>
 
                 <div class="wallet-actions">
-                    <button class="wallet-btn" onclick="alert('Rechargement via Mobile Money (Orange/MTN) bientôt disponible.')">📥 Recharger</button>
+                    <button class="wallet-btn" onclick="rechargeBalance()">📥 Recharger</button>
                     <button class="wallet-btn" onclick="alert('Retrait vers votre compte Mobile Money bientôt disponible.')">📤 Retirer</button>
                 </div>
             </div>
@@ -1648,7 +1648,7 @@
             </div>
 
             <div class="menu-grid">
-                <div class="menu-item" onclick="openLogisticsModal()">
+                <div class="menu-item" onclick="openOrdersModal()">
                     <span class="menu-icon">📦</span>
                     <span class="menu-label">Mes Commandes & Suivi</span>
                 </div>
@@ -2298,20 +2298,35 @@
             const micBtn = document.querySelector('.mic-btn');
             const searchInput = document.getElementById('searchInput');
 
-            recognition.onstart = () => {
-                micBtn.classList.add('mic-active');
-                searchInput.placeholder = "Parlez maintenant...";
-            };
+            // Visual Feedback
+            micBtn.style.background = '#e74c3c';
+            micBtn.style.color = 'white';
+            micBtn.classList.add('pulse'); // Add pulsing animation class if exists
 
-            recognition.onend = () => {
-                micBtn.classList.remove('mic-active');
-                searchInput.placeholder = "Dites 'Vivres' ou 'Tech'...";
-            };
-
-            recognition.onresult = (event) => {
+            recognition.onresult = function(event) {
                 const transcript = event.results[0][0].transcript;
                 searchInput.value = transcript;
-                filterVendors();
+                
+                // Trigger Search
+                filterVendors(transcript);
+                
+                // Reset UI
+                micBtn.style.background = '';
+                micBtn.style.color = '';
+                micBtn.classList.remove('pulse');
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Speech Error", event.error);
+                micBtn.style.background = '';
+                micBtn.style.color = '';
+                micBtn.classList.remove('pulse');
+            };
+            
+            recognition.onend = function() {
+                 micBtn.style.background = '';
+                 micBtn.style.color = '';
+                 micBtn.classList.remove('pulse');
             };
 
             recognition.start();
@@ -2500,6 +2515,18 @@
             } else {
                 showError("La carte n'a pas pu être chargée. Vérifiez votre connexion internet.");
             }
+        });
+
+        // === FIX: CORRECT REDIRECTION FOR ORDERS BUTTON ===
+        document.addEventListener('DOMContentLoaded', () => {
+             const orderCards = document.querySelectorAll('.card');
+             if(orderCards) {
+                 orderCards.forEach(card => {
+                     if(card.innerText.includes('Mes Commandes')) {
+                         card.onclick = openOrdersModal;
+                     }
+                 });
+             }
         });
 
         function showError(msg) {
@@ -2846,11 +2873,11 @@
                             <div style="font-size: 0.85rem; color: #00695c; margin-bottom: 5px;">Contribution par membre</div>
                             <div id="groupShareAmount" style="font-size: 1.5rem; font-weight: 800; color: #004d40;">${priceVal ? Math.ceil(priceVal/5).toLocaleString() : 0} FCFA</div>
                             <div style="width: 100%; height: 1px; background: #b2dfdb; margin: 10px 0;"></div>
-                            <div style="font-size: 0.85rem; color: #00695c; margin-bottom: 5px;">Le Vendeur reçoit (Total Immédiat)</div>
+                            <div style="font-size: 0.85rem; color: #00695c; margin-bottom: 5px;">Total à Collecter (Prix Produit)</div>
                             <div id="groupTotalRecieve" style="font-size: 1.2rem; font-weight: bold; color: #1b5e20;">${priceVal ? priceVal.toLocaleString() : 0} FCFA</div>
                             
                             <div style="font-size: 0.75rem; color: #004d40; margin-top: 10px; font-style: italic;">
-                                🔄 <b>Rotation :</b> Le groupe paie la totalité à chaque échéance. Un membre différent récupère le produit à chaque tour.
+                                🔄 <b>Principe :</b> Chaque membre paie sa part. Une fois le total atteint, le produit est livré.
                             </div>
                         </div>
                     </div>
@@ -2943,18 +2970,26 @@
             window.handleTontineValidation = function(pName) {
                 // Determine Amount
                 let amount = 0;
+                let isGroup = false;
                 
                 const btnGroup = document.getElementById('btnModeGroup');
                 const btnCredit = document.getElementById('btnModeCredit'); 
                 
-                // Check if Group Mode is active (white background)
-                if (btnGroup && btnGroup.style.background === 'white') {
+                // Check if Group Mode is active
+                // ROBUST CHECK: Check if the View is visible instead of button style
+                const viewGroup = document.getElementById('tontineGroupView');
+                const viewCredit = document.getElementById('tontineCreditView');
+                
+                const isGroupVisible = viewGroup && (viewGroup.style.display === 'block' || getComputedStyle(viewGroup).display === 'block');
+                const isCreditVisible = viewCredit && (viewCredit.style.display === 'block' || getComputedStyle(viewCredit).display === 'block');
+
+                if (isGroupVisible) {
                     // Get text like "15 000 FCFA"
                     const text = document.getElementById('groupShareAmount').innerText;
                     amount = parseInt(text.replace(/[^0-9]/g, '')) || 0;
+                    isGroup = true;
                 } 
-                // Check if Credit Mode is active
-                else if (btnCredit && btnCredit.style.background === 'white') {
+                else if (isCreditVisible) {
                      // Credit usually requires first installment
                      amount = parseInt(document.getElementById('creditAmount').value) || 0;
                 }
@@ -2967,7 +3002,23 @@
                 if(typeof openPaymentModal === 'function') {
                     // Pass the callback to openContractModal
                     openPaymentModal(amount, function() {
-                        openContractModal(pName);
+                        if(isGroup) {
+                            // Fix: Ensure we parse total correctly even if it has spaces or formatting
+                            const totalInput = document.getElementById('tontineTotalPrice').value;
+                            const total = parseInt(totalInput.toString().replace(/[^0-9]/g, '')) || 0;
+                            const size = parseInt(document.getElementById('groupSize').value) || 1;
+                            
+                            // Reset State if Starting New
+                            // If previous state was complete, force reset
+                            // ALSO FORCE RESET if user is starting a NEW checkout flow to avoid stuck state
+                            if(window.crowdfundingState) {
+                                window.crowdfundingState = undefined;
+                            }
+
+                            showGroupTontineInvite(total, amount, size, pName);
+                        } else {
+                            openContractModal(pName);
+                        }
                     });
                 } else {
                     console.error("Payment Modal function missing");
@@ -3000,7 +3051,9 @@
             };
 
             window.updateCreditDuration = function() {
-                const currentTotal = parseInt(document.getElementById('tontineTotalPrice').value) || 0;
+                const totalInput = document.getElementById('tontineTotalPrice').value;
+                const currentTotal = parseInt(totalInput.toString().replace(/[^0-9]/g, '')) || 0;
+                
                 const amount = parseInt(document.getElementById('creditAmount').value) || 0;
                 if(amount > 0 && currentTotal > 0) {
                     const count = Math.ceil(currentTotal / amount);
@@ -3094,9 +3147,12 @@
             const btnGroup = document.getElementById('btnModeGroup');
             const btnCredit = document.getElementById('btnModeCredit');
             
-            // Safely check styles - if not white, assume not active
-            const isGroup = btnGroup && btnGroup.style.background === 'white';
-            const isCredit = btnCredit && btnCredit.style.background === 'white';
+            // Safely check styles using View Visibility (Robust)
+            const viewGroup = document.getElementById('tontineGroupView');
+            const viewCredit = document.getElementById('tontineCreditView');
+            
+            const isGroup = viewGroup && (viewGroup.style.display === 'block' || getComputedStyle(viewGroup).display === 'block');
+            const isCredit = viewCredit && (viewCredit.style.display === 'block' || getComputedStyle(viewCredit).display === 'block');
             
             if(isGroup) {
                 mode = 'Tontine Groupe';
@@ -3483,6 +3539,128 @@
             }, 1000); // Check every second
         }
 
+        // === GROUP TONTINE INVITE ===
+        function showGroupTontineInvite(total, shareAmount, size, productName) {
+             // STORE GLOBAL VARS FOR UPDATES
+             // FORCE RECALCULATION IF TOTAL SEEMS WRONG (Sanity Check)
+             const calculatedTotal = shareAmount * size;
+             if(total < calculatedTotal) {
+                 console.warn("Total inconsistent, recalculating:", total, "->", calculatedTotal);
+                 total = calculatedTotal;
+             }
+             
+             window.currentGroupShare = shareAmount;
+             
+             // ALWAYS RESET/INIT STATE CORRECTLY ON OPEN
+             // This ensures if user restarts the flow, it starts clean or maintains correct total
+             if(typeof window.crowdfundingState === 'undefined' || window.crowdfundingState.totalNeeded !== total) {
+                 window.crowdfundingState = {
+                     currentRaised: shareAmount, // Start with 1 share paid (Current User)
+                     totalNeeded: total
+                 };
+             } else {
+                 // State exists and total matches.
+                 // Ensure we at least have the creator's share
+                 if(window.crowdfundingState.currentRaised < shareAmount) {
+                      window.crowdfundingState.currentRaised = shareAmount;
+                 }
+             }
+             
+             console.log("TONTINE STATE:", window.crowdfundingState);
+
+             // Define simulateThirdPartyPay if not exists
+             if(typeof window.simulateThirdPartyPay === 'undefined') {
+                 window.simulateThirdPartyPay = function(amount) {
+                     const overlay = document.createElement('div');
+                     overlay.id = 'mangoo-checkout-overlay';
+                     overlay.className = 'modal-overlay';
+                     overlay.style.display = 'flex';
+                     overlay.style.zIndex = '12000';
+                     
+                     overlay.innerHTML = `
+                         <div class="modal-card">
+                             <span class="modal-icon">💳</span>
+                             <h3 class="modal-title">Paiement Participant (Test)</h3>
+                             <p class="modal-text">Simulez le paiement d'un autre membre du groupe.</p>
+                             
+                             <div style="background:#f9f9f9; padding:15px; border-radius:10px; margin-bottom:20px;">
+                                 <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                     <span>Montant à payer :</span>
+                                     <b>${amount.toLocaleString()} FCFA</b>
+                                 </div>
+                             </div>
+                             
+                             <button onclick="confirmThirdPartyPay(${amount}, this)" style="width:100%; padding:15px; background:#27ae60; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1rem;">
+                                 Payer ${amount.toLocaleString()} FCFA
+                             </button>
+                             
+                             <button onclick="document.getElementById('mangoo-checkout-overlay').remove()" style="margin-top:15px; background:transparent; border:none; color:#636e72; cursor:pointer; text-decoration:underline;">
+                                 Annuler
+                             </button>
+                         </div>
+                     `;
+                     document.body.appendChild(overlay);
+                 };
+             }
+             
+             const overlay = document.createElement('div');
+             overlay.id = 'groupInviteOverlay';
+             overlay.style.cssText = `
+                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                 background: rgba(0,0,0,0.9); z-index: 10000;
+                 display: flex; flex-direction: column; align-items: center; justify-content: center;
+                 font-family: sans-serif; animation: fadeIn 0.3s;
+             `;
+             
+             const link = `https://mangoo.ci/join/${Date.now()}`;
+             
+             overlay.innerHTML = `
+                 <div style="background: white; width: 90%; max-width: 380px; border-radius: 20px; overflow: hidden; padding: 25px; text-align: center; position:relative;">
+                     <div style="font-size: 3rem; margin-bottom: 10px;">👥</div>
+                     <h2 style="color: #1a5f3f; margin-bottom: 5px;">Tontine de Groupe Créée !</h2>
+                     <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">
+                         Votre part de <b>${shareAmount.toLocaleString()} FCFA</b> a été validée.
+                     </p>
+                     
+                     <div style="background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+                         <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.85rem; color: #1a5f3f;">
+                             <span>Progression</span>
+                             <span>1/${size} Participants</span>
+                         </div>
+                         <div style="width: 100%; height: 8px; background: #c8e6c9; border-radius: 4px; overflow: hidden;">
+                             <div style="width: ${100/size}%; height: 100%; background: #27ae60;"></div>
+                         </div>
+                     </div>
+                     
+                     <div style="text-align: left; margin-bottom: 20px;">
+                         <div style="font-size: 0.85rem; font-weight: bold; color: #333; margin-bottom: 8px;">Invitez les autres participants :</div>
+                         <div style="display: flex; gap: 10px;">
+                             <input type="text" value="${link}" readonly style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; color: #555;">
+                             <button onclick="copyToClip('${link}')" style="background: #1a5f3f; color: white; border: none; padding: 0 15px; border-radius: 8px; cursor: pointer; font-weight: bold;">Copier</button>
+                         </div>
+                         <div style="font-size: 0.75rem; color: #888; margin-top: 5px;">
+                             Chaque participant paiera sa part de ${shareAmount.toLocaleString()} FCFA via ce lien.
+                         </div>
+                         <div style="margin-top: 15px;">
+                             <button onclick="simulateThirdPartyPay(${shareAmount})" style="width: 100%; padding: 10px; background: #fff3e0; color: #e65100; border: 1px dashed #e65100; border-radius: 8px; font-size: 0.85rem; font-weight: bold; cursor: pointer;">
+                                 👁️ Simuler Vue Participant (Test)
+                             </button>
+                         </div>
+                     </div>
+                     
+                     <button onclick="document.getElementById('groupInviteOverlay').remove(); showTontineSchedule('${productName}', 'group', ${size}, ${shareAmount})" style="width: 100%; padding: 15px; background: #0984e3; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 1rem;">
+                         Voir l'échéancier / Suivi
+                     </button>
+                     
+                     <button onclick="document.getElementById('groupInviteOverlay').remove()" style="margin-top: 10px; background: transparent; border: none; color: #999; cursor: pointer; text-decoration: underline;">
+                         Fermer
+                     </button>
+                 </div>
+             `;
+             
+             document.body.appendChild(overlay);
+        }
+
         function confirmTontine(productName) {
             document.getElementById('tontineOverlay').remove();
             
@@ -3490,19 +3668,46 @@
             showTontineSchedule(productName);
         }
 
-        function showTontineSchedule(productName) {
+        function showTontineSchedule(productName, mode = 'solo', groupSize = 1, groupShare = 0) {
             // Cleanup previous overlays to ensure we return to main page on close
             const tontine = document.getElementById('tontineOverlay');
             if(tontine) tontine.remove();
             
             const contract = document.getElementById('contractOverlay');
             if(contract) contract.remove();
+            
+            const invite = document.getElementById('groupInviteOverlay');
+            if(invite) invite.remove();
+
+            // === RECALCULATE DYNAMIC DATA ===
+            let shareAmount = groupShare;
+            let totalAmount = 0;
+            
+            // Try to recover data from global state if missing
+            if(mode === 'group') {
+                 if(!shareAmount && window.currentGroupShare) shareAmount = window.currentGroupShare;
+                 if(!groupSize && window.crowdfundingState && window.crowdfundingState.totalNeeded) {
+                      groupSize = Math.round(window.crowdfundingState.totalNeeded / shareAmount);
+                 }
+            } else {
+                 // Solo Mode Logic
+                 // Try to find total amount from input if available
+                 const inputTotal = document.getElementById('tontineTotalPrice');
+                 if(inputTotal) {
+                     totalAmount = parseInt(inputTotal.value.replace(/[^0-9]/g, '')) || 0;
+                 }
+                 // If not found (modal closed), default to 5000 * 4 or standard
+                 if(!totalAmount) totalAmount = 20000; // Fallback
+                 
+                 // Share is typically Total / 4 (Weekly)
+                 if(!shareAmount) shareAmount = Math.ceil(totalAmount / 4);
+            }
 
             const overlay = document.createElement('div');
             overlay.id = 'scheduleOverlay';
             overlay.style.cssText = `
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: #f8fafc; z-index: 9000; overflow-y: auto;
+                background: #f8fafc; z-index: 20000; overflow-y: auto;
                 font-family: sans-serif;
             `;
             
@@ -3515,26 +3720,78 @@
                 dates.push(d);
             }
             
-            overlay.innerHTML = `
-                <div style="background: #1a5f3f; padding: 20px; color: white; border-radius: 0 0 25px 25px; box-shadow: 0 4px 15px rgba(26, 95, 63, 0.2);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <button onclick="document.getElementById('scheduleOverlay').remove()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 10px; font-weight: bold; cursor: pointer;">✕ Fermer</button>
-                        <h2 style="margin: 0; font-size: 1.2rem;">Échéancier</h2>
-                        <div style="width: 40px;"></div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 5px;">Produit</div>
-                        <div style="font-size: 1.5rem; font-weight: 800;">${productName}</div>
-                        <div style="font-size: 0.8rem; margin-top: 10px; background: rgba(255,255,255,0.15); display: inline-block; padding: 5px 15px; border-radius: 15px;">
-                            📅 Prochain paiement : ${dates[0].toLocaleDateString('fr-FR')}
-                        </div>
-                    </div>
-                </div>
+            // CONTENT GENERATION
+            let contentHtml = '';
+            
+            if(mode === 'group') {
+                // GROUP MODE VIEW
+                const participants = [];
+                // Add Me
+                participants.push({ name: "Moi (Créateur)", status: "Payé", color: "#27ae60", date: "Aujourd'hui" });
                 
-                <div style="padding: 20px; max-width: 500px; margin: 0 auto;">
+                // Calculate current status from Global State
+                let paidCount = 1; // Me
+                if(window.crowdfundingState && window.crowdfundingState.currentRaised) {
+                    paidCount = Math.floor(window.crowdfundingState.currentRaised / shareAmount);
+                }
+                
+                // Add Others
+                for(let i=1; i<groupSize; i++) {
+                    const isPaid = (i + 1) <= paidCount;
+                    participants.push({ 
+                        name: `Participant ${i+1}`, 
+                        status: isPaid ? "Payé" : "En attente", 
+                        color: isPaid ? "#27ae60" : "#b2bec3", 
+                        date: isPaid ? "Aujourd'hui" : "-" 
+                    });
+                }
+                
+                contentHtml = `
+                    <div style="background: white; border-radius: 15px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px;">
+                        <h3 style="margin-top: 0; color: #333; font-size: 1rem; border-bottom: 1px solid #eee; padding-bottom: 10px;">Suivi des Participants</h3>
+                        ${participants.map((p, index) => `
+                            <div style="display: flex; align-items: center; padding: 15px 0; border-bottom: ${index < participants.length - 1 ? '1px dashed #eee' : 'none'};">
+                                <div style="background: ${p.status === 'Payé' ? '#e8f5e9' : '#f1f2f6'}; color: ${p.status === 'Payé' ? '#1b5e20' : '#636e72'}; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px;">
+                                    ${index + 1}
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: bold; color: #333;">${p.name}</div>
+                                    <div style="font-size: 0.85rem; color: #666;">${shareAmount.toLocaleString()} FCFA</div>
+                                </div>
+                                <div style="font-size: 0.8rem; font-weight:bold; color:${p.status === 'Payé' ? '#1b5e20' : '#636e72'}; background:${p.status === 'Payé' ? '#e8f5e9' : '#f1f2f6'}; padding:4px 8px; border-radius:10px;">
+                                    ${p.status}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div style="text-align:center; margin-bottom:20px;">
+                        <button onclick="showGroupTontineInvite(${shareAmount * groupSize}, ${shareAmount}, ${groupSize}, '${productName}')" style="background:#dfe6e9; color:#2d3436; border:none; padding:10px 20px; border-radius:20px; font-weight:bold; cursor:pointer;">
+                            🔗 Réafficher le lien d'invitation
+                        </button>
+                    </div>
+                    
+                    <div style="text-align:center; margin-bottom:20px; display:flex; flex-direction:column; gap:10px;">
+                        ${paidCount < groupSize ? `
+                        <button onclick="simulateThirdPartyPay(${shareAmount})" style="background:#fff3e0; color:#e65100; border:1px dashed #e65100; padding:10px 20px; border-radius:20px; font-weight:bold; cursor:pointer;">
+                            👁️ Simuler un paiement participant (Test)
+                        </button>
+                        
+                        <button onclick="simulateThirdPartyPay(${shareAmount})" style="background:#e3f2fd; color:#0d47a1; border:1px dashed #0d47a1; padding:10px 20px; border-radius:20px; font-weight:bold; cursor:pointer;">
+                            👥 Simuler entrée Participant suivant (3 000 F)
+                        </button>
+                        ` : `
+                        <div style="background:#e8f5e9; padding:15px; border-radius:10px; color:#2e7d32; font-weight:bold;">
+                            🎉 Tous les paiements sont terminés !
+                        </div>
+                        `}
+                    </div>
+                `;
+            } else {
+                // SOLO MODE VIEW (Default)
+                contentHtml = `
                     <div style="background: white; border-radius: 15px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px;">
                         <h3 style="margin-top: 0; color: #333; font-size: 1rem; border-bottom: 1px solid #eee; padding-bottom: 10px;">Vos Échéances</h3>
-                        
                         ${dates.map((d, index) => `
                             <div style="display: flex; align-items: center; padding: 15px 0; border-bottom: ${index < 3 ? '1px dashed #eee' : 'none'};">
                                 <div style="background: ${index === 0 ? '#e8f5e9' : '#f3f4f6'}; color: ${index === 0 ? '#1b5e20' : '#888'}; width: 50px; height: 50px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px;">
@@ -3543,7 +3800,7 @@
                                 </div>
                                 <div style="flex: 1;">
                                     <div style="font-weight: bold; color: #333;">Versement N°${index+1}</div>
-                                    <div style="font-size: 0.85rem; color: #666;">5 000 FCFA</div>
+                                    <div style="font-size: 0.85rem; color: #666;">${shareAmount.toLocaleString()} FCFA</div>
                                 </div>
                                 <button onclick="simulateReminder('${productName}', '${d.toLocaleDateString('fr-FR')}')" style="background: #fff3e0; color: #e65100; border: none; padding: 8px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;">
                                     🔔 Simuler (J-3)
@@ -3551,6 +3808,27 @@
                             </div>
                         `).join('')}
                     </div>
+                `;
+            }
+            
+            overlay.innerHTML = `
+                <div style="background: #1a5f3f; padding: 20px; color: white; border-radius: 0 0 25px 25px; box-shadow: 0 4px 15px rgba(26, 95, 63, 0.2);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <button onclick="document.getElementById('scheduleOverlay').remove()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 10px; font-weight: bold; cursor: pointer;">✕ Fermer</button>
+                        <h2 style="margin: 0; font-size: 1.2rem;">${mode === 'group' ? 'Suivi Tontine' : 'Échéancier'}</h2>
+                        <div style="width: 40px;"></div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 5px;">Produit</div>
+                        <div style="font-size: 1.5rem; font-weight: 800;">${productName}</div>
+                        <div style="font-size: 0.8rem; margin-top: 10px; background: rgba(255,255,255,0.15); display: inline-block; padding: 5px 15px; border-radius: 15px;">
+                            ${mode === 'group' ? '📅 En attente des participants' : `📅 Prochain paiement : ${dates[0].toLocaleDateString('fr-FR')}`}
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="padding: 20px; max-width: 500px; margin: 0 auto;">
+                    ${contentHtml}
                     
                     <div style="background: #e3f2fd; padding: 15px; border-radius: 12px; color: #0d47a1; font-size: 0.9rem; line-height: 1.4; display: flex; gap: 10px;">
                         <span style="font-size: 1.2rem;">🛡️</span>
@@ -4249,6 +4527,9 @@
                 
                 if (confirm(`✅ Félicitations ! Votre score de confiance est élevé.\n\nMangoo peut vous avancer ${creditAmount.toLocaleString()} FCFA immédiatement.\n\nRemboursement : 26 500 FCFA dans 14 jours.\n\nAccepter l'offre ?`)) {
                     currentBalance += creditAmount;
+                    // UPDATE BALANCE
+                    userBalance = currentBalance;
+                    localStorage.setItem('mangoo_user_balance', userBalance);
                     document.querySelector('.wallet-balance').innerText = currentBalance.toLocaleString() + " FCFA";
                     alert("💸 Crédit débloqué ! Votre solde a été mis à jour.");
                     btn.style.display = 'none'; // Hide button after use
@@ -4257,6 +4538,20 @@
                     btn.style.opacity = '1';
                 }
             }, 2000);
+        }
+        
+        // === RECHARGE BALANCE LOGIC (NEW) ===
+        function rechargeBalance() {
+            const amount = prompt("Combien voulez-vous recharger ? (FCFA)", "50000");
+            if(amount) {
+                const val = parseInt(amount.replace(/\D/g,'')) || 0;
+                if(val > 0) {
+                    userBalance += val;
+                    localStorage.setItem('mangoo_user_balance', userBalance);
+                    document.querySelector('.wallet-balance').innerText = userBalance.toLocaleString() + " FCFA";
+                    alert(`✅ Votre compte a été rechargé de ${val.toLocaleString()} FCFA.`);
+                }
+            }
         }
 
         // === SELLER MODE ===
@@ -4944,6 +5239,13 @@
 
         // === MODAL SELLER LOGIC ===
         function openSellerModal() {
+            // FIX: If trying to open 'Mes Commandes', redirect
+            // This is a safety catch if onclick is mis-assigned
+            if(arguments[0] && arguments[0].target && arguments[0].target.innerText.includes('Commandes')) {
+                openOrdersModal();
+                return;
+            }
+            
             const modal = document.getElementById('sellerModal');
             modal.style.display = 'flex';
             
@@ -5492,6 +5794,13 @@
             // Validation
             if(currentPaymentMethod === 'mangoo_balance') {
                 if(userBalance < currentPaymentAmount) return; // Blocked
+                
+                // PIN Check Logic
+                const pin = prompt("🔐 Sécurité : Entrez votre code PIN (0000 par défaut) pour valider le débit :");
+                if(pin !== '0000') {
+                    alert("Code PIN incorrect ! Paiement annulé.");
+                    return;
+                }
             }
             else if(currentPaymentMethod === 'paypal') {
                  const email = document.getElementById('paymentPhone').value;
@@ -5585,8 +5894,8 @@
              updateSplitCalc();
         }
         
-        // State for Crowdfunding
-        let crowdfundingState = {
+        // State for Crowdfunding (Global)
+        window.crowdfundingState = {
             totalNeeded: 0,
             currentRaised: 0
         };
@@ -5710,8 +6019,8 @@
                         🔒 <b>Sécurité :</b> Les fonds sont sécurisés par Mangoo jusqu'à ce que le montant total soit atteint.
                     </div>
                     
-                    <button onclick="this.parentElement.parentElement.remove(); copyToClip('${link}')" style="width:100%; padding:12px; background:#00b894; color:white; border:none; border-radius:8px; font-weight:bold; margin-bottom:10px;">
-                        Copier & Fermer
+                    <button onclick="copyToClip('${link}')" style="width:100%; padding:12px; background:#00b894; color:white; border:none; border-radius:8px; font-weight:bold; margin-bottom:10px;">
+                        Copier le Lien
                     </button>
                     
                     <button onclick="simulateThirdPartyPay(${amountNeeded})" style="width:100%; padding:12px; background:#dfe6e9; color:#2d3436; border:none; border-radius:8px; font-weight:bold;">
@@ -5723,8 +6032,61 @@
 
             
             window.copyToClip = (txt) => {
-                navigator.clipboard.writeText(txt);
-                alert("Lien copié !");
+                const fallbackCopy = (text) => {
+                    try {
+                        const textArea = document.createElement("textarea");
+                        textArea.value = text;
+                        textArea.style.position = "fixed";
+                        textArea.style.left = "-9999px";
+                        document.body.appendChild(textArea);
+                        textArea.focus();
+                        textArea.select();
+                        const successful = document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        return successful;
+                    } catch (err) {
+                        console.error('Fallback copy failed', err);
+                        return false;
+                    }
+                };
+
+                const updateButtonUI = (btn) => {
+                    if(!btn) return;
+                    const originalText = btn.innerText;
+                    const originalBg = btn.style.background;
+                    
+                    btn.innerText = "Copié !";
+                    btn.style.background = "#27ae60";
+                    // Avoid re-click spam
+                    const originalOnClick = btn.onclick;
+                    btn.onclick = null;
+                    
+                    setTimeout(() => {
+                        btn.innerText = originalText;
+                        btn.style.background = originalBg;
+                        btn.onclick = originalOnClick;
+                    }, 2000);
+                };
+
+                // TRY FALLBACK FIRST
+                if (fallbackCopy(txt)) {
+                    // Find button to update
+                    let btn = document.querySelector('#groupInviteOverlay button[onclick^="copyToClip"]');
+                    if (!btn) {
+                        const buttons = document.querySelectorAll('button');
+                        for(let b of buttons) {
+                            if(b.innerText.trim() === 'Copier' || b.innerText.trim() === 'Copier le Lien') {
+                                btn = b;
+                                break;
+                            }
+                        }
+                    }
+                    if(btn) updateButtonUI(btn);
+                    else alert("Lien copié !");
+                } else {
+                    // LAST RESORT: PROMPT
+                    prompt("Appuyez sur Ctrl+C pour copier le lien :", txt);
+                }
             };
         }
             
@@ -5737,8 +6099,11 @@
                 // If this is a fresh simulation start (not a recursive call from partial payment), reset or use passed amount
                 // But for simplicity in this prototype, we rely on the global crowdfundingState if it exists and matches
                 let remaining = amount;
-                if(crowdfundingState.totalNeeded > 0) {
-                     remaining = crowdfundingState.totalNeeded - crowdfundingState.currentRaised;
+                if(window.crowdfundingState && window.crowdfundingState.totalNeeded > 0) {
+                     // FIX: If amount passed is specifically for an installment (e.g. 3000), use that.
+                     // Otherwise calculate remaining for full payoff.
+                     // Here we assume 'amount' is the intended payment (e.g. 3000 for 2nd installment)
+                     remaining = amount; 
                 }
 
                 const shareOverlay = document.getElementById('mangoo-share-overlay');
@@ -5750,7 +6115,7 @@
                 // Create Third Party Checkout View
                 const checkout = document.createElement('div');
                 checkout.id = 'mangoo-checkout-overlay';
-                checkout.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:#f8f9fa; z-index:11000; overflow-y:auto; display:flex; flex-direction:column; align-items:center; padding:20px; font-family:sans-serif;";
+                checkout.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:#f8f9fa; z-index:21000; overflow-y:auto; display:flex; flex-direction:column; align-items:center; padding:20px; font-family:sans-serif;";
                 
                 checkout.innerHTML = `
                     <style>
@@ -5771,7 +6136,7 @@
                         @keyframes spin { 100% { transform: rotate(360deg); } }
                         
                         .progress-bar { width: 100%; height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden; margin-top: 10px; }
-                        .progress-fill { height: 100%; background: #00b894; width: ${(crowdfundingState.currentRaised / crowdfundingState.totalNeeded * 100)}%; transition: width 0.5s ease; }
+                        .progress-fill { height: 100%; background: #00b894; width: ${(window.crowdfundingState.currentRaised / window.crowdfundingState.totalNeeded * 100)}%; transition: width 0.5s ease; }
                     </style>
                     <div id="checkout-card" style="width:100%; max-width:480px; background:white; padding:25px; border-radius:15px; box-shadow:0 10px 40px rgba(0,0,0,0.1); margin-top:20px; animation: slideUp 0.4s ease-out;">
                         <!-- Header -->
@@ -5850,16 +6215,28 @@
                                 <div class="tp-radio" style="width:20px; height:20px; border:2px solid #dfe6e9; border-radius:50%;"></div>
                             </div>
                             
-                            <!-- Mangoo Balance (NEW) -->
-                            <div onclick="selectThirdPartyMethod(this, 'mangoo_balance')" class="tp-method" style="border:2px solid #dfe6e9; padding:15px; border-radius:10px; margin-bottom:10px; cursor:pointer; display:flex; align-items:center; gap:15px; transition:all 0.2s;">
-                                <div style="font-size:1.5rem;">🥭</div>
-                                <div style="flex:1;">
-                                    <div style="font-weight:bold; color:#2d3436;">Solde Mangoo</div>
-                                    <div style="font-size:0.8rem; color:#636e72;">Compte MangooTech</div>
-                                </div>
-                                <div class="tp-radio" style="width:20px; height:20px; border:2px solid #dfe6e9; border-radius:50%;"></div>
+                        <!-- Mangoo Balance (NEW) -->
+                        <div onclick="selectThirdPartyMethod(this, 'mangoo_balance')" class="tp-method" style="border:2px solid #dfe6e9; padding:15px; border-radius:10px; margin-bottom:10px; cursor:pointer; display:flex; align-items:center; gap:15px; transition:all 0.2s;">
+                            <div style="font-size:1.5rem;">🥭</div>
+                            <div style="flex:1;">
+                                <div style="font-weight:bold; color:#2d3436;">Solde Mangoo</div>
+                                <div style="font-size:0.8rem; color:#636e72;">Utiliser mon compte Mangoo</div>
+                            </div>
+                            <div class="tp-radio" style="width:20px; height:20px; border:2px solid #dfe6e9; border-radius:50%;"></div>
+                        </div>
+
+                        <!-- Payment Fields -->
+                        <div id="tp-payment-fields" style="display:none; background:#f9f9f9; padding:15px; border-radius:10px; border:1px solid #dfe6e9; margin-bottom:20px; animation: fadeIn 0.3s;">
+                            <label style="display:block; font-size:0.85rem; font-weight:bold; color:#2d3436; margin-bottom:5px;">Numéro de téléphone / Email</label>
+                            <input type="text" id="tp-phone-input" placeholder="+225 07..." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-size:1rem;">
+                            
+                            <!-- Balance PIN (New) -->
+                            <div id="tp-balance-pin" style="display:none; margin-top:10px;">
+                                <label style="display:block; font-size:0.85rem; font-weight:bold; color:#2d3436; margin-bottom:5px;">Code PIN Mangoo (4 chiffres)</label>
+                                <input type="password" id="tp-pin-input" placeholder="****" maxlength="4" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-size:1rem; letter-spacing: 5px; text-align: center;">
                             </div>
                         </div>
+
 
                         <!-- Pay Button -->
                         <button id="btnThirdPartyPay" disabled onclick="confirmThirdPartyPay(document.getElementById('contributionAmount').value, this)" style="width:100%; padding:18px; background:#b2bec3; color:white; border:none; border-radius:12px; font-size:1.1rem; font-weight:bold; cursor:not-allowed; transition:all 0.3s;">
@@ -5902,6 +6279,26 @@
                     radio.style.background = '#00b894';
                     radio.style.border = '2px solid #00b894';
                 }
+
+                // Handle Fields Visibility
+                const fields = document.getElementById('tp-payment-fields');
+                const pinArea = document.getElementById('tp-balance-pin');
+                
+                if (fields) {
+                    if (type === 'mobile_money' || type === 'mangoo_balance' || type === 'paypal') {
+                        fields.style.display = 'block';
+                        // Scroll to fields
+                        fields.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } else {
+                        fields.style.display = 'none';
+                    }
+                    
+                    if (type === 'mangoo_balance') {
+                        if(pinArea) pinArea.style.display = 'block';
+                    } else {
+                        if(pinArea) pinArea.style.display = 'none';
+                    }
+                }
                 
                 // Enable Button
                 const btn = document.getElementById('btnThirdPartyPay');
@@ -5911,6 +6308,110 @@
                     btn.style.cursor = 'pointer';
                     btn.style.boxShadow = '0 5px 15px rgba(0,184,148,0.4)';
                 }
+            };
+            
+            window.confirmThirdPartyPay = (amount, btn) => {
+                 // Validate Fields if visible
+                 const fields = document.getElementById('tp-payment-fields');
+                 if (fields && fields.style.display !== 'none') {
+                     const phone = document.getElementById('tp-phone-input').value;
+                     if (!phone || phone.length < 5) {
+                         alert("Veuillez entrer un numéro de téléphone ou email valide.");
+                         return;
+                     }
+                     
+                     if (window.selectedMethod === 'mangoo_balance') {
+                         const pin = document.getElementById('tp-pin-input').value;
+                         if (pin !== '0000') {
+                             alert("Code PIN incorrect (Code par défaut: 0000).");
+                             return;
+                         }
+                     }
+                 }
+
+                 // Proceed
+                 btn.innerHTML = '<span class="spin">↻</span> Traitement...';
+                 btn.style.opacity = '0.8';
+                 
+                 setTimeout(() => {
+                     // Update State
+                     const contribution = parseInt(amount) || 0;
+                     if(typeof window.crowdfundingState !== 'undefined') {
+                         window.crowdfundingState.currentRaised += contribution;
+                         
+                         // Update UI Progress Bar if exists
+                         const fill = document.querySelector('.progress-fill');
+                         if(fill) {
+                             const pct = (window.crowdfundingState.currentRaised / window.crowdfundingState.totalNeeded * 100);
+                             fill.style.width = pct + '%';
+                         }
+                         
+                         // Check if complete
+                        if(window.crowdfundingState.currentRaised >= window.crowdfundingState.totalNeeded) {
+                            // SUCCESS FULL
+                        // DO NOT REMOVE OVERLAY YET - LET USER SEE SUCCESS
+                        
+                        // Remove Group Invite Overlay if exists
+                        const invite = document.getElementById('groupInviteOverlay');
+                        if(invite) invite.remove();
+                        
+                        setTimeout(() => {
+                            document.getElementById('mangoo-checkout-overlay').remove();
+                            // FIX: DO NOT OPEN CONTRACT AGAIN IF ALREADY SIGNED
+                            // Only open final contract if this is the final payment
+                            
+                            // Remove schedule overlay if exists
+                            const scheduleOverlay = document.getElementById('scheduleOverlay');
+                            if(scheduleOverlay) scheduleOverlay.remove();
+                            
+                            openPostCagnotteContract();
+                        }, 2000); // Wait 2 seconds for user to see "Contribution Validée"
+                    } else {
+                             // SUCCESS PARTIAL
+                             // Calculate remaining
+                             const remaining = window.crowdfundingState.totalNeeded - window.crowdfundingState.currentRaised;
+                             const progressPct = Math.min((window.crowdfundingState.currentRaised / window.crowdfundingState.totalNeeded) * 100, 100);
+                             
+                             alert(`✅ Contribution de ${contribution.toLocaleString()} FCFA reçue !\n\nIl reste ${remaining.toLocaleString()} FCFA à collecter.`);
+                             document.getElementById('mangoo-checkout-overlay').remove();
+                             
+                             // REFRESH SCHEDULE IF OPEN
+                             const scheduleOverlay = document.getElementById('scheduleOverlay');
+                             if(scheduleOverlay) {
+                                 // Re-render schedule to show updated status
+                                 // We simply remove it and re-open it with same params
+                                 scheduleOverlay.remove();
+                                 showTontineSchedule("Sneakers Pro", 'group', 5, 3000);
+                                 
+                                 // AUTO-TRIGGER NEXT PAYMENT IF NOT COMPLETE (Recursive Flow)
+                                 // Only for "Test" purposes to make it easier for user
+                                 setTimeout(() => {
+                                      // Ask user if they want to simulate next participant immediately
+                                      if(confirm("Voulez-vous simuler l'entrée du participant suivant immédiatement ?")) {
+                                          simulateThirdPartyPay(3000);
+                                      }
+                                 }, 500);
+                             }
+
+                             // Refresh Group Invite Overlay if open
+                             const inviteOverlay = document.getElementById('groupInviteOverlay');
+                             if(inviteOverlay) {
+                                 // Update Progress Bar
+                                 const progressBar = inviteOverlay.querySelector('div[style*="background: #27ae60"]');
+                                 if(progressBar) progressBar.style.width = progressPct + '%';
+                                 
+                                 // Update Text "1/X Participants" -> "X/Y Participants"
+                                 // We approximate participants count based on amount
+                                 const shareAmount = window.currentGroupShare || 3000;
+                                 const currentParticipants = Math.floor(window.crowdfundingState.currentRaised / shareAmount);
+                                 const totalParticipants = Math.ceil(window.crowdfundingState.totalNeeded / shareAmount);
+                                 
+                                 const progressText = inviteOverlay.querySelector('div[style*="justify-content: space-between"] span:last-child');
+                                 if(progressText) progressText.innerText = `${currentParticipants}/${totalParticipants} Participants`;
+                             }
+                         }
+                     }
+                 }, 1500);
             };
             
             window.triggerMomoPush = (el, provider) => {
@@ -5987,7 +6488,14 @@
                             // 3. Create New Overlay
                             const newOverlay = document.createElement('div');
                             newOverlay.id = 'mangoo-checkout-overlay-success';
-                            newOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:12000; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.3s;";
+                            newOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:22000; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.3s;";
+                            
+                            // REFRESH SCHEDULE HERE AS WELL
+                            const scheduleOverlay = document.getElementById('scheduleOverlay');
+                            if(scheduleOverlay) {
+                                scheduleOverlay.remove();
+                                showTontineSchedule("Sneakers Pro", 'group', 5, 3000);
+                            }
                             
                             let finalHtml = "";
                             
@@ -6008,7 +6516,7 @@
                                                 <span style="font-weight:bold; color:#d63031;">${realRemaining.toLocaleString()} FCFA</span>
                                             </div>
                                             <div class="progress-bar" style="height:10px; background:#dfe6e9; border-radius:5px;">
-                                                <div style="height:100%; background:#00b894; width:${(crowdfundingState.currentRaised / crowdfundingState.totalNeeded * 100)}%;"></div>
+                                                <div style="height:100%; background:#00b894; width:${(window.crowdfundingState.currentRaised / window.crowdfundingState.totalNeeded * 100)}%;"></div>
                                             </div>
                                         </div>
                                         
@@ -6040,8 +6548,11 @@
                                             <div style="font-size:0.8rem; color:#2e7d32;">Contrat numérique prêt pour signature.</div>
                                         </div>
                                         
-                                        <button onclick="document.getElementById('mangoo-checkout-overlay-success').remove(); openPostCagnotteContract();" style="width:100%; padding:15px; background:#0984e3; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1rem;">
+                                        <button onclick="document.getElementById('mangoo-checkout-overlay-success').remove(); const invite = document.getElementById('groupInviteOverlay'); if(invite) invite.remove(); openPostCagnotteContract();" style="width:100%; padding:15px; background:#0984e3; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1rem;">
                                             ✍️ Signer le Contrat Numérique
+                                        </button>
+                                        <button onclick="document.getElementById('mangoo-checkout-overlay-success').remove()" style="margin-top:10px; background:transparent; border:none; color:#999; cursor:pointer; text-decoration:underline; width:100%;">
+                                            Fermer
                                         </button>
                                     </div>
                                 `;
@@ -6310,6 +6821,57 @@
 
         // === LOGISTICS MODAL ===
         function openLogisticsModal() {
+            // Check if element exists first
+            const modal = document.getElementById('logisticsModal');
+            if(!modal) {
+                 // Create it dynamically if missing
+                 const newModal = document.createElement('div');
+                 newModal.id = 'logisticsModal';
+                 newModal.className = 'modal-overlay';
+                 newModal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:15000; display:none; align-items:center; justify-content:center; backdrop-filter:blur(5px);";
+                 newModal.onclick = (e) => { if(e.target.id === 'logisticsModal') newModal.style.display = 'none'; };
+                 
+                 newModal.innerHTML = `
+                    <div class="modal-card" style="width:90%; max-width:400px; background:#1e272e; color:white; border-radius:15px; overflow:hidden;">
+                        <div style="background:#0984e3; padding:20px; text-align:center;">
+                            <div style="font-size:3rem;">📦</div>
+                            <h2 style="margin:10px 0 5px;">Suivi Logistique</h2>
+                            <p style="font-size:0.8rem; opacity:0.8;">Suivez vos importations et vos livraisons locales Mangoo Express.</p>
+                        </div>
+                        
+                        <div style="padding:20px;">
+                            <div style="background:rgba(9,132,227,0.1); border:1px solid #0984e3; padding:10px; border-radius:8px; display:flex; gap:10px; align-items:flex-start; margin-bottom:20px;">
+                                <div style="color:#0984e3; font-size:1.2rem;">ℹ️</div>
+                                <div style="font-size:0.8rem; line-height:1.4;">
+                                    <b>Mangoo Logistics :</b> Nous regroupons vos commandes avec celles d'autres commerçants pour réduire les frais. Les livreurs locaux assurent le dernier kilomètre.
+                                </div>
+                            </div>
+                            
+                            <div style="margin-bottom:15px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; color:#bdc3c7; font-size:0.9rem;">
+                                    <span>En Transit (Import)</span>
+                                    <span>▼</span>
+                                </div>
+                                
+                                <div style="background:#2d3436; padding:12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                                    <span style="font-weight:bold;">Commande #IMP-8823</span>
+                                    <div style="display:flex; align-items:center; gap:10px;">
+                                        <span style="color:#0984e3; font-weight:bold;">J-5</span>
+                                        <span style="font-size:0.8rem;">▼</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button onclick="document.getElementById('logisticsModal').style.display='none'" style="width:100%; padding:15px; background:#636e72; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">
+                                Fermer
+                            </button>
+                        </div>
+                    </div>
+                 `;
+                 document.body.appendChild(newModal);
+                 modal = newModal;
+            }
+            
             document.getElementById('logisticsModal').style.display = 'flex';
         }
         
@@ -6414,19 +6976,98 @@
                 
                 // Show Final Success
                 const success = document.createElement('div');
+                success.id = 'finalSuccessModal'; // Add ID for easier targeting
                 success.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:14000; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.5s;";
                 success.innerHTML = `
                     <div style="background:white; padding:30px; border-radius:20px; width:90%; max-width:400px; text-align:center;">
                         <div style="font-size:4rem; margin-bottom:15px;">🚚</div>
                         <h2 style="color:#2d3436; margin-bottom:10px;">Commande Validée !</h2>
                         <p style="color:#636e72;">Votre contrat est signé. La livraison est programmée.</p>
-                        <button onclick="window.location.reload(); alert('Redirection vers Mes Commandes...')" style="margin-top:20px; padding:12px 24px; background:#0984e3; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">
+                        <button onclick="document.getElementById('finalSuccessModal').remove(); openOrdersModal();" style="margin-top:20px; padding:12px 24px; background:#0984e3; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">
                             Voir mes commandes
+                        </button>
+                        <button onclick="document.getElementById('finalSuccessModal').remove();" style="margin-top:10px; background:transparent; border:none; color:#999; cursor:pointer; text-decoration:underline; display:block; width:100%;">
+                            Fermer
                         </button>
                     </div>
                 `;
                 document.body.appendChild(success);
             }, 800);
+        }
+
+        // === ORDERS MODAL (NEW) ===
+        window.openOrdersModal = function() {
+            console.log("Opening Orders Modal...");
+            // Close other modals if open
+            const paymentModal = document.getElementById('paymentModal');
+            if(paymentModal) paymentModal.style.display = 'none';
+            
+            const existingOrders = document.getElementById('ordersModal');
+            if(existingOrders) existingOrders.remove();
+
+            const ordersOverlay = document.createElement('div');
+            ordersOverlay.id = 'ordersModal';
+            ordersOverlay.className = 'modal-overlay';
+            ordersOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:15000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px); animation:fadeIn 0.3s;";
+            ordersOverlay.onclick = (e) => { if(e.target.id === 'ordersModal') ordersOverlay.remove(); };
+            
+            // Real Data from State
+            const currentRaised = window.crowdfundingState ? window.crowdfundingState.currentRaised : 15000;
+            const totalNeeded = window.crowdfundingState ? window.crowdfundingState.totalNeeded : 15000;
+            const isComplete = currentRaised >= totalNeeded;
+            const productName = "Sneakers Pro"; // Default or dynamic
+
+            const orders = [
+                { 
+                    id: 'CMD-9923', 
+                    date: 'Aujourd\'hui', 
+                    product: productName, 
+                    amount: totalNeeded, 
+                    status: isComplete ? 'Payé' : 'En cours', 
+                    statusColor: isComplete ? '#27ae60' : '#f1c40f', 
+                    type: isComplete ? 'Cagnotte (Terminée)' : 'Cagnotte (En cours)',
+                    action: `document.getElementById('ordersModal').remove(); showTontineSchedule('${productName}', 'group', 5, 3000)`
+                }
+            ];
+
+            let ordersHtml = '';
+            orders.forEach(order => {
+                ordersHtml += `
+                    <div onclick="${order.action}" style="background:white; border:1px solid #dfe6e9; border-radius:12px; padding:15px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; transition:transform 0.2s;">
+                        <div>
+                            <div style="font-weight:bold; color:#2d3436;">${order.product}</div>
+                            <div style="font-size:0.8rem; color:#636e72;">#${order.id} • ${order.date}</div>
+                            <div style="font-size:0.75rem; color:#0984e3; margin-top:5px; font-weight:bold;">${order.type}</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-weight:bold; color:#2d3436;">${order.amount.toLocaleString()} F</div>
+                            <div style="font-size:0.8rem; font-weight:bold; color:white; background:${order.statusColor}; padding:2px 8px; border-radius:10px; display:inline-block; margin-top:5px;">
+                                ${order.status}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            ordersOverlay.innerHTML = `
+                <div style="background:white; width:90%; max-width:450px; border-radius:20px; padding:25px; box-shadow:0 15px 50px rgba(0,0,0,0.2); position:relative; max-height:85vh; display:flex; flex-direction:column;">
+                    <div style="text-align:center; margin-bottom:20px;">
+                        <div style="font-size:3rem; margin-bottom:10px;">📦</div>
+                        <h2 style="margin:0; color:#2d3436;">Mes Commandes</h2>
+                        <p style="color:#636e72; margin-top:5px;">Suivez vos achats et paiements en cours.</p>
+                    </div>
+                    
+                    <div style="flex:1; overflow-y:auto; padding:5px;">
+                        ${ordersHtml}
+                    </div>
+                    
+                    <button onclick="document.getElementById('ordersModal').remove(); window.location.reload();" style="margin-top:15px; background:#dfe6e9; color:#2d3436; border:none; padding:12px; border-radius:10px; font-weight:bold; width:100%; cursor:pointer;">
+                        Fermer & Retour à l'accueil
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(ordersOverlay);
         }
 
     </script>
