@@ -1552,51 +1552,199 @@
             <!-- Items injected by JS -->
         </div>
 
-        <!-- ACCOUNT VIEW (Hidden by default) -->
-        <div id="accountView" class="scrollable-view">
-            <div class="account-header">
+        <!-- ACCOUNT VIEW (Client Dashboard) -->
+        <div id="accountView" class="scrollable-view" style="background:#f8f9fa;">
+            <div class="account-header" style="background:white; padding:20px; padding-top:60px; text-align:center; border-bottom:1px solid #eee;">
                 <!-- Back Button -->
-                <button class="btn-back-account" onclick="switchView('map')">
-                    <span style="font-size: 1.2rem; margin-right: 5px;">←</span> Retour
+                <button class="btn-back-account" onclick="switchView('map')" style="position:absolute; top:20px; left:20px; background:#f1f2f6; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer;">
+                    ←
                 </button>
                 
-                <img src="https://ui-avatars.com/api/?name=Utilisateur+Demo&background=1a5f3f&color=fff" class="profile-pic">
-                <div class="user-name">Utilisateur Démo</div>
-                <div class="user-phone">+237 699 00 00 00</div>
-            </div>
-
-            <!-- MODE SWITCH (Client / Vendeur) -->
-            <div style="background:white; border-radius:15px; padding:15px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 10px rgba(0,0,0,0.05);" class="vendor-card">
-                <div>
-                    <div style="font-weight:bold; color:#2d3436;" class="vc-name">Mode Vendeur Pro</div>
-                    <div style="font-size:0.8rem; color:#636e72;" class="vc-cat">Voir mes ventes & dettes</div>
+                <div style="position:relative; display:inline-block;">
+                    <img src="https://ui-avatars.com/api/?name=Utilisateur+Demo&background=1a5f3f&color=fff" class="profile-pic" style="width:80px; height:80px; border-radius:50%; border:3px solid white; box-shadow:0 5px 15px rgba(0,0,0,0.1);">
+                    <div style="position:absolute; bottom:0; right:0; background:#27ae60; width:20px; height:20px; border-radius:50%; border:2px solid white;"></div>
                 </div>
-                <label class="switch">
-                    <input type="checkbox" id="sellerModeSwitch" onchange="toggleSellerMode()">
-                    <span class="slider round"></span>
-                </label>
+                <h2 style="margin:10px 0 5px; color:#2d3436;">Utilisateur Démo</h2>
+                <div style="color:#636e72; font-size:0.9rem;">+237 699 00 00 00</div>
             </div>
 
-            <!-- WALLET SECTION -->
-            <div class="wallet-card">
-                <div class="wallet-label">Solde Mangoo Pay</div>
-                <div class="wallet-balance" onclick="rechargeBalance()" title="Cliquez pour recharger">150 000 FCFA</div>
+            <!-- DASHBOARD TABS -->
+            <div style="background:white; padding:0 15px; display:flex; border-bottom:1px solid #eee; position:sticky; top:0; z-index:10;">
+                <button onclick="switchDashTab('wallet')" class="dash-tab active" id="btn-dash-wallet" style="flex:1; padding:15px 5px; background:transparent; border:none; border-bottom:3px solid #1a5f3f; font-weight:bold; color:#1a5f3f; cursor:pointer;">Portefeuille</button>
+                <button onclick="switchDashTab('orders')" class="dash-tab" id="btn-dash-orders" style="flex:1; padding:15px 5px; background:transparent; border:none; border-bottom:3px solid transparent; font-weight:bold; color:#636e72; cursor:pointer;">Commandes</button>
+                <button onclick="switchDashTab('tontines')" class="dash-tab" id="btn-dash-tontines" style="flex:1; padding:15px 5px; background:transparent; border:none; border-bottom:3px solid transparent; font-weight:bold; color:#636e72; cursor:pointer;">Tontines</button>
+                <button onclick="switchDashTab('debts')" class="dash-tab" id="btn-dash-debts" style="flex:1; padding:15px 5px; background:transparent; border:none; border-bottom:3px solid transparent; font-weight:bold; color:#636e72; cursor:pointer;">Dettes</button>
+            </div>
+
+            <div style="padding:20px; padding-bottom:80px;">
                 
-                <div style="margin-bottom: 20px; font-size: 0.9rem; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; display: flex; justify-content: space-between;">
-                    <span>⚡ Crédit Instantané</span>
-                    <span style="color: #00b894; font-weight: bold;">25 000 FCFA</span>
-                </div>
-                
-                <button class="wallet-btn" style="width:100%; margin-bottom:15px; background:rgba(255,255,255,0.15); border:1px dashed rgba(255,255,255,0.3);" onclick="requestCredit()">
-                    💸 Demander une avance (BNPL)
-                </button>
+                <!-- TAB: WALLET -->
+                <div id="dash-wallet" class="dash-content">
+                    <div class="wallet-card" style="margin-top:0;">
+                        <div class="wallet-label">Solde Mangoo Pay</div>
+                        <div class="wallet-balance" onclick="rechargeBalance()" title="Cliquez pour recharger">150 000 FCFA</div>
+                        
+                        <div style="margin-bottom: 20px; font-size: 0.9rem; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; display: flex; justify-content: space-between;">
+                            <span>⚡ Crédit Instantané</span>
+                            <span style="color: #00b894; font-weight: bold;">25 000 FCFA</span>
+                        </div>
+                        
+                        <button class="wallet-btn" style="width:100%; margin-bottom:15px; background:rgba(255,255,255,0.15); border:1px dashed rgba(255,255,255,0.3);" onclick="requestCredit()">
+                            💸 Demander une avance (BNPL)
+                        </button>
 
-                <div class="wallet-actions">
-                    <button class="wallet-btn" onclick="rechargeBalance()">📥 Recharger</button>
-                    <button class="wallet-btn" onclick="openP2PModal()">💸 Transfert de crédit</button>
-                    <button class="wallet-btn" onclick="alert('Retrait vers votre compte Mobile Money bientôt disponible.')">📤 Retirer</button>
+                        <div class="wallet-actions">
+                            <button class="wallet-btn" onclick="rechargeBalance()">📥 Recharger</button>
+                            <button class="wallet-btn" onclick="openP2PModal()">💸 Transfert</button>
+                            <button class="wallet-btn" onclick="alert('Retrait vers votre compte Mobile Money bientôt disponible.')">📤 Retirer</button>
+                        </div>
+                    </div>
+
+                    <!-- Vendor Mode Toggle moved here -->
+                    <div style="background:white; border-radius:15px; padding:15px; margin-top:20px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 10px rgba(0,0,0,0.05);">
+                        <div>
+                            <div style="font-weight:bold; color:#2d3436;">Mode Vendeur Pro</div>
+                            <div style="font-size:0.8rem; color:#636e72;">Voir mes ventes & stock</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="sellerModeSwitch" onchange="toggleSellerMode()">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <!-- VENDOR SECTION (Hidden by default) -->
+                    <div id="vendorSection" style="margin-top:20px; display:none;">
+                        
+                        <!-- NEW: SELL BUTTON -->
+                        <button onclick="openAddProductModal()" style="width:100%; padding:20px; background:linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); color:white; border:none; border-radius:15px; font-weight:bold; font-size:1.1rem; display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:20px; box-shadow:0 5px 15px rgba(39, 174, 96, 0.4); cursor:pointer; transition:transform 0.1s;">
+                            <span style="font-size:1.5rem;">📸</span>
+                            Vendre un article
+                        </button>
+
+                        <!-- MANGOO SUPPLY (Restored) -->
+                        <div id="supplyChainCard" style="background:linear-gradient(135deg, #0984e3 0%, #74b9ff 100%); border-radius:15px; padding:20px; margin-bottom:20px; color:white; display:none; box-shadow:0 8px 15px rgba(9, 132, 227, 0.3); cursor:pointer;" onclick="openSupplyModal()">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div>
+                                    <div style="font-weight:bold; font-size:1.1rem;">Mangoo Supply Chain 🏭</div>
+                                    <div style="font-size:0.85rem; opacity:0.9;">Dropshipping & Vente en Gros</div>
+                                </div>
+                                <div style="font-size:2rem;">📦</div>
+                            </div>
+                        </div>
+
+                        <!-- DEBT BOOK (Restored) -->
+                        <div class="debt-book" id="debtBook" style="display:none;">
+                            <div class="debt-header">
+                                <span class="debt-title">📒 Carnet de Crédits Clients</span>
+                                <span class="debt-total">Total: 85 000 FCFA</span>
+                            </div>
+                            <div class="debt-list" id="debtList">
+                                <div class="debt-item">
+                                    <div>
+                                        <div class="debt-client">Maman Paul (Vivres)</div>
+                                        <div class="debt-meta">12 Février • Retard J+5</div>
+                                    </div>
+                                    <div style="text-align:right;">
+                                        <div class="debt-amount">15 000 F</div>
+                                        <button class="btn-remind" onclick="remindDebt('Maman Paul', 15000)">🔔 Rappel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: ORDERS -->
+                <div id="dash-orders" class="dash-content" style="display:none;">
+                    <!-- Dynamic Orders List -->
+                    <div id="ordersListContainer">
+                        <!-- Will be populated by JS -->
+                        <div style="text-align:center; padding:40px 0; color:#b2bec3;">
+                            <div style="font-size:3rem; margin-bottom:10px;">📦</div>
+                            <div>Aucune commande récente</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: TONTINES -->
+                <div id="dash-tontines" class="dash-content" style="display:none;">
+                    <div id="tontinesListContainer">
+                        <!-- Will be populated by JS -->
+                        <div style="text-align:center; padding:40px 0; color:#b2bec3;">
+                            <div style="font-size:3rem; margin-bottom:10px;">👥</div>
+                            <div>Aucune tontine en cours</div>
+                            <button onclick="switchView('list')" style="margin-top:10px; padding:10px 20px; background:#0984e3; color:white; border:none; border-radius:20px; cursor:pointer;">Explorer les produits</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: DEBTS -->
+                <div id="dash-debts" class="dash-content" style="display:none;">
+                    <div style="background:white; border-radius:15px; padding:20px; box-shadow:0 4px 10px rgba(0,0,0,0.05); margin-bottom:20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                            <div style="font-weight:bold; color:#2d3436;">Limite de Crédit</div>
+                            <div style="font-weight:bold; color:#00b894;">50 000 FCFA</div>
+                        </div>
+                        <div style="height:8px; background:#f1f2f6; border-radius:4px; overflow:hidden;">
+                            <div style="height:100%; width:30%; background:#0984e3;"></div>
+                        </div>
+                        <div style="font-size:0.8rem; color:#636e72; margin-top:5px;">15 000 FCFA utilisés</div>
+                    </div>
+
+                    <div id="debtsListContainer">
+                        <!-- Mock Debt Item -->
+                        <div style="background:white; border-radius:15px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05); border-left:4px solid #d63031;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                <span style="font-weight:bold; color:#2d3436;">Achat Crédit (BNPL)</span>
+                                <span style="font-weight:bold; color:#d63031;">-15 000 FCFA</span>
+                            </div>
+                            <div style="font-size:0.85rem; color:#636e72; margin-bottom:10px;">Sneakers Pro • Tech Mobile Pro</div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:0.75rem; background:#ffebee; color:#c0392b; padding:3px 8px; border-radius:10px;">Échéance : 25/03/2026</span>
+                                <button onclick="openPaymentModal(15000, () => alert('Dette remboursée !'))" style="padding:5px 12px; background:#d63031; color:white; border:none; border-radius:15px; font-size:0.8rem; cursor:pointer;">Rembourser</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DRIVER RECRUITMENT CARD (Now Active) -->
+                <div style="background:white; border-radius:15px; padding:15px; margin:20px; box-shadow:0 4px 10px rgba(0,0,0,0.05); display:flex; align-items:center; gap:15px; cursor:pointer;" onclick="openDriverModal()">
+                    <div style="background:#fff3e0; width:50px; height:50px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.8rem;">🛵</div>
+                    <div>
+                        <div style="font-weight:bold; color:#2d3436;">Devenir Livreur Express</div>
+                        <div style="font-size:0.8rem; color:#e67e22;">Gagnez de l'argent avec votre moto</div>
+                    </div>
+                    <span style="margin-left:auto; color:#b2bec3;">›</span>
+                </div>
+
+            </div>
+
+            <!-- SETTINGS FOOTER -->
+            <div style="padding:20px; background:#f8f9fa;">
+                <div class="action-list">
+                    <div class="action-row" onclick="alert('Aucune nouvelle notification.')">
+                        <span>🔔 Notifications</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="action-row" onclick="alert('Langues disponibles : Français, Anglais.')">
+                        <span>🌍 Langue (Français)</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="action-row" onclick="alert('Vos données sont chiffrées et sécurisées.')">
+                        <span>🔒 Sécurité</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="action-row" onclick="alert('Besoin d\'aide ? Contactez support@mangoo.cm')">
+                        <span>❓ Aide & Support</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="action-row" style="color: #d63031;" onclick="if(confirm('Voulez-vous vraiment vous déconnecter ?')) { alert('Déconnexion...'); }">
+                        <span>🚪 Déconnexion</span>
+                        <span class="arrow">›</span>
+                    </div>
                 </div>
             </div>
+        </div>
 
             <!-- MANGOO SUPPLY (NEW ACCESS) -->
             <div id="supplyChainCard" style="background:linear-gradient(135deg, #0984e3 0%, #74b9ff 100%); border-radius:15px; padding:20px; margin-bottom:20px; color:white; display:none; box-shadow:0 8px 15px rgba(9, 132, 227, 0.3); cursor:pointer; animation: slideUp 0.3s;" onclick="openSupplyModal()">
@@ -2113,6 +2261,16 @@
                             <div style="font-size:0.75rem; color:#636e72;">CI, GH, UG, RW</div>
                         </div>
                         <div style="color:#f1c40f; font-weight:bold;">1.5%</div>
+                    </div>
+                    
+                    <!-- Free Money (New) -->
+                    <div onclick="selectPaymentMethod('free_money')" class="payment-method-card" style="display:flex; align-items:center; padding:15px; border:2px solid #dfe6e9; border-radius:12px; cursor:pointer; transition:all 0.2s;">
+                        <div style="width:40px; height:40px; background:#e74c3c; border-radius:8px; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; margin-right:15px;">Free</div>
+                        <div style="flex:1;">
+                            <div style="font-weight:bold; color:#2d3436;">Free Money</div>
+                            <div style="font-size:0.75rem; color:#636e72;">SN</div>
+                        </div>
+                        <div style="color:#e74c3c; font-weight:bold;">1%</div>
                     </div>
                     
                     <!-- Moov (New) -->
@@ -2664,6 +2822,30 @@
                 let animation = '';
                 let badge = '';
 
+                // Check for Stories (Randomly active for demo if not set)
+                // In a real app, vendor.hasStory would be true/false
+                const hasStory = vendor.hasStory || (Math.random() > 0.7); 
+                let storyRing = '';
+                
+                if (hasStory) {
+                    // Story Ring Style (Gradient Border)
+                    storyRing = `
+                        position: absolute;
+                        top: -5px; left: -5px; right: -5px; bottom: -5px;
+                        border-radius: 50%;
+                        background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+                        z-index: -1;
+                        padding: 2px;
+                        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+                        -webkit-mask-composite: xor;
+                        mask-composite: exclude;
+                    `;
+                    // Simplified visual approach for ring using pseudo-element logic in inline styles is hard.
+                    // Let's use a wrapper div with padding for the gradient border effect.
+                    borderColor = 'transparent'; // Remove inner border to let gradient show
+                    // We'll wrap the inner content
+                }
+
                 if (vendor.live) {
                     borderColor = '#d63031'; // Red
                     bgColor = '#ffeaa7';
@@ -2676,23 +2858,48 @@
                     badge = '<span style="position:absolute; top:-8px; right:-8px; background:#f1c40f; color:#2d3436; font-size:10px; padding:2px 4px; border-radius:4px; font-weight:bold; z-index:10; border:1px solid #fff;">PROMO</span>';
                 }
 
+                // Story Ring HTML Construction
+                let ringHtml = '';
+                if(hasStory && !vendor.live) { // Story ring mainly for non-live vendors (Live has its own pulse)
+                     ringHtml = `
+                        <div style="
+                            position: absolute;
+                            top: -4px; left: -4px; right: -4px; bottom: -4px;
+                            border-radius: 50%;
+                            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+                            z-index: -1;
+                        "></div>
+                        <div style="
+                            position: absolute;
+                            top: -1px; left: -1px; right: -1px; bottom: -1px;
+                            border-radius: 50%;
+                            background: white;
+                            z-index: -1;
+                        "></div>
+                     `;
+                     borderColor = 'white'; // Inner border
+                }
+
                 let markerHtml = `
-                    <div style="
-                        background: ${bgColor};
-                        border: 3px solid ${borderColor};
-                        border-radius: 50%;
-                        width: 50px; 
-                        height: 50px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                        ${animation}
-                        transition: transform 0.2s;
-                        position: relative;
-                    ">
-                        <img src="${vendor.avatar}" style="width:42px; height:42px; border-radius:50%; object-fit:cover;">
-                        ${badge}
+                    <div style="position:relative; width:50px; height:50px;" onclick="openStory(${vendor.id}); event.stopPropagation();">
+                        ${ringHtml}
+                        <div style="
+                            background: ${bgColor};
+                            border: 2px solid ${borderColor};
+                            border-radius: 50%;
+                            width: 100%; 
+                            height: 100%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                            ${animation}
+                            transition: transform 0.2s;
+                            position: relative;
+                        ">
+                            <img src="${vendor.avatar}" style="width:44px; height:44px; border-radius:50%; object-fit:cover;">
+                            ${badge}
+                        </div>
                     </div>
                 `;
 
@@ -2763,7 +2970,7 @@
 
                 VENDORS.slice(0, 10).forEach(v => {
                     storiesHtml += `
-                        <div class="story-item" onclick="openVendorSheetById(${v.id})">
+                        <div class="story-item" onclick="openStory(${v.id})">
                             <div class="story-ring">
                                 <img src="${v.avatar}" class="story-img">
                             </div>
@@ -3904,10 +4111,6 @@
             speechSynthesis.speak(utterance);
         }
 
-        function startBargain(productName) {
-            alert(`🗣️ Négociation démarrée pour : ${productName}\n(Fonctionnalité à venir dans la prochaine mise à jour)`);
-        }
-
         /* === LIST VIEW RENDERER === */
         // === FIX: RE-ADD SHOW ERROR FUNCTION ===
         function showError(msg) {
@@ -4137,6 +4340,9 @@
                 // Hide filters/stories for account view
                 if(topSection) topSection.style.display = 'none';
                 if(innovBtn) innovBtn.style.display = 'none'; // Hide in account view
+                
+                // Initialize Dashboard
+                switchDashTab('wallet');
             }
         }
 
@@ -4331,22 +4537,257 @@
             }
         }
 
-        function startBargain(productName) {
-            // Find vendor context if needed
-            // Open Chat with pre-filled message
-            const msg = `🤝 Je souhaite négocier le prix pour : ${productName}`;
+        function startBargain(productName, productPrice, previousOffer) {
+            // If price is missing (e.g. called from vendor list), fallback to chat
+            if(!productPrice) {
+                 openChat(`🤝 Bonjour, je souhaite discuter de vos produits : ${productName}`);
+                 return;
+            }
+
+            // Open Negotiation Modal
+            const overlay = document.createElement('div');
+            overlay.id = 'negotiationModal';
+            overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9000; display:flex; align-items:center; justify-content:center; flex-direction:column;";
             
-            // If we are in list view and clicked "Marchander", activeVendor might not be the right one
-            // Ideally we should pass the vendor object to startBargain. 
-            // For this quick implementation, we assume the user is browsing the list so we might need to find the vendor.
-            // BUT: openChat relies on activeVendor. 
-            // Let's improve startBargain to set activeVendor if it finds the product's vendor.
+            const cleanPrice = parseInt(String(productPrice).replace(/[^0-9]/g, '')) || 0;
             
-            // Actually, in the list view loop, we have 'vendor'. Let's pass it!
-            // Updating the onclick handlers in renderListView and createProductCardHTML...
+            // Logic for pre-filled value: if coming from a counter-offer, maybe suggest something slightly higher than previous user offer but lower than counter?
+            // For now, let's keep the standard suggestion or user's previous attempt if we stored it.
+            // Let's suggest 90% if it's a "new round".
+            const suggestion = previousOffer ? previousOffer : (cleanPrice * 0.9).toFixed(0);
             
-            // For now, let's just open chat.
-            openChat(msg);
+            overlay.innerHTML = `
+                <div style="background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 380px; text-align: center; font-family: sans-serif; animation: slideUp 0.3s;">
+                    <div style="font-size: 3rem; margin-bottom: 10px;">🤝</div>
+                    <h2 style="margin-bottom: 5px; color: #1a5f3f; font-weight: 800;">Négociation</h2>
+                    <div style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">
+                        ${previousOffer ? 'Le vendeur a proposé ' + previousOffer.toLocaleString() + ' FCFA. <br>Faites une nouvelle offre.' : 'Proposez votre meilleur prix'}
+                    </div>
+                    
+                    <div style="background: #f8fafc; border-radius: 15px; padding: 15px; text-align: left; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <span style="color:#64748b; font-size:0.9rem;">Produit</span>
+                            <span style="font-weight:bold; color:#0f172a;">${productName}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="color:#64748b; font-size:0.9rem;">Prix Vendeur</span>
+                            <span style="font-weight:800; color:#d63031; text-decoration:line-through;">${cleanPrice.toLocaleString()} FCFA</span>
+                        </div>
+                        ${previousOffer ? `
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
+                            <span style="color:#64748b; font-size:0.9rem;">Dernière offre</span>
+                            <span style="font-weight:bold; color:#e67e22;">${previousOffer.toLocaleString()} FCFA</span>
+                        </div>` : ''}
+                    </div>
+
+                    <div style="margin-bottom:20px; text-align:left;">
+                        <label style="display:block; font-size:0.8rem; font-weight:bold; color:#2d3436; margin-bottom:8px;">Votre Offre (FCFA)</label>
+                        <input type="number" id="offerInput" placeholder="${suggestion}" style="width:100%; padding:15px; border:2px solid #dfe6e9; border-radius:12px; font-size:1.2rem; font-weight:bold; outline:none; color:#2d3436;">
+                    </div>
+
+                    <button onclick="submitOffer('${productName}', ${cleanPrice})" style="width: 100%; padding: 16px; background: #f1c40f; color: #2d3436; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(241, 196, 15, 0.3);">
+                        💬 Proposer mon prix
+                    </button>
+                    
+                    <button onclick="document.getElementById('negotiationModal').remove()" style="width: 100%; padding: 12px; background: transparent; color: #94a3b8; border: none; margin-top: 5px; font-weight: bold; cursor: pointer;">
+                        Annuler
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        function submitOffer(productName, originalPrice) {
+            const offerInput = document.getElementById('offerInput');
+            const offer = parseInt(offerInput.value);
+            
+            if(!offer || offer <= 0) {
+                alert("Veuillez entrer un montant valide.");
+                return;
+            }
+            
+            // Simulation Logic
+            const overlay = document.getElementById('negotiationModal');
+            const btn = overlay.querySelector('button');
+            btn.innerHTML = '<span class="spin">↻</span> Négociation en cours...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                // Simple Logic:
+                // > 85% : Accepted
+                // 70% - 85% : Counter Offer (avg)
+                // < 70% : Refused
+                
+                const ratio = offer / originalPrice;
+                let resultTitle = "";
+                let resultMsg = "";
+                let resultColor = "";
+                let actionBtn = "";
+                
+                if (ratio >= 0.85) {
+                    // ACCEPTED
+                    resultTitle = "✅ Offre Acceptée !";
+                    resultMsg = `Le vendeur accepte votre prix de <b>${offer.toLocaleString()} FCFA</b>.`;
+                    resultColor = "#27ae60";
+                    actionBtn = `<button onclick="closeNegotiationAndPay('${productName}', ${offer})" style="width:100%; padding:15px; background:#27ae60; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">💳 Payer ${offer.toLocaleString()} FCFA</button>`;
+                } else if (ratio >= 0.70) {
+                    // COUNTER OFFER
+                    const counter = Math.ceil((originalPrice + offer) / 2 / 100) * 100; // Average rounded
+                    resultTitle = "🔄 Contre-proposition";
+                    resultMsg = `Le vendeur propose <b>${counter.toLocaleString()} FCFA</b>.`;
+                    resultColor = "#e67e22";
+                    actionBtn = `
+                        <div style="display:flex; gap:10px;">
+                            <button onclick="closeNegotiationAndPay('${productName}', ${counter})" style="flex:1; padding:15px; background:#e67e22; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">Accepter ${counter.toLocaleString()} F</button>
+                            <button onclick="document.getElementById('negotiationModal').remove()" style="flex:1; padding:15px; background:#dfe6e9; color:#636e72; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">Refuser</button>
+                        </div>
+                        <div style="margin-top:10px; text-align:center;">
+                            <button onclick="document.getElementById('negotiationModal').remove(); startBargain('${productName}', ${originalPrice}, ${counter})" style="background:transparent; border:none; color:#e67e22; text-decoration:underline; cursor:pointer; font-size:0.9rem;">Faire une nouvelle offre</button>
+                        </div>
+                    `;
+                } else {
+                    // REFUSED
+                    resultTitle = "❌ Offre Refusée";
+                    resultMsg = "Votre offre est trop basse. Veuillez faire une proposition plus sérieuse.";
+                    resultColor = "#d63031";
+                    actionBtn = `<button onclick="document.getElementById('negotiationModal').remove(); startBargain('${productName}', ${originalPrice})" style="width:100%; padding:15px; background:#2d3436; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">Nouvelle Offre</button>`;
+                }
+                
+                overlay.innerHTML = `
+                    <div style="background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 380px; text-align: center; font-family: sans-serif; animation: popIn 0.3s;">
+                        <div style="font-size: 3rem; margin-bottom: 10px;">${ratio >= 0.85 ? '🤝' : (ratio >= 0.7 ? '🤔' : '😤')}</div>
+                        <h2 style="margin-bottom: 10px; color: ${resultColor}; font-weight: 800;">${resultTitle}</h2>
+                        <div style="color: #2d3436; font-size: 1rem; margin-bottom: 25px; line-height:1.5;">${resultMsg}</div>
+                        
+                        ${actionBtn}
+                        
+                        ${ratio < 0.85 ? `<button onclick="document.getElementById('negotiationModal').remove()" style="width: 100%; padding: 12px; background: transparent; color: #94a3b8; border: none; margin-top: 5px; font-weight: bold; cursor: pointer;">Fermer</button>` : ''}
+                    </div>
+                `;
+                
+            }, 1500);
+        }
+
+        function closeNegotiationAndPay(productName, finalPrice) {
+            document.getElementById('negotiationModal').remove();
+            
+            // Show Contract Modal for "Vente Négociée"
+            // We reuse showSignatureModal but adapt it
+            // Or better: directly open payment since agreement is reached?
+            // User requested: "Contrat de vente négociée est généré automatiquement"
+            
+            showNegotiatedContract(productName, finalPrice);
+        }
+
+        function showNegotiatedContract(name, price) {
+             const overlay = document.createElement('div');
+            overlay.id = 'negotiatedContractOverlay';
+            overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9500; display:flex; align-items:center; justify-content:center; flex-direction:column;";
+            
+            const date = new Date().toLocaleDateString('fr-FR');
+            
+            overlay.innerHTML = `
+                <div style="background: white; padding: 0; border-radius: 20px; width: 90%; max-width: 350px; overflow:hidden; animation: slideUp 0.3s; font-family: sans-serif;">
+                    <div style="background:#f1c40f; color:#2d3436; padding:20px; text-align:center;">
+                        <div style="font-size:2rem;">📜</div>
+                        <h2 style="margin:5px 0 0 0;">Contrat Négocié</h2>
+                        <div style="font-size:0.8rem; opacity:0.8;">Accord commercial validé</div>
+                    </div>
+                    
+                    <div style="padding:20px;">
+                        <div style="background:#fffdf0; padding:15px; border-radius:10px; font-size:0.85rem; color:#2d3436; margin-bottom:20px; border:1px solid #ffeaa7;">
+                            <p style="margin:0 0 10px 0;">Les parties conviennent de la vente du produit <b>${name}</b> au prix exceptionnel de :</p>
+                            <div style="font-size:1.5rem; font-weight:800; color:#d35400; text-align:center; margin:10px 0;">${price.toLocaleString()} FCFA</div>
+                            <p style="margin:0;">Cet accord est ferme et définitif.</p>
+                            <div style="margin-top:10px; font-weight:bold; color:#d35400;">Date : ${date}</div>
+                        </div>
+                        
+                        <label style="display:block; margin-bottom:10px; font-weight:bold; color:#636e72; font-size:0.9rem;">Votre Code PIN (Signature)</label>
+                        <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
+                            <input type="password" value="1234" id="contractPin" style="width:100%; text-align:center; letter-spacing:10px; font-size:1.5rem; padding:10px; border:2px solid #f1c40f; border-radius:10px; background:#fffdf0; color:#d35400; font-weight:bold;">
+                        </div>
+                        <div style="text-align:center; font-size:0.8rem; color:#95a5a6; margin-bottom:15px;">(Code PIN par défaut : 1234)</div>
+
+                        <button onclick="document.getElementById('negotiatedContractOverlay').remove(); openPaymentModal(${price}, () => { showDigitalReceipt('${name}', ${price}); })" style="width:100%; padding:15px; background:#2d3436; color:white; border:none; border-radius:12px; font-weight:bold; font-size:1rem; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.2);">
+                            🖊️ Signer & Payer
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        function showDigitalReceipt(productName, price) {
+            // Save order to state for Dashboard
+            window.crowdfundingState = {
+                productName: productName,
+                totalNeeded: price,
+                raised: price,
+                mode: 'negotiated',
+                participants: []
+            };
+            
+            const overlay = document.createElement('div');
+            overlay.id = 'receiptOverlay';
+            overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9900; display:flex; align-items:center; justify-content:center; flex-direction:column;";
+            
+            const date = new Date().toLocaleDateString('fr-FR');
+            const time = new Date().toLocaleTimeString('fr-FR');
+            const ref = 'MNG-' + Math.floor(Math.random() * 1000000);
+            
+            overlay.innerHTML = `
+                <div style="background: white; padding: 0; border-radius: 0; width: 90%; max-width: 350px; font-family: 'Courier New', monospace; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: slideUp 0.3s; position:relative; overflow:hidden;">
+                    <!-- Zigzag top -->
+                    <div style="background:linear-gradient(-45deg, transparent 10px, white 10px), linear-gradient(45deg, transparent 10px, white 10px); background-size: 20px 20px; background-repeat: repeat-x; height: 10px; width: 100%; position: absolute; top: -10px;"></div>
+                    
+                    <div style="padding: 30px 20px; text-align:center; border-bottom:1px dashed #ccc;">
+                        <div style="font-weight:bold; font-size:1.2rem; margin-bottom:5px;">MANGOO PAY</div>
+                        <div style="font-size:0.8rem; color:#666;">REÇU DE PAIEMENT</div>
+                        <div style="font-size:0.7rem; color:#2d3436; margin-top:3px; font-weight:bold;">FACTURE ACQUITTÉE</div>
+                    </div>
+                    
+                    <div style="padding: 20px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:0.9rem;">
+                            <span style="color:#666;">Date</span>
+                            <span>${date} ${time}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:0.9rem;">
+                            <span style="color:#666;">Référence</span>
+                            <span>${ref}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:0.9rem;">
+                            <span style="color:#666;">Vendeur</span>
+                            <span>Tech Mobile Pro</span>
+                        </div>
+                        
+                        <div style="margin:20px 0; border-top:2px solid #000; border-bottom:2px solid #000; padding:10px 0;">
+                            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:1.1rem;">
+                                <span>TOTAL PAYÉ</span>
+                                <span>${price.toLocaleString()} FCFA</span>
+                            </div>
+                            <div style="font-size:0.8rem; margin-top:5px;">${productName} (Prix Négocié)</div>
+                        </div>
+                        
+                        <div style="text-align:center; margin-top:20px;">
+                            <div style="font-size:3rem; line-height:1;">✅</div>
+                            <div style="font-weight:bold; color:#27ae60; margin-top:5px;">SUCCÈS</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background:#f8f9fa; padding:15px; text-align:center; font-size:0.75rem; color:#666; border-top:1px dashed #ccc;">
+                        Ce document tient lieu de facture simplifiée.<br>
+                        Conservez ce reçu numérique.
+                    </div>
+
+                    <!-- Zigzag bottom -->
+                    <div style="background:linear-gradient(135deg, transparent 10px, white 10px), linear-gradient(225deg, transparent 10px, white 10px); background-size: 20px 20px; background-repeat: repeat-x; height: 10px; width: 100%; position: absolute; bottom: -10px;"></div>
+                    
+                    <button onclick="document.getElementById('receiptOverlay').remove(); switchView('account');" style="width:100%; padding:15px; background:#2d3436; color:white; border:none; font-weight:bold; cursor:pointer; margin-top:0;">
+                        FERMER
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
         }
 
         let miniMap = null;
@@ -4591,21 +5032,173 @@
         // === SELLER MODE ===
         function toggleSellerMode() {
             const isSeller = document.getElementById('sellerModeSwitch').checked;
-            const debtBook = document.querySelector('.debt-book');
-            const supplyCard = document.getElementById('supplyChainCard'); // NEW
+            const vendorSection = document.getElementById('vendorSection');
             const walletTitle = document.querySelector('.wallet-label');
-            const btnSeller = document.querySelector('.btn-seller');
             
             if (isSeller) {
-                debtBook.style.display = 'block';
-                if(supplyCard) supplyCard.style.display = 'block'; // Show Supply Chain
+                vendorSection.style.display = 'block';
                 walletTitle.innerText = "Chiffre d'Affaires (Mangoo Pro)";
-                if(btnSeller) btnSeller.style.display = 'none'; // Hide "Devenir Vendeur"
             } else {
-                debtBook.style.display = 'none';
-                if(supplyCard) supplyCard.style.display = 'none'; // Hide Supply Chain
+                vendorSection.style.display = 'none';
                 walletTitle.innerText = "Solde Mangoo Pay";
-                if(btnSeller) btnSeller.style.display = 'flex';
+            }
+        }
+
+        // === PRODUCT MANAGEMENT (SELL) ===
+        function openAddProductModal() {
+            const overlay = document.createElement('div');
+            overlay.id = 'addProductOverlay';
+            overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9000; display:flex; align-items:center; justify-content:center; flex-direction:column;";
+            
+            overlay.innerHTML = `
+                <div style="background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 380px; position:relative; animation: slideUp 0.3s;">
+                    <div style="text-align:center; margin-bottom:20px;">
+                        <div style="width:120px; height:120px; margin:0 auto; border-radius:15px; overflow:hidden; position:relative; cursor:pointer; background:#f1f2f6; border:2px dashed #b2bec3; display:flex; align-items:center; justify-content:center;" onclick="triggerCameraInput()">
+                            <img id="previewImg" style="width:100%; height:100%; object-fit:cover; display:none;">
+                            <span id="cameraIcon" style="font-size:3rem; opacity:0.7;">📸</span>
+                            <div style="position:absolute; bottom:0; left:0; right:0; background:rgba(0,0,0,0.5); color:white; font-size:0.7rem; padding:5px;">Toucher pour photo</div>
+                        </div>
+                        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handleImageUpload(this)">
+                        
+                        <h2 style="margin:10px 0 0; color:#2d3436;">Vendre un article</h2>
+                        <div style="font-size:0.9rem; color:#636e72;">Ajoutez un produit à votre boutique</div>
+                    </div>
+                    
+                    <div style="margin-bottom:15px;">
+                        <label style="display:block; font-weight:bold; color:#2d3436; margin-bottom:5px;">Nom du produit</label>
+                        <input type="text" id="newProdName" placeholder="Ex: Sac de Riz 50kg" style="width:100%; padding:12px; border:1px solid #dfe6e9; border-radius:10px; font-size:1rem;">
+                    </div>
+                    
+                    <div style="margin-bottom:15px;">
+                        <label style="display:block; font-weight:bold; color:#2d3436; margin-bottom:5px;">Prix (FCFA)</label>
+                        <input type="number" id="newProdPrice" placeholder="Ex: 25000" style="width:100%; padding:12px; border:1px solid #dfe6e9; border-radius:10px; font-size:1rem;">
+                    </div>
+                    
+                    <div style="margin-bottom:20px;">
+                        <label style="display:block; font-weight:bold; color:#2d3436; margin-bottom:5px;">Catégorie</label>
+                        <select id="newProdCategory" style="width:100%; padding:12px; border:1px solid #dfe6e9; border-radius:10px; font-size:1rem; background:white;">
+                            <option value="🥬 Vivres Frais">🥬 Vivres Frais</option>
+                            <option value="📱 Électronique">📱 Électronique</option>
+                            <option value="🧵 Mode">🧵 Mode</option>
+                            <option value="🏠 Maison">🏠 Maison</option>
+                        </select>
+                    </div>
+
+                    <button onclick="publishProduct()" style="width:100%; padding:15px; background:#27ae60; color:white; border:none; border-radius:12px; font-weight:bold; font-size:1.1rem; cursor:pointer; box-shadow:0 4px 10px rgba(39, 174, 96, 0.3);">
+                        🚀 Publier maintenant
+                    </button>
+                    
+                    <button onclick="document.getElementById('addProductOverlay').remove()" style="width:100%; padding:15px; background:transparent; color:#636e72; border:none; margin-top:5px; font-weight:bold; cursor:pointer;">
+                        Annuler
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        function triggerCameraInput() {
+            document.getElementById('cameraInput').click();
+        }
+
+        function handleImageUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const icon = document.getElementById('cameraIcon');
+                    const img = document.getElementById('previewImg');
+                    const container = img.parentElement;
+                    
+                    if(icon) icon.style.display = 'none';
+                    if(img) {
+                        img.src = e.target.result;
+                        img.style.display = 'block';
+                        container.style.border = '2px solid #27ae60'; // Success border
+                    }
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function publishProduct() {
+            const name = document.getElementById('newProdName').value;
+            const price = document.getElementById('newProdPrice').value;
+            const category = document.getElementById('newProdCategory').value;
+            const imgPreview = document.getElementById('previewImg');
+            
+            // Get image or use default placeholder if none
+            let productImg = null;
+            if(imgPreview && imgPreview.style.display === 'block') {
+                productImg = imgPreview.src;
+            }
+            
+            if(!name || !price) {
+                alert("Veuillez remplir au moins le nom et le prix !");
+                return;
+            }
+            
+            // 1. Get or Create My Shop ID
+            let myShopId = localStorage.getItem('mangoo_my_shop_id');
+            if(!myShopId) {
+                // First time -> Create Shop
+                myShopId = Date.now().toString(); // Simple ID
+                localStorage.setItem('mangoo_my_shop_id', myShopId);
+                
+                // Add to Global Vendors (Mock)
+                const newVendor = {
+                    id: myShopId,
+                    name: "Ma Boutique (Moi)",
+                    category: category, // Take category of first product
+                    lat: USER_POS[0], // Use current user pos
+                    lng: USER_POS[1],
+                    status: "open",
+                    live: true,
+                    voicePitch: "Bienvenue dans ma nouvelle boutique sur Mangoo !",
+                    avatar: "https://ui-avatars.com/api/?name=Moi&background=27ae60&color=fff",
+                    isMine: true // Mark as mine
+                };
+                
+                // Add to VENDORS array (in memory)
+                VENDORS.push(newVendor);
+                
+                // Refresh Map
+                renderVendorsOnMap(VENDORS);
+                
+                // Switch to Seller Mode UI if not already
+                if(!document.getElementById('sellerModeSwitch').checked) {
+                    document.getElementById('sellerModeSwitch').checked = true;
+                    toggleSellerMode();
+                }
+                
+                alert("🎉 Félicitations ! Votre boutique est créée.");
+            }
+            
+            // 2. Add Product
+            let myProducts = JSON.parse(localStorage.getItem('mangoo_my_products') || '[]');
+            const newProduct = {
+                id: Date.now(),
+                name: name,
+                price: parseInt(price).toLocaleString().replace(/\s/g, ' '), 
+                vendorName: "Moi",
+                category: category,
+                img: productImg // Save uploaded image or null
+            };
+            
+            myProducts.unshift(newProduct); // Add to top
+            localStorage.setItem('mangoo_my_products', JSON.stringify(myProducts));
+            
+            // Update Global `window.MY_PRODUCTS` just in case
+            window.MY_PRODUCTS = myProducts;
+            
+            // Close Modal
+            document.getElementById('addProductOverlay').remove();
+            
+            // Switch to Account View and Show Orders/Sales Tab?
+            // Actually, let's open the Vendor Sheet of the user
+            const myVendor = VENDORS.find(v => v.id == myShopId) || VENDORS[VENDORS.length-1]; // Fallback to last added
+            
+            if(myVendor) {
+                switchView('map');
+                setTimeout(() => openVendorSheet(myVendor), 300);
             }
         }
 
@@ -4743,6 +5336,23 @@
             // Dynamic Link for Shop (Removed as we use tabs now)
             // const shopBtn = document.getElementById('btnShop');
             // ...
+
+            // Delivery Simulation Button
+            const btnDelivery = document.createElement('button');
+            btnDelivery.innerText = '🚚 Simuler Livraison';
+            btnDelivery.style.cssText = "width:100%; margin-top:10px; padding:12px; background:#f1f2f6; color:#2d3436; border:none; border-radius:12px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;";
+            btnDelivery.onclick = () => openDeliverySimulation(vendor.id);
+            
+            // Append after existing buttons if not already there
+            const actionContainer = sheet.querySelector('.sheet-content'); // We need to find a good place
+            // Actually, let's put it in the "Boutique" tab at the top
+            const boutiqueTab = document.getElementById('vendor-tab-boutique');
+            
+            // Check if already added
+            if(!document.getElementById('btn-sim-delivery')) {
+                btnDelivery.id = 'btn-sim-delivery';
+                boutiqueTab.insertBefore(btnDelivery, boutiqueTab.firstChild);
+            }
 
             // Distance (Mock calculation)
             const dist = (Math.random() * 2).toFixed(1); 
@@ -4890,6 +5500,468 @@
                 const url = `https://wa.me/?text=${encodeURIComponent(text + " " + window.location.href)}`;
                 window.open(url, '_blank');
             }
+        }
+
+        // === STORIES & COMMUNITY ===
+        function openStory(vendorId) {
+            const vendor = VENDORS.find(v => v.id == vendorId);
+            if (!vendor) return;
+
+            // Mock Story Content
+            const storyOverlay = document.createElement('div');
+            storyOverlay.id = 'storyOverlay';
+            storyOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:10000; display:flex; flex-direction:column;";
+            
+            // Progress Bar
+            let progressHtml = `
+                <div style="padding:10px; display:flex; gap:5px; z-index:10001;">
+                    <div style="flex:1; height:3px; background:rgba(255,255,255,0.3); border-radius:3px; overflow:hidden;">
+                        <div id="storyProgress" style="width:0%; height:100%; background:white; transition:width 5s linear;"></div>
+                    </div>
+                </div>
+            `;
+            
+            // Header
+            let headerHtml = `
+                <div style="padding:0 15px; display:flex; justify-content:space-between; align-items:center; color:white; z-index:10001;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <img src="${vendor.avatar}" style="width:35px; height:35px; border-radius:50%; border:1px solid white;">
+                        <span style="font-weight:bold;">${vendor.name}</span>
+                        <span style="font-size:0.8rem; opacity:0.7;">2h</span>
+                    </div>
+                    <button onclick="closeStory()" style="background:none; border:none; color:white; font-size:1.5rem;">×</button>
+                </div>
+            `;
+            
+            // Content (Image/Video)
+            // Using a placeholder image related to category for demo
+            let bgImage = "https://source.unsplash.com/random/400x800/?market,africa";
+            if(vendor.category.includes("Vivres")) bgImage = "https://images.unsplash.com/photo-1606914502206-89c099c27976?w=400";
+            if(vendor.category.includes("Mode")) bgImage = "https://images.unsplash.com/photo-1579294800821-694d95e86143?w=400";
+            if(vendor.category.includes("Électronique")) bgImage = "https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=400";
+            
+            let contentHtml = `
+                <div style="flex:1; background:url('${bgImage}') center/cover; position:relative; display:flex; align-items:flex-end; padding-bottom:50px;">
+                    <div style="width:100%; padding:20px; background:linear-gradient(to top, rgba(0,0,0,0.8), transparent); color:white; text-align:center;">
+                        <h2 style="margin:0;">🔥 Promo Flash !</h2>
+                        <p>Arrivage frais ce matin. -20% pour les 5 premiers clients !</p>
+                        
+                        <div style="display:flex; gap:10px; justify-content:center; margin-top:15px;">
+                            <button onclick="closeStory(); openVendorSheetById(${vendor.id})" style="padding:10px 20px; background:white; color:black; border:none; border-radius:20px; font-weight:bold;">Visiter Boutique</button>
+                            <button onclick="reactStory('🔥')" style="padding:10px; background:rgba(255,255,255,0.2); border-radius:50%; border:none; font-size:1.2rem;">🔥</button>
+                            <button onclick="reactStory('❤️')" style="padding:10px; background:rgba(255,255,255,0.2); border-radius:50%; border:none; font-size:1.2rem;">❤️</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            storyOverlay.innerHTML = progressHtml + headerHtml + contentHtml;
+            document.body.appendChild(storyOverlay);
+            
+            // Animate Progress
+            setTimeout(() => {
+                const bar = document.getElementById('storyProgress');
+                if(bar) bar.style.width = '100%';
+            }, 50);
+            
+            // Auto Close after 5s
+            window.storyTimeout = setTimeout(closeStory, 5000);
+        }
+        
+        function closeStory() {
+            const overlay = document.getElementById('storyOverlay');
+            if(overlay) overlay.remove();
+            if(window.storyTimeout) clearTimeout(window.storyTimeout);
+        }
+        
+        function reactStory(emoji) {
+            // Show floating emoji animation
+            const float = document.createElement('div');
+            float.innerText = emoji;
+            float.style.cssText = "position:fixed; bottom:100px; left:50%; transform:translateX(-50%); font-size:3rem; animation: floatUp 1s forwards; z-index:10002;";
+            document.body.appendChild(float);
+            
+            setTimeout(() => float.remove(), 1000);
+        }
+
+        // === LOGISTICS SIMULATION ===
+        function openDeliverySimulation(vendorId) {
+            const vendor = VENDORS.find(v => v.id == vendorId);
+            const category = vendor ? vendor.category : "";
+            
+            // Determine Vehicle Type & Pricing based on Category
+            let vehicleIcon = "🛵";
+            let vehicleName = "Moto";
+            let vehicleSpeed = "~15 min";
+            let priceStd = "500 F";
+            let priceExp = "1 000 F";
+            
+            if(category.includes("Vivres")) {
+                // Food -> Moto or Tricycle
+                vehicleIcon = "🛵"; 
+            } else if(category.includes("Électronique")) {
+                // Tech -> Secure Moto
+                vehicleIcon = "🏍️";
+                vehicleName = "Moto Sécurisée";
+                priceStd = "1 000 F";
+                priceExp = "2 000 F";
+            } else if(category.includes("Maison") || category.includes("Meuble")) {
+                // Furniture -> Truck
+                vehicleIcon = "🛻";
+                vehicleName = "Pick-up";
+                vehicleSpeed = "~1h";
+                priceStd = "5 000 F";
+                priceExp = "8 000 F";
+            }
+
+            const overlay = document.createElement('div');
+            overlay.id = 'deliveryOverlay';
+            overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9000; display:flex; align-items:flex-end;";
+            
+            overlay.innerHTML = `
+                <div style="background:white; width:100%; border-radius:20px 20px 0 0; padding:20px; animation:slideUp 0.3s; box-shadow:0 -5px 20px rgba(0,0,0,0.1);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <div>
+                            <h3 style="margin:0;">🚚 Livraison ${vehicleName}</h3>
+                            <div style="font-size:0.8rem; color:#636e72;">Adapté pour : ${category}</div>
+                        </div>
+                        <button onclick="document.getElementById('deliveryOverlay').remove()" style="background:none; border:none; font-size:1.5rem;">×</button>
+                    </div>
+                    
+                    <!-- Map Animation Container -->
+                    <div style="height:150px; background:#f1f2f6; border-radius:15px; margin-bottom:15px; position:relative; overflow:hidden;">
+                        <!-- Road -->
+                        <div style="position:absolute; top:50%; left:0; right:0; height:4px; background:#dfe6e9; margin-top:-2px;"></div>
+                        <!-- Vehicle -->
+                        <div id="deliveryBike" style="position:absolute; top:50%; left:10%; margin-top:-15px; font-size:2rem; transition:left 3s cubic-bezier(0.25, 1, 0.5, 1);">${vehicleIcon}</div>
+                        <!-- Vendor Point -->
+                        <div style="position:absolute; top:50%; left:10%; width:10px; height:10px; background:#e74c3c; border-radius:50%; margin-top:-5px;"></div>
+                        <!-- User Point -->
+                        <div style="position:absolute; top:50%; right:10%; width:10px; height:10px; background:#0984e3; border-radius:50%; margin-top:-5px;"></div>
+                    </div>
+                    
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <div style="text-align:center; flex:1; cursor:pointer; padding:5px; border-radius:10px; border:1px solid #dfe6e9;" onclick="selectDeliveryOption(this)">
+                            <div style="font-weight:bold; color:#2d3436;">Standard</div>
+                            <div style="font-size:0.8rem; color:#636e72;">~${category.includes("Maison") ? "2h" : "45 min"}</div>
+                            <div style="font-weight:bold; color:#0984e3;">${priceStd}</div>
+                        </div>
+                        <div style="width:10px;"></div>
+                        <div style="text-align:center; flex:1; cursor:pointer; padding:5px; border-radius:10px; border:2px solid #e74c3c; background:#fff5f5;" onclick="selectDeliveryOption(this)">
+                            <div style="font-weight:bold; color:#2d3436;">Express ⚡</div>
+                            <div style="font-size:0.8rem; color:#636e72;">${vehicleSpeed}</div>
+                            <div style="font-weight:bold; color:#e74c3c;">${priceExp}</div>
+                        </div>
+                    </div>
+                    
+                    <button onclick="startDeliverySim('${vehicleName}')" style="width:100%; padding:15px; background:#2d3436; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">
+                        Valider la livraison
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+        }
+        
+        function selectDeliveryOption(el) {
+            // Visual selection logic only for demo
+            el.parentElement.querySelectorAll('div[onclick]').forEach(d => {
+                d.style.border = '1px solid #dfe6e9';
+                d.style.background = 'transparent';
+            });
+            el.style.border = '2px solid #27ae60';
+            el.style.background = '#e8f5e9';
+        }
+
+        function startDeliverySim(vehicleName) {
+            const bike = document.getElementById('deliveryBike');
+            if(bike) {
+                bike.style.left = '85%'; // Move to destination
+            }
+            
+            setTimeout(() => {
+                alert(`✅ Chauffeur ${vehicleName} en route ! Suivi GPS activé.`);
+                document.getElementById('deliveryOverlay').remove();
+            }, 3000);
+        }
+
+        // === DRIVER MODULE ===
+        function openDriverModal() {
+            // Check if user is "verified" as driver (Mock)
+            const isDriverVerified = localStorage.getItem('mangoo_driver_verified');
+            
+            if(!isDriverVerified) {
+                openDriverOnboarding();
+                return;
+            }
+            
+            const overlay = document.createElement('div');
+            overlay.id = 'driverOverlay';
+            overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:10000; display:flex; flex-direction:column; overflow-y:auto;";
+            
+            overlay.innerHTML = `
+                <div style="background:#e67e22; color:white; padding:20px; display:flex; align-items:center; gap:15px;">
+                    <button onclick="document.getElementById('driverOverlay').remove()" style="background:none; border:none; color:white; font-size:1.5rem;">←</button>
+                    <h2 style="margin:0; flex:1;">Espace Livreur</h2>
+                    <label class="switch">
+                        <input type="checkbox" id="driverStatusSwitch" checked onchange="toggleDriverStatus()">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                
+                <div style="padding:20px; flex:1; background:#f8f9fa;">
+                    <!-- Earnings Card -->
+                    <div style="background:white; border-radius:15px; padding:20px; box-shadow:0 4px 10px rgba(0,0,0,0.05); margin-bottom:20px; text-align:center;">
+                        <div style="color:#636e72; margin-bottom:5px;">Gains du jour</div>
+                        <div style="font-size:2.5rem; font-weight:bold; color:#2d3436;" id="driverEarnings">0 FCFA</div>
+                        <div style="font-size:0.9rem; color:#00b894;">+0% vs hier</div>
+                    </div>
+                    
+                    <!-- Map / Radar Area -->
+                    <div id="driverMapArea" style="background:#2d3436; border-radius:15px; height:200px; margin-bottom:20px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+                        <div style="position:absolute; width:100%; height:100%; opacity:0.3; background:url('https://api.mapbox.com/styles/v1/mapbox/dark-v10/static/9.767869,4.051056,14,0/600x300?access_token=pk.eyJ1IjoiZGVtb21hcHMiLCJhIjoiY2xwbmJ3bHl0MDBzbzJrbzZ5b3J6Z3J6ZSJ9.xxxxx'); background-size:cover;"></div>
+                        
+                        <!-- Radar Pulse -->
+                        <div id="radarPulse" style="width:20px; height:20px; background:#e67e22; border-radius:50%; position:relative; z-index:2;">
+                            <div style="position:absolute; top:-20px; left:-20px; right:-20px; bottom:-20px; border:2px solid #e67e22; border-radius:50%; animation:pulse-radar 1.5s infinite;"></div>
+                        </div>
+                        <div id="radarText" style="position:absolute; bottom:15px; color:white; font-size:0.9rem; font-weight:bold; background:rgba(0,0,0,0.5); padding:5px 10px; border-radius:20px;">
+                            Recherche de courses...
+                        </div>
+                    </div>
+                    
+                    <style>
+                        @keyframes pulse-radar {
+                            0% { transform:scale(0.5); opacity:1; }
+                            100% { transform:scale(2); opacity:0; }
+                        }
+                    </style>
+                    
+                    <!-- Pending Requests -->
+                    <div id="driverRequests">
+                        <div style="text-align:center; color:#b2bec3; margin-top:40px;">
+                            En attente de commandes...
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            startDriverSimulation();
+        }
+
+        function openDriverOnboarding() {
+            const overlay = document.createElement('div');
+            overlay.id = 'driverOnboarding';
+            overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:10000; display:flex; flex-direction:column; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif;";
+            
+            overlay.innerHTML = `
+                <div style="background:linear-gradient(135deg, #e67e22 0%, #d35400 100%); padding:40px 20px 30px; text-align:center; color:white; border-radius:0 0 30px 30px; box-shadow:0 10px 30px rgba(230, 126, 34, 0.3);">
+                    <div style="font-size:4rem; margin-bottom:10px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.2));">🛵</div>
+                    <h2 style="margin:0; font-size:1.8rem; font-weight:800;">Mangoo Express</h2>
+                    <p style="opacity:0.9; margin-top:5px; font-size:0.95rem;">Devenez partenaire et gagnez plus.</p>
+                </div>
+                
+                <div style="flex:1; overflow-y:auto; padding:30px 20px;">
+                    <h3 style="color:#2d3436; margin-bottom:20px; font-size:1.2rem;">📝 Votre Profil</h3>
+                    
+                    <div style="background:white; border-radius:20px; padding:20px; box-shadow:0 5px 20px rgba(0,0,0,0.05); border:1px solid #f1f2f6;">
+                        <div style="margin-bottom:20px;">
+                            <label style="font-weight:bold; display:block; margin-bottom:8px; color:#636e72; font-size:0.9rem;">Type de Véhicule</label>
+                            <div style="position:relative;">
+                                <select id="vehicleType" style="width:100%; padding:15px; border-radius:12px; border:1px solid #dfe6e9; background:#f8f9fa; font-size:1rem; color:#2d3436; appearance:none; font-weight:bold;">
+                                    <option>Moto</option>
+                                    <option>Tricycle</option>
+                                    <option>Voiture</option>
+                                    <option>Camion</option>
+                                </select>
+                                <div style="position:absolute; right:15px; top:50%; transform:translateY(-50%); pointer-events:none; color:#636e72;">▼</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom:10px;">
+                            <label style="font-weight:bold; display:block; margin-bottom:8px; color:#636e72; font-size:0.9rem;">Permis de Conduire / CNI</label>
+                            <div style="border:2px dashed #b2bec3; padding:30px 20px; text-align:center; border-radius:15px; background:#f8f9fa; color:#636e72; cursor:pointer; position:relative; overflow:hidden; transition:all 0.2s;" onclick="document.getElementById('driverLicenseInput').click()" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
+                                <input type="file" id="driverLicenseInput" accept="image/*" style="display:none;" onchange="handleLicenseUpload(this)">
+                                <img id="licensePreview" style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; display:none;">
+                                <div id="licensePlaceholder">
+                                    <div style="font-size:2rem; margin-bottom:5px;">📷</div>
+                                    <div style="font-weight:bold; font-size:0.9rem;">Toucher pour ajouter</div>
+                                    <div style="font-size:0.75rem; opacity:0.7;">Format clair et lisible</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top:30px;">
+                        <button onclick="submitDriverApp()" style="width:100%; padding:18px; background:linear-gradient(135deg, #e67e22 0%, #d35400 100%); color:white; border:none; border-radius:15px; font-weight:bold; font-size:1.1rem; cursor:pointer; box-shadow:0 10px 20px rgba(230, 126, 34, 0.3); transition:transform 0.1s;">
+                            🚀 Envoyer ma candidature
+                        </button>
+                        <button onclick="document.getElementById('driverOnboarding').remove()" style="width:100%; padding:15px; background:transparent; color:#636e72; border:none; font-weight:bold; cursor:pointer; margin-top:10px;">
+                            Annuler
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        function handleLicenseUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById('licensePreview');
+                    const placeholder = document.getElementById('licensePlaceholder');
+                    const container = img.parentElement;
+                    
+                    if(img) {
+                        img.src = e.target.result;
+                        img.style.display = 'block';
+                    }
+                    if(placeholder) placeholder.style.display = 'none';
+                    container.style.border = '2px solid #27ae60';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function submitDriverApp() {
+            const btn = document.querySelector('#driverOnboarding button');
+            btn.innerText = "Vérification en cours...";
+            
+            setTimeout(() => {
+                localStorage.setItem('mangoo_driver_verified', 'true');
+                document.getElementById('driverOnboarding').remove();
+                alert("✅ Dossier validé ! Bienvenue dans l'équipe.");
+                openDriverModal();
+            }, 1500);
+        }
+
+        function toggleDriverStatus() {
+            const isOnline = document.getElementById('driverStatusSwitch').checked;
+            const radar = document.getElementById('radarPulse');
+            const txt = document.getElementById('radarText');
+            
+            if(isOnline) {
+                radar.style.display = 'block';
+                txt.innerText = "Recherche de courses...";
+                startDriverSimulation();
+            } else {
+                radar.style.display = 'none';
+                txt.innerText = "Hors ligne 🔴";
+                clearTimeout(window.driverSimTimeout);
+            }
+        }
+
+        function startDriverSimulation() {
+            if(window.driverSimTimeout) clearTimeout(window.driverSimTimeout);
+            
+            window.driverSimTimeout = setTimeout(() => {
+                const reqContainer = document.getElementById('driverRequests');
+                const isOnline = document.getElementById('driverStatusSwitch')?.checked;
+                
+                if(reqContainer && isOnline) {
+                    reqContainer.innerHTML = `
+                        <div style="background:white; border-radius:15px; padding:15px; border-left:5px solid #e67e22; box-shadow:0 5px 15px rgba(0,0,0,0.1); animation:slideUp 0.3s;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                                <span style="font-weight:bold; color:#e67e22;">Nouvelle Course ! 📦</span>
+                                <span style="font-weight:bold;">1 500 FCFA</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+                                <div style="width:40px; height:40px; background:#f1f2f6; border-radius:50%; display:flex; align-items:center; justify-content:center;">🏪</div>
+                                <div>
+                                    <div style="font-weight:bold; font-size:0.9rem;">Chez Maman Sarah</div>
+                                    <div style="font-size:0.8rem; color:#636e72;">~1.2 km</div>
+                                </div>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+                                <div style="width:40px; height:40px; background:#f1f2f6; border-radius:50%; display:flex; align-items:center; justify-content:center;">👤</div>
+                                <div>
+                                    <div style="font-weight:bold; font-size:0.9rem;">Client: Paul</div>
+                                    <div style="font-size:0.8rem; color:#636e72;">Akwa Nord</div>
+                                </div>
+                            </div>
+                            
+                            <div style="display:flex; gap:10px;">
+                                <button onclick="acceptDriverJob(this)" style="flex:1; padding:15px; background:#2d3436; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">
+                                    Accepter
+                                </button>
+                                <button onclick="rejectDriverJob()" style="padding:15px; background:#f1f2f6; color:#d63031; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">
+                                    Refuser
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                }
+            }, 3000);
+        }
+
+        function rejectDriverJob() {
+            document.getElementById('driverRequests').innerHTML = `
+                <div style="text-align:center; color:#b2bec3; margin-top:40px;">
+                    Recherche de nouvelles courses...
+                </div>
+            `;
+            startDriverSimulation();
+        }
+
+        function acceptDriverJob(btn) {
+            // Transform card into "Active Job" mode
+            const card = btn.closest('div[style*="background:white"]');
+            card.innerHTML = `
+                <div style="text-align:center; padding:10px;">
+                    <div style="font-size:1.2rem; font-weight:bold; color:#e67e22; margin-bottom:10px;">Course en cours 🛵</div>
+                    
+                    <div style="display:flex; justify-content:space-around; margin-bottom:20px;">
+                        <button style="background:#f1f2f6; border:none; padding:10px; border-radius:50%; width:50px; height:50px;">📞</button>
+                        <button style="background:#f1f2f6; border:none; padding:10px; border-radius:50%; width:50px; height:50px;">💬</button>
+                        <button style="background:#f1f2f6; border:none; padding:10px; border-radius:50%; width:50px; height:50px;">📍</button>
+                    </div>
+                    
+                    <div style="background:#fff3e0; padding:10px; border-radius:10px; margin-bottom:15px; font-size:0.9rem;">
+                        Récupérez le colis chez <b>Maman Sarah</b>
+                    </div>
+                    
+                    <button onclick="driverArrived(this)" style="width:100%; padding:15px; background:#2d3436; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">
+                        Je suis arrivé chez le client
+                    </button>
+                </div>
+            `;
+        }
+
+        function driverArrived(btn) {
+            const card = btn.closest('div');
+            card.innerHTML = `
+                <div style="text-align:center; padding:10px;">
+                    <div style="font-size:1.2rem; font-weight:bold; color:#27ae60; margin-bottom:10px;">Preuve de Livraison 📸</div>
+                    <p style="font-size:0.9rem; color:#666;">Prenez une photo du colis remis au client.</p>
+                    
+                    <div style="width:100%; height:150px; background:#f1f2f6; border:2px dashed #ccc; border-radius:10px; margin-bottom:15px; display:flex; align-items:center; justify-content:center; cursor:pointer;" onclick="this.style.background='#e8f5e9'; this.innerHTML='✅ Photo Ajoutée';">
+                        📷 Toucher pour photo
+                    </div>
+                    
+                    <button onclick="finishDriverJob()" style="width:100%; padding:15px; background:#27ae60; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">
+                        Valider la livraison
+                    </button>
+                </div>
+            `;
+        }
+
+        function finishDriverJob() {
+            // Update Earnings
+            const earnEl = document.getElementById('driverEarnings');
+            earnEl.innerText = "1 500 FCFA";
+            earnEl.style.color = "#27ae60";
+            
+            alert("Bravo ! Course terminée. Votre compte a été crédité.");
+            
+            document.getElementById('driverRequests').innerHTML = `
+                <div style="text-align:center; color:#b2bec3; margin-top:40px;">
+                    Recherche de nouvelles courses...
+                </div>
+            `;
+            startDriverSimulation();
         }
 
         // === GESTION DU VOICE PITCH ===
@@ -5103,7 +6175,7 @@
                         </div>
                         <div style="display:flex; gap:5px; opacity:1; transform:scale(1); background:transparent; padding:0; border-radius:0;">
                              <button onclick="startTontine('${post.name}', '${post.price}')" style="background:#8B5CF6; color:white; border:none; padding:8px 12px; border-radius:10px; font-size:0.75rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.1);">👥 Tontine</button>
-                             <button onclick="startBargain('${post.name}')" style="background:#f1c40f; color:#2d3436; border:none; padding:8px 12px; border-radius:10px; font-size:0.75rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.1);">🤝 Marchander</button>
+                             <button onclick="startBargain('${post.name}', '${post.price}')" style="background:#f1c40f; color:#2d3436; border:none; padding:8px 12px; border-radius:10px; font-size:0.75rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.1);">🤝 Marchander</button>
                         </div>
                     </div>
                 ` : `
@@ -5114,7 +6186,7 @@
                         </button>` : ''}
                         <div style="display:flex; gap:5px;">
                             <button onclick="startTontine('${post.name}', '${post.price}')" style="background:#8B5CF6; color:white; border:none; padding:8px 12px; border-radius:10px; font-size:0.75rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.1);">👥 Tontine</button>
-                            <button onclick="startBargain('${post.name}')" style="background:#f1c40f; color:#2d3436; border:none; padding:8px 12px; border-radius:10px; font-size:0.75rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.1);">🤝 Marchander</button>
+                            <button onclick="startBargain('${post.name}', '${post.price}')" style="background:#f1c40f; color:#2d3436; border:none; padding:8px 12px; border-radius:10px; font-size:0.75rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.1);">🤝 Marchander</button>
                         </div>
                     </div>
                 `}
@@ -7381,6 +8453,109 @@
             document.body.appendChild(ordersOverlay);
         }
 
+        // === DASHBOARD LOGIC ===
+        
+        function switchDashTab(tabName) {
+            // Update Tab UI
+            document.querySelectorAll('.dash-tab').forEach(t => {
+                t.classList.remove('active');
+                t.style.borderBottom = '3px solid transparent';
+                t.style.color = '#636e72';
+            });
+            const activeBtn = document.getElementById('btn-dash-' + tabName);
+            if(activeBtn) {
+                activeBtn.classList.add('active');
+                activeBtn.style.borderBottom = '3px solid #1a5f3f';
+                activeBtn.style.color = '#1a5f3f';
+            }
+            
+            // Show Content
+            document.querySelectorAll('.dash-content').forEach(c => c.style.display = 'none');
+            document.getElementById('dash-' + tabName).style.display = 'block';
+            
+            // Refresh data if needed
+            if(tabName === 'orders' || tabName === 'tontines' || tabName === 'debts') {
+                updateDashboard();
+            }
+        }
+
+        function updateDashboard() {
+            // 1. ORDERS
+            const ordersContainer = document.getElementById('ordersListContainer');
+            if(ordersContainer) {
+                // Mock Orders + Real recent state
+                let ordersHtml = '';
+                
+                // Check if we have a recent crowdfunding purchase (Completed)
+                // Also check if we have a 'negotiated' purchase stored somewhere? 
+                // Currently we don't persist negotiated purchases in a global state except alert.
+                // Let's assume crowdfundingState covers Tontine/Epargne completed.
+                
+                if(window.crowdfundingState && (window.crowdfundingState.raised >= window.crowdfundingState.totalNeeded)) {
+                     const state = window.crowdfundingState;
+                     ordersHtml += `
+                        <div style="background:white; border-radius:15px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05); border-left:4px solid #27ae60;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                <span style="font-weight:bold; color:#2d3436;">Commande #${Math.floor(Math.random()*10000)}</span>
+                                <span style="font-weight:bold; color:#27ae60;">Payé</span>
+                            </div>
+                            <div style="font-size:0.85rem; color:#636e72; margin-bottom:10px;">${state.productName || 'Produit'} • ${state.totalNeeded.toLocaleString()} FCFA</div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:0.75rem; background:#e8f5e9; color:#27ae60; padding:3px 8px; border-radius:10px;">Livraison en cours</span>
+                                <button onclick="showDigitalReceipt('${state.productName || 'Produit'}', ${state.totalNeeded})" style="padding:5px 12px; background:#dfe6e9; color:#2d3436; border:none; border-radius:15px; font-size:0.8rem; cursor:pointer;">📄 Reçu</button>
+                            </div>
+                        </div>
+                     `;
+                }
+                
+                // Add some mock history
+                ordersHtml += `
+                    <div style="background:white; border-radius:15px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05); border-left:4px solid #b2bec3;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                            <span style="font-weight:bold; color:#2d3436;">Commande #8921</span>
+                            <span style="font-weight:bold; color:#636e72;">Livré</span>
+                        </div>
+                        <div style="font-size:0.85rem; color:#636e72; margin-bottom:10px;">Sac de Riz 50kg • Maman Paul</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:0.75rem; background:#f1f2f6; color:#636e72; padding:3px 8px; border-radius:10px;">10/02/2026</span>
+                            <button onclick="alert('Reçu archivé')" style="padding:5px 12px; background:transparent; color:#0984e3; border:none; font-size:0.8rem; cursor:pointer; text-decoration:underline;">Détails</button>
+                        </div>
+                    </div>
+                `;
+                
+                if(ordersHtml) ordersContainer.innerHTML = ordersHtml;
+            }
+
+            // 2. TONTINES
+            const tontinesContainer = document.getElementById('tontinesListContainer');
+            if(tontinesContainer && window.crowdfundingState && window.crowdfundingState.mode === 'tontine' && window.crowdfundingState.raised < window.crowdfundingState.totalNeeded) {
+                 const state = window.crowdfundingState;
+                 const progress = Math.round((state.raised / state.totalNeeded) * 100);
+                 const participants = state.participants.length;
+                 const totalParts = state.totalParts || 4;
+                 
+                 tontinesContainer.innerHTML = `
+                    <div style="background:white; border-radius:15px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05); border:1px solid #8B5CF6;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <span style="font-weight:bold; color:#8B5CF6;">Tontine Active</span>
+                            <span style="font-weight:bold; color:#2d3436;">${progress}%</span>
+                        </div>
+                        <div style="font-size:0.9rem; font-weight:bold; margin-bottom:5px;">${state.productName}</div>
+                        <div style="height:10px; background:#f3e8ff; border-radius:5px; margin-bottom:10px; overflow:hidden;">
+                            <div style="height:100%; width:${progress}%; background:#8B5CF6;"></div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#636e72; margin-bottom:15px;">
+                            <span>${state.raised.toLocaleString()} / ${state.totalNeeded.toLocaleString()} F</span>
+                            <span>👥 ${participants}/${totalParts}</span>
+                        </div>
+                        <div style="display:flex; gap:10px;">
+                            <button onclick="showTontineSchedule('${state.productName}', 'tontine', 4, 0)" style="flex:1; padding:10px; background:#8B5CF6; color:white; border:none; border-radius:10px; cursor:pointer;">Voir Détails</button>
+                            <button onclick="shareTontineLink()" style="flex:1; padding:10px; background:#f3e8ff; color:#8B5CF6; border:none; border-radius:10px; cursor:pointer;">🔗 Inviter</button>
+                        </div>
+                    </div>
+                 `;
+            }
+        }
     </script>
 </body>
 </html>

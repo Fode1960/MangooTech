@@ -781,7 +781,7 @@ const MangooLocalFrame = React.memo(({ user, onBack }) => {
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
       <iframe 
-        src="/mangoo-local.html?v=43" 
+        src="/mangoo-local.html?v=57" 
         style={{ width: '100%', height: '100%', border: 'none' }}
         title="Mangoo Local+"
       />
