@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a5f3f">
     <title>Mangoo Local+ 🌍</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥭</text></svg>">
     <link rel="manifest" href="mangoo-local.webmanifest">
     <!-- Leaflet CSS - PRELOADED -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -1592,6 +1593,7 @@
 
                 <div class="wallet-actions">
                     <button class="wallet-btn" onclick="rechargeBalance()">📥 Recharger</button>
+                    <button class="wallet-btn" onclick="openP2PModal()">💸 Transfert de crédit</button>
                     <button class="wallet-btn" onclick="alert('Retrait vers votre compte Mobile Money bientôt disponible.')">📤 Retirer</button>
                 </div>
             </div>
@@ -2231,6 +2233,43 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
     
     <script>
+        const USER_POS = [4.051056, 9.767869]; 
+        const VENDORS = [
+            {
+                id: 1,
+                name: "Chez Maman Sarah",
+                category: "🥬 Vivres Frais",
+                lat: 4.052000,
+                lng: 9.768000,
+                status: "open",
+                live: true, // EN LIVE !
+                voicePitch: "Bonjour mes enfants ! Aujourd'hui j'ai reçu du Ndolé frais et des miondo de Deido. Venez vite avant que ça finisse !",
+                avatar: "https://ui-avatars.com/api/?name=Maman+Sarah&background=1a5f3f&color=fff"
+            },
+            {
+                id: 2,
+                name: "Tech Mobile Pro",
+                category: "📱 Électronique",
+                lat: 4.050500,
+                lng: 9.767000,
+                status: "open",
+                live: false,
+                voicePitch: "Promo iPhone 12 reconditionné, garantie 3 mois. Chargeur offert si vous venez de la part de Mangoo.",
+                avatar: "https://ui-avatars.com/api/?name=Tech+Pro&background=0984e3&color=fff"
+            },
+            {
+                id: 3,
+                name: "Tailleur Élégance",
+                category: "🧵 Mode",
+                lat: 4.051500,
+                lng: 9.769000,
+                status: "closed",
+                live: false,
+                voicePitch: "Atelier fermé ce matin, je suis au marché des tissus. Ouverture à 14h pour les essayages.",
+                avatar: "https://ui-avatars.com/api/?name=Tailleur+E&background=e17055&color=fff"
+            }
+        ];
+
         // === MANGOO LAB LOGIC ===
         function openLabModal() {
             document.getElementById('labModal').style.display = 'flex';
@@ -2409,7 +2448,8 @@
         });
 
         // === DONNÉES (Douala, Cameroun) ===
-        let USER_POS = [4.051056, 9.767869]; 
+        // USER_POS already declared above
+        // VENDORS already declared above
         let currentMarkers = [];
         let currentCategory = 'all';
         let currentView = 'map'; 
@@ -2424,75 +2464,12 @@
         }
 
         const DEFAULT_VENDORS = [
-            {
-                id: 1,
-                name: "Chez Maman Sarah",
-                category: "🥬 Vivres Frais",
-                lat: 4.052000,
-                lng: 9.768000,
-                status: "open",
-                live: true,
-                voicePitch: "Bonjour mes enfants ! Aujourd'hui j'ai reçu du Ndolé frais et des miondo de Deido. Venez vite avant que ça finisse !",
-                avatar: "https://ui-avatars.com/api/?name=Maman+Sarah&background=1a5f3f&color=fff"
-            },
-            {
-                id: 2,
-                name: "Tech Mobile Pro",
-                category: "📱 Électronique",
-                lat: 4.050500,
-                lng: 9.767000,
-                status: "open",
-                live: false,
-                promo: true, // Activated Promo
-                voicePitch: "Promo iPhone 12 reconditionné, garantie 3 mois. Chargeur offert si vous venez de la part de Mangoo.",
-                avatar: "https://ui-avatars.com/api/?name=Tech+Pro&background=0984e3&color=fff"
-            },
-            {
-                id: 3,
-                name: "Tailleur Élégance",
-                category: "🧵 Mode",
-                lat: 4.051500,
-                lng: 9.769000,
-                status: "closed",
-                live: false,
-                voicePitch: "Atelier fermé ce matin, je suis au marché des tissus. Ouverture à 14h pour les essayages.",
-                avatar: "https://ui-avatars.com/api/?name=Tailleur+E&background=e17055&color=fff"
-            },
-            {
-                id: 4,
-                name: "Salon Beauté Divine",
-                category: "💇‍♀️ Beauté",
-                lat: 4.049000,
-                lng: 9.765000,
-                status: "open",
-                live: true,
-                voicePitch: "Promotion tresses américaines aujourd'hui ! -20% pour les 3 premières clientes.",
-                avatar: "https://ui-avatars.com/api/?name=Beaute+D&background=fd79a8&color=fff"
-            },
-            {
-                id: 5,
-                name: "Garage Confiance",
-                category: "🔧 Services",
-                lat: 4.053000,
-                lng: 9.766000,
-                status: "open",
-                live: false,
-                voicePitch: "Vidange rapide et diagnostic électronique. On est ouvert même le dimanche.",
-                avatar: "https://ui-avatars.com/api/?name=Garage+C&background=636e72&color=fff"
-            }
+            // ... (We can keep this for reset or fallback logic if needed, but main VENDORS is now top-level)
         ];
 
-        let VENDORS = [];
-        
-        try {
-            // VENDORS = JSON.parse(localStorage.getItem('mangoo_vendors')) || DEFAULT_VENDORS;
-            const stored = localStorage.getItem('mangoo_vendors');
-            VENDORS = stored ? JSON.parse(stored) : DEFAULT_VENDORS;
-            
-            if (!Array.isArray(VENDORS) || VENDORS.length === 0) VENDORS = DEFAULT_VENDORS;
-        } catch(e) {
-            console.warn('Storage Error:', e);
-            VENDORS = DEFAULT_VENDORS;
+        // Ensure VENDORS is populated if empty (though top-level declaration handles it)
+        if (!VENDORS || VENDORS.length === 0) {
+             // Fallback to top-level definition
         }
 
         let map;
@@ -2517,27 +2494,92 @@
             }
         });
 
-        // === FIX: CORRECT REDIRECTION FOR ORDERS BUTTON ===
-        document.addEventListener('DOMContentLoaded', () => {
-             const orderCards = document.querySelectorAll('.card');
-             if(orderCards) {
-                 orderCards.forEach(card => {
-                     if(card.innerText.includes('Mes Commandes')) {
-                         card.onclick = openOrdersModal;
-                     }
-                 });
-             }
-        });
-
-        function showError(msg) {
-            const loader = document.getElementById('loader');
-            if(loader) {
-                loader.innerHTML = `<div style="text-align:center; padding:20px; color:#d63031;">
-                    <h3>Oups !</h3>
-                    <p>${msg}</p>
-                    <button onclick="window.location.reload()" style="padding:12px 24px; border:none; background:#1a5f3f; color:white; border-radius:8px; margin-top:10px; font-weight:bold; cursor:pointer;">Réessayer</button>
-                </div>`;
+        // === FIX: ORDERS REDIRECTION ===
+        function openOrdersModal() {
+            // Check if we are in Tontine Mode
+            // If Tontine State exists AND is not fully paid, show Schedule
+            // BUT if fully paid (or cash payment), show Order Status
+            
+            if (window.crowdfundingState) {
+                // If paid 100%, show "Completed Order" (or Schedule with 100%)
+                // If Cash Payment, we marked it as full raised
+                
+                // Let's create a dedicated "My Orders" modal instead of hijacking the schedule
+                // But for now, let's adapt the Schedule to look like an Order if 100%
+                
+                // Check if it was a Cash Payment (we can infer if currentRaised == totalNeeded quickly)
+                const isPaid = window.crowdfundingState.currentRaised >= window.crowdfundingState.totalNeeded;
+                
+                if(isPaid) {
+                    // Show "Order Delivered/Ready" view instead of "Payment Schedule"
+                    showCompletedOrderModal("Sneakers Pro", window.crowdfundingState.totalNeeded);
+                    return;
+                } else {
+                    showTontineSchedule("Sneakers Pro", window.crowdfundingState.mode || 'solo', 4, Math.ceil(window.crowdfundingState.totalNeeded/4));
+                    return;
+                }
             }
+
+            // Normal Orders Modal (Non-Tontine)
+            const ordersOverlay = document.createElement('div');
+            ordersOverlay.id = 'ordersOverlay';
+            ordersOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:20000; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.3s;";
+            
+            ordersOverlay.innerHTML = `
+                <div style="background:white; width:90%; max-width:400px; height:80vh; border-radius:20px; display:flex; flex-direction:column; overflow:hidden;">
+                    <div style="padding:20px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                        <h2 style="margin:0; font-size:1.2rem;">📦 Mes Commandes</h2>
+                        <button onclick="document.getElementById('ordersOverlay').remove()" style="background:#f1f2f6; border:none; width:30px; height:30px; border-radius:50%; cursor:pointer;">✕</button>
+                    </div>
+                    <div style="flex:1; padding:20px; overflow-y:auto; text-align:center; color:#636e72;">
+                        <div style="font-size:3rem; margin-bottom:10px;">📭</div>
+                        <p>Aucune commande standard en cours.</p>
+                        <p style="font-size:0.8rem;">Les achats Tontine/Épargne sont dans la section dédiée.</p>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(ordersOverlay);
+        }
+
+        function showCompletedOrderModal(productName, totalAmount) {
+             const overlay = document.createElement('div');
+             overlay.id = 'completedOrderOverlay';
+             overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:21000; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.3s;";
+             
+             overlay.innerHTML = `
+                <div style="background:white; width:90%; max-width:400px; border-radius:20px; overflow:hidden; display:flex; flex-direction:column;">
+                    <div style="background:#27ae60; color:white; padding:20px; text-align:center;">
+                        <div style="font-size:3rem;">📦</div>
+                        <h2 style="margin:10px 0 0 0;">Commande Validée</h2>
+                        <div style="font-size:0.9rem; opacity:0.9;">Paiement Comptant Reçu</div>
+                    </div>
+                    
+                    <div style="padding:25px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:15px;">
+                            <span style="color:#636e72;">Produit</span>
+                            <span style="font-weight:bold;">${productName}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                            <span style="color:#636e72;">Montant Payé</span>
+                            <span style="font-weight:bold; color:#27ae60;">${totalAmount.toLocaleString()} FCFA</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:25px;">
+                            <span style="color:#636e72;">Statut</span>
+                            <span style="background:#e8f5e9; color:#27ae60; padding:4px 8px; border-radius:10px; font-size:0.8rem; font-weight:bold;">Payé • En Préparation</span>
+                        </div>
+                        
+                        <div style="background:#f1f2f6; padding:15px; border-radius:10px; font-size:0.85rem; color:#636e72; margin-bottom:25px; line-height:1.4;">
+                            Votre commande est en cours de traitement par le vendeur. Vous recevrez une notification dès qu'elle sera expédiée.
+                        </div>
+                        
+                        <button onclick="document.getElementById('completedOrderOverlay').remove()" style="width:100%; padding:15px; background:#2d3436; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">
+                            Fermer
+                        </button>
+                    </div>
+                </div>
+             `;
+             document.body.appendChild(overlay);
         }
 
         function initApp() {
@@ -2743,155 +2785,94 @@
 
         // === TONTINE LOGIC ===
         function startTontine(productName, price) {
+            // Check if tontine is already active
+            // We check both raised and currentRaised to be safe against previous bugs
+            const isRaisedComplete = (window.crowdfundingState.raised || 0) >= window.crowdfundingState.totalNeeded;
+            const isCurrentRaisedComplete = (window.crowdfundingState.currentRaised || 0) >= window.crowdfundingState.totalNeeded;
+            const isComplete = isRaisedComplete || isCurrentRaisedComplete;
+            
+            if(window.crowdfundingState.totalNeeded > 0 && !isComplete) {
+                 alert("Vous avez déjà une tontine ou un financement en cours !");
+                 return;
+            }
+
             const overlay = document.createElement('div');
             overlay.id = 'tontineOverlay';
-            overlay.style.position = 'fixed';
-            overlay.style.top = '0';
-            overlay.style.left = '0';
-            overlay.style.width = '100%';
-            overlay.style.height = '100%';
-            overlay.style.backgroundColor = 'rgba(0,0,0,0.85)';
-            overlay.style.zIndex = '8000';
-            overlay.style.display = 'flex';
-            overlay.style.alignItems = 'center';
-            overlay.style.justifyContent = 'center';
-            overlay.style.flexDirection = 'column';
+            overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:8000; display:flex; align-items:center; justify-content:center; flex-direction:column;";
             
             // Clean price
             let cleanPrice = price ? parseInt(String(price).replace(/[^0-9]/g, '')) : 0;
-            let priceVal = cleanPrice;
+            let priceVal = cleanPrice || 15000;
+            
+            // Default split
+            const defaultSteps = 4;
+            const share = Math.ceil(priceVal / defaultSteps);
+            
+            // Default Mode
+            window.tempTontineMode = 'solo';
             
             overlay.innerHTML = `
-                <div style="background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 380px; text-align: center; font-family: sans-serif; position: relative; max-height: 90vh; overflow-y: auto;">
-                    <div style="font-size: 3rem; margin-bottom: 10px;">👥</div>
-                    <h2 style="margin-bottom: 5px; color: #1a5f3f; font-weight: 800;">Tontine Mangoo</h2>
-                    <div style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Choisissez votre mode de paiement</div>
+                <div style="background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 380px; text-align: center; font-family: sans-serif; position: relative; animation: slideUp 0.3s;">
+                    <div style="font-size: 3rem; margin-bottom: 10px;">🤝</div>
+                    <h2 style="margin-bottom: 5px; color: #1a5f3f; font-weight: 800;">Nouveau Contrat</h2>
+                    <div style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Choisissez votre formule</div>
                     
-                    <!-- Mode Toggle -->
-                    <div style="background: #f3f4f6; padding: 5px; border-radius: 10px; display: flex; margin-bottom: 20px; gap: 5px;">
-                        <button onclick="switchTontineMode('solo')" id="btnModeSolo" style="flex: 1; padding: 10px 5px; border: none; border-radius: 8px; background: white; color: #1a5f3f; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; font-size: 0.8rem;">Epargne</button>
-                        <button onclick="switchTontineMode('group')" id="btnModeGroup" style="flex: 1; padding: 10px 5px; border: none; border-radius: 8px; background: transparent; color: #666; font-weight: bold; cursor: pointer; font-size: 0.8rem;">Tontine</button>
-                        <button onclick="switchTontineMode('credit')" id="btnModeCredit" style="flex: 1; padding: 10px 5px; border: none; border-radius: 8px; background: transparent; color: #666; font-weight: bold; cursor: pointer; font-size: 0.8rem;">Crédit</button>
-                    </div>
-
-                    <div style="background: #e8f5e9; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left; border: 1px solid #c8e6c9;">
-                        <div style="font-size: 0.8rem; color: #2e7d32; text-transform: uppercase; font-weight: bold;">Produit</div>
-                        <div style="font-size: 1.1rem; font-weight: bold; color: #1b5e20; margin-bottom: 5px;">${productName}</div>
-                        <div style="font-size: 0.8rem; color: #e67e22; background: #fff3e0; padding: 5px 10px; border-radius: 12px; display: inline-block; margin-bottom: 10px;">
-                            ℹ️ En cas de retard de paiement, une dette sera automatiquement ajoutée à votre Carnet de Crédits.
+                    <div style="background: #f8fafc; border-radius: 15px; padding: 15px; text-align: left; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <span style="color:#64748b; font-size:0.9rem;">Produit</span>
+                            <span style="font-weight:bold; color:#0f172a;">${productName}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <span style="color:#64748b; font-size:0.9rem;">Prix Total</span>
+                            <span style="font-weight:bold; color:#0f172a;">${priceVal.toLocaleString()} FCFA</span>
                         </div>
                         
-                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 10px;">
-                            <div>
-                                <div style="font-size: 0.75rem; color: #2e7d32;">Prix Total (Négociable)</div>
-                                <div style="display: flex; align-items: center; gap: 5px;">
-                                    <input type="number" id="tontineTotalPrice" value="${priceVal}" disabled 
-                                        style="font-size: 1.4rem; font-weight: 800; color: #1b5e20; background: transparent; border: none; width: 110px; border-bottom: 2px solid transparent;">
-                                    <span style="font-size: 1rem; font-weight: bold; color: #2e7d32;">FCFA</span>
+                        <div id="tontinePartsSelector" style="display:none; margin-top:10px; border-top:1px solid #e2e8f0; padding-top:10px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                                <span style="color:#64748b; font-size:0.9rem;">Nombre de parts</span>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <button onclick="changeTontineParts(-1)" style="width:25px; height:25px; border-radius:50%; border:1px solid #cbd5e1; background:white; cursor:pointer; font-weight:bold;">-</button>
+                                    <span id="tontinePartsCount" style="font-weight:bold; color:#0f172a;">4</span>
+                                    <button onclick="changeTontineParts(1)" style="width:25px; height:25px; border-radius:50%; border:1px solid #cbd5e1; background:white; cursor:pointer; font-weight:bold;">+</button>
                                 </div>
                             </div>
-                            <div style="display: flex; gap: 5px;">
-                                <button onclick="launchTontineCall()" style="background: #e8f5e9; color: #1a5f3f; border: 1px solid #1a5f3f; padding: 8px; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                                    📞
-                                </button>
-                                <button onclick="editTontinePrice()" style="background: #fbc02d; color: #333; border: none; padding: 8px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 5px;">
-                                    🤝 Négocier
-                                </button>
-                            </div>
                         </div>
+
+                        <div style="width:100%; height:1px; background:#e2e8f0; margin:10px 0;"></div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="color:#64748b; font-size:0.9rem;" id="shareLabel">Votre part (x4)</span>
+                            <span style="font-weight:800; color:#27ae60; font-size:1.2rem;" id="shareValue">${share.toLocaleString()} FCFA</span>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:10px; margin-bottom:15px;">
+                        <button onclick="setTontineMode('solo', this)" class="mode-btn" style="flex:1; padding:10px; border:2px solid #27ae60; background:#e8f5e9; border-radius:12px; cursor:pointer;">
+                            <div style="font-size:1.5rem;">🐷</div>
+                            <div style="font-weight:bold; color:#1a5f3f; font-size:0.8rem;">Épargne</div>
+                        </button>
+                        <button onclick="setTontineMode('credit', this)" class="mode-btn" style="flex:1; padding:10px; border:1px solid #ddd; background:white; border-radius:12px; cursor:pointer;">
+                            <div style="font-size:1.5rem;">💸</div>
+                            <div style="font-weight:bold; color:#64748b; font-size:0.8rem;">Crédit</div>
+                        </button>
+                        <button onclick="setTontineMode('tontine', this)" class="mode-btn" style="flex:1; padding:10px; border:1px solid #ddd; background:white; border-radius:12px; cursor:pointer;">
+                            <div style="font-size:1.5rem;">👥</div>
+                            <div style="font-weight:bold; color:#64748b; font-size:0.8rem;">Tontine</div>
+                        </button>
                     </div>
                     
-                    <!-- SOLO VIEW (Epargne) -->
-                    <div id="tontineSoloView">
-                        <div style="text-align: left; margin-bottom: 20px;">
-                            <label style="font-size: 0.9rem; font-weight: bold; color: #444; display: block; margin-bottom: 5px;">Fréquence de paiement</label>
-                            <div style="display: flex; gap: 10px;">
-                                <button onclick="selectFreq(this, 'daily')" class="freq-btn active" style="flex: 1; padding: 10px; border: 2px solid #1a5f3f; background: #1a5f3f; color: white; border-radius: 8px; font-weight: bold; cursor: pointer;">Quotidien</button>
-                                <button onclick="selectFreq(this, 'weekly')" class="freq-btn" style="flex: 1; padding: 10px; border: 1px solid #ddd; background: white; color: #666; border-radius: 8px; font-weight: bold; cursor: pointer;">Hebdo</button>
-                            </div>
-                        </div>
-
-                        <div style="text-align: left; margin-bottom: 25px;">
-                            <label style="font-size: 0.9rem; font-weight: bold; color: #444; display: block; margin-bottom: 5px;">Montant par versement</label>
-                            <div style="display: flex; align-items: center; background: white; border: 2px solid #ddd; border-radius: 8px; padding: 0 10px;">
-                                <input type="number" id="tontineAmount" value="${priceVal ? Math.ceil(priceVal/30) : 500}" style="border: none; outline: none; padding: 12px 5px; font-size: 1.1rem; font-weight: bold; width: 100%; color: #333;">
-                                <span style="font-weight: bold; color: #888;">FCFA</span>
-                            </div>
-                            <div id="tontineDuration" style="font-size: 0.8rem; color: #666; margin-top: 5px; font-style: italic;">
-                                ~ ${priceVal ? '30 jours' : 'Durée variable'}
-                            </div>
-                            <div style="margin-top: 15px; padding: 10px; background: #fff3e0; border-radius: 8px; font-size: 0.8rem; color: #e65100; display: flex; align-items: center; gap: 8px;">
-                                📦 <b>Livraison :</b> Après paiement total du montant.
-                            </div>
-                        </div>
+                    <div id="modeDescription" style="font-size: 0.8rem; color: #1a5f3f; background: #e8f5e9; padding: 10px; border-radius: 8px; margin-bottom: 20px;">
+                        ✅ <b>Épargne :</b> Payez à votre rythme. Livraison après paiement complet.
                     </div>
 
-                    <!-- CREDIT VIEW -->
-                    <div id="tontineCreditView" style="display: none;">
-                        <div style="text-align: left; margin-bottom: 20px;">
-                            <label style="font-size: 0.9rem; font-weight: bold; color: #444; display: block; margin-bottom: 5px;">Fréquence de remboursement</label>
-                            <div style="display: flex; gap: 10px;">
-                                <button onclick="selectCreditFreq(this, 'weekly')" class="credit-freq-btn active" style="flex: 1; padding: 10px; border: 2px solid #1a5f3f; background: #1a5f3f; color: white; border-radius: 8px; font-weight: bold; cursor: pointer;">Hebdo</button>
-                                <button onclick="selectCreditFreq(this, 'monthly')" class="credit-freq-btn" style="flex: 1; padding: 10px; border: 1px solid #ddd; background: white; color: #666; border-radius: 8px; font-weight: bold; cursor: pointer;">Mensuel</button>
-                            </div>
-                        </div>
-
-                        <div style="text-align: left; margin-bottom: 25px;">
-                            <label style="font-size: 0.9rem; font-weight: bold; color: #444; display: block; margin-bottom: 5px;">Montant à rembourser</label>
-                            <div style="display: flex; align-items: center; background: white; border: 2px solid #ddd; border-radius: 8px; padding: 0 10px;">
-                                <input type="number" id="creditAmount" value="${priceVal ? Math.ceil(priceVal/4) : 5000}" style="border: none; outline: none; padding: 12px 5px; font-size: 1.1rem; font-weight: bold; width: 100%; color: #333;">
-                                <span style="font-weight: bold; color: #888;">FCFA</span>
-                            </div>
-                            <div id="creditDuration" style="font-size: 0.8rem; color: #666; margin-top: 5px; font-style: italic;">
-                                ~ 4 semaines pour finir
-                            </div>
-                            
-                            <div style="margin-top: 15px; padding: 10px; background: #e8f5e9; border-radius: 8px; font-size: 0.8rem; color: #1b5e20; display: flex; align-items: center; gap: 8px;">
-                                📦 <b>Livraison :</b> Immédiatement (Payer après).
-                            </div>
-                        </div>
+                    <div id="tontineWarning" style="display:none; font-size: 0.75rem; color: #d63031; background: #ffebee; padding: 10px; border-radius: 8px; margin-bottom: 20px;">
+                        ℹ️ <b>Note :</b> La Tontine divise le montant par 4. Pour payer la totalité seul, choisissez le mode <b>Épargne</b>.
                     </div>
 
-                    <!-- GROUP VIEW (Tontine) -->
-                    <div id="tontineGroupView" style="display: none;">
-                        <div style="text-align: left; margin-bottom: 20px;">
-                            <label style="font-size: 0.9rem; font-weight: bold; color: #444; display: block; margin-bottom: 5px;">Nombre de participants</label>
-                            <div style="display: flex; align-items: center; background: white; border: 2px solid #ddd; border-radius: 8px; padding: 0 10px; margin-bottom: 15px;">
-                                <button onclick="changeParticipants(-1)" style="padding: 10px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #1a5f3f;">➖</button>
-                                <input type="number" id="groupSize" value="5" style="border: none; outline: none; padding: 12px 5px; font-size: 1.1rem; font-weight: bold; width: 100%; text-align: center; color: #333;">
-                                <button onclick="changeParticipants(1)" style="padding: 10px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #1a5f3f;">➕</button>
-                            </div>
-
-                            <label style="font-size: 0.9rem; font-weight: bold; color: #444; display: block; margin-bottom: 5px;">Fréquence de Rotation</label>
-                            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                                <button onclick="selectGroupFreq(this, 'weekly')" class="group-freq-btn active" style="flex: 1; padding: 8px; border: 2px solid #1a5f3f; background: #1a5f3f; color: white; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">Hebdo</button>
-                                <button onclick="selectGroupFreq(this, 'monthly')" class="group-freq-btn" style="flex: 1; padding: 8px; border: 1px solid #ddd; background: white; color: #666; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">Mensuel</button>
-                            </div>
-                        </div>
-
-                        <div style="background: #e0f2f1; padding: 15px; border-radius: 12px; margin-bottom: 25px; text-align: center; border: 1px dashed #00695c;">
-                            <div style="font-size: 0.85rem; color: #00695c; margin-bottom: 5px;">Contribution par membre</div>
-                            <div id="groupShareAmount" style="font-size: 1.5rem; font-weight: 800; color: #004d40;">${priceVal ? Math.ceil(priceVal/5).toLocaleString() : 0} FCFA</div>
-                            <div style="width: 100%; height: 1px; background: #b2dfdb; margin: 10px 0;"></div>
-                            <div style="font-size: 0.85rem; color: #00695c; margin-bottom: 5px;">Total à Collecter (Prix Produit)</div>
-                            <div id="groupTotalRecieve" style="font-size: 1.2rem; font-weight: bold; color: #1b5e20;">${priceVal ? priceVal.toLocaleString() : 0} FCFA</div>
-                            
-                            <div style="font-size: 0.75rem; color: #004d40; margin-top: 10px; font-style: italic;">
-                                🔄 <b>Principe :</b> Chaque membre paie sa part. Une fois le total atteint, le produit est livré.
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- PREVIEW SCHEDULE BUTTON -->
-                    <button onclick="showTontineSchedule('${productName}')" style="width: 100%; padding: 12px; background: white; color: #1a5f3f; border: 1px solid #1a5f3f; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        📅 Voir l'échéancier prévisionnel
-                    </button>
-
-                    <button onclick="handleTontineValidation('${productName}')" style="width: 100%; padding: 16px; background: #1a5f3f; color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(26, 95, 63, 0.3);">
-                        ✅ Valider la Tontine
+                    <button onclick="validateTontineContract(${priceVal}, ${share}, '${productName}')" style="width: 100%; padding: 16px; background: #1a5f3f; color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(26, 95, 63, 0.3);">
+                        ✅ Valider & Commencer
                     </button>
                     
-                    <button onclick="document.getElementById('tontineOverlay').remove()" style="width: 100%; padding: 12px; background: transparent; color: #666; border: none; margin-top: 10px; font-weight: bold; cursor: pointer;">
+                    <button onclick="document.getElementById('tontineOverlay').remove()" style="width: 100%; padding: 12px; background: transparent; color: #94a3b8; border: none; margin-top: 5px; font-weight: bold; cursor: pointer;">
                         Annuler
                     </button>
                 </div>
@@ -2899,239 +2880,254 @@
             
             document.body.appendChild(overlay);
             
-            // Logic for Solo Frequency
-            window.selectFreq = function(btn, type) {
-                document.querySelectorAll('.freq-btn').forEach(b => {
-                    b.style.background = 'white';
-                    b.style.color = '#666';
+            // Tontine variables
+            window.tontineParts = 4;
+            window.currentProductPrice = priceVal;
+            
+            // Helper for parts change
+            window.changeTontineParts = (delta) => {
+                let newParts = window.tontineParts + delta;
+                if(newParts < 2) newParts = 2;
+                if(newParts > 12) newParts = 12;
+                window.tontineParts = newParts;
+                
+                document.getElementById('tontinePartsCount').innerText = newParts;
+                const newShare = Math.ceil(window.currentProductPrice / newParts);
+                document.getElementById('shareLabel').innerText = `Votre part (x${newParts})`;
+                document.getElementById('shareValue').innerText = `${newShare.toLocaleString()} FCFA`;
+            };
+
+            // Helper for mode switching inside modal
+            window.setTontineMode = (mode, btn) => {
+                window.tempTontineMode = mode;
+                // Reset styles
+                document.querySelectorAll('.mode-btn').forEach(b => {
                     b.style.border = '1px solid #ddd';
-                    b.classList.remove('active');
-                });
-                btn.style.background = '#1a5f3f';
-                btn.style.color = 'white';
-                btn.style.border = '2px solid #1a5f3f';
-                btn.classList.add('active');
-                
-                const currentTotal = parseInt(document.getElementById('tontineTotalPrice').value) || 0;
-                const input = document.getElementById('tontineAmount');
-                if(currentTotal > 0) {
-                    if(type === 'daily') input.value = Math.ceil(currentTotal / 30);
-                    else input.value = Math.ceil(currentTotal / 4);
-                    updateDuration();
-                }
-            };
-
-            // Logic for Group Frequency
-            window.selectGroupFreq = function(btn, type) {
-                document.querySelectorAll('.group-freq-btn').forEach(b => {
                     b.style.background = 'white';
-                    b.style.color = '#666';
-                    b.style.border = '1px solid #ddd';
-                    b.classList.remove('active');
                 });
-                btn.style.background = '#1a5f3f';
-                btn.style.color = 'white';
-                btn.style.border = '2px solid #1a5f3f';
-                btn.classList.add('active');
-            };
-            
-            window.updateDuration = function() {
-                const currentTotal = parseInt(document.getElementById('tontineTotalPrice').value) || 0;
-                const amount = parseInt(document.getElementById('tontineAmount').value) || 0;
-                if(amount > 0 && currentTotal > 0) {
-                    const count = Math.ceil(currentTotal / amount);
-                    const isDaily = document.querySelector('.freq-btn.active') ? document.querySelector('.freq-btn.active').innerText.includes('Quotidien') : true; 
-                    document.getElementById('tontineDuration').innerText = `~ ${count} ${isDaily ? 'jours' : 'semaines'} pour finir`;
+                // Set active
+                btn.style.border = '2px solid #27ae60';
+                btn.style.background = '#e8f5e9';
+                
+                // Specific Style for Tontine
+                if (mode === 'tontine') {
+                    btn.style.border = '2px solid #8B5CF6';
+                    btn.style.background = '#F3E8FF';
                 }
-            };
-            
-            // Logic for Group
-            window.changeParticipants = function(delta) {
-                const input = document.getElementById('groupSize');
-                let val = parseInt(input.value) || 1;
-                val += delta;
-                if (val < 2) val = 2;
-                input.value = val;
-                updateGroupShare();
-            };
-
-            window.updateGroupShare = function() {
-                const currentTotal = parseInt(document.getElementById('tontineTotalPrice').value) || 0;
-                const size = parseInt(document.getElementById('groupSize').value) || 1;
-                const share = Math.ceil(currentTotal / size);
                 
-                const shareEl = document.getElementById('groupShareAmount');
-                const totalEl = document.getElementById('groupTotalRecieve');
+                const desc = document.getElementById('modeDescription');
+                const warning = document.getElementById('tontineWarning');
+                const partsSelector = document.getElementById('tontinePartsSelector');
                 
-                if(shareEl) shareEl.innerText = share.toLocaleString() + " FCFA";
-                if(totalEl) totalEl.innerText = currentTotal.toLocaleString() + " FCFA";
-            };
-
-            window.handleTontineValidation = function(pName) {
-                // Determine Amount
-                let amount = 0;
-                let isGroup = false;
-                
-                const btnGroup = document.getElementById('btnModeGroup');
-                const btnCredit = document.getElementById('btnModeCredit'); 
-                
-                // Check if Group Mode is active
-                // ROBUST CHECK: Check if the View is visible instead of button style
-                const viewGroup = document.getElementById('tontineGroupView');
-                const viewCredit = document.getElementById('tontineCreditView');
-                
-                const isGroupVisible = viewGroup && (viewGroup.style.display === 'block' || getComputedStyle(viewGroup).display === 'block');
-                const isCreditVisible = viewCredit && (viewCredit.style.display === 'block' || getComputedStyle(viewCredit).display === 'block');
-
-                if (isGroupVisible) {
-                    // Get text like "15 000 FCFA"
-                    const text = document.getElementById('groupShareAmount').innerText;
-                    amount = parseInt(text.replace(/[^0-9]/g, '')) || 0;
-                    isGroup = true;
-                } 
-                else if (isCreditVisible) {
-                     // Credit usually requires first installment
-                     amount = parseInt(document.getElementById('creditAmount').value) || 0;
-                }
-                else {
-                    // Solo Mode (Default)
-                    amount = parseInt(document.getElementById('tontineAmount').value) || 0;
-                }
-
-                // Trigger Payment
-                if(typeof openPaymentModal === 'function') {
-                    // Pass the callback to openContractModal
-                    openPaymentModal(amount, function() {
-                        if(isGroup) {
-                            // Fix: Ensure we parse total correctly even if it has spaces or formatting
-                            const totalInput = document.getElementById('tontineTotalPrice').value;
-                            const total = parseInt(totalInput.toString().replace(/[^0-9]/g, '')) || 0;
-                            const size = parseInt(document.getElementById('groupSize').value) || 1;
-                            
-                            // Reset State if Starting New
-                            // If previous state was complete, force reset
-                            // ALSO FORCE RESET if user is starting a NEW checkout flow to avoid stuck state
-                            if(window.crowdfundingState) {
-                                window.crowdfundingState = undefined;
-                            }
-
-                            showGroupTontineInvite(total, amount, size, pName);
-                        } else {
-                            openContractModal(pName);
-                        }
-                    });
-                } else {
-                    console.error("Payment Modal function missing");
-                    openContractModal(pName);
-                }
-            };
-
-            document.getElementById('groupSize').addEventListener('input', updateGroupShare);
-            
-            // Logic for Credit Frequency
-            window.selectCreditFreq = function(btn, type) {
-                document.querySelectorAll('.credit-freq-btn').forEach(b => {
-                    b.style.background = 'white';
-                    b.style.color = '#666';
-                    b.style.border = '1px solid #ddd';
-                    b.classList.remove('active');
-                });
-                btn.style.background = '#1a5f3f';
-                btn.style.color = 'white';
-                btn.style.border = '2px solid #1a5f3f';
-                btn.classList.add('active');
-                
-                const currentTotal = parseInt(document.getElementById('tontineTotalPrice').value) || 0;
-                const input = document.getElementById('creditAmount');
-                if(currentTotal > 0) {
-                    if(type === 'weekly') input.value = Math.ceil(currentTotal / 4);
-                    else input.value = Math.ceil(currentTotal / 12); // Assume 12 months for monthly default
-                    updateCreditDuration();
-                }
-            };
-
-            window.updateCreditDuration = function() {
-                const totalInput = document.getElementById('tontineTotalPrice').value;
-                const currentTotal = parseInt(totalInput.toString().replace(/[^0-9]/g, '')) || 0;
-                
-                const amount = parseInt(document.getElementById('creditAmount').value) || 0;
-                if(amount > 0 && currentTotal > 0) {
-                    const count = Math.ceil(currentTotal / amount);
-                    const isWeekly = document.querySelector('.credit-freq-btn.active') ? document.querySelector('.credit-freq-btn.active').innerText.includes('Hebdo') : true; 
-                    document.getElementById('creditDuration').innerText = `~ ${count} ${isWeekly ? 'semaines' : 'mois'} pour finir`;
-                }
-            };
-            
-            document.getElementById('creditAmount').addEventListener('input', updateCreditDuration);
-
-            // Logic for Editing Price (Negotiation)
-            window.editTontinePrice = function() {
-                const input = document.getElementById('tontineTotalPrice');
-                input.disabled = false;
-                input.focus();
-                input.style.borderBottom = "2px solid #10B981";
-                input.style.background = "#fff";
-                
-                // Add blur listener to save and recalc
-                input.onblur = function() {
-                    input.disabled = true;
-                    input.style.borderBottom = "2px solid transparent";
-                    input.style.background = "transparent";
-                    updateDuration();
-                    updateGroupShare();
-                    updateCreditDuration();
-                };
-            };
-
-            document.getElementById('tontineAmount').addEventListener('input', updateDuration);
-            document.getElementById('tontineTotalPrice').addEventListener('input', () => {
-                updateDuration();
-                updateGroupShare();
-                updateCreditDuration();
-            });
-
-            // Logic for Switching Modes
-            window.switchTontineMode = function(mode) {
-                const btnSolo = document.getElementById('btnModeSolo');
-                const btnGroup = document.getElementById('btnModeGroup');
-                const btnCredit = document.getElementById('btnModeCredit');
-                
-                const viewSolo = document.getElementById('tontineSoloView');
-                const viewGroup = document.getElementById('tontineGroupView');
-                const viewCredit = document.getElementById('tontineCreditView');
-                
-                // Reset All Buttons
-                [btnSolo, btnGroup, btnCredit].forEach(btn => {
-                    btn.style.background = 'transparent';
-                    btn.style.color = '#666';
-                    btn.style.boxShadow = 'none';
-                });
-                
-                // Hide All Views
-                viewSolo.style.display = 'none';
-                viewGroup.style.display = 'none';
-                viewCredit.style.display = 'none';
-
-                if (mode === 'solo') {
-                    btnSolo.style.background = 'white';
-                    btnSolo.style.color = '#1a5f3f';
-                    btnSolo.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
-                    viewSolo.style.display = 'block';
-                } else if (mode === 'group') {
-                    btnGroup.style.background = 'white';
-                    btnGroup.style.color = '#1a5f3f';
-                    btnGroup.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
-                    viewGroup.style.display = 'block';
-                    updateGroupShare();
-                } else if (mode === 'credit') {
-                    btnCredit.style.background = 'white';
-                    btnCredit.style.color = '#1a5f3f';
-                    btnCredit.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
-                    viewCredit.style.display = 'block';
-                    updateCreditDuration();
+                if(mode === 'solo') {
+                    desc.innerHTML = '✅ <b>Épargne :</b> Payez à votre rythme. Livraison après paiement complet.';
+                    warning.style.display = 'none';
+                    partsSelector.style.display = 'none';
+                    // Reset share display to 1/4 or full? Actually Epargne is flexible, but let's keep default view
+                    document.getElementById('shareLabel').innerText = "Votre part (x4)";
+                    document.getElementById('shareValue').innerText = `${Math.ceil(window.currentProductPrice/4).toLocaleString()} FCFA`;
+                } else if(mode === 'credit') {
+                    desc.innerHTML = '⚡ <b>Crédit :</b> Livraison immédiate (sous réserve). Remboursez plus tard.';
+                    warning.style.display = 'none';
+                    partsSelector.style.display = 'none';
+                } else if(mode === 'tontine') {
+                    desc.innerHTML = '👥 <b>Tontine :</b> Cotisez à plusieurs pour acheter ce produit.';
+                    warning.style.display = 'block';
+                    warning.innerHTML = `ℹ️ <b>Note :</b> Invitez des amis pour compléter le paiement.`;
+                    partsSelector.style.display = 'block';
+                    
+                    // Trigger update
+                    window.changeTontineParts(0);
                 }
             };
         }
+
+        function validateTontineContract(total, defaultShare, name) {
+            // Recalculate share based on selected parts if Tontine
+            let finalShare = defaultShare;
+            if (window.tempTontineMode === 'tontine') {
+                finalShare = Math.ceil(total / window.tontineParts);
+            }
+            
+            // Initialize State with Mode
+            window.crowdfundingState = {
+                totalNeeded: total,
+                raised: 0, 
+                currentRaised: 0, 
+                mode: window.tempTontineMode || 'solo',
+                participants: [],
+                productName: name,
+                totalParts: window.tontineParts // Save parts count
+            };
+            saveCrowdfundingState();
+            
+            // Close Setup
+            document.getElementById('tontineOverlay').remove();
+            
+            // Logic:
+            if (window.crowdfundingState.mode === 'solo') {
+                showEpargnePaymentChoice(name, total, finalShare);
+            } else if (window.crowdfundingState.mode === 'credit') {
+                showSignatureModal(name, total, finalShare);
+            } else if (window.crowdfundingState.mode === 'tontine') {
+                 // Tontine Logic: Require Signature too
+                 showSignatureModal(name, total, finalShare);
+            }
+        }
+
+        function showSignatureModal(name, total, share) {
+            const overlay = document.createElement('div');
+            overlay.id = 'signatureOverlay';
+            overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9500; display:flex; align-items:center; justify-content:center; flex-direction:column;";
+            
+            const date = new Date().toLocaleDateString('fr-FR');
+            
+            // Adapt Text based on Mode
+            let contractText = `Je soussigné(e), certifie vouloir acquérir <b>${name}</b> pour un montant de <b>${total.toLocaleString()} FCFA</b>.`;
+            let engagementText = "Je m'engage à respecter l'échéancier de paiement choisi.";
+            let btnText = "🖊️ Signer le contrat";
+            
+            if(window.crowdfundingState && window.crowdfundingState.mode === 'tontine') {
+                contractText = `Je soussigné(e), certifie vouloir participer à la Tontine pour <b>${name}</b> (Valeur Totale : <b>${total.toLocaleString()} FCFA</b>).`;
+                engagementText = `Je m'engage à payer ma part de <b>${share.toLocaleString()} FCFA</b> et à inviter les autres participants.`;
+                btnText = "🖊️ Signer & Rejoindre";
+            } else if(window.crowdfundingState && window.crowdfundingState.mode === 'credit') {
+                 engagementText = "Je m'engage à rembourser le crédit selon les termes convenus.";
+            }
+
+            overlay.innerHTML = `
+                <div style="background: white; padding: 0; border-radius: 20px; width: 90%; max-width: 350px; overflow:hidden; animation: slideUp 0.3s; font-family: sans-serif;">
+                    <div style="background:#1a5f3f; color:white; padding:20px; text-align:center;">
+                        <div style="font-size:2rem;">✍️</div>
+                        <h2 style="margin:5px 0 0 0;">Signature Numérique</h2>
+                        <div style="font-size:0.8rem; opacity:0.8;">Contrat légal simplifié</div>
+                    </div>
+                    
+                    <div style="padding:20px;">
+                        <div style="background:#f8f9fa; padding:15px; border-radius:10px; font-size:0.85rem; color:#2d3436; margin-bottom:20px; border:1px solid #e9ecef;">
+                            <p style="margin:0 0 10px 0;">${contractText}</p>
+                            <p style="margin:0;">${engagementText}</p>
+                            <div style="margin-top:10px; font-weight:bold; color:#1a5f3f;">Date : ${date}</div>
+                        </div>
+                        
+                        <label style="display:block; margin-bottom:10px; font-weight:bold; color:#636e72; font-size:0.9rem;">Votre Code PIN (Signature)</label>
+                        <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
+                            <input type="password" value="1234" disabled style="width:100%; text-align:center; letter-spacing:10px; font-size:1.5rem; padding:10px; border:2px solid #1a5f3f; border-radius:10px; background:#e8f5e9; color:#1a5f3f; font-weight:bold;">
+                        </div>
+                        
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px; font-size:0.8rem; color:#636e72;">
+                            <input type="checkbox" checked disabled>
+                            <span>J'accepte les <a href="#" style="color:#0984e3;">CGU Mangoo</a></span>
+                        </div>
+
+                        <button onclick="confirmSignature('${name}', ${total}, ${share})" style="width:100%; padding:15px; background:#1a5f3f; color:white; border:none; border-radius:12px; font-weight:bold; font-size:1rem; cursor:pointer; box-shadow:0 4px 10px rgba(26, 95, 63, 0.3);">
+                            ${btnText}
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        function confirmSignature(name, total, share) {
+            document.getElementById('signatureOverlay').remove();
+            
+            // Show Success Toast
+            const toast = document.createElement('div');
+            toast.innerText = "✅ Contrat signé avec succès";
+            toast.style.cssText = "position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#27ae60; color:white; padding:10px 20px; border-radius:20px; z-index:10000; font-weight:bold; box-shadow:0 5px 15px rgba(0,0,0,0.2); animation: fadeOut 3s forwards;";
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+
+            // Logic Flow based on Mode
+            if(window.crowdfundingState.mode === 'tontine') {
+                 // Open Payment for first share AFTER signature
+                 openPaymentModal(share, () => {
+                     // Success Callback
+                     window.crowdfundingState.raised += share;
+                     window.crowdfundingState.currentRaised += share;
+                     window.crowdfundingState.participants.push({ name: 'Moi', amount: share });
+                     saveCrowdfundingState(); 
+                     
+                     // Show Success UI
+                     const remaining = window.crowdfundingState.totalNeeded - window.crowdfundingState.raised;
+                    const partsCount = window.crowdfundingState.totalParts || 4;
+                    const participantsCount = window.crowdfundingState.participants.length;
+                    
+                    alert(`✅ Votre part a été payée !\n\n💰 Reste à collecter : ${remaining.toLocaleString()} FCFA\n👥 Participants : ${participantsCount}/${partsCount}`);
+                     
+                     // Trigger Reminder Display
+                     checkActiveTontineReminder();
+                 });
+            } else {
+                // Go to Schedule (Epargne/Credit)
+                showTontineSchedule(name, window.crowdfundingState.mode, 4, share);
+            }
+        }
+
+        function showEpargnePaymentChoice(name, total, share) {
+            const overlay = document.createElement('div');
+            overlay.id = 'epargneChoiceOverlay';
+            overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9000; display:flex; align-items:center; justify-content:center; flex-direction:column;";
+            
+            overlay.innerHTML = `
+                <div style="background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 380px; text-align: center; font-family: sans-serif; animation: zoomIn 0.3s;">
+                    <div style="font-size: 3rem; margin-bottom: 10px;">🐷</div>
+                    <h2 style="margin-bottom: 5px; color: #1a5f3f; font-weight: 800;">Mode Épargne</h2>
+                    <div style="color: #666; font-size: 0.9rem; margin-bottom: 25px;">Comment souhaitez-vous payer ?</div>
+                    
+                    <button onclick="handleEpargneChoice('cash', ${total}, '${name}')" style="width:100%; padding:15px; margin-bottom:15px; background:#fff3e0; border:2px solid #ff9f43; border-radius:12px; display:flex; align-items:center; gap:15px; cursor:pointer; text-align:left;">
+                        <div style="font-size:1.5rem;">⚡</div>
+                        <div>
+                            <div style="font-weight:bold; color:#d35400; font-size:1rem;">Paiement Comptant</div>
+                            <div style="font-size:0.8rem; color:#e67e22;">Payer la totalité maintenant</div>
+                        </div>
+                    </button>
+
+                    <button onclick="handleEpargneChoice('installments', ${share}, '${name}')" style="width:100%; padding:15px; margin-bottom:10px; background:#e8f5e9; border:2px solid #27ae60; border-radius:12px; display:flex; align-items:center; gap:15px; cursor:pointer; text-align:left;">
+                        <div style="font-size:1.5rem;">📅</div>
+                        <div>
+                            <div style="font-weight:bold; color:#1a5f3f; font-size:1rem;">Paiement en plusieurs fois</div>
+                            <div style="font-size:0.8rem; color:#27ae60;">Échéancier souple (x4)</div>
+                        </div>
+                    </button>
+                    
+                    <button onclick="document.getElementById('epargneChoiceOverlay').remove()" style="width: 100%; padding: 12px; background: transparent; color: #94a3b8; border: none; margin-top: 5px; font-weight: bold; cursor: pointer;">
+                        Retour
+                    </button>
+                </div>
+                <style>@keyframes zoomIn { from { transform:scale(0.9); opacity:0; } to { transform:scale(1); opacity:1; } }</style>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        function handleEpargneChoice(type, amount, name) {
+            const overlay = document.getElementById('epargneChoiceOverlay');
+            if(overlay) overlay.remove();
+            
+            if (type === 'cash') {
+                // Direct Payment for Total Amount
+                if(typeof openPaymentModal === 'function') {
+                    // Important: We pass the TOTAL amount here
+                    openPaymentModal(amount, function() {
+                        // Success Callback
+                        // Mark all as paid in state
+                        window.crowdfundingState.currentRaised = amount; 
+                        saveCrowdfundingState();
+                        
+                        // Show "Completed Order" view directly
+                        showCompletedOrderModal(name, amount);
+                    });
+                }
+            } else {
+                // Installments -> REQUIRE SIGNATURE FIRST
+                // Calculate share again if needed, or pass it
+                // We passed 'share' as 'amount' in the onclick for installments
+                const total = window.crowdfundingState.totalNeeded;
+                showSignatureModal(name, total, amount);
+            }
+        }
+
 
         // === DIGITAL CONTRACT LOGIC ===
         function openContractModal(productName = "Produit Sélectionné") {
@@ -3164,8 +3160,10 @@
                 freq = document.querySelector('.credit-freq-btn.active').innerText;
             } else {
                 mode = 'Epargne Individuelle';
-                amount = document.getElementById('tontineAmount').value + " FCFA";
-                freq = document.querySelector('.freq-btn.active').innerText;
+                const el = document.getElementById('tontineAmount');
+                amount = (el ? el.value : 0) + " FCFA";
+                const freqEl = document.querySelector('.freq-btn.active');
+                freq = freqEl ? freqEl.innerText : 'Quotidien';
             }
 
             // 2. Create Contract Overlay
@@ -3669,15 +3667,11 @@
         }
 
         function showTontineSchedule(productName, mode = 'solo', groupSize = 1, groupShare = 0) {
-            // Cleanup previous overlays to ensure we return to main page on close
-            const tontine = document.getElementById('tontineOverlay');
-            if(tontine) tontine.remove();
-            
-            const contract = document.getElementById('contractOverlay');
-            if(contract) contract.remove();
-            
-            const invite = document.getElementById('groupInviteOverlay');
-            if(invite) invite.remove();
+            // Cleanup previous overlays
+            ['tontineOverlay', 'contractOverlay', 'groupInviteOverlay', 'scheduleOverlay'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.remove();
+            });
 
             // === RECALCULATE DYNAMIC DATA ===
             let shareAmount = groupShare;
@@ -3691,15 +3685,11 @@
                  }
             } else {
                  // Solo Mode Logic
-                 // Try to find total amount from input if available
                  const inputTotal = document.getElementById('tontineTotalPrice');
                  if(inputTotal) {
                      totalAmount = parseInt(inputTotal.value.replace(/[^0-9]/g, '')) || 0;
                  }
-                 // If not found (modal closed), default to 5000 * 4 or standard
-                 if(!totalAmount) totalAmount = 20000; // Fallback
-                 
-                 // Share is typically Total / 4 (Weekly)
+                 if(!totalAmount) totalAmount = 20000;
                  if(!shareAmount) shareAmount = Math.ceil(totalAmount / 4);
             }
 
@@ -3711,132 +3701,146 @@
                 font-family: sans-serif;
             `;
             
-            // Generate fake dates
-            const today = new Date();
-            const dates = [];
-            for(let i=1; i<=4; i++) {
-                const d = new Date(today);
-                d.setDate(today.getDate() + (i*7)); // Weekly
-                dates.push(d);
+            // Calculate Progress for Visual Track
+            let paidCount = 0;
+            if(window.crowdfundingState && window.crowdfundingState.currentRaised) {
+                paidCount = Math.floor(window.crowdfundingState.currentRaised / shareAmount);
             }
+            // Ensure at least step 1 is active if 0 paid
+            const currentStep = paidCount + 1;
+            const totalSteps = mode === 'group' ? groupSize : 4;
             
-            // CONTENT GENERATION
-            let contentHtml = '';
+            const isCredit = mode === 'credit';
+            const headerTitle = isCredit ? 'Remboursement Crédit' : 'Objectif Épargne';
+            const stepLabelBase = isCredit ? 'Remboursement' : 'Versement';
+            const progressLabel = isCredit ? 'Remboursé' : 'Payé';
+
+            let trackHtml = '';
             
-            if(mode === 'group') {
-                // GROUP MODE VIEW
-                const participants = [];
-                // Add Me
-                participants.push({ name: "Moi (Créateur)", status: "Payé", color: "#27ae60", date: "Aujourd'hui" });
+            // VISUAL TRACK GENERATION
+            for(let i=1; i<=totalSteps; i++) {
+                let stateClass = '';
+                let icon = '';
+                let label = '';
+                let actionBtn = '';
                 
-                // Calculate current status from Global State
-                let paidCount = 1; // Me
-                if(window.crowdfundingState && window.crowdfundingState.currentRaised) {
-                    paidCount = Math.floor(window.crowdfundingState.currentRaised / shareAmount);
+                if (i < currentStep) {
+                    // PAST (PAID)
+                    stateClass = 'step-paid';
+                    icon = '✅';
+                    label = 'Réglé';
+                } else if (i === currentStep) {
+                    // CURRENT (ACTIVE)
+                    stateClass = 'step-active';
+                    icon = '📍';
+                    label = 'À Payer';
+                    
+                    // Add Action Button for Current Step
+                    actionBtn = `
+                        <button onclick="simulateThirdPartyPay(${shareAmount})" style="
+                            margin-top: 10px; width: 100%; padding: 12px; 
+                            background: #27ae60; color: white; border: none; 
+                            border-radius: 10px; font-weight: bold; cursor: pointer;
+                            box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3);
+                            animation: pulse 2s infinite;
+                        ">
+                            💳 Payer ${stepLabelBase} (${shareAmount.toLocaleString()} F)
+                        </button>
+                    `;
+                } else {
+                    // FUTURE (LOCKED)
+                    stateClass = 'step-locked';
+                    icon = '🔒';
+                    label = 'Verrouillé';
                 }
                 
-                // Add Others
-                for(let i=1; i<groupSize; i++) {
-                    const isPaid = (i + 1) <= paidCount;
-                    participants.push({ 
-                        name: `Participant ${i+1}`, 
-                        status: isPaid ? "Payé" : "En attente", 
-                        color: isPaid ? "#27ae60" : "#b2bec3", 
-                        date: isPaid ? "Aujourd'hui" : "-" 
-                    });
-                }
-                
-                contentHtml = `
-                    <div style="background: white; border-radius: 15px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px;">
-                        <h3 style="margin-top: 0; color: #333; font-size: 1rem; border-bottom: 1px solid #eee; padding-bottom: 10px;">Suivi des Participants</h3>
-                        ${participants.map((p, index) => `
-                            <div style="display: flex; align-items: center; padding: 15px 0; border-bottom: ${index < participants.length - 1 ? '1px dashed #eee' : 'none'};">
-                                <div style="background: ${p.status === 'Payé' ? '#e8f5e9' : '#f1f2f6'}; color: ${p.status === 'Payé' ? '#1b5e20' : '#636e72'}; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px;">
-                                    ${index + 1}
-                                </div>
-                                <div style="flex: 1;">
-                                    <div style="font-weight: bold; color: #333;">${p.name}</div>
-                                    <div style="font-size: 0.85rem; color: #666;">${shareAmount.toLocaleString()} FCFA</div>
-                                </div>
-                                <div style="font-size: 0.8rem; font-weight:bold; color:${p.status === 'Payé' ? '#1b5e20' : '#636e72'}; background:${p.status === 'Payé' ? '#e8f5e9' : '#f1f2f6'}; padding:4px 8px; border-radius:10px;">
-                                    ${p.status}
-                                </div>
+                trackHtml += `
+                    <div class="track-step ${stateClass}" style="
+                        display: flex; gap: 15px; margin-bottom: 20px; 
+                        opacity: ${stateClass === 'step-locked' ? '0.5' : '1'};
+                        filter: ${stateClass === 'step-locked' ? 'grayscale(1)' : 'none'};
+                    ">
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <div style="
+                                width: 50px; height: 50px; border-radius: 50%; 
+                                background: ${stateClass === 'step-active' ? '#fff' : (stateClass === 'step-paid' ? '#27ae60' : '#dfe6e9')};
+                                border: 3px solid ${stateClass === 'step-active' ? '#27ae60' : 'transparent'};
+                                display: flex; align-items: center; justify-content: center;
+                                font-size: 1.5rem; z-index: 2; position: relative;
+                            ">
+                                ${icon}
                             </div>
-                        `).join('')}
-                    </div>
-                    
-                    <div style="text-align:center; margin-bottom:20px;">
-                        <button onclick="showGroupTontineInvite(${shareAmount * groupSize}, ${shareAmount}, ${groupSize}, '${productName}')" style="background:#dfe6e9; color:#2d3436; border:none; padding:10px 20px; border-radius:20px; font-weight:bold; cursor:pointer;">
-                            🔗 Réafficher le lien d'invitation
-                        </button>
-                    </div>
-                    
-                    <div style="text-align:center; margin-bottom:20px; display:flex; flex-direction:column; gap:10px;">
-                        ${paidCount < groupSize ? `
-                        <button onclick="simulateThirdPartyPay(${shareAmount})" style="background:#fff3e0; color:#e65100; border:1px dashed #e65100; padding:10px 20px; border-radius:20px; font-weight:bold; cursor:pointer;">
-                            👁️ Simuler un paiement participant (Test)
-                        </button>
-                        
-                        <button onclick="simulateThirdPartyPay(${shareAmount})" style="background:#e3f2fd; color:#0d47a1; border:1px dashed #0d47a1; padding:10px 20px; border-radius:20px; font-weight:bold; cursor:pointer;">
-                            👥 Simuler entrée Participant suivant (3 000 F)
-                        </button>
-                        ` : `
-                        <div style="background:#e8f5e9; padding:15px; border-radius:10px; color:#2e7d32; font-weight:bold;">
-                            🎉 Tous les paiements sont terminés !
+                            ${i < totalSteps ? `<div style="width: 4px; flex: 1; background: #dfe6e9; min-height: 30px; margin-top: -5px; margin-bottom: -5px;"></div>` : ''}
                         </div>
-                        `}
-                    </div>
-                `;
-            } else {
-                // SOLO MODE VIEW (Default)
-                contentHtml = `
-                    <div style="background: white; border-radius: 15px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px;">
-                        <h3 style="margin-top: 0; color: #333; font-size: 1rem; border-bottom: 1px solid #eee; padding-bottom: 10px;">Vos Échéances</h3>
-                        ${dates.map((d, index) => `
-                            <div style="display: flex; align-items: center; padding: 15px 0; border-bottom: ${index < 3 ? '1px dashed #eee' : 'none'};">
-                                <div style="background: ${index === 0 ? '#e8f5e9' : '#f3f4f6'}; color: ${index === 0 ? '#1b5e20' : '#888'}; width: 50px; height: 50px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px;">
-                                    <span style="font-size: 0.8rem;">${d.getDate()}</span>
-                                    <span style="font-size: 0.7rem; text-transform: uppercase;">${d.toLocaleDateString('fr-FR', {month: 'short'})}</span>
-                                </div>
-                                <div style="flex: 1;">
-                                    <div style="font-weight: bold; color: #333;">Versement N°${index+1}</div>
-                                    <div style="font-size: 0.85rem; color: #666;">${shareAmount.toLocaleString()} FCFA</div>
-                                </div>
-                                <button onclick="simulateReminder('${productName}', '${d.toLocaleDateString('fr-FR')}')" style="background: #fff3e0; color: #e65100; border: none; padding: 8px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                                    🔔 Simuler (J-3)
-                                </button>
-                            </div>
-                        `).join('')}
+                        
+                        <div style="flex: 1; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: relative; top: -5px;">
+                            <div style="font-weight: bold; color: #2d3436; font-size: 1.1rem;">Étape ${i}</div>
+                            <div style="color: #636e72; font-size: 0.9rem;">${mode === 'group' ? (i===1 ? 'Moi (Créateur)' : `Participant ${i}`) : `${stepLabelBase} Mensuel`}</div>
+                            <div style="margin-top: 5px; font-weight: bold; color: #27ae60;">${shareAmount.toLocaleString()} FCFA</div>
+                            ${actionBtn}
+                        </div>
                     </div>
                 `;
             }
             
             overlay.innerHTML = `
-                <div style="background: #1a5f3f; padding: 20px; color: white; border-radius: 0 0 25px 25px; box-shadow: 0 4px 15px rgba(26, 95, 63, 0.2);">
+                <style>
+                    @keyframes pulse {
+                        0% { transform: scale(1); }
+                        50% { transform: scale(1.02); }
+                        100% { transform: scale(1); }
+                    }
+                </style>
+                
+                <div style="background: ${isCredit ? '#2c3e50' : '#1a5f3f'}; padding: 20px; color: white; border-radius: 0 0 30px 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 100;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                         <button onclick="document.getElementById('scheduleOverlay').remove()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 10px; font-weight: bold; cursor: pointer;">✕ Fermer</button>
-                        <h2 style="margin: 0; font-size: 1.2rem;">${mode === 'group' ? 'Suivi Tontine' : 'Échéancier'}</h2>
+                        <h2 style="margin: 0; font-size: 1.2rem;">Parcours Tontine</h2>
                         <div style="width: 40px;"></div>
                     </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 5px;">Produit</div>
-                        <div style="font-size: 1.5rem; font-weight: 800;">${productName}</div>
-                        <div style="font-size: 0.8rem; margin-top: 10px; background: rgba(255,255,255,0.15); display: inline-block; padding: 5px 15px; border-radius: 15px;">
-                            ${mode === 'group' ? '📅 En attente des participants' : `📅 Prochain paiement : ${dates[0].toLocaleDateString('fr-FR')}`}
+                    
+                    <div style="background: white; border-radius: 15px; padding: 15px; display: flex; align-items: center; gap: 15px; color: #2d3436;">
+                        <div style="font-size: 2.5rem;">${isCredit ? '⚡' : '👟'}</div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.8rem; color: #636e72; text-transform: uppercase; font-weight: bold;">${headerTitle}</div>
+                            <div style="font-weight: 800; font-size: 1.2rem;">${productName}</div>
+                            <div style="display: flex; align-items: center; gap: 5px; margin-top: 5px;">
+                                <div style="flex: 1; height: 8px; background: #dfe6e9; border-radius: 4px; overflow: hidden;">
+                                    <div style="height: 100%; background: ${isCredit ? '#e74c3c' : '#27ae60'}; width: ${(paidCount / totalSteps) * 100}%;"></div>
+                                </div>
+                                <div style="font-size: 0.8rem; font-weight: bold; color: ${isCredit ? '#e74c3c' : '#27ae60'};">${Math.round((paidCount / totalSteps) * 100)}% ${progressLabel}</div>
+                            </div>
                         </div>
                     </div>
+                    
+                    ${isCredit ? `
+                    <div style="margin-top:10px; font-size:0.8rem; background:rgba(255,255,255,0.1); padding:8px; border-radius:8px; display:flex; gap:5px;">
+                        <span>📦</span> <b>Status Produit :</b> <span style="font-weight:bold;">Livré (Crédit)</span>
+                    </div>
+                    ` : ''}
                 </div>
                 
-                <div style="padding: 20px; max-width: 500px; margin: 0 auto;">
-                    ${contentHtml}
+                <div style="padding: 30px 20px 100px 20px; max-width: 500px; margin: 0 auto;">
+                    ${trackHtml}
                     
-                    <div style="background: #e3f2fd; padding: 15px; border-radius: 12px; color: #0d47a1; font-size: 0.9rem; line-height: 1.4; display: flex; gap: 10px;">
-                        <span style="font-size: 1.2rem;">🛡️</span>
-                        <div>
-                            <b>Confiance Garantie :</b><br>
-                            Ce calendrier est partagé avec le vendeur. En cas de retard, une pénalité peut s'appliquer. Le respect des dates augmente votre score de confiance.
-                        </div>
+                    ${currentStep <= totalSteps ? `
+                    <div style="margin-top: 30px; text-align: center;">
+                        <button onclick="simulateThirdPartyPay(${(totalSteps - paidCount) * shareAmount})" style="
+                            background: #e3f2fd; color: #0984e3; border: 2px dashed #0984e3; 
+                            padding: 15px 20px; border-radius: 15px; font-weight: bold; cursor: pointer;
+                            width: 100%; font-size: 1rem;
+                        ">
+                            ⏩ ${isCredit ? 'Tout rembourser' : 'Payer le reste'} d'un coup<br>
+                            <span style="font-size: 0.8rem; font-weight: normal;">(${(totalSteps - paidCount) * shareAmount} FCFA)</span>
+                        </button>
                     </div>
+                    ` : `
+                    <div style="background:#e8f5e9; padding:20px; border-radius:15px; text-align:center; color:#2e7d32; margin-top: 20px;">
+                        <div style="font-size: 3rem; margin-bottom: 10px;">🎉</div>
+                        <h3 style="margin:0;">Félicitations !</h3>
+                        <p>${isCredit ? 'Votre crédit est entièrement remboursé.' : 'Vous avez complété tout le parcours.'}</p>
+                    </div>
+                    `}
                 </div>
             `;
             
@@ -3905,6 +3909,36 @@
         }
 
         /* === LIST VIEW RENDERER === */
+        // === FIX: RE-ADD SHOW ERROR FUNCTION ===
+        function showError(msg) {
+            const loader = document.getElementById('loader');
+            if(loader) {
+                loader.innerHTML = `<div style="text-align:center; padding:20px; color:#d63031;">
+                    <h3>Oups !</h3>
+                    <p>${msg}</p>
+                    <button onclick="window.location.reload()" style="padding:12px 24px; border:none; background:#1a5f3f; color:white; border-radius:8px; margin-top:10px; font-weight:bold; cursor:pointer;">Réessayer</button>
+                </div>`;
+            }
+        }
+        
+        function updatePaymentRemainingBox(amount) {
+            const remainingBox = document.getElementById('paymentRemainingBox');
+            if(remainingBox) {
+                 // Check if it's a full payment context
+                 // We can check if 'amount' is large (like > 10000 or close to totalNeeded)
+                 const total = window.crowdfundingState ? window.crowdfundingState.totalNeeded : 15000;
+                 
+                 if (amount >= total) {
+                     remainingBox.style.display = 'none';
+                 } else {
+                     remainingBox.style.display = 'flex';
+                     // Ensure amount is updated
+                     const displayEl = remainingBox.querySelector('.amount-display');
+                     if(displayEl) displayEl.innerText = amount.toLocaleString() + " FCFA";
+                 }
+            }
+        }
+
         function renderListView(vendors) {
             const listContainer = document.getElementById('listView');
             listContainer.innerHTML = '';
@@ -5086,6 +5120,7 @@
                 `}
             </div>`;
         }
+
         
         function editProduct(productId) {
             const product = window.MY_PRODUCTS.find(p => p.id == productId);
@@ -5645,15 +5680,52 @@
         let currentPaymentCallback = null;
         let userBalance = parseFloat(localStorage.getItem('mangoo_user_balance')) || 150000; // Default Mock Balance
 
+        // === FIX: HIDE REMAINING BOX INITIALLY IF COMPTANT ===
+        // We ensure that if we are in "Comptant" flow, we hide it immediately when opening modal.
+        // Also update openPaymentModal to be smarter.
+        
         function openPaymentModal(amount, callback) {
+            // Hide Tontine Reminder Card immediately
+            const reminderCard = document.getElementById('tontineReminderCard');
+            if(reminderCard) reminderCard.style.display = 'none';
+
             currentPaymentAmount = amount;
-            window.pendingTotalAmount = amount; // Store Total for Comparison
+            window.pendingTotalAmount = amount; 
             currentPaymentCallback = callback;
             
             // Init Balance
             document.getElementById('userBalanceDisplay').innerText = userBalance.toLocaleString() + ' FCFA';
             document.getElementById('paymentAmountDisplay').innerText = amount.toLocaleString() + ' FCFA';
             document.getElementById('paymentModal').style.display = 'flex';
+            
+            // LOGIC FOR "RESTE À PAYER" BOX - FORCE HIDE
+            // We force hide it using CSS first, then decide to show it.
+            // This prevents "flicker" or stale state.
+            
+            const remainingBox = document.getElementById('paymentRemainingBox');
+            if(remainingBox) {
+                // Default: Hide it
+                remainingBox.style.display = 'none';
+                
+                // Determine Total Price Context
+                let totalPrice = 15000;
+                if(window.crowdfundingState && window.crowdfundingState.totalNeeded) {
+                    totalPrice = window.crowdfundingState.totalNeeded;
+                }
+                
+                // Only show if amount is SIGNIFICANTLY LESS than total price (e.g. installment)
+                // Using a threshold of 95% to be safe against float errors or small diffs
+                if (amount < (totalPrice * 0.95)) {
+                    remainingBox.style.display = 'flex';
+                    
+                    // Calculate Debt
+                    const currentRaised = (window.crowdfundingState && window.crowdfundingState.currentRaised) ? window.crowdfundingState.currentRaised : 0;
+                    const debt = totalPrice - currentRaised;
+                    
+                    const displayEl = remainingBox.querySelector('.amount-display');
+                    if(displayEl) displayEl.innerText = debt.toLocaleString() + " FCFA";
+                }
+            }
             
             // Reset to default view
             switchPaymentTab('self');
@@ -5894,11 +5966,177 @@
              updateSplitCalc();
         }
         
-        // State for Crowdfunding (Global)
-        window.crowdfundingState = {
+        // State for Crowdfunding (Global & Persistent)
+        const savedState = localStorage.getItem('mangoo_crowdfunding_state');
+        window.crowdfundingState = savedState ? JSON.parse(savedState) : {
             totalNeeded: 0,
             currentRaised: 0
         };
+
+        // Helper to save state
+        window.saveCrowdfundingState = () => {
+            localStorage.setItem('mangoo_crowdfunding_state', JSON.stringify(window.crowdfundingState));
+            checkActiveTontineReminder(); // Update UI immediately
+        };
+
+        // Helper to check and show reminder
+        window.checkActiveTontineReminder = () => {
+            // FIX: Don't show reminder if Payment Modal is Open
+            const modal = document.getElementById('paymentModal');
+            const reminderId = 'tontineReminderCard';
+            const existing = document.getElementById(reminderId);
+            
+            if(modal && modal.style.display === 'flex') {
+                if(existing) existing.style.display = 'none'; 
+                return; 
+            }
+            
+            const state = window.crowdfundingState;
+            
+            // Condition: Active Tontine (Total > 0) AND Not Complete (Raised < Total) AND Started (Raised > 0)
+            // Or even if Raised is 0 but Total is set (committed to pay)
+            if (state && state.totalNeeded > 0 && state.currentRaised < state.totalNeeded) {
+                const remaining = state.totalNeeded - state.currentRaised;
+                const progress = Math.round((state.currentRaised / state.totalNeeded) * 100);
+                
+                if(existing) {
+                    // Update existing
+                    const amountEl = existing.querySelector('.rem-amount');
+                    if(amountEl) amountEl.innerText = remaining.toLocaleString() + ' FCFA';
+                    
+                    // Update Circular Progress
+                    const circle = existing.querySelector('.rem-progress-circle');
+                    if(circle) circle.setAttribute('stroke-dasharray', `${progress}, 100`);
+                    
+                    // Update Text Percent
+                    const percentText = existing.querySelector('.rem-percent-text');
+                    if(percentText) percentText.innerText = progress + '%';
+                    else {
+                        // Fallback if class not added yet
+                         const textDivs = existing.getElementsByTagName('div');
+                         for(let d of textDivs) {
+                             if(d.innerText.includes('%')) {
+                                 d.innerText = progress + '%';
+                                 break;
+                             }
+                         }
+                    }
+                    return;
+                }
+
+                // Create New Reminder Card (Floating Bottom)
+                const card = document.createElement('div');
+                card.id = reminderId;
+                card.style.cssText = `
+                    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+                    width: 90%; max-width: 400px; background: white; border-radius: 16px;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 9000;
+                    padding: 15px; display: flex; align-items: center; gap: 15px;
+                    animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                    border: 1px solid #e0f2f1;
+                `;
+                
+                card.innerHTML = `
+                    <div style="position:relative; width:50px; height:50px;">
+                        <svg viewBox="0 0 36 36" style="width:100%; height:100%; transform: rotate(-90deg);">
+                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#eee" stroke-width="4" />
+                            <path class="rem-progress-circle" stroke-dasharray="${progress}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#00b894" stroke-width="4" />
+                        </svg>
+                        <div class="rem-percent-text" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-size:0.7rem; font-weight:bold; color:#00b894;">${progress}%</div>
+                    </div>
+                    
+                    <div style="flex:1;">
+                        <div style="font-size:0.8rem; color:#636e72; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px;">Reste à payer</div>
+                        <div class="rem-amount" style="font-size:1.2rem; font-weight:800; color:#2d3436;">${remaining.toLocaleString()} FCFA</div>
+                        <div style="font-size:0.75rem; color:#0984e3; margin-top:2px;">📅 Échéance: Aujourd'hui</div>
+                    </div>
+                    
+                    <button onclick="simulateThirdPartyPay(3000)" style="
+                        background: #0984e3; color: white; border: none; padding: 10px 20px;
+                        border-radius: 12px; font-weight: bold; font-size: 0.9rem;
+                        box-shadow: 0 4px 10px rgba(9, 132, 227, 0.3); cursor: pointer;
+                        display: flex; flex-direction: column; align-items: center;
+                    ">
+                        <span>Payer</span>
+                        <span style="font-size:0.7rem; opacity:0.8;">3 000 F</span>
+                    </button>
+                    
+                    <button onclick="document.getElementById('${reminderId}').style.display='none'" style="
+                        position:absolute; top:-10px; right:-10px; width:24px; height:24px;
+                        background:#ff7675; color:white; border:none; border-radius:50%;
+                        font-weight:bold; font-size:0.8rem; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.1);
+                    ">✕</button>
+                `;
+                
+                document.body.appendChild(card);
+            } else {
+                if(existing) existing.remove();
+            }
+        };
+
+        // Initialize Reminder on Load
+        window.addEventListener('load', () => {
+             // NO FORCE DEMO STATE - IT BREAKS THE REAL USER FLOW
+             // Only initialize check if state exists
+             setTimeout(checkActiveTontineReminder, 1000); 
+             setInterval(checkActiveTontineReminder, 5000); 
+        });
+
+        // === FIX: HIDE REMAINING BOX INITIALLY IF COMPTANT ===
+        // We ensure that if we are in "Comptant" flow, we hide it immediately when opening modal.
+        // Also update openPaymentModal to be smarter.
+        
+        function openPaymentModal(amount, callback) {
+            currentPaymentAmount = amount;
+            window.pendingTotalAmount = amount; 
+            currentPaymentCallback = callback;
+            
+            // Init Balance
+            document.getElementById('userBalanceDisplay').innerText = userBalance.toLocaleString() + ' FCFA';
+            document.getElementById('paymentAmountDisplay').innerText = amount.toLocaleString() + ' FCFA';
+            document.getElementById('paymentModal').style.display = 'flex';
+            
+            // LOGIC FOR "RESTE À PAYER" BOX - FORCE HIDE
+            // We force hide it using CSS first, then decide to show it.
+            // This prevents "flicker" or stale state.
+            
+            const remainingBox = document.getElementById('paymentRemainingBox');
+            const payButton = document.getElementById('btnPayConfirm');
+
+            if(remainingBox) {
+                // Default: Hide it
+                remainingBox.style.display = 'none';
+                
+                // Determine Total Price Context
+                let totalPrice = 15000;
+                if(window.crowdfundingState && window.crowdfundingState.totalNeeded) {
+                    totalPrice = window.crowdfundingState.totalNeeded;
+                }
+                
+                // Only show if amount is SIGNIFICANTLY LESS than total price (e.g. installment)
+                // Using a threshold of 95% to be safe against float errors or small diffs
+                if (amount < (totalPrice * 0.95)) {
+                    remainingBox.style.display = 'flex';
+                    // Fix button overlap if remaining box is visible
+                    if(payButton) payButton.style.bottom = "100px"; // Move button up if box is there? No, UI is floating.
+                    
+                    // Calculate Debt
+                    const currentRaised = (window.crowdfundingState && window.crowdfundingState.currentRaised) ? window.crowdfundingState.currentRaised : 0;
+                    const debt = totalPrice - currentRaised;
+                    
+                    const displayEl = remainingBox.querySelector('.amount-display');
+                    if(displayEl) displayEl.innerText = debt.toLocaleString() + " FCFA";
+                }
+            }
+            
+            // Reset to default view
+            switchPaymentTab('self');
+            resetPaymentSelection();
+            
+            // Reset Split Inputs
+            document.getElementById('splitMyPart').value = 0;
+            document.getElementById('splitThirdPart').innerText = amount.toLocaleString() + " FCFA";
+        }
 
         function generatePaymentLink() {
             const total = currentPaymentAmount;
@@ -5906,10 +6144,11 @@
             const thirdPart = total - myPart;
             
             // Initialize Crowdfunding State
-            crowdfundingState = {
+            window.crowdfundingState = {
                 totalNeeded: thirdPart,
                 currentRaised: 0
             };
+            saveCrowdfundingState(); // PERSIST
             
             // SECURITY RESET: Ensure session storage is clean for new simulation
             sessionStorage.setItem('mangoo_raised', 0);
@@ -6336,8 +6575,12 @@
                  setTimeout(() => {
                      // Update State
                      const contribution = parseInt(amount) || 0;
-                     if(typeof window.crowdfundingState !== 'undefined') {
-                         window.crowdfundingState.currentRaised += contribution;
+                    if(typeof window.crowdfundingState !== 'undefined') {
+                        window.crowdfundingState.currentRaised += contribution;
+                        if(typeof window.crowdfundingState.raised !== 'undefined') {
+                             window.crowdfundingState.raised += contribution;
+                        }
+                        saveCrowdfundingState(); // PERSIST
                          
                          // Update UI Progress Bar if exists
                          const fill = document.querySelector('.progress-fill');
@@ -6364,7 +6607,16 @@
                             const scheduleOverlay = document.getElementById('scheduleOverlay');
                             if(scheduleOverlay) scheduleOverlay.remove();
                             
-                            openPostCagnotteContract();
+                            // FIX: Directly remove success overlay and SHOW SUCCESS MESSAGE instead of Contract
+                            document.getElementById('mangoo-checkout-overlay-success').remove();
+                            
+                            // Just show a simple alert or final success view
+                            alert("🎉 Félicitations ! La cagnotte est terminée.\nLe vendeur a été notifié pour la livraison.");
+                            
+                            // Reload to reset or show final state in orders
+                            window.location.reload();
+                            
+                            // openPostCagnotteContract(); <--- DISABLED TO PREVENT RE-SIGNING
                         }, 2000); // Wait 2 seconds for user to see "Contribution Validée"
                     } else {
                              // SUCCESS PARTIAL
@@ -6430,8 +6682,31 @@
                 }
             };
 
-            window.finishGatewaySimulation = (btn) => {
+            window.finishGatewaySimulation = (btnInput) => {
+                // Robust initialization
+                let btn = btnInput;
+                
                 try {
+                    // 1. HARD SAFETY: Ensure btn is a valid object with style
+                    if (!btn || typeof btn !== 'object' || !btn.style) {
+                        console.warn("finishGatewaySimulation: Invalid input, recovering...");
+                        // Try to find the active button in the checkout card
+                        const card = document.getElementById('checkout-card');
+                        if (card) {
+                            const buttons = card.querySelectorAll('button');
+                            for(let b of buttons) {
+                                if(b.innerHTML.includes('Payer')) {
+                                    btn = b;
+                                    break;
+                                }
+                            }
+                        }
+                        // If still not found, use a safe dummy
+                        if (!btn || !btn.style) {
+                             btn = { style: {}, innerHTML: '', value: '' };
+                        }
+                    }
+
                     if(window.selectedMethod === 'mangoo_balance') {
                         // 1. Check Phone Number
                         const phoneInput = document.getElementById('mangooPayPhone');
@@ -6446,22 +6721,35 @@
                         }
 
                         // 2. Check PIN
-                        if(btn.style.background !== 'rgb(39, 174, 96)' && btn.style.background !== '#27ae60') {
+                        const currentBg = (btn && btn.style) ? btn.style.background : '';
+                        if(currentBg !== 'rgb(39, 174, 96)' && currentBg !== '#27ae60') {
                              const pin = prompt("🔐 Sécurité : Entrez votre code PIN (0000 par défaut) pour valider le débit :");
                              if(pin !== '0000') {
                                  alert("Code PIN incorrect ! Paiement annulé.");
                                  return;
                              }
                         }
+                    } else if (window.selectedMethod === 'paypal') {
+                        // MOCK PAYPAL SUCCESS
                     }
 
                     const contribution = window.pendingContributionAmount || parseInt(document.getElementById('contributionAmount')?.value) || 0;
                     
                     // Prevent double counting if user clicks multiple times
-                    const isAlreadySuccess = (btn.style.background === 'rgb(39, 174, 96)' || btn.style.background === '#27ae60');
+                    // SAFE ACCESS TO STYLE
+                    const checkBg = (btn && btn.style) ? btn.style.background : '';
+                    const isAlreadySuccess = (checkBg === 'rgb(39, 174, 96)' || checkBg === '#27ae60');
                     
                     if(!isAlreadySuccess) {
-                        crowdfundingState.currentRaised += contribution;
+                        // FIX: Ensure contribution is treated as number
+                        const amountToAdd = parseInt(contribution);
+                        if(!isNaN(amountToAdd)) {
+                             if(typeof window.crowdfundingState.currentRaised !== 'number') window.crowdfundingState.currentRaised = 0;
+                            window.crowdfundingState.currentRaised += amountToAdd;
+                            if(typeof window.crowdfundingState.raised !== 'number') window.crowdfundingState.raised = 0;
+                            window.crowdfundingState.raised += amountToAdd;
+                            saveCrowdfundingState(); // PERSIST
+                        }
                     }
                     
                     const remaining = crowdfundingState.totalNeeded - crowdfundingState.currentRaised;
@@ -6499,11 +6787,12 @@
                             
                             let finalHtml = "";
                             
+                            // IMPORTANT: Show "Success" only if TRULY complete. Otherwise show "Progress"
                             if(!realIsComplete) {
                                  finalHtml = `
                                     <div style="background:white; width:90%; max-width:400px; border-radius:20px; padding:30px; position:relative; max-height:90vh; overflow-y:auto; box-shadow:0 10px 30px rgba(0,0,0,0.3); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; animation:fadeIn 0.5s;">
                                         <div style="font-size:4rem; margin-bottom:20px;">🎉</div>
-                                        <h2 style="color:#2d3436; margin-bottom:10px;">Merci pour votre contribution !</h2>
+                                        <h2 style="color:#2d3436; margin-bottom:10px;">Paiement Validé !</h2>
                                         <div style="font-size:1.2rem; color:#636e72; margin-bottom:20px;">
                                             Un SMS de confirmation a été envoyé au 
                                             <b>${confirmPhone}</b>.
@@ -6512,20 +6801,17 @@
                                         
                                         <div style="background:#f1f2f6; padding:15px; border-radius:10px; width:100%; max-width:350px; margin-bottom:30px;">
                                             <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                                                <span>Reste à collecter :</span>
+                                                <span>Reste à payer :</span>
                                                 <span style="font-weight:bold; color:#d63031;">${realRemaining.toLocaleString()} FCFA</span>
                                             </div>
-                                            <div class="progress-bar" style="height:10px; background:#dfe6e9; border-radius:5px;">
+                                            <div class="progress-bar" style="height:10px; background:#dfe6e9; border-radius:5px; overflow:hidden;">
                                                 <div style="height:100%; background:#00b894; width:${(window.crowdfundingState.currentRaised / window.crowdfundingState.totalNeeded * 100)}%;"></div>
                                             </div>
                                         </div>
                                         
                                         <div style="display:flex; flex-direction:column; gap:10px; width:100%; max-width:300px;">
-                                            <button onclick="simulateThirdPartyPay(${realRemaining})" style="padding:15px; background:#0984e3; color:white; border:none; border-radius:25px; font-weight:bold; cursor:pointer;">
-                                                🔄 Payer le reste (${realRemaining.toLocaleString()} FCFA)
-                                            </button>
-                                            <button onclick="copyToClip('https://mangoo.ci/pay/cagnotte-shared')" style="padding:15px; background:#dfe6e9; color:#2d3436; border:none; border-radius:25px; font-weight:bold; cursor:pointer;">
-                                                🔗 Copier le lien pour partager
+                                            <button onclick="document.getElementById('mangoo-checkout-overlay-success').remove(); simulateThirdPartyPay(3000)" style="padding:15px; background:#0984e3; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">
+                                                💳 Payer l'échéance suivante
                                             </button>
                                             <button onclick="document.getElementById('mangoo-checkout-overlay-success').remove()" style="padding:15px; background:transparent; color:#636e72; border:none; cursor:pointer;">
                                                 Fermer
@@ -6540,16 +6826,16 @@
                                         <h2 style="color:#2d3436; margin-bottom:10px;">Cagnotte Terminée !</h2>
                                         <p style="color:#636e72; margin-bottom:20px;">
                                             La totalité du montant a été collectée. <br>
-                                            Veuillez procéder à la signature du contrat.
+                                            La livraison est programmée.
                                         </p>
                                         
                                         <div style="background:#e8f5e9; padding:15px; border-radius:10px; margin-bottom:20px; text-align:left;">
                                             <div style="font-size:0.9rem; color:#1b5e20; font-weight:bold; margin-bottom:5px;">Statut : Prêt (100%)</div>
-                                            <div style="font-size:0.8rem; color:#2e7d32;">Contrat numérique prêt pour signature.</div>
+                                            <div style="font-size:0.8rem; color:#2e7d32;">Contrat déjà signé. Livraison en cours.</div>
                                         </div>
                                         
-                                        <button onclick="document.getElementById('mangoo-checkout-overlay-success').remove(); const invite = document.getElementById('groupInviteOverlay'); if(invite) invite.remove(); openPostCagnotteContract();" style="width:100%; padding:15px; background:#0984e3; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1rem;">
-                                            ✍️ Signer le Contrat Numérique
+                                        <button onclick="document.getElementById('mangoo-checkout-overlay-success').remove(); const invite = document.getElementById('groupInviteOverlay'); if(invite) invite.remove(); openOrdersModal();" style="width:100%; padding:15px; background:#0984e3; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1rem;">
+                                            📦 Voir mes commandes
                                         </button>
                                         <button onclick="document.getElementById('mangoo-checkout-overlay-success').remove()" style="margin-top:10px; background:transparent; border:none; color:#999; cursor:pointer; text-decoration:underline; width:100%;">
                                             Fermer
@@ -6710,40 +6996,50 @@
             p2pOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:12000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px); animation:fadeIn 0.3s;";
             
             p2pOverlay.innerHTML = `
-                <div style="background:white; width:90%; max-width:400px; border-radius:20px; padding:25px; box-shadow:0 15px 50px rgba(0,0,0,0.2); position:relative;">
+                <div style="background:white; width:90%; max-width:400px; max-height: 90vh; overflow-y: auto; border-radius:20px; padding:25px; box-shadow:0 15px 50px rgba(0,0,0,0.2); position:relative; display: flex; flex-direction: column;">
                     <button onclick="document.getElementById('p2pOverlay').remove()" style="position:absolute; top:15px; right:15px; background:#f1f2f6; border:none; width:30px; height:30px; border-radius:50%; cursor:pointer; font-weight:bold; color:#636e72;">✕</button>
                     
-                    <div style="text-align:center; margin-bottom:20px;">
+                    <div style="text-align:center; margin-bottom:20px; flex-shrink: 0;">
                         <div style="width:60px; height:60px; background:#e0f2f1; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; font-size:2rem;">💸</div>
-                        <h2 style="margin:0; color:#2d3436;">Transfert Gratuit</h2>
-                        <p style="color:#636e72; font-size:0.9rem; margin-top:5px;">Envoyez de l'argent instantanément à un proche</p>
+                        <h2 style="margin:0; color:#2d3436;">Transfert de crédit</h2>
+                        <p style="color:#636e72; font-size:0.9rem; margin-top:5px;">Envoyez du crédit Mangoo à un proche</p>
                     </div>
 
-                    <div style="background:#f8f9fa; padding:15px; border-radius:12px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between;">
-                        <span style="color:#636e72; font-size:0.9rem;">Votre solde actuel</span>
-                        <span style="font-weight:bold; color:#00b894; font-size:1.1rem;">${userBalance.toLocaleString()} FCFA</span>
-                    </div>
+                    <div style="flex: 1; overflow-y: auto; padding-right: 5px;">
+                        <div style="background:#f8f9fa; padding:15px; border-radius:12px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between;">
+                            <span style="color:#636e72; font-size:0.9rem;">Votre solde actuel</span>
+                            <span style="font-weight:bold; color:#00b894; font-size:1.1rem;">${userBalance.toLocaleString()} FCFA</span>
+                        </div>
 
-                    <div style="margin-bottom:15px;">
-                        <label style="display:block; font-size:0.8rem; font-weight:bold; color:#2d3436; margin-bottom:8px;">Numéro du destinataire (Mangoo)</label>
-                        <div style="position:relative;">
-                            <input type="tel" placeholder="Ex: 07 07 00 00 00" id="p2pReceiver" style="width:100%; padding:15px; padding-left:45px; border:2px solid #dfe6e9; border-radius:10px; font-size:1rem; outline:none; transition:border 0.2s;">
-                            <span style="position:absolute; left:15px; top:50%; transform:translateY(-50%);">👤</span>
+                        <div style="margin-bottom:15px;">
+                            <label style="display:block; font-size:0.8rem; font-weight:bold; color:#2d3436; margin-bottom:8px;">Numéro du destinataire (Mangoo)</label>
+                            <div style="position:relative;">
+                                <input type="tel" placeholder="Ex: 07 07 00 00 00" id="p2pReceiver" style="width:100%; padding:15px; padding-left:45px; border:2px solid #dfe6e9; border-radius:10px; font-size:1rem; outline:none; transition:border 0.2s;">
+                                <span style="position:absolute; left:15px; top:50%; transform:translateY(-50%);">👤</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:15px;">
+                            <label style="display:block; font-size:0.8rem; font-weight:bold; color:#2d3436; margin-bottom:8px;">Montant à envoyer</label>
+                            <div style="position:relative;">
+                                <input type="number" placeholder="0" id="p2pAmount" style="width:100%; padding:15px; padding-right:60px; border:2px solid #dfe6e9; border-radius:10px; font-size:1.5rem; font-weight:bold; outline:none; color:#2d3436;">
+                                <span style="position:absolute; right:15px; top:50%; transform:translateY(-50%); font-weight:bold; color:#b2bec3;">FCFA</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:25px;">
+                            <label style="display:block; font-size:0.8rem; font-weight:bold; color:#2d3436; margin-bottom:8px;">Code Secret (4 chiffres)</label>
+                            <div style="position:relative;">
+                                <input type="password" placeholder="****" id="p2pPin" maxlength="4" style="width:100%; padding:15px; padding-left:45px; border:2px solid #dfe6e9; border-radius:10px; font-size:1.5rem; font-weight:bold; outline:none; color:#2d3436; letter-spacing: 5px;">
+                                <span style="position:absolute; left:15px; top:50%; transform:translateY(-50%);">🔒</span>
+                            </div>
+                            <div style="font-size:0.8rem; color:#00b894; margin-top:5px; display:flex; align-items:center; gap:5px;">
+                                <span>✨</span> Frais de transaction : <b>0 FCFA</b>
+                            </div>
                         </div>
                     </div>
 
-                    <div style="margin-bottom:25px;">
-                        <label style="display:block; font-size:0.8rem; font-weight:bold; color:#2d3436; margin-bottom:8px;">Montant à envoyer</label>
-                        <div style="position:relative;">
-                            <input type="number" placeholder="0" id="p2pAmount" style="width:100%; padding:15px; padding-right:60px; border:2px solid #dfe6e9; border-radius:10px; font-size:1.5rem; font-weight:bold; outline:none; color:#2d3436;">
-                            <span style="position:absolute; right:15px; top:50%; transform:translateY(-50%); font-weight:bold; color:#b2bec3;">FCFA</span>
-                        </div>
-                        <div style="font-size:0.8rem; color:#00b894; margin-top:5px; display:flex; align-items:center; gap:5px;">
-                            <span>✨</span> Frais de transaction : <b>0 FCFA</b>
-                        </div>
-                    </div>
-
-                    <button onclick="processP2PTransfer()" style="width:100%; padding:18px; background:#00b894; color:white; border:none; border-radius:12px; font-weight:bold; font-size:1.1rem; cursor:pointer; box-shadow:0 5px 15px rgba(0,184,148,0.3); transition:transform 0.1s;">
+                    <button onclick="processP2PTransfer()" style="width:100%; padding:18px; background:#00b894; color:white; border:none; border-radius:12px; font-weight:bold; font-size:1.1rem; cursor:pointer; box-shadow:0 5px 15px rgba(0,184,148,0.3); transition:transform 0.1s; flex-shrink: 0; margin-top: 10px;">
                         Envoyer maintenant
                     </button>
                 </div>
@@ -6754,6 +7050,7 @@
         function processP2PTransfer() {
             const receiver = document.getElementById('p2pReceiver').value;
             const amount = parseInt(document.getElementById('p2pAmount').value);
+            const pin = document.getElementById('p2pPin').value;
             
             if(!receiver || receiver.length < 4) {
                 alert("Veuillez entrer un numéro valide.");
@@ -6765,6 +7062,11 @@
             }
             if(amount > userBalance) {
                 alert("Solde insuffisant !");
+                return;
+            }
+            // Basic PIN Validation (Simulated)
+            if(!pin || pin.length !== 4) {
+                alert("Veuillez entrer votre code secret à 4 chiffres.");
                 return;
             }
 
@@ -6983,7 +7285,7 @@
                         <div style="font-size:4rem; margin-bottom:15px;">🚚</div>
                         <h2 style="color:#2d3436; margin-bottom:10px;">Commande Validée !</h2>
                         <p style="color:#636e72;">Votre contrat est signé. La livraison est programmée.</p>
-                        <button onclick="document.getElementById('finalSuccessModal').remove(); openOrdersModal();" style="margin-top:20px; padding:12px 24px; background:#0984e3; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">
+                        <button onclick="document.getElementById('finalSuccessModal').remove(); setTimeout(openOrdersModal, 100);" style="margin-top:20px; padding:12px 24px; background:#0984e3; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">
                             Voir mes commandes
                         </button>
                         <button onclick="document.getElementById('finalSuccessModal').remove();" style="margin-top:10px; background:transparent; border:none; color:#999; cursor:pointer; text-decoration:underline; display:block; width:100%;">
@@ -7002,13 +7304,17 @@
             const paymentModal = document.getElementById('paymentModal');
             if(paymentModal) paymentModal.style.display = 'none';
             
+            // FIX: Close Schedule Overlay if open to prevent conflicts
+            const scheduleOverlay = document.getElementById('scheduleOverlay');
+            if(scheduleOverlay) scheduleOverlay.remove();
+            
             const existingOrders = document.getElementById('ordersModal');
             if(existingOrders) existingOrders.remove();
 
             const ordersOverlay = document.createElement('div');
             ordersOverlay.id = 'ordersModal';
             ordersOverlay.className = 'modal-overlay';
-            ordersOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:15000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px); animation:fadeIn 0.3s;";
+            ordersOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:25000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px); animation:fadeIn 0.3s;";
             ordersOverlay.onclick = (e) => { if(e.target.id === 'ordersModal') ordersOverlay.remove(); };
             
             // Real Data from State
@@ -7023,7 +7329,7 @@
                     date: 'Aujourd\'hui', 
                     product: productName, 
                     amount: totalNeeded, 
-                    status: isComplete ? 'Payé' : 'En cours', 
+                    status: isComplete ? 'Tontine Terminée' : 'En cours', 
                     statusColor: isComplete ? '#27ae60' : '#f1c40f', 
                     type: isComplete ? 'Cagnotte (Terminée)' : 'Cagnotte (En cours)',
                     action: `document.getElementById('ordersModal').remove(); showTontineSchedule('${productName}', 'group', 5, 3000)`
@@ -7034,10 +7340,15 @@
             orders.forEach(order => {
                 ordersHtml += `
                     <div onclick="${order.action}" style="background:white; border:1px solid #dfe6e9; border-radius:12px; padding:15px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; transition:transform 0.2s;">
-                        <div>
+                        <div style="flex:1;">
                             <div style="font-weight:bold; color:#2d3436;">${order.product}</div>
                             <div style="font-size:0.8rem; color:#636e72;">#${order.id} • ${order.date}</div>
                             <div style="font-size:0.75rem; color:#0984e3; margin-top:5px; font-weight:bold;">${order.type}</div>
+                            ${order.status === 'Tontine Terminée' ? 
+                                `<div style="font-size:0.75rem; color:#27ae60; margin-top:3px; display:flex; align-items:center; gap:5px;">
+                                    <span>📦 Livraison Programmée</span>
+                                </div>` : ''
+                            }
                         </div>
                         <div style="text-align:right;">
                             <div style="font-weight:bold; color:#2d3436;">${order.amount.toLocaleString()} F</div>
@@ -7061,8 +7372,8 @@
                         ${ordersHtml}
                     </div>
                     
-                    <button onclick="document.getElementById('ordersModal').remove(); window.location.reload();" style="margin-top:15px; background:#dfe6e9; color:#2d3436; border:none; padding:12px; border-radius:10px; font-weight:bold; width:100%; cursor:pointer;">
-                        Fermer & Retour à l'accueil
+                    <button onclick="document.getElementById('ordersModal').remove();" style="margin-top:15px; background:#dfe6e9; color:#2d3436; border:none; padding:12px; border-radius:10px; font-weight:bold; width:100%; cursor:pointer;">
+                        Fermer
                     </button>
                 </div>
             `;
