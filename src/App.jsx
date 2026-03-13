@@ -97,7 +97,7 @@ const useStore = create((set, get) => ({
 }));
 
 // Composant de connexion optimisé
-const Login = ({ onLogin }) => {
+const Login = ({ onLogin, onBack }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -169,6 +169,16 @@ const Login = ({ onLogin }) => {
           ? 'bg-gray-800 border border-gray-700' 
           : 'bg-white'
       }`}>
+        {onBack && (
+          <button 
+            onClick={onBack}
+            className={`mb-6 flex items-center gap-2 text-sm font-medium transition-colors duration-300 hover:text-orange-500 ${
+              isDark ? 'text-gray-400' : 'text-gray-600'
+            }`}
+          >
+            ← Retour
+          </button>
+        )}
         <div className="text-center mb-8">
           <div className="text-6xl mb-4 animate-bounce">🛍️</div>
           <h1 className={`text-3xl font-bold bg-gradient-to-r from-orange-500 to-green-600 bg-clip-text text-transparent`}>
@@ -246,6 +256,156 @@ const Login = ({ onLogin }) => {
             <p><span className="font-mono">client@example.com</span> / client123</p>
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
+
+// Composant d'inscription optimisé
+const Register = ({ onRegister, onBack }) => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [shopName, setShopName] = useState('');
+  const { isDark } = useThemeStore();
+
+  const handleRegister = useCallback((e) => {
+    e.preventDefault();
+    // Simulation d'inscription
+    const newUser = {
+      id: Date.now(),
+      name: name,
+      email: email,
+      role: 'vendor',
+      shopName: shopName,
+      avatar: '🏪'
+    };
+    onRegister(newUser);
+  }, [name, email, shopName, onRegister]);
+
+  return (
+    <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 ${
+      isDark 
+        ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
+        : 'bg-gradient-to-br from-orange-50 to-green-50'
+    }`}>
+      <div className={`max-w-xl w-full rounded-2xl shadow-2xl p-6 transition-colors duration-300 ${
+        isDark 
+          ? 'bg-gray-800 border border-gray-700' 
+          : 'bg-white'
+      }`}>
+        {onBack && (
+          <button 
+            onClick={onBack}
+            className={`mb-2 flex items-center gap-2 text-sm font-medium transition-colors duration-300 hover:text-orange-500 ${
+              isDark ? 'text-gray-400' : 'text-gray-600'
+            }`}
+          >
+            ← Retour
+          </button>
+        )}
+        <div className="text-center mb-4">
+          <div className="text-4xl mb-2 animate-bounce">🏪</div>
+          <h1 className={`text-2xl font-bold bg-gradient-to-r from-orange-500 to-green-600 bg-clip-text text-transparent`}>
+            Créer ma boutique
+          </h1>
+          <p className={`text-xs mt-1 transition-colors duration-300 ${
+            isDark ? 'text-gray-400' : 'text-gray-600'
+          }`}>
+            Rejoignez MangooTech et vendez en ligne
+          </p>
+        </div>
+
+        <form onSubmit={handleRegister} className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={`block text-xs font-medium mb-1 transition-colors duration-300 ${
+                isDark ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                Nom complet
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors duration-300 ${
+                  isDark 
+                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500' 
+                    : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+                }`}
+                placeholder="Jean Dupont"
+                required
+              />
+            </div>
+
+            <div>
+              <label className={`block text-xs font-medium mb-1 transition-colors duration-300 ${
+                isDark ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                Nom de la boutique
+              </label>
+              <input
+                type="text"
+                value={shopName}
+                onChange={(e) => setShopName(e.target.value)}
+                className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors duration-300 ${
+                  isDark 
+                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500' 
+                    : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+                }`}
+                placeholder="Ma Super Boutique"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className={`block text-xs font-medium mb-1 transition-colors duration-300 ${
+              isDark ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors duration-300 ${
+                isDark 
+                  ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500' 
+                  : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+              }`}
+              placeholder="jean@example.com"
+              required
+            />
+          </div>
+
+          <div>
+            <label className={`block text-xs font-medium mb-1 transition-colors duration-300 ${
+              isDark ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              Mot de passe
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors duration-300 ${
+                isDark 
+                  ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500' 
+                  : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+              }`}
+              placeholder="••••••••"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full bg-gradient-to-r from-orange-500 to-green-600 text-white py-2 px-4 rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105"
+          >
+            Créer ma boutique
+          </button>
+        </form>
       </div>
     </div>
   );
@@ -781,7 +941,7 @@ const MangooLocalFrame = React.memo(({ user, onBack }) => {
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
       <iframe 
-        src="/mangoo-local.html?v=57" 
+        src="/mangoo-local.html?v=59" 
         style={{ width: '100%', height: '100%', border: 'none' }}
         title="Mangoo Local+"
       />
@@ -945,8 +1105,12 @@ function App() {
 
 
 
+    if (user.role === 'register_request') {
+      return <Register onRegister={handleLogin} onBack={() => setUser(null)} />;
+    }
+
     if (user.role === 'login_request') {
-      return <Login onLogin={handleLogin} />;
+      return <Login onLogin={handleLogin} onBack={() => setUser(null)} />;
     }
 
     // Admin avec React Router
@@ -1011,10 +1175,10 @@ function App() {
               <ThemeToggle />
               <button 
                 onClick={() => setUser(null)}
-                className="text-gray-500 hover:text-red-500"
-                title="Déconnexion"
+                className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-red-500 transition-colors px-3 py-2 rounded-lg hover:bg-red-50"
+                title="Se déconnecter et retourner à l'accueil"
               >
-                ✕
+                <span>← Retour</span>
               </button>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MessageCircle, Send, Paperclip, Smile, Phone, Video, MoreVertical, Filter, Archive, Trash2, Clock, CheckCheck, Check } from 'lucide-react';
+import { Search, MessageCircle, Send, Paperclip, Smile, Phone, Video, MoreVertical, Filter, Archive, Trash2, Clock, CheckCheck, Check, Users } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -36,6 +36,13 @@ const VendorChatManagement: React.FC = () => {
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [viewMode, setViewMode] = useState<'conversations' | 'contacts'>('conversations');
+
+  const contacts = [
+    { id: 'support', name: 'Support Mangoo', avatar: 'S', status: 'online', role: 'Support', color: 'bg-green-500' },
+    { id: 'supplier_1', name: 'Fournisseur Chine', avatar: 'F', status: 'offline', role: 'Fournisseur', color: 'bg-purple-500' },
+    { id: 'delivery_1', name: 'Livreur Express', avatar: 'L', status: 'online', role: 'Livreur', color: 'bg-blue-500' }
+  ];
 
   // Données de démonstration
   useEffect(() => {
@@ -226,92 +233,132 @@ const VendorChatManagement: React.FC = () => {
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
         {/* En-tête */}
         <div className="p-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Messages</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">
+              {viewMode === 'conversations' ? 'Messages' : 'Contacts'}
+            </h2>
+            <button
+              onClick={() => setViewMode(viewMode === 'conversations' ? 'contacts' : 'conversations')}
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+              title={viewMode === 'conversations' ? 'Voir les contacts' : 'Voir les messages'}
+            >
+              {viewMode === 'conversations' ? <Users className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
+            </button>
+          </div>
           
           {/* Recherche */}
           <div className="relative mb-3">
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Rechercher une conversation..."
+              placeholder={viewMode === 'conversations' ? "Rechercher une conversation..." : "Rechercher un contact..."}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
-          {/* Filtres */}
-          <div className="flex space-x-2">
-            {['all', 'active', 'archived'].map((status) => (
-              <button
-                key={status}
-                onClick={() => setFilterStatus(status as any)}
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  filterStatus === status
-                    ? 'bg-blue-100 text-blue-800'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {status === 'all' ? 'Tous' : status === 'active' ? 'Actifs' : 'Archivés'}
-              </button>
-            ))}
-          </div>
+          {/* Filtres (Visible seulement en mode conversations) */}
+          {viewMode === 'conversations' && (
+            <div className="flex space-x-2">
+              {['all', 'active', 'archived'].map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setFilterStatus(status as any)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    filterStatus === status
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {status === 'all' ? 'Tous' : status === 'active' ? 'Actifs' : 'Archivés'}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Liste des conversations */}
+        {/* Liste des conversations ou contacts */}
         <div className="flex-1 overflow-y-auto">
-          {filteredConversations.map((conversation) => (
-            <div
-              key={conversation.id}
-              onClick={() => setSelectedConversation(conversation)}
-              className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${
-                selectedConversation?.id === conversation.id ? 'bg-blue-50 border-blue-200' : ''
-              }`}
-            >
-              <div className="flex items-start space-x-3">
-                <div className="relative">
-                  <img
-                    src={conversation.customerAvatar}
-                    alt={conversation.customerName}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                  {conversation.isOnline && (
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                  )}
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-gray-900 truncate">
-                      {conversation.customerName}
-                    </h3>
-                    <span className="text-xs text-gray-500">
-                      {formatTime(conversation.lastMessageTime)}
-                    </span>
+          {viewMode === 'contacts' ? (
+             <div className="p-2">
+               {contacts.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase())).map(contact => (
+                 <div 
+                   key={contact.id}
+                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                   onClick={() => {
+                     // Logique pour démarrer une conversation avec ce contact
+                     setViewMode('conversations');
+                     setSearchTerm(contact.name);
+                   }}
+                 >
+                   <div className={`w-10 h-10 ${contact.color} rounded-full flex items-center justify-center text-white font-bold`}>
+                     {contact.avatar}
+                   </div>
+                   <div className="flex-1">
+                     <div className="font-medium text-gray-900">{contact.name}</div>
+                     <div className="text-xs text-gray-500 flex items-center gap-1">
+                       <span className={`w-2 h-2 rounded-full ${contact.status === 'online' ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+                       {contact.role}
+                     </div>
+                   </div>
+                 </div>
+               ))}
+             </div>
+          ) : (
+            filteredConversations.map((conversation) => (
+              <div
+                key={conversation.id}
+                onClick={() => setSelectedConversation(conversation)}
+                className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${
+                  selectedConversation?.id === conversation.id ? 'bg-blue-50 border-blue-200' : ''
+                }`}
+              >
+                <div className="flex items-start space-x-3">
+                  <div className="relative">
+                    <img
+                      src={conversation.customerAvatar}
+                      alt={conversation.customerName}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                    {conversation.isOnline && (
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                    )}
                   </div>
                   
-                  <p className="text-sm text-gray-600 truncate mt-1">
-                    {conversation.lastMessage}
-                  </p>
-                  
-                  {conversation.unreadCount > 0 && (
-                    <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-white bg-blue-600 rounded-full mt-1">
-                      {conversation.unreadCount}
-                    </span>
-                  )}
-                  
-                  {conversation.orderId && (
-                    <div className="flex items-center mt-1 text-xs text-gray-500">
-                      <span>Commande: {conversation.orderId}</span>
-                      {conversation.productName && (
-                        <span className="ml-1">• {conversation.productName}</span>
-                      )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-medium text-gray-900 truncate">
+                        {conversation.customerName}
+                      </h3>
+                      <span className="text-xs text-gray-500">
+                        {formatTime(conversation.lastMessageTime)}
+                      </span>
                     </div>
-                  )}
+                    
+                    <p className="text-sm text-gray-600 truncate mt-1">
+                      {conversation.lastMessage}
+                    </p>
+                    
+                    {conversation.unreadCount > 0 && (
+                      <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-white bg-blue-600 rounded-full mt-1">
+                        {conversation.unreadCount}
+                      </span>
+                    )}
+                    
+                    {conversation.orderId && (
+                      <div className="flex items-center mt-1 text-xs text-gray-500">
+                        <span>Commande: {conversation.orderId}</span>
+                        {conversation.productName && (
+                          <span className="ml-1">• {conversation.productName}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 

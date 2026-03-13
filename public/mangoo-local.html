@@ -2124,8 +2124,45 @@
                 <div id="chatName" style="font-weight:bold; overflow:hidden; text-overflow:ellipsis;">Vendeur</div>
                 <div style="font-size:0.75rem; opacity:0.8;">En ligne</div>
             </div>
-            <button onclick="startAudioCall()" style="background:rgba(255,255,255,0.2); border:none; color:white; font-size:1.2rem; cursor:pointer; padding:8px; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center;">📞</button>
+            <div style="display:flex; gap:5px; align-items:center;">
+                <button id="chat-contacts-btn" onclick="toggleContactsView()" style="background:none; border:none; color:white; cursor:pointer; font-size:1.2rem; padding:5px;" title="Contacts">👥</button>
+                <button onclick="startAudioCall()" style="background:rgba(255,255,255,0.2); border:none; color:white; font-size:1.2rem; cursor:pointer; padding:8px; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center;">📞</button>
+            </div>
         </div>
+        
+        <!-- Contacts View (Hidden by default) -->
+        <div id="chat-contacts-view" style="display: none; position: absolute; top: 60px; left: 0; right: 0; bottom: 0; background: white; z-index: 100; flex-direction: column;">
+            <div style="padding: 10px; border-bottom: 1px solid #eee; background: #f8f9fa;">
+                <input type="text" placeholder="🔍 Rechercher un contact..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 20px; outline: none;">
+            </div>
+            <div style="flex: 1; overflow-y: auto;">
+                <!-- Mock Contact: Support -->
+                <div class="contact-item" onclick="selectContact('Support Mangoo')" style="padding: 15px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: background 0.2s;">
+                    <img src="https://ui-avatars.com/api/?name=Support+Mangoo&background=1a5f3f&color=fff" style="width: 45px; height: 45px; border-radius: 50%;">
+                    <div style="flex: 1;">
+                        <div style="font-weight: bold; color: #2d3436;">Support Mangoo 🛡️</div>
+                        <div style="font-size: 0.8rem; color: #00b894;">En ligne • Répond instantanément</div>
+                    </div>
+                </div>
+                <!-- Mock Contact: Vendeur (Current) -->
+                <div class="contact-item" onclick="selectContact('Vendeur')" style="padding: 15px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 15px; cursor: pointer; background: #f0f8ff;">
+                    <img src="https://ui-avatars.com/api/?name=Vendeur&background=e17055&color=fff" style="width: 45px; height: 45px; border-radius: 50%;">
+                    <div style="flex: 1;">
+                        <div style="font-weight: bold; color: #2d3436;">Vendeur (Actuel)</div>
+                        <div style="font-size: 0.8rem; color: #636e72;">Dernier message: À l'instant</div>
+                    </div>
+                </div>
+                <!-- Mock Contact: Livreur -->
+                <div class="contact-item" onclick="selectContact('Livreur Express')" style="padding: 15px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 15px; cursor: pointer;">
+                    <img src="https://ui-avatars.com/api/?name=Livreur+Express&background=0984e3&color=fff" style="width: 45px; height: 45px; border-radius: 50%;">
+                    <div style="flex: 1;">
+                        <div style="font-weight: bold; color: #2d3436;">Livreur Express 🛵</div>
+                        <div style="font-size: 0.8rem; color: #636e72;">En route pour la livraison</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="chat-messages" id="chatHistory">
             <!-- Messages -->
         </div>
@@ -4856,6 +4893,60 @@
                 }, 200);
             }
         }
+
+        function toggleContactsView() {
+            const view = document.getElementById('chat-contacts-view');
+            if (view.style.display === 'none' || !view.style.display) {
+                view.style.display = 'flex';
+            } else {
+                view.style.display = 'none';
+            }
+        }
+
+        function selectContact(name) {
+            // Update Chat Header
+            const headerName = document.getElementById('chatName');
+            const headerAvatar = document.getElementById('chatAvatar');
+            
+            headerName.innerText = name;
+            headerAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff`;
+            
+            // Clear or update messages (Mock)
+            const history = document.getElementById('chatHistory');
+            // Clear current messages
+            history.innerHTML = '';
+            
+            // Add a welcome message
+            const now = new Date();
+            const timeStr = now.getHours() + ":" + (now.getMinutes()<10?'0':'') + now.getMinutes();
+            
+            history.innerHTML = `
+                <div style="text-align: center; margin: 20px 0; color: #b2bec3; font-size: 0.8rem;">
+                    Conversation avec ${name}
+                </div>
+                <div class="msg-bubble msg-received">
+                    <div class="msg-content">Bonjour, je suis ${name}. Comment puis-je vous aider ?</div>
+                    <div class="msg-meta">
+                        <span>${timeStr}</span>
+                    </div>
+                </div>
+            `;
+            
+            // Hide contacts view
+            document.getElementById('chat-contacts-view').style.display = 'none';
+        }
+
+        // Add Enter key listener for chat input
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatInput = document.getElementById('chatInput');
+            if(chatInput) {
+                chatInput.addEventListener('keydown', function(e) {
+                    if(e.key === 'Enter') {
+                        sendMessage();
+                    }
+                });
+            }
+        });
 
         function closeChat() {
             document.getElementById('connectPlus').style.display = 'none';

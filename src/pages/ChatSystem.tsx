@@ -29,7 +29,15 @@ const ChatSystem: React.FC = () => {
 
   const [newMessage, setNewMessage] = useState('');
   const [selectedChat, setSelectedChat] = useState(1);
+  const [viewMode, setViewMode] = useState<'conversations' | 'contacts'>('conversations');
+  const [searchTerm, setSearchTerm] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const contacts = [
+    { id: 101, name: 'Support Mangoo', avatar: 'S', status: 'online', role: 'Support', color: 'bg-green-500' },
+    { id: 102, name: 'Vendeur Mode', avatar: 'V', status: 'offline', role: 'Vendeur', color: 'bg-orange-500' },
+    { id: 103, name: 'Livreur Express', avatar: 'L', status: 'online', role: 'Livreur', color: 'bg-blue-500' }
+  ];
 
   const chats = [
     {
@@ -137,41 +145,90 @@ const ChatSystem: React.FC = () => {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
               <div className="p-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Conversations</h2>
-              </div>
-              <div className="divide-y divide-gray-200">
-                {chats.map((chat) => (
-                  <div
-                    key={chat.id}
-                    className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-                      selectedChat === chat.id ? 'bg-orange-50 border-r-2 border-orange-500' : ''
-                    }`}
-                    onClick={() => setSelectedChat(chat.id)}
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    {viewMode === 'conversations' ? 'Conversations' : 'Contacts'}
+                  </h2>
+                  <button
+                    onClick={() => setViewMode(viewMode === 'conversations' ? 'contacts' : 'conversations')}
+                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                    title={viewMode === 'conversations' ? 'Voir les contacts' : 'Voir les conversations'}
                   >
-                    <div className="flex items-center space-x-3">
-                      <div className="relative">
-                        <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full flex items-center justify-center">
-                          <span className="text-white font-semibold">{chat.avatar}</span>
+                    {viewMode === 'conversations' ? <Users className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
+                  </button>
+                </div>
+                {/* Search Bar */}
+                <input
+                  type="text"
+                  placeholder={viewMode === 'conversations' ? "Rechercher une conversation..." : "Rechercher un contact..."}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+              <div className="divide-y divide-gray-200 max-h-[500px] overflow-y-auto">
+                {viewMode === 'contacts' ? (
+                  contacts.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase())).map((contact) => (
+                    <div
+                      key={contact.id}
+                      className="p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => {
+                        setViewMode('conversations');
+                        setSearchTerm(''); 
+                        // In a real app, we would start a new chat here
+                        toast.success(`Conversation démarrée avec ${contact.name}`);
+                      }}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="relative">
+                          <div className={`w-12 h-12 ${contact.color} rounded-full flex items-center justify-center`}>
+                            <span className="text-white font-semibold">{contact.avatar}</span>
+                          </div>
+                          {contact.status === 'online' && (
+                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                          )}
                         </div>
-                        {chat.online && (
-                          <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-sm font-semibold text-gray-900 truncate">{contact.name}</h3>
+                          <p className="text-sm text-gray-500 truncate">{contact.role}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  chats.filter(c => c.user.toLowerCase().includes(searchTerm.toLowerCase())).map((chat) => (
+                    <div
+                      key={chat.id}
+                      className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
+                        selectedChat === chat.id ? 'bg-orange-50 border-r-2 border-orange-500' : ''
+                      }`}
+                      onClick={() => setSelectedChat(chat.id)}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="relative">
+                          <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full flex items-center justify-center">
+                            <span className="text-white font-semibold">{chat.avatar}</span>
+                          </div>
+                          {chat.online && (
+                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-semibold text-gray-900 truncate">{chat.user}</h3>
+                            <span className="text-xs text-gray-500">{chat.timestamp}</span>
+                          </div>
+                          <p className="text-sm text-gray-600 truncate">{chat.lastMessage}</p>
+                        </div>
+                        {chat.unread > 0 && (
+                          <span className="bg-orange-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
+                            {chat.unread}
+                          </span>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-sm font-semibold text-gray-900 truncate">{chat.user}</h3>
-                          <span className="text-xs text-gray-500">{chat.timestamp}</span>
-                        </div>
-                        <p className="text-sm text-gray-600 truncate">{chat.lastMessage}</p>
-                      </div>
-                      {chat.unread > 0 && (
-                        <span className="bg-orange-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
-                          {chat.unread}
-                        </span>
-                      )}
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>
