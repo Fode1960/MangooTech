@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { create } from 'zustand';
 import { useThemeStore } from './stores/themeStore';
 import { ThemeToggle } from './components/ThemeToggle';
 import { PaymentMethods } from './components/PaymentMethodsStable';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PaymentAnalyticsDashboard } from './components/PaymentAnalyticsDashboardSimple';
-import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminShops from './pages/AdminShops';
 import AdminCommissions from './pages/AdminCommissions';
@@ -13,6 +13,8 @@ import AdminUsers from './pages/AdminUsers';
 import AdminCreateShop from './pages/AdminCreateShop';
 import AdminPayments from './pages/AdminPayments';
 import AdminWallet from './pages/AdminWallet';
+import AdminAnalytics from './pages/AdminAnalytics';
+import AdminSettings from './pages/AdminSettings';
 import AdminNavigation from './components/AdminNavigation';
 import SimpleTest from './pages/SimpleTest';
 import ProductCard from './components/OptimizedProductCard';
@@ -20,6 +22,12 @@ import MarketplaceFilters from './components/MarketplaceFilters';
 import PerformanceMonitor from './components/PerformanceMonitor';
 import AfricanInnovationHub from './components/AfricanInnovationHub';
 import LandingPage from './components/LandingPage';
+import ShopPage from './pages/shop/ShopPage.jsx';
+import VendorAccessQRPage from './pages/VendorAccessQRPage';
+import { QRCodeCanvas } from 'qrcode.react';
+import { Toaster, toast } from 'sonner';
+import { ensureWalletBalance, getWalletBalance, getWalletKeyFromUser, creditWalletBalance } from './utils/demoWallet';
+import { usePaymentStore } from './stores/paymentStore';
 
 // Store optimisé avec Zustand
 const useStore = create((set, get) => ({
@@ -43,6 +51,7 @@ const useStore = create((set, get) => ({
   setProducts: (products) => set({ products }),
   setVendors: (vendors) => set({ vendors }),
   setOrders: (orders) => set({ orders }),
+  setCart: (cart) => set({ cart }),
   
   addToCart: (product) => set((state) => {
     const existing = state.cart.find(item => item.id === product.id);
@@ -97,16 +106,78 @@ const useStore = create((set, get) => ({
 }));
 
 // Composant de connexion optimisé
-const Login = ({ onLogin, onBack }) => {
+const Login = ({ onLogin, onBack, onCreateClient }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const { isDark } = useThemeStore();
+
+  const activateVendorAccount = useCallback(() => {
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    if (!normalizedEmail) {
+      setError('Entrez votre email');
+      return;
+    }
+    if (!password) {
+      setError('Entrez votre mot de passe');
+      return;
+    }
+
+    const shop = (() => {
+      try {
+        const raw = localStorage.getItem('demo_shops');
+        const shops = raw ? JSON.parse(raw) : [];
+        const list = Array.isArray(shops) ? shops : [];
+        return list.find((s) => String(s?.ownerEmail || '').trim().toLowerCase() === normalizedEmail) || null;
+      } catch {
+        return null;
+      }
+    })();
+
+    if (!shop) {
+      setError('Aucune boutique trouvée pour cet email');
+      return;
+    }
+
+    const newUser = {
+      id: Date.now(),
+      name: shop?.ownerName || shop?.name || 'Vendeur',
+      email: normalizedEmail,
+      role: 'vendor',
+      shopName: shop?.name || 'Boutique',
+      avatar: '🏪',
+      password
+    };
+
+    try {
+      const raw = localStorage.getItem('demo_users');
+      const data = raw ? JSON.parse(raw) : {};
+      const map = data && typeof data === 'object' ? data : {};
+      map[normalizedEmail] = newUser;
+      localStorage.setItem('demo_users', JSON.stringify(map));
+    } catch {
+      // ignore
+    }
+
+    setError('');
+    onLogin(newUser);
+  }, [email, onLogin, password]);
 
   const handleLogin = useCallback((e) => {
     e.preventDefault();
     
     const normalizedEmail = email.toLowerCase().trim();
+
+    const storedUsers = (() => {
+      try {
+        const raw = localStorage.getItem('demo_users');
+        const data = raw ? JSON.parse(raw) : {};
+        return data && typeof data === 'object' ? data : {};
+      } catch {
+        return {};
+      }
+    })();
     
     const demoUsers = {
       'admin@mangoo.tech': { 
@@ -149,8 +220,12 @@ const Login = ({ onLogin, onBack }) => {
       }
     };
 
-    const user = demoUsers[normalizedEmail];
-    if (user && (password === 'admin123' || password === 'vendor123' || password === 'client123')) {
+    const fromStored = Boolean(storedUsers[normalizedEmail]);
+    const user = (fromStored ? storedUsers[normalizedEmail] : null) || demoUsers[normalizedEmail];
+    const isDemoPassword = (password === 'admin123' || password === 'vendor123' || password === 'client123');
+    const isStoredPassword = fromStored && Boolean(user?.password) && String(user.password) === password;
+
+    if (user && (fromStored ? isStoredPassword : isDemoPassword)) {
       onLogin(user);
       setError('');
     } else {
@@ -164,7 +239,7 @@ const Login = ({ onLogin, onBack }) => {
         ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
         : 'bg-gradient-to-br from-orange-50 to-green-50'
     }`}>
-      <div className={`max-w-md w-full rounded-2xl shadow-2xl p-8 transition-colors duration-300 ${
+      <div className={`max-w-md w-full rounded-2xl shadow-2xl p-6 transition-colors duration-300 max-h-[calc(100vh-2rem)] overflow-y-auto ${
         isDark 
           ? 'bg-gray-800 border border-gray-700' 
           : 'bg-white'
@@ -224,18 +299,30 @@ const Login = ({ onLogin, onBack }) => {
             }`}>
               Mot de passe
             </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={`w-full px-4 py-3 rounded-lg border transition-colors duration-300 ${
-                isDark 
-                  ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500' 
-                  : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
-              }`}
-              placeholder="admin123"
-              required
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={`w-full px-4 py-3 pr-12 rounded-lg border transition-colors duration-300 ${
+                  isDark 
+                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500' 
+                    : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+                }`}
+                placeholder="admin123"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className={`absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 rounded-md text-xs font-semibold transition-colors ${
+                  isDark ? 'text-gray-200 hover:bg-gray-600' : 'text-gray-700 hover:bg-gray-100'
+                }`}
+                aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              >
+                {showPassword ? 'Masquer' : 'Afficher'}
+              </button>
+            </div>
           </div>
 
           <button
@@ -246,16 +333,37 @@ const Login = ({ onLogin, onBack }) => {
           </button>
         </form>
 
-        <div className={`mt-6 text-center text-xs transition-colors duration-300 ${
-          isDark ? 'text-gray-400' : 'text-gray-500'
-        }`}>
-          <p className="mb-2">Comptes de démonstration :</p>
-          <div className="space-y-1">
+        <div className="mt-4 space-y-2">
+          {onCreateClient && (
+            <button
+              type="button"
+              onClick={onCreateClient}
+              className={`w-full px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                isDark ? 'bg-gray-900 text-white hover:bg-gray-700 border border-gray-700' : 'bg-white text-gray-900 hover:bg-gray-50 border border-gray-200'
+              }`}
+            >
+              Créer un compte client
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={activateVendorAccount}
+            className={`w-full px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+              isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+            }`}
+          >
+            J’ai créé une boutique (activer mon compte vendeur)
+          </button>
+        </div>
+
+        <details className={`mt-4 text-xs transition-colors duration-300 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+          <summary className="cursor-pointer select-none font-semibold">Comptes de démonstration</summary>
+          <div className="mt-2 space-y-1">
             <p><span className="font-mono">admin@mangoo.tech</span> / admin123</p>
             <p><span className="font-mono">vendor@example.com</span> / vendor123</p>
             <p><span className="font-mono">client@example.com</span> / client123</p>
           </div>
-        </div>
+        </details>
       </div>
     </div>
   );
@@ -266,22 +374,301 @@ const Register = ({ onRegister, onBack }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [shopName, setShopName] = useState('');
+  const [shopCategory, setShopCategory] = useState(() => {
+    try {
+      return localStorage.getItem('mangoo-create-category') || 'general';
+    } catch {
+      return 'general';
+    }
+  });
+  const [logoDataUrl, setLogoDataUrl] = useState('');
+  const [primaryColor, setPrimaryColor] = useState('#F97316');
+  const [secondaryColor, setSecondaryColor] = useState('#FBBF24');
+  const [createdShop, setCreatedShop] = useState(null);
+  const [paletteMode, setPaletteMode] = useState('both');
   const { isDark } = useThemeStore();
+
+  const colorPalettes = useMemo(() => [
+    { name: 'Orange Mangoo', primary: '#F97316', secondary: '#FBBF24' },
+    { name: 'Bleu Ciel', primary: '#0EA5E9', secondary: '#38BDF8' },
+    { name: 'Vert Nature', primary: '#10B981', secondary: '#34D399' },
+    { name: 'Rouge Passion', primary: '#EF4444', secondary: '#F87171' },
+    { name: 'Violet Royal', primary: '#8B5CF6', secondary: '#A78BFA' },
+    { name: 'Rose Doux', primary: '#EC4899', secondary: '#F472B6' },
+    { name: 'Marron Terre', primary: '#A16207', secondary: '#CA8A04' },
+    { name: 'Gris Moderne', primary: '#6B7280', secondary: '#9CA3AF' }
+  ], []);
+
+  const shopCategories = useMemo(() => [
+    { key: 'general', label: 'Général' },
+    { key: 'food', label: 'Alimentation' },
+    { key: 'tech', label: 'Technologie' },
+    { key: 'telephony', label: 'Téléphonie' },
+    { key: 'fashion', label: 'Mode' },
+    { key: 'beauty', label: 'Beauté' },
+    { key: 'home', label: 'Maison' },
+    { key: 'services', label: 'Services' }
+  ], []);
+
+  const slugify = useCallback((value) => {
+    return (value || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }, []);
+
+  const ensureUniqueSlug = useCallback((baseSlug, existingSlugs) => {
+    if (!baseSlug) return `boutique-${Date.now()}`;
+    if (!existingSlugs.includes(baseSlug)) return baseSlug;
+    let i = 2;
+    while (existingSlugs.includes(`${baseSlug}-${i}`)) i += 1;
+    return `${baseSlug}-${i}`;
+  }, []);
+
+  const applyPalette = useCallback((palette) => {
+    if (paletteMode === 'primary') {
+      setPrimaryColor(palette.primary);
+      return;
+    }
+    if (paletteMode === 'secondary') {
+      setSecondaryColor(palette.secondary);
+      return;
+    }
+    setPrimaryColor(palette.primary);
+    setSecondaryColor(palette.secondary);
+  }, [paletteMode]);
+
+  const handleLogoChange = useCallback(async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setLogoDataUrl(String(ev.target?.result || ''));
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  }, []);
+
+  const persistCreatedShop = useCallback((shop) => {
+    try {
+      const raw = localStorage.getItem('demo_shops');
+      const shops = raw ? JSON.parse(raw) : [];
+      const next = Array.isArray(shops) ? shops : [];
+      const idx = next.findIndex((s) => s?.slug === shop.slug);
+      if (idx >= 0) {
+        next[idx] = { ...next[idx], ...shop, updatedAt: new Date().toISOString() };
+      } else {
+        next.push({ ...shop, createdAt: new Date().toISOString() });
+      }
+      localStorage.setItem('demo_shops', JSON.stringify(next));
+    } catch {
+      localStorage.setItem('demo_shops', JSON.stringify([{ ...shop, createdAt: new Date().toISOString() }]));
+    }
+  }, []);
 
   const handleRegister = useCallback((e) => {
     e.preventDefault();
-    // Simulation d'inscription
+    const existing = (() => {
+      try {
+        const raw = localStorage.getItem('demo_shops');
+        const shops = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(shops)) return [];
+        return shops.map((s) => s?.slug).filter(Boolean);
+      } catch {
+        return [];
+      }
+    })();
+
+    const baseSlug = slugify(shopName);
+    const slug = ensureUniqueSlug(baseSlug, existing);
+    const shopUrl = `${window.location.origin}/shop/${slug}`;
+
+    const shop = {
+      id: `shop-${Date.now()}`,
+      name: shopName,
+      slug,
+      category: shopCategory,
+      ownerName: name,
+      ownerEmail: email,
+      ownerPassword: password,
+      logoDataUrl,
+      primaryColor,
+      secondaryColor,
+      shopUrl
+    };
+
+    persistCreatedShop(shop);
+
+    try {
+      const normalizedEmail = String(email || '').trim().toLowerCase();
+      if (normalizedEmail) {
+        const rawUsers = localStorage.getItem('demo_users');
+        const data = rawUsers ? JSON.parse(rawUsers) : {};
+        const map = data && typeof data === 'object' ? data : {};
+        map[normalizedEmail] = {
+          id: Date.now(),
+          name,
+          email,
+          role: 'vendor',
+          shopName,
+          avatar: '🏪',
+          password
+        };
+        localStorage.setItem('demo_users', JSON.stringify(map));
+      }
+    } catch {
+      // ignore
+    }
+
+    setCreatedShop(shop);
+    try {
+      localStorage.removeItem('mangoo-create-category');
+    } catch {
+      // ignore
+    }
+  }, [email, ensureUniqueSlug, logoDataUrl, name, password, persistCreatedShop, primaryColor, secondaryColor, shopCategory, shopName, slugify]);
+
+  const finalizeRegister = useCallback(() => {
     const newUser = {
       id: Date.now(),
-      name: name,
-      email: email,
+      name,
+      email,
       role: 'vendor',
-      shopName: shopName,
-      avatar: '🏪'
+      shopName,
+      avatar: '🏪',
+      password
     };
+
+    try {
+      const raw = localStorage.getItem('demo_users');
+      const data = raw ? JSON.parse(raw) : {};
+      const map = data && typeof data === 'object' ? data : {};
+      map[String(email || '').trim().toLowerCase()] = newUser;
+      localStorage.setItem('demo_users', JSON.stringify(map));
+    } catch {
+      // ignore
+    }
     onRegister(newUser);
-  }, [name, email, shopName, onRegister]);
+  }, [email, name, onRegister, password, shopName]);
+
+  if (createdShop) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 ${
+        isDark 
+          ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
+          : 'bg-gradient-to-br from-orange-50 to-green-50'
+      }`}>
+        <div className={`max-w-2xl w-full rounded-2xl shadow-2xl p-6 transition-colors duration-300 ${
+          isDark 
+            ? 'bg-gray-800 border border-gray-700' 
+            : 'bg-white'
+        }`}>
+          <div className="text-center mb-6">
+            <div className="text-5xl mb-3">✅</div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-green-600 bg-clip-text text-transparent">
+              Boutique créée
+            </h1>
+            <p className={`text-sm mt-2 transition-colors duration-300 ${
+              isDark ? 'text-gray-400' : 'text-gray-600'
+            }`}>
+              Votre lien et votre QR Code sont prêts.
+            </p>
+          </div>
+
+          <div className={`rounded-xl p-4 border transition-colors duration-300 ${
+            isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'
+          }`}>
+            <div className="flex flex-col md:flex-row gap-4 items-center">
+              <div className="w-full md:w-2/3">
+                <div className="flex items-center gap-3 mb-3">
+                  {createdShop.logoDataUrl ? (
+                    <img src={createdShop.logoDataUrl} alt="Logo" className="w-12 h-12 rounded-lg object-cover" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold" style={{ backgroundColor: createdShop.primaryColor }}>
+                      {createdShop.name?.charAt(0)?.toUpperCase() || 'B'}
+                    </div>
+                  )}
+                  <div>
+                    <div className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{createdShop.name}</div>
+                    <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{createdShop.slug}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex-1">
+                    <div className={`text-xs mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Lien boutique</div>
+                    <div className={`text-sm break-all ${isDark ? 'text-white' : 'text-gray-900'}`}>{createdShop.shopUrl}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard.writeText(createdShop.shopUrl)}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white border border-gray-200 hover:bg-gray-100'
+                    }`}
+                  >
+                    Copier
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <a
+                    href={createdShop.shopUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex-1 bg-gradient-to-r from-orange-500 to-green-600 text-white py-2 px-4 rounded-lg font-medium text-center hover:from-orange-600 hover:to-green-700 transition-all duration-300"
+                  >
+                    Ouvrir la boutique
+                  </a>
+                  <button
+                    type="button"
+                    onClick={finalizeRegister}
+                    className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all duration-300 ${
+                      isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-900 text-white hover:bg-gray-800'
+                    }`}
+                  >
+                    Accéder au tableau de bord
+                  </button>
+                </div>
+              </div>
+
+              <div className="w-full md:w-1/3 flex items-center justify-center">
+                <div className={`p-3 rounded-xl ${isDark ? 'bg-white' : 'bg-white'}`}>
+                  <QRCodeCanvas value={createdShop.shopUrl} size={160} includeMargin />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 flex gap-2 justify-between">
+            <button
+              type="button"
+              onClick={() => setCreatedShop(null)}
+              className={`text-sm font-medium transition-colors ${
+                isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900'
+              }`}
+            >
+              Modifier les informations
+            </button>
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className={`text-sm font-medium transition-colors ${
+                  isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900'
+                }`}
+              >
+                Retour accueil
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 ${
@@ -289,7 +676,7 @@ const Register = ({ onRegister, onBack }) => {
         ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
         : 'bg-gradient-to-br from-orange-50 to-green-50'
     }`}>
-      <div className={`max-w-xl w-full rounded-2xl shadow-2xl p-6 transition-colors duration-300 ${
+      <div className={`max-w-4xl w-full rounded-2xl shadow-2xl p-6 transition-colors duration-300 ${
         isDark 
           ? 'bg-gray-800 border border-gray-700' 
           : 'bg-white'
@@ -297,7 +684,7 @@ const Register = ({ onRegister, onBack }) => {
         {onBack && (
           <button 
             onClick={onBack}
-            className={`mb-2 flex items-center gap-2 text-sm font-medium transition-colors duration-300 hover:text-orange-500 ${
+            className={`mb-3 flex items-center gap-2 text-sm font-medium transition-colors duration-300 hover:text-orange-500 ${
               isDark ? 'text-gray-400' : 'text-gray-600'
             }`}
           >
@@ -306,104 +693,483 @@ const Register = ({ onRegister, onBack }) => {
         )}
         <div className="text-center mb-4">
           <div className="text-4xl mb-2 animate-bounce">🏪</div>
-          <h1 className={`text-2xl font-bold bg-gradient-to-r from-orange-500 to-green-600 bg-clip-text text-transparent`}>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-green-600 bg-clip-text text-transparent">
             Créer ma boutique
           </h1>
           <p className={`text-xs mt-1 transition-colors duration-300 ${
             isDark ? 'text-gray-400' : 'text-gray-600'
           }`}>
-            Rejoignez MangooTech et vendez en ligne
+            Logo, couleurs, lien et QR Code inclus
           </p>
         </div>
 
-        <form onSubmit={handleRegister} className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={`block text-xs font-medium mb-1 transition-colors duration-300 ${
-                isDark ? 'text-gray-300' : 'text-gray-700'
-              }`}>
-                Nom complet
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors duration-300 ${
-                  isDark 
-                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500' 
-                    : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
-                }`}
-                placeholder="Jean Dupont"
-                required
-              />
+        <form onSubmit={handleRegister} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={`block text-xs font-medium mb-1 transition-colors duration-300 ${
+                  isDark ? 'text-gray-300' : 'text-gray-700'
+                }`}>
+                  Nom complet
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors duration-300 ${
+                    isDark 
+                      ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500' 
+                      : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+                  }`}
+                  placeholder="Jean Dupont"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className={`block text-xs font-medium mb-1 transition-colors duration-300 ${
+                  isDark ? 'text-gray-300' : 'text-gray-700'
+                }`}>
+                  Nom de la boutique
+                </label>
+                <input
+                  type="text"
+                  value={shopName}
+                  onChange={(e) => setShopName(e.target.value)}
+                  className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors duration-300 ${
+                    isDark 
+                      ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500' 
+                      : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+                  }`}
+                  placeholder="Ma Super Boutique"
+                  required
+                />
+                <div className={`text-[11px] mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Lien: {window.location.origin}/shop/{slugify(shopName) || 'ma-boutique'}
+                </div>
+              </div>
             </div>
 
             <div>
               <label className={`block text-xs font-medium mb-1 transition-colors duration-300 ${
                 isDark ? 'text-gray-300' : 'text-gray-700'
               }`}>
-                Nom de la boutique
+                Catégorie
+              </label>
+              <select
+                value={shopCategory}
+                onChange={(e) => setShopCategory(e.target.value)}
+                className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors duration-300 ${
+                  isDark
+                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500'
+                    : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+                }`}
+              >
+                {shopCategories.map((c) => (
+                  <option key={c.key} value={c.key}>{c.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className={`block text-xs font-medium mb-1 transition-colors duration-300 ${
+                isDark ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                Email vendeur
               </label>
               <input
-                type="text"
-                value={shopName}
-                onChange={(e) => setShopName(e.target.value)}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors duration-300 ${
                   isDark 
                     ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500' 
                     : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
                 }`}
-                placeholder="Ma Super Boutique"
+                placeholder="jean@example.com"
                 required
               />
+              <div className={`text-[11px] mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                Sert à activer le mode vendeur et gérer vos produits.
+              </div>
+            </div>
+
+            <div>
+              <label className={`block text-xs font-medium mb-1 transition-colors duration-300 ${
+                isDark ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                Mot de passe
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={`w-full px-3 py-2 pr-20 text-sm rounded-lg border transition-colors duration-300 ${
+                    isDark 
+                      ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500' 
+                      : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+                  }`}
+                  placeholder="••••••••"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className={`absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 rounded-md text-xs font-semibold transition-colors ${
+                    isDark ? 'text-gray-200 hover:bg-gray-600' : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                >
+                  {showPassword ? 'Masquer' : 'Afficher'}
+                </button>
+              </div>
             </div>
           </div>
 
-          <div>
-            <label className={`block text-xs font-medium mb-1 transition-colors duration-300 ${
-              isDark ? 'text-gray-300' : 'text-gray-700'
+          <div className="space-y-3">
+            <div className={`rounded-xl p-3 border transition-colors duration-300 ${
+              isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'
             }`}>
+              <div className={`text-xs font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                Logo & couleurs
+              </div>
+
+              <div className="flex items-center gap-3 mb-3">
+                {logoDataUrl ? (
+                  <div className="relative">
+                    <img src={logoDataUrl} alt="Logo" className="w-12 h-12 rounded-lg object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setLogoDataUrl('')}
+                      className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white text-xs"
+                      aria-label="Supprimer le logo"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold" style={{ backgroundColor: primaryColor }}>
+                    {shopName?.charAt(0)?.toUpperCase() || 'B'}
+                  </div>
+                )}
+
+                <label className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
+                  isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white border border-gray-200 hover:bg-gray-100'
+                }`}>
+                  Choisir un logo
+                  <input type="file" accept="image/*" onChange={handleLogoChange} className="hidden" />
+                </label>
+              </div>
+
+              <div className="flex items-center justify-between mb-2">
+                <div className={`text-[11px] font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Palettes
+                </div>
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setPaletteMode('both')}
+                    className={`px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${
+                      paletteMode === 'both'
+                        ? (isDark ? 'bg-white text-gray-900' : 'bg-gray-900 text-white')
+                        : (isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white border border-gray-200 hover:bg-gray-100')
+                    }`}
+                  >
+                    2 couleurs
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaletteMode('primary')}
+                    className={`px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${
+                      paletteMode === 'primary'
+                        ? (isDark ? 'bg-white text-gray-900' : 'bg-gray-900 text-white')
+                        : (isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white border border-gray-200 hover:bg-gray-100')
+                    }`}
+                  >
+                    Primaire
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaletteMode('secondary')}
+                    className={`px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${
+                      paletteMode === 'secondary'
+                        ? (isDark ? 'bg-white text-gray-900' : 'bg-gray-900 text-white')
+                        : (isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white border border-gray-200 hover:bg-gray-100')
+                    }`}
+                  >
+                    Secondaire
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-8 gap-2 mb-3">
+                {colorPalettes.map((p) => (
+                  <button
+                    key={p.name}
+                    type="button"
+                    onClick={() => applyPalette(p)}
+                    className={`h-8 rounded-lg border transition-all ${
+                      primaryColor === p.primary && secondaryColor === p.secondary
+                        ? (isDark ? 'border-white' : 'border-gray-900')
+                        : (isDark ? 'border-gray-700' : 'border-gray-200')
+                    }`}
+                    title={p.name}
+                    style={{ background: `linear-gradient(90deg, ${p.primary}, ${p.secondary})` }}
+                  />
+                ))}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={`block text-[11px] mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Primaire</label>
+                  <div className="flex gap-2 items-center">
+                    <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-10 h-9 rounded" />
+                    <input
+                      type="text"
+                      value={primaryColor}
+                      onChange={(e) => setPrimaryColor(e.target.value)}
+                      className={`flex-1 px-2 py-2 text-sm rounded-lg border transition-colors duration-300 ${
+                        isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className={`block text-[11px] mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Secondaire</label>
+                  <div className="flex gap-2 items-center">
+                    <input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-10 h-9 rounded" />
+                    <input
+                      type="text"
+                      value={secondaryColor}
+                      onChange={(e) => setSecondaryColor(e.target.value)}
+                      className={`flex-1 px-2 py-2 text-sm rounded-lg border transition-colors duration-300 ${
+                        isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-gradient-to-r from-orange-500 to-green-600 text-white py-2 px-4 rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105"
+            >
+              Créer ma boutique
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const ClientRegister = ({ onRegister, onBack }) => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [error, setError] = useState('');
+  const { isDark } = useThemeStore();
+
+  const handleSubmit = useCallback((e) => {
+    e.preventDefault();
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    if (!normalizedEmail) {
+      setError('Entrez votre email');
+      return;
+    }
+    if (!password) {
+      setError('Entrez votre mot de passe');
+      return;
+    }
+
+    const exists = (() => {
+      try {
+        const raw = localStorage.getItem('demo_users');
+        const data = raw ? JSON.parse(raw) : {};
+        const map = data && typeof data === 'object' ? data : {};
+        return Boolean(map[normalizedEmail]);
+      } catch {
+        return false;
+      }
+    })();
+
+    if (exists) {
+      setError('Un compte existe déjà avec cet email');
+      return;
+    }
+
+    const newUser = {
+      id: Date.now(),
+      name: name || normalizedEmail.split('@')[0],
+      email: normalizedEmail,
+      role: 'client',
+      avatar: '🧑‍💻',
+      password,
+      phone,
+      address
+    };
+
+    try {
+      const raw = localStorage.getItem('demo_users');
+      const data = raw ? JSON.parse(raw) : {};
+      const map = data && typeof data === 'object' ? data : {};
+      map[normalizedEmail] = newUser;
+      localStorage.setItem('demo_users', JSON.stringify(map));
+    } catch {
+      // ignore
+    }
+
+    setError('');
+    onRegister(newUser);
+  }, [address, email, name, onRegister, password, phone]);
+
+  return (
+    <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 ${
+      isDark
+        ? 'bg-gradient-to-br from-gray-900 to-gray-800'
+        : 'bg-gradient-to-br from-orange-50 to-green-50'
+    }`}>
+      <div className={`max-w-md w-full rounded-2xl shadow-2xl p-6 transition-colors duration-300 max-h-[calc(100vh-2rem)] overflow-y-auto ${
+        isDark
+          ? 'bg-gray-800 border border-gray-700'
+          : 'bg-white'
+      }`}>
+        {onBack && (
+          <button
+            onClick={onBack}
+            className={`mb-6 flex items-center gap-2 text-sm font-medium transition-colors duration-300 hover:text-orange-500 ${
+              isDark ? 'text-gray-400' : 'text-gray-600'
+            }`}
+          >
+            ← Retour
+          </button>
+        )}
+
+        <div className="text-center mb-6">
+          <div className="text-6xl mb-4">🧑‍💻</div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-green-600 bg-clip-text text-transparent">MangooTech</h1>
+          <p className={`text-sm mt-2 transition-colors duration-300 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            Créez votre compte client
+          </p>
+        </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className={`block text-sm font-medium mb-2 transition-colors duration-300 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+              Nom complet
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className={`w-full px-4 py-3 rounded-lg border transition-colors duration-300 ${
+                isDark
+                  ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500'
+                  : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+              }`}
+              placeholder="Votre nom"
+              required
+            />
+          </div>
+
+          <div>
+            <label className={`block text-sm font-medium mb-2 transition-colors duration-300 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
               Email
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors duration-300 ${
-                isDark 
-                  ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500' 
+              className={`w-full px-4 py-3 rounded-lg border transition-colors duration-300 ${
+                isDark
+                  ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500'
                   : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
               }`}
-              placeholder="jean@example.com"
+              placeholder="vous@exemple.com"
               required
             />
           </div>
 
           <div>
-            <label className={`block text-xs font-medium mb-1 transition-colors duration-300 ${
-              isDark ? 'text-gray-300' : 'text-gray-700'
-            }`}>
+            <label className={`block text-sm font-medium mb-2 transition-colors duration-300 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
               Mot de passe
             </label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={`w-full px-4 py-3 pr-12 rounded-lg border transition-colors duration-300 ${
+                  isDark
+                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500'
+                    : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+                }`}
+                placeholder="••••••••"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className={`absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 rounded-md text-xs font-semibold transition-colors ${
+                  isDark ? 'text-gray-200 hover:bg-gray-600' : 'text-gray-700 hover:bg-gray-100'
+                }`}
+                aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              >
+                {showPassword ? 'Masquer' : 'Afficher'}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className={`block text-sm font-medium mb-2 transition-colors duration-300 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+              Téléphone
+            </label>
             <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors duration-300 ${
-                isDark 
-                  ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500' 
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className={`w-full px-4 py-3 rounded-lg border transition-colors duration-300 ${
+                isDark
+                  ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500'
                   : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
               }`}
-              placeholder="••••••••"
-              required
+              placeholder="+33 6 12 34 56 78"
+            />
+          </div>
+
+          <div>
+            <label className={`block text-sm font-medium mb-2 transition-colors duration-300 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+              Adresse
+            </label>
+            <input
+              type="text"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              className={`w-full px-4 py-3 rounded-lg border transition-colors duration-300 ${
+                isDark
+                  ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500'
+                  : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+              }`}
+              placeholder="Votre adresse"
             />
           </div>
 
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-orange-500 to-green-600 text-white py-2 px-4 rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105"
+            className="w-full bg-gradient-to-r from-orange-500 to-green-600 text-white py-3 px-4 rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105"
           >
-            Créer ma boutique
+            Créer mon compte
           </button>
         </form>
       </div>
@@ -412,13 +1178,34 @@ const Register = ({ onRegister, onBack }) => {
 };
 
 // Interface Vendeur optimisée
-const VendorDashboard = () => {
+const VendorDashboard = ({ user }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [VendorStats, setVendorStats] = useState(null);
   const [VendorStockManager, setVendorStockManager] = useState(null);
   const [VendorOrderHistory, setVendorOrderHistory] = useState(null);
   const [VendorNotifications, setVendorNotifications] = useState(null);
+  const [VendorProductManager, setVendorProductManager] = useState(null);
+  const [vendorShops, setVendorShops] = useState([]);
+  const [editingShopSlug, setEditingShopSlug] = useState('');
+  const [editName, setEditName] = useState('');
+  const [editOwnerEmail, setEditOwnerEmail] = useState('');
+  const [editCategory, setEditCategory] = useState('general');
+  const [editLogoDataUrl, setEditLogoDataUrl] = useState('');
+  const [editPrimaryColor, setEditPrimaryColor] = useState('#F97316');
+  const [editSecondaryColor, setEditSecondaryColor] = useState('#FBBF24');
+  const [showShopEditor, setShowShopEditor] = useState(false);
   const { isDark } = useThemeStore();
+
+  const shopCategories = useMemo(() => [
+    { key: 'general', label: 'Général' },
+    { key: 'food', label: 'Alimentation' },
+    { key: 'tech', label: 'Technologie' },
+    { key: 'telephony', label: 'Téléphonie' },
+    { key: 'fashion', label: 'Mode' },
+    { key: 'beauty', label: 'Beauté' },
+    { key: 'home', label: 'Maison' },
+    { key: 'services', label: 'Services' }
+  ], []);
 
   // Chargement dynamique des composants
   useEffect(() => {
@@ -435,6 +1222,9 @@ const VendorDashboard = () => {
         
         const notificationsModule = await import('./components/VendorNotifications');
         setVendorNotifications(() => notificationsModule.default);
+
+        const productsModule = await import('./components/VendorProductManager');
+        setVendorProductManager(() => productsModule.default);
       } catch (error) {
         console.error('Erreur lors du chargement des composants:', error);
       }
@@ -443,11 +1233,85 @@ const VendorDashboard = () => {
     loadComponents();
   }, []);
 
+  const loadVendorShops = useCallback(() => {
+    try {
+      const raw = localStorage.getItem('demo_shops');
+      const all = raw ? JSON.parse(raw) : [];
+      const list = Array.isArray(all) ? all : [];
+      const email = user?.email;
+      const filtered = email ? list.filter((s) => s?.ownerEmail === email) : list;
+      setVendorShops(filtered);
+    } catch {
+      setVendorShops([]);
+    }
+  }, [user?.email]);
+
+  const openShopEditor = useCallback((shop) => {
+    setEditingShopSlug(shop?.slug || '');
+    setEditName(shop?.name || '');
+    setEditOwnerEmail(shop?.ownerEmail || shop?.owner_email || user?.email || '');
+    setEditCategory(shop?.category || 'general');
+    setEditLogoDataUrl(shop?.logoDataUrl || '');
+    setEditPrimaryColor(shop?.primaryColor || '#F97316');
+    setEditSecondaryColor(shop?.secondaryColor || '#FBBF24');
+    setShowShopEditor(true);
+  }, [user?.email]);
+
+  const handleEditLogoChange = useCallback((e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setEditLogoDataUrl(String(ev.target?.result || ''));
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  }, []);
+
+  const saveShopEdits = useCallback(() => {
+    const slug = String(editingShopSlug || '').trim();
+    if (!slug) return;
+    try {
+      const raw = localStorage.getItem('demo_shops');
+      const shops = raw ? JSON.parse(raw) : [];
+      const list = Array.isArray(shops) ? shops : [];
+      const next = list.map((s) => {
+        if (s?.slug !== slug) return s;
+        return {
+          ...s,
+          name: editName,
+          ownerEmail: editOwnerEmail,
+          category: editCategory,
+          logoDataUrl: editLogoDataUrl,
+          primaryColor: editPrimaryColor,
+          secondaryColor: editSecondaryColor,
+          updatedAt: new Date().toISOString()
+        };
+      });
+      localStorage.setItem('demo_shops', JSON.stringify(next));
+      setShowShopEditor(false);
+      loadVendorShops();
+    } catch {
+      setShowShopEditor(false);
+    }
+  }, [editCategory, editLogoDataUrl, editName, editOwnerEmail, editPrimaryColor, editSecondaryColor, editingShopSlug, loadVendorShops]);
+
+  useEffect(() => {
+    loadVendorShops();
+    const onStorage = (e) => {
+      if (e.key === 'demo_shops') loadVendorShops();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [loadVendorShops]);
+
   const tabs = [
     { id: 'overview', name: 'Vue d\'ensemble', icon: '📊' },
     { id: 'stock', name: 'Gestion Stock', icon: '📦' },
+    { id: 'products', name: 'Produits', icon: '🧾' },
     { id: 'orders', name: 'Commandes', icon: '🛒' },
-    { id: 'notifications', name: 'Notifications', icon: '🔔' }
+    { id: 'notifications', name: 'Notifications', icon: '🔔' },
+    { id: 'shops', name: 'Mes boutiques', icon: '🏪' }
   ];
 
   const renderTabContent = useCallback(() => {
@@ -456,14 +1320,244 @@ const VendorDashboard = () => {
         return VendorStats ? <VendorStats vendorId="vendor-demo" /> : <div>Chargement...</div>;
       case 'stock':
         return VendorStockManager ? <VendorStockManager vendorId="vendor-demo" /> : <div>Chargement...</div>;
+      case 'products':
+        return VendorProductManager
+          ? <VendorProductManager shops={vendorShops} defaultShopSlug={vendorShops[0]?.slug || ''} />
+          : <div>Chargement...</div>;
       case 'orders':
         return VendorOrderHistory ? <VendorOrderHistory vendorId="vendor-demo" /> : <div>Chargement...</div>;
       case 'notifications':
         return VendorNotifications ? <VendorNotifications vendorId="vendor-demo" /> : <div>Chargement...</div>;
+      case 'shops':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Mes boutiques</div>
+                <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm`}>{vendorShops.length} boutique(s) enregistrée(s)</div>
+              </div>
+              <button
+                type="button"
+                onClick={loadVendorShops}
+                className={`${isDark ? 'bg-gray-800 text-white hover:bg-gray-700' : 'bg-white border border-gray-200 hover:bg-gray-50'} px-4 py-2 rounded-lg text-sm font-medium transition-colors`}
+              >
+                Actualiser
+              </button>
+            </div>
+
+            {vendorShops.length === 0 ? (
+              <div className={`${isDark ? 'bg-gray-800 border-gray-700 text-gray-300' : 'bg-white border-gray-200 text-gray-700'} border rounded-xl p-6 text-center`}>
+                <div className="text-4xl mb-2">🏪</div>
+                <div className="font-semibold">Aucune boutique trouvée</div>
+                <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Créez une boutique depuis « Créer ma boutique » sur l’accueil.</div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {vendorShops.map((s) => {
+                  const url = s.shopUrl || `${window.location.origin}/shop/${s.slug}`;
+                  return (
+                    <div
+                      key={s.id || s.slug}
+                      className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl p-4`}
+                      style={{
+                        background: `linear-gradient(135deg, ${s.primaryColor || '#F97316'}15, ${s.secondaryColor || '#FBBF24'}15)`
+                      }}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          {s.logoDataUrl ? (
+                            <img src={s.logoDataUrl} alt="Logo" className="w-10 h-10 rounded-lg object-cover" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold" style={{ backgroundColor: s.primaryColor || '#F97316' }}>
+                              {(s.name || 'B').charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <div>
+                            <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>{s.name}</div>
+                            <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-xs`}>{s.slug}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openShopEditor(s)}
+                            className={`${isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white border border-gray-200 hover:bg-gray-50'} px-3 py-2 rounded-lg text-sm font-medium transition-colors`}
+                          >
+                            Modifier
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => navigator.clipboard.writeText(url)}
+                            className={`${isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white border border-gray-200 hover:bg-gray-50'} px-3 py-2 rounded-lg text-sm font-medium transition-colors`}
+                          >
+                            Copier
+                          </button>
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:from-orange-600 hover:to-green-700 transition-all"
+                          >
+                            Ouvrir
+                          </a>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex items-center justify-between gap-3">
+                        <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm break-all`}>{url}</div>
+                        <div className="bg-white rounded-lg p-2">
+                          <QRCodeCanvas value={url} size={72} includeMargin />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {showShopEditor && (
+              <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+                <div className="w-full max-w-2xl rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-2xl">
+                  <div className="p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+                    <div className="font-semibold text-gray-900 dark:text-white">Modifier ma boutique</div>
+                    <button
+                      type="button"
+                      onClick={() => setShowShopEditor(false)}
+                      className="px-3 py-2 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    >
+                      Fermer
+                    </button>
+                  </div>
+                  <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Nom de la boutique</label>
+                      <input
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Email vendeur</label>
+                      <input
+                        value={editOwnerEmail}
+                        onChange={(e) => setEditOwnerEmail(e.target.value)}
+                        type="email"
+                        className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                      />
+                      <div className="text-[11px] mt-1 text-gray-500 dark:text-gray-400">Cet email sert à activer le mode vendeur sur la boutique.</div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Catégorie</label>
+                      <select
+                        value={editCategory}
+                        onChange={(e) => setEditCategory(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                      >
+                        {shopCategories.map((c) => (
+                          <option key={c.key} value={c.key}>{c.label}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Logo</div>
+                      <div className="flex items-center gap-3">
+                        {editLogoDataUrl ? (
+                          <img src={editLogoDataUrl} alt="Logo" className="w-12 h-12 rounded-lg object-cover" />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold" style={{ backgroundColor: editPrimaryColor }}>
+                            {(editName || 'B').charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <label className={`${isDark ? 'bg-gray-800 text-white hover:bg-gray-700 border border-gray-700' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'} px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors`}>
+                          Changer le logo
+                          <input type="file" accept="image/*" onChange={handleEditLogoChange} className="hidden" />
+                        </label>
+                        {editLogoDataUrl && (
+                          <button
+                            type="button"
+                            onClick={() => setEditLogoDataUrl('')}
+                            className="px-3 py-2 rounded-lg text-sm font-medium bg-red-50 text-red-700 hover:bg-red-100"
+                          >
+                            Supprimer
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Couleur primaire</label>
+                      <div className="flex gap-2 items-center">
+                        <input type="color" value={editPrimaryColor} onChange={(e) => setEditPrimaryColor(e.target.value)} className="w-10 h-9 rounded" />
+                        <input
+                          value={editPrimaryColor}
+                          onChange={(e) => setEditPrimaryColor(e.target.value)}
+                          className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Couleur secondaire</label>
+                      <div className="flex gap-2 items-center">
+                        <input type="color" value={editSecondaryColor} onChange={(e) => setEditSecondaryColor(e.target.value)} className="w-10 h-9 rounded" />
+                        <input
+                          value={editSecondaryColor}
+                          onChange={(e) => setEditSecondaryColor(e.target.value)}
+                          className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 pt-0 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowShopEditor(false)}
+                      className={`${isDark ? 'bg-gray-800 text-white border border-gray-700 hover:bg-gray-700' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'} px-4 py-2 rounded-xl text-sm font-semibold transition-colors`}
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="button"
+                      onClick={saveShopEdits}
+                      className="px-4 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-orange-500 to-green-600 text-white"
+                    >
+                      Enregistrer
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
       default:
         return VendorStats ? <VendorStats vendorId="vendor-demo" /> : <div>Chargement...</div>;
     }
-  }, [activeTab, VendorStats, VendorStockManager, VendorOrderHistory, VendorNotifications]);
+  }, [
+    VendorNotifications,
+    VendorOrderHistory,
+    VendorProductManager,
+    VendorStats,
+    VendorStockManager,
+    activeTab,
+    editCategory,
+    editLogoDataUrl,
+    editName,
+    editOwnerEmail,
+    editPrimaryColor,
+    editSecondaryColor,
+    handleEditLogoChange,
+    isDark,
+    loadVendorShops,
+    openShopEditor,
+    saveShopEdits,
+    shopCategories,
+    showShopEditor,
+    vendorShops
+  ]);
 
   return (
     <div className="p-6">
@@ -499,12 +1593,42 @@ const VendorDashboard = () => {
   );
 };
 
+const CLIENT_ORDERS_KEY = 'demo_client_orders';
+
+const readClientOrdersMap = () => {
+  try {
+    const raw = localStorage.getItem(CLIENT_ORDERS_KEY);
+    const data = raw ? JSON.parse(raw) : {};
+    return data && typeof data === 'object' ? data : {};
+  } catch {
+    return {};
+  }
+};
+
+const writeClientOrdersMap = (next) => {
+  localStorage.setItem(CLIENT_ORDERS_KEY, JSON.stringify(next));
+};
+
+const upsertClientOrder = (email, order) => {
+  const key = String(email || '').trim().toLowerCase();
+  if (!key) return;
+  try {
+    const map = readClientOrdersMap();
+    const list = Array.isArray(map[key]) ? map[key] : [];
+    map[key] = [order, ...list];
+    writeClientOrdersMap(map);
+  } catch {
+    // ignore
+  }
+};
+
 // Interface Client optimisée
-const ClientMarketplace = () => {
+const ClientMarketplace = ({ user }) => {
   const { products, cart, wishlist, searchQuery, selectedCategory, priceRange, selectedRating, selectedSort } = useStore();
   const [showPayment, setShowPayment] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const { isDark } = useThemeStore();
+  const email = String(user?.email || '').trim().toLowerCase();
 
   const categories = useMemo(() => [
     { id: 'all', name: 'Tous', icon: '🛍️' },
@@ -596,10 +1720,38 @@ const ClientMarketplace = () => {
   }, [searchQuery, selectedCategory, priceRange, selectedRating, selectedSort]);
 
   const handlePaymentSuccess = useCallback((transaction) => {
-    alert(`Paiement réussi! Transaction ID: ${transaction.id}`);
+    const items = cart.map((item) => {
+      const unit = parseFloat(String(item.price || '').replace(/[^\d]/g, '')) || 0;
+      return {
+        productId: item.id,
+        name: item.name,
+        qty: item.quantity,
+        unitPriceCents: Math.round(unit * 100),
+        currency: 'XOF'
+      };
+    });
+
+    const order = {
+      id: `order-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      status: 'paid',
+      totalCents: Math.round(cartTotal * 100),
+      currency: 'XOF',
+      items,
+      payment: {
+        id: transaction?.id || '',
+        provider: transaction?.provider || 'demo'
+      }
+    };
+
+    if (email) {
+      upsertClientOrder(email, order);
+    }
+
+    toast.success('Paiement réussi');
     useStore.getState().setCart([]);
     setShowPayment(false);
-  }, []);
+  }, [cart, cartTotal, email]);
 
   const handlePaymentError = useCallback((error) => {
     alert(`Erreur de paiement: ${error.message}`);
@@ -722,6 +1874,7 @@ const ClientMarketplace = () => {
                   amount={cartTotal}
                   currency="XOF"
                   country="CI"
+                  userId={user?.id || user?.email || 'demo-user'}
                   onPaymentSuccess={handlePaymentSuccess}
                   onPaymentError={handlePaymentError}
                 />
@@ -868,6 +2021,1117 @@ const ClientMarketplace = () => {
   );
 };
 
+const ShopsDirectory = () => {
+  const { vendors } = useStore();
+  const { isDark } = useThemeStore();
+  const navigate = useNavigate();
+  const [demoCreatedShops, setDemoCreatedShops] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState('');
+  const listRef = useRef(null);
+
+  const shopCategories = useMemo(() => [
+    { key: 'general', label: 'Général' },
+    { key: 'food', label: 'Alimentation' },
+    { key: 'tech', label: 'Technologie' },
+    { key: 'telephony', label: 'Téléphonie' },
+    { key: 'fashion', label: 'Mode' },
+    { key: 'beauty', label: 'Beauté' },
+    { key: 'home', label: 'Maison' },
+    { key: 'services', label: 'Services' }
+  ], []);
+
+  const loadCreatedShops = useCallback(() => {
+    try {
+      const raw = localStorage.getItem('demo_shops');
+      const shops = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(shops)) {
+        setDemoCreatedShops([]);
+        return;
+      }
+      setDemoCreatedShops(
+        shops
+          .filter((s) => s?.slug)
+          .map((s) => ({
+            id: s.id || s.slug,
+            name: s.name || 'Boutique',
+            slug: s.slug,
+            category: s.category || 'general',
+            primaryColor: s.primaryColor || '#F97316',
+            secondaryColor: s.secondaryColor || '#FBBF24',
+            logoDataUrl: s.logoDataUrl || '',
+            source: 'created'
+          }))
+      );
+    } catch {
+      setDemoCreatedShops([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCreatedShops();
+    const onStorage = (e) => {
+      if (e.key === 'demo_shops') loadCreatedShops();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [loadCreatedShops]);
+
+  useEffect(() => {
+    const fromQuery = searchParams.get('categorie') || searchParams.get('category');
+    const q = searchParams.get('q') || '';
+    if (fromQuery) setSelectedCategory(fromQuery);
+    setSearchTerm(q);
+  }, [searchParams]);
+
+  const directory = useMemo(() => {
+    const base = [{
+      id: 'boutique-demo',
+      name: 'Boutique Demo',
+      slug: 'boutique-demo',
+      category: 'general',
+      primaryColor: '#F97316',
+      secondaryColor: '#10B981',
+      logoDataUrl: '',
+      source: 'demo'
+    }];
+
+    const normalizeVendorCategory = (raw) => {
+      const c = String(raw || 'general');
+      if (c === 'electronics') return 'tech';
+      return c;
+    };
+
+    const fromVendors = (vendors || []).map((v) => ({
+      id: `vendor-${v.id}`,
+      name: v.name,
+      slug: 'boutique-demo',
+      category: normalizeVendorCategory(v.category) || 'general',
+      primaryColor: '#0EA5E9',
+      secondaryColor: '#38BDF8',
+      logoDataUrl: '',
+      source: 'vendor'
+    }));
+
+    const bySlug = new Map();
+    [...base, ...demoCreatedShops, ...fromVendors].forEach((s) => {
+      const key = `${s.slug}-${s.name}`;
+      if (!bySlug.has(key)) bySlug.set(key, s);
+    });
+    return Array.from(bySlug.values());
+  }, [demoCreatedShops, vendors]);
+
+  const goToShop = useCallback((slug) => {
+    try {
+      localStorage.setItem('mangoo-last-view', 'shops');
+    } catch {
+      // ignore
+    }
+    navigate(`/shop/${slug}`);
+  }, [navigate]);
+
+  const scrollToList = useCallback(() => {
+    requestAnimationFrame(() => {
+      listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }, []);
+
+  const requestCreateShop = useCallback((category) => {
+    try {
+      localStorage.setItem('mangoo-create-category', category || 'general');
+      localStorage.setItem('mangoo-last-view', 'landing');
+      localStorage.setItem('mangoo-open-register', '1');
+    } catch {
+      // ignore
+    }
+    navigate('/');
+    window.dispatchEvent(new Event('mangoo-open-register'));
+  }, [navigate]);
+
+  const categoryLabel = useCallback((category) => {
+    const key = String(category || 'general');
+    const found = shopCategories.find((c) => c.key === key);
+    return found ? found.label : (key.charAt(0).toUpperCase() + key.slice(1));
+  }, [shopCategories]);
+
+  const categories = useMemo(() => {
+    return ['all', ...shopCategories.map((c) => c.key)];
+  }, [shopCategories]);
+
+  const visibleShops = useMemo(() => {
+    const normalize = (value) => String(value || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+    const term = normalize(searchTerm).trim();
+    const byCategory = selectedCategory === 'all'
+      ? directory
+      : directory.filter((s) => (s?.category || 'general') === selectedCategory);
+
+    if (!term) return byCategory;
+    return byCategory.filter((s) => {
+      const name = normalize(s?.name);
+      const slug = normalize(s?.slug);
+      return name.includes(term) || slug.includes(term);
+    });
+  }, [directory, searchTerm, selectedCategory]);
+
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    if (selectedCategory === 'all') {
+      next.delete('category');
+      next.delete('categorie');
+    } else {
+      next.set('categorie', selectedCategory);
+      next.delete('category');
+    }
+
+    if (searchTerm.trim()) {
+      next.set('q', searchTerm.trim());
+    } else {
+      next.delete('q');
+    }
+
+    if (next.toString() !== searchParams.toString()) {
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, searchTerm, selectedCategory, setSearchParams]);
+
+  return (
+    <div className="px-4 sm:px-6 lg:px-8 pt-6 pb-16">
+      <div className="mb-6 text-center">
+        <h1 className="text-3xl sm:text-4xl font-bold mb-3 bg-gradient-to-r from-orange-500 to-green-600 bg-clip-text text-transparent">
+          Boutiques MangooTech
+        </h1>
+        <p className={`text-lg transition-colors duration-300 ${
+          isDark ? 'text-gray-300' : 'text-gray-600'
+        }`}>
+          Découvrez et suivez vos boutiques préférées
+        </p>
+      </div>
+
+      <div className={`text-center text-sm mb-3 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+        Filtre: {selectedCategory === 'all' ? 'Toutes' : categoryLabel(selectedCategory)} • {visibleShops.length} boutique(s)
+      </div>
+
+      <div className="max-w-2xl mx-auto mb-4">
+        <div className={`flex items-center gap-2 px-4 py-3 rounded-2xl border shadow-sm transition-colors ${
+          isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
+          <span className={`${isDark ? 'text-gray-300' : 'text-gray-500'}`}>🔎</span>
+          <input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Rechercher une boutique (nom ou lien)"
+            className={`w-full bg-transparent outline-none text-sm ${isDark ? 'text-white placeholder:text-gray-400' : 'text-gray-900 placeholder:text-gray-500'}`}
+          />
+          {searchTerm.trim() && (
+            <button
+              type="button"
+              onClick={() => setSearchTerm('')}
+              className={`px-2 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Effacer
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2 justify-center mb-6 relative z-10">
+        {categories.map((cat) => {
+          const active = selectedCategory === cat;
+          const label = cat === 'all' ? 'Toutes' : categoryLabel(cat);
+          return (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => {
+                setSelectedCategory(cat);
+                scrollToList();
+              }}
+              className={`px-3 py-2 rounded-full text-sm font-semibold transition-colors ${
+                active
+                  ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                  : (isDark ? 'bg-gray-800 text-gray-200 border border-gray-700 hover:bg-gray-700' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50')
+              }`}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
+      {visibleShops.length === 0 ? (
+        <div ref={listRef} className="text-center py-12">
+          <div className="text-6xl mb-4">🏪</div>
+          <h3 className={`text-xl font-semibold mb-2 ${
+            isDark ? 'text-gray-300' : 'text-gray-700'
+          }`}>
+            Aucune boutique dans cette catégorie
+          </h3>
+          <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            Essayez une autre catégorie ou créez une boutique via « Créer ma boutique ».
+          </p>
+          <div className="mt-5 flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              type="button"
+              onClick={() => setSelectedCategory('all')}
+              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                isDark ? 'bg-gray-800 text-white border border-gray-700 hover:bg-gray-700' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              Voir toutes les boutiques
+            </button>
+            <button
+              type="button"
+              onClick={() => requestCreateShop(selectedCategory === 'all' ? 'general' : selectedCategory)}
+              className="px-4 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-orange-500 to-green-600 text-white hover:from-orange-600 hover:to-green-700 transition-colors"
+            >
+              Créer une boutique {selectedCategory === 'all' ? '' : categoryLabel(selectedCategory)}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div ref={listRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-2">
+          {visibleShops.map((shop) => (
+            <div
+              key={shop.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => goToShop(shop.slug)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  goToShop(shop.slug);
+                }
+              }}
+              className={`text-left rounded-2xl border shadow-lg hover:shadow-xl transition-all overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500/60 ${
+                isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
+              }`}
+            >
+              <div
+                className="h-16"
+                style={{ background: `linear-gradient(90deg, ${shop.primaryColor}, ${shop.secondaryColor})` }}
+              />
+              <div className="p-4">
+                <div className="flex items-center gap-3">
+                  {shop.logoDataUrl ? (
+                    <img src={shop.logoDataUrl} alt="Logo" className="w-12 h-12 rounded-xl object-cover" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold" style={{ backgroundColor: shop.primaryColor }}>
+                      {shop.name?.charAt(0)?.toUpperCase() || 'B'}
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <div className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{shop.name}</div>
+                    <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{shop.slug}</div>
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedCategory(shop.category || 'general');
+                      scrollToList();
+                    }}
+                    className={`text-xs px-2 py-1 rounded-full font-semibold transition-colors ${
+                      isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                    title="Filtrer par catégorie"
+                  >
+                    {categoryLabel(shop.category)}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      goToShop(shop.slug);
+                    }}
+                    className={`text-xs font-semibold underline underline-offset-4 transition-colors ${
+                      isDark ? 'text-gray-200 hover:text-white' : 'text-gray-700 hover:text-gray-900'
+                    }`}
+                  >
+                    Voir
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+function ClientWishlistSection() {
+  const { isDark } = useThemeStore();
+  const { wishlist, products } = useStore();
+  const wished = useMemo(() => {
+    const ids = new Set(Array.isArray(wishlist) ? wishlist : []);
+    return (Array.isArray(products) ? products : []).filter((p) => ids.has(p.id));
+  }, [products, wishlist]);
+
+  return (
+    <div>
+      {wished.length === 0 ? (
+        <div className={`${isDark ? 'bg-gray-900 border-gray-700 text-gray-300' : 'bg-gray-50 border-gray-200 text-gray-700'} border rounded-xl p-6 text-center`}>
+          <div className="text-4xl mb-2">❤️</div>
+          <div className="font-semibold">Aucun favori</div>
+          <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Ajoutez des produits en favoris depuis la marketplace.</div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {wished.map((p) => (
+            <div key={p.id} className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-4 flex items-start gap-3`}>
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl bg-gradient-to-r from-orange-500 to-green-600 text-white">
+                {p.icon || '🛍️'}
+              </div>
+              <div className="flex-1">
+                <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>{p.name}</div>
+                <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm`}>{p.price}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => {
+  const { isDark } = useThemeStore();
+  const { processPayment } = usePaymentStore();
+  const isGuest = String(user?.email || '') === 'guest@mangoo.tech';
+  const [name, setName] = useState(user?.name || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [address, setAddress] = useState(user?.address || '');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const savedTimeoutRef = useRef(null);
+  const [activeSection, setActiveSection] = useState('orders');
+  const [orders, setOrders] = useState([]);
+  const [walletBalance, setWalletBalance] = useState(null);
+  const [walletTopupChannel, setWalletTopupChannel] = useState('');
+  const [walletTopupOpen, setWalletTopupOpen] = useState(false);
+  const [walletTopupMethod, setWalletTopupMethod] = useState('wave');
+  const [walletTopupAmount, setWalletTopupAmount] = useState('');
+  const [walletTopupReference, setWalletTopupReference] = useState('');
+  const [walletPhoneNumber, setWalletPhoneNumber] = useState('');
+  const [walletEmail, setWalletEmail] = useState(String(user?.email || ''));
+  const [isWalletBusy, setIsWalletBusy] = useState(false);
+
+  useEffect(() => {
+    setName(user?.name || '');
+    setPhone(user?.phone || '');
+    setAddress(user?.address || '');
+    setWalletEmail(String(user?.email || ''));
+    setWalletTopupOpen(false);
+    setWalletTopupChannel('');
+    setWalletTopupAmount('');
+    setWalletTopupReference('');
+    setWalletPhoneNumber('');
+  }, [user?.address, user?.name, user?.phone]);
+
+  const walletKey = useMemo(() => getWalletKeyFromUser(user), [user]);
+
+  const refreshWallet = useCallback(() => {
+    if (!walletKey) return;
+    setWalletBalance(getWalletBalance(walletKey));
+  }, [walletKey]);
+
+  useEffect(() => {
+    if (!walletKey) {
+      setWalletBalance(null);
+      return;
+    }
+    setWalletBalance(ensureWalletBalance(walletKey, 300000));
+  }, [walletKey]);
+
+  useEffect(() => {
+    const onWallet = () => refreshWallet();
+    window.addEventListener('mangoo-wallet-updated', onWallet);
+    return () => window.removeEventListener('mangoo-wallet-updated', onWallet);
+  }, [refreshWallet]);
+
+  useEffect(() => {
+    if (activeSection !== 'wallet') return;
+    setWalletTopupOpen(false);
+    setWalletTopupChannel('');
+    setWalletTopupAmount('');
+    setWalletTopupReference('');
+    setWalletPhoneNumber('');
+  }, [activeSection]);
+
+  const handleWalletTopup = useCallback(async () => {
+    if (!walletKey) {
+      toast.error('Veuillez vous reconnecter pour recharger votre solde');
+      return;
+    }
+
+    if (!walletTopupChannel) {
+      toast.error('Choisissez une méthode de rechargement');
+      return;
+    }
+    const cleaned = String(walletTopupAmount || '').replace(/[^\d]/g, '');
+    const amount = Number(cleaned);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast.error('Montant invalide');
+      return;
+    }
+
+    setIsWalletBusy(true);
+    try {
+      if (walletTopupChannel === 'mobile_money') {
+        if (!walletPhoneNumber) {
+          toast.error('Numéro Mobile Money requis');
+          return;
+        }
+        await processPayment({
+          method: walletTopupMethod,
+          amount: String(amount),
+          currency: 'XOF',
+          phoneNumber: walletPhoneNumber,
+          description: 'Recharge solde Mangoo Pay',
+          userId: walletKey,
+          authToken: localStorage.getItem('token') || 'demo-token'
+        });
+        creditWalletBalance(walletKey, amount);
+      } else if (walletTopupChannel === 'card') {
+        const e = String(walletEmail || '').trim();
+        if (!e) {
+          toast.error('Email requis pour la carte');
+          return;
+        }
+        await processPayment({
+          method: 'stripe',
+          amount: String(amount),
+          currency: 'XOF',
+          email: e,
+          description: 'Recharge solde Mangoo Pay',
+          userId: walletKey,
+          authToken: localStorage.getItem('token') || 'demo-token'
+        });
+        creditWalletBalance(walletKey, amount);
+      } else {
+        const ref = String(walletTopupReference || '').trim();
+        if (ref.length < 4) {
+          toast.error('Référence de transfert requise');
+          return;
+        }
+        creditWalletBalance(walletKey, amount);
+      }
+
+      setWalletTopupAmount('');
+      setWalletTopupReference('');
+      refreshWallet();
+      toast.success('Solde rechargé');
+    } catch {
+      toast.error('Rechargement échoué');
+    } finally {
+      setIsWalletBusy(false);
+    }
+  }, [processPayment, refreshWallet, walletEmail, walletKey, walletPhoneNumber, walletTopupAmount, walletTopupChannel, walletTopupMethod, walletTopupReference]);
+
+  useEffect(() => {
+    if (isGuest) {
+      setOrders([]);
+      return;
+    }
+    const email = String(user?.email || '').trim().toLowerCase();
+    if (!email) {
+      setOrders([]);
+      return;
+    }
+    try {
+      const map = readClientOrdersMap();
+      const list = Array.isArray(map[email]) ? map[email] : [];
+      setOrders(list);
+    } catch {
+      setOrders([]);
+    }
+  }, [isGuest, user?.email]);
+
+  useEffect(() => {
+    return () => {
+      if (savedTimeoutRef.current) {
+        clearTimeout(savedTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const isDirty = useMemo(() => {
+    const current = {
+      name: String(name || '').trim(),
+      phone: String(phone || '').trim(),
+      address: String(address || '').trim()
+    };
+    const initial = {
+      name: String(user?.name || '').trim(),
+      phone: String(user?.phone || '').trim(),
+      address: String(user?.address || '').trim()
+    };
+    return current.name !== initial.name || current.phone !== initial.phone || current.address !== initial.address;
+  }, [address, name, phone, user?.address, user?.name, user?.phone]);
+
+  const handleSave = useCallback(async () => {
+    if (saving) return;
+    if (!isDirty) {
+      toast.info('Aucune modification à enregistrer');
+      return;
+    }
+    setSaving(true);
+    try {
+      onSaveProfile({ name: String(name || '').trim(), phone: String(phone || '').trim(), address: String(address || '').trim() });
+      setSaved(true);
+      toast.success('Profil enregistré');
+      if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
+      savedTimeoutRef.current = setTimeout(() => setSaved(false), 1500);
+    } catch {
+      toast.error('Impossible d’enregistrer');
+    } finally {
+      setSaving(false);
+    }
+  }, [address, isDirty, name, onSaveProfile, phone, saving]);
+
+  return (
+    <div className="p-6">
+      <div className="max-w-3xl mx-auto">
+        <div className="mb-6">
+          <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Mon compte</h1>
+          <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Gérez votre profil client et vos informations.</p>
+        </div>
+
+        {isGuest ? (
+          <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-6 shadow-sm`}>
+            <div className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Vous êtes en mode invité</div>
+            <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Créez un compte client pour sauvegarder votre profil et vos commandes.</div>
+            <div className="mt-4 flex flex-col sm:flex-row gap-2">
+              <button
+                type="button"
+                onClick={onOpenRegister}
+                className="flex-1 bg-gradient-to-r from-orange-500 to-green-600 text-white py-2 px-4 rounded-xl font-semibold hover:from-orange-600 hover:to-green-700 transition-all"
+              >
+                Créer un compte
+              </button>
+              <button
+                type="button"
+                onClick={onOpenLogin}
+                className={`${isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white border border-gray-200 hover:bg-gray-50'} flex-1 py-2 px-4 rounded-xl font-semibold transition-colors`}
+              >
+                Se connecter
+              </button>
+            </div>
+
+            <div className="mt-6">
+              <div className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-4`}>
+                <div className="flex items-center justify-between gap-3">
+                  <div className={`${isDark ? 'text-gray-200' : 'text-gray-800'} font-semibold`}>
+                    Solde Mangoo Pay
+                  </div>
+                  <button
+                    type="button"
+                    onClick={refreshWallet}
+                    className={`${isDark ? 'bg-gray-800 text-gray-100 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'} text-xs font-semibold px-3 py-1 rounded-full transition-colors`}
+                  >
+                    Actualiser
+                  </button>
+                </div>
+                <div className="mt-2 text-2xl font-bold text-emerald-400">
+                  {(walletBalance ?? 0).toLocaleString('fr-FR')} XOF
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setWalletTopupChannel('mobile_money');
+                      setWalletTopupOpen(true);
+                      setWalletTopupAmount('');
+                      setWalletTopupReference('');
+                    }}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                      walletTopupChannel === 'mobile_money'
+                        ? isDark ? 'bg-emerald-700 text-white' : 'bg-emerald-200 text-emerald-900'
+                        : isDark ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Mobile Money
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setWalletTopupChannel('card');
+                      setWalletTopupOpen(true);
+                      setWalletTopupAmount('');
+                      setWalletTopupReference('');
+                    }}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                      walletTopupChannel === 'card'
+                        ? isDark ? 'bg-emerald-700 text-white' : 'bg-emerald-200 text-emerald-900'
+                        : isDark ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Carte bancaire
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setWalletTopupChannel('credit_transfer');
+                      setWalletTopupOpen(true);
+                      setWalletTopupAmount('');
+                      setWalletTopupReference('');
+                    }}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                      walletTopupChannel === 'credit_transfer'
+                        ? isDark ? 'bg-emerald-700 text-white' : 'bg-emerald-200 text-emerald-900'
+                        : isDark ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Transfert de crédit
+                  </button>
+                </div>
+
+                {!walletTopupOpen && (
+                  <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mt-3 text-xs`}>
+                    Cliquez sur une méthode ci-dessus pour ouvrir le formulaire de rechargement.
+                  </div>
+                )}
+
+                {walletTopupOpen && walletTopupChannel === 'mobile_money' && (
+                  <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <div className={`md:col-span-3 text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Saisissez le numéro Mobile Money qui recevra la demande de paiement.
+                    </div>
+                    <select
+                      value={walletTopupMethod}
+                      onChange={(e) => setWalletTopupMethod(e.target.value)}
+                      className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                    >
+                      <option value="wave">Wave</option>
+                      <option value="orange_money">Orange Money</option>
+                      <option value="mtn_momo">MTN Mobile Money</option>
+                      <option value="moov_money">Moov Money</option>
+                      <option value="free_mobile">Free Mobile</option>
+                    </select>
+                    <input
+                      type="tel"
+                      value={walletPhoneNumber}
+                      onChange={(e) => setWalletPhoneNumber(e.target.value)}
+                      placeholder="Numéro Mobile Money"
+                      className={`md:col-span-2 w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'}`}
+                    />
+                  </div>
+                )}
+
+                {walletTopupOpen && walletTopupChannel === 'card' && (
+                  <div className="mt-3">
+                    <label className={`block text-xs font-semibold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      Email de reçu / facturation
+                    </label>
+                    <input
+                      type="email"
+                      value={walletEmail}
+                      onChange={(e) => setWalletEmail(e.target.value)}
+                      placeholder="Email de reçu / facturation (ex: mdansoko@mangoo.tech)"
+                      className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'}`}
+                    />
+                    <div className={`mt-2 text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Mode démo : le paiement par carte est simulé (pas de redirection).
+                    </div>
+                  </div>
+                )}
+
+                {walletTopupOpen && walletTopupChannel === 'credit_transfer' && (
+                  <div className="mt-3">
+                    <label className={`block text-xs font-semibold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      Référence / code de transfert
+                    </label>
+                    <input
+                      type="text"
+                      value={walletTopupReference}
+                      onChange={(e) => setWalletTopupReference(e.target.value)}
+                      placeholder="Référence / code de transfert"
+                      className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'}`}
+                    />
+                  </div>
+                )}
+
+                {walletTopupOpen && (
+                <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-2">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={walletTopupAmount}
+                    onChange={(e) => setWalletTopupAmount(e.target.value)}
+                    placeholder="Montant à recharger (ex: 5000)"
+                    disabled={isWalletBusy}
+                    className={`md:col-span-2 w-full px-3 py-2 rounded-lg border ${
+                      isDark
+                        ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400'
+                        : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleWalletTopup}
+                    disabled={isWalletBusy}
+                    className={`w-full py-2 px-3 rounded-lg font-semibold transition-colors ${
+                      isWalletBusy
+                        ? isDark
+                          ? 'bg-gray-700 text-gray-300 cursor-not-allowed'
+                          : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                    }`}
+                  >
+                    {isWalletBusy ? 'Rechargement…' : 'Recharger'}
+                  </button>
+                </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-6 shadow-sm`}>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-gradient-to-r from-orange-500 to-green-600 text-white">
+                {user?.avatar || '🧑‍💻'}
+              </div>
+              <div className="flex-1">
+                <div className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{user?.name}</div>
+                <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm`}>{user?.email}</div>
+              </div>
+              <div className={`text-xs px-2 py-1 rounded-full font-semibold ${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'}`}>
+                client
+              </div>
+            </div>
+
+            <div className="mb-5">
+              <div className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-1 flex flex-wrap gap-1`}>
+                <button
+                  type="button"
+                  onClick={() => setActiveSection('orders')}
+                  className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    activeSection === 'orders'
+                      ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                      : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
+                  }`}
+                >
+                  Commandes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveSection('profile')}
+                  className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    activeSection === 'profile'
+                      ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                      : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
+                  }`}
+                >
+                  Profil
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveSection('wishlist')}
+                  className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    activeSection === 'wishlist'
+                      ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                      : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
+                  }`}
+                >
+                  Favoris
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveSection('wallet')}
+                  className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    activeSection === 'wallet'
+                      ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                      : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
+                  }`}
+                >
+                  Mangoo Pay
+                </button>
+              </div>
+            </div>
+
+            {activeSection === 'orders' && (
+              <div>
+                {orders.length === 0 ? (
+                  <div className={`${isDark ? 'bg-gray-900 border-gray-700 text-gray-300' : 'bg-gray-50 border-gray-200 text-gray-700'} border rounded-xl p-6 text-center`}>
+                    <div className="text-4xl mb-2">📦</div>
+                    <div className="font-semibold">Aucune commande</div>
+                    <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Vos commandes apparaîtront ici après un paiement.</div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {orders.map((o) => (
+                      <div key={o.id} className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-4`}>
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>Commande {o.id}</div>
+                            <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm`}>{new Date(o.createdAt).toLocaleString('fr-FR')}</div>
+                            <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm mt-1`}>{(o.items?.length || 0)} article(s)</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-orange-500 font-bold">{Math.round((o.totalCents || 0) / 100).toLocaleString('fr-FR')} FCFA</div>
+                            <div className={`${isDark ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-700'} inline-flex text-xs px-2 py-1 rounded-full font-semibold mt-1`}>{o.status}</div>
+                          </div>
+                        </div>
+                        {Array.isArray(o.items) && o.items.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-gray-700/40 space-y-1">
+                            {o.items.slice(0, 4).map((it) => (
+                              <div key={`${o.id}-${it.productId}`} className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm flex justify-between gap-3`}>
+                                <div className="truncate">{it.name} × {it.qty}</div>
+                                <div className="whitespace-nowrap">{Math.round(((it.unitPriceCents || 0) * (it.qty || 0)) / 100).toLocaleString('fr-FR')} FCFA</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeSection === 'wishlist' && (
+              <ClientWishlistSection />
+            )}
+
+            {activeSection === 'profile' && (
+              <div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className={`block text-xs font-semibold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Nom</label>
+                    <input
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-xs font-semibold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Téléphone</label>
+                    <input
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className={`block text-xs font-semibold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Adresse</label>
+                    <input
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-5 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    className={`bg-gradient-to-r from-orange-500 to-green-600 text-white py-2 px-4 rounded-xl font-semibold hover:from-orange-600 hover:to-green-700 transition-all ${
+                      (!isDirty || saving) ? 'opacity-60 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    {saving ? 'Enregistrement…' : saved ? 'Enregistré' : isDirty ? 'Enregistrer' : 'Aucune modification'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {activeSection === 'wallet' && (
+              <div>
+                <div className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-4`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className={`${isDark ? 'text-gray-200' : 'text-gray-800'} font-semibold`}>
+                      Solde Mangoo Pay
+                    </div>
+                    <button
+                      type="button"
+                      onClick={refreshWallet}
+                      className={`${isDark ? 'bg-gray-800 text-gray-100 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'} text-xs font-semibold px-3 py-1 rounded-full transition-colors`}
+                    >
+                      Actualiser
+                    </button>
+                  </div>
+                  <div className="mt-2 text-2xl font-bold text-emerald-400">
+                    {(walletBalance ?? 0).toLocaleString('fr-FR')} XOF
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setWalletTopupChannel('mobile_money');
+                        setWalletTopupOpen(true);
+                        setWalletTopupAmount('');
+                        setWalletTopupReference('');
+                      }}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                        walletTopupChannel === 'mobile_money'
+                          ? isDark ? 'bg-emerald-700 text-white' : 'bg-emerald-200 text-emerald-900'
+                          : isDark ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      Mobile Money
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setWalletTopupChannel('card');
+                        setWalletTopupOpen(true);
+                        setWalletTopupAmount('');
+                        setWalletTopupReference('');
+                      }}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                        walletTopupChannel === 'card'
+                          ? isDark ? 'bg-emerald-700 text-white' : 'bg-emerald-200 text-emerald-900'
+                          : isDark ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      Carte bancaire
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setWalletTopupChannel('credit_transfer');
+                        setWalletTopupOpen(true);
+                        setWalletTopupAmount('');
+                        setWalletTopupReference('');
+                      }}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                        walletTopupChannel === 'credit_transfer'
+                          ? isDark ? 'bg-emerald-700 text-white' : 'bg-emerald-200 text-emerald-900'
+                          : isDark ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      Transfert de crédit
+                    </button>
+                  </div>
+
+                  {!walletTopupOpen && (
+                    <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mt-3 text-xs`}>
+                      Cliquez sur une méthode ci-dessus pour ouvrir le formulaire de rechargement.
+                    </div>
+                  )}
+
+                  {walletTopupOpen && walletTopupChannel === 'mobile_money' && (
+                    <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <div className={`md:col-span-3 text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        Saisissez le numéro Mobile Money qui recevra la demande de paiement.
+                      </div>
+                      <select
+                        value={walletTopupMethod}
+                        onChange={(e) => setWalletTopupMethod(e.target.value)}
+                        className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                      >
+                        <option value="wave">Wave</option>
+                        <option value="orange_money">Orange Money</option>
+                        <option value="mtn_momo">MTN Mobile Money</option>
+                        <option value="moov_money">Moov Money</option>
+                        <option value="free_mobile">Free Mobile</option>
+                      </select>
+                      <input
+                        type="tel"
+                        value={walletPhoneNumber}
+                        onChange={(e) => setWalletPhoneNumber(e.target.value)}
+                        placeholder="Numéro Mobile Money"
+                        className={`md:col-span-2 w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'}`}
+                      />
+                    </div>
+                  )}
+
+                  {walletTopupOpen && walletTopupChannel === 'card' && (
+                    <div className="mt-3">
+                      <label className={`block text-xs font-semibold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                        Email de reçu / facturation
+                      </label>
+                      <input
+                        type="email"
+                        value={walletEmail}
+                        onChange={(e) => setWalletEmail(e.target.value)}
+                        placeholder="Email de reçu / facturation (ex: mdansoko@mangoo.tech)"
+                        className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'}`}
+                      />
+                      <div className={`mt-2 text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        Mode démo : le paiement par carte est simulé (pas de redirection).
+                      </div>
+                    </div>
+                  )}
+
+                  {walletTopupOpen && walletTopupChannel === 'credit_transfer' && (
+                    <div className="mt-3">
+                      <label className={`block text-xs font-semibold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                        Référence / code de transfert
+                      </label>
+                      <input
+                        type="text"
+                        value={walletTopupReference}
+                        onChange={(e) => setWalletTopupReference(e.target.value)}
+                        placeholder="Référence / code de transfert"
+                        className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'}`}
+                      />
+                    </div>
+                  )}
+
+                  <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={walletTopupAmount}
+                      onChange={(e) => setWalletTopupAmount(e.target.value)}
+                      placeholder={walletTopupChannel ? 'Montant à recharger (ex: 5000)' : 'Choisissez une méthode puis saisissez le montant'}
+                      disabled={!walletTopupChannel || isWalletBusy}
+                      className={`md:col-span-2 w-full px-3 py-2 rounded-lg border ${
+                        isDark
+                          ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400'
+                          : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
+                      } ${!walletTopupChannel ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleWalletTopup}
+                      disabled={isWalletBusy || !walletTopupChannel}
+                      className={`w-full py-2 px-3 rounded-lg font-semibold transition-colors ${
+                        isWalletBusy || !walletTopupChannel
+                          ? isDark
+                            ? 'bg-gray-700 text-gray-300 cursor-not-allowed'
+                            : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                          : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                      }`}
+                    >
+                      {isWalletBusy ? 'Rechargement…' : 'Recharger'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Layout Admin avec React Router
 const AdminLayout = () => {
   const navigate = useNavigate();
@@ -914,7 +3178,9 @@ const AdminLayout = () => {
             <Route path="/admin/commissions" element={<AdminCommissions />} />
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/payments" element={<AdminPayments />} />
+            <Route path="/admin/analytics" element={<AdminAnalytics />} />
             <Route path="/admin/wallet" element={<AdminWallet />} />
+            <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="/admin/create-shop" element={<AdminCreateShop />} />
             <Route path="/admin/simple-test" element={<SimpleTest />} />
             <Route path="/" element={<AdminDashboard />} />
@@ -950,11 +3216,73 @@ const MangooLocalFrame = React.memo(({ user, onBack }) => {
 });
 
 // Composant principal avec optimisation
-function App() {
-  const [user, setUser] = useState(null);
+function AppShell() {
+  const navigate = useNavigate();
+  const [initialState] = useState(() => {
+    let view = 'landing';
+    try {
+      const stored = localStorage.getItem('mangoo-last-view');
+      if (stored === 'landing' || stored === 'marketplace' || stored === 'shops' || stored === 'innovation' || stored === 'account') {
+        view = stored;
+      }
+    } catch {
+      view = 'landing';
+    }
+    const initialUser = (() => {
+      try {
+        const raw = localStorage.getItem('mangoo-current-user');
+        const storedUser = raw ? JSON.parse(raw) : null;
+        if (storedUser?.role) return storedUser;
+      } catch {
+        // ignore
+      }
+      if (view === 'marketplace' || view === 'shops') {
+        return { role: 'client', name: 'Invité', avatar: '👤', email: 'guest@mangoo.tech' };
+      }
+      return null;
+    })();
+    return { view, user: initialUser };
+  });
+
+  const [user, setUser] = useState(initialState.user);
   const [loading, setLoading] = useState(false); // DISABLED LOADING DELAY
-  const [currentView, setCurrentView] = useState('landing');
+  const [currentView, setCurrentView] = useState(initialState.view);
+  const [authReturn, setAuthReturn] = useState(null);
   const { isDark } = useThemeStore();
+  const [clientWalletBalance, setClientWalletBalance] = useState(null);
+  const clientWalletKey = useMemo(() => getWalletKeyFromUser(user), [user]);
+
+  const openRegister = useCallback(() => {
+    try {
+      localStorage.removeItem('mangoo-open-register');
+    } catch {
+      // ignore
+    }
+    setAuthReturn((prev) => prev || (user ? { user, view: currentView } : null));
+    setCurrentView('landing');
+    setUser({ role: 'register_request' });
+  }, [currentView, user]);
+
+  const openLogin = useCallback(() => {
+    setAuthReturn((prev) => prev || (user ? { user, view: currentView } : null));
+    setUser({ role: 'login_request' });
+  }, [currentView, user]);
+
+  const openClientRegister = useCallback(() => {
+    setAuthReturn((prev) => prev || (user ? { user, view: currentView } : null));
+    setUser({ role: 'client_register_request' });
+  }, [currentView, user]);
+
+  const backFromAuth = useCallback(() => {
+    if (authReturn?.user) {
+      setUser(authReturn.user);
+      setCurrentView(authReturn.view || 'marketplace');
+      setAuthReturn(null);
+      return;
+    }
+    setCurrentView('landing');
+    setUser(null);
+  }, [authReturn]);
 
   // console.log('App Rendering. User:', user, 'View:', currentView);
 
@@ -973,24 +3301,51 @@ function App() {
     // REMOVED ARTIFICIAL DELAY
   }, []);
 
+  useEffect(() => {
+    const onOpen = () => openRegister();
+    try {
+      if (localStorage.getItem('mangoo-open-register') === '1') {
+        openRegister();
+      }
+    } catch {
+      // ignore
+    }
+    window.addEventListener('mangoo-open-register', onOpen);
+    return () => window.removeEventListener('mangoo-open-register', onOpen);
+  }, [openRegister]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('mangoo-last-view', currentView);
+    } catch {
+      // ignore
+    }
+  }, [currentView]);
+
+  useEffect(() => {
+    if (!user || user.role !== 'client' || !clientWalletKey) {
+      setClientWalletBalance(null);
+      return;
+    }
+    setClientWalletBalance(ensureWalletBalance(clientWalletKey, 300000));
+  }, [clientWalletKey, user]);
+
+  useEffect(() => {
+    if (!user || user.role !== 'client' || !clientWalletKey) return;
+    const onWallet = () => setClientWalletBalance(getWalletBalance(clientWalletKey));
+    window.addEventListener('mangoo-wallet-updated', onWallet);
+    return () => window.removeEventListener('mangoo-wallet-updated', onWallet);
+  }, [clientWalletKey, user]);
+
   // Handler pour le retour de Mangoo Local+
   const handleBackFromLocal = useCallback(() => {
     setCurrentView(user ? 'marketplace' : 'landing');
   }, [user]);
 
-  // Gestion de la connexion optimisée
-  const handleLogin = useCallback(async (userData) => {
-    setUser(userData);
-    
-    if (userData.email === 'admin@mangoo.tech') {
-      localStorage.setItem('admin-demo-user', JSON.stringify({
-        id: 'admin-demo-123',
-        email: userData.email,
-        role: 'admin'
-      }));
-    }
+  const seedDemoData = useCallback(() => {
+    const state = useStore.getState();
+    if (Array.isArray(state.products) && state.products.length > 0) return;
 
-    // Données de démonstration optimisées
     const mockProducts = [
       {
         id: 1,
@@ -1044,8 +3399,9 @@ function App() {
 
     const mockVendors = [
       { id: 1, name: 'Boutique Tradition', category: 'fashion', rating: 4.8, sales: 245 },
-      { id: 2, name: 'Tech Africa', category: 'electronics', rating: 4.9, sales: 189 },
-      { id: 3, name: 'Saveurs du Terroir', category: 'food', rating: 4.7, sales: 312 }
+      { id: 2, name: 'Tech Africa', category: 'tech', rating: 4.9, sales: 189 },
+      { id: 3, name: 'Saveurs du Terroir', category: 'food', rating: 4.7, sales: 312 },
+      { id: 4, name: 'Téléphonie Express', category: 'telephony', rating: 4.6, sales: 98 }
     ];
 
     const mockOrders = [
@@ -1054,10 +3410,37 @@ function App() {
       { id: 3, customer: 'Paul Traoré', amount: '67.000 FCFA', status: 'processing', date: '2024-01-17' }
     ];
 
-    useStore.getState().setProducts(mockProducts);
-    useStore.getState().setVendors(mockVendors);
-    useStore.getState().setOrders(mockOrders);
+    state.setProducts(mockProducts);
+    state.setVendors(mockVendors);
+    state.setOrders(mockOrders);
   }, []);
+
+  // Gestion de la connexion optimisée
+  const handleLogin = useCallback(async (userData) => {
+    setUser(userData);
+    try {
+      localStorage.setItem('mangoo-current-user', JSON.stringify(userData));
+    } catch {
+      // ignore
+    }
+    
+    if (userData.email === 'admin@mangoo.tech') {
+      localStorage.setItem('admin-demo-user', JSON.stringify({
+        id: 'admin-demo-123',
+        email: userData.email,
+        role: 'admin'
+      }));
+    }
+
+    seedDemoData();
+  }, [seedDemoData]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (user.role === 'client' || user.role === 'vendor' || user.role === 'admin') {
+      seedDemoData();
+    }
+  }, [seedDemoData, user]);
 
   // Auto-login effect for marketplace view REMOVED to prevent loops
   // User state is now handled directly in navigation logic
@@ -1083,17 +3466,16 @@ function App() {
       return (
         <LandingPage 
           onNavigate={(view) => {
-            if (view === 'marketplace') {
-              // Mode Invité: On définit un utilisateur invité pour accéder au dashboard client
-              setUser({ role: 'client', name: 'Invité', avatar: '👤' });
-              // Important: setCurrentView is not needed because user state change triggers re-render
-              // But we set it for consistency
-              setCurrentView('marketplace');
-            } else if (view === 'innovation') {
-               setCurrentView('innovation');
-            } else {
+            if (view === 'marketplace' || view === 'shops') {
+              handleLogin({ role: 'client', name: 'Invité', avatar: '👤', email: 'guest@mangoo.tech' });
               setCurrentView(view);
+              return;
             }
+            if (view === 'innovation') {
+              setCurrentView('innovation');
+              return;
+            }
+            setCurrentView(view);
           }} 
           onLogin={setUser} 
         />
@@ -1106,21 +3488,36 @@ function App() {
 
 
     if (user.role === 'register_request') {
-      return <Register onRegister={handleLogin} onBack={() => setUser(null)} />;
+      return <Register onRegister={(u) => { setAuthReturn(null); handleLogin(u); }} onBack={backFromAuth} />;
     }
 
     if (user.role === 'login_request') {
-      return <Login onLogin={handleLogin} onBack={() => setUser(null)} />;
+      return <Login onLogin={(u) => { setAuthReturn(null); handleLogin(u); }} onBack={backFromAuth} onCreateClient={openClientRegister} />;
     }
 
-    // Admin avec React Router
+    if (user.role === 'client_register_request') {
+      return <ClientRegister onRegister={(u) => { setAuthReturn(null); handleLogin(u); setCurrentView('marketplace'); }} onBack={backFromAuth} />;
+    }
+
     if (user.role === 'admin') {
       return (
-        <Router>
-          <Routes>
-            <Route path="/*" element={<AdminLayout />} />
-          </Routes>
-        </Router>
+        <LandingPage
+          onNavigate={(view) => {
+            if (view === 'marketplace' || view === 'shops') {
+              handleLogin({ role: 'client', name: 'Invité', avatar: '👤', email: 'guest@mangoo.tech' });
+              setCurrentView(view);
+              return;
+            }
+            if (view === 'innovation') {
+              setCurrentView('innovation');
+              return;
+            }
+            setCurrentView(view);
+          }}
+          onLogin={setUser}
+          showAdminDashboard
+          onAdminDashboard={() => navigate('/admin/dashboard')}
+        />
       );
     }
 
@@ -1147,6 +3544,62 @@ function App() {
               </div>
               
               <div className="flex items-center space-x-4">
+                {user.role === 'client' && (
+                  <div className="hidden md:flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView('marketplace')}
+                      className={`${currentView === 'marketplace' ? 'bg-orange-500 text-white' : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} px-3 py-1 rounded-full text-sm font-bold transition-colors`}
+                    >
+                      Marketplace
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView('shops')}
+                      className={`${currentView === 'shops' ? 'bg-orange-500 text-white' : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} px-3 py-1 rounded-full text-sm font-bold transition-colors`}
+                    >
+                      Boutiques
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView('account')}
+                      className={`${currentView === 'account' ? 'bg-orange-500 text-white' : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} px-3 py-1 rounded-full text-sm font-bold transition-colors whitespace-nowrap leading-none`}
+                    >
+                      Mon compte client
+                    </button>
+                  </div>
+                )}
+
+                {user.role === 'client' && user.email === 'guest@mangoo.tech' && (
+                  <div className="hidden md:flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={openClientRegister}
+                      className="bg-gray-900 text-white px-3 py-1 rounded-full text-sm font-bold hover:bg-gray-800 transition-colors"
+                    >
+                      Créer compte
+                    </button>
+                    <button
+                      type="button"
+                      onClick={openLogin}
+                      className="bg-white border border-gray-200 text-gray-900 px-3 py-1 rounded-full text-sm font-bold hover:bg-gray-50 transition-colors"
+                      title="Se connecter"
+                    >
+                      Connexion
+                    </button>
+                  </div>
+                )}
+
+                {user.role === 'client' && (
+                  <button
+                    type="button"
+                    onClick={openLogin}
+                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold hover:bg-blue-200 transition-colors"
+                    title="Accéder à l’espace vendeur"
+                  >
+                    Espace vendeur
+                  </button>
+                )}
                 {/* Bouton Local+ ajouté */}
                 <button
                   onClick={() => setCurrentView('innovation')}
@@ -1172,10 +3625,37 @@ function App() {
                   {user.role}
                 </span>
               </div>
+              {user.role === 'client' && clientWalletKey && (
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('account')}
+                  className={`px-3 py-2 rounded-lg text-sm font-bold transition-colors ${
+                    isDark
+                      ? 'bg-emerald-900/30 border border-emerald-700 text-emerald-200 hover:bg-emerald-900/40'
+                      : 'bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100'
+                  }`}
+                  title="Voir le solde et recharger"
+                >
+                  Solde: {(clientWalletBalance ?? 0).toLocaleString('fr-FR')} XOF
+                </button>
+              )}
               <ThemeToggle />
               <button 
-                onClick={() => setUser(null)}
-                className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-red-500 transition-colors px-3 py-2 rounded-lg hover:bg-red-50"
+                onClick={() => {
+                  try {
+                    localStorage.setItem('mangoo-last-view', 'landing');
+                    localStorage.removeItem('mangoo-current-user');
+                  } catch {
+                    // ignore
+                  }
+                  setCurrentView('landing');
+                  setUser(null);
+                }}
+                className={`flex items-center gap-2 text-sm font-semibold transition-colors px-3 py-2 rounded-lg ${
+                  isDark
+                    ? 'text-gray-200 hover:text-white hover:bg-gray-700'
+                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+                }`}
                 title="Se déconnecter et retourner à l'accueil"
               >
                 <span>← Retour</span>
@@ -1187,13 +3667,56 @@ function App() {
 
       {/* Contenu principal */}
       <main className="max-w-7xl mx-auto">
-        {user.role === 'vendor' && <VendorDashboard />}
-        {(user.role === 'client' || safeCurrentView === 'marketplace') && <ClientMarketplace />}
+        {user.role === 'vendor' && <VendorDashboard user={user} />}
+        {user.role === 'client' && safeCurrentView === 'account' && (
+          <ClientAccount
+            user={user}
+            onOpenLogin={openLogin}
+            onOpenRegister={openClientRegister}
+            onSaveProfile={(patch) => {
+              const email = String(user?.email || '').trim().toLowerCase();
+              const nextUser = { ...user, ...patch };
+              try {
+                const raw = localStorage.getItem('demo_users');
+                const data = raw ? JSON.parse(raw) : {};
+                const map = data && typeof data === 'object' ? data : {};
+                if (email) {
+                  map[email] = { ...map[email], ...patch };
+                  localStorage.setItem('demo_users', JSON.stringify(map));
+                }
+              } catch {
+                // ignore
+              }
+              try {
+                localStorage.setItem('mangoo-current-user', JSON.stringify(nextUser));
+              } catch {
+                // ignore
+              }
+              setUser(nextUser);
+            }}
+          />
+        )}
+        {user.role === 'client' && safeCurrentView === 'shops' && <ShopsDirectory />}
+        {user.role === 'client' && safeCurrentView !== 'shops' && safeCurrentView !== 'account' && <ClientMarketplace user={user} />}
       </main>
       
       {/* Moniteur de performance - Désactivé pour test */}
       {/* <PerformanceMonitor /> */}
     </div>
+  );
+}
+
+function App() {
+  return (
+    <>
+      <Toaster richColors position="top-right" />
+      <Routes>
+        <Route path="/shop/:shopSlug" element={<ShopPage />} />
+        <Route path="/vendor-access-qr" element={<VendorAccessQRPage />} />
+        <Route path="/admin/*" element={<AdminLayout />} />
+        <Route path="/*" element={<AppShell />} />
+      </Routes>
+    </>
   );
 }
 

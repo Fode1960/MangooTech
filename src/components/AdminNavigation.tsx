@@ -1,3 +1,4 @@
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../hooks/useTheme";
 import { 
   LayoutDashboard, 
@@ -14,17 +15,10 @@ import {
   QrCode
 } from "lucide-react";
 
-interface AdminNavigationProps {
-  onNavigate: (page: string) => void;
-  currentPage: string;
-  onLogout?: () => void;
-}
-
-export default function AdminNavigation({ onNavigate, currentPage, onLogout }: AdminNavigationProps) {
+export default function AdminNavigation() {
   const { isDark, toggleTheme } = useTheme();
-  
-  console.log('📍 AdminNavigation rendered, current page:', currentPage);
-  console.log('📍 onNavigate function available:', typeof onNavigate);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const navigation = [
     { name: "Tableau de bord", href: "/admin/dashboard", icon: LayoutDashboard },
@@ -39,8 +33,7 @@ export default function AdminNavigation({ onNavigate, currentPage, onLogout }: A
   ];
 
   const isActive = (path: string) => {
-    const pageName = path.replace('/admin/', '');
-    return currentPage === pageName;
+    return location.pathname === path;
   };
 
   return (
@@ -78,18 +71,13 @@ export default function AdminNavigation({ onNavigate, currentPage, onLogout }: A
               <li key={item.name}>
                 <button
                   onClick={() => {
-                    console.log('🎯 BOUTON CLIQUÉ !', item.name);
-                    
                     // Gestion spéciale pour la route externe vendor-access-qr
                     if (item.href === '/vendor-access-qr') {
-                      console.log('🎯 Navigation vers page Accès & QR');
-                      window.location.href = '/vendor-access-qr';
+                      navigate('/vendor-access-qr');
                       return;
                     }
-                    
-                    const pageName = item.href.replace('/admin/', '');
-                    console.log('🎯 Navigation clicked:', item.name, '-> page:', pageName);
-                    onNavigate(pageName);
+
+                    navigate(item.href);
                   }}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all text-left cursor-pointer active:scale-95 ${
                     isActive(item.href)
@@ -121,11 +109,17 @@ export default function AdminNavigation({ onNavigate, currentPage, onLogout }: A
         <button
           onClick={() => {
             // Nettoyer les données de session
-            localStorage.removeItem('user');
-            localStorage.removeItem('token');
-            localStorage.removeItem('currentRole');
-            // Rediriger vers la page d'accueil
-            window.location.href = '/';
+            try {
+              localStorage.removeItem('user');
+              localStorage.removeItem('token');
+              localStorage.removeItem('currentRole');
+              localStorage.removeItem('admin-demo-user');
+              localStorage.removeItem('mangoo-current-user');
+              localStorage.setItem('mangoo-last-view', 'landing');
+            } catch {
+              // ignore
+            }
+            navigate('/');
           }}
           className="w-full mt-3 group flex items-center justify-center space-x-2 px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
           title="Se déconnecter"

@@ -1,27 +1,6 @@
-import { useState, useEffect } from 'react';
-
 export default function AdminAnalytics() {
-  const [mounted, setMounted] = useState(false);
-
-  console.log('🎯 ADMIN ANALYTICS: Component function called');
-  console.log('📍 Current URL:', window.location.href);
-  console.log('🔄 Component rendering...');
-
-  useEffect(() => {
-    console.log('🎯 ADMIN ANALYTICS: useEffect triggered - Component mounted!');
-    setMounted(true);
-    
-    // ALERT pour confirmation visuelle
-    alert('🎯 ADMIN ANALYTICS: Component est monté et visible!');
-  }, []);
-
   return (
     <div className="p-8">
-      {(() => {
-        console.log('🎯 ADMIN ANALYTICS: RETURN executed - JSX rendering!');
-        console.log('🎯 ADMIN ANALYTICS: mounted state:', mounted);
-        return null;
-      })()}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Analytics</h1>
         <p className="text-gray-600 dark:text-gray-300 mt-2">Statistiques et analyses de la plateforme</p>

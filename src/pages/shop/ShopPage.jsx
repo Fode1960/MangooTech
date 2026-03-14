@@ -1,16 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Store, MapPin, Star, Package, Calendar, Shield, Truck, Heart, Share2, MessageCircle, Users, ShoppingCart } from 'lucide-react';
+import VendorProductManager from '../../components/VendorProductManager';
 
 const ShopPage = () => {
   const { shopSlug } = useParams();
+  const navigate = useNavigate();
   const [shop, setShop] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('products');
   const [isFollowing, setIsFollowing] = useState(false);
+  const [canManageProducts, setCanManageProducts] = useState(false);
+  const [showVendorManager, setShowVendorManager] = useState(false);
+  const [shopOwnerEmail, setShopOwnerEmail] = useState('');
+  const [showVendorMode, setShowVendorMode] = useState(false);
+  const [vendorEmail, setVendorEmail] = useState('');
+  const [pendingMismatch, setPendingMismatch] = useState(false);
+
+  const maskEmail = (value) => {
+    const email = String(value || '').trim();
+    const [local, domain] = email.split('@');
+    if (!local || !domain) return '';
+    if (local.length <= 2) return `${local[0] || '*'}*@${domain}`;
+    return `${local[0]}${'*'.repeat(Math.min(6, local.length - 2))}${local[local.length - 1]}@${domain}`;
+  };
 
   // Données de démonstration pour la boutique
   const demoShop = {
@@ -107,6 +123,18 @@ const ShopPage = () => {
     loadShopData();
   }, [shopSlug]);
 
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('followed_shops');
+      const followed = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(followed)) {
+        setIsFollowing(followed.includes(shopSlug));
+      }
+    } catch {
+      setIsFollowing(false);
+    }
+  }, [shopSlug]);
+
   const loadShopData = async () => {
     try {
       setLoading(true);
@@ -117,18 +145,86 @@ const ShopPage = () => {
         setLoading(false);
         return;
       }
-      
-      // Simuler le chargement des données
-      setTimeout(() => {
-        if (shopSlug === 'boutique-demo') {
-          setShop(demoShop);
-          setProducts(demoProducts);
-          setLoading(false);
-        } else {
-          setError('Boutique non trouvée');
-          setLoading(false);
+
+      const localShop = (() => {
+        try {
+          const raw = localStorage.getItem('demo_shops');
+          const shops = raw ? JSON.parse(raw) : [];
+          if (!Array.isArray(shops)) return null;
+          return shops.find((s) => s?.slug === shopSlug) || null;
+        } catch {
+          return null;
         }
-      }, 1000);
+      })();
+
+      const currentUser = (() => {
+        try {
+          const raw = localStorage.getItem('mangoo-current-user');
+          return raw ? JSON.parse(raw) : null;
+        } catch {
+          return null;
+        }
+      })();
+
+      if (localShop) {
+        const localProducts = (() => {
+          try {
+            const raw = localStorage.getItem('demo_products');
+            const map = raw ? JSON.parse(raw) : {};
+            const list = map && typeof map === 'object' ? map[shopSlug] : [];
+            return Array.isArray(list) ? list : [];
+          } catch {
+            return [];
+          }
+        })();
+
+        const primary = localShop.primaryColor || '#F97316';
+        const secondary = localShop.secondaryColor || '#FBBF24';
+
+        const ownerEmail = String(localShop?.ownerEmail || '').trim().toLowerCase();
+        const currentEmail = String(currentUser?.email || '').trim().toLowerCase();
+        setShopOwnerEmail(ownerEmail);
+        setCanManageProducts(currentUser?.role === 'vendor' && Boolean(currentEmail) && Boolean(ownerEmail) && currentEmail === ownerEmail);
+
+        setShop({
+          ...demoShop,
+          id: localShop.id || demoShop.id,
+          name: localShop.name || demoShop.name,
+          slug: localShop.slug || demoShop.slug,
+          description: localShop.description || demoShop.description,
+          contact_email: localShop.ownerEmail || demoShop.contact_email,
+          primaryColor: primary,
+          secondaryColor: secondary,
+          logoDataUrl: localShop.logoDataUrl || ''
+        });
+        setProducts(localProducts);
+        setError(null);
+        setLoading(false);
+        return;
+      }
+
+      if (shopSlug === 'boutique-demo') {
+        const extraProducts = (() => {
+          try {
+            const raw = localStorage.getItem('demo_products');
+            const map = raw ? JSON.parse(raw) : {};
+            const list = map && typeof map === 'object' ? map[shopSlug] : [];
+            return Array.isArray(list) ? list : [];
+          } catch {
+            return [];
+          }
+        })();
+        setShop(demoShop);
+        setProducts(extraProducts.length ? extraProducts : demoProducts);
+        setCanManageProducts(false);
+        setShopOwnerEmail('');
+        setError(null);
+        setLoading(false);
+        return;
+      }
+
+      setError('Boutique non trouvée');
+      setLoading(false);
       
     } catch (err) {
       setError(err.message || 'Erreur lors du chargement de la boutique');
@@ -136,8 +232,122 @@ const ShopPage = () => {
     }
   };
 
+  const activateVendorMode = () => {
+    const owner = String(shopOwnerEmail || '').trim().toLowerCase();
+    const provided = String(vendorEmail || '').trim().toLowerCase();
+    if (!owner) {
+      toast.error('Cette boutique n’est pas associée à un compte vendeur (démo).');
+      return;
+    }
+    if (!provided) {
+      toast.error('Entrez votre email vendeur.');
+      return;
+    }
+    if (provided !== owner) {
+      setPendingMismatch(true);
+      toast.error(`Email vendeur non reconnu. Email attendu: ${maskEmail(owner)}`);
+      return;
+    }
+    const userData = { role: 'vendor', name: 'Vendeur', avatar: '🏪', email: provided };
+    try {
+      localStorage.setItem('mangoo-current-user', JSON.stringify(userData));
+    } catch {
+      // ignore
+    }
+    setCanManageProducts(true);
+    setShowVendorMode(false);
+    setVendorEmail('');
+    setShowVendorManager(true);
+    toast.success('Mode vendeur activé');
+  };
+
+  const claimShopForEmail = () => {
+    const provided = String(vendorEmail || '').trim().toLowerCase();
+    if (!provided) {
+      toast.error('Entrez votre email vendeur.');
+      return;
+    }
+    try {
+      const raw = localStorage.getItem('demo_shops');
+      const shops = raw ? JSON.parse(raw) : [];
+      const list = Array.isArray(shops) ? shops : [];
+      const next = list.map((s) => (s?.slug === shopSlug ? { ...s, ownerEmail: provided } : s));
+      localStorage.setItem('demo_shops', JSON.stringify(next));
+      setShopOwnerEmail(provided);
+      setPendingMismatch(false);
+      toast.success('Boutique associée à cet email (démo)');
+    } catch {
+      toast.error('Impossible de modifier la boutique (démo).');
+    }
+  };
+
+  useEffect(() => {
+    const reloadProducts = () => {
+      try {
+        const raw = localStorage.getItem('demo_products');
+        const map = raw ? JSON.parse(raw) : {};
+        const list = map && typeof map === 'object' ? map[shopSlug] : [];
+        if (Array.isArray(list)) {
+          setProducts(list);
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    const onUpdated = () => reloadProducts();
+    window.addEventListener('demo_products_updated', onUpdated);
+    return () => window.removeEventListener('demo_products_updated', onUpdated);
+  }, [shopSlug]);
+
   const toggleFollow = () => {
-    setIsFollowing(!isFollowing);
+    const slug = shop?.slug || shopSlug;
+    if (!slug) {
+      toast.error('Boutique invalide');
+      return;
+    }
+
+    setIsFollowing((prev) => {
+      const nextValue = !prev;
+      try {
+        const raw = localStorage.getItem('followed_shops');
+        const followed = raw ? JSON.parse(raw) : [];
+        const list = Array.isArray(followed) ? followed : [];
+        const next = nextValue
+          ? Array.from(new Set([...list, slug]))
+          : list.filter((s) => s !== slug);
+        localStorage.setItem('followed_shops', JSON.stringify(next));
+      } catch {
+        try {
+          localStorage.setItem('followed_shops', JSON.stringify(nextValue ? [slug] : []));
+        } catch {
+          toast.error('Impossible d’enregistrer le suivi (stockage local)');
+        }
+      }
+
+      setShop((current) => {
+        if (!current) return current;
+        const currentCount = Number(current.followers_count || 0);
+        const updatedCount = nextValue ? currentCount + 1 : Math.max(0, currentCount - 1);
+        return { ...current, followers_count: updatedCount };
+      });
+
+      toast.success(nextValue ? 'Boutique suivie' : 'Suivi retiré');
+      return nextValue;
+    });
+  };
+
+  const contactShop = () => {
+    const email = shop?.contact_email;
+    if (!email) {
+      toast.error('Email de contact indisponible');
+      return;
+    }
+    const subject = encodeURIComponent(`Contact boutique: ${shop?.name || ''}`);
+    const body = encodeURIComponent('Bonjour,\n\nJe souhaite avoir plus d’informations sur vos produits.\n');
+    const url = `mailto:${email}?subject=${subject}&body=${body}`;
+    toast.info('Ouverture de votre application email…');
+    window.location.href = url;
   };
 
   const shareShop = () => {
@@ -151,6 +361,15 @@ const ShopPage = () => {
       navigator.clipboard.writeText(window.location.href);
       toast.success('Lien copié dans le presse-papiers');
     }
+  };
+
+  const backToAllShops = () => {
+    try {
+      localStorage.setItem('mangoo-last-view', 'shops');
+    } catch {
+      // ignore
+    }
+    navigate('/');
   };
 
   if (loading) {
@@ -233,19 +452,37 @@ const ShopPage = () => {
   return (
     <div className="min-h-screen">
       {/* Shop Header - Style conforme */}
-      <section className="relative overflow-hidden bg-gradient-primary pt-24 pb-16 lg:pt-32 lg:pb-24">
-        <div className="absolute inset-0 bg-black/20"></div>
+      <section
+        className="relative overflow-hidden pt-24 pb-16 lg:pt-32 lg:pb-24"
+        style={{
+          background: `linear-gradient(135deg, ${shop.primaryColor || '#F97316'}, ${shop.secondaryColor || '#FBBF24'})`
+        }}
+      >
+        <div className="absolute top-6 left-6 z-20">
+          <button
+            type="button"
+            onClick={backToAllShops}
+            className="px-4 py-2 rounded-full bg-white/15 text-white border border-white/30 hover:bg-white/25 transition-colors backdrop-blur-sm"
+          >
+            ← Toutes les boutiques
+          </button>
+        </div>
+        <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
         
         {/* Éléments décoratifs */}
-        <div className="absolute top-20 left-10 w-20 h-20 bg-white/10 rounded-full animate-float"></div>
-        <div className="absolute top-40 right-20 w-16 h-16 bg-white/10 rounded-full animate-float delay-200"></div>
-        <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-white/10 rounded-full animate-float delay-400"></div>
+        <div className="absolute top-20 left-10 w-20 h-20 bg-white/10 rounded-full animate-float pointer-events-none"></div>
+        <div className="absolute top-40 right-20 w-16 h-16 bg-white/10 rounded-full animate-float delay-200 pointer-events-none"></div>
+        <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-white/10 rounded-full animate-float delay-400 pointer-events-none"></div>
         
         <div className="container relative z-10">
           <div className="max-w-4xl mx-auto text-center text-white">
             <div className="mb-8">
-              <div className="w-20 h-20 mx-auto mb-6 bg-white/20 rounded-full flex items-center justify-center">
-                <Store className="w-10 h-10" />
+              <div className="w-20 h-20 mx-auto mb-6 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
+                {shop.logoDataUrl ? (
+                  <img src={shop.logoDataUrl} alt="Logo" className="w-20 h-20 object-cover" />
+                ) : (
+                  <Store className="w-10 h-10" />
+                )}
               </div>
               <div className="flex items-center justify-center gap-3 mb-4">
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold">{shop.name}</h1>
@@ -274,25 +511,43 @@ const ShopPage = () => {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              {canManageProducts && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    try {
+                      localStorage.setItem('mangoo-last-view', 'landing');
+                    } catch {
+                      // ignore
+                    }
+                    navigate('/');
+                  }}
+                  className="text-lg px-8 py-4 inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 backdrop-blur-sm bg-white text-gray-900 hover:bg-gray-100 hover:-translate-y-0.5"
+                >
+                  Tableau de bord
+                </button>
+              )}
               <button
+                type="button"
                 onClick={toggleFollow}
-                className={`btn-primary text-lg px-8 py-4 inline-flex items-center hover-lift ${
+                className={`text-lg px-8 py-4 inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 backdrop-blur-sm hover:-translate-y-0.5 ${
                   isFollowing
-                    ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    : 'bg-secondary-600 text-white hover:bg-secondary-700'
+                    ? 'bg-white text-gray-900 hover:bg-gray-100'
+                    : 'bg-white/15 text-white border border-white/30 hover:bg-white/25'
                 }`}
               >
                 <Users className="w-5 h-5 mr-2" />
                 {isFollowing ? 'Suivi' : 'Suivre'}
               </button>
               <button
+                type="button"
                 onClick={shareShop}
-                className="btn-outline-white text-lg px-8 py-4 inline-flex items-center hover-lift"
+                className="text-lg px-8 py-4 inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 backdrop-blur-sm bg-white/10 text-white border border-white/25 hover:bg-white/20 hover:-translate-y-0.5"
               >
                 <Share2 className="w-5 h-5 mr-2" />
                 Partager
               </button>
-              <button className="btn-outline-white text-lg px-8 py-4 inline-flex items-center hover-lift">
+              <button type="button" onClick={contactShop} className="text-lg px-8 py-4 inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 backdrop-blur-sm bg-white/10 text-white border border-white/25 hover:bg-white/20 hover:-translate-y-0.5">
                 <MessageCircle className="w-5 h-5 mr-2" />
                 Contacter
               </button>
@@ -407,6 +662,24 @@ const ShopPage = () => {
                   {products.length} produit(s)
                 </h2>
                 <div className="flex gap-2">
+                  {canManageProducts && (
+                    <button
+                      type="button"
+                      onClick={() => setShowVendorManager(true)}
+                      className="btn-primary"
+                    >
+                      Ajouter un produit
+                    </button>
+                  )}
+                  {!canManageProducts && shopOwnerEmail && (
+                    <button
+                      type="button"
+                      onClick={() => setShowVendorMode(true)}
+                      className="btn-primary"
+                    >
+                      Je suis le vendeur
+                    </button>
+                  )}
                   <select className="form-input">
                     <option>Tri: Pertinence</option>
                     <option>Prix: croissant</option>
@@ -427,6 +700,28 @@ const ShopPage = () => {
                     <p className="text-gray-600 dark:text-gray-400">
                       Cette boutique n&apos;a pas encore de produits en vente.
                     </p>
+                    {canManageProducts && (
+                      <div className="mt-6">
+                        <button
+                          type="button"
+                          onClick={() => setShowVendorManager(true)}
+                          className="btn-primary"
+                        >
+                          Ajouter mon premier produit
+                        </button>
+                      </div>
+                    )}
+                    {!canManageProducts && shopOwnerEmail && (
+                      <div className="mt-6">
+                        <button
+                          type="button"
+                          onClick={() => setShowVendorMode(true)}
+                          className="btn-primary"
+                        >
+                          Je suis le vendeur
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -436,6 +731,113 @@ const ShopPage = () => {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {showVendorMode && (
+            <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+              <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-2xl">
+                <div className="p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+                  <div className="font-semibold text-gray-900 dark:text-white">Activer le mode vendeur</div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowVendorMode(false);
+                      setVendorEmail('');
+                      setPendingMismatch(false);
+                    }}
+                    className="px-3 py-2 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  >
+                    Fermer
+                  </button>
+                </div>
+                <div className="p-4 space-y-3">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Entrez l’email utilisé lors de la création de cette boutique pour gérer vos produits.
+                  </div>
+                  {shopOwnerEmail && (
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Email associé à cette boutique (démo): {maskEmail(shopOwnerEmail)}
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Email vendeur</label>
+                    <input
+                      value={vendorEmail}
+                      onChange={(e) => setVendorEmail(e.target.value)}
+                      type="email"
+                      placeholder="ex: vous@exemple.com"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                  {pendingMismatch && (
+                    <div className="rounded-xl border border-orange-200 bg-orange-50 text-orange-800 p-3 text-sm">
+                      <div className="font-semibold">Vous n’avez pas le bon email ?</div>
+                      <div className="text-xs mt-1">Mode démo: vous pouvez associer cette boutique à l’email saisi.</div>
+                      <div className="mt-3 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={claimShopForEmail}
+                          className="px-4 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-orange-500 to-green-600 text-white"
+                        >
+                          Associer à cet email (démo)
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowVendorMode(false);
+                        setVendorEmail('');
+                        setPendingMismatch(false);
+                      }}
+                      className="px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="button"
+                      onClick={activateVendorMode}
+                      className="px-4 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-orange-500 to-green-600 text-white"
+                    >
+                      Activer
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showVendorManager && (
+            <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+              <div className="w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-2xl">
+                <div className="p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+                  <div className="font-semibold text-gray-900 dark:text-white">Gestion des produits</div>
+                  <button
+                    type="button"
+                    onClick={() => setShowVendorManager(false)}
+                    className="px-3 py-2 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  >
+                    Fermer
+                  </button>
+                </div>
+                <div className="p-4">
+                  <VendorProductManager
+                    shops={[{
+                      id: shop?.id || shopSlug,
+                      slug: shopSlug,
+                      name: shop?.name || 'Boutique',
+                      category: shop?.category || 'general',
+                      primaryColor: shop?.primaryColor,
+                      secondaryColor: shop?.secondaryColor,
+                      logoDataUrl: shop?.logoDataUrl || ''
+                    }]}
+                    defaultShopSlug={shopSlug}
+                  />
+                </div>
+              </div>
             </div>
           )}
 

@@ -16,7 +16,7 @@ import {
   Instagram 
 } from 'lucide-react';
 
-const LandingPage = ({ onNavigate, onLogin }) => {
+const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminDashboard }) => {
   // State for dark mode with system preference check
   const [isDark, setIsDark] = React.useState(() => {
     if (typeof window !== 'undefined') {
@@ -266,9 +266,20 @@ const LandingPage = ({ onNavigate, onLogin }) => {
             >
               {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
+            {showAdminDashboard && (
+              <button
+                type="button"
+                onClick={onAdminDashboard}
+                className={`px-4 py-2 rounded-full font-bold text-sm transition-colors whitespace-nowrap flex-shrink-0 ${
+                  isDark ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-purple-600 hover:bg-purple-700 text-white'
+                }`}
+              >
+                Admin
+              </button>
+            )}
             <button 
               onClick={() => onLogin({ role: 'login_request' })} 
-              className={`px-5 py-2 rounded-full font-bold text-sm transition-colors ${
+              className={`px-5 py-2 rounded-full font-bold text-sm transition-colors whitespace-nowrap flex-shrink-0 ${
                 isDark ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-gray-900 hover:bg-gray-800 text-white'
               }`}
             >
@@ -312,7 +323,7 @@ const LandingPage = ({ onNavigate, onLogin }) => {
   
             {/* Carte Acheteur */}
             <button 
-              onClick={() => onNavigate('marketplace')}
+              onClick={() => onNavigate('shops')}
               className={`group flex-1 rounded-3xl p-8 border shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1 relative overflow-hidden text-left ${
                 isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
               }`}
@@ -324,7 +335,7 @@ const LandingPage = ({ onNavigate, onLogin }) => {
               <h2 className={`text-2xl font-bold mb-2 text-center ${isDark ? 'text-white' : 'text-gray-900'}`}>Je suis Acheteur</h2>
               <p className={`mb-6 text-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Découvrez des produits uniques et achetez en direct.</p>
               <div className="bg-blue-50 text-blue-700 py-3 rounded-xl font-bold group-hover:bg-blue-600 group-hover:text-white transition-colors flex items-center justify-center gap-2">
-                Explorer les boutiques <ArrowRight className="w-4 h-4" />
+                Voir les boutiques <ArrowRight className="w-4 h-4" />
               </div>
             </button>
   

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { mobileMoneyApi, paypalApi, stripeApi } from '../config/api.js';
 import { getCurrentUserId } from '../utils/uuid.js';
+import { ensureWalletBalance, debitWalletBalance } from '../utils/demoWallet.js';
 
 // Configuration des méthodes de paiement
 export const PAYMENT_METHODS = {
@@ -31,6 +32,33 @@ export const PAYMENT_METHODS = {
     countries: ['CI', 'TG', 'BJ'],
     description: 'Paiement mobile Moov',
     processingFee: 0.012, // 1.2% de frais
+  },
+  WAVE: {
+    id: 'wave',
+    name: 'Wave',
+    icon: '🌊',
+    currency: 'XOF',
+    countries: ['CI', 'SN', 'ML', 'BF'],
+    description: 'Paiement mobile Wave',
+    processingFee: 0.01,
+  },
+  FREE_MOBILE: {
+    id: 'free_mobile',
+    name: 'Free Mobile',
+    icon: '📶',
+    currency: 'XOF',
+    countries: ['SN'],
+    description: 'Paiement mobile Free',
+    processingFee: 0.012,
+  },
+  MANGOO_PAY: {
+    id: 'mangoo_balance',
+    name: 'Mangoo Pay (Solde)',
+    icon: '🧾',
+    currency: 'XOF',
+    countries: ['CI', 'SN', 'ML', 'BF', 'FR', 'BE', 'CA', 'US', 'DE', 'IT', 'GH', 'UG', 'RW', 'TG', 'BJ'],
+    description: 'Paiement via votre solde Mangoo',
+    processingFee: 0,
   },
   // Paiements internationaux
   PAYPAL: {
@@ -82,7 +110,7 @@ export const usePaymentStore = create((set, get) => ({
 
   // Calculer les frais de traitement
   calculateProcessingFee: (amount, methodId) => {
-    const method = PAYMENT_METHODS[methodId];
+    const method = Object.values(PAYMENT_METHODS).find((m) => m.id === methodId) || PAYMENT_METHODS[methodId];
     if (!method) return 0;
     
     const baseAmount = parseFloat(amount);
@@ -129,149 +157,14 @@ export const usePaymentStore = create((set, get) => ({
   processPayment: async (paymentData) => {
     const { amount, method, currency, phoneNumber, email, description } = paymentData;
     set({ isProcessing: true, paymentStatus: null });
-    try {
-      if (!amount || !method || !currency) {
-        throw new Error('Données de paiement incomplètes');
-      }
-      if (['orange_money', 'mtn_momo', 'moov_money'].includes(method) && !phoneNumber) {
-        throw new Error('Numéro de téléphone requis pour le paiement mobile');
-      }
-      if (method === 'paypal' && !email) {
-        throw new Error('Email requis pour PayPal');
-      }
 
-      if (['orange_money', 'mtn_momo', 'moov_money'].includes(method)) {
-        console.log(`🚀 Création paiement mobile ${method} pour ${phoneNumber}`);
-        
-        // Obtenir l'ID utilisateur actuel (anonyme ou connecté)
-        const userId = getCurrentUserId();
-        console.log(`👤 ID utilisateur utilisé: ${userId}`);
-        
-        // Créer le paiement
-        const createData = await mobileMoneyApi.createPayment({
-          user_id: userId,
-          amount,
-          currency,
-          method,
-          phone_number: phoneNumber,
-          description,
-        });
-        
-        console.log(`✅ Paiement créé:`, createData);
-        
-        // Confirmer le paiement
-        const confirmData = await mobileMoneyApi.confirmPayment({
-          paymentId: createData.paymentId, 
-          transactionId: createData.transactionId 
-        });
-        
-        console.log(`✅ Paiement confirmé:`, confirmData);
-        const processingFee = get().calculateProcessingFee(amount, method);
-        const totalAmount = parseFloat(amount) + processingFee;
-        const transaction = {
-          id: createData.transactionId,
-          amount: parseFloat(amount),
-          processingFee,
-          totalAmount,
-          method,
-          currency,
-          phoneNumber,
-          email,
-          description,
-          status: confirmData.status === 'succeeded' ? 'completed' : 'failed',
-          timestamp: new Date().toISOString(),
-        };
-        get().addTransaction(transaction);
-        set({ isProcessing: false, paymentStatus: { success: confirmData.status === 'succeeded', transaction, message: confirmData.status === 'succeeded' ? 'Paiement effectué avec succès!' : 'Paiement échoué' } });
-        return transaction;
-      }
-      
-      // PayPal
-      if (method === 'paypal') {
-        console.log(`🚀 Création commande PayPal`);
-        
-        const userId = getCurrentUserId();
-        
-        const orderData = await paypalApi.createOrder({
-          userId: userId,
-          amount,
-          currency,
-          description,
-          email,
-        });
-        
-        console.log(`✅ Commande PayPal créée:`, orderData);
-        
-        const captureData = await paypalApi.captureOrder(orderData.orderId);
-        
-        console.log(`✅ Commande PayPal capturée:`, captureData);
-        
-        const processingFee = get().calculateProcessingFee(amount, method);
-        const totalAmount = parseFloat(amount) + processingFee;
-        const transaction = {
-          id: orderData.orderId,
-          amount: parseFloat(amount),
-          processingFee,
-          totalAmount,
-          method,
-          currency,
-          email,
-          description,
-          status: captureData.status === 'completed' ? 'completed' : 'failed',
-          timestamp: new Date().toISOString(),
-        };
-        get().addTransaction(transaction);
-        set({ isProcessing: false, paymentStatus: { success: captureData.status === 'completed', transaction, message: captureData.status === 'completed' ? 'Paiement PayPal effectué avec succès!' : 'Paiement PayPal échoué' } });
-        return transaction;
-      }
-      
-      // Stripe
-      if (method === 'stripe') {
-        console.log(`🚀 Création paiement Stripe`);
-        
-        const userId = getCurrentUserId();
-        
-        const intentData = await stripeApi.createPaymentIntent({
-          user_id: userId,
-          amount,
-          currency,
-          description,
-          email,
-        });
-        
-        console.log(`✅ Intent Stripe créé:`, intentData);
-        
-        // Sauvegarder l'ID de paiement pour la confirmation backend
-        if (intentData.paymentId) {
-          localStorage.setItem('currentPaymentId', intentData.paymentId);
-          console.log(`💾 ID de paiement sauvegardé:`, intentData.paymentId);
-        }
-        
-        // Le paiement Stripe est déjà confirmé côté client dans le composant StripePayment
-        // Nous devons juste attendre la confirmation backend
-        const processingFee = get().calculateProcessingFee(amount, method);
-        const totalAmount = parseFloat(amount) + processingFee;
-        const transaction = {
-          id: intentData.paymentIntentId,
-          amount: parseFloat(amount),
-          processingFee,
-          totalAmount,
-          method,
-          currency,
-          email,
-          description,
-          status: 'pending', // Le statut sera mis à jour après confirmation backend
-          paymentId: intentData.paymentId,
-          timestamp: new Date().toISOString(),
-        };
-        
-        console.log(`✅ Transaction Stripe créée (en attente de confirmation):`, transaction);
-        get().addTransaction(transaction);
-        set({ isProcessing: false, paymentStatus: { success: true, transaction, message: 'Paiement Stripe en cours de confirmation...' } });
-        return transaction;
-      }
+    const isFetchError = (err) => {
+      const msg = String(err?.message || '').toLowerCase();
+      return msg.includes('fetch failed') || msg.includes('échec après') || msg.includes('http 500') || msg.includes('database_error');
+    };
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    const simulateTransaction = async (override = {}) => {
+      await new Promise(resolve => setTimeout(resolve, 650));
       const processingFee = get().calculateProcessingFee(amount, method);
       const totalAmount = parseFloat(amount) + processingFee;
       const transaction = {
@@ -286,10 +179,179 @@ export const usePaymentStore = create((set, get) => ({
         description,
         status: 'completed',
         timestamp: new Date().toISOString(),
+        demo: true,
+        ...override,
       };
       get().addTransaction(transaction);
-      set({ isProcessing: false, paymentStatus: { success: true, transaction, message: 'Paiement effectué avec succès!' } });
+      set({ isProcessing: false, paymentStatus: { success: true, transaction, message: 'Paiement effectué (mode démo)' } });
       return transaction;
+    };
+
+    const walletKey = String(paymentData?.userId || '').trim() || String(paymentData?.email || '').trim();
+    try {
+      if (!amount || !method || !currency) {
+        throw new Error('Données de paiement incomplètes');
+      }
+      if (['orange_money', 'mtn_momo', 'moov_money', 'wave', 'free_mobile'].includes(method) && !phoneNumber) {
+        throw new Error('Numéro de téléphone requis pour le paiement mobile');
+      }
+      if (method === 'paypal' && !email) {
+        throw new Error('Email requis pour PayPal');
+      }
+
+
+      if (method === 'mangoo_balance') {
+        if (!walletKey) {
+          throw new Error('Veuillez vous reconnecter pour utiliser le solde Mangoo Pay');
+        }
+        const initBalance = ensureWalletBalance(walletKey, 300000) ?? 0;
+        const processingFee = get().calculateProcessingFee(amount, method);
+        const totalAmount = parseFloat(amount) + processingFee;
+        if (initBalance < totalAmount) {
+          throw new Error('Solde insuffisant. Veuillez recharger votre solde Mangoo Pay.');
+        }
+        debitWalletBalance(walletKey, totalAmount);
+        const tx = await simulateTransaction({ id: `WAL${Date.now()}`, method: 'mangoo_balance', currency: 'XOF' });
+        return tx;
+      }
+      if (['orange_money', 'mtn_momo', 'moov_money', 'wave', 'free_mobile'].includes(method)) {
+        
+        
+        // Obtenir l'ID utilisateur actuel (anonyme ou connecté)
+        const userId = getCurrentUserId();
+        console.log(`👤 ID utilisateur utilisé: ${userId}`);
+        
+        try {
+          const createData = await mobileMoneyApi.createPayment({
+            user_id: userId,
+            amount,
+            currency,
+            method,
+            phone_number: phoneNumber,
+            description,
+          });
+          console.log(`✅ Paiement créé:`, createData);
+          const confirmData = await mobileMoneyApi.confirmPayment({
+            paymentId: createData.paymentId,
+            transactionId: createData.transactionId
+          });
+          console.log(`✅ Paiement confirmé:`, confirmData);
+          const processingFee = get().calculateProcessingFee(amount, method);
+          const totalAmount = parseFloat(amount) + processingFee;
+          const transaction = {
+            id: createData.transactionId,
+            amount: parseFloat(amount),
+            processingFee,
+            totalAmount,
+            method,
+            currency,
+            phoneNumber,
+            email,
+            description,
+            status: confirmData.status === 'succeeded' ? 'completed' : 'failed',
+            timestamp: new Date().toISOString(),
+          };
+          get().addTransaction(transaction);
+          set({ isProcessing: false, paymentStatus: { success: confirmData.status === 'succeeded', transaction, message: confirmData.status === 'succeeded' ? 'Paiement effectué avec succès!' : 'Paiement échoué' } });
+          return transaction;
+        } catch (err) {
+          if (isFetchError(err)) {
+            return simulateTransaction({ method, currency });
+          }
+          throw err;
+        }
+      }
+      
+      // PayPal
+      if (method === 'paypal') {
+        console.log(`🚀 Création commande PayPal`);
+        
+        const userId = getCurrentUserId();
+        
+        try {
+          const orderData = await paypalApi.createOrder({
+            userId: userId,
+            amount,
+            currency,
+            description,
+            email,
+          });
+          console.log(`✅ Commande PayPal créée:`, orderData);
+          const captureData = await paypalApi.captureOrder(orderData.orderId);
+          console.log(`✅ Commande PayPal capturée:`, captureData);
+          const processingFee = get().calculateProcessingFee(amount, method);
+          const totalAmount = parseFloat(amount) + processingFee;
+          const transaction = {
+            id: orderData.orderId,
+            amount: parseFloat(amount),
+            processingFee,
+            totalAmount,
+            method,
+            currency,
+            email,
+            description,
+            status: captureData.status === 'completed' ? 'completed' : 'failed',
+            timestamp: new Date().toISOString(),
+          };
+          get().addTransaction(transaction);
+          set({ isProcessing: false, paymentStatus: { success: captureData.status === 'completed', transaction, message: captureData.status === 'completed' ? 'Paiement PayPal effectué avec succès!' : 'Paiement PayPal échoué' } });
+          return transaction;
+        } catch (err) {
+          if (isFetchError(err)) {
+            return simulateTransaction({ method: 'paypal', currency });
+          }
+          throw err;
+        }
+      }
+      
+      // Stripe
+      if (method === 'stripe') {
+        console.log(`🚀 Création paiement Stripe`);
+        
+        const userId = getCurrentUserId();
+        
+        try {
+          const intentData = await stripeApi.createPaymentIntent({
+            user_id: userId,
+            amount,
+            currency,
+            description,
+            email,
+          });
+          console.log(`✅ Intent Stripe créé:`, intentData);
+        
+          if (intentData.paymentId) {
+            localStorage.setItem('currentPaymentId', intentData.paymentId);
+            console.log(`💾 ID de paiement sauvegardé:`, intentData.paymentId);
+          }
+          const processingFee = get().calculateProcessingFee(amount, method);
+          const totalAmount = parseFloat(amount) + processingFee;
+          const transaction = {
+            id: intentData.paymentIntentId,
+            amount: parseFloat(amount),
+            processingFee,
+            totalAmount,
+            method,
+            currency,
+            email,
+            description,
+            status: 'pending',
+            paymentId: intentData.paymentId,
+            timestamp: new Date().toISOString(),
+          };
+          console.log(`✅ Transaction Stripe créée (en attente de confirmation):`, transaction);
+          get().addTransaction(transaction);
+          set({ isProcessing: false, paymentStatus: { success: true, transaction, message: 'Paiement Stripe en cours de confirmation...' } });
+          return transaction;
+        } catch (err) {
+          if (isFetchError(err)) {
+            return simulateTransaction({ method: 'stripe', currency });
+          }
+          throw err;
+        }
+      }
+
+      return simulateTransaction();
     } catch (error) {
       set({ isProcessing: false, paymentStatus: { success: false, error: error.message, message: 'Erreur lors du paiement. Veuillez réessayer.' } });
       throw error;
