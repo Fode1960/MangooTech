@@ -53,6 +53,8 @@ interface LiveShoppingManagerProps {
   userId: string;
   userName: string;
   onEndStream?: () => void;
+  embedded?: boolean;
+  className?: string;
 }
 
 const LiveShoppingManager: React.FC<LiveShoppingManagerProps> = ({
@@ -60,7 +62,9 @@ const LiveShoppingManager: React.FC<LiveShoppingManagerProps> = ({
   roomId,
   userId,
   userName,
-  onEndStream
+  onEndStream,
+  embedded,
+  className
 }) => {
   const [isLive, setIsLive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -647,16 +651,16 @@ const LiveShoppingManager: React.FC<LiveShoppingManagerProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
+    <div className={`${embedded ? 'h-full flex flex-col' : 'min-h-screen'} ${embedded ? 'bg-transparent' : 'bg-gradient-to-br from-orange-50 to-amber-50'} ${className || ''}`}>
       {/* En-tête avec design MangooTech */}
-      <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white p-4 shadow-lg">
+      <div className={`bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg ${embedded ? 'p-3' : 'p-4'}`}>
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
               <Film className="w-6 h-6 text-orange-500" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">MangooTech Live Shopping</h1>
+              <h1 className={`${embedded ? 'text-xl' : 'text-2xl'} font-bold`}>MangooTech Live Shopping</h1>
               <p className="text-orange-100">Vente en direct • Expérience interactive</p>
             </div>
           </div>
@@ -678,7 +682,7 @@ const LiveShoppingManager: React.FC<LiveShoppingManagerProps> = ({
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto p-4">
+      <div className={`max-w-7xl mx-auto p-4 ${embedded ? 'flex-1 overflow-y-auto' : ''}`}>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Zone vidéo principale */}
           <div className="lg:col-span-3">

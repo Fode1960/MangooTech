@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, X, Send, Paperclip, Smile, Phone, Video, MoreVertical, Search, ChevronDown } from 'lucide-react';
 import { useChat } from '../contexts/ChatContext';
+import { toast } from 'sonner';
 
 interface CustomerChatProps {
   vendorId: string;
@@ -36,6 +37,7 @@ const CustomerChat: React.FC<CustomerChatProps> = ({
   } = useChat();
   
   const { conversations } = state;
+  const currentUserId = state.currentUserId;
   
   const [message, setMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -147,7 +149,7 @@ const CustomerChat: React.FC<CustomerChatProps> = ({
     // Simuler l'upload de fichier
     const fileMessage: ChatMessage = {
       id: `file_${Date.now()}`,
-      senderId: 'customer_current',
+      senderId: currentUserId,
       senderName: 'Vous',
       content: `📎 ${file.name}`,
       timestamp: new Date(),
@@ -193,13 +195,25 @@ const CustomerChat: React.FC<CustomerChatProps> = ({
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          <button className="p-1 hover:bg-white/20 rounded">
+          <button
+            type="button"
+            onClick={() => toast.info(`Appel (démo) vers ${vendorName}`)}
+            className="p-1 hover:bg-white/20 rounded"
+          >
             <Phone className="w-4 h-4" />
           </button>
-          <button className="p-1 hover:bg-white/20 rounded">
+          <button
+            type="button"
+            onClick={() => toast.info(`Appel vidéo (démo) vers ${vendorName}`)}
+            className="p-1 hover:bg-white/20 rounded"
+          >
             <Video className="w-4 h-4" />
           </button>
-          <button className="p-1 hover:bg-white/20 rounded">
+          <button
+            type="button"
+            onClick={() => toast.info('Options (démo)')}
+            className="p-1 hover:bg-white/20 rounded"
+          >
             <MoreVertical className="w-4 h-4" />
           </button>
           <button 
@@ -241,18 +255,18 @@ const CustomerChat: React.FC<CustomerChatProps> = ({
             .map((message) => (
             <div
               key={message.id}
-              className={`flex ${message.senderId === 'customer_current' ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${message.senderId === currentUserId ? 'justify-end' : 'justify-start'}`}
             >
               <div
                 className={`max-w-xs px-4 py-2 rounded-lg ${
-                  message.senderId === 'customer_current'
+                  message.senderId === currentUserId
                     ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
                 }`}
               >
                 <p className="text-sm">{message.content}</p>
                 <p className={`text-xs mt-1 ${
-                  message.senderId === 'customer_current' 
+                  message.senderId === currentUserId 
                     ? 'text-white/80' 
                     : 'text-gray-500 dark:text-gray-400'
                 }`}>

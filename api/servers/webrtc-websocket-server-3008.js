@@ -1,9 +1,9 @@
 // Serveur WebSocket WebRTC pour MangooTech - Port 3008
-const WebSocket = require('ws');
-const http = require('http');
+import http from 'http';
+import WebSocket, { WebSocketServer } from 'ws';
 
 const server = http.createServer();
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocketServer({ server });
 
 // Stockage des rooms et utilisateurs
 const rooms = new Map();

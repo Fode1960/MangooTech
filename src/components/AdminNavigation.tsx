@@ -23,7 +23,7 @@ export default function AdminNavigation() {
   const navigation = [
     { name: "Tableau de bord", href: "/admin/dashboard", icon: LayoutDashboard },
     { name: "Boutiques", href: "/admin/shops", icon: Store },
-    { name: "Accès & QR", href: "/vendor-access-qr", icon: QrCode },
+    { name: "Accès & QR", href: "/admin/vendor-access-qr", icon: QrCode },
     { name: "Commissions", href: "/admin/commissions", icon: Calculator },
     { name: "Utilisateurs", href: "/admin/users", icon: Users },
     { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
@@ -33,7 +33,7 @@ export default function AdminNavigation() {
   ];
 
   const isActive = (path: string) => {
-    return location.pathname === path;
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
   return (
@@ -71,12 +71,6 @@ export default function AdminNavigation() {
               <li key={item.name}>
                 <button
                   onClick={() => {
-                    // Gestion spéciale pour la route externe vendor-access-qr
-                    if (item.href === '/vendor-access-qr') {
-                      navigate('/vendor-access-qr');
-                      return;
-                    }
-
                     navigate(item.href);
                   }}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all text-left cursor-pointer active:scale-95 ${

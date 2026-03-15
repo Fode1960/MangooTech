@@ -5,7 +5,7 @@ import { ThemeToggle } from './components/ThemeToggle';
 import { PaymentMethods } from './components/PaymentMethodsStable';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PaymentAnalyticsDashboard } from './components/PaymentAnalyticsDashboardSimple';
-import { Routes, Route, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminShops from './pages/AdminShops';
 import AdminCommissions from './pages/AdminCommissions';
@@ -28,6 +28,14 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { Toaster, toast } from 'sonner';
 import { ensureWalletBalance, getWalletBalance, getWalletKeyFromUser, creditWalletBalance } from './utils/demoWallet';
 import { usePaymentStore } from './stores/paymentStore';
+import CustomerChat from './components/CustomerChat';
+import { ChatProvider } from './contexts/ChatContext';
+import WebRTCManagerFinal from './components/WebRTCManagerFinal';
+import { LiveShoppingProvider } from './contexts/LiveShoppingContext';
+import WebRTCJoinPage from './pages/WebRTCJoinPage';
+import VendorMessagingCenter from './components/VendorMessagingCenter';
+import LiveShoppingManager from './components/LiveShoppingManager';
+import { NotificationProvider } from './contexts/NotificationContext';
 
 // Store optimisé avec Zustand
 const useStore = create((set, get) => ({
@@ -106,12 +114,22 @@ const useStore = create((set, get) => ({
 }));
 
 // Composant de connexion optimisé
-const Login = ({ onLogin, onBack, onCreateClient }) => {
+const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [selectedPlan, setSelectedPlan] = useState(null);
   const { isDark } = useThemeStore();
+
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem('mangoo-selected-plan');
+      setSelectedPlan(v ? String(v) : null);
+    } catch {
+      setSelectedPlan(null);
+    }
+  }, []);
 
   const activateVendorAccount = useCallback(() => {
     const normalizedEmail = String(email || '').trim().toLowerCase();
@@ -137,6 +155,11 @@ const Login = ({ onLogin, onBack, onCreateClient }) => {
 
     if (!shop) {
       setError('Aucune boutique trouvée pour cet email');
+      return;
+    }
+
+    if (String(shop?.approvalStatus || 'pending') !== 'approved') {
+      setError('Votre boutique est en attente d’approbation par l’administrateur');
       return;
     }
 
@@ -272,6 +295,15 @@ const Login = ({ onLogin, onBack, onCreateClient }) => {
           </div>
         )}
 
+        {selectedPlan && (
+          <div className={`mb-4 px-4 py-3 rounded-lg border text-sm ${
+            isDark ? 'bg-gray-900/40 border-gray-700 text-gray-200' : 'bg-gray-50 border-gray-200 text-gray-700'
+          }`}>
+            <div className="font-semibold">Plan sélectionné : {selectedPlan === 'pro' ? 'Pro' : 'Gratuit'}</div>
+            <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Connectez-vous pour continuer, ou créez votre boutique.</div>
+          </div>
+        )}
+
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className={`block text-sm font-medium mb-2 transition-colors duration-300 ${
@@ -343,6 +375,17 @@ const Login = ({ onLogin, onBack, onCreateClient }) => {
               }`}
             >
               Créer un compte client
+            </button>
+          )}
+          {onCreateVendor && (
+            <button
+              type="button"
+              onClick={onCreateVendor}
+              className={`w-full px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                isDark ? 'bg-gray-900 text-white hover:bg-gray-700 border border-gray-700' : 'bg-white text-gray-900 hover:bg-gray-50 border border-gray-200'
+              }`}
+            >
+              Créer ma boutique
             </button>
           )}
           <button
@@ -465,8 +508,10 @@ const Register = ({ onRegister, onBack }) => {
         next.push({ ...shop, createdAt: new Date().toISOString() });
       }
       localStorage.setItem('demo_shops', JSON.stringify(next));
+      window.dispatchEvent(new Event('demo-shops-updated'));
     } catch {
       localStorage.setItem('demo_shops', JSON.stringify([{ ...shop, createdAt: new Date().toISOString() }]));
+      window.dispatchEvent(new Event('demo-shops-updated'));
     }
   }, []);
 
@@ -498,7 +543,8 @@ const Register = ({ onRegister, onBack }) => {
       logoDataUrl,
       primaryColor,
       secondaryColor,
-      shopUrl
+      shopUrl,
+      approvalStatus: 'pending'
     };
 
     persistCreatedShop(shop);
@@ -1196,6 +1242,33 @@ const VendorDashboard = ({ user }) => {
   const [showShopEditor, setShowShopEditor] = useState(false);
   const { isDark } = useThemeStore();
 
+  const [communicationMode, setCommunicationMode] = useState('messages');
+  const [callRoomId, setCallRoomId] = useState('');
+  const [manualRoomId, setManualRoomId] = useState('');
+
+  const vendorPeerId = useMemo(() => {
+    const id = user?.id ? String(user.id) : String(user?.email || 'vendor');
+    return `vendor_${id}`;
+  }, [user?.email, user?.id]);
+
+  const webrtcInstanceId = useMemo(() => Math.random().toString(36).slice(2, 10), []);
+  const webrtcUserId = useMemo(() => `vendor_${vendorPeerId}_${webrtcInstanceId}`, [vendorPeerId, webrtcInstanceId]);
+
+  const buildCallRoomId = useCallback((peerId) => {
+    const selfId = String(vendorPeerId || '').trim();
+    const otherId = String(peerId || '').trim();
+    if (!selfId || !otherId) return '';
+    return `formal_call_${[selfId, otherId].sort().join('__')}`;
+  }, [vendorPeerId]);
+
+  useEffect(() => {
+    if (activeTab !== 'communication') {
+      setCallRoomId('');
+      setManualRoomId('');
+      setCommunicationMode('messages');
+    }
+  }, [activeTab]);
+
   const shopCategories = useMemo(() => [
     { key: 'general', label: 'Général' },
     { key: 'food', label: 'Alimentation' },
@@ -1289,6 +1362,7 @@ const VendorDashboard = ({ user }) => {
         };
       });
       localStorage.setItem('demo_shops', JSON.stringify(next));
+      window.dispatchEvent(new Event('demo-shops-updated'));
       setShowShopEditor(false);
       loadVendorShops();
     } catch {
@@ -1311,6 +1385,7 @@ const VendorDashboard = ({ user }) => {
     { id: 'products', name: 'Produits', icon: '🧾' },
     { id: 'orders', name: 'Commandes', icon: '🛒' },
     { id: 'notifications', name: 'Notifications', icon: '🔔' },
+    { id: 'communication', name: 'Communication', icon: '📞' },
     { id: 'shops', name: 'Mes boutiques', icon: '🏪' }
   ];
 
@@ -1328,6 +1403,237 @@ const VendorDashboard = ({ user }) => {
         return VendorOrderHistory ? <VendorOrderHistory vendorId="vendor-demo" /> : <div>Chargement...</div>;
       case 'notifications':
         return VendorNotifications ? <VendorNotifications vendorId="vendor-demo" /> : <div>Chargement...</div>;
+      case 'communication': {
+        const contacts = [
+          { id: 'customer_3', name: 'Client Demo', avatar: '🧑‍💻', hint: 'client@example.com' },
+          { id: 'customer_guest@mangoo.tech', name: 'Client invité', avatar: '👤', hint: 'guest@mangoo.tech' }
+        ];
+
+        return (
+          <div className="h-full flex flex-col gap-4">
+            <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl p-4`}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>Communication</div>
+                  <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Messages, appels WebRTC, contacts.</div>
+                </div>
+                <div className={`${isDark ? 'bg-gray-900 border-gray-700 text-gray-300' : 'bg-gray-50 border-gray-200 text-gray-700'} border rounded-lg px-3 py-2 text-xs font-semibold break-all`}>
+                  {vendorPeerId}
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <div className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-1 flex flex-wrap gap-1 items-center overflow-visible`}>
+                  <button
+                    type="button"
+                    onClick={() => setCommunicationMode('messages')}
+                    className={`px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors inline-flex items-center gap-2 leading-none ${
+                      communicationMode === 'messages'
+                        ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                        : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
+                    }`}
+                  >
+                    <span className="text-base leading-none">💬</span>
+                    <span className="leading-none">Messages</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCommunicationMode('contacts')}
+                    className={`px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors inline-flex items-center gap-2 leading-none ${
+                      communicationMode === 'contacts'
+                        ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                        : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
+                    }`}
+                  >
+                    <span className="text-base leading-none">👥</span>
+                    <span className="leading-none">Contacts</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCommunicationMode('call')}
+                    className={`px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors inline-flex items-center gap-2 leading-none ${
+                      communicationMode === 'call'
+                        ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                        : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
+                    }`}
+                  >
+                    <span className="text-base leading-none">📹</span>
+                    <span className="leading-none">Appel</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCommunicationMode('live')}
+                    className={`px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors inline-flex items-center gap-2 leading-none ${
+                      communicationMode === 'live'
+                        ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                        : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
+                    }`}
+                  >
+                    <span className="text-base leading-none">🔴</span>
+                    <span className="leading-none">Live</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 min-h-0">
+              {communicationMode === 'messages' && (
+                <VendorMessagingCenter vendorId={vendorPeerId} />
+              )}
+
+              {communicationMode === 'contacts' && (
+                <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl p-4 h-full overflow-auto`}>
+                <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>Contacts</div>
+                <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Ouvrir un chat ou démarrer un appel.</div>
+                <div className="mt-3 grid grid-cols-1 gap-2">
+                  {contacts.map((t) => (
+                    <div
+                      key={t.id}
+                      className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-3 flex items-center justify-between gap-3`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-gradient-to-r from-orange-500 to-green-600 text-white">
+                          {t.avatar}
+                        </div>
+                        <div>
+                          <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold text-sm`}>{t.name}</div>
+                          <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-xs`}>{t.hint}</div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setCommunicationMode('messages')}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+                        >
+                          Chat
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCommunicationMode('call');
+                            setCallRoomId(buildCallRoomId(t.id));
+                          }}
+                          className={`${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-900'} text-xs font-semibold px-3 py-2 rounded-lg transition-colors`}
+                        >
+                          Appel
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              )}
+
+              {communicationMode === 'call' && (
+                <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl p-4 h-full flex flex-col`}>
+                {!callRoomId ? (
+                  <div className="overflow-auto">
+                    <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>Appel WebRTC</div>
+                    <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Sélectionnez un client ou collez un code room.</div>
+
+                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {contacts.map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => setCallRoomId(buildCallRoomId(t.id))}
+                          className={`${isDark ? 'bg-gray-900 hover:bg-gray-800 border-gray-700 text-white' : 'bg-gray-50 hover:bg-white border-gray-200 text-gray-900'} border rounded-xl p-3 flex items-center justify-between gap-3 transition-colors`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-gradient-to-r from-orange-500 to-green-600 text-white">
+                              {t.avatar}
+                            </div>
+                            <div className="text-left">
+                              <div className="font-semibold text-sm">{t.name}</div>
+                              <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-xs`}>Démarrer</div>
+                            </div>
+                          </div>
+                          <div className="text-sm font-semibold">📹</div>
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <input
+                        value={manualRoomId}
+                        onChange={(e) => setManualRoomId(e.target.value)}
+                        placeholder="Coller roomId..."
+                        className={`md:col-span-2 w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'}`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const rid = String(manualRoomId || '').trim();
+                          if (!rid) return;
+                          setCallRoomId(rid);
+                        }}
+                        className="bg-gradient-to-r from-orange-500 to-green-600 text-white py-2 px-3 rounded-lg font-semibold hover:from-orange-600 hover:to-green-700 transition-all"
+                      >
+                        Rejoindre
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col flex-1 min-h-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>Appel en cours</div>
+                        <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1 break-all`}>Room: {callRoomId}</div>
+                      </div>
+                      <div className="flex gap-2 flex-wrap justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const url = `${window.location.origin}/webrtc?role=client&roomId=${encodeURIComponent(callRoomId)}`;
+                            window.open(url, '_blank', 'noopener,noreferrer');
+                          }}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-3 py-2 rounded-lg transition-colors"
+                        >
+                          Ouvrir client (test)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => navigator.clipboard.writeText(callRoomId)}
+                          className={`${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-900'} text-sm font-semibold px-3 py-2 rounded-lg transition-colors`}
+                        >
+                          Copier
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCallRoomId('')}
+                          className={`${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-900'} text-sm font-semibold px-3 py-2 rounded-lg transition-colors`}
+                        >
+                          Fermer
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex-1 min-h-0 overflow-hidden">
+                      <LiveShoppingProvider>
+                        <WebRTCManagerFinal role="vendor" roomId={callRoomId} userId={webrtcUserId} onCallEnd={() => setCallRoomId('')} />
+                      </LiveShoppingProvider>
+                    </div>
+                  </div>
+                )}
+              </div>
+              )}
+
+              {communicationMode === 'live' && (
+                <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl overflow-hidden h-full`}>
+                <LiveShoppingManager
+                  mode="host"
+                  roomId={`formal_live_${vendorPeerId}`}
+                  userId={vendorPeerId}
+                  userName={user?.name || 'Vendeur'}
+                  embedded
+                />
+              </div>
+              )}
+            </div>
+          </div>
+        );
+      }
       case 'shops':
         return (
           <div className="space-y-4">
@@ -1543,6 +1849,9 @@ const VendorDashboard = ({ user }) => {
     VendorStats,
     VendorStockManager,
     activeTab,
+    buildCallRoomId,
+    callRoomId,
+    communicationMode,
     editCategory,
     editLogoDataUrl,
     editName,
@@ -1552,16 +1861,20 @@ const VendorDashboard = ({ user }) => {
     handleEditLogoChange,
     isDark,
     loadVendorShops,
+    manualRoomId,
     openShopEditor,
     saveShopEdits,
     shopCategories,
     showShopEditor,
-    vendorShops
+    vendorPeerId,
+    vendorShops,
+    webrtcUserId,
+    user?.name
   ]);
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
+    <div className="p-6 flex-1 min-h-0 flex flex-col">
+      <div className="mb-6 shrink-0">
         <h1 className={`text-3xl font-bold mb-4 transition-colors duration-300 ${
           isDark ? 'text-white' : 'text-gray-900'
         }`}>
@@ -1586,7 +1899,7 @@ const VendorDashboard = ({ user }) => {
         </div>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 flex-1 min-h-0 overflow-auto">
         {renderTabContent()}
       </div>
     </div>
@@ -2052,7 +2365,7 @@ const ShopsDirectory = () => {
       }
       setDemoCreatedShops(
         shops
-          .filter((s) => s?.slug)
+          .filter((s) => s?.slug && String(s?.approvalStatus || 'pending') === 'approved')
           .map((s) => ({
             id: s.id || s.slug,
             name: s.name || 'Boutique',
@@ -2074,8 +2387,13 @@ const ShopsDirectory = () => {
     const onStorage = (e) => {
       if (e.key === 'demo_shops') loadCreatedShops();
     };
+    const onCustom = () => loadCreatedShops();
     window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+    window.addEventListener('demo-shops-updated', onCustom);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('demo-shops-updated', onCustom);
+    };
   }, [loadCreatedShops]);
 
   useEffect(() => {
@@ -2414,6 +2732,17 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
   const [saved, setSaved] = useState(false);
   const savedTimeoutRef = useRef(null);
   const [activeSection, setActiveSection] = useState('orders');
+  const [communicationMode, setCommunicationMode] = useState('chat');
+  const [chatTarget, setChatTarget] = useState(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const localVideoRef = useRef(null);
+  const localVideoStreamRef = useRef(null);
+  const [isCameraOn, setIsCameraOn] = useState(false);
+  const [cameraError, setCameraError] = useState('');
+  const [isLiveOpen, setIsLiveOpen] = useState(false);
+  const [liveSelectedProduct, setLiveSelectedProduct] = useState('phone');
+  const [liveMessage, setLiveMessage] = useState('');
+  const [liveMessages, setLiveMessages] = useState([]);
   const [orders, setOrders] = useState([]);
   const [walletBalance, setWalletBalance] = useState(null);
   const [walletTopupChannel, setWalletTopupChannel] = useState('');
@@ -2424,6 +2753,23 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
   const [walletPhoneNumber, setWalletPhoneNumber] = useState('');
   const [walletEmail, setWalletEmail] = useState(String(user?.email || ''));
   const [isWalletBusy, setIsWalletBusy] = useState(false);
+
+  const chatUserId = useMemo(() => {
+    const id = user?.id ? String(user.id) : String(user?.email || 'guest');
+    return `customer_${id}`;
+  }, [user?.email, user?.id]);
+
+  const webrtcInstanceId = useMemo(() => Math.random().toString(36).slice(2, 10), []);
+  const webrtcUserId = useMemo(() => `client_${chatUserId}_${webrtcInstanceId}`, [chatUserId, webrtcInstanceId]);
+  const [callTargetId, setCallTargetId] = useState('vendor_2');
+  const [callRoomId, setCallRoomId] = useState('');
+
+  const buildCallRoomId = useCallback((peerId) => {
+    const selfId = String(chatUserId || '').trim();
+    const otherId = String(peerId || '').trim();
+    if (!selfId || !otherId) return '';
+    return `formal_call_${[selfId, otherId].sort().join('__')}`;
+  }, [chatUserId]);
 
   useEffect(() => {
     setName(user?.name || '');
@@ -2465,6 +2811,54 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
     setWalletTopupAmount('');
     setWalletTopupReference('');
     setWalletPhoneNumber('');
+  }, [activeSection]);
+
+  const stopCamera = useCallback(() => {
+    const stream = localVideoStreamRef.current;
+    if (stream && typeof stream.getTracks === 'function') {
+      stream.getTracks().forEach((t) => t.stop());
+    }
+    localVideoStreamRef.current = null;
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = null;
+    }
+    setIsCameraOn(false);
+    setCameraError('');
+  }, []);
+
+  const startCamera = useCallback(async () => {
+    if (!navigator?.mediaDevices?.getUserMedia) {
+      setCameraError('Caméra non disponible sur cet appareil');
+      return;
+    }
+    try {
+      setCameraError('');
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      localVideoStreamRef.current = stream;
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+      }
+      setIsCameraOn(true);
+    } catch {
+      setCameraError('Accès caméra refusé');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeSection !== 'communication' || communicationMode !== 'call') {
+      stopCamera();
+    }
+  }, [activeSection, communicationMode, stopCamera]);
+
+  useEffect(() => {
+    if (activeSection !== 'communication') {
+      setIsChatOpen(false);
+      setChatTarget(null);
+      setCallRoomId('');
+      setIsLiveOpen(false);
+      setLiveMessage('');
+      setLiveMessages([]);
+    }
   }, [activeSection]);
 
   const handleWalletTopup = useCallback(async () => {
@@ -2862,6 +3256,18 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                 >
                   Mangoo Pay
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveSection('communication')}
+                  className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors inline-flex items-center gap-2 leading-none ${
+                    activeSection === 'communication'
+                      ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                      : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
+                  }`}
+                >
+                  <span className="text-base leading-none">📞</span>
+                  <span className="leading-none">Communication</span>
+                </button>
               </div>
             </div>
 
@@ -2950,6 +3356,351 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                   </button>
                 </div>
               </div>
+            )}
+
+            {activeSection === 'communication' && (
+              <ChatProvider initialUserId={chatUserId} initialUserRole="customer">
+                <div className="space-y-4">
+                  <div className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-1 flex flex-wrap gap-1`}>
+                    <button
+                      type="button"
+                      onClick={() => setCommunicationMode('chat')}
+                      className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                        communicationMode === 'chat'
+                          ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                          : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
+                      }`}
+                    >
+                      💬 Chat
+                    </button>
+                  <button
+                    type="button"
+                    onClick={() => setCommunicationMode('contacts')}
+                    className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                      communicationMode === 'contacts'
+                        ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                        : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
+                    }`}
+                  >
+                    👥 Contacts
+                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setCommunicationMode('call')}
+                      className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                        communicationMode === 'call'
+                          ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                          : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
+                      }`}
+                    >
+                      📹 Appel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCommunicationMode('live')}
+                      className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                        communicationMode === 'live'
+                          ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                          : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
+                      }`}
+                    >
+                      🔴 Live
+                    </button>
+                  </div>
+
+                  {communicationMode === 'chat' && (
+                    <div className="space-y-3">
+                      <div className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-4`}>
+                        <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>Choisir une personne</div>
+                        <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Touchez un bouton, puis envoyez un message.</div>
+                        <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          {[
+                            { id: 'support_mangoo', name: 'Support Mangoo', avatar: '🛟' },
+                            { id: 'vendeur_principal', name: 'Mon vendeur', avatar: '🏪' },
+                            { id: 'livreur', name: 'Livreur', avatar: '🛵' }
+                          ].map((t) => (
+                            <button
+                              key={t.id}
+                              type="button"
+                              onClick={() => {
+                                setChatTarget(t);
+                                setIsChatOpen(true);
+                              }}
+                              className={`${isDark ? 'bg-gray-800 hover:bg-gray-700 border-gray-700 text-white' : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-900'} border rounded-xl p-3 flex items-center gap-3 transition-colors`}
+                            >
+                              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-gradient-to-r from-orange-500 to-green-600 text-white">
+                                {t.avatar}
+                              </div>
+                              <div className="text-left">
+                                <div className="font-semibold text-sm">{t.name}</div>
+                                <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-xs`}>Ouvrir le chat</div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {isChatOpen && chatTarget && (
+                        <CustomerChat
+                          vendorId={chatTarget.id}
+                          vendorName={chatTarget.name}
+                          vendorAvatar={chatTarget.avatar}
+                          onClose={() => {
+                            setIsChatOpen(false);
+                            setChatTarget(null);
+                          }}
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {communicationMode === 'contacts' && (
+                    <div className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-4`}>
+                      <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>Contacts</div>
+                      <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Touchez un contact puis choisissez Chat ou Appel.</div>
+
+                      <div className="mt-3 grid grid-cols-1 gap-2">
+                        {[
+                          { id: 'support_mangoo', name: 'Support Mangoo', avatar: '🛟', hint: 'Aide & assistance' },
+                          { id: 'vendeur_principal', name: 'Mon vendeur', avatar: '🏪', hint: 'Questions produits' },
+                          { id: 'livreur', name: 'Livreur', avatar: '🛵', hint: 'Livraison & suivi' }
+                        ].map((t) => (
+                          <div
+                            key={t.id}
+                            className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl p-3 flex items-center justify-between gap-3`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-gradient-to-r from-orange-500 to-green-600 text-white">
+                                {t.avatar}
+                              </div>
+                              <div>
+                                <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold text-sm`}>{t.name}</div>
+                                <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-xs`}>{t.hint}</div>
+                              </div>
+                            </div>
+
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setCommunicationMode('chat');
+                                  setChatTarget({ id: t.id, name: t.name, avatar: t.avatar });
+                                  setIsChatOpen(true);
+                                }}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+                              >
+                                Chat
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setCommunicationMode('call');
+                                  toast.info(`Appel (démo) vers ${t.name}`);
+                                }}
+                                className={`${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-900'} text-xs font-semibold px-3 py-2 rounded-lg transition-colors`}
+                              >
+                                Appel
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {communicationMode === 'call' && (
+                    <div className="space-y-3">
+                      {!callRoomId ? (
+                        <div className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-4`}>
+                          <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>Appel vidéo (WebRTC)</div>
+                          <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Choisissez une personne, puis démarrez l’appel.</div>
+
+                          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {[
+                              { id: 'vendor_2', name: 'Mon vendeur', avatar: '🏪' },
+                              { id: 'support_mangoo', name: 'Support Mangoo', avatar: '🛟' }
+                            ].map((t) => (
+                              <button
+                                key={t.id}
+                                type="button"
+                                onClick={() => {
+                                  setCallTargetId(t.id);
+                                  setCallRoomId(buildCallRoomId(t.id));
+                                }}
+                                className={`${isDark ? 'bg-gray-800 hover:bg-gray-700 border-gray-700 text-white' : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-900'} border rounded-xl p-3 flex items-center justify-between gap-3 transition-colors`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-gradient-to-r from-orange-500 to-green-600 text-white">
+                                    {t.avatar}
+                                  </div>
+                                  <div className="text-left">
+                                    <div className="font-semibold text-sm">{t.name}</div>
+                                    <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-xs`}>Démarrer un appel</div>
+                                  </div>
+                                </div>
+                                <div className="text-sm font-semibold">📹</div>
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-xs mt-3`}>
+                            Pour tester: ouvrez aussi le lien vendeur dans un autre onglet.
+                          </div>
+                        </div>
+                      ) : (
+                        <div className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-4`}>
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>Appel en cours</div>
+                              <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Room: {callRoomId}</div>
+                            </div>
+                            <div className="flex gap-2 flex-wrap justify-end">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const url = `${window.location.origin}/webrtc?role=vendor&roomId=${encodeURIComponent(callRoomId)}`;
+                                  window.open(url, '_blank', 'noopener,noreferrer');
+                                }}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-3 py-2 rounded-lg transition-colors"
+                              >
+                                Ouvrir vendeur (test)
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setCallRoomId('')}
+                                className={`${isDark ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-900'} text-sm font-semibold px-3 py-2 rounded-lg transition-colors`}
+                              >
+                                Fermer
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="mt-4">
+                            <LiveShoppingProvider>
+                              <WebRTCManagerFinal
+                                role="client"
+                                roomId={callRoomId}
+                                userId={webrtcUserId}
+                                onCallEnd={() => setCallRoomId('')}
+                              />
+                            </LiveShoppingProvider>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {communicationMode === 'live' && (
+                    <div className="space-y-3">
+                      {!isLiveOpen ? (
+                        <div className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-4`}>
+                          <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>Live Shopping</div>
+                          <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Entrez dans un live pour voir les produits et discuter.</div>
+                          <div className="mt-3">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsLiveOpen(true);
+                                setLiveMessages([
+                                  { id: `m_${Date.now()}_1`, sender: '🏪 Vendeur', text: 'Bienvenue dans le live !' },
+                                  { id: `m_${Date.now()}_2`, sender: '🧑‍🤝‍🧑 Client', text: 'Bonjour 👋' }
+                                ]);
+                              }}
+                              className="bg-gradient-to-r from-orange-500 to-green-600 text-white py-2 px-4 rounded-xl font-semibold hover:from-orange-600 hover:to-green-700 transition-all"
+                            >
+                              🔴 Rejoindre un live
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-4`}>
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>🔴 Live en cours</div>
+                              <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Touchez un produit pour le mettre en avant.</div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsLiveOpen(false);
+                                setLiveMessage('');
+                                setLiveMessages([]);
+                              }}
+                              className={`${isDark ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-900'} text-sm font-semibold px-3 py-2 rounded-lg transition-colors`}
+                            >
+                              Quitter
+                            </button>
+                          </div>
+
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {[
+                              { key: 'phone', label: '📱 Téléphone' },
+                              { key: 'rice', label: '🌾 Riz' },
+                              { key: 'dress', label: '👗 Vêtement' }
+                            ].map((p) => (
+                              <button
+                                key={p.key}
+                                type="button"
+                                onClick={() => setLiveSelectedProduct(p.key)}
+                                className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                                  liveSelectedProduct === p.key
+                                    ? isDark ? 'bg-emerald-700 text-white' : 'bg-emerald-200 text-emerald-900'
+                                    : isDark ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                                }`}
+                              >
+                                {p.label}
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
+                            <div className={`${isDark ? 'bg-gray-950 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl overflow-hidden`}>
+                              <div className="aspect-video bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center">
+                                <div className="text-center">
+                                  <div className="text-5xl mb-2">🎥</div>
+                                  <div className="text-white font-bold">EN DIRECT</div>
+                                  <div className="text-gray-300 text-sm">{liveSelectedProduct === 'phone' ? '📱 Téléphone en promo' : liveSelectedProduct === 'rice' ? '🌾 Riz de qualité' : '👗 Nouveaux vêtements'}</div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className={`${isDark ? 'bg-gray-950 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl p-3 flex flex-col`}>
+                              <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>💬 Chat du live</div>
+                              <div className="mt-2 flex-1 overflow-y-auto space-y-2 max-h-56">
+                                {liveMessages.map((m) => (
+                                  <div key={m.id} className={`${isDark ? 'text-gray-200' : 'text-gray-800'} text-sm`}>
+                                    <span className="font-semibold">{m.sender} :</span> {m.text}
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="mt-3 flex gap-2">
+                                <input
+                                  value={liveMessage}
+                                  onChange={(e) => setLiveMessage(e.target.value)}
+                                  placeholder="Écrire…"
+                                  className={`flex-1 px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'}`}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const text = String(liveMessage || '').trim();
+                                    if (!text) return;
+                                    setLiveMessages((prev) => [...prev, { id: `m_${Date.now()}_${Math.random()}`, sender: '🧑‍💻 Vous', text }]);
+                                    setLiveMessage('');
+                                  }}
+                                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 rounded-lg transition-colors"
+                                >
+                                  Envoyer
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </ChatProvider>
             )}
 
             {activeSection === 'wallet' && (
@@ -3138,6 +3889,15 @@ const AdminLayout = () => {
   const location = useLocation();
   const { isDark } = useThemeStore();
 
+  const goBack = useCallback(() => {
+    try {
+      localStorage.setItem('mangoo-last-view', 'landing');
+    } catch {
+      // ignore
+    }
+    navigate('/');
+  }, [navigate]);
+
   return (
     <div className={`min-h-screen flex transition-colors duration-300 ${
       isDark 
@@ -3154,36 +3914,49 @@ const AdminLayout = () => {
             : 'bg-white border-gray-200'
         }`}>
           <div className="flex items-center justify-between p-4">
-            <h1 className={`text-xl font-semibold transition-colors duration-300 ${
-              isDark ? 'text-white' : 'text-gray-900'
-            }`}>
-              {location.pathname === '/admin/dashboard' && 'Tableau de bord'}
-              {location.pathname === '/admin/shops' && 'Commerces'}
-              {location.pathname === '/admin/commissions' && 'Commissions'}
-              {location.pathname === '/admin/users' && 'Utilisateurs'}
-              {location.pathname === '/admin/payments' && 'Paiements'}
-              {location.pathname === '/admin/create-shop' && 'Créer un commerce'}
-            </h1>
-            <div className="flex items-center space-x-4">
-              <ThemeToggle />
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={goBack}
+                className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                  isDark
+                    ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                ← Retour
+              </button>
+              <h1 className={`text-xl font-semibold transition-colors duration-300 ${
+                isDark ? 'text-white' : 'text-gray-900'
+              }`}>
+                {location.pathname === '/admin/dashboard' && 'Tableau de bord'}
+                {location.pathname === '/admin/shops' && 'Commerces'}
+                {location.pathname === '/admin/commissions' && 'Commissions'}
+                {location.pathname === '/admin/users' && 'Utilisateurs'}
+                {location.pathname === '/admin/payments' && 'Paiements'}
+                {location.pathname === '/admin/create-shop' && 'Créer un commerce'}
+              </h1>
             </div>
+            <div className="flex items-center space-x-4" />
           </div>
         </div>
 
         {/* Contenu principal */}
         <main className="flex-1 p-6 overflow-auto">
           <Routes>
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/shops" element={<AdminShops />} />
-            <Route path="/admin/commissions" element={<AdminCommissions />} />
-            <Route path="/admin/users" element={<AdminUsers />} />
-            <Route path="/admin/payments" element={<AdminPayments />} />
-            <Route path="/admin/analytics" element={<AdminAnalytics />} />
-            <Route path="/admin/wallet" element={<AdminWallet />} />
-            <Route path="/admin/settings" element={<AdminSettings />} />
-            <Route path="/admin/create-shop" element={<AdminCreateShop />} />
-            <Route path="/admin/simple-test" element={<SimpleTest />} />
-            <Route path="/" element={<AdminDashboard />} />
+            <Route index element={<AdminDashboard />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="shops" element={<AdminShops />} />
+            <Route path="vendor-access-qr" element={<VendorAccessQRPage />} />
+            <Route path="commissions" element={<AdminCommissions />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="payments" element={<AdminPayments />} />
+            <Route path="analytics" element={<AdminAnalytics />} />
+            <Route path="wallet" element={<AdminWallet />} />
+            <Route path="settings" element={<AdminSettings />} />
+            <Route path="create-shop" element={<AdminCreateShop />} />
+            <Route path="simple-test" element={<SimpleTest />} />
+            <Route path="*" element={<AdminDashboard />} />
           </Routes>
         </main>
       </div>
@@ -3417,23 +4190,38 @@ function AppShell() {
 
   // Gestion de la connexion optimisée
   const handleLogin = useCallback(async (userData) => {
-    setUser(userData);
+    const normalizedEmail = String(userData?.email || '').trim().toLowerCase();
+    const nextUser = normalizedEmail === 'admin@mangoo.tech' ? { ...userData, role: 'admin' } : userData;
+    setUser(nextUser);
     try {
-      localStorage.setItem('mangoo-current-user', JSON.stringify(userData));
+      localStorage.setItem('mangoo-current-user', JSON.stringify(nextUser));
     } catch {
       // ignore
     }
     
-    if (userData.email === 'admin@mangoo.tech') {
+    if (normalizedEmail === 'admin@mangoo.tech') {
       localStorage.setItem('admin-demo-user', JSON.stringify({
         id: 'admin-demo-123',
-        email: userData.email,
+        email: normalizedEmail,
         role: 'admin'
       }));
     }
 
     seedDemoData();
-  }, [seedDemoData]);
+    if (nextUser?.role === 'admin') {
+      navigate('/admin/dashboard');
+    }
+
+    try {
+      const selectedPlan = localStorage.getItem('mangoo-selected-plan');
+      if (selectedPlan) {
+        toast.success(`Plan ${selectedPlan === 'pro' ? 'Pro' : 'Gratuit'} sélectionné`);
+        localStorage.removeItem('mangoo-selected-plan');
+      }
+    } catch {
+      // ignore
+    }
+  }, [navigate, seedDemoData]);
 
   useEffect(() => {
     if (!user) return;
@@ -3459,28 +4247,23 @@ function AppShell() {
   }
 
   if (!user) {
-
-
-
-    if (currentView === 'landing') {
-      return (
-        <LandingPage 
-          onNavigate={(view) => {
-            if (view === 'marketplace' || view === 'shops') {
-              handleLogin({ role: 'client', name: 'Invité', avatar: '👤', email: 'guest@mangoo.tech' });
-              setCurrentView(view);
-              return;
-            }
-            if (view === 'innovation') {
-              setCurrentView('innovation');
-              return;
-            }
+    return (
+      <LandingPage 
+        onNavigate={(view) => {
+          if (view === 'marketplace' || view === 'shops') {
+            handleLogin({ role: 'client', name: 'Invité', avatar: '👤', email: 'guest@mangoo.tech' });
             setCurrentView(view);
-          }} 
-          onLogin={setUser} 
-        />
-      );
-    }
+            return;
+          }
+          if (view === 'innovation') {
+            setCurrentView('innovation');
+            return;
+          }
+          setCurrentView(view);
+        }} 
+        onLogin={setUser} 
+      />
+    );
   }
 
   // Utilisateur connecté
@@ -3492,7 +4275,7 @@ function AppShell() {
     }
 
     if (user.role === 'login_request') {
-      return <Login onLogin={(u) => { setAuthReturn(null); handleLogin(u); }} onBack={backFromAuth} onCreateClient={openClientRegister} />;
+      return <Login onLogin={(u) => { setAuthReturn(null); handleLogin(u); }} onBack={backFromAuth} onCreateClient={openClientRegister} onCreateVendor={openRegister} />;
     }
 
     if (user.role === 'client_register_request') {
@@ -3500,6 +4283,18 @@ function AppShell() {
     }
 
     if (user.role === 'admin') {
+      const logout = () => {
+        try {
+          localStorage.setItem('mangoo-last-view', 'landing');
+          localStorage.removeItem('mangoo-current-user');
+          localStorage.removeItem('admin-demo-user');
+        } catch {
+        }
+        setCurrentView('landing');
+        setUser(null);
+        navigate('/');
+      };
+
       return (
         <LandingPage
           onNavigate={(view) => {
@@ -3514,7 +4309,13 @@ function AppShell() {
             }
             setCurrentView(view);
           }}
-          onLogin={setUser}
+          onLogin={(u) => {
+            if (!u) {
+              logout();
+              return;
+            }
+            setUser(u);
+          }}
           showAdminDashboard
           onAdminDashboard={() => navigate('/admin/dashboard')}
         />
@@ -3708,15 +4509,16 @@ function AppShell() {
 
 function App() {
   return (
-    <>
+    <NotificationProvider>
       <Toaster richColors position="top-right" />
       <Routes>
         <Route path="/shop/:shopSlug" element={<ShopPage />} />
         <Route path="/vendor-access-qr" element={<VendorAccessQRPage />} />
+        <Route path="/webrtc" element={<WebRTCJoinPage />} />
         <Route path="/admin/*" element={<AdminLayout />} />
         <Route path="/*" element={<AppShell />} />
       </Routes>
-    </>
+    </NotificationProvider>
   );
 }
 

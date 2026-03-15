@@ -5,19 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MangooTech - La Plateforme E-commerce Africaine</title>
     <script>
-      console.log('--- INDEX.HTML LOADED ---');
-      
-      window.onerror = function(msg, url, line, col, error) {
-        console.error('GLOBAL ERROR:', msg, url, line, col, error);
-        document.body.innerHTML += '<div style="background:white; color:red; padding:20px; font-size:20px; border:2px solid red; margin:20px;">ERREUR CRITIQUE (Script): ' + msg + '<br>Line: ' + line + '</div>';
-        return false;
-      };
-      
-      window.onunhandledrejection = function(event) {
-        console.error('UNHANDLED PROMISE REJECTION:', event.reason);
-        document.body.innerHTML += '<div style="background:white; color:red; padding:20px; font-size:20px; border:2px solid red; margin:20px;">ERREUR CRITIQUE (Promise): ' + event.reason + '</div>';
-      };
-
       // Initialize theme immediately to prevent flash
       const initTheme = () => {
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -30,12 +17,7 @@
     </script>
   </head>
   <body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-    <div id="root">
-      <div style="padding: 50px; text-align: center; font-family: sans-serif;">
-        <h1>Chargement de l'application...</h1>
-        <p>Si ce message reste affiché, c'est que React n'a pas démarré.</p>
-      </div>
-    </div>
+    <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

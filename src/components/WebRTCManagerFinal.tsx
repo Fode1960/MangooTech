@@ -523,6 +523,7 @@ const WebRTCManagerFinal: React.FC<WebRTCManagerFinalProps> = ({
         console.log('🧊 ICE candidate généré:', event.candidate.candidate);
         wsRef.current.send(JSON.stringify({
           type: 'ice-candidate',
+          roomId,
           data: event.candidate
         }));
       }
@@ -1040,6 +1041,7 @@ const WebRTCManagerFinal: React.FC<WebRTCManagerFinalProps> = ({
       // Notification d'appel
       wsRef.current.send(JSON.stringify({
         type: 'call-notification',
+        roomId,
         from: userId,
         message: `${role === 'vendor' ? 'Vendeur' : 'Client'} vous appelle`
       }));
@@ -1109,6 +1111,7 @@ const WebRTCManagerFinal: React.FC<WebRTCManagerFinalProps> = ({
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({
           type: 'offer',
+          roomId,
           data: offer
         }));
         console.log('✅ Offre envoyée');
@@ -1294,6 +1297,7 @@ const WebRTCManagerFinal: React.FC<WebRTCManagerFinalProps> = ({
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({
           type: 'answer',
+          roomId,
           data: answer
         }));
         console.log('✅ Réponse envoyée');
@@ -1451,6 +1455,7 @@ const WebRTCManagerFinal: React.FC<WebRTCManagerFinalProps> = ({
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({
         type: 'chat-message',
+        roomId,
         message: chatInput.trim(),
         from: userId,
         timestamp: new Date().toISOString()
@@ -1570,6 +1575,7 @@ const WebRTCManagerFinal: React.FC<WebRTCManagerFinalProps> = ({
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       const endCallMessage = JSON.stringify({
         type: 'call-ended',
+        roomId,
         from: userId,
         timestamp: Date.now()
       });
@@ -1660,7 +1666,7 @@ const WebRTCManagerFinal: React.FC<WebRTCManagerFinalProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
+    <div className="flex flex-col h-full min-h-0 bg-gray-900 text-white">
       {/* Barre de statut */}
       <div className="bg-gray-800 p-4 flex justify-between items-center">
         <div className="flex items-center space-x-2">

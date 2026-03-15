@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { supabase } from '../config/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
 import { 
@@ -126,9 +125,6 @@ interface QuickAction {
 }
 
 export default function AdminDashboard() {
-  console.log('📊 ADMIN DASHBOARD: Component function called - STARTING RENDER');
-  console.log('📍 Current URL:', window.location.href);
-  
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isDark } = useTheme();
@@ -141,13 +137,11 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState(30);
   const [selectedMetric, setSelectedMetric] = useState<'revenue' | 'orders' | 'conversion_rate'>('revenue');
+  const requestRef = useRef<AbortController | null>(null);
 
   const COLORS = ['#3B82F6', '#EF4444', '#F59E0B', '#10B981', '#8B5CF6'];
 
   useEffect(() => {
-    console.log('📊 ADMIN DASHBOARD: useEffect triggered - Component mounted!');
-    console.log('📊 ADMIN DASHBOARD: Component est monté et visible!');
-    
     fetchDashboardData();
     // Ajouter un timer pour mettre à jour l'heure
     const timer = setInterval(() => {
@@ -155,107 +149,96 @@ export default function AdminDashboard() {
     }, 60000); // Mise à jour toutes les minutes
 
     return () => clearInterval(timer);
+  }, [period, selectedMetric]);
+
+  const fetchWithTimeout = useCallback(async (url: string, signal: AbortSignal, timeoutMs = 2500) => {
+    const timeoutController = new AbortController();
+    const timeout = setTimeout(() => timeoutController.abort(), timeoutMs);
+    const onAbort = () => timeoutController.abort();
+    signal.addEventListener('abort', onAbort);
+    try {
+      const res = await fetch(url, { signal: timeoutController.signal });
+      if (!res.ok) return null;
+      const text = await res.text();
+      try {
+        return JSON.parse(text);
+      } catch {
+        return null;
+      }
+    } catch {
+      return null;
+    } finally {
+      clearTimeout(timeout);
+      signal.removeEventListener('abort', onAbort);
+    }
+  }, []);
+
+  const applyDemoData = useCallback(() => {
+    const { demoStats, demoTimeSeries, demoCountries, demoTopShops } = generateDemoData();
+    setStats(demoStats);
+    setPaymentMethods([
+      { name: 'Mobile Money', value: demoStats.payments.mobile_money_breakdown.orange + demoStats.payments.mobile_money_breakdown.mtn + demoStats.payments.mobile_money_breakdown.moov, color: '#3B82F6' },
+      { name: 'Carte Bancaire', value: demoStats.payments.methods_distribution.card || 267, color: '#EF4444' },
+      { name: 'Espèces', value: demoStats.payments.methods_distribution.cash || 157, color: '#F59E0B' }
+    ]);
+    setTopShops(demoTopShops);
+    setTimeSeriesData(demoTimeSeries);
+    setCountryData(demoCountries);
   }, [period]);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
+      requestRef.current?.abort();
+      const controller = new AbortController();
+      requestRef.current = controller;
       setLoading(true);
+      applyDemoData();
+      setLoading(false);
 
-      // Utiliser des données de démonstration si l'API n'est pas disponible
-      const { demoStats, demoTimeSeries, demoCountries, demoTopShops } = generateDemoData();
-      
-      // Fetch dashboard overview
-      const statsResponse = await fetch(`/api/admin/dashboard/overview?period=${period}`);
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json();
-        if (statsData.success) {
-          setStats(statsData.data);
-          
-          // Préparer les données pour le graphique des méthodes de paiement
-          const methodsData = Object.entries(statsData.data.payments.methods_distribution || {})
-            .map(([name, value], index) => ({
-              name: name === 'mobile_money' ? 'Mobile Money' : 
-                    name === 'card' ? 'Carte Bancaire' : 
-                    name === 'cash' ? 'Espèces' : name,
-              value: value as number,
-              color: COLORS[index % COLORS.length]
-            }));
-          setPaymentMethods(methodsData);
-        } else {
-          // Utiliser les données de démonstration
-          setStats(demoStats);
-          setPaymentMethods([
-            { name: 'Mobile Money', value: demoStats.payments.mobile_money_breakdown.orange + demoStats.payments.mobile_money_breakdown.mtn + demoStats.payments.mobile_money_breakdown.moov, color: '#3B82F6' },
-            { name: 'Carte Bancaire', value: demoStats.payments.methods_distribution.card || 267, color: '#EF4444' },
-            { name: 'Espèces', value: demoStats.payments.methods_distribution.cash || 157, color: '#F59E0B' }
-          ]);
-        }
-      } else {
-        // Utiliser les données de démonstration
-        setStats(demoStats);
-        setPaymentMethods([
-          { name: 'Mobile Money', value: demoStats.payments.mobile_money_breakdown.orange + demoStats.payments.mobile_money_breakdown.mtn + demoStats.payments.mobile_money_breakdown.moov, color: '#3B82F6' },
-          { name: 'Carte Bancaire', value: demoStats.payments.methods_distribution.card || 267, color: '#EF4444' },
-          { name: 'Espèces', value: demoStats.payments.methods_distribution.cash || 157, color: '#F59E0B' }
-        ]);
+      const overviewUrl = `/api/admin/dashboard/overview?period=${period}`;
+      const topShopsUrl = `/api/admin/analytics/top-shops?period=${period}&metric=${selectedMetric}&limit=5`;
+      const trendsUrl = `/api/admin/analytics/revenue-trends?period=${period}`;
+      const countriesUrl = `/api/admin/analytics/country-stats?period=${period}`;
+
+      const [overview, top, trends, countries] = await Promise.all([
+        fetchWithTimeout(overviewUrl, controller.signal),
+        fetchWithTimeout(topShopsUrl, controller.signal),
+        fetchWithTimeout(trendsUrl, controller.signal),
+        fetchWithTimeout(countriesUrl, controller.signal)
+      ]);
+
+      if (controller.signal.aborted) return;
+
+      if (overview?.success && overview?.data) {
+        setStats(overview.data);
+        const dist = overview.data?.payments?.methods_distribution || {};
+        const methodsData = Object.entries(dist)
+          .map(([name, value], index) => ({
+            name: name === 'mobile_money' ? 'Mobile Money' : name === 'card' ? 'Carte Bancaire' : name === 'cash' ? 'Espèces' : name,
+            value: Number(value || 0),
+            color: COLORS[index % COLORS.length]
+          }));
+        if (methodsData.length > 0) setPaymentMethods(methodsData);
       }
 
-      // Fetch top shops
-      const topShopsResponse = await fetch(`/api/admin/analytics/top-shops?period=${period}&metric=${selectedMetric}&limit=5`);
-      if (topShopsResponse.ok) {
-        const topShopsData = await topShopsResponse.json();
-        if (topShopsData.success) {
-          setTopShops(topShopsData.data.top_shops);
-        } else {
-          setTopShops(demoTopShops);
-        }
-      } else {
-        setTopShops(demoTopShops);
+      if (top?.success && top?.data?.top_shops) {
+        setTopShops(top.data.top_shops);
       }
 
-      // Fetch time series data for revenue trends
-      const timeSeriesResponse = await fetch(`/api/admin/analytics/revenue-trends?period=${period}`);
-      if (timeSeriesResponse.ok) {
-        const timeSeriesData = await timeSeriesResponse.json();
-        if (timeSeriesData.success) {
-          setTimeSeriesData(timeSeriesData.data.trends);
-        } else {
-          setTimeSeriesData(demoTimeSeries);
-        }
-      } else {
-        setTimeSeriesData(demoTimeSeries);
+      if (trends?.success && trends?.data?.trends) {
+        setTimeSeriesData(trends.data.trends);
       }
 
-      // Fetch country data
-      const countryResponse = await fetch(`/api/admin/analytics/country-stats?period=${period}`);
-      if (countryResponse.ok) {
-        const countryData = await countryResponse.json();
-        if (countryData.success) {
-          setCountryData(countryData.data.countries);
-        } else {
-          setCountryData(demoCountries);
-        }
-      } else {
-        setCountryData(demoCountries);
+      if (countries?.success && countries?.data?.countries) {
+        setCountryData(countries.data.countries);
       }
 
     } catch (error) {
-      console.error('Erreur lors du chargement des données du dashboard:', error);
-      // En cas d'erreur, utiliser les données de démonstration
-      const { demoStats, demoTimeSeries, demoCountries, demoTopShops } = generateDemoData();
-      setStats(demoStats);
-      setPaymentMethods([
-        { name: 'Mobile Money', value: demoStats.payments.mobile_money_breakdown.orange + demoStats.payments.mobile_money_breakdown.mtn + demoStats.payments.mobile_money_breakdown.moov, color: '#3B82F6' },
-        { name: 'Carte Bancaire', value: demoStats.payments.methods_distribution.card || 267, color: '#EF4444' },
-        { name: 'Espèces', value: demoStats.payments.methods_distribution.cash || 157, color: '#F59E0B' }
-      ]);
-      setTopShops(demoTopShops);
-      setTimeSeriesData(demoTimeSeries);
-      setCountryData(demoCountries);
+      applyDemoData();
     } finally {
       setLoading(false);
     }
-  };
+  }, [applyDemoData, fetchWithTimeout, period, selectedMetric]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -463,7 +446,6 @@ export default function AdminDashboard() {
       description: 'Ajouter une nouvelle boutique à la plateforme',
       icon: Plus,
       action: () => {
-        console.log('🎯 Action: Navigation vers création de boutique');
         navigate('/admin/shops');
       },
       color: 'blue'
@@ -474,7 +456,6 @@ export default function AdminDashboard() {
       description: 'Gérer la trésorerie et les crédits BNPL',
       icon: Wallet,
       action: () => {
-        console.log('🎯 Action: Navigation vers Mangoo Wallet');
         navigate('/admin/wallet');
       },
       color: 'blue'
@@ -485,7 +466,6 @@ export default function AdminDashboard() {
       description: 'Voir la carte et les innovations locales',
       icon: MapPin,
       action: () => {
-        console.log('🎯 Action: Ouverture de Mangoo Local+');
         window.open('/mangoo-local.html', '_blank');
       },
       color: 'green'

@@ -167,6 +167,7 @@ const ShopPage = () => {
       })();
 
       if (localShop) {
+        const approvalStatus = String(localShop?.approvalStatus || 'pending');
         const localProducts = (() => {
           try {
             const raw = localStorage.getItem('demo_products');
@@ -185,6 +186,14 @@ const ShopPage = () => {
         const currentEmail = String(currentUser?.email || '').trim().toLowerCase();
         setShopOwnerEmail(ownerEmail);
         setCanManageProducts(currentUser?.role === 'vendor' && Boolean(currentEmail) && Boolean(ownerEmail) && currentEmail === ownerEmail);
+
+        const isOwner = currentUser?.role === 'vendor' && Boolean(currentEmail) && Boolean(ownerEmail) && currentEmail === ownerEmail;
+        const isAdmin = currentUser?.role === 'admin';
+        if (approvalStatus !== 'approved' && !isOwner && !isAdmin) {
+          setError('Boutique en attente d’approbation');
+          setLoading(false);
+          return;
+        }
 
         setShop({
           ...demoShop,
@@ -273,6 +282,7 @@ const ShopPage = () => {
       const list = Array.isArray(shops) ? shops : [];
       const next = list.map((s) => (s?.slug === shopSlug ? { ...s, ownerEmail: provided } : s));
       localStorage.setItem('demo_shops', JSON.stringify(next));
+      window.dispatchEvent(new Event('demo-shops-updated'));
       setShopOwnerEmail(provided);
       setPendingMismatch(false);
       toast.success('Boutique associée à cet email (démo)');

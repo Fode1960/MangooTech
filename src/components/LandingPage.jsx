@@ -236,6 +236,23 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
     setIsDark(!isDark);
   };
 
+  const selectPlan = (plan) => {
+    try {
+      localStorage.setItem('mangoo-selected-plan', String(plan || 'free'));
+    } catch {
+    }
+    if (onLogin) onLogin({ role: 'login_request' });
+  };
+
+  const goToContact = () => {
+    try {
+      window.location.hash = '#contact';
+    } catch {
+    }
+    const el = document.getElementById('contact');
+    if (el?.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-300 ${
       isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'
@@ -277,14 +294,27 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                 Admin
               </button>
             )}
-            <button 
-              onClick={() => onLogin({ role: 'login_request' })} 
-              className={`px-5 py-2 rounded-full font-bold text-sm transition-colors whitespace-nowrap flex-shrink-0 ${
-                isDark ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-gray-900 hover:bg-gray-800 text-white'
-              }`}
-            >
-              Connexion
-            </button>
+            {showAdminDashboard ? (
+              <button 
+                type="button"
+                onClick={() => onLogin && onLogin(null)}
+                className={`px-5 py-2 rounded-full font-bold text-sm transition-colors whitespace-nowrap flex-shrink-0 ${
+                  isDark ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-gray-900 hover:bg-gray-800 text-white'
+                }`}
+              >
+                Déconnexion
+              </button>
+            ) : (
+              <button 
+                type="button"
+                onClick={() => onLogin({ role: 'login_request' })} 
+                className={`px-5 py-2 rounded-full font-bold text-sm transition-colors whitespace-nowrap flex-shrink-0 ${
+                  isDark ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-gray-900 hover:bg-gray-800 text-white'
+                }`}
+              >
+                Connexion
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -612,7 +642,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                         <li>✅ 10 Produits max</li>
                         <li>✅ Chat basique</li>
                     </ul>
-                    <button className={`w-full py-3 rounded-xl border font-bold transition-colors ${isDark ? 'border-orange-500 text-orange-500 hover:bg-gray-700' : 'border-orange-500 text-orange-500 hover:bg-orange-50'}`}>Commencer</button>
+                    <button type="button" onClick={() => selectPlan('free')} className={`w-full py-3 rounded-xl border font-bold transition-colors ${isDark ? 'border-orange-500 text-orange-500 hover:bg-gray-700' : 'border-orange-500 text-orange-500 hover:bg-orange-50'}`}>Commencer</button>
                 </div>
                 {/* Pro */}
                 <div className={`p-8 rounded-3xl border-2 border-orange-500 relative flex flex-col transform md:scale-105 shadow-2xl ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
@@ -625,7 +655,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                         <li>✅ Badge "Vérifié"</li>
                         <li>✅ 0% Commission</li>
                     </ul>
-                    <button className="w-full py-3 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold hover:shadow-lg transition-all">Choisir Pro</button>
+                    <button type="button" onClick={() => selectPlan('pro')} className="w-full py-3 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold hover:shadow-lg transition-all">Choisir Pro</button>
                 </div>
                 {/* Enterprise */}
                 <div className={`p-8 rounded-3xl border flex flex-col ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
@@ -636,7 +666,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                         <li>✅ Support dédié 24/7</li>
                         <li>✅ Formation équipes</li>
                     </ul>
-                    <button className={`w-full py-3 rounded-xl border font-bold transition-colors ${isDark ? 'border-blue-500 text-blue-500 hover:bg-gray-700' : 'border-blue-500 text-blue-500 hover:bg-blue-50'}`}>Contacter</button>
+                    <button type="button" onClick={goToContact} className={`w-full py-3 rounded-xl border font-bold transition-colors ${isDark ? 'border-blue-500 text-blue-500 hover:bg-gray-700' : 'border-blue-500 text-blue-500 hover:bg-blue-50'}`}>Contacter</button>
                 </div>
             </div>
         </div>

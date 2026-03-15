@@ -1,47 +1,69 @@
-import React, { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Copy, RefreshCw, Eye, EyeOff, QrCode } from 'lucide-react';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const STORAGE_KEY = 'demo_shops';
 
-const VendorAccessQR = ({ shopId, shopName, shopSlug }) => {
+const readDemoShops = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeDemoShops = (shops) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(shops));
+  window.dispatchEvent(new Event('demo-shops-updated'));
+};
+
+const generatePassword = () => {
+  return Math.random().toString(36).slice(-10);
+};
+
+const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerPassword }) => {
   const [authData, setAuthData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [copiedField, setCopiedField] = useState(null);
 
-  // Fonction pour charger les données d'authentification
-  const loadAuthData = async () => {
+  const loadAuthData = useCallback(() => {
     try {
       setLoading(true);
       setError(null);
-      
-      console.log('Chargement des données d\'authentification pour le shop:', shopId);
-      
-      const { data, error } = await supabase
-        .from('shop_auth')
-        .select('*')
-        .eq('shop_id', shopId)
-        .single();
 
-      if (error) {
-        console.error('Erreur lors du chargement:', error);
-        setError('Impossible de charger les données d\'authentification');
+      const ownerEmail = String(shopOwnerEmail || '').trim();
+      if (!ownerEmail) {
+        setAuthData(null);
+        setError("Cette boutique n'a pas d'email vendeur (ownerEmail)");
         return;
       }
 
-      console.log('Données chargées avec succès:', data);
-      setAuthData(data);
-    } catch (err) {
-      console.error('Erreur inattendue:', err);
-      setError('Erreur inattendue lors du chargement');
+      let password = String(shopOwnerPassword || '').trim();
+      if (!password) {
+        const current = readDemoShops();
+        const nextPassword = generatePassword();
+        const next = current.map((s) => {
+          if (String(s?.id || s?.slug) !== String(shopId) && String(s?.slug) !== String(shopSlug)) return s;
+          return { ...s, ownerPassword: nextPassword, updatedAt: new Date().toISOString() };
+        });
+        writeDemoShops(next);
+        password = nextPassword;
+      }
+
+      setAuthData({
+        vendor_login: ownerEmail,
+        vendor_password: password
+      });
+    } catch {
+      setAuthData(null);
+      setError("Impossible de charger les données d'authentification");
     } finally {
       setLoading(false);
     }
-  };
+  }, [shopId, shopOwnerEmail, shopOwnerPassword, shopSlug]);
 
   // Fonction pour copier dans le presse-papiers
   const copyToClipboard = async (text, field) => {
@@ -49,43 +71,32 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug }) => {
       await navigator.clipboard.writeText(text);
       setCopiedField(field);
       setTimeout(() => setCopiedField(null), 2000);
-    } catch (err) {
-      console.error('Erreur lors de la copie:', err);
+    } catch {
     }
   };
 
   // Fonction pour régénérer le mot de passe
-  const regeneratePassword = async () => {
+  const regeneratePassword = useCallback(() => {
     try {
-      const newPassword = Math.random().toString(36).slice(-8);
-      
-      const { error } = await supabase
-        .from('shop_auth')
-        .update({ vendor_password: newPassword })
-        .eq('shop_id', shopId);
-
-      if (error) {
-        console.error('Erreur lors de la régénération:', error);
-        setError('Impossible de régénérer le mot de passe');
-        return;
-      }
-
-      // Recharger les données
-      await loadAuthData();
-      
-      console.log('Mot de passe régénéré avec succès');
-    } catch (err) {
-      console.error('Erreur inattendue:', err);
-      setError('Erreur inattendue lors de la régénération');
+      const newPassword = generatePassword();
+      const current = readDemoShops();
+      const next = current.map((s) => {
+        if (String(s?.id || s?.slug) !== String(shopId) && String(s?.slug) !== String(shopSlug)) return s;
+        return { ...s, ownerPassword: newPassword, updatedAt: new Date().toISOString() };
+      });
+      writeDemoShops(next);
+      setAuthData((prev) => (prev ? { ...prev, vendor_password: newPassword } : { vendor_login: String(shopOwnerEmail || ''), vendor_password: newPassword }));
+    } catch {
+      setError('Impossible de régénérer le mot de passe');
     }
-  };
+  }, [shopId, shopOwnerEmail, shopSlug]);
 
   // Charger les données au montage
   useEffect(() => {
     if (shopId) {
       loadAuthData();
     }
-  }, [shopId]);
+  }, [shopId, loadAuthData]);
 
   // Affichage du chargement
   if (loading) {
@@ -129,12 +140,7 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug }) => {
     );
   }
 
-  const shopUrl = `http://localhost:3016/shop/${shopSlug}`;
-
-  // Fonction pour logger dans la console
-  const logToConsole = (message, type = 'info') => {
-    console.log(`[${type.toUpperCase()}] ${message}`);
-  };
+  const shopUrl = `${window.location.origin}/shop/${shopSlug}`;
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">

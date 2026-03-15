@@ -61,14 +61,14 @@ export type ChatAction =
   | { type: 'ARCHIVE_CONVERSATION'; payload: string }
   | { type: 'BLOCK_CONVERSATION'; payload: string };
 
-const initialState: ChatState = {
+const createInitialState = (overrides?: Partial<Pick<ChatState, 'currentUserId' | 'currentUserRole'>>): ChatState => ({
   conversations: [],
   activeConversation: null,
   isConnected: false,
   isTyping: false,
-  currentUserId: 'vendor_001',
-  currentUserRole: 'vendor',
-};
+  currentUserId: overrides?.currentUserId || 'vendor_001',
+  currentUserRole: overrides?.currentUserRole || 'vendor'
+});
 
 const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
   switch (action.type) {
@@ -219,18 +219,18 @@ interface ChatContextType {
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
-export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [state, dispatch] = useReducer(chatReducer, initialState);
-  
-  // Rendre l'utilisation des notifications optionnelle pour éviter les erreurs de contexte
-  let addNotification: ((notification: Omit<Notification, 'id'>) => void) | undefined;
-  try {
-    const notificationContext = useNotification();
-    addNotification = notificationContext.addNotification;
-  } catch (error) {
-    // NotificationProvider n'est pas disponible, continuer sans notifications
-    addNotification = undefined;
-  }
+export const ChatProvider: React.FC<{ children: ReactNode; initialUserId?: string; initialUserRole?: ChatState['currentUserRole'] }> = ({
+  children,
+  initialUserId,
+  initialUserRole
+}) => {
+  const [state, dispatch] = useReducer(
+    chatReducer,
+    undefined,
+    () => createInitialState({ currentUserId: initialUserId, currentUserRole: initialUserRole })
+  );
+
+  const { addNotification } = useNotification();
 
   // Simuler la connexion WebSocket
   useEffect(() => {
@@ -309,7 +309,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       conversationId,
       senderId: state.currentUserId,
-      senderName: 'Vendeur',
+      senderName: state.currentUserRole === 'customer' ? 'Vous' : 'Vendeur',
       content,
       timestamp: new Date(),
       isRead: true,
