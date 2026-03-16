@@ -378,12 +378,9 @@
 
             setTimeout(() => {
                 // Try to communicate with parent if in iframe
-                window.parent.postMessage('end_call', '*');
-                
-                if (window.history.length > 1) {
-                    window.history.back();
-                } else {
-                    window.close();
+                try {
+                    window.parent.postMessage('end_call', '*');
+                } catch {
                 }
             }, 1000);
         }

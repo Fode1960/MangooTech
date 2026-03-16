@@ -15,6 +15,7 @@ import AdminPayments from './pages/AdminPayments';
 import AdminWallet from './pages/AdminWallet';
 import AdminAnalytics from './pages/AdminAnalytics';
 import AdminSettings from './pages/AdminSettings';
+import AdminBoosts from './pages/AdminBoosts';
 import AdminNavigation from './components/AdminNavigation';
 import SimpleTest from './pages/SimpleTest';
 import ProductCard from './components/OptimizedProductCard';
@@ -4264,6 +4265,7 @@ const AdminLayout = () => {
               }`}>
                 {location.pathname === '/admin/dashboard' && 'Tableau de bord'}
                 {location.pathname === '/admin/shops' && 'Commerces'}
+                {location.pathname === '/admin/boosts' && 'Boost Carte'}
                 {location.pathname === '/admin/commissions' && 'Commissions'}
                 {location.pathname === '/admin/users' && 'Utilisateurs'}
                 {location.pathname === '/admin/payments' && 'Paiements'}
@@ -4280,6 +4282,7 @@ const AdminLayout = () => {
             <Route index element={<AdminDashboard />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="shops" element={<AdminShops />} />
+            <Route path="boosts" element={<AdminBoosts />} />
             <Route path="vendor-access-qr" element={<VendorAccessQRPage />} />
             <Route path="commissions" element={<AdminCommissions />} />
             <Route path="users" element={<AdminUsers />} />
@@ -4313,7 +4316,7 @@ const MangooLocalFrame = React.memo(({ user, onBack }) => {
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
       <iframe 
-        src="/mangoo-local.html?v=74" 
+        src="/mangoo-local.html?v=92" 
         style={{ width: '100%', height: '100%', border: 'none' }}
         title="Mangoo Local+"
       />

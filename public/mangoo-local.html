@@ -371,12 +371,61 @@
             pointer-events: auto;
             margin-bottom: 0;
             margin-left: 5px;
+            display: none;
         }
 
         .filter-actions {
             display: flex;
             gap: 8px;
             align-items: center;
+        }
+
+        .kind-toggle {
+            position: fixed;
+            top: 140px;
+            left: 15px;
+            z-index: 1200;
+            pointer-events: auto;
+            display: flex;
+            gap: 6px;
+            padding: 6px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0,0,0,0.06);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        html.dark .kind-toggle {
+            background: rgba(17, 24, 39, 0.75);
+            border-color: rgba(255,255,255,0.12);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+        }
+
+        .kind-btn {
+            border: 1px solid rgba(0,0,0,0.06);
+            background: rgba(0,0,0,0.04);
+            color: #2d3436;
+            font-weight: 950;
+            font-size: 0.82rem;
+            padding: 8px 10px;
+            border-radius: 999px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        html.dark .kind-btn {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(255,255,255,0.12);
+            color: #f3f4f6;
+        }
+
+        .kind-btn.active {
+            background: rgba(249, 115, 22, 0.18);
+            border-color: rgba(249, 115, 22, 0.45);
         }
 
         .filter-advanced-btn {
@@ -489,14 +538,166 @@
             gap: 8px;
             padding: 8px;
             border-radius: 16px;
-            background: rgba(255,255,255,0.75);
-            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.28);
+            backdrop-filter: blur(8px);
             border: 1px solid rgba(0,0,0,0.06);
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
         }
+
+        .metiers-toggle-fab {
+            position: fixed;
+            top: 190px;
+            left: 15px;
+            z-index: 1201;
+            width: 44px;
+            height: 44px;
+            border-radius: 22px;
+            border: 1px solid rgba(0,0,0,0.08);
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(10px);
+            color: #2d3436;
+            font-weight: 950;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        }
+
+        html.dark .metiers-toggle-fab {
+            background: rgba(17, 24, 39, 0.75);
+            border-color: rgba(255,255,255,0.12);
+            color: #f3f4f6;
+        }
+
+        .metiers-list-fab {
+            position: fixed;
+            top: 190px;
+            left: 68px;
+            z-index: 1201;
+            height: 44px;
+            padding: 0 12px;
+            border-radius: 22px;
+            border: 1px solid rgba(0,0,0,0.08);
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(10px);
+            color: #2d3436;
+            font-weight: 950;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            white-space: nowrap;
+        }
+
+        html.dark .metiers-list-fab {
+            background: rgba(17, 24, 39, 0.75);
+            border-color: rgba(255,255,255,0.12);
+            color: #f3f4f6;
+        }
+
+        .metiers-families.collapsed {
+            overflow-x: hidden;
+            padding: 8px;
+            justify-content: space-between;
+        }
+
+        .metiers-families.collapsed .metiers-family-chip {
+            display: none;
+        }
+
+        .metiers-families.collapsed .metiers-family-chip.active {
+            display: inline-flex;
+        }
+
+        #metiersNewsBtn {
+            flex: 0 0 auto;
+            padding: 8px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(214, 48, 49, 0.3);
+            background: linear-gradient(135deg, #ff7675 0%, #d63031 100%);
+            color: white;
+            font-weight: 950;
+            font-size: 0.8rem;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        html.dark #metiersNewsBtn {
+            border-color: rgba(255,255,255,0.14);
+        }
+
+        .metiers-families.collapsed #metiersNewsBtn {
+            display: inline-flex;
+        }
+
+        #metiersBarToggle {
+            flex: 0 0 auto;
+            width: 38px;
+            height: 38px;
+            border-radius: 19px;
+            border: 1px solid rgba(0,0,0,0.08);
+            background: rgba(255,255,255,0.85);
+            color: #2d3436;
+            font-weight: 950;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        html.dark #metiersBarToggle {
+            background: rgba(31, 41, 55, 0.9);
+            border-color: rgba(255,255,255,0.12);
+            color: #f3f4f6;
+        }
+
+        .quick-filter-fab {
+            position: fixed;
+            right: 16px;
+            bottom: 92px;
+            z-index: 14000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(0,0,0,0.08);
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(10px);
+            color: #2d3436;
+            font-weight: 950;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        }
+
+        html.dark .quick-filter-fab {
+            background: rgba(17, 24, 39, 0.75);
+            border-color: rgba(255,255,255,0.12);
+            color: #f3f4f6;
+        }
+
+        #metiersResultsBadge {
+            margin-left: auto;
+            flex: 0 0 auto;
+            padding: 8px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(0,0,0,0.08);
+            background: rgba(255,255,255,0.85);
+            color: #2d3436;
+            font-weight: 950;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+        html.dark #metiersResultsBadge {
+            background: rgba(31, 41, 55, 0.9);
+            border-color: rgba(255,255,255,0.12);
+            color: #f3f4f6;
+        }
         html.dark .metiers-families {
-            background: rgba(17, 24, 39, 0.7);
+            background: rgba(17, 24, 39, 0.28);
             border-color: rgba(255,255,255,0.1);
         }
 
@@ -1732,6 +1933,12 @@
             </div>
         </div>
 
+        <div class="kind-toggle" id="kindToggle">
+            <button class="kind-btn active" id="kindAllBtn" onclick="setKindMode('all')">🌍 Tout</button>
+            <button class="kind-btn" id="kindShopsBtn" onclick="setKindMode('shop')">🏪 Boutiques</button>
+            <button class="kind-btn" id="kindServicesBtn" onclick="setKindMode('service')">🛠️ Métiers</button>
+        </div>
+
         <div id="metiersFamiliesBar" class="metiers-families" style="display:none;"></div>
 
         <!-- STORIES BAR (VISIBLE EVERYWHERE) -->
@@ -1741,6 +1948,18 @@
             </div>
         </div>
     </div>
+
+    <button id="metiersToggleFab" class="metiers-toggle-fab" onclick="showMetiersBar()" title="Métiers">＋</button>
+
+    <button id="metiersListFab" class="metiers-list-fab" onclick="openMetiersList()" title="Liste">
+        <span style="font-size:1.1rem;">≡</span>
+        <span>Liste</span>
+    </button>
+
+    <button class="quick-filter-fab" onclick="openMetiersFilters()" title="Filtres Métiers">
+        <span style="font-size:1.2rem;">⚙️</span>
+        <span>Filtres</span>
+    </button>
 
     <!-- CONTENT CONTAINER -->
     <div class="content-container">
@@ -1886,6 +2105,50 @@
                             <span style="font-size:1.5rem;">📸</span>
                             Vendre un article
                         </button>
+
+                        <div id="boostAdminCard" style="background:white; border-radius:15px; padding:16px; margin-bottom:20px; box-shadow:0 4px 10px rgba(0,0,0,0.05); display:none;">
+                            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;">
+                                <div>
+                                    <div style="font-weight:900; color:#2d3436;">📍 Boost Carte (Admin)</div>
+                                    <div style="font-size:0.85rem; color:#636e72;">Sponsorisé / Promo / Nouveau • Max 2 sponsorisés visibles</div>
+                                </div>
+                                <button onclick="refreshBoostPanel()" style="border:none; background:#f1f2f6; color:#2d3436; padding:10px 12px; border-radius:12px; font-weight:900; cursor:pointer;">↻</button>
+                            </div>
+
+                            <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
+                                <select id="boostVendorSelect" style="flex:1; padding:12px; border:1px solid #dfe6e9; border-radius:12px; font-weight:900;" onchange="refreshBoostPanel()"></select>
+                                <select id="boostTierSelect" style="width:120px; padding:12px; border:1px solid #dfe6e9; border-radius:12px; font-weight:900;" onchange="refreshBoostPanel()">
+                                    <option value="1">Bronze</option>
+                                    <option value="2">Argent</option>
+                                    <option value="3">Or</option>
+                                </select>
+                            </div>
+
+                            <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                                <button onclick="setSponsorBoost(12)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#111827; color:white; font-weight:950; cursor:pointer;">🏷️ Sponsor 12h</button>
+                                <button onclick="setSponsorBoost(24)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#111827; color:white; font-weight:950; cursor:pointer;">🏷️ Sponsor 24h</button>
+                                <button onclick="setSponsorBoost(72)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#111827; color:white; font-weight:950; cursor:pointer;">🏷️ Sponsor 72h</button>
+                                <button onclick="clearSponsorBoost()" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#f1f2f6; color:#2d3436; font-weight:950; cursor:pointer;">✖ Stop Sponsor</button>
+                            </div>
+
+                            <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
+                                <button onclick="setPromoBoost(24)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#fef3c7; color:#92400e; font-weight:950; cursor:pointer;">✨ Promo 24h</button>
+                                <button onclick="clearPromoBoost()" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#f1f2f6; color:#2d3436; font-weight:950; cursor:pointer;">✖ Stop Promo</button>
+                                <button onclick="setNewBoost(24)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#eef2ff; color:#3730a3; font-weight:950; cursor:pointer;">🆕 Nouveau 24h</button>
+                                <button onclick="clearNewBoost()" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#f1f2f6; color:#2d3436; font-weight:950; cursor:pointer;">✖ Stop Nouveau</button>
+                            </div>
+
+                            <div style="margin-top:12px; background:#f8fafc; border:1px solid #eef2f7; border-radius:12px; padding:12px; color:#2d3436;">
+                                <div style="display:flex; justify-content:space-between; gap:10px; font-weight:900;">
+                                    <div>État</div>
+                                    <div id="boostStatusText" style="text-align:right; color:#636e72;">—</div>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; gap:10px; margin-top:6px; font-weight:900;">
+                                    <div>Stats (session)</div>
+                                    <div id="boostStatsText" style="text-align:right; color:#636e72;">—</div>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- MANGOO SUPPLY (Restored) -->
                         <div id="supplyChainCard" style="background:linear-gradient(135deg, #0984e3 0%, #74b9ff 100%); border-radius:15px; padding:20px; margin-bottom:20px; color:white; display:none; box-shadow:0 8px 15px rgba(9, 132, 227, 0.3); cursor:pointer;" onclick="openSupplyModal()">
@@ -2728,6 +2991,10 @@
                 id: 1,
                 name: "Chez Maman Sarah",
                 category: "🥬 Vivres Frais",
+                kind: "shop",
+                newUntil: Date.now() + 1000 * 60 * 60 * 24,
+                sponsoredUntil: Date.now() + 1000 * 60 * 60 * 12,
+                sponsoredTier: 1,
                 lat: 4.052000,
                 lng: 9.768000,
                 status: "open",
@@ -2739,6 +3006,10 @@
                 id: 2,
                 name: "Tech Mobile Pro",
                 category: "📱 Électronique",
+                kind: "shop",
+                promoUntil: Date.now() + 1000 * 60 * 60 * 24,
+                sponsoredUntil: Date.now() + 1000 * 60 * 60 * 12,
+                sponsoredTier: 2,
                 lat: 4.050500,
                 lng: 9.767000,
                 status: "open",
@@ -2751,6 +3022,7 @@
                 name: "Tailleur Élégance",
                 category: "🧵 Mode",
                 trade: "Tailleur/Couturier",
+                kind: "service",
                 verified: true,
                 rating: 4.7,
                 isMobile: false,
@@ -2766,6 +3038,8 @@
                 name: "Plombier Express",
                 category: "🔧 Services",
                 trade: "Plombier",
+                kind: "service",
+                promoUntil: Date.now() + 1000 * 60 * 60 * 24,
                 verified: true,
                 rating: 4.8,
                 services: ["Dépannage fuite", "Installation", "Entretien"],
@@ -2788,6 +3062,7 @@
                 name: "Électricien Sécurité",
                 category: "🔧 Services",
                 trade: "Électricien",
+                kind: "service",
                 verified: true,
                 rating: 4.6,
                 services: ["Dépannage", "Installation", "Sécurité"],
@@ -2810,6 +3085,7 @@
                 name: "Réparateur Mobile",
                 category: "📱 Électronique",
                 trade: "Réparateur téléphone",
+                kind: "service",
                 verified: false,
                 rating: 4.5,
                 services: ["Écran", "Batterie", "Charge"],
@@ -2827,6 +3103,7 @@
                 name: "Menuisier Bois Pro",
                 category: "🔧 Services",
                 trade: "Menuisier / Ébéniste",
+                kind: "service",
                 verified: true,
                 rating: 4.4,
                 services: ["Meubles", "Portes", "Réparations"],
@@ -2947,34 +3224,37 @@
             const searchInput = document.getElementById('searchInput');
 
             // Visual Feedback
-            micBtn.style.background = '#e74c3c';
-            micBtn.style.color = 'white';
-            micBtn.classList.add('pulse'); // Add pulsing animation class if exists
+            if (micBtn) micBtn.classList.add('mic-active');
 
             recognition.onresult = function(event) {
                 const transcript = event.results[0][0].transcript;
                 searchInput.value = transcript;
+
+                try {
+                    if (currentKindMode === 'all') {
+                        const t = transcript.toLowerCase();
+                        const serviceHints = ['plombier', 'électricien', 'electricien', 'menuisier', 'ébéniste', 'ebeniste', 'tailleur', 'couturier', 'réparateur', 'reparateur'];
+                        const shopHints = ['boutique', 'vivres', 'tech', 'électronique', 'electronique', 'mode', 'beauté', 'beaute'];
+                        if (serviceHints.some(w => t.includes(w))) setKindMode('service');
+                        else if (shopHints.some(w => t.includes(w))) setKindMode('shop');
+                    }
+                } catch {
+                }
                 
                 // Trigger Search
-                filterVendors(transcript);
+                filterVendors();
                 
                 // Reset UI
-                micBtn.style.background = '';
-                micBtn.style.color = '';
-                micBtn.classList.remove('pulse');
+                if (micBtn) micBtn.classList.remove('mic-active');
             };
 
             recognition.onerror = function(event) {
                 console.error("Speech Error", event.error);
-                micBtn.style.background = '';
-                micBtn.style.color = '';
-                micBtn.classList.remove('pulse');
+                if (micBtn) micBtn.classList.remove('mic-active');
             };
             
             recognition.onend = function() {
-                 micBtn.style.background = '';
-                 micBtn.style.color = '';
-                 micBtn.classList.remove('pulse');
+                 if (micBtn) micBtn.classList.remove('mic-active');
             };
 
             recognition.start();
@@ -3034,6 +3314,13 @@
             const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
             const callFrame = document.getElementById('callFrame');
             const callOverlay = document.getElementById('callOverlay');
+
+            try {
+                window.__returnVendorIdAfterCall = activeVendor ? activeVendor.id : null;
+                const sheet = document.getElementById('vendorSheet');
+                window.__returnToSheetAfterCall = sheet ? sheet.classList.contains('active') : false;
+            } catch {
+            }
             
             let url = `test-webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}`;
             if (type === 'video') {
@@ -3051,7 +3338,23 @@
                 const callFrame = document.getElementById('callFrame');
                 if (callOverlay) {
                     callOverlay.style.display = 'none';
-                    callFrame.src = ''; // Stop audio/video
+                    if (callFrame) callFrame.src = ''; // Stop audio/video
+
+                    callOverlay.style.height = '100%';
+                    callOverlay.style.top = '0';
+                    callOverlay.style.borderRadius = '0';
+                    callOverlay.setAttribute('data-minimized', 'false');
+                    const minBtn = document.getElementById('callMinBtn');
+                    if (minBtn) minBtn.remove();
+                }
+
+                try {
+                    const returnId = window.__returnVendorIdAfterCall;
+                    const shouldReturnToSheet = window.__returnToSheetAfterCall;
+                    if (returnId && shouldReturnToSheet) {
+                        openVendorSheetById(returnId);
+                    }
+                } catch {
                 }
             }
         });
@@ -3067,16 +3370,17 @@
         let onlyMobile = false;
         let onlyVerified = false;
         let onlyAvailable = false;
+        let currentKindMode = 'all';
         let currentView = 'map'; 
 
         const METIERS_FAMILIES = [
             { id: 'all', label: 'Tous' },
-            { id: 'batiment', label: 'Bâtiment & Dépannage' },
-            { id: 'auto', label: 'Auto & Moto' },
-            { id: 'repair', label: 'Réparation & Électronique' },
-            { id: 'mode', label: 'Mode & Textile' },
-            { id: 'bois', label: 'Bois & Mobilier' },
-            { id: 'domicile', label: 'Services à domicile' }
+            { id: 'batiment', label: '🧰 Bâtiment' },
+            { id: 'auto', label: '🛵 Auto & Moto' },
+            { id: 'repair', label: '📱 Réparation' },
+            { id: 'mode', label: '🧵 Mode' },
+            { id: 'bois', label: '🪵 Bois' },
+            { id: 'domicile', label: '🏠 Domicile' }
         ];
 
         function getVendorFamily(v) {
@@ -3112,18 +3416,383 @@
         }
 
         function initMetiersUI() {
+            window.isMetiersBarCollapsed = true;
+            window.isMetiersBarHidden = true;
             renderFamiliesBar();
             renderMetiersFilterBody();
+            try {
+                updateMetiersResultsBadge(getFilteredVendors().length);
+            } catch {
+            }
+        }
+
+        function getAdStats() {
+            try {
+                const raw = localStorage.getItem('mangoo_ads_stats');
+                const parsed = raw ? JSON.parse(raw) : {};
+                return parsed && typeof parsed === 'object' ? parsed : {};
+            } catch {
+                return {};
+            }
+        }
+
+        function setAdStats(next) {
+            try {
+                localStorage.setItem('mangoo_ads_stats', JSON.stringify(next || {}));
+            } catch {
+            }
+        }
+
+        function getBoostConfig() {
+            try {
+                const raw = localStorage.getItem('mangoo_boost_config');
+                const parsed = raw ? JSON.parse(raw) : {};
+                return parsed && typeof parsed === 'object' ? parsed : {};
+            } catch {
+                return {};
+            }
+        }
+
+        function setBoostConfig(next) {
+            try {
+                localStorage.setItem('mangoo_boost_config', JSON.stringify(next || {}));
+            } catch {
+            }
+        }
+
+        function applyBoostConfigToVendors() {
+            const cfg = getBoostConfig();
+            VENDORS.forEach(v => {
+                const id = String(v.id);
+                const c = cfg[id];
+                if (!c || typeof c !== 'object') return;
+                if (typeof c.sponsoredUntil === 'number' || c.sponsoredUntil === null) v.sponsoredUntil = c.sponsoredUntil;
+                if (typeof c.sponsoredTier === 'number' || c.sponsoredTier === null) v.sponsoredTier = c.sponsoredTier;
+                if (typeof c.promoUntil === 'number' || c.promoUntil === null) v.promoUntil = c.promoUntil;
+                if (typeof c.newUntil === 'number' || c.newUntil === null) v.newUntil = c.newUntil;
+            });
+        }
+
+        function setVendorBoost(vendorId, patch) {
+            if (!vendorId && vendorId !== 0) return;
+            const id = String(vendorId);
+            const cfg = getBoostConfig();
+            const prev = cfg[id] && typeof cfg[id] === 'object' ? cfg[id] : {};
+            cfg[id] = { ...prev, ...patch };
+            setBoostConfig(cfg);
+
+            const v = VENDORS.find(x => String(x.id) === id);
+            if (v) {
+                Object.keys(patch || {}).forEach(k => {
+                    v[k] = patch[k];
+                });
+            }
+        }
+
+        function isAdminUser() {
+            try {
+                const demo = localStorage.getItem('admin-demo-user');
+                if (demo) {
+                    const u = JSON.parse(demo);
+                    if (String(u?.email || '').toLowerCase() === 'admin@mangoo.tech' || String(u?.role || '') === 'admin') return true;
+                }
+            } catch {
+            }
+            try {
+                const raw = localStorage.getItem('mangoo-current-user');
+                const u = raw ? JSON.parse(raw) : null;
+                if (u && String(u?.role || '') === 'admin') return true;
+            } catch {
+            }
+            return false;
+        }
+
+        function updateBoostAdminVisibility() {
+            const el = document.getElementById('boostAdminCard');
+            if (!el) return;
+            el.style.display = isAdminUser() ? 'block' : 'none';
+        }
+
+        function formatUntil(ts) {
+            if (!ts || typeof ts !== 'number') return '—';
+            const d = new Date(ts);
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mm = String(d.getMinutes()).padStart(2, '0');
+            return `${hh}:${mm}`;
+        }
+
+        function ensureBoostPanelOptions() {
+            const sel = document.getElementById('boostVendorSelect');
+            if (!sel) return;
+            const cur = sel.value;
+            sel.innerHTML = VENDORS.map(v => {
+                const kind = String(v.kind || '').toLowerCase();
+                const tag = kind === 'shop' ? '🏪' : '🛠️';
+                return `<option value="${String(v.id)}">${tag} ${v.name}</option>`;
+            }).join('');
+            if (cur && Array.from(sel.options).some(o => o.value === cur)) sel.value = cur;
+        }
+
+        function refreshBoostPanel() {
+            ensureBoostPanelOptions();
+            const sel = document.getElementById('boostVendorSelect');
+            const tierSel = document.getElementById('boostTierSelect');
+            const statusEl = document.getElementById('boostStatusText');
+            const statsEl = document.getElementById('boostStatsText');
+            if (!sel || !tierSel || !statusEl || !statsEl) return;
+
+            const id = sel.value;
+            const v = VENDORS.find(x => String(x.id) === String(id));
+            if (!v) return;
+
+            const now = Date.now();
+            const sponsorOn = typeof v.sponsoredUntil === 'number' && v.sponsoredUntil > now;
+            const promoOn = typeof v.promoUntil === 'number' && v.promoUntil > now;
+            const newOn = typeof v.newUntil === 'number' && v.newUntil > now;
+            if (typeof v.sponsoredTier === 'number') tierSel.value = String(v.sponsoredTier);
+
+            const parts = [];
+            if (sponsorOn) {
+                const t = Number(v.sponsoredTier || 1);
+                const tierLabel = t === 3 ? 'Or' : t === 2 ? 'Argent' : 'Bronze';
+                parts.push(`🏷️ Sponsor jusqu’à ${formatUntil(v.sponsoredUntil)} (${tierLabel})`);
+            }
+            if (promoOn) parts.push(`✨ Promo jusqu’à ${formatUntil(v.promoUntil)}`);
+            if (newOn) parts.push(`🆕 Nouveau jusqu’à ${formatUntil(v.newUntil)}`);
+            statusEl.textContent = parts.length ? parts.join(' • ') : 'Aucun boost actif';
+
+            const stats = getAdStats();
+            const s = stats[String(v.id)] || { impressions: 0, clicks: 0 };
+            const imp = Number(s.impressions || 0);
+            const clk = Number(s.clicks || 0);
+            const ctr = imp ? Math.round((clk / imp) * 100) : 0;
+            statsEl.textContent = `${imp} vues • ${clk} clics • ${ctr}%`;
+        }
+
+        function getSelectedBoostVendorId() {
+            const sel = document.getElementById('boostVendorSelect');
+            if (!sel) return null;
+            return sel.value;
+        }
+
+        function setSponsorBoost(hours) {
+            const id = getSelectedBoostVendorId();
+            if (!id) return;
+            const tierSel = document.getElementById('boostTierSelect');
+            const tier = tierSel ? Number(tierSel.value || 1) : 1;
+            const until = Date.now() + Number(hours) * 60 * 60 * 1000;
+            setVendorBoost(id, { sponsoredUntil: until, sponsoredTier: tier });
+            filterVendors();
+            refreshBoostPanel();
+        }
+
+        function clearSponsorBoost() {
+            const id = getSelectedBoostVendorId();
+            if (!id) return;
+            setVendorBoost(id, { sponsoredUntil: null, sponsoredTier: null });
+            filterVendors();
+            refreshBoostPanel();
+        }
+
+        function setPromoBoost(hours) {
+            const id = getSelectedBoostVendorId();
+            if (!id) return;
+            const until = Date.now() + Number(hours) * 60 * 60 * 1000;
+            setVendorBoost(id, { promoUntil: until });
+            filterVendors();
+            refreshBoostPanel();
+        }
+
+        function clearPromoBoost() {
+            const id = getSelectedBoostVendorId();
+            if (!id) return;
+            setVendorBoost(id, { promoUntil: null });
+            filterVendors();
+            refreshBoostPanel();
+        }
+
+        function setNewBoost(hours) {
+            const id = getSelectedBoostVendorId();
+            if (!id) return;
+            const until = Date.now() + Number(hours) * 60 * 60 * 1000;
+            setVendorBoost(id, { newUntil: until });
+            filterVendors();
+            refreshBoostPanel();
+        }
+
+        function clearNewBoost() {
+            const id = getSelectedBoostVendorId();
+            if (!id) return;
+            setVendorBoost(id, { newUntil: null });
+            filterVendors();
+            refreshBoostPanel();
+        }
+
+        function recordAdImpression(vendorId) {
+            if (!vendorId && vendorId !== 0) return;
+            const sessionKey = `mangoo_ads_seen_${vendorId}`;
+            if (sessionStorage.getItem(sessionKey) === '1') return;
+            sessionStorage.setItem(sessionKey, '1');
+
+            const stats = getAdStats();
+            const id = String(vendorId);
+            const prev = stats[id] || { impressions: 0, clicks: 0 };
+            stats[id] = {
+                impressions: (prev.impressions || 0) + 1,
+                clicks: prev.clicks || 0,
+                lastImpressionTs: Date.now(),
+                lastClickTs: prev.lastClickTs || null
+            };
+            setAdStats(stats);
+        }
+
+        function recordAdClick(vendorId) {
+            if (!vendorId && vendorId !== 0) return;
+            const stats = getAdStats();
+            const id = String(vendorId);
+            const prev = stats[id] || { impressions: 0, clicks: 0 };
+            stats[id] = {
+                impressions: prev.impressions || 0,
+                clicks: (prev.clicks || 0) + 1,
+                lastImpressionTs: prev.lastImpressionTs || null,
+                lastClickTs: Date.now()
+            };
+            setAdStats(stats);
+        }
+
+        function setKindMode(mode) {
+            currentKindMode = mode;
+
+            const allBtn = document.getElementById('kindAllBtn');
+            const shopsBtn = document.getElementById('kindShopsBtn');
+            const servicesBtn = document.getElementById('kindServicesBtn');
+            if (allBtn) allBtn.classList.toggle('active', mode === 'all');
+            if (shopsBtn) shopsBtn.classList.toggle('active', mode === 'shop');
+            if (servicesBtn) servicesBtn.classList.toggle('active', mode === 'service');
+
+            if (mode !== 'service') {
+                currentFamily = 'all';
+                currentTrade = 'all';
+                onlyMobile = false;
+                onlyVerified = false;
+                onlyAvailable = false;
+            }
+
+            if (mode === 'service') {
+                window.isMetiersBarHidden = true;
+                window.isMetiersBarCollapsed = true;
+            } else {
+                window.isMetiersBarHidden = true;
+                window.isMetiersBarCollapsed = true;
+            }
+
+            renderFamiliesBar();
+            renderMetiersFilterBody();
+            try {
+                renderStories();
+            } catch {
+            }
+            filterVendors();
         }
 
         function renderFamiliesBar() {
             const bar = document.getElementById('metiersFamiliesBar');
             if (!bar) return;
+            const fab = document.getElementById('metiersToggleFab');
+            const listFab = document.getElementById('metiersListFab');
+
+            if (currentKindMode !== 'service') {
+                bar.style.display = 'none';
+                if (fab) fab.style.display = 'none';
+                if (listFab) listFab.style.display = 'none';
+                return;
+            }
+
+            if (currentView !== 'map') {
+                bar.style.display = 'none';
+                if (fab) fab.style.display = 'none';
+                if (listFab) listFab.style.display = 'none';
+                return;
+            }
+
+            const hidden = !!window.isMetiersBarHidden;
+            if (hidden) {
+                bar.style.display = 'none';
+                if (fab) fab.style.display = 'flex';
+                if (listFab) listFab.style.display = 'flex';
+                return;
+            }
             bar.style.display = 'flex';
-            bar.innerHTML = METIERS_FAMILIES.map(f => {
+            if (fab) fab.style.display = 'none';
+            if (listFab) listFab.style.display = 'flex';
+            const collapsed = !!window.isMetiersBarCollapsed;
+            bar.classList.toggle('collapsed', collapsed);
+            bar.innerHTML =
+                `<button id="metiersBarToggle" onclick="toggleMetiersBar()" title="Afficher/Masquer">${collapsed ? '＋' : '－'}</button>` +
+                `<button id="metiersNewsBtn" onclick="switchView('list', document.querySelectorAll('.nav-item')[1])">Nouveautés ›</button>` +
+                METIERS_FAMILIES.map(f => {
                 const active = f.id === currentFamily ? 'active' : '';
                 return `<button class="metiers-family-chip ${active}" onclick="setMetiersFamily('${f.id}')">${f.label}</button>`;
-            }).join('');
+            }).join('') + `<div id="metiersResultsBadge">0</div>`;
+        }
+
+        function openMetiersList() {
+            hideMetiersBar();
+            switchView('list', document.querySelectorAll('.nav-item')[1]);
+        }
+
+        function showMetiersBar() {
+            window.isMetiersBarHidden = false;
+            window.isMetiersBarCollapsed = false;
+            renderFamiliesBar();
+        }
+
+        function hideMetiersBar() {
+            window.isMetiersBarHidden = true;
+            window.isMetiersBarCollapsed = true;
+            renderFamiliesBar();
+        }
+
+        function toggleMetiersBar() {
+            window.isMetiersBarCollapsed = !window.isMetiersBarCollapsed;
+            renderFamiliesBar();
+        }
+
+        function updateMetiersResultsBadge(count) {
+            const el = document.getElementById('metiersResultsBadge');
+            if (!el) return;
+            el.textContent = `Résultats: ${count}`;
+        }
+
+        function getFilteredVendors() {
+            const query = (document.getElementById('searchInput')?.value || '').toLowerCase();
+            return VENDORS.filter(v => {
+                const kind = String(v.kind || '').toLowerCase();
+                const matchesKind = currentKindMode === 'all' || kind === currentKindMode;
+                if (!matchesKind) return false;
+
+                const trade = String(v.trade || '').toLowerCase();
+                const matchesSearch = v.name.toLowerCase().includes(query) || v.category.toLowerCase().includes(query) || trade.includes(query);
+                const matchesCategory = currentCategory === 'all' || v.category === currentCategory;
+
+                const dist = (typeof v.lat === 'number' && typeof v.lng === 'number') ? distanceKm(USER_POS[0], USER_POS[1], v.lat, v.lng) : 0;
+                const matchesDistance = !maxDistanceKm || dist <= maxDistanceKm;
+
+                if (currentKindMode !== 'service') {
+                    return matchesSearch && matchesCategory && matchesDistance;
+                }
+
+                const fam = getVendorFamily(v);
+                const matchesFamily = currentFamily === 'all' || fam === currentFamily;
+
+                const matchesTrade = currentTrade === 'all' || String(v.trade || '') === currentTrade;
+
+                const matchesMobile = !onlyMobile || !!v.isMobile;
+                const matchesAvailable = !onlyAvailable || String(v.status || '').toLowerCase() === 'open';
+                const matchesVerified = !onlyVerified || !!v.verified;
+
+                return matchesSearch && matchesCategory && matchesFamily && matchesTrade && matchesDistance && matchesMobile && matchesAvailable && matchesVerified;
+            });
         }
 
         function setMetiersFamily(familyId) {
@@ -3135,6 +3804,7 @@
             renderFamiliesBar();
             renderMetiersFilterBody();
             filterVendors();
+            hideMetiersBar();
         }
 
         function openMetiersFilters() {
@@ -3182,6 +3852,7 @@
             closeMetiersFilters();
             renderFamiliesBar();
             filterVendors();
+            hideMetiersBar();
         }
 
         function renderMetiersFilterBody() {
@@ -3357,10 +4028,33 @@
             appInitialized = true;
 
             // console.log("Initializing App...");
+            try {
+                applyBoostConfigToVendors();
+            } catch {
+            }
             initMap();
             renderListView(VENDORS);
             renderStories();
             initMetiersUI();
+
+            try {
+                refreshBoostPanel();
+            } catch {
+            }
+
+            try {
+                localStorage.setItem('mangoo_local_vendors_catalog', JSON.stringify(VENDORS.map(v => ({
+                    id: String(v.id),
+                    name: v.name,
+                    kind: String(v.kind || '')
+                }))));
+            } catch {
+            }
+
+            try {
+                updateBoostAdminVisibility();
+            } catch {
+            }
             
             const loader = document.getElementById('loader');
             if(loader) {
@@ -3400,6 +4094,22 @@
                 // (Though stopPropagation on marker should handle this, checking target is safer)
                 closeSheet();
             });
+
+            try {
+                map.on('dragstart', () => {
+                    if (!window.isMetiersBarCollapsed) {
+                        window.isMetiersBarCollapsed = true;
+                        renderFamiliesBar();
+                    }
+                });
+                map.on('zoomstart', () => {
+                    if (!window.isMetiersBarCollapsed) {
+                        window.isMetiersBarCollapsed = true;
+                        renderFamiliesBar();
+                    }
+                });
+            } catch {
+            }
         }
 
         function updateUserMarker() {
@@ -3431,14 +4141,32 @@
                         50% { box-shadow: 0 0 0 15px rgba(241, 196, 15, 0); transform: scale(1.1); }
                         100% { box-shadow: 0 0 0 0 rgba(241, 196, 15, 0); transform: scale(1); }
                     }
+                    @keyframes pulse-new {
+                        0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.55); transform: scale(1); }
+                        50% { box-shadow: 0 0 0 15px rgba(99, 102, 241, 0); transform: scale(1.08); }
+                        100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); transform: scale(1); }
+                    }
                     @keyframes pulse-live {
                         0% { box-shadow: 0 0 0 0 rgba(214, 48, 49, 0.7); }
                         70% { box-shadow: 0 0 0 10px rgba(214, 48, 49, 0); }
                         100% { box-shadow: 0 0 0 0 rgba(214, 48, 49, 0); }
                     }
+                    @keyframes blink-badge {
+                        0% { opacity: 1; }
+                        50% { opacity: 0.2; }
+                        100% { opacity: 1; }
+                    }
                 `;
                 document.head.appendChild(style);
             }
+
+            const now = Date.now();
+            const sponsoredIds = vendors
+                .filter(v => typeof v.sponsoredUntil === 'number' && v.sponsoredUntil > now)
+                .sort((a, b) => (Number(b.sponsoredTier || 0) - Number(a.sponsoredTier || 0)))
+                .slice(0, 2)
+                .map(v => v.id);
+            const sponsoredSet = new Set(sponsoredIds);
 
             vendors.forEach(vendor => {
                 // Determine style based on status
@@ -3446,6 +4174,11 @@
                 let bgColor = '#fff';
                 let animation = '';
                 let badge = '';
+                let badge2 = '';
+
+                const promoActive = vendor.promo === true || (typeof vendor.promoUntil === 'number' && vendor.promoUntil > now);
+                const newActive = vendor.new === true || (typeof vendor.newUntil === 'number' && vendor.newUntil > now);
+                const sponsoredActive = sponsoredSet.has(vendor.id);
 
                 // Check for Stories (Randomly active for demo if not set)
                 // In a real app, vendor.hasStory would be true/false
@@ -3476,12 +4209,27 @@
                     bgColor = '#ffeaa7';
                     animation = 'animation: pulse-live 1.5s infinite;';
                     badge = '<span style="position:absolute; top:-8px; right:-8px; background:#d63031; color:white; font-size:9px; padding:2px 4px; border-radius:4px; font-weight:bold; z-index:10;">LIVE</span>';
-                } else if (vendor.promo) {
+                } else if (promoActive) {
                     borderColor = '#f1c40f'; // Gold
                     bgColor = '#fffbe6';
                     animation = 'animation: pulse-promo 2s infinite;';
-                    badge = '<span style="position:absolute; top:-8px; right:-8px; background:#f1c40f; color:#2d3436; font-size:10px; padding:2px 4px; border-radius:4px; font-weight:bold; z-index:10; border:1px solid #fff;">PROMO</span>';
+                    badge = '<span style="position:absolute; top:-8px; right:-8px; background:#f1c40f; color:#2d3436; font-size:10px; padding:2px 4px; border-radius:4px; font-weight:bold; z-index:10; border:1px solid #fff; animation: blink-badge 1s infinite;">PROMO</span>';
+                    if (newActive) badge2 = '<span style="position:absolute; top:-8px; left:-8px; background:#6366f1; color:white; font-size:10px; padding:2px 4px; border-radius:4px; font-weight:bold; z-index:10; border:1px solid rgba(255,255,255,0.9); animation: blink-badge 1s infinite;">NOUVEAU</span>';
+                } else if (newActive) {
+                    borderColor = '#6366f1';
+                    bgColor = '#eef2ff';
+                    animation = 'animation: pulse-new 2s infinite;';
+                    badge = '<span style="position:absolute; top:-8px; left:-8px; background:#6366f1; color:white; font-size:10px; padding:2px 4px; border-radius:4px; font-weight:bold; z-index:10; border:1px solid rgba(255,255,255,0.9); animation: blink-badge 1s infinite;">NOUVEAU</span>';
                 }
+
+                const sponsoredBadge = sponsoredActive
+                    ? '<span style="position:absolute; bottom:-8px; left:-8px; background:rgba(17, 24, 39, 0.85); color:white; font-size:9px; padding:2px 5px; border-radius:999px; font-weight:bold; z-index:10; border:1px solid rgba(255,255,255,0.65);">🏷️</span>'
+                    : '';
+
+                const kind = String(vendor.kind || '').toLowerCase();
+                const kindBadge = kind === 'shop'
+                    ? '<span style="position:absolute; bottom:-8px; right:-8px; background:#16a34a; color:white; font-size:10px; padding:2px 5px; border-radius:999px; font-weight:bold; z-index:10; border:1px solid rgba(255,255,255,0.9);">🏪</span>'
+                    : '<span style="position:absolute; bottom:-8px; right:-8px; background:#2563eb; color:white; font-size:10px; padding:2px 5px; border-radius:999px; font-weight:bold; z-index:10; border:1px solid rgba(255,255,255,0.9);">🛠️</span>';
 
                 // Story Ring HTML Construction
                 let ringHtml = '';
@@ -3524,6 +4272,9 @@
                         ">
                             <img src="${vendor.avatar}" style="width:44px; height:44px; border-radius:50%; object-fit:cover;">
                             ${badge}
+                            ${badge2}
+                            ${kindBadge}
+                            ${sponsoredBadge}
                         </div>
                     </div>
                 `;
@@ -3537,12 +4288,15 @@
 
                 const marker = L.marker([vendor.lat, vendor.lng], {
                     icon: icon,
-                    zIndexOffset: vendor.promo || vendor.live ? 1000 : 100 // Promos on top
+                    zIndexOffset: vendor.live || promoActive || newActive || sponsoredActive ? 1000 : 100
                 }).addTo(map);
+
+                if (sponsoredActive) recordAdImpression(vendor.id);
 
                 // Use the most standard Leaflet way first
                 marker.on('click', function(e) {
                     L.DomEvent.stopPropagation(e);
+                    if (sponsoredActive) recordAdClick(vendor.id);
                     openVendorSheet(vendor);
                     map.flyTo([vendor.lat, vendor.lng], 17, {animate: true, duration: 0.5});
                 });
@@ -3558,6 +4312,7 @@
                         el.addEventListener('click', function(e) {
                             e.stopPropagation();
                             e.preventDefault();
+                            if (sponsoredActive) recordAdClick(vendor.id);
                             openVendorSheet(vendor);
                             map.flyTo([vendor.lat, vendor.lng], 17, {animate: true, duration: 0.5});
                         }, true); 
@@ -3572,40 +4327,38 @@
         function renderStories() {
             const container = document.getElementById('storiesContent');
             const wrapper = document.getElementById('globalStories');
-            
-            if (VENDORS.length > 0) {
-                wrapper.style.display = 'block';
-                
-                let storiesHtml = '';
-                
-                // HEADER
-                storiesHtml += `
-                    <div class="stories-header" onclick="switchView('list', document.querySelectorAll('.nav-item')[1])">
-                        Nouveautés ›
+
+            if (!wrapper || !container) return;
+
+            if (currentKindMode !== 'shop') {
+                wrapper.style.display = 'none';
+                container.innerHTML = '';
+                return;
+            }
+
+            const shops = VENDORS.filter(v => String(v.kind || '').toLowerCase() === 'shop');
+            wrapper.style.display = shops.length ? 'block' : 'none';
+
+            let html = '';
+            html += `<div class="story-item" onclick="openSellerModal()">
+                    <div class="story-ring" style="background: #dfe6e9; box-shadow:none; border: 2px dashed #b2bec3;">
+                        <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:#636e72;">+</div>
+                    </div>
+                    <div class="story-name">Ajouter</div>
+                </div>`;
+
+            shops.slice(0, 10).forEach(v => {
+                html += `
+                    <div class="story-item" onclick="openVendorSheetById(${v.id})">
+                        <div class="story-ring">
+                            <img src="${v.avatar}" class="story-img">
+                        </div>
+                        <div class="story-name">${v.name.split(' ')[0]}</div>
                     </div>
                 `;
+            });
 
-                // Add "My Story" (Create)
-                storiesHtml += `<div class="story-item" onclick="openSellerModal()">
-                        <div class="story-ring" style="background: #dfe6e9; box-shadow:none; border: 2px dashed #b2bec3;">
-                            <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:#636e72;">+</div>
-                        </div>
-                        <div class="story-name">Ajouter</div>
-                    </div>`;
-
-                VENDORS.slice(0, 10).forEach(v => {
-                    storiesHtml += `
-                        <div class="story-item" onclick="openStory(${v.id})">
-                            <div class="story-ring">
-                                <img src="${v.avatar}" class="story-img">
-                            </div>
-                            <div class="story-name">${v.name.split(' ')[0]}</div>
-                        </div>
-                    `;
-                });
-                
-                container.innerHTML = storiesHtml;
-            }
+            container.innerHTML = html;
         }
 
         function openVendorSheetById(id) {
@@ -3613,6 +4366,20 @@
             if (vendor) {
                 openVendorSheet(vendor);
             }
+        }
+
+        function openConnectByVendorId(id) {
+            const vendor = VENDORS.find(x => x.id == id);
+            if (!vendor) return;
+            activeVendor = vendor;
+            openChat();
+        }
+
+        function openItineraryByVendorId(id) {
+            const vendor = VENDORS.find(x => x.id == id);
+            if (!vendor) return;
+            activeVendor = vendor;
+            launchItinerary();
         }
 
         // === TONTINE LOGIC ===
@@ -4787,9 +5554,12 @@
             
             // Note: Back button is now handled globally in switchView to avoid z-index/stacking context issues
 
+            const isService = currentKindMode === 'service';
+            const title = isService ? 'Prestataires' : 'Toutes les boutiques';
+
             listHeader.innerHTML = `
                 <div style="padding: 0 20px 0 20px; text-align: center;">
-                    <h2 style="margin:0; font-size:1.6rem; color:#2d3436; font-weight: 800; letter-spacing: -0.5px;">Toutes les boutiques</h2>
+                    <h2 style="margin:0; font-size:1.6rem; color:#2d3436; font-weight: 800; letter-spacing: -0.5px;">${title}</h2>
                     <div style="width: 40px; height: 4px; background: #1a5f3f; margin: 8px auto; border-radius: 2px;"></div>
                     <p style="margin:0; color:#636e72; font-size:0.9rem; font-weight: 500;">${vendors.length} résultats trouvés</p>
                 </div>
@@ -4813,18 +5583,74 @@
             gridContainer.style.gap = '15px';
             gridContainer.style.padding = '0 15px';
 
+            const formatKm = (km) => {
+                if (typeof km !== 'number' || Number.isNaN(km)) return '-- km';
+                return `${km.toFixed(1).replace('.', ',')} km`;
+            };
+
             vendors.forEach(vendor => {
-                const dist = (Math.random() * 2).toFixed(1); // Mock dist
+                const distKm = (typeof vendor.lat === 'number' && typeof vendor.lng === 'number')
+                    ? distanceKm(USER_POS[0], USER_POS[1], vendor.lat, vendor.lng)
+                    : NaN;
+                const dist = formatKm(distKm);
                 const div = document.createElement('div');
                 div.className = 'vendor-card';
                 div.style.flexDirection = 'column';
                 div.style.alignItems = 'flex-start';
                 div.onclick = () => openVendorSheet(vendor);
-                
+
+                if (isService) {
+                    const quartier = Array.isArray(vendor.coverage) && vendor.coverage.length ? String(vendor.coverage[0]) : '';
+                    const trade = String(vendor.trade || '').trim();
+
+                    const badges = [];
+                    if (vendor.verified) badges.push({ label: 'Vérifié', tone: 'ok' });
+                    if (vendor.isMobile) badges.push({ label: 'Se déplace', tone: 'info' });
+                    if (Array.isArray(vendor.services) && vendor.services.length) badges.push({ label: 'Profil', tone: 'neutral' });
+                    if (String(vendor.kind || '').toLowerCase() === 'shop') badges.push({ label: 'Boutique', tone: 'neutral' });
+                    const shown = badges.slice(0, 2);
+                    const extra = Math.max(0, badges.length - shown.length);
+
+                    const badgeHtml = shown.map(b => {
+                        const bg = b.tone === 'ok' ? 'rgba(34,197,94,0.18)' : b.tone === 'info' ? 'rgba(59,130,246,0.14)' : 'rgba(255,255,255,0.06)';
+                        const br = b.tone === 'ok' ? 'rgba(34,197,94,0.35)' : b.tone === 'info' ? 'rgba(59,130,246,0.25)' : 'rgba(255,255,255,0.12)';
+                        const fg = document.documentElement.classList.contains('dark') ? '#f3f4f6' : '#2d3436';
+                        const title = b.label === 'Se déplace'
+                            ? 'Le prestataire se déplace chez vous (quartiers dans la fiche)'
+                            : b.label === 'Profil'
+                                ? 'Voir les services, la zone couverte et le portfolio dans la fiche'
+                                : '';
+                        return `<span title="${title}" style="padding:6px 10px; border-radius:999px; border:1px solid ${br}; background:${bg}; color:${fg}; font-weight:900; font-size:0.78rem;">${b.label}</span>`;
+                    }).join('');
+
+                    const moreHtml = extra ? `<span style="padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.06); color:${document.documentElement.classList.contains('dark') ? '#f3f4f6' : '#2d3436'}; font-weight:900; font-size:0.78rem;">+${extra}</span>` : '';
+
+                    div.innerHTML = `
+                        <div style="display:flex; width:100%; align-items:flex-start; gap:12px;">
+                            <img src="${vendor.avatar}" style="width:54px; height:54px; border-radius:50%; border:2px solid #f1f2f6;">
+                            <div style="flex:1; min-width:0;">
+                                <div class="vc-name" style="font-size:1.1rem;">${vendor.name}</div>
+                                <div style="margin-top:2px; color:var(--ml-muted); font-size:0.9rem; font-weight:800;">${trade || vendor.category}${quartier ? ` • Quartier: ${quartier}` : ''}</div>
+                                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">${badgeHtml}${moreHtml}</div>
+                            </div>
+                            <div style="text-align:right; flex:0 0 auto;">
+                                <div class="vc-dist" style="justify-content:flex-end;">📍 ${dist}</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:10px; width:100%; margin-top:12px;">
+                            <button onclick="event.stopPropagation(); openConnectByVendorId(${JSON.stringify(vendor.id)})" style="flex:1; background:#a16207; color:white; border:none; padding:10px 12px; border-radius:12px; font-size:0.9rem; font-weight:950; cursor:pointer;">Mangoo Connect+</button>
+                            <button onclick="event.stopPropagation(); openVendorSheetById(${JSON.stringify(vendor.id)})" style="flex:1; background:#2d3436; color:white; border:none; padding:10px 12px; border-radius:12px; font-size:0.9rem; font-weight:950; cursor:pointer;">Voir fiche</button>
+                            <button onclick="event.stopPropagation(); openItineraryByVendorId(${JSON.stringify(vendor.id)})" style="flex:1; background:#374151; color:white; border:none; padding:10px 12px; border-radius:12px; font-size:0.9rem; font-weight:950; cursor:pointer;">Itinéraire</button>
+                        </div>
+                    `;
+                    gridContainer.appendChild(div);
+                    return;
+                }
+
                 let statusIcon = '';
                 let statusText = '';
                 let statusClass = '';
-                
+
                 if (vendor.live) {
                     statusIcon = '🔴';
                     statusText = 'En Live';
@@ -4853,7 +5679,7 @@
                         </div>
                         <div style="margin-left:auto; text-align:right;">
                             <div style="${statusClass} font-size:0.8rem;">${statusIcon} ${statusText}</div>
-                            <div class="vc-dist">📍 ${dist} km</div>
+                            <div class="vc-dist">📍 ${dist}</div>
                         </div>
                     </div>
                     <div style="font-size:0.85rem; color:#636e72; line-height:1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom:10px;">
@@ -4906,7 +5732,7 @@
             geoBtn.style.display = 'none';
 
             if (searchBar) searchBar.style.display = 'flex';
-            if (familiesBar) familiesBar.style.display = 'flex';
+            renderFamiliesBar();
             
             // Top section visibility (Stories + Filters)
             if(topSection) topSection.style.display = 'none'; 
@@ -4917,7 +5743,14 @@
                 if (!backBtn) {
                     backBtn = document.createElement('button');
                     backBtn.id = 'floatingBackBtn';
-                    backBtn.onclick = () => switchView('map');
+                    backBtn.onclick = () => {
+                        const sheet = document.getElementById('vendorSheet');
+                        if (sheet && sheet.classList.contains('active')) {
+                            closeSheet();
+                            return;
+                        }
+                        switchView('map');
+                    };
                     backBtn.style.cssText = `
                         position: fixed; 
                         left: 20px; 
@@ -4987,6 +5820,11 @@
                 // Initialize Dashboard
                 switchDashTab('wallet');
             }
+
+            try {
+                renderFamiliesBar();
+            } catch {
+            }
         }
 
         function toggleTheme() {
@@ -5034,27 +5872,8 @@
                 return;
             }
 
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            
-            const filtered = VENDORS.filter(v => {
-                const trade = String(v.trade || '').toLowerCase();
-                const matchesSearch = v.name.toLowerCase().includes(query) || v.category.toLowerCase().includes(query) || trade.includes(query);
-                const matchesCategory = currentCategory === 'all' || v.category === currentCategory;
-
-                const fam = getVendorFamily(v);
-                const matchesFamily = currentFamily === 'all' || fam === currentFamily;
-
-                const matchesTrade = currentTrade === 'all' || String(v.trade || '') === currentTrade;
-
-                const dist = (typeof v.lat === 'number' && typeof v.lng === 'number') ? distanceKm(USER_POS[0], USER_POS[1], v.lat, v.lng) : 0;
-                const matchesDistance = !maxDistanceKm || dist <= maxDistanceKm;
-
-                const matchesMobile = !onlyMobile || !!v.isMobile;
-                const matchesAvailable = !onlyAvailable || String(v.status || '').toLowerCase() === 'open';
-                const matchesVerified = !onlyVerified || !!v.verified;
-
-                return matchesSearch && matchesCategory && matchesFamily && matchesTrade && matchesDistance && matchesMobile && matchesAvailable && matchesVerified;
-            });
+            const filtered = getFilteredVendors();
+            updateMetiersResultsBadge(filtered.length);
 
             if (currentView === 'map') {
                 renderVendorsOnMap(filtered);
@@ -5925,6 +6744,14 @@
             if (isSeller) {
                 vendorSection.style.display = 'block';
                 walletTitle.innerText = "Chiffre d'Affaires (Mangoo Pro)";
+                try {
+                    refreshBoostPanel();
+                } catch {
+                }
+                try {
+                    updateBoostAdminVisibility();
+                } catch {
+                }
             } else {
                 vendorSection.style.display = 'none';
                 walletTitle.innerText = "Solde Mangoo Pay";
@@ -6048,6 +6875,7 @@
                 VENDORS.push(newVendor);
                 
                 // Refresh Map
+                newVendor.kind = 'shop';
                 renderVendorsOnMap(VENDORS);
                 
                 // Switch to Seller Mode UI if not already
@@ -6084,6 +6912,7 @@
             const myVendor = VENDORS.find(v => v.id == myShopId) || VENDORS[VENDORS.length-1]; // Fallback to last added
             
             if(myVendor) {
+                myVendor.newUntil = Date.now() + 1000 * 60 * 60 * 24;
                 switchView('map');
                 setTimeout(() => openVendorSheet(myVendor), 300);
             }
@@ -6192,7 +7021,8 @@
                 if (vendor.isMobile) badges.push('🚗 Se déplace');
                 if (Array.isArray(vendor.services) && vendor.services.length) badges.push('🧰 Profil');
                 if (vendor.live) badges.push('🔴 Live');
-                if (vendor.category && !String(vendor.category).toLowerCase().includes('services')) badges.push('🏪 Boutique');
+                if (String(vendor.kind || '').toLowerCase() === 'shop') badges.push('🏪 Boutique');
+                if (typeof vendor.sponsoredUntil === 'number' && vendor.sponsoredUntil > Date.now()) badges.push('🏷️ Sponsorisé');
 
                 if (badges.length) {
                     badgesEl.style.display = 'flex';
@@ -6273,15 +7103,13 @@
             btnDelivery.style.cssText = "width:100%; margin-top:10px; padding:12px; background:#f1f2f6; color:#2d3436; border:none; border-radius:12px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;";
             btnDelivery.onclick = () => openDeliverySimulation(vendor.id);
             
-            // Append after existing buttons if not already there
-            const actionContainer = sheet.querySelector('.sheet-content'); // We need to find a good place
-            // Actually, let's put it in the "Boutique" tab at the top
+            const kind = String(vendor.kind || '').toLowerCase();
             const boutiqueTab = document.getElementById('vendor-tab-boutique');
-            
-            // Check if already added
-            if(!document.getElementById('btn-sim-delivery')) {
-                btnDelivery.id = 'btn-sim-delivery';
-                boutiqueTab.insertBefore(btnDelivery, boutiqueTab.firstChild);
+            if (kind !== 'service') {
+                if(!document.getElementById('btn-sim-delivery') && boutiqueTab) {
+                    btnDelivery.id = 'btn-sim-delivery';
+                    boutiqueTab.insertBefore(btnDelivery, boutiqueTab.firstChild);
+                }
             }
 
             const dist = (typeof vendor.lat === 'number' && typeof vendor.lng === 'number') ? distanceKm(USER_POS[0], USER_POS[1], vendor.lat, vendor.lng) : 0;
@@ -6370,8 +7198,8 @@
                 `);
             }
 
-            // Reset to Boutique tab (Default)
-            switchSheetTab('boutique');
+            const defaultTab = kind === 'service' ? 'profil' : 'boutique';
+            switchSheetTab(defaultTab);
 
             const profilTab = document.getElementById('vendor-tab-profil');
             if (profilTab) {
