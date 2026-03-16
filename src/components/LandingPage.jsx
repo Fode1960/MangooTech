@@ -239,6 +239,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
   const selectPlan = (plan) => {
     try {
       localStorage.setItem('mangoo-selected-plan', String(plan || 'free'));
+      localStorage.setItem('mangoo-last-selected-plan', String(plan || 'free'));
     } catch {
     }
     if (onLogin) onLogin({ role: 'login_request' });

@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a5f3f">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Mangoo Local+ 🌍</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥭</text></svg>">
     <link rel="manifest" href="mangoo-local.webmanifest">
@@ -185,6 +188,43 @@
         html.dark body {
             background-color: #111827;
         }
+
+        :root {
+            --ml-bg: #f8f9fa;
+            --ml-panel: #ffffff;
+            --ml-card: #ffffff;
+            --ml-text: #2d3436;
+            --ml-muted: #636e72;
+            --ml-border: #eee;
+        }
+        html.dark {
+            --ml-bg: #0b1220;
+            --ml-panel: #111827;
+            --ml-card: #111827;
+            --ml-text: #f3f4f6;
+            --ml-muted: #9ca3af;
+            --ml-border: #1f2937;
+        }
+
+        #espaceView,
+        #introView,
+        #accountView {
+            background: var(--ml-bg);
+        }
+
+        .hub-header {
+            background: var(--ml-panel);
+            border-bottom: 1px solid var(--ml-border);
+        }
+        .hub-title { color: var(--ml-text); }
+        .hub-subtitle { color: var(--ml-muted); }
+        .hub-card {
+            background: var(--ml-card);
+            border: 1px solid var(--ml-border);
+        }
+        .hub-card-title { color: var(--ml-text); }
+        .hub-card-subtitle { color: var(--ml-muted); }
+        .hub-chevron { color: var(--ml-muted); }
         
         /* === HEADER === */
         .header {
@@ -198,6 +238,31 @@
             z-index: 1000;
             border-bottom-left-radius: 25px;
             border-bottom-right-radius: 25px;
+        }
+
+        .theme-toggle-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 1002;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.22);
+            color: white;
+            backdrop-filter: blur(6px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        }
+        html.dark .theme-toggle-btn {
+            background: rgba(0, 0, 0, 0.35);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.35);
         }
         .header h1 {
             margin: 0;
@@ -307,6 +372,35 @@
             margin-bottom: 0;
             margin-left: 5px;
         }
+
+        .filter-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .filter-advanced-btn {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            color: #2d3436;
+            cursor: pointer;
+            width: 38px;
+            height: 38px;
+            border-radius: 19px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        html.dark .filter-advanced-btn {
+            background: #1f2937;
+            color: white;
+            border-color: rgba(255,255,255,0.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
         
         .filter-toggle-btn {
             background: rgba(255, 255, 255, 0.95);
@@ -382,6 +476,132 @@
         html.dark .filter-option.active {
             background: rgba(16, 185, 129, 0.2);
             color: #34d399;
+        }
+
+        .metiers-families {
+            position: fixed;
+            top: 190px;
+            left: 15px;
+            right: 15px;
+            z-index: 1100;
+            pointer-events: auto;
+            display: flex;
+            gap: 8px;
+            padding: 8px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.75);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0,0,0,0.06);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        html.dark .metiers-families {
+            background: rgba(17, 24, 39, 0.7);
+            border-color: rgba(255,255,255,0.1);
+        }
+
+        .metiers-family-chip {
+            flex: 0 0 auto;
+            padding: 8px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(0,0,0,0.08);
+            background: rgba(255,255,255,0.85);
+            color: #2d3436;
+            font-weight: 900;
+            font-size: 0.8rem;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        html.dark .metiers-family-chip {
+            background: rgba(31, 41, 55, 0.9);
+            border-color: rgba(255,255,255,0.12);
+            color: #f3f4f6;
+        }
+
+        .metiers-family-chip.active {
+            background: rgba(249, 115, 22, 0.18);
+            border-color: rgba(249, 115, 22, 0.45);
+            color: #b45309;
+        }
+        html.dark .metiers-family-chip.active {
+            color: #fdba74;
+        }
+
+        #metiersFilterModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 12000;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 12px;
+        }
+        #metiersFilterCard {
+            width: 100%;
+            max-width: 520px;
+            max-height: 82vh;
+            overflow: hidden;
+            border-radius: 22px;
+            background: var(--ml-panel);
+            border: 1px solid var(--ml-border);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+            display: flex;
+            flex-direction: column;
+        }
+        #metiersFilterHead {
+            padding: 14px 14px 10px;
+            border-bottom: 1px solid var(--ml-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        #metiersFilterBody {
+            padding: 14px;
+            overflow-y: auto;
+        }
+        .mf-title { font-weight: 950; color: var(--ml-text); }
+        .mf-sub { color: var(--ml-muted); font-size: 0.85rem; }
+        .mf-section { margin-bottom: 14px; }
+        .mf-label { color: var(--ml-muted); font-size: 0.85rem; font-weight: 900; margin-bottom: 8px; }
+        .mf-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+        .mf-chip {
+            padding: 8px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--ml-border);
+            background: rgba(255,255,255,0.04);
+            color: var(--ml-text);
+            font-weight: 900;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .mf-chip.active {
+            background: rgba(249, 115, 22, 0.18);
+            border-color: rgba(249, 115, 22, 0.45);
+        }
+        #metiersFilterFoot {
+            padding: 12px 14px;
+            border-top: 1px solid var(--ml-border);
+            display: flex;
+            gap: 10px;
+        }
+        .mf-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 14px;
+            border: 1px solid var(--ml-border);
+            background: rgba(255,255,255,0.04);
+            color: var(--ml-text);
+            font-weight: 950;
+            cursor: pointer;
+        }
+        .mf-btn.primary {
+            background: rgba(249, 115, 22, 0.18);
+            border-color: rgba(249, 115, 22, 0.45);
         }
 
         /* === CONTENT CONTAINER (MAP & LIST) === */
@@ -1454,6 +1674,7 @@
     <!-- HEADER -->
     <div class="header">
         <button onclick="window.parent.postMessage('exit_mangoo_local', '*')" style="position:absolute; top:15px; left:15px; background:rgba(255,255,255,0.2); border:none; color:white; border-radius:50%; width:30px; height:30px; cursor:pointer; font-weight:bold; font-size:1rem; z-index:1002;">✕</button>
+        <button id="themeToggle" class="theme-toggle-btn" onclick="toggleTheme()" title="Jour/Nuit">🌙</button>
         <h1>🥭 Mangoo Local+</h1>
         <div class="subtitle">Trouvez les meilleures affaires autour de vous</div>
         
@@ -1488,41 +1709,19 @@
         📅
     </button>
 
-    <!-- SHORTCUT MANGOO LAB (Bottom Left) -->
-    <button id="btnInnovations" onclick="openLabModal()" style="
-        position: absolute;
-        bottom: 85px;
-        left: 20px;
-        z-index: 1100;
-        background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
-        color: white;
-        border: none;
-        padding: 12px 20px;
-        border-radius: 30px;
-        font-size: 0.95rem;
-        font-weight: bold;
-        box-shadow: 0 6px 15px rgba(108, 92, 231, 0.4);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-        transition: transform 0.2s;
-        animation: popIn 0.5s;
-        white-space: nowrap; 
-        min-width: 140px;
-        justify-content: center;
-    " onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
-        <span style="font-size: 1.2rem;">🧪</span> Mangoo Lab
-    </button>
+    
 
     <!-- TOP SECTION (Stories + Filters) -->
     <div class="top-section">
         <!-- CATEGORY FILTERS (Vertical Dropdown) -->
         <div class="filter-container">
-            <button class="filter-toggle-btn" onclick="toggleFilterMenu()">
-                <span id="currentFilterLabel">🌍 Tout</span>
-                <span style="font-size: 0.8rem; margin-left: 5px;">▼</span>
-            </button>
+            <div class="filter-actions">
+                <button class="filter-toggle-btn" onclick="toggleFilterMenu()">
+                    <span id="currentFilterLabel">🌍 Tout</span>
+                    <span style="font-size: 0.8rem; margin-left: 5px;">▼</span>
+                </button>
+                <button class="filter-advanced-btn" onclick="openMetiersFilters()" title="Filtres">⚙️</button>
+            </div>
             <div id="filterMenu" class="filter-dropdown">
                 <div class="filter-option active" onclick="filterCategory('all', this)">🌍 Tout</div>
                 <div class="filter-option" onclick="filterCategory('🥬 Vivres Frais', this)">🥬 Vivres</div>
@@ -1532,6 +1731,8 @@
                 <div class="filter-option" onclick="filterCategory('🔧 Services', this)">🔧 Services</div>
             </div>
         </div>
+
+        <div id="metiersFamiliesBar" class="metiers-families" style="display:none;"></div>
 
         <!-- STORIES BAR (VISIBLE EVERYWHERE) -->
         <div id="globalStories" class="stories-wrapper" style="display: none;">
@@ -1552,11 +1753,76 @@
             <!-- Items injected by JS -->
         </div>
 
+        <!-- ESPACE VIEW (Hub) -->
+        <div id="espaceView" class="scrollable-view" style="display:none;">
+            <div class="hub-header" style="padding:20px; text-align:center;">
+                <button class="btn-back-account" onclick="switchView('map')" style="position:absolute; top:20px; left:20px;">←</button>
+                <h2 class="hub-title" style="margin:10px 0 5px;">Espace</h2>
+                <div class="hub-subtitle" style="font-size:0.95rem;">Tout au même endroit</div>
+            </div>
+            <div style="padding:20px; padding-bottom:90px; display:grid; gap:12px;">
+                <div class="hub-card" style="border-radius:18px; padding:16px; display:flex; align-items:center; gap:14px; cursor:pointer;" onclick="switchView('list')">
+                    <div style="width:54px; height:54px; border-radius:16px; background:#e8f5e9; display:flex; align-items:center; justify-content:center; font-size:1.8rem;">📋</div>
+                    <div style="flex:1;">
+                        <div class="hub-card-title" style="font-weight:900;">Liste</div>
+                        <div class="hub-card-subtitle" style="font-size:0.9rem;">Voir tous les prestataires</div>
+                    </div>
+                    <div class="hub-chevron" style="font-size:1.6rem;">›</div>
+                </div>
+
+                <div class="hub-card" style="border-radius:18px; padding:16px; display:flex; align-items:center; gap:14px; cursor:pointer;" onclick="switchView('fav')">
+                    <div style="width:54px; height:54px; border-radius:16px; background:#fff0f6; display:flex; align-items:center; justify-content:center; font-size:1.8rem;">❤️</div>
+                    <div style="flex:1;">
+                        <div class="hub-card-title" style="font-weight:900;">Favoris</div>
+                        <div class="hub-card-subtitle" style="font-size:0.9rem;">Mes prestataires préférés</div>
+                    </div>
+                    <div class="hub-chevron" style="font-size:1.6rem;">›</div>
+                </div>
+
+                <div class="hub-card" style="border-radius:18px; padding:16px; display:flex; align-items:center; gap:14px; cursor:pointer;" onclick="openDriverModal()">
+                    <div style="width:54px; height:54px; border-radius:16px; background:#fff3e0; display:flex; align-items:center; justify-content:center; font-size:1.8rem;">🛵</div>
+                    <div style="flex:1;">
+                        <div class="hub-card-title" style="font-weight:900;">Livraison</div>
+                        <div class="hub-card-subtitle" style="font-size:0.9rem;">Devenir Livreur Express</div>
+                    </div>
+                    <div class="hub-chevron" style="font-size:1.6rem;">›</div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- INTRO VIEW (Simple) -->
+        <div id="introView" class="scrollable-view" style="display:none;">
+            <div class="hub-header" style="padding:20px; text-align:center;">
+                <button class="btn-back-account" onclick="switchView('map')" style="position:absolute; top:20px; left:20px;">←</button>
+                <h2 class="hub-title" style="margin:10px 0 5px;">Intro Local+</h2>
+                <div class="hub-subtitle" style="font-size:0.95rem;">Comment utiliser Local+ en 30 secondes</div>
+            </div>
+            <div style="padding:20px; padding-bottom:90px;">
+                <div class="hub-card" style="border-radius:16px; padding:16px; margin-bottom:12px;">
+                    <div class="hub-card-title" style="font-weight:bold; margin-bottom:6px;">1) Rechercher un besoin</div>
+                    <div class="hub-card-subtitle" style="line-height:1.45;">Tapez un métier (ex: Plombier, Tailleur) ou utilisez les filtres.</div>
+                </div>
+                <div class="hub-card" style="border-radius:16px; padding:16px; margin-bottom:12px;">
+                    <div class="hub-card-title" style="font-weight:bold; margin-bottom:6px;">2) Choisir un prestataire</div>
+                    <div class="hub-card-subtitle" style="line-height:1.45;">Cliquez sur un pin pour ouvrir la fiche: services, horaires, zone couverte.</div>
+                </div>
+                <div class="hub-card" style="border-radius:16px; padding:16px; margin-bottom:12px;">
+                    <div class="hub-card-title" style="font-weight:bold; margin-bottom:6px;">3) Contacter via Mangoo Connect+</div>
+                    <div class="hub-card-subtitle" style="line-height:1.45;">Envoyez votre besoin, votre quartier, et une photo si nécessaire.</div>
+                </div>
+                <div class="hub-card" style="border-radius:16px; padding:16px;">
+                    <div class="hub-card-title" style="font-weight:bold; margin-bottom:6px;">Astuce</div>
+                    <div class="hub-card-subtitle" style="line-height:1.45;">Badge 🚗 “Se déplace” = le prestataire peut venir chez vous. Les quartiers couverts sont dans la fiche.</div>
+                </div>
+            </div>
+        </div>
+
         <!-- ACCOUNT VIEW (Client Dashboard) -->
-        <div id="accountView" class="scrollable-view" style="background:#f8f9fa;">
-            <div class="account-header" style="background:white; padding:20px; padding-top:60px; text-align:center; border-bottom:1px solid #eee;">
+        <div id="accountView" class="scrollable-view" style="background:var(--ml-bg);">
+            <div class="hub-header" style="padding:20px; text-align:center;">
                 <!-- Back Button -->
-                <button class="btn-back-account" onclick="switchView('map')" style="position:absolute; top:20px; left:20px; background:#f1f2f6; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer;">
+                <button class="btn-back-account" onclick="switchView('map')" style="position:absolute; top:20px; left:20px;">
                     ←
                 </button>
                 
@@ -1564,8 +1830,8 @@
                     <img src="https://ui-avatars.com/api/?name=Utilisateur+Demo&background=1a5f3f&color=fff" class="profile-pic" style="width:80px; height:80px; border-radius:50%; border:3px solid white; box-shadow:0 5px 15px rgba(0,0,0,0.1);">
                     <div style="position:absolute; bottom:0; right:0; background:#27ae60; width:20px; height:20px; border-radius:50%; border:2px solid white;"></div>
                 </div>
-                <h2 style="margin:10px 0 5px; color:#2d3436;">Utilisateur Démo</h2>
-                <div style="color:#636e72; font-size:0.9rem;">+237 699 00 00 00</div>
+                <h2 class="hub-title" style="margin:10px 0 5px;">Utilisateur Démo</h2>
+                <div class="hub-subtitle" style="font-size:0.9rem;">+237 699 00 00 00</div>
             </div>
 
             <!-- DASHBOARD TABS -->
@@ -1705,16 +1971,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- DRIVER RECRUITMENT CARD (Now Active) -->
-                <div style="background:white; border-radius:15px; padding:15px; margin:20px; box-shadow:0 4px 10px rgba(0,0,0,0.05); display:flex; align-items:center; gap:15px; cursor:pointer;" onclick="openDriverModal()">
-                    <div style="background:#fff3e0; width:50px; height:50px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.8rem;">🛵</div>
-                    <div>
-                        <div style="font-weight:bold; color:#2d3436;">Devenir Livreur Express</div>
-                        <div style="font-size:0.8rem; color:#e67e22;">Gagnez de l'argent avec votre moto</div>
-                    </div>
-                    <span style="margin-left:auto; color:#b2bec3;">›</span>
                 </div>
 
             </div>
@@ -1867,6 +2123,7 @@
                         <span id="vCategory">Catégorie</span> • <span class="vc-dist" id="vDistance">-- km</span>
                         <span class="status-badge status-open" id="vStatus">Ouvert</span>
                     </div>
+                    <div id="vTradeLine" style="margin-top:6px; font-size:0.9rem; color:#636e72; display:none;"></div>
                 </div>
                 <!-- Fav & Share Buttons -->
                 <div style="position: absolute; right: 0; top: 10px; display: flex; gap: 15px;">
@@ -1881,6 +2138,8 @@
                 <div class="wave-visual"></div>
                 <div class="voice-text">Écouter le message du vendeur</div>
             </div>
+
+            <div id="vBadges" style="display:none; gap:8px; flex-wrap:wrap; margin-bottom:15px;"></div>
             
             <!-- Quick Edit Link for Owner -->
             <div id="ownerEditLink" style="text-align:center; margin-bottom:15px; display:none;">
@@ -1909,6 +2168,7 @@
             <div style="display:flex; border-bottom:1px solid #dfe6e9; margin-bottom:15px;">
                 <div class="sheet-tab active" onclick="switchSheetTab('boutique', this)">Boutique</div>
                 <div class="sheet-tab" onclick="switchSheetTab('carte', this)">Carte</div>
+                <div class="sheet-tab" onclick="switchSheetTab('profil', this)">Profil</div>
             </div>
 
             <!-- Tab Content: Boutique -->
@@ -1930,6 +2190,11 @@
                     </button>
                 </div>
             </div>
+
+            <!-- Tab Content: Profil -->
+            <div id="vendor-tab-profil" style="display:none; padding:10px;">
+                <!-- Injected by JS -->
+            </div>
         </div>
     </div>
 
@@ -1939,17 +2204,17 @@
             <span class="nav-icon">🗺️</span>
             Carte
         </div>
-        <div class="nav-item" onclick="switchView('list', this)">
-            <span class="nav-icon">📋</span>
-            Liste
+        <div class="nav-item" onclick="switchView('espace', this)">
+            <span class="nav-icon">🧰</span>
+            Espace
         </div>
-        <div class="nav-item" onclick="switchView('fav', this)">
-            <span class="nav-icon">❤️</span>
-            Favoris
+        <div class="nav-item" onclick="switchView('intro', this)">
+            <span class="nav-icon">✨</span>
+            Intro
         </div>
         <div class="nav-item" onclick="switchView('account', this)">
             <span class="nav-icon">👤</span>
-            Mon Espace
+            Mon compte
         </div>
     </div>
 
@@ -2125,6 +2390,7 @@
                 <div style="font-size:0.75rem; opacity:0.8;">En ligne</div>
             </div>
             <div style="display:flex; gap:5px; align-items:center;">
+                <button id="chat-requests-btn" onclick="toggleRequestsView()" style="background:none; border:none; color:white; cursor:pointer; font-size:1.2rem; padding:5px;" title="Mes demandes">📋</button>
                 <button id="chat-contacts-btn" onclick="toggleContactsView()" style="background:none; border:none; color:white; cursor:pointer; font-size:1.2rem; padding:5px;" title="Contacts">👥</button>
                 <button onclick="startAudioCall()" style="background:rgba(255,255,255,0.2); border:none; color:white; font-size:1.2rem; cursor:pointer; padding:8px; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center;">📞</button>
             </div>
@@ -2163,13 +2429,41 @@
             </div>
         </div>
 
+        <div id="chat-requests-view" style="display: none; position: absolute; top: 60px; left: 0; right: 0; bottom: 0; background: var(--ml-panel); z-index: 110; flex-direction: column;">
+            <div style="padding: 12px; border-bottom: 1px solid var(--ml-border); background: var(--ml-bg); display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <div style="font-weight:900; color:var(--ml-text);">📋 Mes demandes (Connect+)</div>
+                <button onclick="toggleRequestsView()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--ml-muted);">✕</button>
+            </div>
+            <div id="chatRequestsList" style="flex: 1; overflow-y: auto;"></div>
+        </div>
+
         <div class="chat-messages" id="chatHistory">
             <!-- Messages -->
         </div>
+        <div id="chatQuickBar" style="padding:10px; border-top:1px solid var(--ml-border); background:var(--ml-panel); display:none; gap:8px; flex-wrap:wrap;"></div>
         <div class="chat-input-area">
             <button class="attachment-btn" onclick="attachFile()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; padding:5px;">📷</button>
+            <button class="attachment-btn" onclick="sendLocation()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; padding:5px;">📍</button>
             <input type="text" class="chat-input" placeholder="Écrire un message..." id="chatInput">
             <button class="btn-send" onclick="sendMessage()" style="background:#1a5f3f; color:white; border:none; padding:10px 15px; border-radius:20px; font-weight:bold; cursor:pointer; margin-left:5px;">➤</button>
+        </div>
+    </div>
+
+    <!-- METIERS FILTERS (Advanced) -->
+    <div id="metiersFilterModal" onclick="closeMetiersFilters(event)">
+        <div id="metiersFilterCard" onclick="event.stopPropagation()">
+            <div id="metiersFilterHead">
+                <div>
+                    <div class="mf-title">Filtres Métiers</div>
+                    <div class="mf-sub">Affiner par famille, métier, distance</div>
+                </div>
+                <button class="mf-btn" style="flex:0 0 auto; padding:10px 12px;" onclick="closeMetiersFilters()">✕</button>
+            </div>
+            <div id="metiersFilterBody"></div>
+            <div id="metiersFilterFoot">
+                <button class="mf-btn" onclick="resetMetiersFilters()">Réinitialiser</button>
+                <button class="mf-btn primary" onclick="applyMetiersFilters()">Appliquer</button>
+            </div>
         </div>
     </div>
 
@@ -2456,12 +2750,99 @@
                 id: 3,
                 name: "Tailleur Élégance",
                 category: "🧵 Mode",
+                trade: "Tailleur/Couturier",
+                verified: true,
+                rating: 4.7,
+                isMobile: false,
                 lat: 4.051500,
                 lng: 9.769000,
                 status: "closed",
                 live: false,
                 voicePitch: "Atelier fermé ce matin, je suis au marché des tissus. Ouverture à 14h pour les essayages.",
                 avatar: "https://ui-avatars.com/api/?name=Tailleur+E&background=e17055&color=fff"
+            },
+            {
+                id: 4,
+                name: "Plombier Express",
+                category: "🔧 Services",
+                trade: "Plombier",
+                verified: true,
+                rating: 4.8,
+                services: ["Dépannage fuite", "Installation", "Entretien"],
+                portfolio: [
+                    "https://source.unsplash.com/400x400/?plumbing,tools",
+                    "https://source.unsplash.com/400x400/?pipe,repair",
+                    "https://source.unsplash.com/400x400/?bathroom,plumber"
+                ],
+                isMobile: true,
+                coverage: ["Marcory", "Koumassi", "Treichville"],
+                lat: 4.051250,
+                lng: 9.766700,
+                status: "open",
+                live: false,
+                voicePitch: "Dépannage fuite et installation. Intervention rapide dans votre quartier.",
+                avatar: "https://ui-avatars.com/api/?name=Plombier+Express&background=16a085&color=fff"
+            },
+            {
+                id: 5,
+                name: "Électricien Sécurité",
+                category: "🔧 Services",
+                trade: "Électricien",
+                verified: true,
+                rating: 4.6,
+                services: ["Dépannage", "Installation", "Sécurité"],
+                portfolio: [
+                    "https://source.unsplash.com/400x400/?electrician,wiring",
+                    "https://source.unsplash.com/400x400/?electrical,panel",
+                    "https://source.unsplash.com/400x400/?tools,electric"
+                ],
+                isMobile: true,
+                coverage: ["Bonapriso", "Akwa", "Deido"],
+                lat: 4.050900,
+                lng: 9.769800,
+                status: "open",
+                live: false,
+                voicePitch: "Pannes, installations, sécurité électrique. Devis rapide.",
+                avatar: "https://ui-avatars.com/api/?name=Electricien&background=0ea5e9&color=fff"
+            },
+            {
+                id: 6,
+                name: "Réparateur Mobile",
+                category: "📱 Électronique",
+                trade: "Réparateur téléphone",
+                verified: false,
+                rating: 4.5,
+                services: ["Écran", "Batterie", "Charge"],
+                isMobile: true,
+                coverage: ["Akwa", "Bali", "Bonanjo"],
+                lat: 4.052150,
+                lng: 9.769300,
+                status: "open",
+                live: false,
+                voicePitch: "Écran cassé, batterie, charge. Diagnostic en 10 minutes.",
+                avatar: "https://ui-avatars.com/api/?name=Reparateur+Tel&background=2563eb&color=fff"
+            },
+            {
+                id: 7,
+                name: "Menuisier Bois Pro",
+                category: "🔧 Services",
+                trade: "Menuisier / Ébéniste",
+                verified: true,
+                rating: 4.4,
+                services: ["Meubles", "Portes", "Réparations"],
+                portfolio: [
+                    "https://source.unsplash.com/400x400/?carpentry,wood",
+                    "https://source.unsplash.com/400x400/?furniture,wood",
+                    "https://source.unsplash.com/400x400/?workshop,carpenter"
+                ],
+                isMobile: true,
+                coverage: ["Koumassi", "Logpom", "Bepanda"],
+                lat: 4.049900,
+                lng: 9.768900,
+                status: "open",
+                live: false,
+                voicePitch: "Meubles, portes, réparations. Travail soigné.",
+                avatar: "https://ui-avatars.com/api/?name=Menuisier&background=8b5a2b&color=fff"
             }
         ];
 
@@ -2478,13 +2859,46 @@
             }
         }
 
+        function applyTheme(isDark) {
+            try {
+                if (isDark) document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+            } catch {
+            }
+
+            try {
+                localStorage.theme = isDark ? 'dark' : 'light';
+            } catch {
+            }
+
+            try {
+                const btn = document.getElementById('themeToggle');
+                if (btn) btn.textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+            } catch {
+            }
+
+            try {
+                const labToggle = document.getElementById('darkModeToggle');
+                if (labToggle) labToggle.checked = document.documentElement.classList.contains('dark');
+            } catch {
+            }
+
+            try {
+                if (currentView === 'list' || currentView === 'fav') filterVendors();
+                if (currentView === 'map') {
+                    const listHeader = document.getElementById('listHeader');
+                    if (listHeader) listHeader.style.background = document.documentElement.classList.contains('dark') ? '#111827' : '#f0f2f5';
+                }
+            } catch {
+            }
+        }
+
         function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            const isDark = document.documentElement.classList.contains('dark');
-            localStorage.theme = isDark ? 'dark' : 'light';
-            
-            // Update UI specific elements if needed
-            renderListView(VENDORS); // Refresh list header colors
+            try {
+                const next = document.getElementById('darkModeToggle')?.checked;
+                applyTheme(!!next);
+            } catch {
+            }
         }
 
         function toggle3DMap() {
@@ -2647,7 +3061,168 @@
         // VENDORS already declared above
         let currentMarkers = [];
         let currentCategory = 'all';
+        let currentFamily = 'all';
+        let currentTrade = 'all';
+        let maxDistanceKm = 5;
+        let onlyMobile = false;
+        let onlyVerified = false;
+        let onlyAvailable = false;
         let currentView = 'map'; 
+
+        const METIERS_FAMILIES = [
+            { id: 'all', label: 'Tous' },
+            { id: 'batiment', label: 'Bâtiment & Dépannage' },
+            { id: 'auto', label: 'Auto & Moto' },
+            { id: 'repair', label: 'Réparation & Électronique' },
+            { id: 'mode', label: 'Mode & Textile' },
+            { id: 'bois', label: 'Bois & Mobilier' },
+            { id: 'domicile', label: 'Services à domicile' }
+        ];
+
+        function getVendorFamily(v) {
+            const cat = String(v?.category || '').toLowerCase();
+            const trade = String(v?.trade || '').toLowerCase();
+
+            if (cat.includes('électronique') || cat.includes('electronique') || trade.includes('téléphone') || trade.includes('telephone') || trade.includes('réparateur') || trade.includes('reparateur')) return 'repair';
+            if (cat.includes('mode') || trade.includes('tailleur') || trade.includes('couturier')) return 'mode';
+            if (trade.includes('menuisier') || trade.includes('ébéniste') || trade.includes('ebeniste') || cat.includes('meuble') || cat.includes('bois')) return 'bois';
+            if (trade.includes('mécanicien') || trade.includes('mecanicien') || trade.includes('auto') || trade.includes('moto')) return 'auto';
+            if (cat.includes('services') || trade.includes('plombier') || trade.includes('électricien') || trade.includes('electricien') || trade.includes('peintre') || trade.includes('ferronnier')) return 'batiment';
+            return 'all';
+        }
+
+        function distanceKm(lat1, lng1, lat2, lng2) {
+            const R = 6371;
+            const toRad = (deg) => (deg * Math.PI) / 180;
+            const dLat = toRad(lat2 - lat1);
+            const dLng = toRad(lng2 - lng1);
+            const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        function getUniqueTradesByFamily(familyId) {
+            const trades = new Set();
+            VENDORS.forEach(v => {
+                if (!v.trade) return;
+                const fam = getVendorFamily(v);
+                if (familyId === 'all' || fam === familyId) trades.add(String(v.trade));
+            });
+            return Array.from(trades).sort((a, b) => a.localeCompare(b));
+        }
+
+        function initMetiersUI() {
+            renderFamiliesBar();
+            renderMetiersFilterBody();
+        }
+
+        function renderFamiliesBar() {
+            const bar = document.getElementById('metiersFamiliesBar');
+            if (!bar) return;
+            bar.style.display = 'flex';
+            bar.innerHTML = METIERS_FAMILIES.map(f => {
+                const active = f.id === currentFamily ? 'active' : '';
+                return `<button class="metiers-family-chip ${active}" onclick="setMetiersFamily('${f.id}')">${f.label}</button>`;
+            }).join('');
+        }
+
+        function setMetiersFamily(familyId) {
+            currentFamily = familyId;
+            if (currentTrade !== 'all') {
+                const trades = getUniqueTradesByFamily(currentFamily);
+                if (!trades.includes(currentTrade)) currentTrade = 'all';
+            }
+            renderFamiliesBar();
+            renderMetiersFilterBody();
+            filterVendors();
+        }
+
+        function openMetiersFilters() {
+            renderMetiersFilterBody();
+            const modal = document.getElementById('metiersFilterModal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeMetiersFilters(e) {
+            const modal = document.getElementById('metiersFilterModal');
+            if (!modal) return;
+            if (!e || e.target === modal) modal.style.display = 'none';
+        }
+
+        function setMetiersTrade(trade) {
+            currentTrade = trade;
+            renderMetiersFilterBody();
+        }
+
+        function setMetiersDistance(km) {
+            maxDistanceKm = km;
+            renderMetiersFilterBody();
+        }
+
+        function toggleMetiersFlag(flag) {
+            if (flag === 'mobile') onlyMobile = !onlyMobile;
+            if (flag === 'verified') onlyVerified = !onlyVerified;
+            if (flag === 'available') onlyAvailable = !onlyAvailable;
+            renderMetiersFilterBody();
+        }
+
+        function resetMetiersFilters() {
+            currentFamily = 'all';
+            currentTrade = 'all';
+            maxDistanceKm = 5;
+            onlyMobile = false;
+            onlyVerified = false;
+            onlyAvailable = false;
+            renderFamiliesBar();
+            renderMetiersFilterBody();
+            filterVendors();
+        }
+
+        function applyMetiersFilters() {
+            closeMetiersFilters();
+            renderFamiliesBar();
+            filterVendors();
+        }
+
+        function renderMetiersFilterBody() {
+            const body = document.getElementById('metiersFilterBody');
+            if (!body) return;
+
+            const trades = getUniqueTradesByFamily(currentFamily);
+
+            body.innerHTML = `
+                <div class="mf-section">
+                    <div class="mf-label">Famille</div>
+                    <div class="mf-chips">
+                        ${METIERS_FAMILIES.map(f => `<button class="mf-chip ${f.id === currentFamily ? 'active' : ''}" onclick="setMetiersFamily('${f.id}')">${f.label}</button>`).join('')}
+                    </div>
+                </div>
+
+                <div class="mf-section">
+                    <div class="mf-label">Métier</div>
+                    <div class="mf-chips">
+                        <button class="mf-chip ${currentTrade === 'all' ? 'active' : ''}" onclick="setMetiersTrade('all')">Tous</button>
+                        ${trades.map(t => `<button class="mf-chip ${t === currentTrade ? 'active' : ''}" onclick="setMetiersTrade(${JSON.stringify(t)})">${t}</button>`).join('')}
+                    </div>
+                </div>
+
+                <div class="mf-section">
+                    <div class="mf-label">Distance</div>
+                    <div class="mf-chips">
+                        ${[2,5,10].map(km => `<button class="mf-chip ${km === maxDistanceKm ? 'active' : ''}" onclick="setMetiersDistance(${km})">${km} km</button>`).join('')}
+                    </div>
+                </div>
+
+                <div class="mf-section" style="margin-bottom:0;">
+                    <div class="mf-label">Options</div>
+                    <div class="mf-chips">
+                        <button class="mf-chip ${onlyMobile ? 'active' : ''}" onclick="toggleMetiersFlag('mobile')">🚗 Se déplace</button>
+                        <button class="mf-chip ${onlyAvailable ? 'active' : ''}" onclick="toggleMetiersFlag('available')">✅ Disponible</button>
+                        <button class="mf-chip ${onlyVerified ? 'active' : ''}" onclick="toggleMetiersFlag('verified')">🛡️ Vérifié</button>
+                    </div>
+                </div>
+            `;
+        }
         
         // Safe Storage Access
         let favorites = [];
@@ -2785,12 +3360,25 @@
             initMap();
             renderListView(VENDORS);
             renderStories();
+            initMetiersUI();
             
             const loader = document.getElementById('loader');
             if(loader) {
                 loader.style.opacity = '0';
                 setTimeout(() => loader.style.display = 'none', 500);
             }
+        }
+
+        try {
+            window.addEventListener('error', (e) => {
+                const msg = e?.error?.message || e?.message || 'Erreur inconnue.';
+                showError(msg);
+            });
+            window.addEventListener('unhandledrejection', (e) => {
+                const msg = e?.reason?.message || String(e?.reason || 'Erreur inconnue.');
+                showError(msg);
+            });
+        } catch {
         }
 
         function initMap() {
@@ -4261,7 +4849,7 @@
                         <img src="${vendor.avatar}" style="width:50px; height:50px; border-radius:50%; margin-right:15px; border:2px solid #f1f2f6;">
                         <div>
                             <div class="vc-name" style="font-size:1.1rem; color:#2d3436;">${vendor.name}</div>
-                            <div class="vc-cat" style="color:#636e72;">${vendor.category}</div>
+                            <div class="vc-cat" style="color:#636e72;">${vendor.category}${vendor.trade ? ` • ${vendor.trade}` : ''}</div>
                         </div>
                         <div style="margin-left:auto; text-align:right;">
                             <div style="${statusClass} font-size:0.8rem;">${statusIcon} ${statusText}</div>
@@ -4269,7 +4857,7 @@
                         </div>
                     </div>
                     <div style="font-size:0.85rem; color:#636e72; line-height:1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom:10px;">
-                        ${vendor.voiceAudio ? '<span style="color:#d63031; font-weight:bold;">🎙️ Vocal Authentique</span> • ' : ''}${displayPitch}
+                        ${vendor.isMobile ? '<span style="color:#0984e3; font-weight:bold;">🚗 Se déplace</span> • ' : ''}${vendor.voiceAudio ? '<span style="color:#d63031; font-weight:bold;">🎙️ Vocal Authentique</span> • ' : ''}${displayPitch}
                     </div>
                     <div style="display:flex; gap:10px; margin-top:5px;">
                         <button onclick="event.stopPropagation(); startTontine('${vendor.name}')" style="flex:1; background:#8B5CF6; color:white; border:none; padding:8px; border-radius:8px; font-size:0.8rem; font-weight:bold; cursor:pointer;">👥 Tontine</button>
@@ -4289,9 +4877,10 @@
             if (!btn) {
                 const navItems = document.querySelectorAll('.nav-item');
                 if (view === 'map') btn = navItems[0];
-                else if (view === 'list') btn = navItems[1];
-                else if (view === 'fav') btn = navItems[2];
+                else if (view === 'espace') btn = navItems[1];
+                else if (view === 'intro') btn = navItems[2];
                 else if (view === 'account') btn = navItems[3];
+                else if (view === 'list' || view === 'fav') btn = navItems[1];
             }
 
             // Update Nav UI
@@ -4300,25 +4889,31 @@
 
             const mapDiv = document.getElementById('map');
             const listDiv = document.getElementById('listView');
+            const espaceDiv = document.getElementById('espaceView');
+            const introDiv = document.getElementById('introView');
             const accountDiv = document.getElementById('accountView');
             const geoBtn = document.querySelector('.fab-geo');
             const topSection = document.querySelector('.top-section'); // Refactored top section
-            const innovBtn = document.getElementById('btnInnovations');
+            const searchBar = document.querySelector('.search-container');
+            const familiesBar = document.getElementById('metiersFamiliesBar');
 
             // Reset all (hide everything first)
             mapDiv.style.display = 'none';
             listDiv.style.display = 'none';
+            if (espaceDiv) espaceDiv.style.display = 'none';
+            if (introDiv) introDiv.style.display = 'none';
             accountDiv.style.display = 'none';
             geoBtn.style.display = 'none';
+
+            if (searchBar) searchBar.style.display = 'flex';
+            if (familiesBar) familiesBar.style.display = 'flex';
             
             // Top section visibility (Stories + Filters)
             if(topSection) topSection.style.display = 'none'; 
 
-            if(innovBtn) innovBtn.style.display = 'flex'; // Show by default
-
             // Manage Floating Back Button (Global)
             let backBtn = document.getElementById('floatingBackBtn');
-            if (view === 'list' || view === 'fav') {
+            if (view === 'list' || view === 'fav' || view === 'intro' || view === 'espace') {
                 if (!backBtn) {
                     backBtn = document.createElement('button');
                     backBtn.id = 'floatingBackBtn';
@@ -4364,6 +4959,11 @@
                 if(topSection) topSection.style.display = 'flex'; // Show Filters & Stories
                 setTimeout(() => map.invalidateSize(), 100);
                 filterVendors(); 
+            } else if (view === 'espace') {
+                if (espaceDiv) espaceDiv.style.display = 'block';
+                if(topSection) topSection.style.display = 'none';
+                if (searchBar) searchBar.style.display = 'none';
+                if (familiesBar) familiesBar.style.display = 'none';
             } else if (view === 'list') {
                 listDiv.style.display = 'block';
                 if(topSection) topSection.style.display = 'none'; // Hide Filters & Stories in List View
@@ -4372,15 +4972,32 @@
                 listDiv.style.display = 'block';
                 renderFavorites();
                 if(topSection) topSection.style.display = 'none'; // Hide Filters & Stories in Fav View
+            } else if (view === 'intro') {
+                if (introDiv) introDiv.style.display = 'block';
+                if(topSection) topSection.style.display = 'none';
+                if (searchBar) searchBar.style.display = 'none';
+                if (familiesBar) familiesBar.style.display = 'none';
             } else if (view === 'account') {
                 accountDiv.style.display = 'block';
                 // Hide filters/stories for account view
                 if(topSection) topSection.style.display = 'none';
-                if(innovBtn) innovBtn.style.display = 'none'; // Hide in account view
+                if (searchBar) searchBar.style.display = 'none';
+                if (familiesBar) familiesBar.style.display = 'none';
                 
                 // Initialize Dashboard
                 switchDashTab('wallet');
             }
+        }
+
+        function toggleTheme() {
+            applyTheme(!document.documentElement.classList.contains('dark'));
+        }
+
+        try {
+            window.addEventListener('load', () => {
+                applyTheme(document.documentElement.classList.contains('dark'));
+            });
+        } catch {
         }
 
         function renderFavorites() {
@@ -4420,9 +5037,23 @@
             const query = document.getElementById('searchInput').value.toLowerCase();
             
             const filtered = VENDORS.filter(v => {
-                const matchesSearch = v.name.toLowerCase().includes(query) || v.category.toLowerCase().includes(query);
+                const trade = String(v.trade || '').toLowerCase();
+                const matchesSearch = v.name.toLowerCase().includes(query) || v.category.toLowerCase().includes(query) || trade.includes(query);
                 const matchesCategory = currentCategory === 'all' || v.category === currentCategory;
-                return matchesSearch && matchesCategory;
+
+                const fam = getVendorFamily(v);
+                const matchesFamily = currentFamily === 'all' || fam === currentFamily;
+
+                const matchesTrade = currentTrade === 'all' || String(v.trade || '') === currentTrade;
+
+                const dist = (typeof v.lat === 'number' && typeof v.lng === 'number') ? distanceKm(USER_POS[0], USER_POS[1], v.lat, v.lng) : 0;
+                const matchesDistance = !maxDistanceKm || dist <= maxDistanceKm;
+
+                const matchesMobile = !onlyMobile || !!v.isMobile;
+                const matchesAvailable = !onlyAvailable || String(v.status || '').toLowerCase() === 'open';
+                const matchesVerified = !onlyVerified || !!v.verified;
+
+                return matchesSearch && matchesCategory && matchesFamily && matchesTrade && matchesDistance && matchesMobile && matchesAvailable && matchesVerified;
             });
 
             if (currentView === 'map') {
@@ -4478,51 +5109,197 @@
 
 
         // === MANGOO CONNECT+ LOGIC ===
+        let connectDraft = { urgent: false, quartier: null, devis: false };
+        let connectSessionHasUserMessage = false;
+
+        function loadConnectRequests() {
+            try {
+                const raw = localStorage.getItem('mangoo_connect_requests');
+                const parsed = raw ? JSON.parse(raw) : [];
+                return Array.isArray(parsed) ? parsed : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function saveConnectRequest(payload) {
+            try {
+                const list = loadConnectRequests();
+                list.unshift(payload);
+                localStorage.setItem('mangoo_connect_requests', JSON.stringify(list.slice(0, 30)));
+            } catch {
+            }
+        }
+
+        function buildPrefillMessage(vendor) {
+            const trade = String(vendor?.trade || '').trim();
+            const quartier = Array.isArray(vendor?.coverage) && vendor.coverage.length ? String(vendor.coverage[0]) : (connectDraft.quartier || 'mon quartier');
+            if (trade) return `Bonjour, je cherche un ${trade.toLowerCase()} à ${quartier}. Disponible aujourd’hui ?`;
+            return `Bonjour, je cherche un prestataire à ${quartier}. Disponible aujourd’hui ?`;
+        }
+
         function openChat(initialMessage = null) {
             // Hide floating back button to prevent overlap
             const floatBtn = document.getElementById('floatingBackBtn');
             if(floatBtn) floatBtn.style.display = 'none';
 
-            // Ensure activeVendor is set or fallback
-            // ... (rest of function)
             const vendorName = activeVendor ? activeVendor.name : "Vendeur";
             const vendorAvatar = activeVendor ? activeVendor.avatar : "https://ui-avatars.com/api/?name=Vendeur&background=random";
 
             document.getElementById('chatAvatar').src = vendorAvatar;
             document.getElementById('chatName').innerText = vendorName;
             
-            // Mock History with Timestamps and Options
             const history = document.getElementById('chatHistory');
             const now = new Date();
             const timeStr = now.getHours() + ":" + (now.getMinutes()<10?'0':'') + now.getMinutes();
+
+            const requestsView = document.getElementById('chat-requests-view');
+            const contactsView = document.getElementById('chat-contacts-view');
+            if (requestsView) requestsView.style.display = 'none';
+            if (contactsView) contactsView.style.display = 'none';
+
+            connectSessionHasUserMessage = false;
+            connectDraft = { urgent: false, quartier: null, devis: false };
+            if (activeVendor?.coverage && activeVendor.coverage.length) connectDraft.quartier = String(activeVendor.coverage[0]);
             
             history.innerHTML = `
                 <div style="text-align:center; color:#95a5a6; font-size:0.75rem; margin:10px 0;">Aujourd'hui</div>
                 
                 <div class="msg-bubble msg-received">
-                    Bonjour ! Bienvenue chez ${vendorName}. Comment puis-je vous aider ?
-                    <div class="msg-meta">
-                        <span>${timeStr}</span>
-                    </div>
+                    <div class="msg-content">Bonjour ! Bienvenue chez ${vendorName}. Comment puis-je vous aider ?</div>
+                    <div class="msg-meta"><span>${timeStr}</span></div>
                 </div>
             `;
-            
-            // Add Initial Context Message (Bargaining)
-            if (initialMessage) {
-                history.innerHTML += `
-                    <div class="msg-bubble msg-sent" style="background:#f1c40f; color:#2d3436; font-weight:bold;">
-                        ${initialMessage}
-                        <div class="msg-meta" style="color:#636e72;">
-                            <span>${timeStr}</span> • <span>✓</span>
-                        </div>
-                        <div class="msg-options">
-                            <button class="msg-opt-btn" onclick="this.closest('.msg-bubble').remove()">🗑️</button>
-                        </div>
-                    </div>
-                `;
+
+            const input = document.getElementById('chatInput');
+            if (input) {
+                const prefill = typeof initialMessage === 'string' && initialMessage.trim() ? initialMessage.trim() : buildPrefillMessage(activeVendor);
+                input.value = prefill;
             }
+
+            renderChatQuickBar();
             
             document.getElementById('connectPlus').style.display = 'flex';
+        }
+
+        function renderChatQuickBar() {
+            const bar = document.getElementById('chatQuickBar');
+            if (!bar) return;
+
+            bar.style.display = 'flex';
+            const quartier = connectDraft.quartier || 'Quartier';
+
+            bar.innerHTML = `
+                <button class="mf-chip ${connectDraft.urgent ? 'active' : ''}" onclick="toggleChatUrgent()">⚡ Urgence</button>
+                <button class="mf-chip ${connectDraft.devis ? 'active' : ''}" onclick="toggleChatDevis()">📄 Devis</button>
+                <button class="mf-chip" onclick="cycleChatQuartier()">📍 ${quartier}</button>
+            `;
+        }
+
+        function toggleChatUrgent() {
+            connectDraft.urgent = !connectDraft.urgent;
+            renderChatQuickBar();
+        }
+
+        function toggleChatDevis() {
+            connectDraft.devis = !connectDraft.devis;
+            renderChatQuickBar();
+        }
+
+        function cycleChatQuartier() {
+            const options = Array.isArray(activeVendor?.coverage) ? activeVendor.coverage.filter(Boolean) : [];
+            if (!options.length) {
+                const val = prompt('Votre quartier ?', connectDraft.quartier || '');
+                if (val !== null) connectDraft.quartier = String(val).trim() || connectDraft.quartier;
+                renderChatQuickBar();
+                return;
+            }
+            const idx = Math.max(0, options.indexOf(connectDraft.quartier));
+            const next = options[(idx + 1) % options.length];
+            connectDraft.quartier = String(next);
+            renderChatQuickBar();
+        }
+
+        function toggleRequestsView() {
+            const view = document.getElementById('chat-requests-view');
+            const contactsView = document.getElementById('chat-contacts-view');
+            if (!view) return;
+            if (contactsView) contactsView.style.display = 'none';
+
+            const isOpen = view.style.display === 'flex';
+            view.style.display = isOpen ? 'none' : 'flex';
+            if (!isOpen) renderRequestsList();
+        }
+
+        function renderRequestsList() {
+            const container = document.getElementById('chatRequestsList');
+            if (!container) return;
+
+            const list = loadConnectRequests();
+            if (!list.length) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding:40px 16px; color:var(--ml-muted);">
+                        <div style="font-size:2.5rem; margin-bottom:10px;">📭</div>
+                        <div style="font-weight:900; color:var(--ml-text); margin-bottom:6px;">Aucune demande</div>
+                        <div>Vos messages Connect+ apparaîtront ici.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = list.map(item => {
+                const dt = new Date(item.ts || Date.now());
+                const hh = String(dt.getHours()).padStart(2, '0');
+                const mm = String(dt.getMinutes()).padStart(2, '0');
+                const title = item.vendorName || 'Prestataire';
+                const meta = [item.trade, item.quartier, item.urgent ? 'Urgence' : null].filter(Boolean).join(' • ');
+                const txt = String(item.text || '').slice(0, 80);
+                return `
+                    <div onclick="reopenRequest(${item.ts})" style="padding:14px 14px; border-bottom:1px solid var(--ml-border); cursor:pointer;">
+                        <div style="display:flex; justify-content:space-between; gap:10px;">
+                            <div style="font-weight:950; color:var(--ml-text);">${title}</div>
+                            <div style="color:var(--ml-muted); font-size:0.8rem;">${hh}:${mm}</div>
+                        </div>
+                        <div style="color:var(--ml-muted); font-size:0.85rem; margin-top:4px;">${meta}</div>
+                        <div style="color:var(--ml-text); font-size:0.9rem; margin-top:6px; opacity:0.95;">${txt}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function reopenRequest(ts) {
+            const list = loadConnectRequests();
+            const item = list.find(x => Number(x.ts) === Number(ts));
+            if (!item) return;
+            const vendor = VENDORS.find(v => v.id === item.vendorId);
+            if (vendor) activeVendor = vendor;
+            toggleRequestsView();
+            openChat(item.text);
+        }
+
+        function sendLocation() {
+            const history = document.getElementById('chatHistory');
+            if (!history) return;
+
+            if (!navigator.geolocation) {
+                alert('GPS non disponible sur cet appareil.');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    const text = `📍 Ma position: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+                    const input = document.getElementById('chatInput');
+                    if (input) input.value = text;
+                    sendMessage();
+                },
+                () => {
+                    alert('Impossible de récupérer la position.');
+                },
+                { enableHighAccuracy: false, timeout: 6000 }
+            );
         }
         
         function sendMessage() {
@@ -4838,15 +5615,18 @@
                 if(tabs.length > 0) {
                     if(tab === 'boutique') tabs[0].classList.add('active');
                     if(tab === 'carte') tabs[1].classList.add('active');
+                    if(tab === 'profil') tabs[2].classList.add('active');
                 }
             }
 
             // Update Content
             const tabBoutique = document.getElementById('vendor-tab-boutique');
             const tabCarte = document.getElementById('vendor-tab-carte');
+            const tabProfil = document.getElementById('vendor-tab-profil');
             
             if(tabBoutique) tabBoutique.style.display = 'none';
             if(tabCarte) tabCarte.style.display = 'none';
+            if(tabProfil) tabProfil.style.display = 'none';
             
             const target = document.getElementById('vendor-tab-' + tab);
             if(target) {
@@ -4896,6 +5676,8 @@
 
         function toggleContactsView() {
             const view = document.getElementById('chat-contacts-view');
+            const reqView = document.getElementById('chat-requests-view');
+            if (reqView) reqView.style.display = 'none';
             if (view.style.display === 'none' || !view.style.display) {
                 view.style.display = 'flex';
             } else {
@@ -4973,6 +5755,20 @@
             
             const text = input.value.trim();
             if(!text) return;
+
+            if (!connectSessionHasUserMessage) {
+                connectSessionHasUserMessage = true;
+                saveConnectRequest({
+                    ts: Date.now(),
+                    vendorId: activeVendor ? activeVendor.id : null,
+                    vendorName: activeVendor ? activeVendor.name : null,
+                    trade: activeVendor ? String(activeVendor.trade || '').trim() : null,
+                    quartier: connectDraft?.quartier || null,
+                    urgent: !!connectDraft?.urgent,
+                    devis: !!connectDraft?.devis,
+                    text
+                });
+            }
             
             const history = document.getElementById('chatHistory');
             const now = new Date();
@@ -5365,6 +6161,49 @@
             document.getElementById('vName').innerText = vendor.name;
             document.getElementById('vCategory').innerText = vendor.category;
             document.getElementById('vAvatar').src = vendor.avatar;
+
+            const tradeLine = document.getElementById('vTradeLine');
+            if (tradeLine) {
+                const trade = String(vendor.trade || '').trim();
+                const isMobile = Boolean(vendor.isMobile);
+                const coverage = Array.isArray(vendor.coverage) ? vendor.coverage.filter(Boolean).slice(0, 3) : [];
+                const rating = typeof vendor.rating === 'number' ? vendor.rating.toFixed(1) : '';
+                const parts = [];
+                if (trade) parts.push(trade);
+                if (rating) parts.push(`⭐ ${rating}`);
+                if (isMobile) {
+                    const c = coverage.length ? ` (Quartiers: ${coverage.join(', ')}${Array.isArray(vendor.coverage) && vendor.coverage.length > 3 ? '…' : ''})` : '';
+                    parts.push(`🚗 Se déplace${c}`);
+                }
+                if (vendor.verified) parts.push('🛡️ Vérifié');
+                if (parts.length) {
+                    tradeLine.style.display = 'block';
+                    tradeLine.innerText = parts.join(' • ');
+                } else {
+                    tradeLine.style.display = 'none';
+                    tradeLine.innerText = '';
+                }
+            }
+
+            const badgesEl = document.getElementById('vBadges');
+            if (badgesEl) {
+                const badges = [];
+                if (vendor.verified) badges.push('🛡️ Vérifié');
+                if (vendor.isMobile) badges.push('🚗 Se déplace');
+                if (Array.isArray(vendor.services) && vendor.services.length) badges.push('🧰 Profil');
+                if (vendor.live) badges.push('🔴 Live');
+                if (vendor.category && !String(vendor.category).toLowerCase().includes('services')) badges.push('🏪 Boutique');
+
+                if (badges.length) {
+                    badgesEl.style.display = 'flex';
+                    badgesEl.innerHTML = badges.map(b => `
+                        <span style="padding:6px 10px; border-radius:999px; border:1px solid var(--ml-border); background:rgba(255,255,255,0.04); color:var(--ml-text); font-weight:900; font-size:0.8rem;">${b}</span>
+                    `).join('');
+                } else {
+                    badgesEl.style.display = 'none';
+                    badgesEl.innerHTML = '';
+                }
+            }
             
             // UPDATE VOICE PLAYER UI
             const playerText = document.querySelector('.voice-text');
@@ -5445,9 +6284,8 @@
                 boutiqueTab.insertBefore(btnDelivery, boutiqueTab.firstChild);
             }
 
-            // Distance (Mock calculation)
-            const dist = (Math.random() * 2).toFixed(1); 
-            document.getElementById('vDistance').innerText = dist + " km";
+            const dist = (typeof vendor.lat === 'number' && typeof vendor.lng === 'number') ? distanceKm(USER_POS[0], USER_POS[1], vendor.lat, vendor.lng) : 0;
+            document.getElementById('vDistance').innerText = dist ? dist.toFixed(1) + " km" : "-- km";
 
             // Statut et Live
             const statusBadge = document.getElementById('vStatus');
@@ -5534,6 +6372,60 @@
 
             // Reset to Boutique tab (Default)
             switchSheetTab('boutique');
+
+            const profilTab = document.getElementById('vendor-tab-profil');
+            if (profilTab) {
+                const services = Array.isArray(vendor.services) ? vendor.services : [];
+                const coverage = Array.isArray(vendor.coverage) ? vendor.coverage.filter(Boolean) : [];
+                const trade = String(vendor.trade || '').trim();
+                const rating = typeof vendor.rating === 'number' ? vendor.rating.toFixed(1) : null;
+
+                const servicesHtml = services.length ? services.map(s => `<span class="mf-chip" style="background:rgba(255,255,255,0.04);">${s}</span>`).join('') : '<div style="color:var(--ml-muted); font-size:0.9rem;">Non renseigné.</div>';
+
+                const coverageHtml = vendor.isMobile ? `
+                    <div style="color:var(--ml-muted); font-size:0.95rem; line-height:1.45;">
+                        Se déplace: Oui${maxDistanceKm ? ` • Rayon (option): ${maxDistanceKm} km` : ''}<br>
+                        Quartiers: ${coverage.length ? coverage.join(', ') : 'Non renseigné'}
+                    </div>
+                ` : `<div style="color:var(--ml-muted); font-size:0.95rem;">Se déplace: Non</div>`;
+
+                const portfolio = Array.isArray(vendor.portfolio) ? vendor.portfolio.slice(0, 3) : [];
+                const portfolioHtml = portfolio.length ? `
+                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px;">
+                        ${portfolio.map(src => `<div style="border-radius:14px; overflow:hidden; border:1px solid var(--ml-border); background:rgba(255,255,255,0.04); aspect-ratio: 1 / 1;"><img src="${src}" style="width:100%; height:100%; object-fit:cover; display:block;"></div>`).join('')}
+                    </div>
+                ` : `
+                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px;">
+                        <div style="border-radius:14px; border:1px dashed var(--ml-border); background:rgba(255,255,255,0.03); aspect-ratio: 1 / 1; display:flex; align-items:center; justify-content:center; color:var(--ml-muted); font-weight:900;">Photo 1</div>
+                        <div style="border-radius:14px; border:1px dashed var(--ml-border); background:rgba(255,255,255,0.03); aspect-ratio: 1 / 1; display:flex; align-items:center; justify-content:center; color:var(--ml-muted); font-weight:900;">Photo 2</div>
+                        <div style="border-radius:14px; border:1px dashed var(--ml-border); background:rgba(255,255,255,0.03); aspect-ratio: 1 / 1; display:flex; align-items:center; justify-content:center; color:var(--ml-muted); font-weight:900;">Photo 3</div>
+                    </div>
+                `;
+
+                profilTab.innerHTML = `
+                    <div class="hub-card" style="border-radius:16px; padding:14px; margin-bottom:12px;">
+                        <div class="hub-card-title" style="font-weight:950; margin-bottom:8px;">Prestataire</div>
+                        <div style="color:var(--ml-muted); font-size:0.95rem; line-height:1.45;">
+                            ${trade ? trade : 'Métier non renseigné'}${rating ? ` • Note: ${rating}` : ''}
+                        </div>
+                    </div>
+
+                    <div class="hub-card" style="border-radius:16px; padding:14px; margin-bottom:12px;">
+                        <div class="hub-card-title" style="font-weight:950; margin-bottom:8px;">Services proposés</div>
+                        <div class="mf-chips">${servicesHtml}</div>
+                    </div>
+
+                    <div class="hub-card" style="border-radius:16px; padding:14px; margin-bottom:12px;">
+                        <div class="hub-card-title" style="font-weight:950; margin-bottom:8px;">Zone couverte</div>
+                        ${coverageHtml}
+                    </div>
+
+                    <div class="hub-card" style="border-radius:16px; padding:14px;">
+                        <div class="hub-card-title" style="font-weight:950; margin-bottom:10px;">Portfolio</div>
+                        ${portfolioHtml}
+                    </div>
+                `;
+            }
 
             document.getElementById('vendorSheet').classList.add('active');
         }
@@ -5844,35 +6736,35 @@
         function openDriverOnboarding() {
             const overlay = document.createElement('div');
             overlay.id = 'driverOnboarding';
-            overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:10000; display:flex; flex-direction:column; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif;";
+            overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:var(--ml-bg); z-index:10000; display:flex; flex-direction:column; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; color:var(--ml-text);";
             
             overlay.innerHTML = `
-                <div style="background:linear-gradient(135deg, #e67e22 0%, #d35400 100%); padding:40px 20px 30px; text-align:center; color:white; border-radius:0 0 30px 30px; box-shadow:0 10px 30px rgba(230, 126, 34, 0.3);">
-                    <div style="font-size:4rem; margin-bottom:10px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.2));">🛵</div>
-                    <h2 style="margin:0; font-size:1.8rem; font-weight:800;">Mangoo Express</h2>
-                    <p style="opacity:0.9; margin-top:5px; font-size:0.95rem;">Devenez partenaire et gagnez plus.</p>
+                <div style="background:linear-gradient(135deg, #e67e22 0%, #d35400 100%); padding:24px 16px 18px; text-align:center; color:white; border-radius:0 0 22px 22px; box-shadow:0 10px 30px rgba(230, 126, 34, 0.25);">
+                    <div style="font-size:3rem; margin-bottom:6px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.2));">🛵</div>
+                    <h2 style="margin:0; font-size:1.55rem; font-weight:800; line-height:1.15;">Mangoo Express</h2>
+                    <p style="opacity:0.9; margin:6px 0 0; font-size:0.9rem;">Devenez partenaire et gagnez plus.</p>
                 </div>
                 
-                <div style="flex:1; overflow-y:auto; padding:30px 20px;">
-                    <h3 style="color:#2d3436; margin-bottom:20px; font-size:1.2rem;">📝 Votre Profil</h3>
+                <div style="flex:1; overflow-y:auto; padding:18px 16px 20px;">
+                    <h3 style="color:var(--ml-text); margin-bottom:20px; font-size:1.2rem;">📝 Votre Profil</h3>
                     
-                    <div style="background:white; border-radius:20px; padding:20px; box-shadow:0 5px 20px rgba(0,0,0,0.05); border:1px solid #f1f2f6;">
+                    <div style="background:var(--ml-card); border-radius:20px; padding:20px; box-shadow:0 5px 20px rgba(0,0,0,0.05); border:1px solid var(--ml-border);">
                         <div style="margin-bottom:20px;">
-                            <label style="font-weight:bold; display:block; margin-bottom:8px; color:#636e72; font-size:0.9rem;">Type de Véhicule</label>
+                            <label style="font-weight:bold; display:block; margin-bottom:8px; color:var(--ml-muted); font-size:0.9rem;">Type de Véhicule</label>
                             <div style="position:relative;">
-                                <select id="vehicleType" style="width:100%; padding:15px; border-radius:12px; border:1px solid #dfe6e9; background:#f8f9fa; font-size:1rem; color:#2d3436; appearance:none; font-weight:bold;">
+                                <select id="vehicleType" style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--ml-border); background:var(--ml-bg); font-size:1rem; color:var(--ml-text); appearance:none; font-weight:bold;">
                                     <option>Moto</option>
                                     <option>Tricycle</option>
                                     <option>Voiture</option>
                                     <option>Camion</option>
                                 </select>
-                                <div style="position:absolute; right:15px; top:50%; transform:translateY(-50%); pointer-events:none; color:#636e72;">▼</div>
+                                <div style="position:absolute; right:15px; top:50%; transform:translateY(-50%); pointer-events:none; color:var(--ml-muted);">▼</div>
                             </div>
                         </div>
                         
                         <div style="margin-bottom:10px;">
-                            <label style="font-weight:bold; display:block; margin-bottom:8px; color:#636e72; font-size:0.9rem;">Permis de Conduire / CNI</label>
-                            <div style="border:2px dashed #b2bec3; padding:30px 20px; text-align:center; border-radius:15px; background:#f8f9fa; color:#636e72; cursor:pointer; position:relative; overflow:hidden; transition:all 0.2s;" onclick="document.getElementById('driverLicenseInput').click()" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
+                            <label style="font-weight:bold; display:block; margin-bottom:8px; color:var(--ml-muted); font-size:0.9rem;">Permis de Conduire / CNI</label>
+                            <div style="border:2px dashed #b2bec3; padding:30px 20px; text-align:center; border-radius:15px; background:var(--ml-bg); color:var(--ml-muted); cursor:pointer; position:relative; overflow:hidden; transition:all 0.2s;" onclick="document.getElementById('driverLicenseInput').click()" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
                                 <input type="file" id="driverLicenseInput" accept="image/*" style="display:none;" onchange="handleLicenseUpload(this)">
                                 <img id="licensePreview" style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; display:none;">
                                 <div id="licensePlaceholder">
@@ -5883,15 +6775,15 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <div style="margin-top:30px;">
-                        <button onclick="submitDriverApp()" style="width:100%; padding:18px; background:linear-gradient(135deg, #e67e22 0%, #d35400 100%); color:white; border:none; border-radius:15px; font-weight:bold; font-size:1.1rem; cursor:pointer; box-shadow:0 10px 20px rgba(230, 126, 34, 0.3); transition:transform 0.1s;">
-                            🚀 Envoyer ma candidature
-                        </button>
-                        <button onclick="document.getElementById('driverOnboarding').remove()" style="width:100%; padding:15px; background:transparent; color:#636e72; border:none; font-weight:bold; cursor:pointer; margin-top:10px;">
-                            Annuler
-                        </button>
-                    </div>
+                </div>
+                
+                <div style="padding:14px 16px 16px; border-top:1px solid var(--ml-border); background:var(--ml-panel);">
+                    <button onclick="submitDriverApp()" style="width:100%; padding:14px; background:linear-gradient(135deg, #e67e22 0%, #d35400 100%); color:white; border:none; border-radius:14px; font-weight:900; font-size:1.05rem; cursor:pointer; box-shadow:0 10px 20px rgba(230, 126, 34, 0.25);">
+                        🚀 Envoyer ma candidature
+                    </button>
+                    <button onclick="document.getElementById('driverOnboarding').remove()" style="width:100%; padding:12px; background:transparent; color:var(--ml-muted); border:none; font-weight:900; cursor:pointer; margin-top:8px;">
+                        Annuler
+                    </button>
                 </div>
             `;
             document.body.appendChild(overlay);

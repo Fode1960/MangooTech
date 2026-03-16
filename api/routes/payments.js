@@ -1,6 +1,7 @@
 import express from 'express';
 import { stripe } from '../config/payments.js';
 import { createClient } from '@supabase/supabase-js';
+import { activateUserPack, deactivateOtherActivePacks } from '../services/packActivation.js';
 
 const router = express.Router();
 
@@ -13,7 +14,7 @@ const supabase = createClient(
 // Créer un paiement Stripe
 router.post('/create-stripe-payment', async (req, res) => {
   try {
-    const { amount, currency = 'eur', description, customer_email, user_id } = req.body;
+    const { amount, currency = 'eur', description, customer_email, user_id, pack_id, pack_name, pack_price } = req.body;
 
     console.log('Requête Stripe reçue:', { amount, currency, description, customer_email, user_id });
 
@@ -52,6 +53,9 @@ router.post('/create-stripe-payment', async (req, res) => {
         platform: 'mangoo_tech',
         payment_method: 'stripe',
         user_id: user_id || 'anonymous',
+        pack_id: pack_id || '',
+        pack_name: pack_name || '',
+        pack_price: pack_price || '',
       },
     });
 
@@ -71,7 +75,10 @@ router.post('/create-stripe-payment', async (req, res) => {
         created_via: 'api',
         stripe_currency: paymentIntent.currency,
         amount_in_cents: amountInCents,
-        net_amount_cents: netAmount
+        net_amount_cents: netAmount,
+        pack_id: pack_id || null,
+        pack_name: pack_name || null,
+        pack_price: pack_price || null
       }
     };
 
@@ -214,6 +221,23 @@ router.post('/confirm-stripe-payment', async (req, res) => {
           .single();
         if (!existingTx) {
           await createTransaction(paymentRow, 'success');
+        }
+
+        const packId = paymentRow?.metadata?.pack_id;
+        const resolvedUserId = paymentRow?.user_id;
+        if (packId && resolvedUserId) {
+          try {
+            await deactivateOtherActivePacks({ supabase, userId: resolvedUserId, keepPackId: packId });
+            await activateUserPack({
+              supabase,
+              userId: resolvedUserId,
+              packId,
+              source: 'stripe_confirm',
+              transaction: { paymentIntentId, paymentId: paymentRow.id },
+            });
+          } catch (e) {
+            console.error('Activation pack (stripe) échouée:', e);
+          }
         }
       }
       res.json({

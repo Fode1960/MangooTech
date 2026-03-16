@@ -207,30 +207,19 @@ export const PaymentMethods = ({
     e.preventDefault();
     
     if (!selectedPaymentMethod) return;
-    
-    // Vérifier que l'utilisateur est toujours connecté avant le paiement
-    const currentUserRaw = localStorage.getItem('mangoo-current-user') || localStorage.getItem('user');
-    if (!currentUserRaw) {
-      alert('⚠️ Votre session a expiré. Veuillez vous reconnecter.');
-      if (onPaymentError) {
-        onPaymentError(new Error('Session expirée'));
-      }
-      return;
-    }
 
+    const currentUserRaw = localStorage.getItem('mangoo-current-user') || localStorage.getItem('user');
     let currentUser = null;
     try {
-      currentUser = JSON.parse(currentUserRaw);
+      currentUser = currentUserRaw ? JSON.parse(currentUserRaw) : null;
     } catch {
       currentUser = null;
     }
-    if (!currentUser || (!currentUser.id && !currentUser.email)) {
-      alert('⚠️ Votre session a expiré. Veuillez vous reconnecter.');
-      if (onPaymentError) {
-        onPaymentError(new Error('Session expirée'));
-      }
-      return;
-    }
+    const resolvedUserId =
+      currentUser?.id ||
+      currentUser?.email ||
+      (typeof userId === 'string' ? userId : null) ||
+      'anonymous';
     
     try {
       await processPayment({
@@ -239,7 +228,11 @@ export const PaymentMethods = ({
         currency: currentCurrency,
         phoneNumber: phoneNumber,
         email: email,
-        userId: currentUser.id || currentUser.email || 'anonymous',
+        userId: resolvedUserId,
+        description: packName ? `Abonnement ${packName}` : description,
+        packId,
+        packName,
+        packPrice,
         authToken: localStorage.getItem('token') || 'demo-token'
       });
 
@@ -254,7 +247,7 @@ export const PaymentMethods = ({
           method: selectedPaymentMethod,
           amount: totalAmount,
           currency: currentCurrency,
-          userId: currentUser.id || currentUser.email
+          userId: resolvedUserId
         });
       }
     } catch (error) {

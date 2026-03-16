@@ -33,6 +33,7 @@ import { ChatProvider } from './contexts/ChatContext';
 import WebRTCManagerFinal from './components/WebRTCManagerFinal';
 import { LiveShoppingProvider } from './contexts/LiveShoppingContext';
 import WebRTCJoinPage from './pages/WebRTCJoinPage';
+import PlanCheckoutTest from './pages/PlanCheckoutTest';
 import VendorMessagingCenter from './components/VendorMessagingCenter';
 import LiveShoppingManager from './components/LiveShoppingManager';
 import { NotificationProvider } from './contexts/NotificationContext';
@@ -121,6 +122,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
   const [error, setError] = useState('');
   const [selectedPlan, setSelectedPlan] = useState(null);
   const { isDark } = useThemeStore();
+  const navigate = useNavigate();
 
   useEffect(() => {
     try {
@@ -245,16 +247,63 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
 
     const fromStored = Boolean(storedUsers[normalizedEmail]);
     const user = (fromStored ? storedUsers[normalizedEmail] : null) || demoUsers[normalizedEmail];
-    const isDemoPassword = (password === 'admin123' || password === 'vendor123' || password === 'client123');
+
+    const demoPasswords = {
+      'admin@mangoo.tech': 'admin123',
+      'vendor@example.com': 'vendor123',
+      'client@example.com': 'client123',
+      'vendeur@exemple.com': 'vendor123',
+      'vendeur@example.com': 'vendor123'
+    };
     const isStoredPassword = fromStored && Boolean(user?.password) && String(user.password) === password;
+    const isDemoPassword = Boolean(demoPasswords[normalizedEmail]) && String(demoPasswords[normalizedEmail]) === password;
 
     if (user && (fromStored ? isStoredPassword : isDemoPassword)) {
       onLogin(user);
       setError('');
-    } else {
-      setError('Identifiants incorrects');
+      try {
+        const sp = localStorage.getItem('mangoo-selected-plan');
+        if (sp) {
+          const plan = String(sp);
+          const pack = plan === 'pro' ? 'pack_professionnel' : 'pack_decouverte';
+          navigate(`/plan-checkout?pack=${encodeURIComponent(pack)}`);
+          localStorage.removeItem('mangoo-selected-plan');
+          return;
+        }
+      } catch {
+      }
+      return;
     }
-  }, [email, password]);
+
+    if (!fromStored && !demoUsers[normalizedEmail] && normalizedEmail && password) {
+      const newUser = {
+        id: `local_${Date.now()}`,
+        name: normalizedEmail.split('@')[0] || 'Utilisateur',
+        email: normalizedEmail,
+        role: 'client',
+        avatar: '🧑‍💻'
+      };
+      try {
+        localStorage.setItem('mangoo-current-user', JSON.stringify(newUser));
+      } catch {
+      }
+      onLogin(newUser);
+      setError('');
+      try {
+        const sp = localStorage.getItem('mangoo-selected-plan');
+        if (sp) {
+          const plan = String(sp);
+          const pack = plan === 'pro' ? 'pack_professionnel' : 'pack_decouverte';
+          navigate(`/plan-checkout?pack=${encodeURIComponent(pack)}`);
+          localStorage.removeItem('mangoo-selected-plan');
+        }
+      } catch {
+      }
+      return;
+    }
+
+    setError('Identifiants incorrects');
+  }, [email, navigate, onLogin, password]);
 
   return (
     <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 ${
@@ -2724,6 +2773,7 @@ function ClientWishlistSection() {
 const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => {
   const { isDark } = useThemeStore();
   const { processPayment } = usePaymentStore();
+  const navigate = useNavigate();
   const isGuest = String(user?.email || '') === 'guest@mangoo.tech';
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
@@ -2753,6 +2803,173 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
   const [walletPhoneNumber, setWalletPhoneNumber] = useState('');
   const [walletEmail, setWalletEmail] = useState(String(user?.email || ''));
   const [isWalletBusy, setIsWalletBusy] = useState(false);
+
+  const [activePackInfo, setActivePackInfo] = useState({ mode: 'unknown', packId: null, packName: null });
+  const [pendingPackInfo, setPendingPackInfo] = useState({ packId: null, packName: null, effectiveAt: null });
+  const [isPackLoading, setIsPackLoading] = useState(false);
+  const [packHistory, setPackHistory] = useState([]);
+
+  const packCatalog = useMemo(
+    () => [
+      { id: 'pack_decouverte', name: 'Pack Découverte', sort_order: 1 },
+      { id: 'pack_visibilite', name: 'Pack Visibilité', sort_order: 2 },
+      { id: 'pack_professionnel', name: 'Pack Professionnel', sort_order: 3 },
+      { id: 'pack_premium', name: 'Pack Premium', sort_order: 4 },
+    ],
+    []
+  );
+
+  const resolvePackName = useCallback(
+    (packId) => packCatalog.find((p) => p.id === String(packId || ''))?.name || null,
+    [packCatalog]
+  );
+
+  const readLocalActivePack = useCallback(() => {
+    try {
+      const raw = localStorage.getItem('mangoo-active-pack');
+      const data = raw ? JSON.parse(raw) : null;
+      if (!data || typeof data !== 'object') return null;
+      const userId = user?.id || user?.email || null;
+      if (!userId) return null;
+      if (String(data.userId || '') !== String(userId)) return null;
+
+      const pendingId = data.pendingPackId || null;
+      const pendingAtRaw = data.pendingPackEffectiveAt || null;
+      if (pendingId && pendingAtRaw) {
+        const pendingAt = new Date(pendingAtRaw);
+        if (!Number.isNaN(pendingAt.getTime()) && Date.now() >= pendingAt.getTime()) {
+          const next = { ...data };
+          next.packId = pendingId;
+          next.pendingPackId = null;
+          next.pendingPackEffectiveAt = null;
+          next.pendingProrata = null;
+          next.activatedAt = new Date().toISOString();
+          localStorage.setItem('mangoo-active-pack', JSON.stringify(next));
+          return next;
+        }
+      }
+      return data;
+    } catch {
+      return null;
+    }
+  }, [user?.email, user?.id]);
+
+  const refreshActivePack = useCallback(async () => {
+    const userId = user?.id || user?.email || null;
+    if (!userId) {
+      setActivePackInfo({ mode: 'unknown', packId: null, packName: null });
+      setPendingPackInfo({ packId: null, packName: null, effectiveAt: null });
+      return;
+    }
+
+    const local = readLocalActivePack();
+    const localPackId = local?.packId || null;
+    const localPackName = localPackId ? resolvePackName(localPackId) : null;
+
+    const pendingPackId = local?.pendingPackId || null;
+    const pendingPackName = pendingPackId ? resolvePackName(pendingPackId) : null;
+    const pendingEffectiveAtRaw = local?.pendingPackEffectiveAt || null;
+    const pendingEffectiveAt = pendingEffectiveAtRaw ? new Date(pendingEffectiveAtRaw) : null;
+    setPendingPackInfo({
+      packId: pendingPackId,
+      packName: pendingPackName,
+      effectiveAt: pendingEffectiveAt && !Number.isNaN(pendingEffectiveAt.getTime()) ? pendingEffectiveAt.toISOString() : null,
+    });
+
+    setIsPackLoading(true);
+    try {
+      const res = await fetch(`/api/user-pack/current?userId=${encodeURIComponent(String(userId))}`);
+      const data = await res.json();
+      if (res.ok && data?.success) {
+        const packId = data?.pack?.id || data?.userPack?.pack_id || localPackId;
+        const packName = data?.pack?.name || resolvePackName(packId) || localPackName;
+        setActivePackInfo({ mode: data?.mode || 'unknown', packId: packId || null, packName: packName || null });
+        return;
+      }
+    } catch {
+    } finally {
+      setIsPackLoading(false);
+    }
+
+    setActivePackInfo({ mode: 'unknown', packId: localPackId, packName: localPackName });
+  }, [readLocalActivePack, resolvePackName, user?.email, user?.id]);
+
+  useEffect(() => {
+    refreshActivePack();
+  }, [refreshActivePack]);
+
+  useEffect(() => {
+    const onPack = () => refreshActivePack();
+    window.addEventListener('mangoo-pack-updated', onPack);
+    return () => window.removeEventListener('mangoo-pack-updated', onPack);
+  }, [refreshActivePack]);
+
+  const currentPackOrder = useMemo(() => packCatalog.find((p) => p.id === activePackInfo.packId)?.sort_order || 0, [activePackInfo.packId, packCatalog]);
+
+  const nextUpgradePack = useMemo(() => {
+    if (!currentPackOrder) return packCatalog[0] || null;
+    return packCatalog.find((p) => p.sort_order === currentPackOrder + 1) || null;
+  }, [currentPackOrder, packCatalog]);
+
+  const nextDowngradePack = useMemo(() => {
+    if (!currentPackOrder) return null;
+    return packCatalog.find((p) => p.sort_order === currentPackOrder - 1) || null;
+  }, [currentPackOrder, packCatalog]);
+
+  const goToPackCheckout = useCallback(
+    (packId) => {
+      const id = String(packId || '').trim();
+      if (!id) return;
+      navigate(`/plan-checkout?pack=${encodeURIComponent(id)}`);
+    },
+    [navigate]
+  );
+
+  const formatPackName = useCallback((packId) => {
+    if (!packId) return 'Aucun';
+    return resolvePackName(packId) || String(packId);
+  }, [resolvePackName]);
+
+  const loadPackHistory = useCallback(() => {
+    const userId = user?.id || user?.email || null;
+    if (!userId) {
+      setPackHistory([]);
+      return;
+    }
+    try {
+      const raw = localStorage.getItem('mangoo-pack-history');
+      const data = raw ? JSON.parse(raw) : {};
+      const map = data && typeof data === 'object' ? data : {};
+      const list = Array.isArray(map[String(userId)]) ? map[String(userId)] : [];
+      setPackHistory(list);
+    } catch {
+      setPackHistory([]);
+    }
+  }, [user?.email, user?.id]);
+
+  const clearPackHistory = useCallback(() => {
+    const userId = user?.id || user?.email || null;
+    if (!userId) return;
+    try {
+      const raw = localStorage.getItem('mangoo-pack-history');
+      const data = raw ? JSON.parse(raw) : {};
+      const map = data && typeof data === 'object' ? data : {};
+      delete map[String(userId)];
+      localStorage.setItem('mangoo-pack-history', JSON.stringify(map));
+    } catch {
+    }
+    setPackHistory([]);
+  }, [user?.email, user?.id]);
+
+  useEffect(() => {
+    loadPackHistory();
+  }, [loadPackHistory]);
+
+  useEffect(() => {
+    const onPack = () => loadPackHistory();
+    window.addEventListener('mangoo-pack-updated', onPack);
+    return () => window.removeEventListener('mangoo-pack-updated', onPack);
+  }, [loadPackHistory]);
 
   const chatUserId = useMemo(() => {
     const id = user?.id ? String(user.id) : String(user?.email || 'guest');
@@ -2998,6 +3215,122 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
         <div className="mb-6">
           <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Mon compte</h1>
           <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Gérez votre profil client et vos informations.</p>
+        </div>
+
+        <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-5 shadow-sm mb-6`}>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>Abonnement</div>
+              <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm mt-1`}>
+                Pack actif: {activePackInfo.packName || 'Aucun'}
+                {activePackInfo.mode === 'offline' ? (
+                  <span className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-xs ml-2`}>(hors ligne)</span>
+                ) : null}
+              </div>
+              {pendingPackInfo.packId ? (
+                <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>
+                  Changement planifié: {pendingPackInfo.packName || pendingPackInfo.packId}
+                  {pendingPackInfo.effectiveAt ? ` (effet le ${new Date(pendingPackInfo.effectiveAt).toLocaleDateString('fr-FR')})` : ''}
+                </div>
+              ) : null}
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => refreshActivePack()}
+                disabled={isPackLoading}
+                className={`${isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-xl font-semibold transition-colors disabled:opacity-60`}
+              >
+                {isPackLoading ? 'Chargement…' : 'Actualiser'}
+              </button>
+              <button
+                type="button"
+                onClick={() => goToPackCheckout(activePackInfo.packId || 'pack_decouverte')}
+                className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-orange-600 hover:to-green-700 transition-all"
+                title="Ouvrir la page de test d’achat/changement de pack"
+              >
+                Gérer mon pack
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-3 flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => goToPackCheckout(nextUpgradePack?.id)}
+              disabled={!nextUpgradePack}
+              className={`${isDark ? 'bg-emerald-900/30 border border-emerald-700 text-emerald-200 hover:bg-emerald-900/40' : 'bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100'} px-3 py-2 rounded-xl text-sm font-bold transition-colors disabled:opacity-60`}
+              title="Test : passer au pack supérieur via paiement"
+            >
+              Passer au pack supérieur{nextUpgradePack ? ` (${nextUpgradePack.name})` : ''}
+            </button>
+            <button
+              type="button"
+              onClick={() => goToPackCheckout(nextDowngradePack?.id)}
+              disabled={!nextDowngradePack}
+              className={`${isDark ? 'bg-blue-900/20 border border-blue-700 text-blue-200 hover:bg-blue-900/30' : 'bg-blue-50 border border-blue-200 text-blue-800 hover:bg-blue-100'} px-3 py-2 rounded-xl text-sm font-bold transition-colors disabled:opacity-60`}
+              title="Test : rétrograder via paiement"
+            >
+              Rétrograder{nextDowngradePack ? ` (${nextDowngradePack.name})` : ''}
+            </button>
+          </div>
+
+          <div className={`mt-4 rounded-xl border p-4 ${isDark ? 'border-gray-700 bg-gray-900/20' : 'border-gray-200 bg-white'}`}>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>Historique des changements</div>
+              <button
+                type="button"
+                onClick={clearPackHistory}
+                disabled={!packHistory.length}
+                className={`${isDark ? 'bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-800 hover:bg-gray-50'} px-3 py-2 rounded-xl text-sm font-semibold transition-colors disabled:opacity-60`}
+                title="Vider l’historique"
+              >
+                Vider
+              </button>
+            </div>
+
+            {!packHistory.length ? (
+              <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-2`}>Aucun changement enregistré.</div>
+            ) : (
+              <div className="mt-3 overflow-x-auto">
+                <table className={`w-full text-sm border-separate border-spacing-y-2`}>
+                  <thead>
+                    <tr className={`${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      <th className="text-left font-semibold">Date</th>
+                      <th className="text-left font-semibold">Ancien pack</th>
+                      <th className="text-left font-semibold">Nouveau pack</th>
+                      <th className="text-left font-semibold">Source</th>
+                      <th className="text-left font-semibold">Prorata</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {packHistory.slice(0, 10).map((h, idx) => (
+                      <tr
+                        key={`${h?.at || 'at'}_${idx}`}
+                        className={`${isDark ? 'bg-gray-900/30' : 'bg-gray-50'} border ${isDark ? 'border-gray-700' : 'border-gray-200'} rounded-lg`}
+                      >
+                        <td className="py-2 px-2 whitespace-nowrap">
+                          {h?.at ? new Date(h.at).toLocaleString('fr-FR') : '—'}
+                        </td>
+                        <td className="py-2 px-2 whitespace-nowrap">{formatPackName(h?.fromPackId)}</td>
+                        <td className="py-2 px-2 whitespace-nowrap">{formatPackName(h?.toPackId)}</td>
+                        <td className="py-2 px-2 whitespace-nowrap">{h?.source ? String(h.source) : '—'}</td>
+                        <td className="py-2 px-2 whitespace-nowrap">
+                          {h?.prorata ? (
+                            <span>
+                              payé {Number(h.prorata.chargeAmount || 0).toLocaleString('fr-FR')} / crédit {Number(h.prorata.creditAmount || 0).toLocaleString('fr-FR')}
+                            </span>
+                          ) : (
+                            '—'
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
 
         {isGuest ? (
@@ -3980,7 +4313,7 @@ const MangooLocalFrame = React.memo(({ user, onBack }) => {
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
       <iframe 
-        src="/mangoo-local.html?v=59" 
+        src="/mangoo-local.html?v=74" 
         style={{ width: '100%', height: '100%', border: 'none' }}
         title="Mangoo Local+"
       />
@@ -4024,6 +4357,74 @@ function AppShell() {
   const { isDark } = useThemeStore();
   const [clientWalletBalance, setClientWalletBalance] = useState(null);
   const clientWalletKey = useMemo(() => getWalletKeyFromUser(user), [user]);
+  const [activePack, setActivePack] = useState({ packId: null, packName: null, mode: 'unknown' });
+
+  const resolveUserId = useMemo(() => {
+    return user?.id || user?.email || null;
+  }, [user?.email, user?.id]);
+
+  const packNameFromId = useCallback((id) => {
+    const map = {
+      pack_decouverte: 'Pack Découverte',
+      pack_visibilite: 'Pack Visibilité',
+      pack_professionnel: 'Pack Professionnel',
+      pack_premium: 'Pack Premium',
+    };
+    return map[String(id || '')] || null;
+  }, []);
+
+  const readLocalActivePack = useCallback((uid) => {
+    try {
+      const raw = localStorage.getItem('mangoo-active-pack');
+      const data = raw ? JSON.parse(raw) : null;
+      if (!data || typeof data !== 'object') return null;
+      if (String(data.userId || '') !== String(uid || '')) return null;
+
+      const pendingId = data.pendingPackId || null;
+      const pendingAtRaw = data.pendingPackEffectiveAt || null;
+      if (pendingId && pendingAtRaw) {
+        const pendingAt = new Date(pendingAtRaw);
+        if (!Number.isNaN(pendingAt.getTime()) && Date.now() >= pendingAt.getTime()) {
+          const next = { ...data };
+          next.packId = pendingId;
+          next.pendingPackId = null;
+          next.pendingPackEffectiveAt = null;
+          next.pendingProrata = null;
+          next.activatedAt = new Date().toISOString();
+          localStorage.setItem('mangoo-active-pack', JSON.stringify(next));
+          return next;
+        }
+      }
+      return data;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const refreshActivePack = useCallback(async () => {
+    if (!resolveUserId) {
+      setActivePack({ packId: null, packName: null, mode: 'unknown' });
+      return;
+    }
+
+    const local = readLocalActivePack(resolveUserId);
+    const localPackId = local?.packId || null;
+    const localPackName = localPackId ? packNameFromId(localPackId) : null;
+
+    try {
+      const res = await fetch(`/api/user-pack/current?userId=${encodeURIComponent(String(resolveUserId))}`);
+      const data = await res.json();
+      if (res.ok && data?.success) {
+        const packId = data?.pack?.id || data?.userPack?.pack_id || localPackId;
+        const packName = data?.pack?.name || packNameFromId(packId) || localPackName;
+        setActivePack({ packId: packId || null, packName: packName || null, mode: data?.mode || 'unknown' });
+        return;
+      }
+    } catch {
+    }
+
+    setActivePack({ packId: localPackId, packName: localPackName, mode: 'unknown' });
+  }, [packNameFromId, readLocalActivePack, resolveUserId]);
 
   const openRegister = useCallback(() => {
     try {
@@ -4109,6 +4510,16 @@ function AppShell() {
     window.addEventListener('mangoo-wallet-updated', onWallet);
     return () => window.removeEventListener('mangoo-wallet-updated', onWallet);
   }, [clientWalletKey, user]);
+
+  useEffect(() => {
+    refreshActivePack();
+  }, [refreshActivePack]);
+
+  useEffect(() => {
+    const onPack = () => refreshActivePack();
+    window.addEventListener('mangoo-pack-updated', onPack);
+    return () => window.removeEventListener('mangoo-pack-updated', onPack);
+  }, [refreshActivePack]);
 
   // Handler pour le retour de Mangoo Local+
   const handleBackFromLocal = useCallback(() => {
@@ -4216,7 +4627,10 @@ function AppShell() {
       const selectedPlan = localStorage.getItem('mangoo-selected-plan');
       if (selectedPlan) {
         toast.success(`Plan ${selectedPlan === 'pro' ? 'Pro' : 'Gratuit'} sélectionné`);
+        const pack = selectedPlan === 'pro' ? 'pack_professionnel' : 'pack_decouverte';
+        navigate(`/plan-checkout?pack=${encodeURIComponent(pack)}`);
         localStorage.removeItem('mangoo-selected-plan');
+        return;
       }
     } catch {
       // ignore
@@ -4440,6 +4854,28 @@ function AppShell() {
                   Solde: {(clientWalletBalance ?? 0).toLocaleString('fr-FR')} XOF
                 </button>
               )}
+
+              {user.role === 'client' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const pack = activePack?.packId || 'pack_decouverte';
+                    navigate(`/plan-checkout?pack=${encodeURIComponent(String(pack))}`);
+                  }}
+                  className={`px-3 py-2 rounded-lg text-sm font-bold transition-colors ${
+                    activePack?.packId
+                      ? isDark
+                        ? 'bg-orange-900/20 border border-orange-700 text-orange-200 hover:bg-orange-900/30'
+                        : 'bg-orange-50 border border-orange-200 text-orange-800 hover:bg-orange-100'
+                      : isDark
+                        ? 'bg-gray-800 border border-gray-700 text-gray-200 hover:bg-gray-700'
+                        : 'bg-white border border-gray-200 text-gray-800 hover:bg-gray-50'
+                  }`}
+                  title="Voir l’abonnement et changer de pack"
+                >
+                  Pack: {activePack?.packName || 'Aucun'}
+                </button>
+              )}
               <ThemeToggle />
               <button 
                 onClick={() => {
@@ -4515,6 +4951,7 @@ function App() {
         <Route path="/shop/:shopSlug" element={<ShopPage />} />
         <Route path="/vendor-access-qr" element={<VendorAccessQRPage />} />
         <Route path="/webrtc" element={<WebRTCJoinPage />} />
+        <Route path="/plan-checkout" element={<PlanCheckoutTest />} />
         <Route path="/admin/*" element={<AdminLayout />} />
         <Route path="/*" element={<AppShell />} />
       </Routes>

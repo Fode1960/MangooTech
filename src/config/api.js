@@ -1,7 +1,7 @@
 // Configuration de l'API Backend
 export const API_CONFIG = {
   // URL de base pour le backend
-  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:3009',
+  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:3045',
   
   // Endpoints des paiements
   PAYMENTS: {
@@ -11,6 +11,11 @@ export const API_CONFIG = {
     PAYPAL_CAPTURE: '/api/paypal/capture-order',
     STRIPE_CREATE: '/api/payments/create-stripe-payment',
     STRIPE_CONFIRM: '/api/payments/confirm-stripe-payment',
+  },
+
+  DEMO_BILLING: {
+    ACTIVATE_PACK: '/api/demo-billing/activate-pack',
+    PRORATA_QUOTE: '/api/demo-billing/prorata-quote',
   },
   
   // Configuration des headers
@@ -130,5 +135,24 @@ export const stripeApi = {
       method: 'POST',
       body: JSON.stringify(paymentData),
     });
+  },
+};
+
+export const demoBillingApi = {
+  activatePack: async ({ userId, packId, source, transactionId }) => {
+    const qs = new URLSearchParams({
+      userId: String(userId || ''),
+      packId: String(packId || ''),
+      source: String(source || 'demo_payment'),
+    });
+    if (transactionId) qs.set('transactionId', String(transactionId));
+    return apiCall(`${API_CONFIG.DEMO_BILLING.ACTIVATE_PACK}?${qs.toString()}`);
+  },
+  prorataQuote: async ({ userId, packId }) => {
+    const qs = new URLSearchParams({
+      userId: String(userId || ''),
+      packId: String(packId || ''),
+    });
+    return apiCall(`${API_CONFIG.DEMO_BILLING.PRORATA_QUOTE}?${qs.toString()}`);
   },
 };

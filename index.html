@@ -14,10 +14,76 @@
         }
       };
       initTheme();
+
+      const showBootError = (title, detail) => {
+        try {
+          const existing = document.getElementById('boot-error-overlay');
+          if (existing) return;
+
+          const overlay = document.createElement('div');
+          overlay.id = 'boot-error-overlay';
+          overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);color:#fff;z-index:99999;display:flex;align-items:flex-start;justify-content:center;padding:24px;box-sizing:border-box;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;';
+
+          const box = document.createElement('div');
+          box.style.cssText = 'max-width:980px;width:100%;border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:16px;background:rgba(255,255,255,0.06);';
+
+          const h = document.createElement('div');
+          h.textContent = title;
+          h.style.cssText = 'font-weight:800;font-size:14px;margin-bottom:12px;';
+
+          const pre = document.createElement('pre');
+          pre.textContent = String(detail || '');
+          pre.style.cssText = 'white-space:pre-wrap;line-height:1.35;font-size:12px;margin:0;';
+
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.textContent = 'Recharger';
+          btn.style.cssText = 'margin-top:12px;background:#f97316;color:#111;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;';
+          btn.onclick = () => window.location.reload();
+
+          box.appendChild(h);
+          box.appendChild(pre);
+          box.appendChild(btn);
+          overlay.appendChild(box);
+          document.body.appendChild(overlay);
+        } catch {
+        }
+      };
+
+      window.addEventListener('error', (e) => {
+        const msg = e?.error?.stack || e?.message || 'Erreur JavaScript au démarrage.';
+        showBootError('Erreur au démarrage (JavaScript)', msg);
+      });
+
+      window.addEventListener('unhandledrejection', (e) => {
+        const reason = e?.reason;
+        const msg = reason?.stack || reason?.message || String(reason || 'Promesse rejetée au démarrage.');
+        showBootError('Erreur au démarrage (Promise)', msg);
+      });
+
+      setTimeout(() => {
+        try {
+          const root = document.getElementById('root');
+          const fallback = document.getElementById('boot-fallback');
+          const hasBootOverlay = document.getElementById('boot-error-overlay');
+          if (fallback && !hasBootOverlay) {
+            showBootError(
+              'Application non chargée',
+              'L’application ne s’est pas rendue dans #root après un délai. Ouvrez la console (F12) pour voir l’erreur, puis rechargez.'
+            );
+          }
+        } catch {
+        }
+      }, 12000);
     </script>
   </head>
   <body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-    <div id="root"></div>
+    <div id="root" style="min-height: 100vh; display:flex; align-items:center; justify-content:center; padding:24px; box-sizing:border-box;">
+      <div id="boot-fallback" style="max-width: 560px; width:100%; text-align:center; color:#374151; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;">
+        <div style="font-weight: 800; font-size: 18px; margin-bottom: 8px;">Chargement de MangooTech…</div>
+        <div style="font-size: 13px; opacity: 0.85;">Si cet écran reste affiché, l’application n’a pas démarré.</div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

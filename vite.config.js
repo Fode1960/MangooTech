@@ -7,6 +7,13 @@ export default defineConfig({
     port: 3007,
     strictPort: true,
     host: true, // Listen on all local IPs
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3045',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
     // hmr: {
     //   clientPort: 3007 // Force client to connect to this port
     // }

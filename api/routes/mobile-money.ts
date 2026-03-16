@@ -2,6 +2,8 @@ import express from 'express'
 import { createClient } from '@supabase/supabase-js'
 import { randomUUID } from 'crypto'
 import { MOBILE_MONEY_CONFIG } from '../config/payments.js'
+import { activateUserPack, deactivateOtherActivePacks } from '../services/packActivation.js'
+import { createDemoPayment, confirmDemoPayment, activateDemoUserPack } from '../services/demoBillingStore.js'
 
 const router = express.Router()
 
@@ -80,15 +82,26 @@ router.post('/create-payment', async (req, res) => {
       .single()
 
     if (error) {
+      const msg = String(error.message || '').toLowerCase()
+      const shouldFallback = msg.includes('fetch failed') || msg.includes('getaddrinfo') || msg.includes('resolve')
+      if (shouldFallback) {
+        const demo = createDemoPayment({
+          userId: finalUserId,
+          amount: amountNumber,
+          currency,
+          method,
+          phoneNumber: phone_number,
+          description,
+          packId: pack_id,
+          packName: pack_name,
+          packPrice: pack_price,
+        })
+        return res.json({ success: true, paymentId: demo.paymentId, transactionId: demo.transactionId, next: 'confirm', demo: true })
+      }
       return res.status(500).json({ success: false, error: 'database_error', details: error.message })
     }
 
-    res.json({
-      success: true,
-      paymentId: payment.id,
-      transactionId,
-      next: 'confirm',
-    })
+    res.json({ success: true, paymentId: payment.id, transactionId, next: 'confirm' })
   } catch (e: any) {
     res.status(500).json({ success: false, error: 'internal_error', details: e.message })
   }
@@ -108,7 +121,23 @@ router.post('/confirm-payment', async (req, res) => {
       .eq('id', paymentId)
       .single()
 
-    if (fetchError || !payment) {
+    if (fetchError) {
+      const msg = String(fetchError.message || '').toLowerCase()
+      const shouldFallback = msg.includes('fetch failed') || msg.includes('getaddrinfo') || msg.includes('resolve')
+      if (shouldFallback) {
+        const demoConfirm = confirmDemoPayment({ paymentId, transactionId, outcome })
+        if (demoConfirm.status === 'succeeded') {
+          const packId = demoConfirm.payment?.metadata?.pack_id
+          if (packId) {
+            activateDemoUserPack({ userId: demoConfirm.payment.user_id, packId, source: 'mobile_money_confirm_demo' })
+          }
+        }
+        return res.json({ success: true, status: demoConfirm.status, demo: true })
+      }
+      return res.status(404).json({ success: false, error: 'payment_not_found' })
+    }
+
+    if (!payment) {
       return res.status(404).json({ success: false, error: 'payment_not_found' })
     }
 
@@ -147,6 +176,22 @@ router.post('/confirm-payment', async (req, res) => {
         },
         created_at: new Date().toISOString(),
       })
+
+      const packId = payment?.metadata?.pack_id
+      if (packId) {
+        try {
+          await deactivateOtherActivePacks({ supabase, userId: payment.user_id, keepPackId: packId })
+          await activateUserPack({
+            supabase,
+            userId: payment.user_id,
+            packId,
+            source: 'mobile_money_confirm',
+            transaction: { paymentId, transactionId },
+          })
+        } catch (e) {
+          console.error('Activation pack (mobile money) échouée:', e)
+        }
+      }
     }
 
     res.json({ success: true, status })

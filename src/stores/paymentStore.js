@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import { mobileMoneyApi, paypalApi, stripeApi } from '../config/api.js';
+import { demoBillingApi, mobileMoneyApi, paypalApi, stripeApi } from '../config/api.js';
 import { getCurrentUserId } from '../utils/uuid.js';
-import { ensureWalletBalance, debitWalletBalance } from '../utils/demoWallet.js';
+import { ensureWalletBalance, debitWalletBalance, creditWalletBalance } from '../utils/demoWallet.js';
 
 // Configuration des méthodes de paiement
 export const PAYMENT_METHODS = {
@@ -114,6 +114,7 @@ export const usePaymentStore = create((set, get) => ({
     if (!method) return 0;
     
     const baseAmount = parseFloat(amount);
+    if (!Number.isFinite(baseAmount) || baseAmount <= 0) return 0;
     const fee = baseAmount * method.processingFee;
     
     // Minimum de frais pour les petites transactions
@@ -158,6 +159,77 @@ export const usePaymentStore = create((set, get) => ({
     const { amount, method, currency, phoneNumber, email, description } = paymentData;
     set({ isProcessing: true, paymentStatus: null });
 
+    const maybeActivateDemoPack = async (transactionId = null) => {
+      const packId = paymentData?.packId;
+      const userId = paymentData?.userId;
+      if (!packId || !userId) return;
+      try {
+        let previousPackId = null;
+        try {
+          const rawPrev = localStorage.getItem('mangoo-active-pack');
+          const prev = rawPrev ? JSON.parse(rawPrev) : null;
+          if (prev && typeof prev === 'object' && String(prev.userId || '') === String(userId)) {
+            previousPackId = prev.packId || null;
+          }
+        } catch {
+        }
+
+        const resp = await demoBillingApi.activatePack({ userId, packId, source: `client_${method}`, transactionId });
+        const activatedPackId = resp?.userPack?.pack_id || packId;
+        const prorata = resp?.userPack?.metadata?.prorata || null;
+        const creditAmount = Number(prorata?.creditAmount);
+        try {
+          localStorage.setItem('mangoo-active-pack', JSON.stringify({
+            userId,
+            packId: activatedPackId,
+            activatedAt: new Date().toISOString(),
+            source: `client_${method}`,
+            startedAt: resp?.userPack?.started_at || null,
+            expiresAt: resp?.userPack?.expires_at || null,
+            prorata: prorata || null
+          }));
+
+          try {
+            const historyRaw = localStorage.getItem('mangoo-pack-history');
+            const historyData = historyRaw ? JSON.parse(historyRaw) : {};
+            const map = historyData && typeof historyData === 'object' ? historyData : {};
+            const key = String(userId);
+            const list = Array.isArray(map[key]) ? map[key] : [];
+            if (previousPackId && String(previousPackId) === String(activatedPackId)) {
+              map[key] = list;
+              localStorage.setItem('mangoo-pack-history', JSON.stringify(map));
+            } else {
+              const entry = {
+                at: new Date().toISOString(),
+                fromPackId: previousPackId,
+                toPackId: activatedPackId,
+                source: `client_${method}`,
+                txId: resp?.userPack?.metadata?.transactionId || transactionId || null,
+                prorata: prorata || null
+              };
+              map[key] = [entry, ...list].slice(0, 50);
+              localStorage.setItem('mangoo-pack-history', JSON.stringify(map));
+            }
+          } catch {
+          }
+
+          if (Number.isFinite(creditAmount) && creditAmount > 0) {
+            try {
+              creditWalletBalance(String(userId), creditAmount);
+            } catch {
+            }
+          }
+
+          try {
+            window.dispatchEvent(new Event('mangoo-pack-updated'));
+          } catch {
+          }
+        } catch {
+        }
+      } catch {
+      }
+    };
+
     const isFetchError = (err) => {
       const msg = String(err?.message || '').toLowerCase();
       return msg.includes('fetch failed') || msg.includes('échec après') || msg.includes('http 500') || msg.includes('database_error');
@@ -184,6 +256,7 @@ export const usePaymentStore = create((set, get) => ({
       };
       get().addTransaction(transaction);
       set({ isProcessing: false, paymentStatus: { success: true, transaction, message: 'Paiement effectué (mode démo)' } });
+      await maybeActivateDemoPack(transaction.id);
       return transaction;
     };
 
@@ -218,7 +291,7 @@ export const usePaymentStore = create((set, get) => ({
         
         
         // Obtenir l'ID utilisateur actuel (anonyme ou connecté)
-        const userId = getCurrentUserId();
+        const userId = paymentData?.userId || getCurrentUserId();
         console.log(`👤 ID utilisateur utilisé: ${userId}`);
         
         try {
@@ -229,6 +302,9 @@ export const usePaymentStore = create((set, get) => ({
             method,
             phone_number: phoneNumber,
             description,
+            pack_id: paymentData?.packId,
+            pack_name: paymentData?.packName,
+            pack_price: paymentData?.packPrice,
           });
           console.log(`✅ Paiement créé:`, createData);
           const confirmData = await mobileMoneyApi.confirmPayment({
@@ -253,6 +329,7 @@ export const usePaymentStore = create((set, get) => ({
           };
           get().addTransaction(transaction);
           set({ isProcessing: false, paymentStatus: { success: confirmData.status === 'succeeded', transaction, message: confirmData.status === 'succeeded' ? 'Paiement effectué avec succès!' : 'Paiement échoué' } });
+          if (confirmData.status === 'succeeded') await maybeActivateDemoPack(createData.transactionId);
           return transaction;
         } catch (err) {
           if (isFetchError(err)) {
@@ -266,15 +343,18 @@ export const usePaymentStore = create((set, get) => ({
       if (method === 'paypal') {
         console.log(`🚀 Création commande PayPal`);
         
-        const userId = getCurrentUserId();
+        const userId = paymentData?.userId || getCurrentUserId();
         
         try {
           const orderData = await paypalApi.createOrder({
-            userId: userId,
+            user_id: userId,
             amount,
             currency,
             description,
             email,
+            pack_id: paymentData?.packId,
+            pack_name: paymentData?.packName,
+            pack_price: paymentData?.packPrice,
           });
           console.log(`✅ Commande PayPal créée:`, orderData);
           const captureData = await paypalApi.captureOrder(orderData.orderId);
@@ -295,6 +375,7 @@ export const usePaymentStore = create((set, get) => ({
           };
           get().addTransaction(transaction);
           set({ isProcessing: false, paymentStatus: { success: captureData.status === 'completed', transaction, message: captureData.status === 'completed' ? 'Paiement PayPal effectué avec succès!' : 'Paiement PayPal échoué' } });
+          if (captureData.status === 'completed') await maybeActivateDemoPack(orderData.orderId);
           return transaction;
         } catch (err) {
           if (isFetchError(err)) {
@@ -308,7 +389,7 @@ export const usePaymentStore = create((set, get) => ({
       if (method === 'stripe') {
         console.log(`🚀 Création paiement Stripe`);
         
-        const userId = getCurrentUserId();
+        const userId = paymentData?.userId || getCurrentUserId();
         
         try {
           const intentData = await stripeApi.createPaymentIntent({
@@ -316,7 +397,10 @@ export const usePaymentStore = create((set, get) => ({
             amount,
             currency,
             description,
-            email,
+            customer_email: email,
+            pack_id: paymentData?.packId,
+            pack_name: paymentData?.packName,
+            pack_price: paymentData?.packPrice,
           });
           console.log(`✅ Intent Stripe créé:`, intentData);
         
@@ -342,6 +426,7 @@ export const usePaymentStore = create((set, get) => ({
           console.log(`✅ Transaction Stripe créée (en attente de confirmation):`, transaction);
           get().addTransaction(transaction);
           set({ isProcessing: false, paymentStatus: { success: true, transaction, message: 'Paiement Stripe en cours de confirmation...' } });
+          await maybeActivateDemoPack(intentData.paymentIntentId);
           return transaction;
         } catch (err) {
           if (isFetchError(err)) {

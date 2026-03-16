@@ -2,6 +2,7 @@ import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import { emailService } from '../services/emailService';
+import { activateUserPack, deactivateOtherActivePacks } from '../services/packActivation.js';
 
 const router = express.Router();
 
@@ -372,7 +373,18 @@ router.post('/capture-payment', async (req, res) => {
 
     // Si c'est un paiement d'abonnement, activer le pack
     if (payment.pack_id) {
-      await activateUserPack(payment.user_id, payment.pack_id);
+      try {
+        await deactivateOtherActivePacks({ supabase, userId: payment.user_id, keepPackId: payment.pack_id });
+        await activateUserPack({
+          supabase,
+          userId: payment.user_id,
+          packId: payment.pack_id,
+          source: 'paypal_capture',
+          transaction: { orderId },
+        });
+      } catch (e) {
+        console.error('Activation pack (paypal) échouée:', e);
+      }
     }
 
     // Envoyer un email de confirmation
@@ -571,7 +583,7 @@ async function handleOrderCancelled(event: PayPalWebhookEvent) {
 /**
  * Activer un pack pour un utilisateur
  */
-async function activateUserPack(userId: string, packId: string) {
+async function activateUserPackLegacy(userId: string, packId: string) {
   try {
     // Vérifier si l'utilisateur a déjà ce pack actif
     const { data: existingPack } = await supabase

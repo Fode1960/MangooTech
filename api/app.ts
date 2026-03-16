@@ -19,6 +19,7 @@ import paypalRoutes from './routes/paypal-routes.js'
 import analyticsRoutes from './routes/analytics.js'
 import mobileMoneyRoutes from './routes/mobile-money.js'
 import mobileMoneyWebhooksRoutes from './routes/mobile-money-webhooks.js'
+import packsRoutes from './routes/packs.ts'
 import adminShopsRoutes from './routes/admin-shops.js'
 import shopsSimpleRoutes from './routes/shops-simple.ts'
 import adminCommissionsRoutes from './routes/admin-commissions.js'
@@ -31,6 +32,8 @@ import paymentMethodsConfigRoutes from './routes/payment-methods-config.ts'
 import notificationsRoutes from './routes/notifications.ts'
 import reconciliationReportsRoutes from './routes/reconciliation-reports.ts'
 import testShopsRoutes from './routes/test-shops.js'
+import demoBillingRoutes from './routes/demo-billing.ts'
+import userPackRoutes from './routes/user-pack.ts'
 
 // for esm mode
 const __filename = fileURLToPath(import.meta.url)
@@ -69,6 +72,7 @@ app.use('/api/paypal-webhooks', paypalRoutes)
 app.use('/api/analytics', analyticsRoutes)
 app.use('/api/mobile-money', mobileMoneyRoutes)
 app.use('/api/mobile-money-webhooks', mobileMoneyWebhooksRoutes)
+app.use('/api/packs', packsRoutes)
 
 /**
  * Admin Routes
@@ -88,6 +92,8 @@ app.use('/api/commissions', commissionRoutes)
  * Test Routes (debug)
  */
 app.use('/api/test', testShopsRoutes)
+app.use('/api/demo-billing', demoBillingRoutes)
+app.use('/api/user-pack', userPackRoutes)
 
 /**
  * health
