@@ -26,6 +26,16 @@
           }
         } catch(e) {}
       })();
+
+      (function() {
+        try {
+          const cores = Number(navigator.hardwareConcurrency || 0);
+          const mem = Number(navigator.deviceMemory || 0);
+          const lowEnd = (cores && cores <= 4) || (mem && mem <= 4);
+          if (lowEnd) document.documentElement.classList.add('low-end');
+        } catch {
+        }
+      })();
         // === GPS LOCATION LOGIC ===
         function captureShopLocation() {
             const btn = document.getElementById('btnCaptureGPS');
@@ -424,8 +434,15 @@
         }
 
         .kind-btn.active {
-            background: rgba(249, 115, 22, 0.18);
-            border-color: rgba(249, 115, 22, 0.45);
+            background: #1a5f3f;
+            border-color: rgba(26, 95, 63, 0.55);
+            color: white;
+        }
+
+        html.dark .kind-btn.active {
+            background: #1a5f3f;
+            border-color: rgba(52, 211, 153, 0.55);
+            color: white;
         }
 
         .filter-advanced-btn {
@@ -545,6 +562,14 @@
             -webkit-overflow-scrolling: touch;
         }
 
+        html.low-end .metiers-families {
+            backdrop-filter: none;
+        }
+
+        html.low-end .quick-filter-fab {
+            backdrop-filter: none;
+        }
+
         .metiers-toggle-fab {
             position: fixed;
             top: 190px;
@@ -563,6 +588,10 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        }
+
+        html.low-end .metiers-toggle-fab {
+            backdrop-filter: none;
         }
 
         html.dark .metiers-toggle-fab {
@@ -591,6 +620,10 @@
             gap: 8px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.25);
             white-space: nowrap;
+        }
+
+        html.low-end .metiers-list-fab {
+            backdrop-filter: none;
         }
 
         html.dark .metiers-list-fab {
@@ -625,8 +658,61 @@
             cursor: pointer;
             white-space: nowrap;
         }
+
+        #metiersNewsBtn.active {
+            border-color: rgba(37, 99, 235, 0.55);
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        }
+
+        #metiersListBtn {
+            flex: 0 0 auto;
+            padding: 8px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(0,0,0,0.08);
+            background: rgba(0,0,0,0.04);
+            color: #2d3436;
+            font-weight: 950;
+            font-size: 0.8rem;
+            cursor: pointer;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        html.dark #metiersListBtn {
+            border-color: rgba(255,255,255,0.14);
+            background: rgba(255,255,255,0.06);
+            color: #f3f4f6;
+        }
+
+        #metiersListBtn.active {
+            border-color: rgba(26, 95, 63, 0.55);
+            background: rgba(26, 95, 63, 0.18);
+        }
         html.dark #metiersNewsBtn {
             border-color: rgba(255,255,255,0.14);
+        }
+
+        .fab-label {
+            position: fixed;
+            left: 15px;
+            top: 238px;
+            z-index: 1202;
+            font-size: 0.78rem;
+            font-weight: 950;
+            color: #f3f4f6;
+            background: rgba(0,0,0,0.35);
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.12);
+            backdrop-filter: blur(8px);
+            display: none;
+            pointer-events: none;
+        }
+
+        html.low-end .fab-label {
+            backdrop-filter: none;
         }
 
         .metiers-families.collapsed #metiersNewsBtn {
@@ -1951,6 +2037,8 @@
 
     <button id="metiersToggleFab" class="metiers-toggle-fab" onclick="showMetiersBar()" title="Métiers">＋</button>
 
+    <div id="fabAddLabel" class="fab-label">Ajouter</div>
+
     <button id="metiersListFab" class="metiers-list-fab" onclick="openMetiersList()" title="Liste">
         <span style="font-size:1.1rem;">≡</span>
         <span>Liste</span>
@@ -2497,8 +2585,27 @@
                 <label>Catégorie</label>
                 <select class="input-field" id="shopCategoryInput">
                     <option>🥬 Vivres Frais</option>
+                    <option>🍲 Restauration</option>
+                    <option>🧁 Pâtisserie</option>
+                    <option>🛒 Épicerie</option>
                     <option>📱 Électronique</option>
+                    <option>📞 Téléphonie</option>
+                    <option>💻 Informatique</option>
                     <option>🧵 Mode & Vêtements</option>
+                    <option>👟 Chaussures</option>
+                    <option>💄 Beauté & Cosmétique</option>
+                    <option>💇‍♀️ Salon & Coiffure</option>
+                    <option>🏠 Maison & Déco</option>
+                    <option>🪑 Meubles</option>
+                    <option>🧰 Bricolage</option>
+                    <option>🔩 Quincaillerie</option>
+                    <option>🛠️ Artisanat</option>
+                    <option>🎁 Cadeaux</option>
+                    <option>🍼 Bébé & Enfants</option>
+                    <option>🏥 Santé</option>
+                    <option>📚 Librairie & Éducation</option>
+                    <option>🚗 Auto & Moto</option>
+                    <option>🐓 Agriculture</option>
                     <option>🔧 Services</option>
                 </select>
             </div>
@@ -2547,6 +2654,137 @@
             <div style="text-align: center; font-size: 0.75rem; color: #999; margin-top: 10px;">
                 * La validation GPS débloque la création
             </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="providerModal" onclick="closeProviderModal(event)">
+        <div class="modal-card">
+            <span class="modal-icon">🧰</span>
+            <h2 class="modal-title">Devenez Prestataire</h2>
+            <p class="modal-text">Inscrivez votre métier en 2 minutes et recevez des clients autour de vous.</p>
+
+            <div class="input-group">
+                <label>Nom du prestataire</label>
+                <input type="text" id="providerNameInput" class="input-field" placeholder="Ex: Plombier Express">
+            </div>
+
+            <div class="input-group">
+                <label>Métier</label>
+                <select class="input-field" id="providerTradeSelect" onchange="onProviderTradeSelectChange()">
+                    <option value="">Choisir un métier…</option>
+                    <optgroup label="🧵 Artisanat">
+                        <option value="Tailleur / Couturier">Tailleur / Couturier</option>
+                        <option value="Cordonnier">Cordonnier</option>
+                        <option value="Bijoutier">Bijoutier</option>
+                        <option value="Potier">Potier</option>
+                        <option value="Forgeron">Forgeron</option>
+                        <option value="Menuisier">Menuisier</option>
+                        <option value="Ébéniste">Ébéniste</option>
+                        <option value="Tisserand">Tisserand</option>
+                    </optgroup>
+                    <optgroup label="🧰 BTP">
+                        <option value="Maçon">Maçon</option>
+                        <option value="Charpentier">Charpentier</option>
+                        <option value="Peintre">Peintre</option>
+                        <option value="Électricien">Électricien</option>
+                        <option value="Plombier">Plombier</option>
+                        <option value="Manœuvre">Manœuvre</option>
+                    </optgroup>
+                    <optgroup label="🔧 Réparation">
+                        <option value="Réparateur téléphone">Réparateur téléphone</option>
+                        <option value="Réparateur électroménager">Réparateur électroménager</option>
+                    </optgroup>
+                    <optgroup label="🛵 Auto & Moto">
+                        <option value="Mécanicien auto">Mécanicien auto</option>
+                        <option value="Mécanicien moto">Mécanicien moto</option>
+                    </optgroup>
+                    <optgroup label="🏠 Domicile">
+                        <option value="Femme de ménage">Femme de ménage</option>
+                        <option value="Jardinier">Jardinier</option>
+                        <option value="Gardien">Gardien</option>
+                        <option value="Lavage voiture">Lavage voiture</option>
+                    </optgroup>
+                    <optgroup label="🩺 Santé & Bien-être">
+                        <option value="Infirmier">Infirmier</option>
+                        <option value="Sage-femme">Sage-femme</option>
+                        <option value="Kinésithérapeute">Kinésithérapeute</option>
+                        <option value="Coiffeur à domicile">Coiffeur à domicile</option>
+                        <option value="Esthéticienne">Esthéticienne</option>
+                    </optgroup>
+                    <optgroup label="🚚 Transport">
+                        <option value="Coursier">Coursier</option>
+                        <option value="Livreur">Livreur</option>
+                        <option value="Location de véhicules">Location de véhicules</option>
+                    </optgroup>
+                    <optgroup label="🎓 Éducation">
+                        <option value="Formateur">Formateur</option>
+                        <option value="Centre de formation">Centre de formation</option>
+                    </optgroup>
+                    <optgroup label="💻 Numérique">
+                        <option value="Community manager">Community manager</option>
+                        <option value="Technicien informatique">Technicien informatique</option>
+                        <option value="Ingénieur logiciel">Ingénieur logiciel</option>
+                    </optgroup>
+                    <optgroup label="💰 Finance">
+                        <option value="Comptable">Comptable</option>
+                        <option value="Conseiller">Conseiller</option>
+                    </optgroup>
+                    <option value="__other__">Autre (écrire)</option>
+                </select>
+                <input type="text" id="providerTradeInput" class="input-field" placeholder="Écrire votre métier…" style="display:none; margin-top:10px;">
+            </div>
+
+            <div class="input-group">
+                <label>Quartiers (séparés par des virgules)</label>
+                <input type="text" id="providerCoverageInput" class="input-field" placeholder="Ex: Akwa, Bonapriso, Deido">
+            </div>
+
+            <div class="input-group" style="background:#111827; padding:14px; border-radius:14px; border:1px solid rgba(255,255,255,0.10); margin-bottom: 18px;">
+                <label style="color:#f3f4f6; font-size: 1rem;">🚗 Se déplace chez le client</label>
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:8px;">
+                    <div style="font-size:0.85rem; color:#cbd5e1; line-height:1.35;">Activez si vous pouvez intervenir à domicile.</div>
+                    <label class="switch" style="margin:0;">
+                        <input type="checkbox" id="providerMobileToggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="input-group" style="background:#f0fdf4; padding:15px; border-radius:15px; border:1px solid #00b894; margin-bottom: 20px;">
+                <label style="color:#006266; font-size: 1.1rem;">📢 Présentez votre métier (Vocal)</label>
+                <div style="font-size: 0.85rem; color: #2d3436; margin-bottom: 12px; line-height: 1.4;">
+                    Expliquez votre service et vos prix avec votre voix (Français ou langue locale).
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <button id="btnRecordProviderAudio" onclick="toggleProviderAudioRecord()" style="width: 60px; height: 60px; border-radius: 50%; border: none; background: #d63031; color: white; font-size: 1.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(214, 48, 49, 0.4); transition:all 0.2s;">🎙️</button>
+                    <div id="providerAudioTimer" style="font-weight: bold; color: #d63031; display: none; font-size: 1.2rem;">00:00</div>
+
+                    <div id="providerAudioPreviewContainer" style="display: none; align-items: center; gap: 10px; flex: 1;">
+                        <audio id="providerAudioPreview" controls style="height: 40px; width: 100%; border-radius: 20px;"></audio>
+                        <button onclick="deleteProviderAudio()" style="background: white; border: 1px solid #dfe6e9; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #d63031;">🗑️</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Description écrite (Optionnel)</label>
+                <div style="position: relative;">
+                    <textarea class="input-field" id="providerPitchInput" rows="2" placeholder="Si vous le souhaitez, écrivez une courte description..."></textarea>
+                    <button onclick="startProviderPitchRecording()" style="position:absolute; bottom:10px; right:10px; background:white; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;" title="Dictée vocale">📝</button>
+                </div>
+            </div>
+
+            <div class="input-group" style="background: #e8f5e9; padding: 15px; border-radius: 12px; border: 1px dashed #27ae60; margin-bottom: 20px;">
+                <label style="color: #1a5f3f; font-weight: bold; margin-bottom: 5px; display: block;">📍 Position Exacte (Obligatoire)</label>
+                <div style="font-size: 0.85rem; color: #555; margin-bottom: 10px; line-height: 1.4;">Validez votre position pour être visible sur Mangoo Maps.</div>
+                <button id="btnCaptureProviderGPS" onclick="captureProviderLocation()" style="width: 100%; padding: 12px; background: white; border: 2px solid #1a5f3f; color: #1a5f3f; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s;">🎯 Capturer ma position GPS</button>
+                <input type="hidden" id="providerLat">
+                <input type="hidden" id="providerLng">
+            </div>
+
+            <button class="btn-submit" id="btnSubmitProvider" onclick="submitProvider()" style="margin-top: 5px;" disabled>Créer mon profil</button>
+            <div style="text-align: center; font-size: 0.75rem; color: #999; margin-top: 10px;">* La validation GPS débloque la création</div>
         </div>
     </div>
 
@@ -3371,27 +3609,48 @@
         let onlyVerified = false;
         let onlyAvailable = false;
         let currentKindMode = 'all';
+        window.onlyBoosted = false;
         let currentView = 'map'; 
 
         const METIERS_FAMILIES = [
             { id: 'all', label: 'Tous' },
-            { id: 'batiment', label: '🧰 Bâtiment' },
+            { id: 'artisanat', label: '🧵 Artisanat' },
+            { id: 'batiment', label: '🧰 BTP' },
+            { id: 'repair', label: '🔧 Réparation' },
             { id: 'auto', label: '🛵 Auto & Moto' },
-            { id: 'repair', label: '📱 Réparation' },
-            { id: 'mode', label: '🧵 Mode' },
-            { id: 'bois', label: '🪵 Bois' },
-            { id: 'domicile', label: '🏠 Domicile' }
+            { id: 'domicile', label: '🏠 Domicile' },
+            { id: 'sante', label: '🩺 Santé' },
+            { id: 'transport', label: '🚚 Transport' },
+            { id: 'education', label: '🎓 Éducation' },
+            { id: 'digital', label: '💻 Numérique' },
+            { id: 'finance', label: '💰 Finance' },
+            { id: 'hotellerie', label: '🍽️ Hôtellerie' },
+            { id: 'agro', label: '🌾 Agro' },
+            { id: 'industrie', label: '🏭 Industrie' }
         ];
 
         function getVendorFamily(v) {
             const cat = String(v?.category || '').toLowerCase();
             const trade = String(v?.trade || '').toLowerCase();
 
-            if (cat.includes('électronique') || cat.includes('electronique') || trade.includes('téléphone') || trade.includes('telephone') || trade.includes('réparateur') || trade.includes('reparateur')) return 'repair';
-            if (cat.includes('mode') || trade.includes('tailleur') || trade.includes('couturier')) return 'mode';
-            if (trade.includes('menuisier') || trade.includes('ébéniste') || trade.includes('ebeniste') || cat.includes('meuble') || cat.includes('bois')) return 'bois';
+            const t = `${cat} ${trade}`;
+
+            if (t.includes('médec') || t.includes('medec') || t.includes('infirm') || t.includes('sage-femme') || t.includes('sages-femmes') || t.includes('kines') || t.includes('kinés') || t.includes('pharmac') || t.includes('santé') || t.includes('sante') || t.includes('bien-être') || t.includes('bien etre') || t.includes('esthétique') || t.includes('esthet') || t.includes('coiffe')) return 'sante';
+            if (t.includes('école') || t.includes('ecole') || t.includes('universit') || t.includes('formation') || t.includes('formateur') || t.includes('enseign')) return 'education';
+            if (t.includes('coursier') || t.includes('livreur') || t.includes('livraison') || t.includes('transport') || t.includes('camionnette') || t.includes('location de véhicules') || t.includes('location de vehicules')) return 'transport';
+            if (t.includes('banque') || t.includes('microfinance') || t.includes('assurance') || t.includes('comptable') || t.includes('analyst') || t.includes('financ')) return 'finance';
+            if (t.includes('informat') || t.includes('logiciel') || t.includes('cyber') || t.includes('community') || t.includes('télécom') || t.includes('telecom') || t.includes('data')) return 'digital';
+            if (t.includes('hotel') || t.includes('auberge') || t.includes('restaurant') || t.includes('chef') || t.includes('street food') || t.includes('restauration')) return 'hotellerie';
+            if (t.includes('agric') || t.includes('éleveur') || t.includes('eleveur') || t.includes('pêche') || t.includes('peche') || t.includes('engrais') || t.includes('bio') || t.includes('agro') || t.includes('coopérative') || t.includes('cooperative')) return 'agro';
+            if (t.includes('industrie') || t.includes('usine') || t.includes('manufact') || t.includes('qualité') || t.includes('qualite') || t.includes('production') || t.includes('contrôle') || t.includes('controle')) return 'industrie';
+
+            if (t.includes('tailleur') || t.includes('couturier') || t.includes('cordonnier') || t.includes('potier') || t.includes('bijoutier') || t.includes('forgeron') || t.includes('tisserand') || t.includes('menuisier') || t.includes('ébéniste') || t.includes('ebeniste') || t.includes('meuble') || t.includes('bois') || t.includes('artisanat')) return 'artisanat';
+
+            if (t.includes('femme de menage') || t.includes('ménage') || t.includes('menage') || t.includes('jardin') || t.includes('gardien') || t.includes('laverie') || t.includes('domestique') || t.includes('domicile')) return 'domicile';
+
+            if (cat.includes('électronique') || cat.includes('electronique') || trade.includes('téléphone') || trade.includes('telephone') || trade.includes('réparateur') || trade.includes('reparateur') || trade.includes('électroménager') || trade.includes('electromenager')) return 'repair';
             if (trade.includes('mécanicien') || trade.includes('mecanicien') || trade.includes('auto') || trade.includes('moto')) return 'auto';
-            if (cat.includes('services') || trade.includes('plombier') || trade.includes('électricien') || trade.includes('electricien') || trade.includes('peintre') || trade.includes('ferronnier')) return 'batiment';
+            if (cat.includes('services') || trade.includes('plombier') || trade.includes('électricien') || trade.includes('electricien') || trade.includes('peintre') || trade.includes('maçon') || trade.includes('macon') || trade.includes('charpent') || trade.includes('manoeuvre') || trade.includes('géomètre') || trade.includes('geometre') || trade.includes('architect') || trade.includes('conducteur de travaux') || trade.includes('chef de chantier') || trade.includes('forgeron') || trade.includes('ferronnier')) return 'batiment';
             return 'all';
         }
 
@@ -3678,9 +3937,9 @@
                 onlyAvailable = false;
             }
 
-            if (mode === 'service') {
-                window.isMetiersBarHidden = true;
-                window.isMetiersBarCollapsed = true;
+            if (mode === 'service' || mode === 'all') {
+                window.isMetiersBarHidden = false;
+                window.isMetiersBarCollapsed = false;
             } else {
                 window.isMetiersBarHidden = true;
                 window.isMetiersBarCollapsed = true;
@@ -3695,18 +3954,20 @@
             filterVendors();
         }
 
+        function toggleBoostedOnly() {
+            window.onlyBoosted = !window.onlyBoosted;
+            renderFamiliesBar();
+            filterVendors();
+        }
+
         function renderFamiliesBar() {
             const bar = document.getElementById('metiersFamiliesBar');
             if (!bar) return;
             const fab = document.getElementById('metiersToggleFab');
             const listFab = document.getElementById('metiersListFab');
+            const fabLabel = document.getElementById('fabAddLabel');
 
-            if (currentKindMode !== 'service') {
-                bar.style.display = 'none';
-                if (fab) fab.style.display = 'none';
-                if (listFab) listFab.style.display = 'none';
-                return;
-            }
+            if (fabLabel) fabLabel.style.display = 'none';
 
             if (currentView !== 'map') {
                 bar.style.display = 'none';
@@ -3715,21 +3976,62 @@
                 return;
             }
 
+            if (currentKindMode === 'shop') {
+                bar.style.display = 'none';
+                if (fab) {
+                    fab.style.display = 'flex';
+                    fab.title = 'Ajouter';
+                    fab.onclick = openSellerModal;
+                    fab.style.background = 'rgba(255,255,255,0.98)';
+                    fab.style.color = '#2d3436';
+                }
+                if (fabLabel) {
+                    fabLabel.textContent = 'Ajouter';
+                    fabLabel.style.display = 'block';
+                }
+                if (listFab) {
+                    listFab.style.display = 'flex';
+                    listFab.title = 'Liste';
+                    listFab.onclick = openShopsList;
+                }
+                return;
+            }
+
+            if (listFab) listFab.style.display = 'none';
+
+            if (currentKindMode === 'service') {
+                if (fab) {
+                    fab.style.display = 'flex';
+                    fab.title = 'Ajouter';
+                    fab.onclick = openProviderModal;
+                    fab.style.background = 'rgba(255,255,255,0.98)';
+                    fab.style.color = '#2d3436';
+                }
+                if (fabLabel) {
+                    fabLabel.textContent = 'Ajouter';
+                    fabLabel.style.display = 'block';
+                }
+            } else {
+                if (fab) fab.style.display = 'none';
+            }
+
+            if (currentKindMode !== 'service' && currentKindMode !== 'all') {
+                bar.style.display = 'none';
+                return;
+            }
+
             const hidden = !!window.isMetiersBarHidden;
             if (hidden) {
                 bar.style.display = 'none';
-                if (fab) fab.style.display = 'flex';
-                if (listFab) listFab.style.display = 'flex';
                 return;
             }
             bar.style.display = 'flex';
-            if (fab) fab.style.display = 'none';
-            if (listFab) listFab.style.display = 'flex';
             const collapsed = !!window.isMetiersBarCollapsed;
             bar.classList.toggle('collapsed', collapsed);
             bar.innerHTML =
                 `<button id="metiersBarToggle" onclick="toggleMetiersBar()" title="Afficher/Masquer">${collapsed ? '＋' : '－'}</button>` +
-                `<button id="metiersNewsBtn" onclick="switchView('list', document.querySelectorAll('.nav-item')[1])">Nouveautés ›</button>` +
+                `<button id="metiersListBtn" class="${currentView === 'list' ? 'active' : ''}" onclick="openMetiersList()">≡ Liste</button>` +
+                `<button id="metiersNewsBtn" class="${window.onlyBoosted ? 'active' : ''}" onclick="toggleBoostedOnly()">Nouveautés</button>` +
                 METIERS_FAMILIES.map(f => {
                 const active = f.id === currentFamily ? 'active' : '';
                 return `<button class="metiers-family-chip ${active}" onclick="setMetiersFamily('${f.id}')">${f.label}</button>`;
@@ -3738,7 +4040,335 @@
 
         function openMetiersList() {
             hideMetiersBar();
+            setKindMode('service');
             switchView('list', document.querySelectorAll('.nav-item')[1]);
+        }
+
+        function openShopsList() {
+            hideMetiersBar();
+            setKindMode('shop');
+            switchView('list', document.querySelectorAll('.nav-item')[1]);
+        }
+
+        let providerMediaRecorder;
+        let providerAudioChunks = [];
+        let currentProviderAudioBase64 = null;
+        let providerAudioTimerInterval;
+
+        function openProviderModal() {
+            const modal = document.getElementById('providerModal');
+            if (!modal) return;
+            modal.style.display = 'flex';
+
+            const nameInput = document.getElementById('providerNameInput');
+            const tradeSelect = document.getElementById('providerTradeSelect');
+            const tradeInput = document.getElementById('providerTradeInput');
+            const covInput = document.getElementById('providerCoverageInput');
+            const pitchInput = document.getElementById('providerPitchInput');
+            const mobileToggle = document.getElementById('providerMobileToggle');
+            const latInput = document.getElementById('providerLat');
+            const lngInput = document.getElementById('providerLng');
+            const submitBtn = document.getElementById('btnSubmitProvider');
+
+            if (nameInput) nameInput.value = '';
+            if (tradeSelect) tradeSelect.value = '';
+            if (tradeInput) tradeInput.value = '';
+            if (covInput) covInput.value = '';
+            if (pitchInput) pitchInput.value = '';
+            if (mobileToggle) mobileToggle.checked = false;
+            if (latInput) latInput.value = '';
+            if (lngInput) lngInput.value = '';
+
+            onProviderTradeSelectChange();
+
+            currentProviderAudioBase64 = null;
+            const previewC = document.getElementById('providerAudioPreviewContainer');
+            const preview = document.getElementById('providerAudioPreview');
+            const btnRec = document.getElementById('btnRecordProviderAudio');
+            const timer = document.getElementById('providerAudioTimer');
+            if (previewC) previewC.style.display = 'none';
+            if (preview) preview.src = '';
+            if (btnRec) {
+                btnRec.style.display = 'flex';
+                btnRec.classList.remove('recording');
+                btnRec.style.background = '#d63031';
+                btnRec.innerHTML = '🎙️';
+                btnRec.style.animation = 'none';
+            }
+            if (timer) timer.style.display = 'none';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.6';
+                submitBtn.style.cursor = 'not-allowed';
+            }
+        }
+
+        function closeProviderModal(e) {
+            const modal = document.getElementById('providerModal');
+            if (!modal) return;
+            if (e && e.target !== modal) return;
+            modal.style.display = 'none';
+        }
+
+        function onProviderTradeSelectChange() {
+            const sel = document.getElementById('providerTradeSelect');
+            const input = document.getElementById('providerTradeInput');
+            if (!sel || !input) return;
+            const v = String(sel.value || '');
+            if (v === '__other__') {
+                input.style.display = 'block';
+                input.focus();
+                return;
+            }
+            input.style.display = 'none';
+            input.value = '';
+        }
+
+        async function toggleProviderAudioRecord() {
+            const btn = document.getElementById('btnRecordProviderAudio');
+            const timer = document.getElementById('providerAudioTimer');
+            if (!btn) return;
+
+            if (btn.classList.contains('recording')) {
+                providerMediaRecorder.stop();
+                btn.classList.remove('recording');
+                btn.style.background = '#ff7675';
+                btn.innerHTML = '🎙️';
+                btn.style.animation = 'none';
+                clearInterval(providerAudioTimerInterval);
+                if (timer) timer.style.display = 'none';
+                return;
+            }
+
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert('Microphone non détecté.');
+                return;
+            }
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                providerMediaRecorder = new MediaRecorder(stream);
+                providerAudioChunks = [];
+
+                providerMediaRecorder.ondataavailable = event => {
+                    providerAudioChunks.push(event.data);
+                };
+
+                providerMediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(providerAudioChunks, { type: 'audio/mp3' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+
+                    const preview = document.getElementById('providerAudioPreview');
+                    const container = document.getElementById('providerAudioPreviewContainer');
+                    if (preview) preview.src = audioUrl;
+                    if (container) container.style.display = 'flex';
+                    btn.style.display = 'none';
+
+                    const reader = new FileReader();
+                    reader.readAsDataURL(audioBlob);
+                    reader.onloadend = () => {
+                        currentProviderAudioBase64 = reader.result;
+                    };
+                };
+
+                providerMediaRecorder.start();
+                btn.classList.add('recording');
+                btn.style.background = '#d63031';
+                btn.innerHTML = '⏹️';
+                btn.style.animation = 'pulse-mic 1s infinite';
+
+                if (timer) {
+                    timer.style.display = 'block';
+                    let seconds = 0;
+                    timer.innerText = '00:00';
+                    providerAudioTimerInterval = setInterval(() => {
+                        seconds++;
+                        const min = Math.floor(seconds / 60).toString().padStart(2, '0');
+                        const sec = (seconds % 60).toString().padStart(2, '0');
+                        timer.innerText = `${min}:${sec}`;
+                    }, 1000);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Accès au micro refusé.');
+            }
+        }
+
+        function deleteProviderAudio() {
+            if (!confirm("Supprimer l'enregistrement ?")) return;
+            currentProviderAudioBase64 = null;
+            const previewC = document.getElementById('providerAudioPreviewContainer');
+            const preview = document.getElementById('providerAudioPreview');
+            const btn = document.getElementById('btnRecordProviderAudio');
+            if (previewC) previewC.style.display = 'none';
+            if (preview) preview.src = '';
+            if (btn) btn.style.display = 'flex';
+        }
+
+        function startProviderPitchRecording() {
+            if (!('webkitSpeechRecognition' in window)) {
+                alert('Votre navigateur ne supporte pas la reconnaissance vocale.');
+                return;
+            }
+
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = 'fr-FR';
+            recognition.interimResults = false;
+
+            const pitchInput = document.getElementById('providerPitchInput');
+            if (!pitchInput) return;
+            pitchInput.placeholder = 'Écoute en cours... Parlez maintenant !';
+
+            recognition.onstart = () => {
+                pitchInput.style.borderColor = '#e17055';
+                pitchInput.style.background = '#fff0f0';
+            };
+
+            recognition.onend = () => {
+                pitchInput.style.borderColor = '#dfe6e9';
+                pitchInput.style.background = '';
+                pitchInput.placeholder = 'Si vous le souhaitez, écrivez une courte description...';
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                pitchInput.value = transcript;
+            };
+
+            recognition.start();
+        }
+
+        function captureProviderLocation() {
+            const btn = document.getElementById('btnCaptureProviderGPS');
+            const submitBtn = document.getElementById('btnSubmitProvider');
+            const latInput = document.getElementById('providerLat');
+            const lngInput = document.getElementById('providerLng');
+            if (!btn || !submitBtn || !latInput || !lngInput) return;
+
+            btn.innerHTML = '<div class="spinner" style="width:15px; height:15px; border-width:2px; border-left-color:#1a5f3f; display:inline-block; margin-right:5px;"></div> Recherche Satellites...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                const lat = USER_POS[0] + (Math.random() * 0.002 - 0.001);
+                const lng = USER_POS[1] + (Math.random() * 0.002 - 0.001);
+                latInput.value = lat;
+                lngInput.value = lng;
+
+                btn.innerHTML = `✅ Position Validée (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+                btn.style.background = '#e8f5e9';
+                btn.style.border = '2px solid #27ae60';
+                btn.style.color = '#27ae60';
+
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+
+                const toast = document.createElement('div');
+                toast.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#333; color:white; padding:10px 20px; border-radius:20px; font-size:0.8rem; z-index:9999;';
+                toast.innerHTML = '📍 Position ajoutée sur Mangoo Maps';
+                document.body.appendChild(toast);
+                setTimeout(()=>toast.remove(), 2500);
+            }, 1800);
+        }
+
+        function submitProvider() {
+            const btn = document.getElementById('btnSubmitProvider');
+            const nameInput = document.getElementById('providerNameInput');
+            const tradeSelect = document.getElementById('providerTradeSelect');
+            const tradeInput = document.getElementById('providerTradeInput');
+            const covInput = document.getElementById('providerCoverageInput');
+            const pitchInput = document.getElementById('providerPitchInput');
+            const mobileToggle = document.getElementById('providerMobileToggle');
+            const latInput = document.getElementById('providerLat');
+            const lngInput = document.getElementById('providerLng');
+            if (!btn || !nameInput || !tradeSelect || !tradeInput || !latInput || !lngInput) return;
+
+            const name = String(nameInput.value || '').trim();
+            const selected = String(tradeSelect.value || '').trim();
+            const trade = selected === '__other__' ? String(tradeInput.value || '').trim() : selected;
+            const pitch = String(pitchInput?.value || '').trim();
+            const coverageRaw = String(covInput?.value || '').trim();
+            const coverage = coverageRaw ? coverageRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+            const isMobile = !!mobileToggle?.checked;
+
+            if (!name) {
+                alert('Veuillez entrer un nom.');
+                return;
+            }
+            if (!trade) {
+                alert('Veuillez choisir un métier.');
+                return;
+            }
+            if (!latInput.value || !lngInput.value) {
+                alert("⚠️ Veuillez valider votre position GPS.");
+                return;
+            }
+
+            btn.innerHTML = 'Création en cours...';
+            btn.style.opacity = '0.7';
+
+            setTimeout(() => {
+                const newVendor = {
+                    id: Date.now(),
+                    name,
+                    category: '🔧 Services',
+                    trade,
+                    kind: 'service',
+                    verified: false,
+                    rating: 4.5,
+                    isMobile,
+                    coverage,
+                    services: [],
+                    portfolio: [],
+                    lat: parseFloat(latInput.value),
+                    lng: parseFloat(lngInput.value),
+                    status: 'open',
+                    live: false,
+                    voicePitch: pitch || `Bonjour, je suis ${name}. Je suis ${trade.toLowerCase()}.`,
+                    voiceAudio: currentProviderAudioBase64,
+                    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff`
+                };
+
+                VENDORS.push(newVendor);
+                try {
+                    localStorage.setItem('mangoo_vendors', JSON.stringify(VENDORS));
+                } catch {
+                }
+
+                const modal = document.getElementById('providerModal');
+                if (modal) modal.style.display = 'none';
+                alert('🎉 Votre profil prestataire est en ligne !');
+
+                btn.innerHTML = 'Créer mon profil';
+                btn.style.opacity = '1';
+                btn.disabled = true;
+
+                const gpsBtn = document.getElementById('btnCaptureProviderGPS');
+                if (gpsBtn) {
+                    gpsBtn.disabled = false;
+                    gpsBtn.innerHTML = '🎯 Capturer ma position GPS';
+                    gpsBtn.style.background = 'white';
+                    gpsBtn.style.color = '#1a5f3f';
+                    gpsBtn.style.border = '2px solid #1a5f3f';
+                }
+
+                try {
+                    renderVendorsOnMap(VENDORS);
+                } catch {
+                }
+                try {
+                    filterVendors();
+                } catch {
+                }
+                try {
+                    map.flyTo([newVendor.lat, newVendor.lng], 18);
+                } catch {
+                }
+                try {
+                    setTimeout(() => openVendorSheet(newVendor), 700);
+                } catch {
+                }
+            }, 900);
         }
 
         function showMetiersBar() {
@@ -3771,6 +4401,15 @@
                 const matchesKind = currentKindMode === 'all' || kind === currentKindMode;
                 if (!matchesKind) return false;
 
+                if (window.onlyBoosted) {
+                    const now = Date.now();
+                    const boosted = !!v.live ||
+                        (typeof v.newUntil === 'number' && v.newUntil > now) ||
+                        (typeof v.promoUntil === 'number' && v.promoUntil > now) ||
+                        (typeof v.sponsoredUntil === 'number' && v.sponsoredUntil > now);
+                    if (!boosted) return false;
+                }
+
                 const trade = String(v.trade || '').toLowerCase();
                 const matchesSearch = v.name.toLowerCase().includes(query) || v.category.toLowerCase().includes(query) || trade.includes(query);
                 const matchesCategory = currentCategory === 'all' || v.category === currentCategory;
@@ -3796,6 +4435,12 @@
         }
 
         function setMetiersFamily(familyId) {
+            if (currentKindMode !== 'service') {
+                currentFamily = familyId;
+                setKindMode('service');
+                return;
+            }
+
             currentFamily = familyId;
             if (currentTrade !== 'all') {
                 const trades = getUniqueTradesByFamily(currentFamily);
@@ -4330,35 +4975,8 @@
 
             if (!wrapper || !container) return;
 
-            if (currentKindMode !== 'shop') {
-                wrapper.style.display = 'none';
-                container.innerHTML = '';
-                return;
-            }
-
-            const shops = VENDORS.filter(v => String(v.kind || '').toLowerCase() === 'shop');
-            wrapper.style.display = shops.length ? 'block' : 'none';
-
-            let html = '';
-            html += `<div class="story-item" onclick="openSellerModal()">
-                    <div class="story-ring" style="background: #dfe6e9; box-shadow:none; border: 2px dashed #b2bec3;">
-                        <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:#636e72;">+</div>
-                    </div>
-                    <div class="story-name">Ajouter</div>
-                </div>`;
-
-            shops.slice(0, 10).forEach(v => {
-                html += `
-                    <div class="story-item" onclick="openVendorSheetById(${v.id})">
-                        <div class="story-ring">
-                            <img src="${v.avatar}" class="story-img">
-                        </div>
-                        <div class="story-name">${v.name.split(' ')[0]}</div>
-                    </div>
-                `;
-            });
-
-            container.innerHTML = html;
+            wrapper.style.display = 'none';
+            container.innerHTML = '';
         }
 
         function openVendorSheetById(id) {
@@ -5866,20 +6484,26 @@
             }
         });
 
+        let __filterVendorsScheduled = false;
         function filterVendors() {
-            if (currentView === 'fav') {
-                renderFavorites();
-                return;
-            }
+            if (__filterVendorsScheduled) return;
+            __filterVendorsScheduled = true;
+            requestAnimationFrame(() => {
+                __filterVendorsScheduled = false;
+                if (currentView === 'fav') {
+                    renderFavorites();
+                    return;
+                }
 
-            const filtered = getFilteredVendors();
-            updateMetiersResultsBadge(filtered.length);
+                const filtered = getFilteredVendors();
+                updateMetiersResultsBadge(filtered.length);
 
-            if (currentView === 'map') {
-                renderVendorsOnMap(filtered);
-            } else {
-                renderListView(filtered);
-            }
+                if (currentView === 'map') {
+                    renderVendorsOnMap(filtered);
+                } else {
+                    renderListView(filtered);
+                }
+            });
         }
 
         function filterCategory(category, element) {

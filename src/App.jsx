@@ -58,6 +58,7 @@ const useStore = create((set, get) => ({
   
   // Actions optimisées
   setUser: (user) => set({ user, currentRole: user?.role || 'client' }),
+  setCurrentRole: (currentRole) => set({ currentRole }),
   setProducts: (products) => set({ products }),
   setVendors: (vendors) => set({ vendors }),
   setOrders: (orders) => set({ orders }),
@@ -115,6 +116,126 @@ const useStore = create((set, get) => ({
   })
 }));
 
+const ROLE_LABELS = {
+  client: 'Acheter',
+  vendor: 'Vendre',
+  prestataire: 'Services'
+};
+
+const ROLE_ICONS = {
+  client: '🛒',
+  vendor: '🏪',
+  prestataire: '🧰'
+};
+
+const normalizeRoles = (user) => {
+  const roles = Array.isArray(user?.roles) ? user.roles.filter(Boolean) : [];
+  if (roles.length) return Array.from(new Set(roles));
+  const role = String(user?.role || '').trim();
+  if (!role) return ['client'];
+  if (role === 'vendor') return ['vendor', 'client'];
+  if (role === 'prestataire') return ['prestataire', 'client'];
+  if (role === 'admin') return ['admin'];
+  return [role];
+};
+
+const persistUserToDemoUsers = (user) => {
+  const email = String(user?.email || '').trim().toLowerCase();
+  if (!email) return;
+  try {
+    const raw = localStorage.getItem('demo_users');
+    const data = raw ? JSON.parse(raw) : {};
+    const map = data && typeof data === 'object' ? data : {};
+    map[email] = { ...(map[email] || {}), ...user };
+    localStorage.setItem('demo_users', JSON.stringify(map));
+  } catch {
+  }
+};
+
+const speakFR = (text) => {
+  try {
+    if (!('speechSynthesis' in window)) return;
+    const utter = new SpeechSynthesisUtterance(String(text || ''));
+    utter.lang = 'fr-FR';
+    utter.rate = 0.98;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utter);
+  } catch {
+  }
+};
+
+const SpaceChooser = ({ isDark, open, user, onChoose, onClose }) => {
+  const roles = useMemo(() => normalizeRoles(user), [user]);
+  const canChoose = Array.isArray(roles) && roles.length > 0;
+
+  useEffect(() => {
+    if (!open) return;
+    speakFR("Choisissez votre espace : Acheter, Vendre, ou Services.");
+  }, [open]);
+
+  if (!open) return null;
+
+  const tiles = [
+    { id: 'client', title: 'Acheter', subtitle: 'Je veux acheter', icon: ROLE_ICONS.client },
+    { id: 'vendor', title: 'Vendre', subtitle: 'Je vends des produits', icon: ROLE_ICONS.vendor },
+    { id: 'prestataire', title: 'Services', subtitle: 'Je propose un service', icon: ROLE_ICONS.prestataire }
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4" style={{ background: 'rgba(0,0,0,0.72)' }} onClick={onClose}>
+      <div className={`w-full max-w-md rounded-2xl shadow-2xl ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`} onClick={(e) => e.stopPropagation()}>
+        <div className="p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-lg font-black">Choisir mon espace</div>
+              <div className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Appuyez sur un bouton</div>
+            </div>
+            <button type="button" className={`${isDark ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'} px-3 py-2 rounded-xl font-black`} onClick={() => speakFR("Choisissez : Acheter, Vendre, ou Services.")}>🔊</button>
+          </div>
+
+          <div className="mt-4 grid gap-3">
+            {tiles.map((t) => {
+              const enabled = t.id === 'client' || roles.includes(t.id) || roles.includes('admin');
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  className={`w-full text-left rounded-2xl p-4 border transition-colors ${
+                    enabled
+                      ? isDark
+                        ? 'bg-gray-800 border-gray-700 hover:bg-gray-750'
+                        : 'bg-white border-gray-200 hover:bg-gray-50'
+                      : isDark
+                        ? 'bg-gray-800/60 border-gray-700/60 opacity-70'
+                        : 'bg-gray-50 border-gray-200 opacity-70'
+                  }`}
+                  onClick={() => onChoose(t.id)}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}>{t.icon}</div>
+                    <div className="min-w-0">
+                      <div className="text-xl font-black leading-tight">{t.title}</div>
+                      <div className={`text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{t.subtitle}</div>
+                      {!enabled && t.id !== 'client' && (
+                        <div className={`mt-1 text-xs font-black ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>Activer lors de l’inscription</div>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-4 flex items-center justify-between">
+            <button type="button" className={`${isDark ? 'text-gray-300' : 'text-gray-600'} font-bold`} onClick={onClose}>Fermer</button>
+            <div className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-xs font-bold`}>{canChoose ? '' : ''}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Composant de connexion optimisé
 const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
   const [email, setEmail] = useState('');
@@ -124,6 +245,47 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const { isDark } = useThemeStore();
   const navigate = useNavigate();
+
+  const speakHelp = useCallback(() => {
+    speakFR("Pour vous connecter, tapez votre email et votre mot de passe, puis appuyez sur Se connecter. Exemple vendeur : vendor arrobase example point com, mot de passe vendor 1 2 3. Exemple client : client arrobase example point com, mot de passe client 1 2 3.");
+  }, []);
+
+  const fastLogin = useCallback((kind) => {
+    if (kind === 'admin') {
+      onLogin({
+        id: 1,
+        name: 'Administrateur',
+        role: 'admin',
+        roles: ['admin'],
+        email: 'admin@mangoo.tech',
+        avatar: '👨‍💼',
+        password: 'admin123'
+      });
+      return;
+    }
+    if (kind === 'vendor') {
+      onLogin({
+        id: 2,
+        name: 'Commerçant Demo',
+        role: 'vendor',
+        roles: ['vendor', 'client', 'prestataire'],
+        email: 'vendor@example.com',
+        shopName: 'Boutique Demo',
+        avatar: '👨‍🎨',
+        password: 'vendor123'
+      });
+      return;
+    }
+    onLogin({
+      id: 3,
+      name: 'Client Demo',
+      role: 'client',
+      roles: ['client'],
+      email: 'client@example.com',
+      avatar: '🧑‍💻',
+      password: 'client123'
+    });
+  }, [onLogin]);
 
   useEffect(() => {
     try {
@@ -171,6 +333,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
       name: shop?.ownerName || shop?.name || 'Vendeur',
       email: normalizedEmail,
       role: 'vendor',
+      roles: ['vendor', 'client'],
       shopName: shop?.name || 'Boutique',
       avatar: '🏪',
       password
@@ -210,6 +373,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         id: 1, 
         name: 'Administrateur', 
         role: 'admin', 
+        roles: ['admin'],
         email: 'admin@mangoo.tech',
         avatar: '👨‍💼'
       },
@@ -217,6 +381,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         id: 2, 
         name: 'Commerçant Demo', 
         role: 'vendor', 
+        roles: ['vendor', 'client', 'prestataire'],
         email: 'vendor@example.com',
         shopName: 'Boutique Demo',
         avatar: '👨‍🎨'
@@ -225,6 +390,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         id: 3, 
         name: 'Client Demo', 
         role: 'client', 
+        roles: ['client'],
         email: 'client@example.com',
         avatar: '🧑‍💻'
       },
@@ -232,6 +398,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         id: 2, 
         name: 'Commerçant Demo', 
         role: 'vendor', 
+        roles: ['vendor', 'client', 'prestataire'],
         email: 'vendor@example.com',
         shopName: 'Boutique Demo',
         avatar: '👨‍🎨'
@@ -240,6 +407,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         id: 2, 
         name: 'Commerçant Demo', 
         role: 'vendor', 
+        roles: ['vendor', 'client', 'prestataire'],
         email: 'vendor@example.com',
         shopName: 'Boutique Demo',
         avatar: '👨‍🎨'
@@ -282,6 +450,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         name: normalizedEmail.split('@')[0] || 'Utilisateur',
         email: normalizedEmail,
         role: 'client',
+        roles: ['client'],
         avatar: '🧑‍💻'
       };
       try {
@@ -344,6 +513,16 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
             {error}
           </div>
         )}
+
+        <button
+          type="button"
+          onClick={speakHelp}
+          className={`w-full px-4 py-3 rounded-xl text-sm font-black transition-colors mb-4 ${
+            isDark ? 'bg-gray-900 text-white hover:bg-gray-700 border border-gray-700' : 'bg-white text-gray-900 hover:bg-gray-50 border border-gray-200'
+          }`}
+        >
+          🔊 Écouter l’aide
+        </button>
 
         {selectedPlan && (
           <div className={`mb-4 px-4 py-3 rounded-lg border text-sm ${
@@ -415,6 +594,45 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
           </button>
         </form>
 
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={speakHelp}
+            className={`w-full px-4 py-3 rounded-xl text-sm font-black transition-colors ${
+              isDark ? 'bg-gray-900 text-white hover:bg-gray-700 border border-gray-700' : 'bg-white text-gray-900 hover:bg-gray-50 border border-gray-200'
+            }`}
+          >
+            🔊 Écouter l’aide
+          </button>
+
+          <div className={`mt-3 text-xs font-bold ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Connexion rapide (démo)</div>
+          <div className="mt-2 grid grid-cols-1 gap-2">
+            <button
+              type="button"
+              onClick={() => fastLogin('vendor')}
+              className="w-full bg-blue-600 text-white px-4 py-3 rounded-xl font-black hover:bg-blue-700 transition-colors"
+            >
+              🏪 Entrer : Vendre / Services
+            </button>
+            <button
+              type="button"
+              onClick={() => fastLogin('client')}
+              className="w-full bg-emerald-600 text-white px-4 py-3 rounded-xl font-black hover:bg-emerald-700 transition-colors"
+            >
+              🛒 Entrer : Acheter
+            </button>
+            <button
+              type="button"
+              onClick={() => fastLogin('admin')}
+              className={`w-full px-4 py-3 rounded-xl font-black transition-colors ${
+                isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+              }`}
+            >
+              👨‍💼 Admin
+            </button>
+          </div>
+        </div>
+
         <div className="mt-4 space-y-2">
           {onCreateClient && (
             <button
@@ -482,6 +700,19 @@ const Register = ({ onRegister, onBack }) => {
   const [createdShop, setCreatedShop] = useState(null);
   const [paletteMode, setPaletteMode] = useState('both');
   const { isDark } = useThemeStore();
+
+  const speakHelp = useCallback(() => {
+    speakFR("Créer une boutique. Remplissez le nom, l’email, et le mot de passe. Ensuite écrivez le nom de la boutique. Choisissez une catégorie. Puis appuyez sur Créer ma boutique.");
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem('mangoo-voice:register') === '1') return;
+      sessionStorage.setItem('mangoo-voice:register', '1');
+    } catch {
+    }
+    speakHelp();
+  }, [speakHelp]);
 
   const colorPalettes = useMemo(() => [
     { name: 'Orange Mangoo', primary: '#F97316', secondary: '#FBBF24' },
@@ -610,6 +841,7 @@ const Register = ({ onRegister, onBack }) => {
           name,
           email,
           role: 'vendor',
+          roles: ['vendor', 'client'],
           shopName,
           avatar: '🏪',
           password
@@ -634,6 +866,7 @@ const Register = ({ onRegister, onBack }) => {
       name,
       email,
       role: 'vendor',
+      roles: ['vendor', 'client'],
       shopName,
       avatar: '🏪',
       password
@@ -797,6 +1030,18 @@ const Register = ({ onRegister, onBack }) => {
           }`}>
             Logo, couleurs, lien et QR Code inclus
           </p>
+        </div>
+
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={speakHelp}
+            className={`w-full px-4 py-3 rounded-xl text-sm font-black transition-colors ${
+              isDark ? 'bg-gray-900 text-white hover:bg-gray-700 border border-gray-700' : 'bg-white text-gray-900 hover:bg-gray-50 border border-gray-200'
+            }`}
+          >
+            🔊 Écouter l’aide
+          </button>
         </div>
 
         <form onSubmit={handleRegister} className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1071,6 +1316,19 @@ const ClientRegister = ({ onRegister, onBack }) => {
   const [error, setError] = useState('');
   const { isDark } = useThemeStore();
 
+  const speakHelp = useCallback(() => {
+    speakFR("Créer un compte client. Remplissez votre nom, l’email et le mot de passe. Puis appuyez sur Créer mon compte.");
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem('mangoo-voice:client-register') === '1') return;
+      sessionStorage.setItem('mangoo-voice:client-register', '1');
+    } catch {
+    }
+    speakHelp();
+  }, [speakHelp]);
+
   const handleSubmit = useCallback((e) => {
     e.preventDefault();
     const normalizedEmail = String(email || '').trim().toLowerCase();
@@ -1104,6 +1362,7 @@ const ClientRegister = ({ onRegister, onBack }) => {
       name: name || normalizedEmail.split('@')[0],
       email: normalizedEmail,
       role: 'client',
+      roles: ['client'],
       avatar: '🧑‍💻',
       password,
       phone,
@@ -4327,6 +4586,7 @@ const MangooLocalFrame = React.memo(({ user, onBack }) => {
 // Composant principal avec optimisation
 function AppShell() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [initialState] = useState(() => {
     let view = 'landing';
     try {
@@ -4341,7 +4601,20 @@ function AppShell() {
       try {
         const raw = localStorage.getItem('mangoo-current-user');
         const storedUser = raw ? JSON.parse(raw) : null;
-        if (storedUser?.role) return storedUser;
+        if (storedUser?.role) {
+          const email = String(storedUser?.email || '').trim().toLowerCase();
+          const roles = normalizeRoles(storedUser);
+          let activeRole = String(storedUser?.role || '').trim();
+          try {
+            const saved = email ? localStorage.getItem(`mangoo-active-role:${email}`) : null;
+            if (saved) activeRole = String(saved);
+          } catch {
+          }
+          if (activeRole && roles.includes(activeRole)) {
+            return { ...storedUser, roles, role: activeRole };
+          }
+          return { ...storedUser, roles };
+        }
       } catch {
         // ignore
       }
@@ -4357,6 +4630,7 @@ function AppShell() {
   const [loading, setLoading] = useState(false); // DISABLED LOADING DELAY
   const [currentView, setCurrentView] = useState(initialState.view);
   const [authReturn, setAuthReturn] = useState(null);
+  const [spaceChooserOpen, setSpaceChooserOpen] = useState(false);
   const { isDark } = useThemeStore();
   const [clientWalletBalance, setClientWalletBalance] = useState(null);
   const clientWalletKey = useMemo(() => getWalletKeyFromUser(user), [user]);
@@ -4442,8 +4716,15 @@ function AppShell() {
 
   const openLogin = useCallback(() => {
     setAuthReturn((prev) => prev || (user ? { user, view: currentView } : null));
+    setCurrentView('landing');
     setUser({ role: 'login_request' });
   }, [currentView, user]);
+
+  useEffect(() => {
+    if (location?.pathname === '/connexion') {
+      openLogin();
+    }
+  }, [location?.pathname, openLogin]);
 
   const openClientRegister = useCallback(() => {
     setAuthReturn((prev) => prev || (user ? { user, view: currentView } : null));
@@ -4605,8 +4886,18 @@ function AppShell() {
   // Gestion de la connexion optimisée
   const handleLogin = useCallback(async (userData) => {
     const normalizedEmail = String(userData?.email || '').trim().toLowerCase();
-    const nextUser = normalizedEmail === 'admin@mangoo.tech' ? { ...userData, role: 'admin' } : userData;
+    const baseUser = normalizedEmail === 'admin@mangoo.tech' ? { ...userData, role: 'admin' } : userData;
+    const roles = normalizeRoles(baseUser);
+    let activeRole = String(baseUser?.role || '').trim();
+    try {
+      const saved = normalizedEmail ? localStorage.getItem(`mangoo-active-role:${normalizedEmail}`) : null;
+      if (saved) activeRole = String(saved);
+    } catch {
+    }
+    if (!activeRole || !roles.includes(activeRole)) activeRole = roles[0] || 'client';
+    const nextUser = { ...baseUser, roles, role: activeRole };
     setUser(nextUser);
+    persistUserToDemoUsers(nextUser);
     try {
       localStorage.setItem('mangoo-current-user', JSON.stringify(nextUser));
     } catch {
@@ -4626,6 +4917,10 @@ function AppShell() {
       navigate('/admin/dashboard');
     }
 
+    if (Array.isArray(roles) && roles.length > 1 && nextUser?.role !== 'admin') {
+      setSpaceChooserOpen(true);
+    }
+
     try {
       const selectedPlan = localStorage.getItem('mangoo-selected-plan');
       if (selectedPlan) {
@@ -4639,6 +4934,42 @@ function AppShell() {
       // ignore
     }
   }, [navigate, seedDemoData]);
+
+  const chooseSpace = useCallback((nextRole) => {
+    if (!user) return;
+    const role = String(nextRole || '').trim();
+    if (!role) return;
+
+    const email = String(user?.email || '').trim().toLowerCase();
+    const roles = normalizeRoles(user);
+
+    if (!roles.includes(role) && role === 'vendor') {
+      setSpaceChooserOpen(false);
+      openRegister();
+      return;
+    }
+
+    const nextRoles = roles.includes(role) ? roles : Array.from(new Set([...roles, role]));
+    const nextUser = { ...user, role, roles: nextRoles };
+    setUser(nextUser);
+    persistUserToDemoUsers(nextUser);
+    try {
+      localStorage.setItem('mangoo-current-user', JSON.stringify(nextUser));
+    } catch {
+    }
+    try {
+      if (email) localStorage.setItem(`mangoo-active-role:${email}`, role);
+    } catch {
+    }
+
+    if (role === 'client') {
+      setCurrentView('marketplace');
+    } else if (role === 'prestataire') {
+      setCurrentView('innovation');
+    }
+
+    setSpaceChooserOpen(false);
+  }, [openRegister, user]);
 
   useEffect(() => {
     if (!user) return;
@@ -4811,11 +5142,21 @@ function AppShell() {
                 {user.role === 'client' && (
                   <button
                     type="button"
-                    onClick={openLogin}
+                    onClick={() => setSpaceChooserOpen(true)}
                     className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold hover:bg-blue-200 transition-colors"
-                    title="Accéder à l’espace vendeur"
+                    title="Changer d’espace"
                   >
-                    Espace vendeur
+                    Changer d’espace
+                  </button>
+                )}
+                {Array.isArray(user.roles) && user.roles.length > 1 && user.role !== 'client' && (
+                  <button
+                    type="button"
+                    onClick={() => setSpaceChooserOpen(true)}
+                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold hover:bg-blue-200 transition-colors"
+                    title="Changer d’espace"
+                  >
+                    Changer d’espace
                   </button>
                 )}
                 {/* Bouton Local+ ajouté */}
@@ -4840,7 +5181,7 @@ function AppShell() {
                     ? 'bg-blue-100 text-blue-800'
                     : 'bg-green-100 text-green-800'
                 }`}>
-                  {user.role}
+                  {ROLE_LABELS[user.role] || user.role}
                 </span>
               </div>
               {user.role === 'client' && clientWalletKey && (
@@ -4939,6 +5280,14 @@ function AppShell() {
         {user.role === 'client' && safeCurrentView === 'shops' && <ShopsDirectory />}
         {user.role === 'client' && safeCurrentView !== 'shops' && safeCurrentView !== 'account' && <ClientMarketplace user={user} />}
       </main>
+
+      <SpaceChooser
+        isDark={isDark}
+        open={spaceChooserOpen}
+        user={user}
+        onChoose={chooseSpace}
+        onClose={() => setSpaceChooserOpen(false)}
+      />
       
       {/* Moniteur de performance - Désactivé pour test */}
       {/* <PerformanceMonitor /> */}
@@ -4956,6 +5305,7 @@ function App() {
         <Route path="/webrtc" element={<WebRTCJoinPage />} />
         <Route path="/plan-checkout" element={<PlanCheckoutTest />} />
         <Route path="/admin/*" element={<AdminLayout />} />
+        <Route path="/connexion" element={<AppShell />} />
         <Route path="/*" element={<AppShell />} />
       </Routes>
     </NotificationProvider>
