@@ -16,6 +16,7 @@ import AdminWallet from './pages/AdminWallet';
 import AdminAnalytics from './pages/AdminAnalytics';
 import AdminSettings from './pages/AdminSettings';
 import AdminBoosts from './pages/AdminBoosts';
+import AdminInvoices from './pages/AdminInvoices';
 import AdminNavigation from './components/AdminNavigation';
 import SimpleTest from './pages/SimpleTest';
 import ProductCard from './components/OptimizedProductCard';
@@ -39,6 +40,10 @@ import VendorMessagingCenter from './components/VendorMessagingCenter';
 import LiveShoppingManager from './components/LiveShoppingManager';
 import { NotificationProvider } from './contexts/NotificationContext';
 import CourierScreen from './pages/CourierScreen';
+import CourierRegister from './pages/CourierRegister';
+import DeliveryCheckout from './pages/DeliveryCheckout';
+import OrderStatus from './pages/OrderStatus';
+import ClientInvoiceModal from './components/invoice/ClientInvoiceModal';
 
 // Store optimisé avec Zustand
 const useStore = create((set, get) => ({
@@ -120,13 +125,15 @@ const useStore = create((set, get) => ({
 const ROLE_LABELS = {
   client: 'Acheter',
   vendor: 'Vendre',
-  prestataire: 'Services'
+  prestataire: 'Services',
+  livreur: 'Livrer'
 };
 
 const ROLE_ICONS = {
   client: '🛒',
   vendor: '🏪',
-  prestataire: '🧰'
+  prestataire: '🧰',
+  livreur: '🛵'
 };
 
 const normalizeRoles = (user) => {
@@ -136,6 +143,7 @@ const normalizeRoles = (user) => {
   if (!role) return ['client'];
   if (role === 'vendor') return ['vendor', 'client'];
   if (role === 'prestataire') return ['prestataire', 'client'];
+  if (role === 'livreur') return ['livreur', 'client'];
   if (role === 'admin') return ['admin'];
   return [role];
 };
@@ -171,7 +179,7 @@ const SpaceChooser = ({ isDark, open, user, onChoose, onClose }) => {
 
   useEffect(() => {
     if (!open) return;
-    speakFR("Choisissez votre espace : Acheter, Vendre, ou Services.");
+    speakFR("Choisissez votre espace : Acheter, Vendre, Livrer, ou Services.");
   }, [open]);
 
   if (!open) return null;
@@ -179,6 +187,7 @@ const SpaceChooser = ({ isDark, open, user, onChoose, onClose }) => {
   const tiles = [
     { id: 'client', title: 'Acheter', subtitle: 'Je veux acheter', icon: ROLE_ICONS.client },
     { id: 'vendor', title: 'Vendre', subtitle: 'Je vends des produits', icon: ROLE_ICONS.vendor },
+    { id: 'livreur', title: 'Livrer', subtitle: 'Je livre des commandes', icon: ROLE_ICONS.livreur },
     { id: 'prestataire', title: 'Services', subtitle: 'Je propose un service', icon: ROLE_ICONS.prestataire }
   ];
 
@@ -191,7 +200,7 @@ const SpaceChooser = ({ isDark, open, user, onChoose, onClose }) => {
               <div className="text-lg font-black">Choisir mon espace</div>
               <div className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Appuyez sur un bouton</div>
             </div>
-            <button type="button" className={`${isDark ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'} px-3 py-2 rounded-xl font-black`} onClick={() => speakFR("Choisissez : Acheter, Vendre, ou Services.")}>🔊</button>
+            <button type="button" className={`${isDark ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'} px-3 py-2 rounded-xl font-black`} onClick={() => speakFR("Choisissez : Acheter, Vendre, Livrer, ou Services.")}>🔊</button>
           </div>
 
           <div className="mt-4 grid gap-3">
@@ -274,6 +283,18 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         shopName: 'Boutique Demo',
         avatar: '👨‍🎨',
         password: 'vendor123'
+      });
+      return;
+    }
+    if (kind === 'livreur') {
+      onLogin({
+        id: 4,
+        name: 'Livreur Demo',
+        role: 'livreur',
+        roles: ['livreur', 'client'],
+        email: 'livreur@exemple.com',
+        avatar: '🛵',
+        password: 'livreur123'
       });
       return;
     }
@@ -617,6 +638,13 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
             </button>
             <button
               type="button"
+              onClick={() => fastLogin('livreur')}
+              className="w-full bg-slate-900 text-white px-4 py-3 rounded-xl font-black hover:bg-slate-800 transition-colors"
+            >
+              🛵 Entrer : Livrer
+            </button>
+            <button
+              type="button"
               onClick={() => fastLogin('client')}
               className="w-full bg-emerald-600 text-white px-4 py-3 rounded-xl font-black hover:bg-emerald-700 transition-colors"
             >
@@ -659,6 +687,15 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
           )}
           <button
             type="button"
+            onClick={() => navigate('/livreur/inscription')}
+            className={`w-full px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+              isDark ? 'bg-gray-900 text-white hover:bg-gray-700 border border-gray-700' : 'bg-white text-gray-900 hover:bg-gray-50 border border-gray-200'
+            }`}
+          >
+            Créer un compte livreur
+          </button>
+          <button
+            type="button"
             onClick={activateVendorAccount}
             className={`w-full px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
               isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
@@ -674,6 +711,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
             <p><span className="font-mono">admin@mangoo.tech</span> / admin123</p>
             <p><span className="font-mono">vendor@example.com</span> / vendor123</p>
             <p><span className="font-mono">client@example.com</span> / client123</p>
+            <p><span className="font-mono">livreur@exemple.com</span> / livreur123</p>
           </div>
         </details>
       </div>
@@ -2432,7 +2470,10 @@ const ClientMarketplace = ({ user }) => {
         name: item.name,
         qty: item.quantity,
         unitPriceCents: Math.round(unit * 100),
-        currency: 'XOF'
+        currency: 'XOF',
+        shopSlug: item.shopSlug || item.shop_slug || null,
+        vendorName: item.vendorName || item.vendor || null,
+        vendorCountry: item.vendorCountry || item.country || null
       };
     });
 
@@ -2451,6 +2492,31 @@ const ClientMarketplace = ({ user }) => {
 
     if (email) {
       upsertClientOrder(email, order);
+
+      try {
+        const vatRate = 0.18;
+        const ttc = Math.round((order.totalCents || 0) / 100);
+        const vatIncluded = Math.round(ttc - ttc / (1 + vatRate));
+        const raw = localStorage.getItem('mangoo-admin-invoices');
+        const existing = raw ? JSON.parse(raw) : [];
+        const list = Array.isArray(existing) ? existing : [];
+        const vendors = Array.from(new Set((items || []).map((it) => String(it?.vendorName || it?.shopSlug || '').trim()).filter(Boolean)))
+          .map((name) => ({ name }));
+        list.unshift({
+          id: `inv_${order.id}`,
+          createdAt: new Date().toISOString(),
+          orderId: order.id,
+          clientEmail: email,
+          clientName: String(user?.name || ''),
+          vendors,
+          totalTtcFcfa: ttc,
+          vatIncludedFcfa: vatIncluded,
+          order,
+          client: { name: String(user?.name || ''), email, phone: String(user?.phone || ''), address: String(user?.address || '') },
+        });
+        localStorage.setItem('mangoo-admin-invoices', JSON.stringify(list.slice(0, 500)));
+      } catch {
+      }
     }
 
     toast.success('Paiement réussi');
@@ -3147,6 +3213,26 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
   const [walletEmail, setWalletEmail] = useState(String(user?.email || ''));
   const [isWalletBusy, setIsWalletBusy] = useState(false);
 
+  const [invoiceOrder, setInvoiceOrder] = useState(null);
+
+  const requestDeliveryForOrder = useCallback((order) => {
+    try {
+      const payload = {
+        order,
+        user: {
+          email: String(user?.email || ''),
+          name: String(user?.name || ''),
+          phone: String(user?.phone || ''),
+          address: String(user?.address || ''),
+        },
+        createdAt: new Date().toISOString(),
+      }
+      localStorage.setItem('mangoo-delivery-source-order', JSON.stringify(payload))
+    } catch {
+    }
+    navigate(`/checkout/livraison?src=client_order&orderId=${encodeURIComponent(String(order?.id || ''))}`)
+  }, [navigate, user?.address, user?.email, user?.name, user?.phone])
+
   const [activePackInfo, setActivePackInfo] = useState({ mode: 'unknown', packId: null, packName: null });
   const [pendingPackInfo, setPendingPackInfo] = useState({ packId: null, packName: null, effectiveAt: null });
   const [isPackLoading, setIsPackLoading] = useState(false);
@@ -3554,7 +3640,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
 
   return (
     <div className="p-6">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="mb-6">
           <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Mon compte</h1>
           <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Gérez votre profil client et vos informations.</p>
@@ -3954,6 +4040,32 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                     <div className="text-4xl mb-2">📦</div>
                     <div className="font-semibold">Aucune commande</div>
                     <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Vos commandes apparaîtront ici après un paiement.</div>
+                    <div className="mt-4 flex flex-wrap justify-center gap-2">
+                      <button
+                        type="button"
+                        disabled
+                        className={`${isDark ? 'bg-white/5 border border-white/10 text-gray-400' : 'bg-white border border-gray-200 text-gray-400'} px-4 py-2 rounded-xl font-black opacity-60 cursor-not-allowed`}
+                        title="Disponible après paiement"
+                      >
+                        🚚 Demander livraison
+                      </button>
+                      <button
+                        type="button"
+                        disabled
+                        className={`${isDark ? 'bg-white/5 border border-white/10 text-gray-400' : 'bg-white border border-gray-200 text-gray-400'} px-4 py-2 rounded-xl font-black opacity-60 cursor-not-allowed`}
+                        title="Disponible après paiement"
+                      >
+                        🧾 Facture
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveSection('profile')}
+                        className={`${isDark ? 'bg-gray-800 border border-gray-700 text-gray-200 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-800 hover:bg-gray-50'} px-4 py-2 rounded-xl font-black transition-colors`}
+                        title="Renseigner mon adresse"
+                      >
+                        ✍️ Mon adresse
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -3970,6 +4082,44 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                             <div className={`${isDark ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-700'} inline-flex text-xs px-2 py-1 rounded-full font-semibold mt-1`}>{o.status}</div>
                           </div>
                         </div>
+
+                        {(
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => requestDeliveryForOrder(o)}
+                              disabled={String(o.status || '') !== 'paid'}
+                              className={String(o.status || '') === 'paid'
+                                ? 'px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-green-600 text-white font-black hover:from-orange-600 hover:to-green-700 transition-all'
+                                : `${isDark ? 'bg-white/5 border border-white/10 text-gray-400' : 'bg-white border border-gray-200 text-gray-400'} px-4 py-2 rounded-xl font-black opacity-60 cursor-not-allowed`
+                              }
+                              title={String(o.status || '') === 'paid' ? 'Demander une livraison pour cette commande' : 'Disponible après paiement'}
+                            >
+                              🚚 Demander livraison
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setInvoiceOrder(o)}
+                              disabled={String(o.status || '') !== 'paid'}
+                              className={String(o.status || '') === 'paid'
+                                ? `${isDark ? 'bg-white/5 border border-white/10 hover:bg-white/10 text-white' : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-900'} px-4 py-2 rounded-xl font-black transition-colors`
+                                : `${isDark ? 'bg-white/5 border border-white/10 text-gray-400' : 'bg-white border border-gray-200 text-gray-400'} px-4 py-2 rounded-xl font-black opacity-60 cursor-not-allowed`
+                              }
+                              title={String(o.status || '') === 'paid' ? 'Voir la facture' : 'Disponible après paiement'}
+                            >
+                              🧾 Facture
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setActiveSection('profile')}
+                              className={`${isDark ? 'bg-gray-800 border border-gray-700 text-gray-200 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-800 hover:bg-gray-50'} px-4 py-2 rounded-xl font-black transition-colors`}
+                              title="Renseigner mon adresse"
+                            >
+                              ✍️ Mon adresse
+                            </button>
+                          </div>
+                        )}
+
                         {Array.isArray(o.items) && o.items.length > 0 && (
                           <div className="mt-3 pt-3 border-t border-gray-700/40 space-y-1">
                             {o.items.slice(0, 4).map((it) => (
@@ -4554,6 +4704,12 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
             )}
           </div>
         )}
+        <ClientInvoiceModal
+          open={Boolean(invoiceOrder)}
+          onClose={() => setInvoiceOrder(null)}
+          client={{ name: user?.name, email: user?.email, phone: user?.phone, address: user?.address }}
+          order={invoiceOrder}
+        />
       </div>
     </div>
   );
@@ -4631,6 +4787,7 @@ const AdminLayout = () => {
             <Route path="payments" element={<AdminPayments />} />
             <Route path="analytics" element={<AdminAnalytics />} />
             <Route path="wallet" element={<AdminWallet />} />
+            <Route path="invoices" element={<AdminInvoices />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="create-shop" element={<AdminCreateShop />} />
             <Route path="simple-test" element={<SimpleTest />} />
@@ -4809,6 +4966,25 @@ function AppShell() {
     }
   }, [location?.pathname, openLogin]);
 
+  useEffect(() => {
+    let shouldOpen = false;
+    try {
+      shouldOpen = localStorage.getItem('mangoo-open-boussole') === '1';
+      if (shouldOpen) localStorage.removeItem('mangoo-open-boussole');
+    } catch {
+      shouldOpen = false;
+    }
+    if (!shouldOpen) return;
+
+    if (!user) {
+      setCurrentView('landing');
+      setUser({ role: 'login_request' });
+      return;
+    }
+
+    setSpaceChooserOpen(true);
+  }, [user]);
+
   const openClientRegister = useCallback(() => {
     setAuthReturn((prev) => prev || (user ? { user, view: currentView } : null));
     setCurrentView('landing');
@@ -4828,9 +5004,15 @@ function AppShell() {
       setAuthReturn(null);
       return;
     }
+    if (location?.pathname === '/connexion') {
+      try {
+        navigate('/');
+      } catch {
+      }
+    }
     setCurrentView('landing');
     setUser(null);
-  }, [authReturn]);
+  }, [authReturn, location?.pathname, navigate]);
 
   // console.log('App Rendering. User:', user, 'View:', currentView);
 
@@ -4904,6 +5086,88 @@ function AppShell() {
     const state = useStore.getState();
     if (Array.isArray(state.products) && state.products.length > 0) return;
 
+    try {
+      const raw = localStorage.getItem('demo_shops');
+      const existing = raw ? JSON.parse(raw) : [];
+      const list = Array.isArray(existing) ? existing : [];
+      if (!list.length) {
+        const now = new Date().toISOString();
+        const seeded = [
+          {
+            id: 'shop_tech_africa',
+            name: 'Tech Africa',
+            slug: 'tech-africa',
+            category: 'tech',
+            ownerName: 'Commerçant Demo',
+            ownerEmail: 'vendeur@demo.mangoo.tech',
+            approvalStatus: 'approved',
+            createdAt: now,
+            updatedAt: now,
+            billingCountry: 'ci',
+            billingLegalName: 'Tech Africa SARL',
+            billingRegistrationId: 'RCCM CI-ABJ-2026-B-00001',
+            billingTaxId: 'NINEA/NIU: DEMO-CI-0001',
+            billingAddress: 'Abidjan, Côte d’Ivoire',
+            billingPhone: '+225 00 00 00 00'
+          },
+          {
+            id: 'shop_boutique_tradition',
+            name: 'Boutique Tradition',
+            slug: 'boutique-tradition',
+            category: 'fashion',
+            ownerName: 'Commerçant Demo',
+            ownerEmail: 'vendeur@demo.mangoo.tech',
+            approvalStatus: 'approved',
+            createdAt: now,
+            updatedAt: now,
+            billingCountry: 'sn',
+            billingLegalName: 'Boutique Tradition',
+            billingRegistrationId: 'RCCM SN-DKR-2026-A-00001',
+            billingTaxId: 'NINEA: DEMO-SN-0001',
+            billingAddress: 'Dakar, Sénégal',
+            billingPhone: '+221 77 000 00 00'
+          },
+          {
+            id: 'shop_saveurs_terroir',
+            name: 'Saveurs du Terroir',
+            slug: 'saveurs-du-terroir',
+            category: 'food',
+            ownerName: 'Commerçant Demo',
+            ownerEmail: 'vendeur@demo.mangoo.tech',
+            approvalStatus: 'approved',
+            createdAt: now,
+            updatedAt: now,
+            billingCountry: 'cm',
+            billingLegalName: 'Saveurs du Terroir',
+            billingRegistrationId: 'RCCM CM-DLA-2026-A-00001',
+            billingTaxId: 'NIU: DEMO-CM-0001',
+            billingAddress: 'Douala, Cameroun',
+            billingPhone: '+237 6 00 00 00 00'
+          },
+          {
+            id: 'shop_artisanat_africa',
+            name: 'Artisanat Africa',
+            slug: 'artisanat-africa',
+            category: 'handicraft',
+            ownerName: 'Commerçant Demo',
+            ownerEmail: 'vendeur@demo.mangoo.tech',
+            approvalStatus: 'approved',
+            createdAt: now,
+            updatedAt: now,
+            billingCountry: 'ci',
+            billingLegalName: 'Artisanat Africa',
+            billingRegistrationId: 'RCCM CI-ABJ-2026-B-00002',
+            billingTaxId: 'NINEA/NIU: DEMO-CI-0002',
+            billingAddress: 'Abidjan, Côte d’Ivoire',
+            billingPhone: '+225 00 00 00 01'
+          }
+        ];
+        localStorage.setItem('demo_shops', JSON.stringify(seeded));
+        window.dispatchEvent(new Event('demo-shops-updated'));
+      }
+    } catch {
+    }
+
     const mockProducts = [
       {
         id: 1,
@@ -4915,6 +5179,9 @@ function AppShell() {
         reviews: 128,
         icon: '📱',
         vendor: 'Commerçant Demo',
+        vendorName: 'Tech Africa',
+        shopSlug: 'tech-africa',
+        vendorCountry: 'ci',
         stock: 15
       },
       {
@@ -4927,6 +5194,9 @@ function AppShell() {
         reviews: 89,
         icon: '👕',
         vendor: 'Commerçant Demo',
+        vendorName: 'Boutique Tradition',
+        shopSlug: 'boutique-tradition',
+        vendorCountry: 'sn',
         stock: 25
       },
       {
@@ -4939,6 +5209,9 @@ function AppShell() {
         reviews: 156,
         icon: '🍲',
         vendor: 'Commerçant Demo',
+        vendorName: 'Saveurs du Terroir',
+        shopSlug: 'saveurs-du-terroir',
+        vendorCountry: 'cm',
         stock: 50
       },
       {
@@ -4951,6 +5224,9 @@ function AppShell() {
         reviews: 67,
         icon: '🎨',
         vendor: 'Commerçant Demo',
+        vendorName: 'Artisanat Africa',
+        shopSlug: 'artisanat-africa',
+        vendorCountry: 'ci',
         stock: 8
       }
     ];
@@ -5039,6 +5315,12 @@ function AppShell() {
       return;
     }
 
+    if (!roles.includes(role) && role === 'livreur') {
+      setSpaceChooserOpen(false);
+      navigate('/livreur/inscription');
+      return;
+    }
+
     const nextRoles = roles.includes(role) ? roles : Array.from(new Set([...roles, role]));
     const nextUser = { ...user, role, roles: nextRoles };
     setUser(nextUser);
@@ -5056,10 +5338,12 @@ function AppShell() {
       setCurrentView('marketplace');
     } else if (role === 'prestataire') {
       setCurrentView('innovation');
+    } else if (role === 'livreur') {
+      navigate('/livreur');
     }
 
     setSpaceChooserOpen(false);
-  }, [openRegister, user]);
+  }, [navigate, openRegister, user]);
 
   useEffect(() => {
     if (!user) return;
@@ -5174,17 +5458,17 @@ function AppShell() {
             : 'bg-white'
         }`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center space-x-4 cursor-pointer" onClick={() => { setCurrentView('landing'); setUser(null); }}>
+            <div className="flex justify-between items-center py-3 gap-3">
+              <div className="flex items-center gap-4 cursor-pointer" onClick={() => { setCurrentView('landing'); setUser(null); }}>
                 <div className="text-2xl">🛍️</div>
                 <h1 className={`text-xl font-bold bg-gradient-to-r from-orange-500 to-green-600 bg-clip-text text-transparent`}>
                   MangooTech
                 </h1>
               </div>
               
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center justify-end gap-2 flex-nowrap min-w-0">
                 {user.role === 'client' && (
-                  <div className="hidden md:flex items-center gap-2">
+                  <div className="hidden md:flex items-center gap-2 flex-nowrap">
                     <button
                       type="button"
                       onClick={() => setCurrentView('marketplace')}
@@ -5201,30 +5485,19 @@ function AppShell() {
                     </button>
                     <button
                       type="button"
+                      onClick={() => navigate('/checkout/livraison')}
+                      className={`${isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} px-3 py-1 rounded-full text-sm font-bold transition-colors whitespace-nowrap leading-none`}
+                      title="Demander une livraison"
+                    >
+                      🚚 Livraison
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => setCurrentView('account')}
-                      className={`${currentView === 'account' ? 'bg-orange-500 text-white' : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} px-3 py-1 rounded-full text-sm font-bold transition-colors whitespace-nowrap leading-none`}
+                      className={`${currentView === 'account' ? 'bg-orange-500 text-white' : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} px-2 py-1 rounded-2xl text-[11px] font-black transition-colors leading-[1.05] w-[78px] text-center`}
                     >
-                      Mon compte client
-                    </button>
-                  </div>
-                )}
-
-                {user.role === 'client' && user.email === 'guest@mangoo.tech' && (
-                  <div className="hidden md:flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={openClientRegister}
-                      className="bg-gray-900 text-white px-3 py-1 rounded-full text-sm font-bold hover:bg-gray-800 transition-colors"
-                    >
-                      Créer compte
-                    </button>
-                    <button
-                      type="button"
-                      onClick={openLogin}
-                      className="bg-white border border-gray-200 text-gray-900 px-3 py-1 rounded-full text-sm font-bold hover:bg-gray-50 transition-colors"
-                      title="Se connecter"
-                    >
-                      Connexion
+                      <span className="block">Mon</span>
+                      <span className="block">compte</span>
                     </button>
                   </div>
                 )}
@@ -5233,20 +5506,22 @@ function AppShell() {
                   <button
                     type="button"
                     onClick={() => setSpaceChooserOpen(true)}
-                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold hover:bg-blue-200 transition-colors"
+                    className="bg-blue-100 text-blue-800 px-2 py-1 rounded-2xl text-[11px] font-black hover:bg-blue-200 transition-colors leading-[1.05] w-[92px] text-center"
                     title="Changer d’espace"
                   >
-                    Changer d’espace
+                    <span className="block">Changer</span>
+                    <span className="block">d’espace</span>
                   </button>
                 )}
                 {Array.isArray(user.roles) && user.roles.length > 1 && user.role !== 'client' && (
                   <button
                     type="button"
                     onClick={() => setSpaceChooserOpen(true)}
-                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold hover:bg-blue-200 transition-colors"
+                    className="bg-blue-100 text-blue-800 px-2 py-1 rounded-2xl text-[11px] font-black hover:bg-blue-200 transition-colors leading-[1.05] w-[92px] text-center"
                     title="Changer d’espace"
                   >
-                    Changer d’espace
+                    <span className="block">Changer</span>
+                    <span className="block">d’espace</span>
                   </button>
                 )}
                 {/* Bouton Local+ ajouté */}
@@ -5254,7 +5529,7 @@ function AppShell() {
                   onClick={() => setCurrentView('innovation')}
                   className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold hover:bg-green-200 transition-colors"
                 >
-                  Local+ 🌍
+                  Local+
                 </button>
 
                 {(normalizeRoles(user).includes('admin') || normalizeRoles(user).includes('livreur') || normalizeRoles(user).includes('ops')) && (
@@ -5268,59 +5543,35 @@ function AppShell() {
                   </button>
                 )}
                 
-                <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors duration-300 ${
-                isDark 
-                  ? 'bg-gray-700 text-white' 
-                  : 'bg-gray-100 text-gray-900'
-              }`}>
-                <span className="text-lg">{user.avatar}</span>
-                <span className="text-sm font-medium">{user.name}</span>
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  user.role === 'admin' 
-                    ? 'bg-red-100 text-red-800' 
-                    : user.role === 'vendor'
-                    ? 'bg-blue-100 text-blue-800'
-                    : 'bg-green-100 text-green-800'
-                }`}>
-                  {ROLE_LABELS[user.role] || user.role}
-                </span>
-              </div>
-              {user.role === 'client' && clientWalletKey && (
-                <button
-                  type="button"
-                  onClick={() => setCurrentView('account')}
-                  className={`px-3 py-2 rounded-lg text-sm font-bold transition-colors ${
-                    isDark
-                      ? 'bg-emerald-900/30 border border-emerald-700 text-emerald-200 hover:bg-emerald-900/40'
-                      : 'bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100'
-                  }`}
-                  title="Voir le solde et recharger"
-                >
-                  Solde: {(clientWalletBalance ?? 0).toLocaleString('fr-FR')} XOF
-                </button>
-              )}
-
-              {user.role === 'client' && (
                 <button
                   type="button"
                   onClick={() => {
-                    const pack = activePack?.packId || 'pack_decouverte';
-                    navigate(`/plan-checkout?pack=${encodeURIComponent(String(pack))}`);
+                    if (user.role === 'client') {
+                      setCurrentView('account');
+                      return;
+                    }
+                    setSpaceChooserOpen(true);
                   }}
-                  className={`px-3 py-2 rounded-lg text-sm font-bold transition-colors ${
-                    activePack?.packId
-                      ? isDark
-                        ? 'bg-orange-900/20 border border-orange-700 text-orange-200 hover:bg-orange-900/30'
-                        : 'bg-orange-50 border border-orange-200 text-orange-800 hover:bg-orange-100'
-                      : isDark
-                        ? 'bg-gray-800 border border-gray-700 text-gray-200 hover:bg-gray-700'
-                        : 'bg-white border border-gray-200 text-gray-800 hover:bg-gray-50'
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors duration-300 cursor-pointer ${
+                    isDark 
+                      ? 'bg-gray-700 text-white hover:bg-gray-600' 
+                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                   }`}
-                  title="Voir l’abonnement et changer de pack"
+                  title={user.role === 'client' ? 'Ouvrir mon compte' : 'Changer d’espace'}
                 >
-                  Pack: {activePack?.packName || 'Aucun'}
+                  <span className="text-lg">{user.avatar}</span>
+                  <span className="text-sm font-medium">{user.name}</span>
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    user.role === 'admin' 
+                      ? 'bg-red-100 text-red-800' 
+                      : user.role === 'vendor'
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'bg-green-100 text-green-800'
+                  }`}>
+                    {ROLE_LABELS[user.role] || user.role}
+                  </span>
                 </button>
-              )}
+              
               <ThemeToggle />
               <button 
                 onClick={() => {
@@ -5401,6 +5652,9 @@ function App() {
     <NotificationProvider>
       <Toaster richColors position="top-right" />
       <Routes>
+        <Route path="/checkout/livraison" element={<DeliveryCheckout />} />
+        <Route path="/commande/:orderId" element={<OrderStatus />} />
+        <Route path="/livreur/inscription" element={<CourierRegister />} />
         <Route path="/livreur" element={<CourierScreen />} />
         <Route path="/shop/:shopSlug" element={<ShopPage />} />
         <Route path="/vendor-access-qr" element={<VendorAccessQRPage />} />

@@ -62,6 +62,33 @@ export async function fetchOrders(params?: {
   return Array.isArray(data.orders) ? data.orders : []
 }
 
+export async function fetchOrderById(id: string): Promise<Order> {
+  const url = `/api/orders/${encodeURIComponent(id)}`
+  const { res, data } = await fetchJsonWithRetry(url)
+  if (!res.ok || !data?.success) throw new Error(data?.error || 'Commande introuvable')
+  return data.order
+}
+
+export async function createOrder(body: {
+  userId: string
+  vendorId?: string | null
+  note?: string | null
+  delivery: {
+    source?: 'profile' | 'current' | 'manual'
+    capturedAt?: string
+    position: { latitude: number; longitude: number; accuracy?: number }
+  }
+}): Promise<Order> {
+  const url = `/api/orders`
+  const { res, data } = await fetchJsonWithRetry(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok || !data?.success) throw new Error(data?.error || 'Erreur création commande')
+  return data.order
+}
+
 export async function patchOrder(id: string, body: any): Promise<Order> {
   const url = `/api/orders/${encodeURIComponent(id)}`
   const { res, data } = await fetchJsonWithRetry(url, {

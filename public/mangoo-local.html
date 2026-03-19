@@ -235,6 +235,78 @@
         .hub-card-title { color: var(--ml-text); }
         .hub-card-subtitle { color: var(--ml-muted); }
         .hub-chevron { color: var(--ml-muted); }
+
+        .lp-tabs {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 16px;
+            background: rgba(17, 24, 39, 0.08);
+            border: 1px solid var(--ml-border);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        html.dark .lp-tabs {
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .lp-tab {
+            flex: 0 0 auto;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--ml-muted);
+            padding: 10px 14px;
+            border-radius: 999px;
+            font-weight: 900;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .lp-tab.active {
+            background: linear-gradient(135deg, #f97316 0%, #22c55e 100%);
+            color: #ffffff;
+            border-color: rgba(255,255,255,0.08);
+        }
+        .lp-tab:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .lp-pane { display: none; }
+        .lp-pane.active { display: block; }
+
+        .lp-btn {
+            border: 1px solid transparent;
+            border-radius: 999px;
+            padding: 10px 14px;
+            font-weight: 900;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .lp-btn-primary {
+            background: linear-gradient(135deg, #f97316 0%, #22c55e 100%);
+            color: #fff;
+        }
+        .lp-btn-secondary {
+            background: rgba(255,255,255,0.9);
+            color: #111827;
+            border-color: rgba(17,24,39,0.12);
+        }
+        html.dark .lp-btn-secondary {
+            background: rgba(255,255,255,0.06);
+            color: #f3f4f6;
+            border-color: rgba(255,255,255,0.10);
+        }
+        .lp-btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
         
         /* === HEADER === */
         .header {
@@ -2141,18 +2213,21 @@
                 <div class="hub-subtitle" style="font-size:0.9rem;">+237 699 00 00 00</div>
             </div>
 
-            <!-- DASHBOARD TABS -->
-            <div style="background:white; padding:0 15px; display:flex; border-bottom:1px solid #eee; position:sticky; top:0; z-index:10;">
-                <button onclick="switchDashTab('wallet')" class="dash-tab active" id="btn-dash-wallet" style="flex:1; padding:15px 5px; background:transparent; border:none; border-bottom:3px solid #1a5f3f; font-weight:bold; color:#1a5f3f; cursor:pointer;">Portefeuille</button>
-                <button onclick="switchDashTab('orders')" class="dash-tab" id="btn-dash-orders" style="flex:1; padding:15px 5px; background:transparent; border:none; border-bottom:3px solid transparent; font-weight:bold; color:#636e72; cursor:pointer;">Commandes</button>
-                <button onclick="switchDashTab('tontines')" class="dash-tab" id="btn-dash-tontines" style="flex:1; padding:15px 5px; background:transparent; border:none; border-bottom:3px solid transparent; font-weight:bold; color:#636e72; cursor:pointer;">Tontines</button>
-                <button onclick="switchDashTab('debts')" class="dash-tab" id="btn-dash-debts" style="flex:1; padding:15px 5px; background:transparent; border:none; border-bottom:3px solid transparent; font-weight:bold; color:#636e72; cursor:pointer;">Dettes</button>
+            <div style="padding: 0 16px 12px; position: sticky; top: 0; z-index: 20; background: var(--ml-bg);">
+                <div class="lp-tabs" aria-label="Boussole compte client">
+                    <button type="button" onclick="switchAccountTab('orders')" class="lp-tab active" id="lp-tab-orders">📦 Commandes</button>
+                    <button type="button" onclick="switchAccountTab('sell')" class="lp-tab" id="lp-tab-sell">🏪 Vendre</button>
+                    <button type="button" onclick="switchAccountTab('profile')" class="lp-tab" id="lp-tab-profile">👤 Profil</button>
+                    <button type="button" onclick="switchAccountTab('favorites')" class="lp-tab" id="lp-tab-favorites">❤️ Favoris</button>
+                    <button type="button" onclick="switchAccountTab('pay')" class="lp-tab" id="lp-tab-pay">💳 Mangoo Pay</button>
+                    <button type="button" onclick="switchAccountTab('communication')" class="lp-tab" id="lp-tab-communication">📞 Communication</button>
+                </div>
             </div>
 
-            <div style="padding:20px; padding-bottom:80px;">
+            <div style="padding: 8px 16px 80px;">
                 
                 <!-- TAB: WALLET -->
-                <div id="dash-wallet" class="dash-content">
+                <div id="dash-wallet" class="lp-pane" data-pane="pay">
                     <div class="wallet-card" style="margin-top:0;">
                         <div class="wallet-label">Solde Mangoo Pay</div>
                         <div class="wallet-balance" onclick="rechargeBalance()" title="Cliquez pour recharger">150 000 FCFA</div>
@@ -2173,112 +2248,177 @@
                         </div>
                     </div>
 
-                    <!-- Vendor Mode Toggle moved here -->
-                    <div style="background:white; border-radius:15px; padding:15px; margin-top:20px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 10px rgba(0,0,0,0.05);">
-                        <div>
-                            <div style="font-weight:bold; color:#2d3436;">Mode Vendeur Pro</div>
-                            <div style="font-size:0.8rem; color:#636e72;">Voir mes ventes & stock</div>
+                </div>
+
+                <div id="dash-sell" class="lp-pane" data-pane="sell">
+                    <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
+                        <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">🏪 Espace Vendeur</div>
+                        <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Publier un produit, gérer commandes, stock et boutiques.</div>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px;">
+                            <button type="button" class="lp-btn lp-btn-secondary" onclick="switchAccountTab('orders')">🛒 Retour Acheter</button>
+                            <button type="button" class="lp-btn lp-btn-primary" onclick="openAddProductModal()">📸 Vendre un article</button>
                         </div>
-                        <label class="switch">
-                            <input type="checkbox" id="sellerModeSwitch" onchange="toggleSellerMode()">
-                            <span class="slider round"></span>
-                        </label>
                     </div>
 
-                    <!-- VENDOR SECTION (Hidden by default) -->
-                    <div id="vendorSection" style="margin-top:20px; display:none;">
-                        
-                        <!-- NEW: SELL BUTTON -->
-                        <button onclick="openAddProductModal()" style="width:100%; padding:20px; background:linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); color:white; border:none; border-radius:15px; font-weight:bold; font-size:1.1rem; display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:20px; box-shadow:0 5px 15px rgba(39, 174, 96, 0.4); cursor:pointer; transition:transform 0.1s;">
-                            <span style="font-size:1.5rem;">📸</span>
-                            Vendre un article
-                        </button>
+                    <div id="vendorSection" style="margin-top:14px; display:block;">
 
-                        <div id="boostAdminCard" style="background:white; border-radius:15px; padding:16px; margin-bottom:20px; box-shadow:0 4px 10px rgba(0,0,0,0.05); display:none;">
-                            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;">
-                                <div>
-                                    <div style="font-weight:900; color:#2d3436;">📍 Boost Carte (Admin)</div>
-                                    <div style="font-size:0.85rem; color:#636e72;">Sponsorisé / Promo / Nouveau • Max 2 sponsorisés visibles</div>
-                                </div>
-                                <button onclick="refreshBoostPanel()" style="border:none; background:#f1f2f6; color:#2d3436; padding:10px 12px; border-radius:12px; font-weight:900; cursor:pointer;">↻</button>
-                            </div>
-
-                            <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
-                                <select id="boostVendorSelect" style="flex:1; padding:12px; border:1px solid #dfe6e9; border-radius:12px; font-weight:900;" onchange="refreshBoostPanel()"></select>
-                                <select id="boostTierSelect" style="width:120px; padding:12px; border:1px solid #dfe6e9; border-radius:12px; font-weight:900;" onchange="refreshBoostPanel()">
-                                    <option value="1">Bronze</option>
-                                    <option value="2">Argent</option>
-                                    <option value="3">Or</option>
-                                </select>
-                            </div>
-
-                            <div style="display:flex; flex-wrap:wrap; gap:10px;">
-                                <button onclick="setSponsorBoost(12)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#111827; color:white; font-weight:950; cursor:pointer;">🏷️ Sponsor 12h</button>
-                                <button onclick="setSponsorBoost(24)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#111827; color:white; font-weight:950; cursor:pointer;">🏷️ Sponsor 24h</button>
-                                <button onclick="setSponsorBoost(72)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#111827; color:white; font-weight:950; cursor:pointer;">🏷️ Sponsor 72h</button>
-                                <button onclick="clearSponsorBoost()" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#f1f2f6; color:#2d3436; font-weight:950; cursor:pointer;">✖ Stop Sponsor</button>
-                            </div>
-
-                            <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
-                                <button onclick="setPromoBoost(24)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#fef3c7; color:#92400e; font-weight:950; cursor:pointer;">✨ Promo 24h</button>
-                                <button onclick="clearPromoBoost()" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#f1f2f6; color:#2d3436; font-weight:950; cursor:pointer;">✖ Stop Promo</button>
-                                <button onclick="setNewBoost(24)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#eef2ff; color:#3730a3; font-weight:950; cursor:pointer;">🆕 Nouveau 24h</button>
-                                <button onclick="clearNewBoost()" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#f1f2f6; color:#2d3436; font-weight:950; cursor:pointer;">✖ Stop Nouveau</button>
-                            </div>
-
-                            <div style="margin-top:12px; background:#f8fafc; border:1px solid #eef2f7; border-radius:12px; padding:12px; color:#2d3436;">
-                                <div style="display:flex; justify-content:space-between; gap:10px; font-weight:900;">
-                                    <div>État</div>
-                                    <div id="boostStatusText" style="text-align:right; color:#636e72;">—</div>
-                                </div>
-                                <div style="display:flex; justify-content:space-between; gap:10px; margin-top:6px; font-weight:900;">
-                                    <div>Stats (session)</div>
-                                    <div id="boostStatsText" style="text-align:right; color:#636e72;">—</div>
-                                </div>
-                            </div>
+                        <div class="lp-tabs" style="margin-bottom: 12px;" aria-label="Boussole compte vendeur">
+                            <button type="button" onclick="switchVendorTab('overview')" class="lp-tab active" id="lp-vtab-overview">📊 Vue d’ensemble</button>
+                            <button type="button" onclick="switchVendorTab('stock')" class="lp-tab" id="lp-vtab-stock">📦 Gestion Stock</button>
+                            <button type="button" onclick="switchVendorTab('products')" class="lp-tab" id="lp-vtab-products">🧾 Produits</button>
+                            <button type="button" onclick="switchVendorTab('orders')" class="lp-tab" id="lp-vtab-orders">🛒 Commandes</button>
+                            <button type="button" onclick="switchVendorTab('notifications')" class="lp-tab" id="lp-vtab-notifications">🔔 Notifications</button>
+                            <button type="button" onclick="switchVendorTab('communication')" class="lp-tab" id="lp-vtab-communication">📞 Communication</button>
+                            <button type="button" onclick="switchVendorTab('shops')" class="lp-tab" id="lp-vtab-shops">🏪 Mes boutiques</button>
                         </div>
 
-                        <!-- MANGOO SUPPLY (Restored) -->
-                        <div id="supplyChainCard" style="background:linear-gradient(135deg, #0984e3 0%, #74b9ff 100%); border-radius:15px; padding:20px; margin-bottom:20px; color:white; display:none; box-shadow:0 8px 15px rgba(9, 132, 227, 0.3); cursor:pointer;" onclick="openSupplyModal()">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <div>
-                                    <div style="font-weight:bold; font-size:1.1rem;">Mangoo Supply Chain 🏭</div>
-                                    <div style="font-size:0.85rem; opacity:0.9;">Dropshipping & Vente en Gros</div>
-                                </div>
-                                <div style="font-size:2rem;">📦</div>
+                        <div id="lp-vendor-overview" class="lp-pane active" data-vpane="overview">
+                            <div style="display:flex; gap:10px; flex-wrap:wrap; margin:-6px 0 18px;">
+                                <button type="button" class="lp-btn lp-btn-primary" onclick="alert('🚚 Module Livraisons vendeur (démo).')">🚚 Livraisons</button>
+                                <button type="button" class="lp-btn lp-btn-secondary" onclick="alert('🧾 Module Factures vendeur (démo).')">🧾 Factures</button>
                             </div>
-                        </div>
 
-                        <!-- DEBT BOOK (Restored) -->
-                        <div class="debt-book" id="debtBook" style="display:none;">
-                            <div class="debt-header">
-                                <span class="debt-title">📒 Carnet de Crédits Clients</span>
-                                <span class="debt-total">Total: 85 000 FCFA</span>
-                            </div>
-                            <div class="debt-list" id="debtList">
-                                <div class="debt-item">
+                            <div id="boostAdminCard" style="background:white; border-radius:15px; padding:16px; margin-bottom:20px; box-shadow:0 4px 10px rgba(0,0,0,0.05); display:none;">
+                                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;">
                                     <div>
-                                        <div class="debt-client">Maman Paul (Vivres)</div>
-                                        <div class="debt-meta">12 Février • Retard J+5</div>
+                                        <div style="font-weight:900; color:#2d3436;">📍 Boost Carte (Admin)</div>
+                                        <div style="font-size:0.85rem; color:#636e72;">Sponsorisé / Promo / Nouveau • Max 2 sponsorisés visibles</div>
                                     </div>
-                                    <div style="text-align:right;">
-                                        <div class="debt-amount">15 000 F</div>
-                                        <button class="btn-remind" onclick="remindDebt('Maman Paul', 15000)">🔔 Rappel</button>
+                                    <button onclick="refreshBoostPanel()" style="border:none; background:#f1f2f6; color:#2d3436; padding:10px 12px; border-radius:12px; font-weight:900; cursor:pointer;">↻</button>
+                                </div>
+
+                                <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
+                                    <select id="boostVendorSelect" style="flex:1; padding:12px; border:1px solid #dfe6e9; border-radius:12px; font-weight:900;" onchange="refreshBoostPanel()"></select>
+                                    <select id="boostTierSelect" style="width:120px; padding:12px; border:1px solid #dfe6e9; border-radius:12px; font-weight:900;" onchange="refreshBoostPanel()">
+                                        <option value="1">Bronze</option>
+                                        <option value="2">Argent</option>
+                                        <option value="3">Or</option>
+                                    </select>
+                                </div>
+
+                                <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                                    <button onclick="setSponsorBoost(12)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#111827; color:white; font-weight:950; cursor:pointer;">🏷️ Sponsor 12h</button>
+                                    <button onclick="setSponsorBoost(24)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#111827; color:white; font-weight:950; cursor:pointer;">🏷️ Sponsor 24h</button>
+                                    <button onclick="setSponsorBoost(72)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#111827; color:white; font-weight:950; cursor:pointer;">🏷️ Sponsor 72h</button>
+                                    <button onclick="clearSponsorBoost()" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#f1f2f6; color:#2d3436; font-weight:950; cursor:pointer;">✖ Stop Sponsor</button>
+                                </div>
+
+                                <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
+                                    <button onclick="setPromoBoost(24)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#fef3c7; color:#92400e; font-weight:950; cursor:pointer;">✨ Promo 24h</button>
+                                    <button onclick="clearPromoBoost()" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#f1f2f6; color:#2d3436; font-weight:950; cursor:pointer;">✖ Stop Promo</button>
+                                    <button onclick="setNewBoost(24)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#eef2ff; color:#3730a3; font-weight:950; cursor:pointer;">🆕 Nouveau 24h</button>
+                                    <button onclick="clearNewBoost()" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#f1f2f6; color:#2d3436; font-weight:950; cursor:pointer;">✖ Stop Nouveau</button>
+                                </div>
+
+                                <div style="margin-top:12px; background:#f8fafc; border:1px solid #eef2f7; border-radius:12px; padding:12px; color:#2d3436;">
+                                    <div style="display:flex; justify-content:space-between; gap:10px; font-weight:900;">
+                                        <div>État</div>
+                                        <div id="boostStatusText" style="text-align:right; color:#636e72;">—</div>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; gap:10px; margin-top:6px; font-weight:900;">
+                                        <div>Stats (session)</div>
+                                        <div id="boostStatsText" style="text-align:right; color:#636e72;">—</div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div id="lp-vendor-stock" class="lp-pane" data-vpane="stock">
+                            <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
+                                <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Gestion Stock</div>
+                                <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Module stock Local+ (démo). Utilisez « Produits » pour publier.</div>
+                            </div>
+                        </div>
+
+                        <div id="lp-vendor-products" class="lp-pane" data-vpane="products">
+                            <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
+                                <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Produits</div>
+                                <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Ajoutez et gérez vos produits publiés.</div>
+                                <div style="margin-top: 14px;">
+                                    <button type="button" class="lp-btn lp-btn-primary" onclick="openAddProductModal()">📸 Ajouter un produit</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="lp-vendor-orders" class="lp-pane" data-vpane="orders">
+                            <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
+                                <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Commandes vendeur</div>
+                                <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Historique des commandes reçues (démo).</div>
+                            </div>
+                        </div>
+
+                        <div id="lp-vendor-notifications" class="lp-pane" data-vpane="notifications">
+                            <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
+                                <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Notifications</div>
+                                <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Aucune notification.</div>
+                            </div>
+                        </div>
+
+                        <div id="lp-vendor-communication" class="lp-pane" data-vpane="communication">
+                            <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
+                                <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Communication</div>
+                                <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Contactez vos clients via Mangoo Connect+.</div>
+                                <div style="margin-top: 14px;">
+                                    <button type="button" class="lp-btn lp-btn-primary" onclick="openChat('👋 Bonjour, je suis disponible pour vos commandes.')">💬 Ouvrir le chat</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="lp-vendor-shops" class="lp-pane" data-vpane="shops">
+                            <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
+                                <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Mes boutiques</div>
+                                <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Créez et gérez vos boutiques Local+.</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- TAB: ORDERS -->
-                <div id="dash-orders" class="dash-content" style="display:none;">
+                <div id="dash-orders" class="lp-pane active" data-pane="orders">
                     <!-- Dynamic Orders List -->
                     <div id="ordersListContainer">
                         <!-- Will be populated by JS -->
                         <div style="text-align:center; padding:40px 0; color:#b2bec3;">
                             <div style="font-size:3rem; margin-bottom:10px;">📦</div>
                             <div>Aucune commande récente</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="lp-profile" class="lp-pane" data-pane="profile">
+                    <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
+                        <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Profil & Adresse</div>
+                        <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Ces informations servent pour la livraison et la facturation.</div>
+                        <div style="display: grid; gap: 10px; margin-top: 14px;">
+                            <input id="lpProfileName" placeholder="Nom complet" style="width: 100%; padding: 12px; border: 1px solid var(--ml-border); border-radius: 12px; background: var(--ml-panel); color: var(--ml-text); font-weight: 700;" />
+                            <input id="lpProfilePhone" placeholder="Téléphone" style="width: 100%; padding: 12px; border: 1px solid var(--ml-border); border-radius: 12px; background: var(--ml-panel); color: var(--ml-text); font-weight: 700;" />
+                            <input id="lpProfileAddress" placeholder="Adresse (quartier, rue…)" style="width: 100%; padding: 12px; border: 1px solid var(--ml-border); border-radius: 12px; background: var(--ml-panel); color: var(--ml-text); font-weight: 700;" />
+                            <div style="display:flex; gap: 10px; flex-wrap: wrap;">
+                                <button type="button" class="lp-btn lp-btn-secondary" onclick="loadLpProfile()">↻ Charger</button>
+                                <button type="button" class="lp-btn lp-btn-primary" onclick="saveLpProfile()">Enregistrer</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="lp-favorites" class="lp-pane" data-pane="favorites">
+                    <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
+                        <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Mes favoris</div>
+                        <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Accédez à vos prestataires favoris.</div>
+                        <div style="margin-top: 14px; display:flex; gap: 10px; flex-wrap: wrap;">
+                            <button type="button" class="lp-btn lp-btn-primary" onclick="switchView('fav')">Voir mes favoris</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="lp-communication" class="lp-pane" data-pane="communication">
+                    <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
+                        <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Communication</div>
+                        <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Contactez un vendeur/livreur via Mangoo Connect+.</div>
+                        <div style="margin-top: 14px; display:flex; gap: 10px; flex-wrap: wrap;">
+                            <button type="button" class="lp-btn lp-btn-primary" onclick="openChat()">💬 Ouvrir le chat</button>
+                            <button type="button" class="lp-btn lp-btn-secondary" onclick="alert('📞 Appel audio bientôt disponible.')">📞 Audio</button>
+                            <button type="button" class="lp-btn lp-btn-secondary" onclick="alert('📹 Appel vidéo bientôt disponible.')">📹 Vidéo</button>
                         </div>
                     </div>
                 </div>
@@ -6563,8 +6703,9 @@
                 if (searchBar) searchBar.style.display = 'none';
                 if (familiesBar) familiesBar.style.display = 'none';
                 
-                // Initialize Dashboard
-                switchDashTab('wallet');
+                // Initialize Account UI
+                switchAccountTab('orders');
+                loadLpProfile();
             }
 
             try {
@@ -7489,25 +7630,12 @@
 
         // === SELLER MODE ===
         function toggleSellerMode() {
-            const isSeller = document.getElementById('sellerModeSwitch').checked;
             const vendorSection = document.getElementById('vendorSection');
-            const walletTitle = document.querySelector('.wallet-label');
-            
-            if (isSeller) {
-                vendorSection.style.display = 'block';
-                walletTitle.innerText = "Chiffre d'Affaires (Mangoo Pro)";
-                try {
-                    refreshBoostPanel();
-                } catch {
-                }
-                try {
-                    updateBoostAdminVisibility();
-                } catch {
-                }
-            } else {
-                vendorSection.style.display = 'none';
-                walletTitle.innerText = "Solde Mangoo Pay";
-            }
+            if (!vendorSection) return;
+            try { vendorSection.style.display = 'block'; } catch {}
+            try { switchVendorTab('overview'); } catch {}
+            try { refreshBoostPanel(); } catch {}
+            try { updateBoostAdminVisibility(); } catch {}
         }
 
         // === PRODUCT MANAGEMENT (SELL) ===
@@ -7630,10 +7758,10 @@
                 newVendor.kind = 'shop';
                 renderVendorsOnMap(VENDORS);
                 
-                // Switch to Seller Mode UI if not already
-                if(!document.getElementById('sellerModeSwitch').checked) {
-                    document.getElementById('sellerModeSwitch').checked = true;
-                    toggleSellerMode();
+                // Switch to Seller UI
+                try {
+                    switchAccountTab('sell');
+                } catch {
                 }
                 
                 alert("🎉 Félicitations ! Votre boutique est créée.");
@@ -11042,6 +11170,108 @@
             }
         }
 
+        function switchAccountTab(tabName) {
+            const allowed = ['orders', 'sell', 'profile', 'favorites', 'pay', 'communication']
+            const next = allowed.includes(String(tabName || '')) ? String(tabName) : 'orders'
+
+            allowed.forEach((k) => {
+                const btn = document.getElementById('lp-tab-' + k)
+                if (btn) btn.classList.toggle('active', k === next)
+            })
+
+            document.querySelectorAll('.lp-pane[data-pane]').forEach((el) => {
+                el.classList.toggle('active', String(el.getAttribute('data-pane') || '') === next)
+            })
+
+            if (next === 'orders') {
+                try { updateDashboard() } catch {}
+            }
+            if (next === 'profile') {
+                try { loadLpProfile() } catch {}
+            }
+            if (next === 'sell') {
+                try { switchVendorTab('overview') } catch {}
+                try { refreshBoostPanel() } catch {}
+                try { updateBoostAdminVisibility() } catch {}
+            }
+        }
+
+        function switchVendorTab(tabName) {
+            const allowed = ['overview', 'stock', 'products', 'orders', 'notifications', 'communication', 'shops']
+            const next = allowed.includes(String(tabName || '')) ? String(tabName) : 'overview'
+
+            allowed.forEach((k) => {
+                const btn = document.getElementById('lp-vtab-' + k)
+                if (btn) btn.classList.toggle('active', k === next)
+            })
+
+            document.querySelectorAll('.lp-pane[data-vpane]').forEach((el) => {
+                el.classList.toggle('active', String(el.getAttribute('data-vpane') || '') === next)
+            })
+        }
+
+        function loadLpProfile() {
+            try {
+                const raw = localStorage.getItem('mangoo_local_profile')
+                const data = raw ? JSON.parse(raw) : {}
+                const name = String(data?.name || '')
+                const phone = String(data?.phone || '')
+                const address = String(data?.address || '')
+                const elName = document.getElementById('lpProfileName')
+                const elPhone = document.getElementById('lpProfilePhone')
+                const elAddr = document.getElementById('lpProfileAddress')
+                if (elName) elName.value = name
+                if (elPhone) elPhone.value = phone
+                if (elAddr) elAddr.value = address
+            } catch {
+            }
+        }
+
+        function saveLpProfile() {
+            try {
+                const name = String(document.getElementById('lpProfileName')?.value || '').trim()
+                const phone = String(document.getElementById('lpProfilePhone')?.value || '').trim()
+                const address = String(document.getElementById('lpProfileAddress')?.value || '').trim()
+                localStorage.setItem('mangoo_local_profile', JSON.stringify({ name, phone, address }))
+                alert('✅ Profil enregistré.')
+            } catch {
+                alert('Erreur lors de la sauvegarde.')
+            }
+        }
+
+        function lpRequestDelivery(orderLabel) {
+            try {
+                const raw = localStorage.getItem('mangoo_local_profile')
+                const data = raw ? JSON.parse(raw) : {}
+                const addr = String(data?.address || '').trim()
+                if (!addr) {
+                    alert('✍️ Ajoutez votre adresse avant de demander une livraison.')
+                    switchAccountTab('profile')
+                    return
+                }
+            } catch {
+            }
+            try {
+                if (typeof openDriverModal === 'function') {
+                    openDriverModal()
+                    return
+                }
+            } catch {
+            }
+            alert(`🚚 Livraison demandée pour ${orderLabel}.`) 
+        }
+
+        function lpOpenInvoice(orderLabel, totalFcfa) {
+            try {
+                if (typeof showDigitalReceipt === 'function') {
+                    showDigitalReceipt(orderLabel, Number(totalFcfa) || 0)
+                    return
+                }
+            } catch {
+            }
+            alert('🧾 Facture indisponible.')
+        }
+
         function updateDashboard() {
             // 1. ORDERS
             const ordersContainer = document.getElementById('ordersListContainer');
@@ -11056,16 +11286,32 @@
                 
                 if(window.crowdfundingState && (window.crowdfundingState.raised >= window.crowdfundingState.totalNeeded)) {
                      const state = window.crowdfundingState;
+                     const orderLabel = 'order-' + Math.floor(Math.random()*1000000000);
+                     const createdAt = new Date().toLocaleString('fr-FR');
+                     const totalFcfa = Number(state.totalNeeded || 0) || 0;
                      ordersHtml += `
-                        <div style="background:white; border-radius:15px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05); border-left:4px solid #27ae60;">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                                <span style="font-weight:bold; color:#2d3436;">Commande #${Math.floor(Math.random()*10000)}</span>
-                                <span style="font-weight:bold; color:#27ae60;">Payé</span>
+                        <div style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:16px; margin-bottom:12px;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+                                <div>
+                                    <div style="font-weight:950; color:var(--ml-text);">Commande ${orderLabel}</div>
+                                    <div style="color:var(--ml-muted); font-size:0.85rem; margin-top:2px;">${createdAt}</div>
+                                    <div style="color:var(--ml-muted); font-size:0.85rem; margin-top:2px;">1 article(s)</div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div style="font-weight:950; color:#f97316;">${totalFcfa.toLocaleString()} FCFA</div>
+                                    <div style="display:inline-flex; margin-top:6px; padding:3px 10px; border-radius:999px; font-weight:900; font-size:0.75rem; background: rgba(34,197,94,0.14); color:#22c55e; border:1px solid rgba(34,197,94,0.25);">paid</div>
+                                </div>
                             </div>
-                            <div style="font-size:0.85rem; color:#636e72; margin-bottom:10px;">${state.productName || 'Produit'} • ${state.totalNeeded.toLocaleString()} FCFA</div>
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <span style="font-size:0.75rem; background:#e8f5e9; color:#27ae60; padding:3px 8px; border-radius:10px;">Livraison en cours</span>
-                                <button onclick="showDigitalReceipt('${state.productName || 'Produit'}', ${state.totalNeeded})" style="padding:5px 12px; background:#dfe6e9; color:#2d3436; border:none; border-radius:15px; font-size:0.8rem; cursor:pointer;">📄 Reçu</button>
+
+                            <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+                                <button type="button" class="lp-btn lp-btn-primary" onclick="lpRequestDelivery('${orderLabel}')" title="Demander une livraison pour cette commande">🚚 Demander livraison</button>
+                                <button type="button" class="lp-btn lp-btn-secondary" onclick="lpOpenInvoice('${state.productName || 'Commande'}', ${totalFcfa})" title="Voir la facture">🧾 Facture</button>
+                                <button type="button" class="lp-btn lp-btn-secondary" onclick="switchAccountTab('profile')" title="Renseigner mon adresse">✍️ Mon adresse</button>
+                            </div>
+
+                            <div style="margin-top:12px; padding-top:12px; border-top: 1px solid rgba(255,255,255,0.06); color: var(--ml-muted); font-size:0.85rem; display:flex; justify-content:space-between; gap:12px;">
+                                <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${state.productName || 'Produit'} × 1</div>
+                                <div style="white-space:nowrap;">${totalFcfa.toLocaleString()} FCFA</div>
                             </div>
                         </div>
                      `;
@@ -11073,15 +11319,28 @@
                 
                 // Add some mock history
                 ordersHtml += `
-                    <div style="background:white; border-radius:15px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05); border-left:4px solid #b2bec3;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                            <span style="font-weight:bold; color:#2d3436;">Commande #8921</span>
-                            <span style="font-weight:bold; color:#636e72;">Livré</span>
+                    <div style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:16px; margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+                            <div>
+                                <div style="font-weight:950; color:var(--ml-text);">Commande order-8921</div>
+                                <div style="color:var(--ml-muted); font-size:0.85rem; margin-top:2px;">10/02/2026</div>
+                                <div style="color:var(--ml-muted); font-size:0.85rem; margin-top:2px;">1 article(s)</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-weight:950; color:#f97316;">25 000 FCFA</div>
+                                <div style="display:inline-flex; margin-top:6px; padding:3px 10px; border-radius:999px; font-weight:900; font-size:0.75rem; background: rgba(148,163,184,0.14); color: var(--ml-muted); border:1px solid rgba(148,163,184,0.25);">livré</div>
+                            </div>
                         </div>
-                        <div style="font-size:0.85rem; color:#636e72; margin-bottom:10px;">Sac de Riz 50kg • Maman Paul</div>
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-size:0.75rem; background:#f1f2f6; color:#636e72; padding:3px 8px; border-radius:10px;">10/02/2026</span>
-                            <button onclick="alert('Reçu archivé')" style="padding:5px 12px; background:transparent; color:#0984e3; border:none; font-size:0.8rem; cursor:pointer; text-decoration:underline;">Détails</button>
+
+                        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+                            <button type="button" class="lp-btn lp-btn-primary" disabled title="Disponible après paiement">🚚 Demander livraison</button>
+                            <button type="button" class="lp-btn lp-btn-secondary" onclick="lpOpenInvoice('Sac de Riz 50kg', 25000)" title="Voir la facture">🧾 Facture</button>
+                            <button type="button" class="lp-btn lp-btn-secondary" onclick="switchAccountTab('profile')" title="Renseigner mon adresse">✍️ Mon adresse</button>
+                        </div>
+
+                        <div style="margin-top:12px; padding-top:12px; border-top: 1px solid rgba(255,255,255,0.06); color: var(--ml-muted); font-size:0.85rem; display:flex; justify-content:space-between; gap:12px;">
+                            <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Sac de Riz 50kg × 1</div>
+                            <div style="white-space:nowrap;">25 000 FCFA</div>
                         </div>
                     </div>
                 `;

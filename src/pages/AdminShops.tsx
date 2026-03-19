@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { CheckCircle, ExternalLink, Search, XCircle } from 'lucide-react';
+import { CheckCircle, ExternalLink, Search, XCircle, FileText, X } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 
 type ApprovalStatus = 'pending' | 'approved' | 'rejected';
@@ -22,6 +22,12 @@ type DemoShop = {
   approvedBy?: string;
   rejectedAt?: string;
   rejectedBy?: string;
+  billingCountry?: 'sn' | 'ci' | 'cm';
+  billingLegalName?: string;
+  billingRegistrationId?: string;
+  billingTaxId?: string;
+  billingAddress?: string;
+  billingPhone?: string;
 };
 
 const STORAGE_KEY = 'demo_shops';
@@ -58,6 +64,17 @@ export default function AdminShops() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | ApprovalStatus>('all');
   const [shops, setShops] = useState<DemoShop[]>([]);
+
+  const [billingOpen, setBillingOpen] = useState(false);
+  const [billingSlug, setBillingSlug] = useState<string | null>(null);
+  const [billingForm, setBillingForm] = useState({
+    billingCountry: 'ci',
+    billingLegalName: '',
+    billingRegistrationId: '',
+    billingTaxId: '',
+    billingAddress: '',
+    billingPhone: '',
+  });
 
   const refresh = useCallback(() => {
     const now = new Date().toISOString();
@@ -104,6 +121,43 @@ export default function AdminShops() {
     writeDemoShops(next);
     setShops(next.map(normalizeStatus).filter((s) => s.slug));
   }, []);
+
+  const openBilling = useCallback((shop: DemoShop) => {
+    const slug = String(shop?.slug || '').trim();
+    if (!slug) return;
+    setBillingSlug(slug);
+    setBillingForm({
+      billingCountry: (shop?.billingCountry === 'sn' || shop?.billingCountry === 'cm') ? shop.billingCountry : 'ci',
+      billingLegalName: String(shop?.billingLegalName || shop?.name || ''),
+      billingRegistrationId: String(shop?.billingRegistrationId || ''),
+      billingTaxId: String(shop?.billingTaxId || ''),
+      billingAddress: String(shop?.billingAddress || ''),
+      billingPhone: String(shop?.billingPhone || ''),
+    });
+    setBillingOpen(true);
+  }, []);
+
+  const saveBilling = useCallback(() => {
+    if (!billingSlug) return;
+    const now = new Date().toISOString();
+    const current = readDemoShops();
+    const next = current.map((s) => {
+      if (String(s?.slug || '') !== billingSlug) return s;
+      return {
+        ...s,
+        updatedAt: now,
+        billingCountry: (billingForm.billingCountry === 'sn' || billingForm.billingCountry === 'cm') ? billingForm.billingCountry : 'ci',
+        billingLegalName: String(billingForm.billingLegalName || ''),
+        billingRegistrationId: String(billingForm.billingRegistrationId || ''),
+        billingTaxId: String(billingForm.billingTaxId || ''),
+        billingAddress: String(billingForm.billingAddress || ''),
+        billingPhone: String(billingForm.billingPhone || ''),
+      };
+    });
+    writeDemoShops(next);
+    setBillingOpen(false);
+    setBillingSlug(null);
+  }, [billingForm, billingSlug]);
 
   const filtered = useMemo(() => {
     const q = String(searchTerm || '').trim().toLowerCase();
@@ -219,6 +273,15 @@ export default function AdminShops() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               type="button"
+                              onClick={() => openBilling(s)}
+                              className={`${isDark ? 'bg-gray-900 border border-gray-700 text-gray-200 hover:bg-gray-800' : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-lg text-xs font-semibold inline-flex items-center gap-2`}
+                              title="Configurer les informations de facturation"
+                            >
+                              <FileText className="w-4 h-4" />
+                              Facturation
+                            </button>
+                            <button
+                              type="button"
                               onClick={() => window.open(`/shop/${encodeURIComponent(String(s.slug))}`, '_blank', 'noopener,noreferrer')}
                               className={`${isDark ? 'bg-gray-900 border border-gray-700 text-gray-200 hover:bg-gray-800' : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-lg text-xs font-semibold inline-flex items-center gap-2`}
                               title="Ouvrir la boutique"
@@ -259,6 +322,114 @@ export default function AdminShops() {
           </div>
         </div>
       </div>
+
+      {billingOpen && (
+        <div className="fixed inset-0 z-[1000] bg-black/60 p-4 overflow-y-auto">
+          <div className="min-h-[calc(100vh-2rem)] flex items-start justify-center">
+            <div className={`w-full max-w-2xl rounded-2xl border shadow-2xl overflow-hidden max-h-[calc(100vh-2rem)] flex flex-col ${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}>
+              <div className={`px-5 py-4 border-b flex items-center justify-between shrink-0 ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+                <div>
+                  <div className="text-lg font-black">Facturation boutique</div>
+                  <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{billingSlug}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBillingOpen(false);
+                    setBillingSlug(null);
+                  }}
+                  className={`${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-100'} p-2 rounded-xl`}
+                  title="Fermer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-5 overflow-y-auto space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <div className={`text-xs font-black ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Pays</div>
+                    <select
+                      value={billingForm.billingCountry}
+                      onChange={(e) => setBillingForm((p) => ({ ...p, billingCountry: e.target.value }))}
+                      className={`mt-2 w-full px-3 py-2 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                    >
+                      <option value="sn">Sénégal</option>
+                      <option value="ci">Côte d’Ivoire</option>
+                      <option value="cm">Cameroun</option>
+                    </select>
+                  </div>
+                  <div>
+                    <div className={`text-xs font-black ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Raison sociale</div>
+                    <input
+                      value={billingForm.billingLegalName}
+                      onChange={(e) => setBillingForm((p) => ({ ...p, billingLegalName: e.target.value }))}
+                      className={`mt-2 w-full px-3 py-2 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                      placeholder="Nom légal de l’entreprise"
+                    />
+                  </div>
+                  <div>
+                    <div className={`text-xs font-black ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>RCCM / Registre</div>
+                    <input
+                      value={billingForm.billingRegistrationId}
+                      onChange={(e) => setBillingForm((p) => ({ ...p, billingRegistrationId: e.target.value }))}
+                      className={`mt-2 w-full px-3 py-2 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                      placeholder="RCCM"
+                    />
+                  </div>
+                  <div>
+                    <div className={`text-xs font-black ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>NINEA / NIU / NIF</div>
+                    <input
+                      value={billingForm.billingTaxId}
+                      onChange={(e) => setBillingForm((p) => ({ ...p, billingTaxId: e.target.value }))}
+                      className={`mt-2 w-full px-3 py-2 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                      placeholder="Identifiant fiscal"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <div className={`text-xs font-black ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Adresse</div>
+                    <input
+                      value={billingForm.billingAddress}
+                      onChange={(e) => setBillingForm((p) => ({ ...p, billingAddress: e.target.value }))}
+                      className={`mt-2 w-full px-3 py-2 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                      placeholder="Ville, quartier, rue"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <div className={`text-xs font-black ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Téléphone</div>
+                    <input
+                      value={billingForm.billingPhone}
+                      onChange={(e) => setBillingForm((p) => ({ ...p, billingPhone: e.target.value }))}
+                      className={`mt-2 w-full px-3 py-2 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                      placeholder="+221..."
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBillingOpen(false);
+                      setBillingSlug(null);
+                    }}
+                    className={`${isDark ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'} px-4 py-2 rounded-xl font-black`}
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="button"
+                    onClick={saveBilling}
+                    className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-4 py-2 rounded-xl font-black hover:from-orange-600 hover:to-green-700"
+                  >
+                    Enregistrer
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

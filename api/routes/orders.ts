@@ -34,6 +34,31 @@ type Order = {
   note?: string | null
 }
 
+type StreamClient = {
+  id: string
+  region: RegionKey | null
+  res: any
+}
+
+const clients = new Map<string, StreamClient>()
+
+function sseWrite(res: any, event: string, data: any, id?: string) {
+  try {
+    if (id) res.write(`id: ${id}\n`)
+    res.write(`event: ${event}\n`)
+    res.write(`data: ${JSON.stringify(data)}\n\n`)
+  } catch {
+  }
+}
+
+function broadcastOrderCreated(order: Order) {
+  const id = `evt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+  for (const c of clients.values()) {
+    if (c.region && order.region && c.region !== order.region) continue
+    sseWrite(c.res, 'order_created', { order }, id)
+  }
+}
+
 let writeQueue: Promise<void> = Promise.resolve()
 
 async function ensureDataFile(): Promise<void> {
@@ -100,6 +125,40 @@ function detectRegion(lat: number, lng: number): RegionKey | null {
 
 const router = Router()
 
+router.get('/stream', async (req, res) => {
+  const regionRaw = req.query.region ? String(req.query.region) : null
+  const region = (regionRaw === 'cm' || regionRaw === 'ci' || regionRaw === 'sn') ? regionRaw : null
+  const id = `sse_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+
+  res.status(200)
+  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
+  res.setHeader('Cache-Control', 'no-cache, no-transform')
+  res.setHeader('Connection', 'keep-alive')
+  res.setHeader('X-Accel-Buffering', 'no')
+  if (typeof (res as any).flushHeaders === 'function') (res as any).flushHeaders()
+  try {
+    if (req.socket && typeof (req.socket as any).setTimeout === 'function') (req.socket as any).setTimeout(0)
+  } catch {
+  }
+
+  const client: StreamClient = { id, region, res }
+  clients.set(id, client)
+  res.write(': connected\n\n')
+  sseWrite(res, 'hello', { ok: true, region, now: new Date().toISOString() })
+
+  const ping = setInterval(() => {
+    try {
+      res.write(`: ping ${Date.now()}\n\n`)
+    } catch {
+    }
+  }, 25000)
+
+  req.on('close', () => {
+    clearInterval(ping)
+    clients.delete(id)
+  })
+})
+
 router.post('/', async (req, res) => {
   const body = req.body || {}
   const userId = String(body.userId || '').trim()
@@ -148,6 +207,8 @@ router.post('/', async (req, res) => {
     await writeAll(all)
   })
 
+  broadcastOrderCreated(order)
+
   return res.status(200).json({ success: true, order })
 })
 
@@ -178,6 +239,15 @@ router.get('/', async (req, res) => {
       return detectRegion(lat, lng) === region
     })
   return res.status(200).json({ success: true, count: list.length, orders: list })
+})
+
+router.get('/:id', async (req, res) => {
+  const id = String(req.params.id || '').trim()
+  if (!id) return res.status(400).json({ success: false, error: 'id requis' })
+  const all = await readAll()
+  const order = all.find((o) => String(o.id) === id) || null
+  if (!order) return res.status(404).json({ success: false, error: 'Commande introuvable' })
+  return res.status(200).json({ success: true, order })
 })
 
 router.patch('/:id', async (req, res) => {

@@ -18,6 +18,7 @@ import {
   MessageCircle,
   MapPin
 } from 'lucide-react';
+import VendorClientInvoiceModal, { type VendorOrder } from './invoice/VendorClientInvoiceModal';
 
 interface Order {
   id: string;
@@ -52,6 +53,7 @@ export default function VendorOrderHistory({ vendorId }: VendorOrderHistoryProps
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [invoiceOrder, setInvoiceOrder] = useState<VendorOrder | null>(null);
 
   // Données de démonstration
   const generateDemoOrders = (): Order[] => [
@@ -479,6 +481,26 @@ export default function VendorOrderHistory({ vendorId }: VendorOrderHistoryProps
               
               <div className="mt-6 flex justify-end">
                 <button
+                  onClick={() => {
+                    const o = selectedOrder;
+                    setInvoiceOrder({
+                      id: o.id,
+                      customerName: o.customerName,
+                      customerPhone: o.customerPhone,
+                      customerAddress: o.customerAddress,
+                      items: o.items,
+                      totalAmount: o.totalAmount,
+                      status: o.status,
+                      orderDate: o.orderDate,
+                      paymentMethod: o.paymentMethod,
+                      notes: o.notes
+                    });
+                  }}
+                  className={`mr-2 px-4 py-2 rounded-lg font-semibold ${isDark ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}
+                >
+                  🧾 Émettre facture
+                </button>
+                <button
                   onClick={() => setSelectedOrder(null)}
                   className={`px-4 py-2 rounded-lg ${isDark ? 'bg-gray-600 text-white hover:bg-gray-500' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
                 >
@@ -489,6 +511,14 @@ export default function VendorOrderHistory({ vendorId }: VendorOrderHistoryProps
           </div>
         </div>
       )}
+
+      <VendorClientInvoiceModal
+        open={Boolean(invoiceOrder)}
+        onClose={() => setInvoiceOrder(null)}
+        isDark={isDark}
+        vendorLabel={String(vendorId || 'Vendeur')}
+        order={invoiceOrder}
+      />
     </div>
   );
 }

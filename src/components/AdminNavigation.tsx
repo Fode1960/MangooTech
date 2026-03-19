@@ -8,6 +8,7 @@ import {
   Settings,
   BarChart3,
   CreditCard,
+  FileText,
   Shield,
   MapPin,
   Sun,
@@ -30,6 +31,7 @@ export default function AdminNavigation() {
     { name: "Utilisateurs", href: "/admin/users", icon: Users },
     { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
     { name: "Paiements", href: "/admin/payments", icon: CreditCard },
+    { name: "Factures", href: "/admin/invoices", icon: FileText },
     { name: "Mangoo Wallet", href: "/admin/wallet", icon: CreditCard },
     { name: "Paramètres", href: "/admin/settings", icon: Settings },
   ];
