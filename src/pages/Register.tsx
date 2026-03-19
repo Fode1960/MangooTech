@@ -10,7 +10,8 @@ const Register: React.FC = () => {
     password: '',
     phone: '',
     address: '',
-    userType: 'customer'
+    userType: 'customer',
+    geolocationConsent: false
   });
   const [isLoading, setIsLoading] = useState(false);
   const { register, user } = useAuth();
@@ -22,7 +23,7 @@ const Register: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       await register(formData);
     } catch (error) {
@@ -174,9 +175,26 @@ const Register: React.FC = () => {
               </select>
             </div>
 
+            <div className="flex items-start space-x-3">
+              <input
+                id="geolocationConsent"
+                name="geolocationConsent"
+                type="checkbox"
+                checked={formData.geolocationConsent}
+                onChange={(e) => setFormData(prev => ({ ...prev, geolocationConsent: e.target.checked }))}
+                className="mt-1 h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
+                required
+              />
+              <label htmlFor="geolocationConsent" className="text-sm text-gray-600">
+                J'accepte que ma position géographique soit collectée et stockée dans la base de données de MangooTech à des fins de géolocalisation. 
+                Cette donnée nous permet de vous offrir des services basés sur votre localisation sans dépendre de services tiers comme Google.
+                <span className="text-red-500 ml-1">*</span>
+              </label>
+            </div>
+
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !formData.geolocationConsent}
               className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3 px-4 rounded-lg font-medium hover:from-orange-600 hover:to-amber-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {isLoading ? 'Inscription...' : 'S\'inscrire'}

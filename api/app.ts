@@ -34,6 +34,9 @@ import reconciliationReportsRoutes from './routes/reconciliation-reports.ts'
 import testShopsRoutes from './routes/test-shops.js'
 import demoBillingRoutes from './routes/demo-billing.ts'
 import userPackRoutes from './routes/user-pack.ts'
+import geolocationRoutes from './routes/geolocation.ts'
+import routingRoutes from './routes/routing.ts'
+import ordersRoutes from './routes/orders.ts'
 
 // for esm mode
 const __filename = fileURLToPath(import.meta.url)
@@ -94,6 +97,13 @@ app.use('/api/commissions', commissionRoutes)
 app.use('/api/test', testShopsRoutes)
 app.use('/api/demo-billing', demoBillingRoutes)
 app.use('/api/user-pack', userPackRoutes)
+
+/**
+ * Maps & Geolocation (propriétaire)
+ */
+app.use('/api/geolocation', geolocationRoutes)
+app.use('/api/routing', routingRoutes)
+app.use('/api/orders', ordersRoutes)
 
 /**
  * health

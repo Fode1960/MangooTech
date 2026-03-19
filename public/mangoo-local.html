@@ -3223,7 +3223,94 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
     
     <script>
-        const USER_POS = [4.051056, 9.767869]; 
+        const BASE_USER_POS = [4.051056, 9.767869];
+        let USER_POS = [...BASE_USER_POS];
+        let USER_POS_META = null;
+
+        try {
+            const rawConsent = localStorage.getItem('user_geolocation_consent');
+            const consent = rawConsent ? JSON.parse(rawConsent) : null;
+            const loc = consent?.locationData || consent?.location_data || null;
+            const lat = typeof loc?.latitude === 'number' ? loc.latitude : Number(loc?.latitude);
+            const lng = typeof loc?.longitude === 'number' ? loc.longitude : Number(loc?.longitude);
+            if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+                USER_POS = [lat, lng];
+                USER_POS_META = {
+                    accuracy: typeof loc?.accuracy === 'number' ? loc.accuracy : Number(loc?.accuracy),
+                    timestamp: String(loc?.timestamp || consent?.consentTimestamp || consent?.consent_timestamp || '')
+                };
+            }
+        } catch {
+        }
+
+        function haversineKm(a, b) {
+            const toRad = (v) => (v * Math.PI) / 180;
+            const R = 6371;
+            const dLat = toRad(b[0] - a[0]);
+            const dLng = toRad(b[1] - a[1]);
+            const lat1 = toRad(a[0]);
+            const lat2 = toRad(b[0]);
+            const s1 = Math.sin(dLat / 2);
+            const s2 = Math.sin(dLng / 2);
+            const h = s1 * s1 + Math.cos(lat1) * Math.cos(lat2) * s2 * s2;
+            return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+        }
+
+        function relocateVendorsNearUser() {
+            try {
+                if (!Array.isArray(VENDORS) || VENDORS.length === 0) return;
+
+                const any = VENDORS.find(v => typeof v?.lat === 'number' && typeof v?.lng === 'number');
+                if (!any) return;
+
+                const vendorPos = [Number(any.lat), Number(any.lng)];
+                const dist = haversineKm(USER_POS, vendorPos);
+
+                if (!Number.isFinite(dist) || dist < 50) return;
+
+                const dLat = USER_POS[0] - BASE_USER_POS[0];
+                const dLng = USER_POS[1] - BASE_USER_POS[1];
+
+                VENDORS.forEach(v => {
+                    if (typeof v?.lat !== 'number' || typeof v?.lng !== 'number') return;
+                    v.lat = v.lat + dLat;
+                    v.lng = v.lng + dLng;
+                });
+            } catch {
+            }
+        }
+
+        function addMyProfileVendor() {
+            try {
+                const raw = localStorage.getItem('mangoo-current-user');
+                const u = raw ? JSON.parse(raw) : null;
+                const name = String(u?.name || '').trim();
+                if (!name) return;
+
+                const already = Array.isArray(VENDORS) && VENDORS.some(v => String(v?.id) === 'user_me');
+                if (already) return;
+
+                const lat = USER_POS[0] + 0.0006;
+                const lng = USER_POS[1] + 0.0006;
+
+                VENDORS.unshift({
+                    id: 'user_me',
+                    name: name,
+                    category: (u?.role === 'vendor') ? '🏪 Ma Boutique' : '🧰 Mon Profil',
+                    kind: (u?.role === 'vendor') ? 'shop' : 'service',
+                    verified: true,
+                    rating: 5.0,
+                    lat,
+                    lng,
+                    status: 'open',
+                    live: false,
+                    voicePitch: '📍 Localisation réelle enregistrée',
+                    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=27ae60&color=fff`,
+                    isUserOwned: true
+                });
+            } catch {
+            }
+        }
         const VENDORS = [
             {
                 id: 1,
@@ -4677,6 +4764,9 @@
                 applyBoostConfigToVendors();
             } catch {
             }
+
+            relocateVendorsNearUser();
+            addMyProfileVendor();
             initMap();
             renderListView(VENDORS);
             renderStories();
@@ -4766,7 +4856,22 @@
                 iconSize: [20, 20]
             });
             
-            userMarker = L.marker(USER_POS, {icon: userIcon, zIndexOffset: 1000}).addTo(map).bindPopup("Vous êtes ici");
+            let popup = 'Vous êtes ici';
+            try {
+                if (USER_POS_META) {
+                    const accuracy = USER_POS_META?.accuracy;
+                    const when = USER_POS_META?.timestamp ? new Date(USER_POS_META.timestamp) : null;
+                    const whenText = when && !Number.isNaN(when.getTime()) ? when.toLocaleString('fr-FR') : '';
+                    const accText = typeof accuracy === 'number' && !Number.isNaN(accuracy) ? `±${Math.round(accuracy)} m` : '';
+                    const parts = ['Votre position enregistrée'];
+                    if (accText) parts.push(`Précision : ${accText}`);
+                    if (whenText) parts.push(`Le : ${whenText}`);
+                    popup = parts.join('<br>');
+                }
+            } catch {
+            }
+
+            userMarker = L.marker(USER_POS, {icon: userIcon, zIndexOffset: 1000}).addTo(map).bindPopup(popup);
         }
 
         function renderVendorsOnMap(vendors) {
@@ -4898,37 +5003,60 @@
                      borderColor = 'white'; // Inner border
                 }
 
+                const displayName = String(vendor.name || '').trim() || 'Boutique';
+
                 let markerHtml = `
-                    <div style="position:relative; width:50px; height:50px;" onclick="openStory(${vendor.id}); event.stopPropagation();">
-                        ${ringHtml}
-                        <div style="
-                            background: ${bgColor};
-                            border: 2px solid ${borderColor};
-                            border-radius: 50%;
-                            width: 100%; 
-                            height: 100%;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                            ${animation}
-                            transition: transform 0.2s;
-                            position: relative;
-                        ">
-                            <img src="${vendor.avatar}" style="width:44px; height:44px; border-radius:50%; object-fit:cover;">
-                            ${badge}
-                            ${badge2}
-                            ${kindBadge}
-                            ${sponsoredBadge}
+                    <div style="position:relative; width:140px; height:78px;" onclick="openStory(${vendor.id}); event.stopPropagation();">
+                        <div style="position:absolute; left:50%; top:0; transform:translateX(-50%); width:50px; height:50px;">
+                            ${ringHtml}
+                            <div style="
+                                background: ${bgColor};
+                                border: 2px solid ${borderColor};
+                                border-radius: 50%;
+                                width: 100%; 
+                                height: 100%;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                                ${animation}
+                                transition: transform 0.2s;
+                                position: relative;
+                            ">
+                                <img src="${vendor.avatar}" style="width:44px; height:44px; border-radius:50%; object-fit:cover;">
+                                ${badge}
+                                ${badge2}
+                                ${kindBadge}
+                                ${sponsoredBadge}
+                            </div>
                         </div>
+                        <div style="
+                            position:absolute;
+                            left:50%;
+                            top:56px;
+                            transform:translateX(-50%);
+                            max-width: 140px;
+                            padding: 4px 10px;
+                            border-radius: 999px;
+                            background: rgba(0,0,0,0.72);
+                            color: white;
+                            font-weight: 900;
+                            font-size: 11px;
+                            line-height: 1;
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+                            border: 1px solid rgba(255,255,255,0.15);
+                        ">${displayName}</div>
                     </div>
                 `;
 
                 const icon = L.divIcon({
                     className: 'custom-pin',
                     html: markerHtml,
-                    iconSize: [50, 50],
-                    iconAnchor: [25, 50]
+                    iconSize: [140, 78],
+                    iconAnchor: [70, 78]
                 });
 
                 const marker = L.marker([vendor.lat, vendor.lng], {

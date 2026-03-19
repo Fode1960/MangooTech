@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase } from '../config/supabase'
+import { storeGeolocationConsent, GeolocationConsentData } from '../utils/geolocationConsent'
 
 interface AuthContextType {
   user: User | null
@@ -8,6 +9,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
   signUp: (email: string, password: string, metadata?: any) => Promise<void>
+  register: (userData: any) => Promise<void> // Registration with geolocation consent
   signInDemo: () => Promise<void> // Mode démo pour les tests
   signInLocal: (email: string, password: string) => Promise<void> // Mode local sans Supabase
 }
@@ -98,6 +100,90 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error
   }
 
+  // Registration function with geolocation consent
+  const register = async (userData: any) => {
+    try {
+      // Extract geolocation consent
+      const { geolocationConsent, ...userInfo } = userData
+      
+      // Get geolocation if consent is given
+      let locationData = null
+      if (geolocationConsent) {
+        try {
+          if (navigator.geolocation) {
+            locationData = await new Promise((resolve, reject) => {
+              navigator.geolocation.getCurrentPosition(
+                (position) => {
+                  resolve({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    accuracy: position.coords.accuracy,
+                    timestamp: new Date().toISOString()
+                  })
+                },
+                (error) => {
+                  console.warn('Geolocation error:', error)
+                  resolve(null)
+                },
+                {
+                  enableHighAccuracy: false,
+                  timeout: 10000,
+                  maximumAge: 300000 // 5 minutes
+                }
+              )
+            })
+          }
+        } catch (geoError) {
+          console.warn('Could not get geolocation:', geoError)
+        }
+      }
+
+      // Create metadata with geolocation data
+      const metadata = {
+        full_name: userInfo.name,
+        phone: userInfo.phone,
+        address: userInfo.address,
+        user_type: userInfo.userType,
+        geolocation_consent: geolocationConsent,
+        location_data: locationData,
+        consent_timestamp: new Date().toISOString()
+      }
+
+      // Store user data locally since Supabase is not configured
+      const localUser = {
+        id: 'local-user-' + Date.now(),
+        email: userInfo.email,
+        role: userInfo.userType || 'customer',
+        full_name: userInfo.name,
+        app_metadata: { provider: 'local' },
+        user_metadata: metadata,
+        aud: 'authenticated',
+        created_at: new Date().toISOString()
+      }
+      
+      // Store in local storage
+      localStorage.setItem('local_mode', 'true')
+      localStorage.setItem('local_user', JSON.stringify(localUser))
+      
+      // Store geolocation consent using utility
+      const consentData: GeolocationConsentData = {
+        userId: localUser.id,
+        consentGiven: geolocationConsent,
+        locationData: locationData,
+        consentTimestamp: new Date().toISOString()
+      }
+      storeGeolocationConsent(consentData)
+      
+      // Set user state
+      setUser(localUser as User)
+      setIsLocalMode(true)
+
+    } catch (error) {
+      console.error('Registration error:', error)
+      throw error
+    }
+  }
+
   const signOut = async () => {
     // Nettoyer tous les modes
     localStorage.removeItem('local_mode')
@@ -174,6 +260,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     signIn,
     signUp,
+    register,
     signOut,
     signInDemo,
     signInLocal,

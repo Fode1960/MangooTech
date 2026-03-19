@@ -38,6 +38,7 @@ import PlanCheckoutTest from './pages/PlanCheckoutTest';
 import VendorMessagingCenter from './components/VendorMessagingCenter';
 import LiveShoppingManager from './components/LiveShoppingManager';
 import { NotificationProvider } from './contexts/NotificationContext';
+import CourierScreen from './pages/CourierScreen';
 
 // Store optimisé avec Zustand
 const useStore = create((set, get) => ({
@@ -1313,6 +1314,8 @@ const ClientRegister = ({ onRegister, onBack }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
+  const [geolocationConsent, setGeolocationConsent] = useState(false);
+  const [geoLoading, setGeoLoading] = useState(false);
   const [error, setError] = useState('');
   const { isDark } = useThemeStore();
 
@@ -1329,7 +1332,7 @@ const ClientRegister = ({ onRegister, onBack }) => {
     speakHelp();
   }, [speakHelp]);
 
-  const handleSubmit = useCallback((e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     const normalizedEmail = String(email || '').trim().toLowerCase();
     if (!normalizedEmail) {
@@ -1338,6 +1341,10 @@ const ClientRegister = ({ onRegister, onBack }) => {
     }
     if (!password) {
       setError('Entrez votre mot de passe');
+      return;
+    }
+    if (!geolocationConsent) {
+      setError("Veuillez accepter que votre position soit enregistrée à des fins de géolocalisation");
       return;
     }
 
@@ -1357,6 +1364,37 @@ const ClientRegister = ({ onRegister, onBack }) => {
       return;
     }
 
+    setGeoLoading(true);
+    let locationData = null;
+    try {
+      if (!navigator.geolocation) {
+        setGeoLoading(false);
+        setError("Votre navigateur ne supporte pas la géolocalisation");
+        return;
+      }
+
+      locationData = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            resolve({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy,
+              timestamp: new Date().toISOString()
+            });
+          },
+          (err) => reject(err),
+          { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+        );
+      });
+    } catch {
+      setGeoLoading(false);
+      setError("Impossible d'obtenir votre position. Autorisez la géolocalisation puis réessayez.");
+      return;
+    }
+
+    const consentTimestamp = new Date().toISOString();
+
     const newUser = {
       id: Date.now(),
       name: name || normalizedEmail.split('@')[0],
@@ -1366,7 +1404,10 @@ const ClientRegister = ({ onRegister, onBack }) => {
       avatar: '🧑‍💻',
       password,
       phone,
-      address
+      address,
+      geolocation_consent: true,
+      location_data: locationData,
+      consent_timestamp: consentTimestamp
     };
 
     try {
@@ -1379,9 +1420,35 @@ const ClientRegister = ({ onRegister, onBack }) => {
       // ignore
     }
 
+    try {
+      localStorage.setItem('user_geolocation_consent', JSON.stringify({
+        userId: String(newUser.id),
+        consentGiven: true,
+        locationData,
+        consentTimestamp
+      }));
+    } catch {
+      // ignore
+    }
+
+    try {
+      fetch('/api/geolocation/consent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: String(newUser.id),
+          consentGiven: true,
+          consentTimestamp,
+          locationData,
+        }),
+      }).catch(() => {})
+    } catch {
+    }
+
     setError('');
+    setGeoLoading(false);
     onRegister(newUser);
-  }, [address, email, name, onRegister, password, phone]);
+  }, [address, email, geolocationConsent, name, onRegister, password, phone]);
 
   return (
     <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 ${
@@ -1520,11 +1587,27 @@ const ClientRegister = ({ onRegister, onBack }) => {
             />
           </div>
 
+          <div className={`rounded-xl border p-3 ${isDark ? 'border-gray-700 bg-gray-900/40' : 'border-gray-200 bg-orange-50/50'}`}>
+            <label className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                checked={geolocationConsent}
+                onChange={(e) => setGeolocationConsent(e.target.checked)}
+                className="mt-1 h-4 w-4"
+                required
+              />
+              <span className={`text-sm leading-snug ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+                J'accepte que ma position géographique soit enregistrée à des fins de géolocalisation dans la base de données MangooTech, afin de constituer notre base indépendante de Google.
+              </span>
+            </label>
+          </div>
+
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-orange-500 to-green-600 text-white py-3 px-4 rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105"
+            disabled={geoLoading}
+            className={`w-full bg-gradient-to-r from-orange-500 to-green-600 text-white py-3 px-4 rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105 ${geoLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
           >
-            Créer mon compte
+            {geoLoading ? 'Obtention de la position...' : 'Créer mon compte'}
           </button>
         </form>
       </div>
@@ -4728,8 +4811,15 @@ function AppShell() {
 
   const openClientRegister = useCallback(() => {
     setAuthReturn((prev) => prev || (user ? { user, view: currentView } : null));
+    setCurrentView('landing');
     setUser({ role: 'client_register_request' });
   }, [currentView, user]);
+
+  useEffect(() => {
+    if (location?.pathname === '/register') {
+      openClientRegister();
+    }
+  }, [location?.pathname, openClientRegister]);
 
   const backFromAuth = useCallback(() => {
     if (authReturn?.user) {
@@ -5166,6 +5256,17 @@ function AppShell() {
                 >
                   Local+ 🌍
                 </button>
+
+                {(normalizeRoles(user).includes('admin') || normalizeRoles(user).includes('livreur') || normalizeRoles(user).includes('ops')) && (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/livreur')}
+                    className="bg-sky-100 text-sky-800 px-3 py-1 rounded-full text-sm font-bold hover:bg-sky-200 transition-colors"
+                    title="Écran livreur"
+                  >
+                    Livreur 🚚
+                  </button>
+                )}
                 
                 <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors duration-300 ${
                 isDark 
@@ -5300,6 +5401,7 @@ function App() {
     <NotificationProvider>
       <Toaster richColors position="top-right" />
       <Routes>
+        <Route path="/livreur" element={<CourierScreen />} />
         <Route path="/shop/:shopSlug" element={<ShopPage />} />
         <Route path="/vendor-access-qr" element={<VendorAccessQRPage />} />
         <Route path="/webrtc" element={<WebRTCJoinPage />} />
