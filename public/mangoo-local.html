@@ -29,6 +29,20 @@
 
       (function() {
         try {
+          window.addEventListener('storage', (e) => {
+            if (!e) return;
+            if (e.key !== 'theme') return;
+            const v = String(e.newValue || '').toLowerCase();
+            const dark = v === 'dark';
+            document.documentElement.classList.toggle('dark', dark);
+            const toggle = document.getElementById('darkModeToggle');
+            if (toggle) toggle.checked = dark;
+          });
+        } catch(e) {}
+      })();
+
+      (function() {
+        try {
           const cores = Number(navigator.hardwareConcurrency || 0);
           const mem = Number(navigator.deviceMemory || 0);
           const lowEnd = (cores && cores <= 4) || (mem && mem <= 4);
@@ -2032,7 +2046,7 @@
 
     <!-- HEADER -->
     <div class="header">
-        <button onclick="window.parent.postMessage('exit_mangoo_local', '*')" style="position:absolute; top:15px; left:15px; background:rgba(255,255,255,0.2); border:none; color:white; border-radius:50%; width:30px; height:30px; cursor:pointer; font-weight:bold; font-size:1rem; z-index:1002;">✕</button>
+        <button onclick="exitMangooLocal()" style="position:absolute; top:15px; left:15px; background:rgba(255,255,255,0.2); border:none; color:white; border-radius:50%; width:30px; height:30px; cursor:pointer; font-weight:bold; font-size:1rem; z-index:1002;">✕</button>
         <button id="themeToggle" class="theme-toggle-btn" onclick="toggleTheme()" title="Jour/Nuit">🌙</button>
         <h1>🥭 Mangoo Local+</h1>
         <div class="subtitle">Trouvez les meilleures affaires autour de vous</div>
@@ -2045,7 +2059,7 @@
     </div>
 
     <!-- CALENDAR BUTTON (Floating Top Right) -->
-    <button onclick="showTontineSchedule('Réfrigérateur 300L')" style="
+    <button id="calendarFab" onclick="showTontineSchedule('Réfrigérateur 300L')" style="
         position: absolute;
         top: 140px;
         right: 15px;
@@ -2199,28 +2213,30 @@
 
         <!-- ACCOUNT VIEW (Client Dashboard) -->
         <div id="accountView" class="scrollable-view" style="background:var(--ml-bg);">
-            <div class="hub-header" style="padding:20px; text-align:center;">
+            <div class="hub-header" style="padding:20px; text-align:center; position:relative;">
                 <!-- Back Button -->
                 <button class="btn-back-account" onclick="switchView('map')" style="position:absolute; top:20px; left:20px;">
                     ←
                 </button>
+
+                <button type="button" onclick="openLpIdentityModal()" style="position:absolute; top:16px; right:16px; border:2px solid #f97316; background:var(--ml-panel); color:var(--ml-text); width:56px; height:56px; border-radius:999px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:950; font-size:1.35rem; line-height:1; box-shadow: 0 0 0 3px rgba(249,115,22,0.28), 0 10px 24px rgba(0,0,0,0.22); z-index: 5000;" title="Identité">🪪</button>
                 
                 <div style="position:relative; display:inline-block;">
-                    <img src="https://ui-avatars.com/api/?name=Utilisateur+Demo&background=1a5f3f&color=fff" class="profile-pic" style="width:80px; height:80px; border-radius:50%; border:3px solid white; box-shadow:0 5px 15px rgba(0,0,0,0.1);">
+                    <img id="lpUserAvatar" src="https://ui-avatars.com/api/?name=Utilisateur+Demo&background=1a5f3f&color=fff" class="profile-pic" style="width:80px; height:80px; border-radius:50%; border:3px solid white; box-shadow:0 5px 15px rgba(0,0,0,0.1);">
                     <div style="position:absolute; bottom:0; right:0; background:#27ae60; width:20px; height:20px; border-radius:50%; border:2px solid white;"></div>
                 </div>
-                <h2 class="hub-title" style="margin:10px 0 5px;">Utilisateur Démo</h2>
-                <div class="hub-subtitle" style="font-size:0.9rem;">+237 699 00 00 00</div>
+                <h2 id="lpUserName" class="hub-title" style="margin:10px 0 5px;">Utilisateur Démo</h2>
+                <div id="lpUserPhone" class="hub-subtitle" style="font-size:0.9rem;">+237 699 00 00 00</div>
             </div>
 
             <div style="padding: 0 16px 12px; position: sticky; top: 0; z-index: 20; background: var(--ml-bg);">
                 <div class="lp-tabs" aria-label="Boussole compte client">
-                    <button type="button" onclick="switchAccountTab('orders')" class="lp-tab active" id="lp-tab-orders">📦 Commandes</button>
-                    <button type="button" onclick="switchAccountTab('sell')" class="lp-tab" id="lp-tab-sell">🏪 Vendre</button>
-                    <button type="button" onclick="switchAccountTab('profile')" class="lp-tab" id="lp-tab-profile">👤 Profil</button>
-                    <button type="button" onclick="switchAccountTab('favorites')" class="lp-tab" id="lp-tab-favorites">❤️ Favoris</button>
-                    <button type="button" onclick="switchAccountTab('pay')" class="lp-tab" id="lp-tab-pay">💳 Mangoo Pay</button>
-                    <button type="button" onclick="switchAccountTab('communication')" class="lp-tab" id="lp-tab-communication">📞 Communication</button>
+                    <button type="button" onclick="try{lpGoToClientAccount('orders')}catch{}" class="lp-tab active" id="lp-tab-orders">📦 Commandes</button>
+                    <button type="button" onclick="try{lpGoToVendorDashboard('overview')}catch{}" class="lp-tab" id="lp-tab-sell">🏪 Vendre</button>
+                    <button type="button" onclick="try{lpGoToClientAccount('profile')}catch{}" class="lp-tab" id="lp-tab-profile">👤 Profil</button>
+                    <button type="button" onclick="try{lpGoToClientAccount('wishlist')}catch{}" class="lp-tab" id="lp-tab-favorites">❤️ Favoris</button>
+                    <button type="button" onclick="try{lpGoToClientAccount('wallet')}catch{}" class="lp-tab" id="lp-tab-pay">💳 Mangoo Pay</button>
+                    <button type="button" onclick="try{lpGoToClientAccount('communication',{mode:'chat'})}catch{}" class="lp-tab" id="lp-tab-communication">📞 Communication</button>
                 </div>
             </div>
 
@@ -2244,7 +2260,7 @@
                         <div class="wallet-actions">
                             <button class="wallet-btn" onclick="rechargeBalance()">📥 Recharger</button>
                             <button class="wallet-btn" onclick="openP2PModal()">💸 Transfert</button>
-                            <button class="wallet-btn" onclick="alert('Retrait vers votre compte Mobile Money bientôt disponible.')">📤 Retirer</button>
+                            <button class="wallet-btn" onclick="try{lpGoToClientAccount('wallet',{action:'withdraw'})}catch{}">📤 Retirer</button>
                         </div>
                     </div>
 
@@ -2263,19 +2279,20 @@
                     <div id="vendorSection" style="margin-top:14px; display:block;">
 
                         <div class="lp-tabs" style="margin-bottom: 12px;" aria-label="Boussole compte vendeur">
-                            <button type="button" onclick="switchVendorTab('overview')" class="lp-tab active" id="lp-vtab-overview">📊 Vue d’ensemble</button>
-                            <button type="button" onclick="switchVendorTab('stock')" class="lp-tab" id="lp-vtab-stock">📦 Gestion Stock</button>
-                            <button type="button" onclick="switchVendorTab('products')" class="lp-tab" id="lp-vtab-products">🧾 Produits</button>
-                            <button type="button" onclick="switchVendorTab('orders')" class="lp-tab" id="lp-vtab-orders">🛒 Commandes</button>
-                            <button type="button" onclick="switchVendorTab('notifications')" class="lp-tab" id="lp-vtab-notifications">🔔 Notifications</button>
-                            <button type="button" onclick="switchVendorTab('communication')" class="lp-tab" id="lp-vtab-communication">📞 Communication</button>
-                            <button type="button" onclick="switchVendorTab('shops')" class="lp-tab" id="lp-vtab-shops">🏪 Mes boutiques</button>
+                            <button type="button" onclick="try{lpGoToVendorDashboard('overview')}catch{}; try{switchVendorTab('overview')}catch{}" class="lp-tab active" id="lp-vtab-overview">📊 Vue d’ensemble</button>
+                            <button type="button" onclick="try{lpGoToVendorDashboard('stock')}catch{}; try{switchVendorTab('stock')}catch{}" class="lp-tab" id="lp-vtab-stock">📦 Gestion Stock</button>
+                            <button type="button" onclick="try{lpGoToVendorDashboard('products')}catch{}; try{switchVendorTab('products')}catch{}" class="lp-tab" id="lp-vtab-products">🧾 Produits</button>
+                            <button type="button" onclick="try{lpGoToVendorDashboard('orders')}catch{}; try{switchVendorTab('orders')}catch{}" class="lp-tab" id="lp-vtab-orders">🛒 Commandes</button>
+                            <button type="button" onclick="try{lpGoToVendorDashboard('notifications')}catch{}; try{switchVendorTab('notifications')}catch{}" class="lp-tab" id="lp-vtab-notifications">🔔 Notifications</button>
+                            <button type="button" onclick="try{lpGoToVendorDashboard('communication')}catch{}; try{switchVendorTab('communication')}catch{}" class="lp-tab" id="lp-vtab-communication">📞 Communication</button>
+                            <button type="button" onclick="try{lpGoToVendorDashboard('shops')}catch{}; try{switchVendorTab('shops')}catch{}" class="lp-tab" id="lp-vtab-shops">🏪 Mes boutiques</button>
+                            <button type="button" onclick="try{lpGoToVendorDashboard('supply')}catch{}" class="lp-tab" id="lp-vtab-supply">🏭 Appro</button>
                         </div>
 
                         <div id="lp-vendor-overview" class="lp-pane active" data-vpane="overview">
                             <div style="display:flex; gap:10px; flex-wrap:wrap; margin:-6px 0 18px;">
-                                <button type="button" class="lp-btn lp-btn-primary" onclick="alert('🚚 Module Livraisons vendeur (démo).')">🚚 Livraisons</button>
-                                <button type="button" class="lp-btn lp-btn-secondary" onclick="alert('🧾 Module Factures vendeur (démo).')">🧾 Factures</button>
+                                <button type="button" class="lp-btn lp-btn-primary" onclick="try{lpGoToVendorDashboard('orders')}catch{}">🚚 Livraisons</button>
+                                <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpGoToVendorDashboard('orders')}catch{}">🧾 Factures</button>
                             </div>
 
                             <div id="boostAdminCard" style="background:white; border-radius:15px; padding:16px; margin-bottom:20px; box-shadow:0 4px 10px rgba(0,0,0,0.05); display:none;">
@@ -2359,7 +2376,7 @@
                                 <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Communication</div>
                                 <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Contactez vos clients via Mangoo Connect+.</div>
                                 <div style="margin-top: 14px;">
-                                    <button type="button" class="lp-btn lp-btn-primary" onclick="openChat('👋 Bonjour, je suis disponible pour vos commandes.')">💬 Ouvrir le chat</button>
+                                    <button type="button" class="lp-btn lp-btn-primary" onclick="try{lpGoToVendorDashboard('communication')}catch{}">💬 Ouvrir le chat</button>
                                 </div>
                             </div>
                         </div>
@@ -2389,6 +2406,9 @@
                     <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
                         <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Profil & Adresse</div>
                         <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Ces informations servent pour la livraison et la facturation.</div>
+                        <div style="margin-top: 12px; display:flex; gap:10px; flex-wrap:wrap;">
+                            <button type="button" class="lp-btn lp-btn-secondary" onclick="openLpIdentityModal()">🪪 Identité</button>
+                        </div>
                         <div style="display: grid; gap: 10px; margin-top: 14px;">
                             <input id="lpProfileName" placeholder="Nom complet" style="width: 100%; padding: 12px; border: 1px solid var(--ml-border); border-radius: 12px; background: var(--ml-panel); color: var(--ml-text); font-weight: 700;" />
                             <input id="lpProfilePhone" placeholder="Téléphone" style="width: 100%; padding: 12px; border: 1px solid var(--ml-border); border-radius: 12px; background: var(--ml-panel); color: var(--ml-text); font-weight: 700;" />
@@ -2406,7 +2426,7 @@
                         <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Mes favoris</div>
                         <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Accédez à vos prestataires favoris.</div>
                         <div style="margin-top: 14px; display:flex; gap: 10px; flex-wrap: wrap;">
-                            <button type="button" class="lp-btn lp-btn-primary" onclick="switchView('fav')">Voir mes favoris</button>
+                            <button type="button" class="lp-btn lp-btn-primary" onclick="try{lpGoToClientAccount('wishlist')}catch{}">Voir mes favoris</button>
                         </div>
                     </div>
                 </div>
@@ -2416,9 +2436,9 @@
                         <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Communication</div>
                         <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Contactez un vendeur/livreur via Mangoo Connect+.</div>
                         <div style="margin-top: 14px; display:flex; gap: 10px; flex-wrap: wrap;">
-                            <button type="button" class="lp-btn lp-btn-primary" onclick="openChat()">💬 Ouvrir le chat</button>
-                            <button type="button" class="lp-btn lp-btn-secondary" onclick="alert('📞 Appel audio bientôt disponible.')">📞 Audio</button>
-                            <button type="button" class="lp-btn lp-btn-secondary" onclick="alert('📹 Appel vidéo bientôt disponible.')">📹 Vidéo</button>
+                            <button type="button" class="lp-btn lp-btn-primary" onclick="try{lpGoToClientAccount('communication',{mode:'chat'})}catch{}">💬 Ouvrir le chat</button>
+                            <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpGoToClientAccount('communication',{mode:'call'})}catch{}">📞 Audio</button>
+                            <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpGoToClientAccount('communication',{mode:'call'})}catch{}">📹 Vidéo</button>
                         </div>
                     </div>
                 </div>
@@ -2485,7 +2505,7 @@
                         <span>❓ Aide & Support</span>
                         <span class="arrow">›</span>
                     </div>
-                    <div class="action-row" style="color: #d63031;" onclick="if(confirm('Voulez-vous vraiment vous déconnecter ?')) { alert('Déconnexion...'); }">
+                    <div class="action-row" style="color: #d63031;" onclick="lpLogout()">
                         <span>🚪 Déconnexion</span>
                         <span class="arrow">›</span>
                     </div>
@@ -2582,7 +2602,7 @@
                     <span>❓ Aide & Support</span>
                     <span class="arrow">›</span>
                 </div>
-                <div class="action-row" style="color: #d63031;" onclick="if(confirm('Voulez-vous vraiment vous déconnecter ?')) { alert('Déconnexion...'); }">
+                <div class="action-row" style="color: #d63031;" onclick="lpLogout()">
                     <span>🚪 Déconnexion</span>
                     <span class="arrow">›</span>
                 </div>
@@ -2657,9 +2677,9 @@
 
             <!-- Navigation Tabs -->
             <div style="display:flex; border-bottom:1px solid #dfe6e9; margin-bottom:15px;">
-                <div class="sheet-tab active" onclick="switchSheetTab('boutique', this)">Boutique</div>
-                <div class="sheet-tab" onclick="switchSheetTab('carte', this)">Carte</div>
-                <div class="sheet-tab" onclick="switchSheetTab('profil', this)">Profil</div>
+                <div class="sheet-tab active" id="vendorSheetTabBoutique" onclick="switchSheetTab('boutique', this)">Boutique</div>
+                <div class="sheet-tab" id="vendorSheetTabCarte" onclick="switchSheetTab('carte', this)">Carte</div>
+                <div class="sheet-tab" id="vendorSheetTabProfil" onclick="switchSheetTab('profil', this)">Profil</div>
             </div>
 
             <!-- Tab Content: Boutique -->
@@ -2877,6 +2897,32 @@
             <div class="input-group">
                 <label>Quartiers (séparés par des virgules)</label>
                 <input type="text" id="providerCoverageInput" class="input-field" placeholder="Ex: Akwa, Bonapriso, Deido">
+            </div>
+
+            <div class="input-group">
+                <label>Services proposés (séparés par des virgules)</label>
+                <input type="text" id="providerServicesInput" class="input-field" placeholder="Ex: Dépannage, Installation, Devis">
+            </div>
+
+            <div class="input-group">
+                <label>Portfolio (liens photos - optionnel)</label>
+                <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-top:10px;">
+                    <div style="border-radius:14px; overflow:hidden; border:1px dashed rgba(255,255,255,0.20); background:rgba(255,255,255,0.04); aspect-ratio: 1 / 1; position:relative;">
+                        <img id="providerPortfolioPreview1" alt="Portfolio 1" style="width:100%; height:100%; object-fit:cover; display:none;" />
+                        <label for="providerPortfolioFile1" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#cbd5e1; font-weight:900; cursor:pointer;">Photo 1</label>
+                        <input type="file" id="providerPortfolioFile1" accept="image/*" style="display:none;" onchange="handleProviderPortfolioFile(0, this.files && this.files[0])" />
+                    </div>
+                    <div style="border-radius:14px; overflow:hidden; border:1px dashed rgba(255,255,255,0.20); background:rgba(255,255,255,0.04); aspect-ratio: 1 / 1; position:relative;">
+                        <img id="providerPortfolioPreview2" alt="Portfolio 2" style="width:100%; height:100%; object-fit:cover; display:none;" />
+                        <label for="providerPortfolioFile2" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#cbd5e1; font-weight:900; cursor:pointer;">Photo 2</label>
+                        <input type="file" id="providerPortfolioFile2" accept="image/*" style="display:none;" onchange="handleProviderPortfolioFile(1, this.files && this.files[0])" />
+                    </div>
+                    <div style="border-radius:14px; overflow:hidden; border:1px dashed rgba(255,255,255,0.20); background:rgba(255,255,255,0.04); aspect-ratio: 1 / 1; position:relative;">
+                        <img id="providerPortfolioPreview3" alt="Portfolio 3" style="width:100%; height:100%; object-fit:cover; display:none;" />
+                        <label for="providerPortfolioFile3" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#cbd5e1; font-weight:900; cursor:pointer;">Photo 3</label>
+                        <input type="file" id="providerPortfolioFile3" accept="image/*" style="display:none;" onchange="handleProviderPortfolioFile(2, this.files && this.files[0])" />
+                    </div>
+                </div>
             </div>
 
             <div class="input-group" style="background:#111827; padding:14px; border-radius:14px; border:1px solid rgba(255,255,255,0.10); margin-bottom: 18px;">
@@ -4281,16 +4327,99 @@
         let providerAudioChunks = [];
         let currentProviderAudioBase64 = null;
         let providerAudioTimerInterval;
+        let currentProviderPortfolio = [null, null, null];
+
+        function setProviderPortfolioPreview(index, dataUrl) {
+            const i = Number(index);
+            if (!Number.isFinite(i) || i < 0 || i > 2) return;
+            currentProviderPortfolio[i] = dataUrl || null;
+            const img = document.getElementById(`providerPortfolioPreview${i + 1}`);
+            if (!img) return;
+            if (dataUrl) {
+                img.src = dataUrl;
+                img.style.display = 'block';
+            } else {
+                img.src = '';
+                img.style.display = 'none';
+            }
+        }
+
+        function readImageToDataUrl(file, maxSide = 900, quality = 0.78) {
+            return new Promise((resolve, reject) => {
+                try {
+                    if (!file) {
+                        resolve(null);
+                        return;
+                    }
+                    if (!String(file.type || '').startsWith('image/')) {
+                        reject(new Error('Fichier non image'));
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onerror = () => reject(new Error('Lecture impossible'));
+                    reader.onload = () => {
+                        const img = new Image();
+                        img.onerror = () => reject(new Error('Image invalide'));
+                        img.onload = () => {
+                            const w = img.naturalWidth || img.width;
+                            const h = img.naturalHeight || img.height;
+                            if (!w || !h) {
+                                reject(new Error('Image invalide'));
+                                return;
+                            }
+
+                            const ratio = Math.min(1, maxSide / Math.max(w, h));
+                            const tw = Math.max(1, Math.round(w * ratio));
+                            const th = Math.max(1, Math.round(h * ratio));
+
+                            const canvas = document.createElement('canvas');
+                            canvas.width = tw;
+                            canvas.height = th;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, tw, th);
+                            const out = canvas.toDataURL('image/jpeg', quality);
+                            resolve(out);
+                        };
+                        img.src = String(reader.result || '');
+                    };
+                    reader.readAsDataURL(file);
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        }
+
+        async function handleProviderPortfolioFile(index, file) {
+            try {
+                const dataUrl = await readImageToDataUrl(file, 900, 0.78);
+                if (dataUrl && dataUrl.length > 260000) {
+                    alert('Image trop lourde. Choisissez une photo plus légère.');
+                    setProviderPortfolioPreview(index, null);
+                    return;
+                }
+                setProviderPortfolioPreview(index, dataUrl);
+            } catch {
+                alert('Impossible de charger la photo.');
+                setProviderPortfolioPreview(index, null);
+            }
+        }
 
         function openProviderModal() {
             const modal = document.getElementById('providerModal');
             if (!modal) return;
             modal.style.display = 'flex';
 
+            const title = modal.querySelector('.modal-title');
+            if (title) title.innerText = 'Devenez Prestataire';
+
             const nameInput = document.getElementById('providerNameInput');
             const tradeSelect = document.getElementById('providerTradeSelect');
             const tradeInput = document.getElementById('providerTradeInput');
             const covInput = document.getElementById('providerCoverageInput');
+            const servicesInput = document.getElementById('providerServicesInput');
+            const file1 = document.getElementById('providerPortfolioFile1');
+            const file2 = document.getElementById('providerPortfolioFile2');
+            const file3 = document.getElementById('providerPortfolioFile3');
             const pitchInput = document.getElementById('providerPitchInput');
             const mobileToggle = document.getElementById('providerMobileToggle');
             const latInput = document.getElementById('providerLat');
@@ -4301,6 +4430,13 @@
             if (tradeSelect) tradeSelect.value = '';
             if (tradeInput) tradeInput.value = '';
             if (covInput) covInput.value = '';
+            if (servicesInput) servicesInput.value = '';
+            if (file1) file1.value = '';
+            if (file2) file2.value = '';
+            if (file3) file3.value = '';
+            setProviderPortfolioPreview(0, null);
+            setProviderPortfolioPreview(1, null);
+            setProviderPortfolioPreview(2, null);
             if (pitchInput) pitchInput.value = '';
             if (mobileToggle) mobileToggle.checked = false;
             if (latInput) latInput.value = '';
@@ -4327,7 +4463,134 @@
                 submitBtn.disabled = true;
                 submitBtn.style.opacity = '0.6';
                 submitBtn.style.cursor = 'not-allowed';
+                submitBtn.innerHTML = 'Créer mon profil';
+                submitBtn.onclick = submitProvider;
             }
+        }
+
+        function openProviderModalForVendor(vendorId) {
+            openProviderModal();
+            const v = VENDORS.find((x) => String(x?.id) === String(vendorId));
+            if (!v) return;
+
+            const modal = document.getElementById('providerModal');
+            if (modal) modal.style.display = 'flex';
+            const title = modal ? modal.querySelector('.modal-title') : null;
+            if (title) title.innerText = 'Modifier mon profil';
+
+            const nameInput = document.getElementById('providerNameInput');
+            const tradeSelect = document.getElementById('providerTradeSelect');
+            const tradeInput = document.getElementById('providerTradeInput');
+            const covInput = document.getElementById('providerCoverageInput');
+            const servicesInput = document.getElementById('providerServicesInput');
+            const file1 = document.getElementById('providerPortfolioFile1');
+            const file2 = document.getElementById('providerPortfolioFile2');
+            const file3 = document.getElementById('providerPortfolioFile3');
+            const pitchInput = document.getElementById('providerPitchInput');
+            const mobileToggle = document.getElementById('providerMobileToggle');
+            const latInput = document.getElementById('providerLat');
+            const lngInput = document.getElementById('providerLng');
+            const submitBtn = document.getElementById('btnSubmitProvider');
+
+            if (nameInput) nameInput.value = String(v?.name || '');
+
+            const trade = String(v?.trade || '').trim();
+            if (tradeSelect) {
+                const exists = Array.from(tradeSelect.options || []).some((o) => String(o.value) === trade);
+                tradeSelect.value = exists ? trade : '__other__';
+            }
+            if (tradeSelect && String(tradeSelect.value) === '__other__') {
+                if (tradeInput) {
+                    tradeInput.style.display = 'block';
+                    tradeInput.value = trade;
+                }
+            } else {
+                if (tradeInput) {
+                    tradeInput.style.display = 'none';
+                    tradeInput.value = '';
+                }
+            }
+
+            if (covInput) covInput.value = Array.isArray(v?.coverage) ? v.coverage.join(', ') : '';
+            if (servicesInput) servicesInput.value = Array.isArray(v?.services) ? v.services.join(', ') : '';
+            if (pitchInput) pitchInput.value = String(v?.voicePitch || '');
+            if (mobileToggle) mobileToggle.checked = !!v?.isMobile;
+            if (latInput) latInput.value = String(v?.lat || '');
+            if (lngInput) lngInput.value = String(v?.lng || '');
+
+            if (file1) file1.value = '';
+            if (file2) file2.value = '';
+            if (file3) file3.value = '';
+            const portfolio = Array.isArray(v?.portfolio) ? v.portfolio : [];
+            setProviderPortfolioPreview(0, String(portfolio[0] || '') || null);
+            setProviderPortfolioPreview(1, String(portfolio[1] || '') || null);
+            setProviderPortfolioPreview(2, String(portfolio[2] || '') || null);
+
+            if (v?.voiceAudio) {
+                currentProviderAudioBase64 = v.voiceAudio;
+                const preview = document.getElementById('providerAudioPreview');
+                const container = document.getElementById('providerAudioPreviewContainer');
+                const btnRec = document.getElementById('btnRecordProviderAudio');
+                if (preview) preview.src = v.voiceAudio;
+                if (container) container.style.display = 'flex';
+                if (btnRec) btnRec.style.display = 'none';
+            }
+
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+                submitBtn.innerHTML = 'Enregistrer';
+                submitBtn.onclick = () => updateProvider(vendorId);
+            }
+        }
+
+        function updateProvider(id) {
+            const btn = document.getElementById('btnSubmitProvider');
+            const nameInput = document.getElementById('providerNameInput');
+            const tradeSelect = document.getElementById('providerTradeSelect');
+            const tradeInput = document.getElementById('providerTradeInput');
+            const covInput = document.getElementById('providerCoverageInput');
+            const servicesInput = document.getElementById('providerServicesInput');
+            const pitchInput = document.getElementById('providerPitchInput');
+            const mobileToggle = document.getElementById('providerMobileToggle');
+            const latInput = document.getElementById('providerLat');
+            const lngInput = document.getElementById('providerLng');
+
+            const vendor = VENDORS.find(v => v.id == id);
+            if (!vendor) return;
+
+            const selected = String(tradeSelect?.value || '').trim();
+            const trade = selected === '__other__' ? String(tradeInput?.value || '').trim() : selected;
+            const coverageRaw = String(covInput?.value || '').trim();
+            const coverage = coverageRaw ? coverageRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+            const servicesRaw = String(servicesInput?.value || '').trim();
+            const services = servicesRaw ? servicesRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+            const portfolio = currentProviderPortfolio.filter(Boolean);
+
+            vendor.name = String(nameInput?.value || '').trim() || vendor.name;
+            if (trade) vendor.trade = trade;
+            vendor.coverage = coverage;
+            vendor.isMobile = !!mobileToggle?.checked;
+            vendor.services = services;
+            vendor.portfolio = portfolio;
+            vendor.voicePitch = String(pitchInput?.value || '').trim();
+            vendor.voiceAudio = currentProviderAudioBase64;
+            if (latInput?.value) vendor.lat = parseFloat(latInput.value);
+            if (lngInput?.value) vendor.lng = parseFloat(lngInput.value);
+
+            try { upsertCustomVendor(vendor); } catch {}
+            try { localStorage.setItem('mangoo_vendors', JSON.stringify(VENDORS)); } catch {}
+
+            const modal = document.getElementById('providerModal');
+            if (modal) modal.style.display = 'none';
+            if (btn) {
+                btn.innerHTML = 'Créer mon profil';
+                btn.onclick = submitProvider;
+            }
+            try { renderVendorsOnMap(VENDORS); } catch {}
+            try { filterVendors(); } catch {}
+            try { openVendorSheet(vendor); } catch {}
         }
 
         function closeProviderModal(e) {
@@ -4504,6 +4767,7 @@
             const tradeSelect = document.getElementById('providerTradeSelect');
             const tradeInput = document.getElementById('providerTradeInput');
             const covInput = document.getElementById('providerCoverageInput');
+            const servicesInput = document.getElementById('providerServicesInput');
             const pitchInput = document.getElementById('providerPitchInput');
             const mobileToggle = document.getElementById('providerMobileToggle');
             const latInput = document.getElementById('providerLat');
@@ -4517,6 +4781,13 @@
             const coverageRaw = String(covInput?.value || '').trim();
             const coverage = coverageRaw ? coverageRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
             const isMobile = !!mobileToggle?.checked;
+            const servicesRaw = String(servicesInput?.value || '').trim();
+            const services = servicesRaw ? servicesRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+            const portfolio = currentProviderPortfolio.filter(Boolean);
+
+            const currentUser = getLpCurrentUser ? getLpCurrentUser() : null;
+            const ownerEmail = String(currentUser?.email || '').trim().toLowerCase();
+            const ownerName = String(currentUser?.name || '').trim();
 
             if (!name) {
                 alert('Veuillez entrer un nom.');
@@ -4545,20 +4816,44 @@
                     rating: 4.5,
                     isMobile,
                     coverage,
-                    services: [],
-                    portfolio: [],
+                    services,
+                    portfolio,
                     lat: parseFloat(latInput.value),
                     lng: parseFloat(lngInput.value),
                     status: 'open',
                     live: false,
                     voicePitch: pitch || `Bonjour, je suis ${name}. Je suis ${trade.toLowerCase()}.`,
                     voiceAudio: currentProviderAudioBase64,
-                    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff`
+                    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff`,
+                    ownerEmail,
+                    ownerName,
+                    isUserOwned: true
                 };
 
                 VENDORS.push(newVendor);
+                try { upsertCustomVendor(newVendor); } catch {}
+                try { localStorage.setItem('mangoo_vendors', JSON.stringify(VENDORS)); } catch {}
+
                 try {
-                    localStorage.setItem('mangoo_vendors', JSON.stringify(VENDORS));
+                    localStorage.setItem('mangoo_my_provider_id', String(newVendor.id));
+                } catch {
+                }
+                try {
+                    if (ownerEmail) {
+                        const key = `mangoo_my_provider_ids:${ownerEmail}`;
+                        let list = [];
+                        try {
+                            const raw = localStorage.getItem(key);
+                            const parsed = raw ? JSON.parse(raw) : [];
+                            list = Array.isArray(parsed) ? parsed : [];
+                        } catch {
+                            list = [];
+                        }
+                        if (!list.some((x) => String(x) === String(newVendor.id))) {
+                            list.push(newVendor.id);
+                            localStorage.setItem(key, JSON.stringify(list));
+                        }
+                    }
                 } catch {
                 }
 
@@ -4792,6 +5087,88 @@
         // === INITIALISATION ===
         let appInitialized = false;
 
+        function getStoredCustomVendors() {
+            try {
+                const raw = localStorage.getItem('mangoo_custom_vendors');
+                const parsed = raw ? JSON.parse(raw) : [];
+                return Array.isArray(parsed) ? parsed : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function setStoredCustomVendors(list) {
+            try {
+                localStorage.setItem('mangoo_custom_vendors', JSON.stringify(Array.isArray(list) ? list : []));
+            } catch {
+            }
+        }
+
+        function normalizeVendorForStorage(v) {
+            const vendor = v && typeof v === 'object' ? v : {};
+            const voiceAudio = String(vendor.voiceAudio || '');
+            const safeAudio = voiceAudio && voiceAudio.length <= 350000 ? voiceAudio : null;
+            return {
+                ...vendor,
+                kind: String(vendor.kind || 'shop'),
+                voiceAudio: safeAudio,
+                updatedAt: new Date().toISOString(),
+            };
+        }
+
+        function upsertCustomVendor(v) {
+            try {
+                const id = v?.id;
+                if (id === undefined || id === null) return;
+                const list = getStoredCustomVendors();
+                const idx = list.findIndex((x) => String(x?.id) === String(id));
+                const record = normalizeVendorForStorage(v);
+                if (idx >= 0) list[idx] = { ...list[idx], ...record };
+                else list.push({ ...record, createdAt: new Date().toISOString() });
+                setStoredCustomVendors(list);
+            } catch {
+            }
+        }
+
+        function removeCustomVendor(id) {
+            try {
+                const list = getStoredCustomVendors();
+                const next = list.filter((x) => String(x?.id) !== String(id));
+                setStoredCustomVendors(next);
+            } catch {
+            }
+        }
+
+        function hydrateVendorsFromStorage() {
+            try {
+                const custom = getStoredCustomVendors();
+                let base = [];
+                try {
+                    const raw = localStorage.getItem('mangoo_vendors');
+                    const parsed = raw ? JSON.parse(raw) : [];
+                    base = Array.isArray(parsed) ? parsed : [];
+                } catch {
+                    base = [];
+                }
+
+                const merged = Array.isArray(base) && base.length ? [...base] : [...VENDORS];
+                (custom || []).forEach((c) => {
+                    const idx = merged.findIndex((x) => String(x?.id) === String(c?.id));
+                    if (idx >= 0) merged[idx] = { ...merged[idx], ...c };
+                    else merged.push(c);
+                });
+
+                if (!merged.length) return;
+                try {
+                    VENDORS.splice(0, VENDORS.length, ...merged);
+                } catch {
+                    VENDORS.length = 0;
+                    merged.forEach((v) => VENDORS.push(v));
+                }
+            } catch {
+            }
+        }
+
         window.addEventListener('load', function() {
             if (appInitialized) return;
             
@@ -4899,6 +5276,11 @@
             if (appInitialized) return;
             appInitialized = true;
 
+            try {
+                hydrateVendorsFromStorage();
+            } catch {
+            }
+
             // console.log("Initializing App...");
             try {
                 applyBoostConfigToVendors();
@@ -4935,6 +5317,17 @@
             if(loader) {
                 loader.style.opacity = '0';
                 setTimeout(() => loader.style.display = 'none', 500);
+            }
+
+            try {
+                const openId = localStorage.getItem('mangoo-open-vendor-id');
+                if (openId) {
+                    localStorage.removeItem('mangoo-open-vendor-id');
+                    setTimeout(() => {
+                        try { openVendorSheetById(openId); } catch {}
+                    }, 400);
+                }
+            } catch {
             }
         }
 
@@ -6604,6 +6997,7 @@
             const espaceDiv = document.getElementById('espaceView');
             const introDiv = document.getElementById('introView');
             const accountDiv = document.getElementById('accountView');
+            const calendarFab = document.getElementById('calendarFab');
             const geoBtn = document.querySelector('.fab-geo');
             const topSection = document.querySelector('.top-section'); // Refactored top section
             const searchBar = document.querySelector('.search-container');
@@ -6616,6 +7010,7 @@
             if (introDiv) introDiv.style.display = 'none';
             accountDiv.style.display = 'none';
             geoBtn.style.display = 'none';
+            if (calendarFab) calendarFab.style.display = 'none';
 
             if (searchBar) searchBar.style.display = 'flex';
             renderFamiliesBar();
@@ -6676,6 +7071,7 @@
                 mapDiv.style.display = 'block';
                 geoBtn.style.display = 'flex';
                 if(topSection) topSection.style.display = 'flex'; // Show Filters & Stories
+                if (calendarFab) calendarFab.style.display = 'flex';
                 setTimeout(() => map.invalidateSize(), 100);
                 filterVendors(); 
             } else if (view === 'espace') {
@@ -6686,11 +7082,13 @@
             } else if (view === 'list') {
                 listDiv.style.display = 'block';
                 if(topSection) topSection.style.display = 'none'; // Hide Filters & Stories in List View
+                if (calendarFab) calendarFab.style.display = 'flex';
                 filterVendors(); 
             } else if (view === 'fav') {
                 listDiv.style.display = 'block';
                 renderFavorites();
                 if(topSection) topSection.style.display = 'none'; // Hide Filters & Stories in Fav View
+                if (calendarFab) calendarFab.style.display = 'flex';
             } else if (view === 'intro') {
                 if (introDiv) introDiv.style.display = 'block';
                 if(topSection) topSection.style.display = 'none';
@@ -6704,12 +7102,191 @@
                 if (familiesBar) familiesBar.style.display = 'none';
                 
                 // Initialize Account UI
+                try { applyLpHeaderUser() } catch {}
                 switchAccountTab('orders');
                 loadLpProfile();
             }
 
             try {
                 renderFamiliesBar();
+            } catch {
+            }
+        }
+
+        function exitMangooLocal() {
+            try {
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage('exit_mangoo_local', '*')
+                    try {
+                        setTimeout(() => {
+                            try {
+                                window.parent.location.assign('/')
+                            } catch {
+                            }
+                        }, 250)
+                    } catch {
+                    }
+                    return
+                }
+            } catch {
+            }
+            try {
+                window.location.assign('/')
+            } catch {
+            }
+        }
+
+        function lpGoToVendorDashboard(tab) {
+            const nextTab = String(tab || 'overview')
+            try { lpEnsureFormalRole('vendor') } catch {}
+            try { localStorage.setItem('mangoo-vendor-active-tab', nextTab) } catch {}
+            try {
+                const u = getLpCurrentUser()
+                const email = String(u?.email || '').trim().toLowerCase()
+                if (email) localStorage.setItem(`mangoo-active-role:${email}`, 'vendor')
+            } catch {
+            }
+            try { localStorage.setItem('mangoo-last-view', 'marketplace') } catch {}
+            try { lpRedirectToApp({ lp_role: 'vendor', lp_vendor_tab: nextTab }) } catch {}
+        }
+
+        function lpGoToClientAccount(section, opts) {
+            const nextSection = String(section || 'orders')
+            const allowed = ['orders', 'profile', 'wishlist', 'wallet', 'communication']
+            const safeSection = allowed.includes(nextSection) ? nextSection : 'orders'
+            const options = opts && typeof opts === 'object' ? opts : {}
+
+            try { lpEnsureFormalRole('client') } catch {}
+
+            try { localStorage.setItem('mangoo-client-active-section', safeSection) } catch {}
+            try {
+                const u = getLpCurrentUser()
+                const email = String(u?.email || '').trim().toLowerCase()
+                if (email) localStorage.setItem(`mangoo-active-role:${email}`, 'client')
+            } catch {
+            }
+
+            if (safeSection === 'wallet') {
+                try {
+                    const action = String(options.action || '').trim()
+                    if (action) localStorage.setItem('mangoo-client-wallet-action', action)
+                } catch {
+                }
+            }
+
+            if (safeSection === 'communication') {
+                try {
+                    const mode = String(options.mode || '').trim()
+                    if (mode) localStorage.setItem('mangoo-client-communication-mode', mode)
+                } catch {
+                }
+            }
+
+            try { localStorage.setItem('mangoo-last-view', 'account') } catch {}
+            const redirectParams = { lp_view: 'account', lp_role: 'client', lp_section: safeSection }
+            if (safeSection === 'wallet') {
+                const action = String(options.action || '').trim()
+                if (action) redirectParams.lp_wallet_action = action
+            }
+            if (safeSection === 'communication') {
+                const mode = String(options.mode || '').trim()
+                if (mode) redirectParams.lp_comm_mode = mode
+            }
+            try { lpRedirectToApp(redirectParams) } catch {}
+        }
+
+        function lpEnsureFormalRole(role) {
+            const nextRole = String(role || '').trim().toLowerCase()
+            if (nextRole !== 'client' && nextRole !== 'vendor') return
+
+            let raw = null
+            try { raw = localStorage.getItem('mangoo-current-user') || localStorage.getItem('user') } catch {}
+            if (!raw) return
+
+            let u = null
+            try { u = JSON.parse(raw) } catch { u = null }
+            if (!u || typeof u !== 'object') return
+
+            const email = String(u?.email || '').trim().toLowerCase()
+            const currentRoles = Array.isArray(u?.roles) ? u.roles.map((r) => String(r)) : []
+            const merged = Array.from(new Set([...currentRoles, 'client', 'vendor']))
+            const nextUser = { ...u, role: nextRole, roles: merged }
+
+            try { localStorage.setItem('mangoo-current-user', JSON.stringify(nextUser)) } catch {}
+            try { localStorage.setItem('user', JSON.stringify(nextUser)) } catch {}
+            try { if (email) localStorage.setItem(`mangoo-active-role:${email}`, nextRole) } catch {}
+        }
+
+        function lpRedirectToApp(params) {
+            const p = params && typeof params === 'object' ? params : {}
+            let qs = ''
+            try {
+                const sp = new URLSearchParams()
+                Object.keys(p).forEach((k) => {
+                    const v = p[k]
+                    if (v === undefined || v === null) return
+                    const s = String(v).trim()
+                    if (!s) return
+                    sp.set(k, s)
+                })
+                qs = sp.toString()
+            } catch {
+                qs = ''
+            }
+            const url = qs ? `/?${qs}` : '/'
+            try {
+                if (window.parent && window.parent !== window) {
+                    window.parent.location.assign(url)
+                    return
+                }
+            } catch {
+            }
+            window.location.assign(url)
+        }
+
+        function lpLogout() {
+            try {
+                const ok = confirm('Voulez-vous vraiment vous déconnecter ?')
+                if (!ok) return
+            } catch {
+            }
+            try {
+                const u = getLpCurrentUser()
+                const email = String(u?.email || '').trim().toLowerCase()
+                if (email) {
+                    try { localStorage.removeItem(`mangoo_local_profile:${email}`) } catch {}
+                }
+            } catch {
+            }
+            try {
+                const keys = []
+                for (let i = 0; i < localStorage.length; i += 1) {
+                    const k = localStorage.key(i)
+                    if (typeof k === 'string') keys.push(k)
+                }
+                keys.forEach((k) => {
+                    if (k === 'mangoo-current-user' || k === 'user' || k === 'mangoo_local_profile') {
+                        try { localStorage.removeItem(k) } catch {}
+                        return
+                    }
+                    if (k.startsWith('mangoo_local_profile:')) {
+                        try { localStorage.removeItem(k) } catch {}
+                    }
+                })
+            } catch {
+                try { localStorage.removeItem('mangoo-current-user') } catch {}
+                try { localStorage.removeItem('user') } catch {}
+                try { localStorage.removeItem('mangoo_local_profile') } catch {}
+            }
+            try { applyLpHeaderUser() } catch {}
+            try { closeLpIdentityModal() } catch {}
+            try {
+                switchView('account')
+                switchAccountTab('orders')
+            } catch {
+            }
+            try {
+                alert('✅ Déconnexion effectuée.')
             } catch {
             }
         }
@@ -7616,15 +8193,9 @@
         
         // === RECHARGE BALANCE LOGIC (NEW) ===
         function rechargeBalance() {
-            const amount = prompt("Combien voulez-vous recharger ? (FCFA)", "50000");
-            if(amount) {
-                const val = parseInt(amount.replace(/\D/g,'')) || 0;
-                if(val > 0) {
-                    userBalance += val;
-                    localStorage.setItem('mangoo_user_balance', userBalance);
-                    document.querySelector('.wallet-balance').innerText = userBalance.toLocaleString() + " FCFA";
-                    alert(`✅ Votre compte a été rechargé de ${val.toLocaleString()} FCFA.`);
-                }
+            try {
+                lpGoToClientAccount('wallet', { action: 'recharge' })
+            } catch {
             }
         }
 
@@ -7933,10 +8504,45 @@
             
             // CHECK IF OWNER
             const myShopId = localStorage.getItem('mangoo_my_shop_id');
+            const myProviderId = localStorage.getItem('mangoo_my_provider_id');
             const ownerLink = document.getElementById('ownerEditLink');
             if (ownerLink) {
-                if (myShopId && vendor.id == myShopId) {
+                const kindMode = String(vendor.kind || '').toLowerCase();
+                const currentUser = getLpCurrentUser ? getLpCurrentUser() : null;
+                const email = String(currentUser?.email || '').trim().toLowerCase();
+                let isOwnerProvider = false;
+                if (email) {
+                    try {
+                        const key = `mangoo_my_provider_ids:${email}`;
+                        const raw = localStorage.getItem(key);
+                        const parsed = raw ? JSON.parse(raw) : [];
+                        const list = Array.isArray(parsed) ? parsed : [];
+                        isOwnerProvider = list.some((x) => String(x) === String(vendor.id));
+                    } catch {
+                        isOwnerProvider = false;
+                    }
+                }
+                if (!isOwnerProvider && myProviderId && String(vendor.id) === String(myProviderId)) isOwnerProvider = true;
+                if (!isOwnerProvider && email && String(vendor?.ownerEmail || '').toLowerCase() === email) isOwnerProvider = true;
+
+                if (kindMode === 'service' && isOwnerProvider) {
                     ownerLink.style.display = 'block';
+                    ownerLink.innerHTML = `
+                        <div style="display:flex; gap:10px; justify-content:center;">
+                            <a href="#" onclick="openProviderModalForVendor(${JSON.stringify(vendor.id)})" style="color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px;">⚙️ Réglages</a>
+                            <a href="#" onclick="startServicePayment(${JSON.stringify(vendor.id)})" style="color:#00b894; font-size:0.85rem; text-decoration:none; border:1px solid #00b894; padding:8px 15px; border-radius:20px; font-weight:bold;">💳 Paiement</a>
+                            <a href="#" onclick="openProviderDashboard(${JSON.stringify(vendor.id)})" style="color:#f59e0b; font-size:0.85rem; text-decoration:none; border:1px solid #f59e0b; padding:8px 15px; border-radius:20px; font-weight:bold;">📄 Dashboard</a>
+                        </div>
+                    `;
+                } else if (myShopId && vendor.id == myShopId) {
+                    ownerLink.style.display = 'block';
+                    ownerLink.innerHTML = `
+                        <div style="display:flex; gap:10px; justify-content:center;">
+                            <a href="#" onclick="openSellerModal()" style="color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px;">⚙️ Réglages</a>
+                            <a href="#" onclick="openProductModal()" style="color:#e17055; font-size:0.85rem; text-decoration:none; border:1px solid #e17055; padding:8px 15px; border-radius:20px; font-weight:bold;">📦 Nouveau</a>
+                            <a href="#" onclick="openSupplyModal()" style="color:#0984e3; font-size:0.85rem; text-decoration:none; border:1px solid #0984e3; padding:8px 15px; border-radius:20px; font-weight:bold;">🏭 S'approvisionner</a>
+                        </div>
+                    `;
                 } else {
                     ownerLink.style.display = 'none';
                 }
@@ -7977,13 +8583,21 @@
             // const shopBtn = document.getElementById('btnShop');
             // ...
 
+            const kind = String(vendor.kind || '').toLowerCase();
+
+            const tabBoutiqueBtn = document.getElementById('vendorSheetTabBoutique');
+            const tabCarteBtn = document.getElementById('vendorSheetTabCarte');
+            const tabProfilBtn = document.getElementById('vendorSheetTabProfil');
+            if (tabBoutiqueBtn) tabBoutiqueBtn.style.display = kind === 'service' ? 'none' : '';
+            if (tabCarteBtn) tabCarteBtn.style.display = '';
+            if (tabProfilBtn) tabProfilBtn.style.display = '';
+
             // Delivery Simulation Button
             const btnDelivery = document.createElement('button');
             btnDelivery.innerText = '🚚 Simuler Livraison';
             btnDelivery.style.cssText = "width:100%; margin-top:10px; padding:12px; background:#f1f2f6; color:#2d3436; border:none; border-radius:12px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;";
             btnDelivery.onclick = () => openDeliverySimulation(vendor.id);
             
-            const kind = String(vendor.kind || '').toLowerCase();
             const boutiqueTab = document.getElementById('vendor-tab-boutique');
             if (kind !== 'service') {
                 if(!document.getElementById('btn-sim-delivery') && boutiqueTab) {
@@ -8018,64 +8632,66 @@
             // Clear current list
             const feed = document.getElementById('vendorProductsList');
             const emptyMsg = document.getElementById('emptyProductsMsg');
-            feed.innerHTML = ''; 
-            
-            // For now, we only show products if it's the current user's shop (since we don't have a real backend for all shops)
-            // In a real app, we would fetch products by vendor.id
-            if (myShopId && vendor.id == myShopId) {
-                // Check if we have products in memory (mock)
-                if (!window.MY_PRODUCTS) {
-                    const stored = localStorage.getItem('mangoo_my_products');
-                    window.MY_PRODUCTS = stored ? JSON.parse(stored) : [];
-                }
-                
-                const myProducts = window.MY_PRODUCTS || [];
-                if (myProducts.length > 0) {
-                    emptyMsg.style.display = 'none';
-                    myProducts.forEach(p => {
-                        // Pass 'false' to simulate client view (or true for owner view)
-                        // For now, let's show both views (Owner controls + Client actions) for demo purposes
-                        feed.insertAdjacentHTML('afterbegin', createProductCardHTML(p, true)); 
-                    });
-                    
-                    // Add "Simulation Mode" info
-                    feed.insertAdjacentHTML('beforeend', `
-                        <div style="text-align:center; margin-top:15px; padding:10px; background:#e0f2f1; color:#00695c; border-radius:8px; font-size:0.85rem;">
-                            👀 Mode Propriétaire (Vous voyez les boutons d'édition)
-                        </div>
-                    `);
-                } else {
-                    emptyMsg.style.display = 'block';
-                }
-            } else {
-                // Other vendors: show some mock products using the shared template
-                emptyMsg.style.display = 'none';
-                
-                const mockProducts = [
-                    { id: 1, name: 'Sneakers Pro', price: '15 000', vendorName: vendor.name },
-                    { id: 2, name: 'Montre Connectée', price: '25 000', vendorName: vendor.name },
-                    { id: 3, name: 'Sac à dos', price: '8 000', vendorName: vendor.name }
-                ];
+            if (feed) feed.innerHTML = '';
 
-                let html = '';
-                mockProducts.forEach(p => {
-                    html += createProductCardHTML(p, false);
-                });
-                
-                feed.innerHTML = html;
-                
-                // Add "Voir toute la boutique" button at the end
-                const params = new URLSearchParams({
-                    name: vendor.name,
-                    category: vendor.category,
-                    avatar: vendor.avatar
-                });
-                
-                feed.insertAdjacentHTML('beforeend', `
-                    <a href="mangoo-shop.html?${params.toString()}" style="display:block; text-align:center; margin-top:15px; padding:12px; background:#f1f2f6; color:#2d3436; border-radius:12px; text-decoration:none; font-weight:bold;">
-                        🏪 Visiter la boutique complète
-                    </a>
-                `);
+            if (kind === 'service') {
+                if (emptyMsg) emptyMsg.style.display = 'none';
+                if (boutiqueTab) boutiqueTab.style.display = 'none';
+            } else {
+                if (boutiqueTab) boutiqueTab.style.display = 'block';
+
+                // For now, we only show products if it's the current user's shop (since we don't have a real backend for all shops)
+                // In a real app, we would fetch products by vendor.id
+                if (myShopId && vendor.id == myShopId) {
+                    // Check if we have products in memory (mock)
+                    if (!window.MY_PRODUCTS) {
+                        const stored = localStorage.getItem('mangoo_my_products');
+                        window.MY_PRODUCTS = stored ? JSON.parse(stored) : [];
+                    }
+
+                    const myProducts = window.MY_PRODUCTS || [];
+                    if (myProducts.length > 0) {
+                        if (emptyMsg) emptyMsg.style.display = 'none';
+                        myProducts.forEach(p => {
+                            feed.insertAdjacentHTML('afterbegin', createProductCardHTML(p, true));
+                        });
+
+                        feed.insertAdjacentHTML('beforeend', `
+                            <div style="text-align:center; margin-top:15px; padding:10px; background:#e0f2f1; color:#00695c; border-radius:8px; font-size:0.85rem;">
+                                👀 Mode Propriétaire (Vous voyez les boutons d'édition)
+                            </div>
+                        `);
+                    } else {
+                        if (emptyMsg) emptyMsg.style.display = 'block';
+                    }
+                } else {
+                    if (emptyMsg) emptyMsg.style.display = 'none';
+
+                    const mockProducts = [
+                        { id: 1, name: 'Sneakers Pro', price: '15 000', vendorName: vendor.name },
+                        { id: 2, name: 'Montre Connectée', price: '25 000', vendorName: vendor.name },
+                        { id: 3, name: 'Sac à dos', price: '8 000', vendorName: vendor.name }
+                    ];
+
+                    let html = '';
+                    mockProducts.forEach(p => {
+                        html += createProductCardHTML(p, false);
+                    });
+
+                    feed.innerHTML = html;
+
+                    const params = new URLSearchParams({
+                        name: vendor.name,
+                        category: vendor.category,
+                        avatar: vendor.avatar
+                    });
+
+                    feed.insertAdjacentHTML('beforeend', `
+                        <a href="mangoo-shop.html?${params.toString()}" style="display:block; text-align:center; margin-top:15px; padding:12px; background:#f1f2f6; color:#2d3436; border-radius:12px; text-decoration:none; font-weight:bold;">
+                            🏪 Visiter la boutique complète
+                        </a>
+                    `);
+                }
             }
 
             const defaultTab = kind === 'service' ? 'profil' : 'boutique';
@@ -8111,6 +8727,12 @@
                 `;
 
                 profilTab.innerHTML = `
+                    ${String(vendor.kind || '').toLowerCase() === 'service' ? `
+                        <div style="display:flex; gap:10px; margin-bottom:12px;">
+                            <button onclick="startServicePayment(${JSON.stringify(vendor.id)})" style="flex:1; background:#00b894; color:white; border:none; padding:14px 12px; border-radius:14px; font-weight:950; cursor:pointer;">💳 Payer une prestation</button>
+                            <button onclick="openChat()" style="flex:1; background:#2d3436; color:white; border:none; padding:14px 12px; border-radius:14px; font-weight:950; cursor:pointer;">💬 Demander un devis</button>
+                        </div>
+                    ` : ''}
                     <div class="hub-card" style="border-radius:16px; padding:14px; margin-bottom:12px;">
                         <div class="hub-card-title" style="font-weight:950; margin-bottom:8px;">Prestataire</div>
                         <div style="color:var(--ml-muted); font-size:0.95rem; line-height:1.45;">
@@ -8146,6 +8768,46 @@
             if(!activeVendor) return;
             const url = `https://www.google.com/maps/dir/?api=1&destination=${activeVendor.lat},${activeVendor.lng}`;
             window.open(url, '_blank');
+        }
+
+        function startServicePayment(vendorId) {
+            const vendor = VENDORS.find((v) => String(v?.id) === String(vendorId)) || activeVendor;
+            if (!vendor) return;
+            const amountRaw = prompt('Montant de la prestation (FCFA) :', '5000');
+            const cleaned = String(amountRaw || '').replace(/[^\d]/g, '');
+            const amount = Number(cleaned);
+            if (!Number.isFinite(amount) || amount <= 0) {
+                alert('Montant invalide.');
+                return;
+            }
+            const returnTo = `${window.location.origin}${window.location.pathname}${window.location.search}${window.location.hash}`;
+            const params = new URLSearchParams({
+                vendorId: String(vendor.id),
+                vendorName: String(vendor.name || ''),
+                amount: String(amount),
+                return: returnTo,
+            });
+            const target = `/service-checkout?${params.toString()}`;
+            try {
+                const topWin = window.top && window.top.location ? window.top : window;
+                topWin.location.href = target;
+            } catch {
+                window.location.href = target;
+            }
+        }
+
+        function openProviderDashboard(vendorId) {
+            const v = VENDORS.find((x) => String(x?.id) === String(vendorId)) || activeVendor;
+            if (!v) return;
+            const returnTo = `${window.location.origin}${window.location.pathname}${window.location.search}${window.location.hash}`;
+            const params = new URLSearchParams({ vendorId: String(v.id), return: returnTo });
+            const target = `/provider/dashboard?${params.toString()}`;
+            try {
+                const topWin = window.top && window.top.location ? window.top : window;
+                topWin.location.href = target;
+            } catch {
+                window.location.href = target;
+            }
         }
 
         // === FAVORIS LOGIC ===
@@ -9134,7 +9796,8 @@
                 const index = VENDORS.findIndex(v => v.id == id);
                 if (index > -1) {
                     VENDORS.splice(index, 1);
-                    localStorage.setItem('mangoo_vendors', JSON.stringify(VENDORS));
+                    try { removeCustomVendor(id); } catch {}
+                    try { localStorage.setItem('mangoo_vendors', JSON.stringify(VENDORS)); } catch {}
                 }
                 
                 // Clear user shop ID
@@ -9233,10 +9896,86 @@
 
                 // Ajout à la liste et sauvegarde
                 VENDORS.push(newVendor);
-                localStorage.setItem('mangoo_vendors', JSON.stringify(VENDORS));
+                try { upsertCustomVendor(newVendor); } catch {}
+                try { localStorage.setItem('mangoo_vendors', JSON.stringify(VENDORS)); } catch {}
                 
                 // SAVE USER SHOP ID
                 localStorage.setItem('mangoo_my_shop_id', newVendor.id);
+                try {
+                    const u = getLpCurrentUser ? getLpCurrentUser() : null;
+                    const email = String(u?.email || '').trim().toLowerCase();
+                    if (email) {
+                        const key = `mangoo_my_shop_ids:${email}`;
+                        let list = [];
+                        try {
+                            const raw = localStorage.getItem(key);
+                            const parsed = raw ? JSON.parse(raw) : [];
+                            list = Array.isArray(parsed) ? parsed : [];
+                        } catch { list = []; }
+                        if (!list.some((x) => String(x) === String(newVendor.id))) {
+                            list.push(newVendor.id);
+                            localStorage.setItem(key, JSON.stringify(list));
+                        }
+                    }
+                } catch {
+                }
+
+                try {
+                    const u = getLpCurrentUser ? getLpCurrentUser() : null;
+                    const email = String(u?.email || '').trim().toLowerCase();
+                    const name = String(newVendor?.name || '').trim() || 'Boutique';
+                    const baseSlug = name
+                        .toLowerCase()
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .replace(/[^a-z0-9]+/g, '-')
+                        .replace(/^-+|-+$/g, '') || `boutique-${String(newVendor.id)}`;
+
+                    let shopCategory = 'general';
+                    const c = String(newVendor?.category || '').trim().toLowerCase();
+                    if (c.includes('épicer') || c.includes('epicer') || c.includes('vivre') || c.includes('aliment') || c.includes('food')) shopCategory = 'food';
+                    else if (c.includes('tech') || c.includes('elect') || c.includes('teleph') || c.includes('téléph')) shopCategory = 'tech';
+                    else if (c.includes('mode') || c.includes('fashion') || c.includes('vêt') || c.includes('vet')) shopCategory = 'fashion';
+                    else if (c.includes('beaut') || c.includes('cosm')) shopCategory = 'beauty';
+                    else if (c.includes('maison') || c.includes('home')) shopCategory = 'home';
+                    else if (c.includes('service') || c.includes('métier') || c.includes('metier')) shopCategory = 'services';
+
+                    let shops = [];
+                    try {
+                        const raw = localStorage.getItem('demo_shops');
+                        const parsed = raw ? JSON.parse(raw) : [];
+                        shops = Array.isArray(parsed) ? parsed : [];
+                    } catch { shops = []; }
+
+                    const existingSlugs = new Set(shops.map((s) => String(s?.slug || '')).filter(Boolean));
+                    let slug = baseSlug;
+                    if (existingSlugs.has(slug)) slug = `${baseSlug}-${String(newVendor.id)}`;
+
+                    const idx = shops.findIndex((s) => String(s?.sourceVendorId) === String(newVendor.id));
+                    const shopUrl = `${window.location.origin}/shop/${slug}`;
+                    const record = {
+                        id: `shop-${String(newVendor.id)}`,
+                        name,
+                        slug,
+                        category: shopCategory,
+                        ownerName: String(u?.name || 'Vendeur'),
+                        ownerEmail: email,
+                        logoDataUrl: '',
+                        primaryColor: '#0EA5E9',
+                        secondaryColor: '#38BDF8',
+                        shopUrl,
+                        approvalStatus: 'approved',
+                        source: 'localplus',
+                        sourceVendorId: newVendor.id,
+                        updatedAt: new Date().toISOString(),
+                    };
+                    if (idx >= 0) shops[idx] = { ...shops[idx], ...record };
+                    else shops.push({ ...record, createdAt: new Date().toISOString() });
+                    localStorage.setItem('demo_shops', JSON.stringify(shops));
+                    try { window.dispatchEvent(new Event('demo-shops-updated')); } catch {}
+                } catch {
+                }
+
                 checkUserShop(); // Update UI
 
                 // Reset UI
@@ -9296,8 +10035,9 @@
             vendor.category = categoryInput.value;
             vendor.voicePitch = pitchInput.value;
             vendor.voiceAudio = currentAudioBase64; // UPDATE AUDIO
-            
-            localStorage.setItem('mangoo_vendors', JSON.stringify(VENDORS));
+
+            try { upsertCustomVendor(vendor); } catch {}
+            try { localStorage.setItem('mangoo_vendors', JSON.stringify(VENDORS)); } catch {}
             
             alert("✅ Boutique mise à jour avec succès !");
             document.getElementById('sellerModal').style.display = 'none';
@@ -10750,6 +11490,11 @@
 
         // === P2P TRANSFER FEATURE ===
         function openP2PModal() {
+            try {
+                lpGoToClientAccount('wallet', { action: 'transfer' })
+                return
+            } catch {
+            }
             // Close other modals if open
             const checkout = document.getElementById('mangoo-checkout-overlay');
             if(checkout) checkout.remove();
@@ -11171,8 +11916,14 @@
         }
 
         function switchAccountTab(tabName) {
-            const allowed = ['orders', 'sell', 'profile', 'favorites', 'pay', 'communication']
+            let allowSell = false
+            try { allowSell = isLpVendorUser(getLpCurrentUser()) } catch {}
+            const allowed = allowSell
+                ? ['orders', 'sell', 'profile', 'favorites', 'pay', 'communication']
+                : ['orders', 'profile', 'favorites', 'pay', 'communication']
             const next = allowed.includes(String(tabName || '')) ? String(tabName) : 'orders'
+
+            try { updateLpSellTabVisibility() } catch {}
 
             allowed.forEach((k) => {
                 const btn = document.getElementById('lp-tab-' + k)
@@ -11196,6 +11947,79 @@
             }
         }
 
+        function getLpCurrentUser() {
+            try {
+                const raw = localStorage.getItem('mangoo-current-user') || localStorage.getItem('user')
+                if (!raw) return null
+                const parsed = JSON.parse(raw)
+                if (!parsed || typeof parsed !== 'object') return null
+                const email = String(parsed?.email || '').trim().toLowerCase()
+                const name = String(parsed?.name || parsed?.fullName || parsed?.username || parsed?.displayName || '').trim()
+                const phone = String(parsed?.phone || parsed?.telephone || '').trim()
+                return { ...parsed, email, name, phone }
+            } catch {
+                return null
+            }
+        }
+
+        function isLpVendorUser(u) {
+            const role = String(u?.role || u?.currentRole || '').trim().toLowerCase()
+            return role === 'vendor' || role === 'vendeur' || role === 'seller' || role === 'merchant'
+        }
+
+        function updateLpSellTabVisibility() {
+            const u = getLpCurrentUser()
+            const allowSell = isLpVendorUser(u)
+            const tab = document.getElementById('lp-tab-sell')
+            const pane = document.getElementById('dash-sell')
+            if (tab) tab.style.display = allowSell ? '' : 'none'
+            if (pane) pane.style.display = allowSell ? '' : 'none'
+            if (!allowSell) {
+                try {
+                    if (tab && tab.classList.contains('active')) {
+                        switchAccountTab('orders')
+                    }
+                } catch {
+                }
+            }
+        }
+
+        function lpProfileStorageKey() {
+            const u = getLpCurrentUser()
+            const email = String(u?.email || '').trim().toLowerCase()
+            if (email) return `mangoo_local_profile:${email}`
+            return 'mangoo_local_profile'
+        }
+
+        function applyLpHeaderUser() {
+            const elName = document.getElementById('lpUserName')
+            const elPhone = document.getElementById('lpUserPhone')
+            const elAvatar = document.getElementById('lpUserAvatar')
+
+            const u = getLpCurrentUser()
+            const key = lpProfileStorageKey()
+            let p = {}
+            try {
+                const raw = localStorage.getItem(key) || (key !== 'mangoo_local_profile' ? localStorage.getItem('mangoo_local_profile') : null)
+                p = raw ? (JSON.parse(raw) || {}) : {}
+            } catch {
+                p = {}
+            }
+
+            const email = String(u?.email || '').trim().toLowerCase()
+            const emailPrefix = email && email.includes('@') ? email.split('@')[0] : ''
+            const name = String(u?.name || emailPrefix || p?.name || 'Utilisateur Démo').trim() || 'Utilisateur Démo'
+            const phone = String(u?.phone || p?.phone || (u ? 'Téléphone non renseigné' : '+237 699 00 00 00')).trim() || (u ? 'Téléphone non renseigné' : '+237 699 00 00 00')
+
+            if (elName) elName.textContent = name
+            if (elPhone) elPhone.textContent = phone
+            if (elAvatar) {
+                elAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=1a5f3f&color=fff`
+            }
+
+            try { updateLpSellTabVisibility() } catch {}
+        }
+
         function switchVendorTab(tabName) {
             const allowed = ['overview', 'stock', 'products', 'orders', 'notifications', 'communication', 'shops']
             const next = allowed.includes(String(tabName || '')) ? String(tabName) : 'overview'
@@ -11212,7 +12036,7 @@
 
         function loadLpProfile() {
             try {
-                const raw = localStorage.getItem('mangoo_local_profile')
+                const raw = localStorage.getItem(lpProfileStorageKey()) || localStorage.getItem('mangoo_local_profile')
                 const data = raw ? JSON.parse(raw) : {}
                 const name = String(data?.name || '')
                 const phone = String(data?.phone || '')
@@ -11232,7 +12056,8 @@
                 const name = String(document.getElementById('lpProfileName')?.value || '').trim()
                 const phone = String(document.getElementById('lpProfilePhone')?.value || '').trim()
                 const address = String(document.getElementById('lpProfileAddress')?.value || '').trim()
-                localStorage.setItem('mangoo_local_profile', JSON.stringify({ name, phone, address }))
+                localStorage.setItem(lpProfileStorageKey(), JSON.stringify({ name, phone, address }))
+                try { applyLpHeaderUser() } catch {}
                 alert('✅ Profil enregistré.')
             } catch {
                 alert('Erreur lors de la sauvegarde.')
@@ -11272,6 +12097,179 @@
             alert('🧾 Facture indisponible.')
         }
 
+        function setLpUiVisibility(visible) {
+            const ids = ['calendarFab', 'metiersListFab', 'metiersToggleFab', 'metiersListFab', 'metiersToggleFab', 'fabAddLabel']
+            ids.forEach((id) => {
+                try {
+                    const el = document.getElementById(id)
+                    if (el) el.style.display = visible ? '' : 'none'
+                } catch {
+                }
+            })
+            const selectors = ['.quick-filter-fab', '.filter-advanced-btn', '.fab-geo']
+            selectors.forEach((sel) => {
+                try {
+                    const el = document.querySelector(sel)
+                    if (el) el.style.display = visible ? '' : 'none'
+                } catch {
+                }
+            })
+        }
+
+        function closeLpIdentityModal() {
+            try {
+                const existing = document.getElementById('lpIdentityOverlay')
+                if (existing) existing.remove()
+            } catch {
+            }
+            try { setLpUiVisibility(true) } catch {}
+            try {
+                const v = String(currentView || '')
+                if (v === 'account') {
+                    const calendarFab = document.getElementById('calendarFab')
+                    if (calendarFab) calendarFab.style.display = 'none'
+                }
+            } catch {
+            }
+        }
+
+        function openLpIdentityModal() {
+            try { closeLpIdentityModal() } catch {}
+            try { setLpUiVisibility(false) } catch {}
+
+            const u = getLpCurrentUser()
+            const key = lpProfileStorageKey()
+            let rawUser = null
+            try {
+                rawUser = localStorage.getItem('mangoo-current-user') || localStorage.getItem('user')
+            } catch {
+                rawUser = null
+            }
+
+            const overlay = document.createElement('div')
+            overlay.id = 'lpIdentityOverlay'
+            overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:20000; display:flex; align-items:flex-start; justify-content:center; padding:16px; box-sizing:border-box; overflow-y:auto; -webkit-overflow-scrolling:touch;'
+
+            const status = u ? '✅ Utilisateur détecté' : '⚠️ Aucun utilisateur détecté'
+            const explain = u
+                ? "Local+ lit l’identité depuis localStorage (mangoo-current-user)."
+                : "Ouvrez d’abord l’app Mangoo (secteur formel) et connectez-vous, puis ouvrez Local+ depuis le menu."
+            const email = String(u?.email || '').trim()
+            const name = String(u?.name || '').trim()
+            const phone = String(u?.phone || '').trim()
+            const role = String(u?.role || u?.currentRole || '').trim()
+
+            const identityCard = `
+                <div id="lpIdentityFormCard" style="padding:12px; border-radius:14px; background:rgba(249,115,22,0.10); border:1px solid rgba(249,115,22,0.35);">
+                    <div style="font-weight:950;">📝 Identité Local+ (modifiable)</div>
+                    <div style="color:var(--ml-muted); font-size:0.9rem; margin-top:4px; line-height:1.45;">Ce bloc sert à définir votre identité Local+ (client ou vendeur). Il ne remplace pas la connexion du secteur formel.</div>
+                    <div style="display:grid; gap:10px; margin-top:12px;">
+                        <input id="lpIdentityEmail" placeholder="Email (ex: client@example.com)" value="${email ? email.replace(/"/g, '&quot;') : ''}" style="width:100%; padding:12px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:800; pointer-events:auto;" />
+                        <input id="lpIdentityName" placeholder="Nom (ex: Parfait)" value="${name ? name.replace(/"/g, '&quot;') : ''}" style="width:100%; padding:12px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:800; pointer-events:auto;" />
+                        <input id="lpIdentityPhone" placeholder="Téléphone (ex: +237 6xx xx xx xx)" value="${phone ? phone.replace(/"/g, '&quot;') : ''}" style="width:100%; padding:12px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:800; pointer-events:auto;" />
+                        <select id="lpIdentityRole" style="width:100%; padding:12px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:900;" >
+                            <option value="client" ${role === 'client' || !role ? 'selected' : ''}>👤 Client</option>
+                            <option value="vendor" ${role === 'vendor' ? 'selected' : ''}>🏪 Vendeur</option>
+                        </select>
+                        <button type="button" class="lp-btn lp-btn-primary" onclick="lpSaveIdentityFromModal()">Enregistrer l’identité</button>
+                    </div>
+                </div>
+            `
+
+            overlay.innerHTML = `
+                <div style="background:var(--ml-panel); color:var(--ml-text); width:100%; max-width:520px; border-radius:18px; border:1px solid var(--ml-border); box-shadow:0 20px 60px rgba(0,0,0,0.35); overflow:hidden; max-height: calc(100vh - 32px); display:flex; flex-direction:column;">
+                    <div style="padding:16px; display:flex; align-items:center; justify-content:space-between; gap:10px; border-bottom:1px solid var(--ml-border);">
+                        <div style="font-weight:950;">🪪 Identité Local+</div>
+                        <button type="button" class="lp-btn lp-btn-secondary" onclick="closeLpIdentityModal()">Fermer</button>
+                    </div>
+                    <div style="padding:16px; display:grid; gap:12px; overflow:auto;">
+                        <div style="padding:12px; border-radius:14px; background:rgba(17,24,39,0.06); border:1px solid var(--ml-border);">
+                            <div style="font-weight:900;">${status}</div>
+                            <div style="color:var(--ml-muted); font-size:0.9rem; margin-top:4px; line-height:1.45;">${explain}</div>
+                        </div>
+
+                        ${identityCard}
+
+                        <div style="padding:12px; border-radius:14px; background:rgba(17,24,39,0.06); border:1px solid var(--ml-border);">
+                            <div style="font-weight:950;">Informations détectées (lecture seule)</div>
+                            <div style="color:var(--ml-muted); font-size:0.9rem; margin-top:4px; line-height:1.45;">Ces champs reflètent l’utilisateur courant. Pour modifier, utilisez le bloc “Identité Local+ (modifiable)” ci-dessus.</div>
+                        </div>
+
+                        <div style="display:grid; gap:8px;">
+                            <div style="display:flex; justify-content:space-between; gap:10px; font-size:0.95rem;">
+                                <div style="color:var(--ml-muted);">Email</div>
+                                <div style="font-weight:900; text-align:right;">${email || '—'}</div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; gap:10px; font-size:0.95rem;">
+                                <div style="color:var(--ml-muted);">Nom</div>
+                                <div style="font-weight:900; text-align:right;">${name || '—'}</div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; gap:10px; font-size:0.95rem;">
+                                <div style="color:var(--ml-muted);">Téléphone</div>
+                                <div style="font-weight:900; text-align:right;">${phone || '—'}</div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; gap:10px; font-size:0.95rem;">
+                                <div style="color:var(--ml-muted);">Type</div>
+                                <div style="font-weight:900; text-align:right;">${role || '—'}</div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; gap:10px; font-size:0.95rem;">
+                                <div style="color:var(--ml-muted);">Clé profil Local+</div>
+                                <div style="font-weight:900; text-align:right;">${key}</div>
+                            </div>
+                        </div>
+
+                        <div style="padding:12px; border-radius:14px; background:rgba(17,24,39,0.06); border:1px solid var(--ml-border);">
+                            <div style="font-weight:900;">Raw localStorage</div>
+                            <div style="color:var(--ml-muted); font-size:0.85rem; margin-top:6px; white-space:pre-wrap; word-break:break-word;">${rawUser ? rawUser : '—'}</div>
+                        </div>
+
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button type="button" class="lp-btn lp-btn-primary" onclick="try{applyLpHeaderUser()}catch{}">Rafraîchir l’entête</button>
+                            <button type="button" class="lp-btn lp-btn-secondary" onclick="try{document.getElementById('lpIdentityFormCard')?.scrollIntoView({behavior:'smooth', block:'start'})}catch{}; try{document.getElementById('lpIdentityName')?.focus()}catch{};">Modifier l’identité</button>
+                            <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpGoToClientAccount('profile')}catch{}">Profil livraison</button>
+                            ${u ? '<button type="button" class="lp-btn lp-btn-secondary" onclick="lpClearIdentityFromModal()">Effacer identité</button>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `
+
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) closeLpIdentityModal()
+            })
+
+            document.body.appendChild(overlay)
+        }
+
+        function lpSaveIdentityFromModal() {
+            try {
+                const email = String(document.getElementById('lpIdentityEmail')?.value || '').trim().toLowerCase()
+                const name = String(document.getElementById('lpIdentityName')?.value || '').trim()
+                const phone = String(document.getElementById('lpIdentityPhone')?.value || '').trim()
+                const role = String(document.getElementById('lpIdentityRole')?.value || 'client').trim().toLowerCase()
+                if (!email) {
+                    alert('Entrez un email.')
+                    return
+                }
+                const fallbackName = email.split('@')[0] || 'Utilisateur'
+                const u = { email, name: name || fallbackName, phone, role: role === 'vendor' ? 'vendor' : 'client' }
+                localStorage.setItem('mangoo-current-user', JSON.stringify(u))
+                localStorage.setItem('user', JSON.stringify(u))
+                try { applyLpHeaderUser() } catch {}
+                try { loadLpProfile() } catch {}
+                alert('✅ Identité enregistrée.')
+                try { openLpIdentityModal() } catch {}
+            } catch {
+                alert('Erreur lors de la sauvegarde.')
+            }
+        }
+
+        function lpClearIdentityFromModal() {
+            try { localStorage.removeItem('mangoo-current-user') } catch {}
+            try { localStorage.removeItem('user') } catch {}
+            try { applyLpHeaderUser() } catch {}
+            try { openLpIdentityModal() } catch {}
+        }
+
         function updateDashboard() {
             // 1. ORDERS
             const ordersContainer = document.getElementById('ordersListContainer');
@@ -11306,7 +12304,7 @@
                             <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
                                 <button type="button" class="lp-btn lp-btn-primary" onclick="lpRequestDelivery('${orderLabel}')" title="Demander une livraison pour cette commande">🚚 Demander livraison</button>
                                 <button type="button" class="lp-btn lp-btn-secondary" onclick="lpOpenInvoice('${state.productName || 'Commande'}', ${totalFcfa})" title="Voir la facture">🧾 Facture</button>
-                                <button type="button" class="lp-btn lp-btn-secondary" onclick="switchAccountTab('profile')" title="Renseigner mon adresse">✍️ Mon adresse</button>
+                                <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpGoToClientAccount('profile')}catch{}" title="Renseigner mon adresse">✍️ Mon adresse</button>
                             </div>
 
                             <div style="margin-top:12px; padding-top:12px; border-top: 1px solid rgba(255,255,255,0.06); color: var(--ml-muted); font-size:0.85rem; display:flex; justify-content:space-between; gap:12px;">
@@ -11335,7 +12333,7 @@
                         <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
                             <button type="button" class="lp-btn lp-btn-primary" disabled title="Disponible après paiement">🚚 Demander livraison</button>
                             <button type="button" class="lp-btn lp-btn-secondary" onclick="lpOpenInvoice('Sac de Riz 50kg', 25000)" title="Voir la facture">🧾 Facture</button>
-                            <button type="button" class="lp-btn lp-btn-secondary" onclick="switchAccountTab('profile')" title="Renseigner mon adresse">✍️ Mon adresse</button>
+                            <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpGoToClientAccount('profile')}catch{}" title="Renseigner mon adresse">✍️ Mon adresse</button>
                         </div>
 
                         <div style="margin-top:12px; padding-top:12px; border-top: 1px solid rgba(255,255,255,0.06); color: var(--ml-muted); font-size:0.85rem; display:flex; justify-content:space-between; gap:12px;">

@@ -157,6 +157,39 @@ const ShopPage = () => {
         }
       })();
 
+      const localPlusVendor = (() => {
+        const slugify = (value) => {
+          return String(value || '')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+        };
+        try {
+          const rawLegacy = localStorage.getItem('mangoo_vendors');
+          const legacyParsed = rawLegacy ? JSON.parse(rawLegacy) : [];
+          const legacy = Array.isArray(legacyParsed) ? legacyParsed : [];
+          const rawCustom = localStorage.getItem('mangoo_custom_vendors');
+          const customParsed = rawCustom ? JSON.parse(rawCustom) : [];
+          const custom = Array.isArray(customParsed) ? customParsed : [];
+          const list = [...legacy, ...custom];
+
+          return list.find((v) => {
+            const kind = String(v?.kind || 'shop').trim().toLowerCase();
+            if (kind !== 'shop') return false;
+            const id = String(v?.id ?? '').trim();
+            const name = String(v?.name || '').trim();
+            if (!id || !name) return false;
+            const base = slugify(name) || `boutique-${id}`;
+            const expected = `${base}-${id}`;
+            return expected === shopSlug;
+          }) || null;
+        } catch {
+          return null;
+        }
+      })();
+
       const currentUser = (() => {
         try {
           const raw = localStorage.getItem('mangoo-current-user');
@@ -207,6 +240,60 @@ const ShopPage = () => {
           logoDataUrl: localShop.logoDataUrl || ''
         });
         setProducts(localProducts);
+        setError(null);
+        setLoading(false);
+        return;
+      }
+
+      if (localPlusVendor) {
+        const normalizeCategory = (raw) => {
+          const c = String(raw || '').trim().toLowerCase();
+          if (!c) return 'general';
+          if (c.includes('épicer') || c.includes('epicer') || c.includes('vivre') || c.includes('aliment') || c.includes('food')) return 'food';
+          if (c.includes('tech') || c.includes('elect') || c.includes('teleph') || c.includes('téléph') || c.includes('electron')) return 'tech';
+          if (c.includes('mode') || c.includes('fashion') || c.includes('vêt') || c.includes('vet') || c.includes('tailleur')) return 'fashion';
+          if (c.includes('beaut') || c.includes('cosm')) return 'beauty';
+          if (c.includes('maison') || c.includes('home')) return 'home';
+          if (c.includes('service') || c.includes('métier') || c.includes('metier')) return 'services';
+          return 'general';
+        };
+
+        const localProducts = (() => {
+          try {
+            const raw = localStorage.getItem('demo_products');
+            const map = raw ? JSON.parse(raw) : {};
+            const list = map && typeof map === 'object' ? map[shopSlug] : [];
+            return Array.isArray(list) ? list : [];
+          } catch {
+            return [];
+          }
+        })();
+
+        const description = String(localPlusVendor?.voicePitch || '').trim()
+          || `Bienvenue dans ma nouvelle boutique ${String(localPlusVendor?.name || 'Boutique')} ! Venez découvrir mes produits.`;
+
+        setShop({
+          ...demoShop,
+          id: `localplus-${String(localPlusVendor?.id ?? shopSlug)}`,
+          name: String(localPlusVendor?.name || demoShop.name),
+          slug: shopSlug,
+          description,
+          category: normalizeCategory(localPlusVendor?.category),
+          status: 'approved',
+          contact_email: '',
+          address: { city: 'Douala', country: 'Cameroun' },
+          primaryColor: '#0EA5E9',
+          secondaryColor: '#38BDF8',
+          review_count: 0,
+          followers_count: 0,
+          total_sales: 0,
+          total_revenue: 0,
+          created_at: new Date().toISOString(),
+          logoDataUrl: ''
+        });
+        setProducts(localProducts);
+        setCanManageProducts(false);
+        setShopOwnerEmail('');
         setError(null);
         setLoading(false);
         return;
@@ -536,6 +623,39 @@ const ShopPage = () => {
                 >
                   Tableau de bord
                 </button>
+              )}
+
+              {canManageProducts && (
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigate(`/?lp_role=vendor&lp_vendor_tab=shops&lp_vendor_edit_shop=${encodeURIComponent(String(shopSlug || ''))}`);
+                    }}
+                    className="px-4 py-2 rounded-full bg-white/10 text-white border border-white/25 hover:bg-white/20 transition-colors"
+                  >
+                    ⚙️ Réglages
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('products');
+                      setShowVendorManager(true);
+                    }}
+                    className="px-4 py-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white font-semibold hover:from-orange-600 hover:to-amber-600 transition-all"
+                  >
+                    📦 Nouveau
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigate('/?lp_role=vendor&lp_vendor_tab=supply');
+                    }}
+                    className="px-4 py-2 rounded-full bg-white/10 text-white border border-white/25 hover:bg-white/20 transition-colors"
+                  >
+                    🏭 S'approvisionner
+                  </button>
+                </div>
               )}
               <button
                 type="button"

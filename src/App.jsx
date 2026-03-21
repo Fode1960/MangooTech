@@ -36,6 +36,8 @@ import WebRTCManagerFinal from './components/WebRTCManagerFinal';
 import { LiveShoppingProvider } from './contexts/LiveShoppingContext';
 import WebRTCJoinPage from './pages/WebRTCJoinPage';
 import PlanCheckoutTest from './pages/PlanCheckoutTest';
+import ServiceCheckout from './pages/ServiceCheckout';
+import ProviderDashboard from './pages/ProviderDashboard';
 import VendorMessagingCenter from './components/VendorMessagingCenter';
 import LiveShoppingManager from './components/LiveShoppingManager';
 import { NotificationProvider } from './contexts/NotificationContext';
@@ -253,7 +255,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const { isDark } = useThemeStore();
+  const { isDark, setTheme } = useThemeStore();
   const navigate = useNavigate();
 
   const speakHelp = useCallback(() => {
@@ -864,7 +866,7 @@ const Register = ({ onRegister, onBack }) => {
       primaryColor,
       secondaryColor,
       shopUrl,
-      approvalStatus: 'pending'
+      approvalStatus: 'approved'
     };
 
     persistCreatedShop(shop);
@@ -1655,7 +1657,16 @@ const ClientRegister = ({ onRegister, onBack }) => {
 
 // Interface Vendeur optimisée
 const VendorDashboard = ({ user }) => {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const stored = localStorage.getItem('mangoo-vendor-active-tab');
+      const value = stored ? String(stored) : '';
+      const allowed = ['overview', 'stock', 'products', 'orders', 'notifications', 'communication', 'shops', 'supply'];
+      return allowed.includes(value) ? value : 'overview';
+    } catch {
+      return 'overview';
+    }
+  });
   const [VendorStats, setVendorStats] = useState(null);
   const [VendorStockManager, setVendorStockManager] = useState(null);
   const [VendorOrderHistory, setVendorOrderHistory] = useState(null);
@@ -1675,6 +1686,168 @@ const VendorDashboard = ({ user }) => {
   const [communicationMode, setCommunicationMode] = useState('messages');
   const [callRoomId, setCallRoomId] = useState('');
   const [manualRoomId, setManualRoomId] = useState('');
+
+  const [supplyRegion, setSupplyRegion] = useState('china');
+
+  const supplyRegions = useMemo(() => ([
+    { id: 'china', label: '🇨🇳 Chine Direct', hint: 'Dropshipping & gros', accent: 'from-sky-500 to-blue-600' },
+    { id: 'turkey', label: '🇹🇷 Turquie Mode', hint: 'Textile & accessoires', accent: 'from-orange-500 to-amber-500' },
+    { id: 'local', label: '🌍 Local & Gros', hint: 'Appro local / marchés', accent: 'from-emerald-500 to-green-600' }
+  ]), []);
+
+  const supplyCatalog = useMemo(() => ({
+    china: [
+      { sku: 'CN-EAR-i12', name: 'Écouteurs i12 TWS', price: '2 500 FCFA', moq: 'MOQ 10', eta: 'J+12', origin: 'Shenzhen' },
+      { sku: 'CN-CAB-USB', name: 'Câble USB-C renforcé', price: '1 200 FCFA', moq: 'MOQ 20', eta: 'J+10', origin: 'Guangzhou' },
+      { sku: 'CN-LED-STR', name: 'Ruban LED 5m', price: '3 900 FCFA', moq: 'MOQ 10', eta: 'J+14', origin: 'Yiwu' }
+    ],
+    turkey: [
+      { sku: 'TR-DRS-001', name: 'Robe tissu premium', price: '9 500 FCFA', moq: 'MOQ 5', eta: 'J+9', origin: 'Istanbul' },
+      { sku: 'TR-SHO-002', name: 'Chaussures unisex', price: '12 500 FCFA', moq: 'MOQ 5', eta: 'J+11', origin: 'Bursa' },
+      { sku: 'TR-BAG-003', name: 'Sac bandoulière', price: '7 000 FCFA', moq: 'MOQ 10', eta: 'J+8', origin: 'Izmir' }
+    ],
+    local: [
+      { sku: 'LC-RIZ-25', name: 'Riz 25kg', price: '18 500 FCFA', moq: 'MOQ 2', eta: 'Aujourd\'hui', origin: 'Gros local' },
+      { sku: 'LC-HUI-5', name: 'Huile 5L', price: '6 900 FCFA', moq: 'MOQ 4', eta: 'Aujourd\'hui', origin: 'Gros local' },
+      { sku: 'LC-SAV-BOX', name: 'Savon (carton)', price: '8 200 FCFA', moq: 'MOQ 1', eta: 'Aujourd\'hui', origin: 'Gros local' }
+    ]
+  }), []);
+
+  const normalizeEmail = useCallback((value) => {
+    return String(value || '').trim().toLowerCase();
+  }, []);
+
+  const slugifyVendor = useCallback((value) => {
+    return String(value || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }, []);
+
+  const mapVendorCategoryToShopCategory = useCallback((raw) => {
+    const c = String(raw || '').trim().toLowerCase();
+    if (!c) return 'general';
+    if (c.includes('épicer') || c.includes('epicer') || c.includes('vivre') || c.includes('aliment') || c.includes('food')) return 'food';
+    if (c.includes('tech') || c.includes('elect') || c.includes('teleph') || c.includes('téléph')) return 'tech';
+    if (c.includes('mode') || c.includes('fashion') || c.includes('vêt') || c.includes('vet')) return 'fashion';
+    if (c.includes('beaut') || c.includes('cosm')) return 'beauty';
+    if (c.includes('maison') || c.includes('home')) return 'home';
+    if (c.includes('service') || c.includes('métier') || c.includes('metier')) return 'services';
+    return 'general';
+  }, []);
+
+  const importLocalPlusShopsForCurrentUser = useCallback(() => {
+    const currentEmail = normalizeEmail(user?.email);
+    if (!currentEmail) return;
+
+    let myIds = [];
+    try {
+      const raw = localStorage.getItem(`mangoo_my_shop_ids:${currentEmail}`);
+      const parsed = raw ? JSON.parse(raw) : [];
+      myIds = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      myIds = [];
+    }
+
+    if (!myIds.length) {
+      try {
+        const single = localStorage.getItem('mangoo_my_shop_id');
+        const n = single ? Number(single) : NaN;
+        if (Number.isFinite(n)) myIds = [n];
+      } catch {
+      }
+    }
+
+    if (!myIds.length) return;
+
+    let vendors = [];
+    try {
+      const rawLegacy = localStorage.getItem('mangoo_vendors');
+      const legacyParsed = rawLegacy ? JSON.parse(rawLegacy) : [];
+      const legacy = Array.isArray(legacyParsed) ? legacyParsed : [];
+      const rawCustom = localStorage.getItem('mangoo_custom_vendors');
+      const customParsed = rawCustom ? JSON.parse(rawCustom) : [];
+      const custom = Array.isArray(customParsed) ? customParsed : [];
+      vendors = [...legacy, ...custom];
+    } catch {
+      vendors = [];
+    }
+    if (!vendors.length) return;
+
+    let shops = [];
+    try {
+      const raw = localStorage.getItem('demo_shops');
+      const parsed = raw ? JSON.parse(raw) : [];
+      shops = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      shops = [];
+    }
+
+    const existingSlugs = new Set(shops.map((s) => String(s?.slug || '')).filter(Boolean));
+    const bySourceId = new Map();
+    shops.forEach((s) => {
+      const sid = s?.sourceVendorId;
+      if (sid !== undefined && sid !== null) bySourceId.set(String(sid), s);
+    });
+
+    let changed = false;
+    myIds.forEach((id) => {
+      const vendor = vendors.find((v) => String(v?.id) === String(id));
+      if (!vendor) return;
+
+      const name = String(vendor?.name || '').trim() || 'Boutique';
+      const baseSlug = slugifyVendor(name) || `boutique-${String(id)}`;
+      let slug = baseSlug;
+      if (!bySourceId.has(String(id))) {
+        if (existingSlugs.has(slug)) slug = `${baseSlug}-${String(id)}`;
+        if (existingSlugs.has(slug)) slug = `${baseSlug}-${Date.now()}`;
+      } else {
+        const current = bySourceId.get(String(id));
+        slug = String(current?.slug || baseSlug);
+      }
+
+      const shopUrl = `${window.location.origin}/shop/${slug}`;
+      const category = mapVendorCategoryToShopCategory(vendor?.category);
+      const nextShop = {
+        id: `shop-${String(id)}`,
+        name,
+        slug,
+        category,
+        ownerName: String(user?.name || 'Vendeur'),
+        ownerEmail: currentEmail,
+        logoDataUrl: '',
+        primaryColor: '#0EA5E9',
+        secondaryColor: '#38BDF8',
+        shopUrl,
+        approvalStatus: 'approved',
+        source: 'localplus',
+        sourceVendorId: id,
+        updatedAt: new Date().toISOString()
+      };
+
+      if (bySourceId.has(String(id))) {
+        const idx = shops.findIndex((s) => String(s?.sourceVendorId) === String(id));
+        if (idx >= 0) {
+          shops[idx] = { ...shops[idx], ...nextShop };
+          changed = true;
+          return;
+        }
+      }
+
+      shops.push({ ...nextShop, createdAt: new Date().toISOString() });
+      existingSlugs.add(slug);
+      changed = true;
+    });
+
+    if (!changed) return;
+    try {
+      localStorage.setItem('demo_shops', JSON.stringify(shops));
+      window.dispatchEvent(new Event('demo-shops-updated'));
+    } catch {
+    }
+  }, [mapVendorCategoryToShopCategory, normalizeEmail, slugifyVendor, user?.email, user?.name]);
 
   const vendorPeerId = useMemo(() => {
     const id = user?.id ? String(user.id) : String(user?.email || 'vendor');
@@ -1696,6 +1869,13 @@ const VendorDashboard = ({ user }) => {
       setCallRoomId('');
       setManualRoomId('');
       setCommunicationMode('messages');
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('mangoo-vendor-active-tab', activeTab);
+    } catch {
     }
   }, [activeTab]);
 
@@ -1738,16 +1918,17 @@ const VendorDashboard = ({ user }) => {
 
   const loadVendorShops = useCallback(() => {
     try {
+      importLocalPlusShopsForCurrentUser();
       const raw = localStorage.getItem('demo_shops');
       const all = raw ? JSON.parse(raw) : [];
       const list = Array.isArray(all) ? all : [];
-      const email = user?.email;
-      const filtered = email ? list.filter((s) => s?.ownerEmail === email) : list;
+      const email = normalizeEmail(user?.email);
+      const filtered = email ? list.filter((s) => normalizeEmail(s?.ownerEmail || s?.owner_email) === email) : list;
       setVendorShops(filtered);
     } catch {
       setVendorShops([]);
     }
-  }, [user?.email]);
+  }, [importLocalPlusShopsForCurrentUser, normalizeEmail, user?.email]);
 
   const openShopEditor = useCallback((shop) => {
     setEditingShopSlug(shop?.slug || '');
@@ -1759,6 +1940,21 @@ const VendorDashboard = ({ user }) => {
     setEditSecondaryColor(shop?.secondaryColor || '#FBBF24');
     setShowShopEditor(true);
   }, [user?.email]);
+
+  useEffect(() => {
+    if (!vendorShops.length) return;
+    let slug = '';
+    try {
+      slug = String(localStorage.getItem('mangoo-vendor-edit-shop-slug') || '').trim();
+      localStorage.removeItem('mangoo-vendor-edit-shop-slug');
+    } catch {
+      slug = '';
+    }
+    if (!slug) return;
+    const match = vendorShops.find((s) => String(s?.slug || '').trim() === slug);
+    if (!match) return;
+    openShopEditor(match);
+  }, [openShopEditor, vendorShops]);
 
   const handleEditLogoChange = useCallback((e) => {
     const file = e.target.files?.[0];
@@ -1816,7 +2012,8 @@ const VendorDashboard = ({ user }) => {
     { id: 'orders', name: 'Commandes', icon: '🛒' },
     { id: 'notifications', name: 'Notifications', icon: '🔔' },
     { id: 'communication', name: 'Communication', icon: '📞' },
-    { id: 'shops', name: 'Mes boutiques', icon: '🏪' }
+    { id: 'shops', name: 'Mes boutiques', icon: '🏪' },
+    { id: 'supply', name: 'Approvisionnement', icon: '🏭' }
   ];
 
   const renderTabContent = useCallback(() => {
@@ -2067,6 +2264,21 @@ const VendorDashboard = ({ user }) => {
       case 'shops':
         return (
           <div className="space-y-4">
+            <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-6 shadow-sm`}>
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                <div>
+                  <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>Boutiques & Approvisionnement</div>
+                  <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Réapprovisionnement via Chine, Turquie et gros local.</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('supply')}
+                  className="bg-gradient-to-r from-sky-500 to-blue-600 text-white py-2 px-4 rounded-xl font-semibold hover:from-sky-600 hover:to-blue-700 transition-all"
+                >
+                  🏭 S'approvisionner
+                </button>
+              </div>
+            </div>
             <div className="flex items-center justify-between">
               <div>
                 <div className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Mes boutiques</div>
@@ -2267,6 +2479,89 @@ const VendorDashboard = ({ user }) => {
                 </div>
               </div>
             )}
+          </div>
+        );
+
+      case 'supply':
+        return (
+          <div className="space-y-4">
+            <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-6 shadow-sm`}>
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                <div>
+                  <div className={`${isDark ? 'text-white' : 'text-gray-900'} text-lg font-semibold`}>Mangoo Supply Chain</div>
+                  <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Réapprovisionnement (mode démo) : Chine, Turquie, local.</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => toast.info('Suivi logistique : bientôt disponible')}
+                  className={`${isDark ? 'bg-gray-900 border-gray-700 text-gray-200 hover:bg-gray-800' : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'} px-4 py-2 rounded-xl font-semibold transition-colors`}
+                >
+                  📦 Suivi logistique
+                </button>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {supplyRegions.map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => setSupplyRegion(r.id)}
+                    className={
+                      supplyRegion === r.id
+                        ? `px-3 py-2 rounded-xl text-sm font-semibold text-white bg-gradient-to-r ${r.accent}`
+                        : `${isDark ? 'bg-gray-900 border-gray-700 text-gray-200 hover:bg-gray-800' : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-xl text-sm font-semibold transition-colors`
+                    }
+                    title={r.hint}
+                  >
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-6 shadow-sm`}>
+              <div className={`${isDark ? 'text-gray-200' : 'text-gray-800'} font-semibold mb-4`}>Catalogue</div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                {(supplyCatalog[supplyRegion] || []).map((it) => (
+                  <div key={it.sku} className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-4`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>{it.name}</div>
+                        <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>{it.origin} • {it.eta}</div>
+                        <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm mt-2`}>{it.moq}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-emerald-400 font-bold">{it.price}</div>
+                        <div className={`${isDark ? 'text-gray-500' : 'text-gray-500'} text-xs mt-1`}>{it.sku}</div>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => toast.success(`Ajouté à votre liste d’import: ${it.name}`)}
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-green-600 text-white font-black hover:from-orange-600 hover:to-green-700 transition-all"
+                      >
+                        ➕ Importer
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toast.info('Devis fournisseur : bientôt disponible')}
+                        className={`${isDark ? 'bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'} px-4 py-2 rounded-xl font-black transition-colors`}
+                      >
+                        🧾 Devis
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('shops')}
+                        className={`${isDark ? 'bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'} px-4 py-2 rounded-xl font-black transition-colors`}
+                      >
+                        🏪 Mes boutiques
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         );
       default:
@@ -2797,6 +3092,7 @@ const ShopsDirectory = () => {
   const { isDark } = useThemeStore();
   const navigate = useNavigate();
   const [demoCreatedShops, setDemoCreatedShops] = useState([]);
+  const [localPlusShops, setLocalPlusShops] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
@@ -2812,6 +3108,63 @@ const ShopsDirectory = () => {
     { key: 'home', label: 'Maison' },
     { key: 'services', label: 'Services' }
   ], []);
+
+  const normalizeCategoryFromLocalPlus = useCallback((raw) => {
+    const c = String(raw || '').trim().toLowerCase();
+    if (!c) return 'general';
+    if (c.includes('épicer') || c.includes('epicer') || c.includes('vivre') || c.includes('aliment') || c.includes('food')) return 'food';
+    if (c.includes('tech') || c.includes('elect') || c.includes('teleph') || c.includes('téléph') || c.includes('electron')) return 'tech';
+    if (c.includes('mode') || c.includes('fashion') || c.includes('vêt') || c.includes('vet') || c.includes('tailleur')) return 'fashion';
+    if (c.includes('beaut') || c.includes('cosm')) return 'beauty';
+    if (c.includes('maison') || c.includes('home')) return 'home';
+    if (c.includes('service') || c.includes('métier') || c.includes('metier')) return 'services';
+    return 'general';
+  }, []);
+
+  const slugifyLocalPlus = useCallback((value) => {
+    return String(value || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }, []);
+
+  const loadLocalPlusShops = useCallback(() => {
+    try {
+      const rawLegacy = localStorage.getItem('mangoo_vendors');
+      const legacyParsed = rawLegacy ? JSON.parse(rawLegacy) : [];
+      const legacy = Array.isArray(legacyParsed) ? legacyParsed : [];
+      const rawCustom = localStorage.getItem('mangoo_custom_vendors');
+      const customParsed = rawCustom ? JSON.parse(rawCustom) : [];
+      const custom = Array.isArray(customParsed) ? customParsed : [];
+      const list = [...legacy, ...custom];
+      const mapped = list
+        .filter((v) => {
+          const kind = String(v?.kind || 'shop').trim().toLowerCase();
+          return kind === 'shop';
+        })
+        .map((v) => {
+          const id = String(v?.id ?? '');
+          const name = String(v?.name || 'Boutique').trim() || 'Boutique';
+          const base = slugifyLocalPlus(name) || `boutique-${id || 'localplus'}`;
+          const slug = id ? `${base}-${id}` : base;
+          return {
+            id: `localplus-${id || slug}`,
+            name,
+            slug,
+            category: normalizeCategoryFromLocalPlus(v?.category) || 'general',
+            primaryColor: '#0EA5E9',
+            secondaryColor: '#38BDF8',
+            logoDataUrl: '',
+            source: 'localplus'
+          };
+        });
+      setLocalPlusShops(mapped);
+    } catch {
+      setLocalPlusShops([]);
+    }
+  }, [normalizeCategoryFromLocalPlus, slugifyLocalPlus]);
 
   const loadCreatedShops = useCallback(() => {
     try {
@@ -2842,8 +3195,11 @@ const ShopsDirectory = () => {
 
   useEffect(() => {
     loadCreatedShops();
+    loadLocalPlusShops();
     const onStorage = (e) => {
       if (e.key === 'demo_shops') loadCreatedShops();
+      if (e.key === 'mangoo_vendors') loadLocalPlusShops();
+      if (e.key === 'mangoo_custom_vendors') loadLocalPlusShops();
     };
     const onCustom = () => loadCreatedShops();
     window.addEventListener('storage', onStorage);
@@ -2852,7 +3208,7 @@ const ShopsDirectory = () => {
       window.removeEventListener('storage', onStorage);
       window.removeEventListener('demo-shops-updated', onCustom);
     };
-  }, [loadCreatedShops]);
+  }, [loadCreatedShops, loadLocalPlusShops]);
 
   useEffect(() => {
     const fromQuery = searchParams.get('categorie') || searchParams.get('category');
@@ -2891,12 +3247,12 @@ const ShopsDirectory = () => {
     }));
 
     const bySlug = new Map();
-    [...base, ...demoCreatedShops, ...fromVendors].forEach((s) => {
+    [...base, ...demoCreatedShops, ...localPlusShops, ...fromVendors].forEach((s) => {
       const key = `${s.slug}-${s.name}`;
       if (!bySlug.has(key)) bySlug.set(key, s);
     });
     return Array.from(bySlug.values());
-  }, [demoCreatedShops, vendors]);
+  }, [demoCreatedShops, localPlusShops, vendors]);
 
   const goToShop = useCallback((slug) => {
     try {
@@ -3103,7 +3459,21 @@ const ShopsDirectory = () => {
                     </div>
                   )}
                   <div className="flex-1">
-                    <div className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{shop.name}</div>
+                    <div className="flex items-center gap-2">
+                      <div className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{shop.name}</div>
+                      {shop.source === 'localplus' && (
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded-full font-black border ${
+                            isDark
+                              ? 'bg-emerald-500/15 text-emerald-200 border-emerald-400/30'
+                              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          }`}
+                          title="Boutique créée dans Mangoo Local+"
+                        >
+                          Local+
+                        </span>
+                      )}
+                    </div>
                     <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{shop.slug}</div>
                   </div>
                 </div>
@@ -3190,8 +3560,26 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const savedTimeoutRef = useRef(null);
-  const [activeSection, setActiveSection] = useState('orders');
-  const [communicationMode, setCommunicationMode] = useState('chat');
+  const [activeSection, setActiveSection] = useState(() => {
+    try {
+      const stored = localStorage.getItem('mangoo-client-active-section');
+      const value = stored ? String(stored) : '';
+      const allowed = ['orders', 'profile', 'wishlist', 'wallet', 'communication'];
+      return allowed.includes(value) ? value : 'orders';
+    } catch {
+      return 'orders';
+    }
+  });
+  const [communicationMode, setCommunicationMode] = useState(() => {
+    try {
+      const stored = localStorage.getItem('mangoo-client-communication-mode');
+      const value = stored ? String(stored) : '';
+      const allowed = ['chat', 'contacts', 'call', 'live'];
+      return allowed.includes(value) ? value : 'chat';
+    } catch {
+      return 'chat';
+    }
+  });
   const [chatTarget, setChatTarget] = useState(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const localVideoRef = useRef(null);
@@ -3214,6 +3602,49 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
   const [isWalletBusy, setIsWalletBusy] = useState(false);
 
   const [invoiceOrder, setInvoiceOrder] = useState(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('mangoo-client-active-section', String(activeSection));
+    } catch {
+    }
+  }, [activeSection]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('mangoo-client-communication-mode', String(communicationMode));
+    } catch {
+    }
+  }, [communicationMode]);
+
+  useEffect(() => {
+    if (activeSection !== 'wallet') return;
+    let action = '';
+    try {
+      action = String(localStorage.getItem('mangoo-client-wallet-action') || '');
+      localStorage.removeItem('mangoo-client-wallet-action');
+    } catch {
+      action = '';
+    }
+    if (!action) return;
+    if (action === 'recharge') {
+      setWalletTopupChannel('mobile_money');
+      setWalletTopupOpen(true);
+      setWalletTopupAmount('');
+      setWalletTopupReference('');
+      return;
+    }
+    if (action === 'transfer') {
+      setWalletTopupChannel('credit_transfer');
+      setWalletTopupOpen(true);
+      setWalletTopupAmount('');
+      setWalletTopupReference('');
+      return;
+    }
+    if (action === 'withdraw') {
+      toast.info('Retrait vers Mobile Money : bientôt disponible');
+    }
+  }, [activeSection]);
 
   const requestDeliveryForOrder = useCallback((order) => {
     try {
@@ -4815,7 +5246,7 @@ const MangooLocalFrame = React.memo(({ user, onBack }) => {
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
       <iframe 
-        src="/mangoo-local.html?v=92" 
+        src="/mangoo-local.html?v=101" 
         style={{ width: '100%', height: '100%', border: 'none' }}
         title="Mangoo Local+"
       />
@@ -4827,6 +5258,7 @@ const MangooLocalFrame = React.memo(({ user, onBack }) => {
 function AppShell() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [initialState] = useState(() => {
     let view = 'landing';
     try {
@@ -4875,6 +5307,70 @@ function AppShell() {
   const [clientWalletBalance, setClientWalletBalance] = useState(null);
   const clientWalletKey = useMemo(() => getWalletKeyFromUser(user), [user]);
   const [activePack, setActivePack] = useState({ packId: null, packName: null, mode: 'unknown' });
+
+  useEffect(() => {
+    const lpView = searchParams.get('lp_view');
+    const lpRole = searchParams.get('lp_role');
+    const lpSection = searchParams.get('lp_section');
+    const lpWalletAction = searchParams.get('lp_wallet_action');
+    const lpCommMode = searchParams.get('lp_comm_mode');
+    const lpVendorTab = searchParams.get('lp_vendor_tab');
+    const lpVendorEditShop = searchParams.get('lp_vendor_edit_shop');
+    if (!lpView && !lpRole && !lpSection && !lpWalletAction && !lpCommMode && !lpVendorTab && !lpVendorEditShop) return;
+
+    try {
+      if (lpSection) localStorage.setItem('mangoo-client-active-section', String(lpSection));
+    } catch {
+    }
+    try {
+      if (lpWalletAction) localStorage.setItem('mangoo-client-wallet-action', String(lpWalletAction));
+    } catch {
+    }
+    try {
+      if (lpCommMode) localStorage.setItem('mangoo-client-communication-mode', String(lpCommMode));
+    } catch {
+    }
+    try {
+      if (lpVendorTab) localStorage.setItem('mangoo-vendor-active-tab', String(lpVendorTab));
+    } catch {
+    }
+
+    try {
+      if (lpVendorEditShop) localStorage.setItem('mangoo-vendor-edit-shop-slug', String(lpVendorEditShop));
+    } catch {
+    }
+
+    if (lpRole) {
+      const nextRole = String(lpRole);
+      try {
+        const currentRaw = localStorage.getItem('mangoo-current-user');
+        const currentUser = currentRaw ? JSON.parse(currentRaw) : null;
+        const email = String(currentUser?.email || '').trim().toLowerCase();
+        if (email) localStorage.setItem(`mangoo-active-role:${email}`, nextRole);
+      } catch {
+      }
+
+      try {
+        const raw = localStorage.getItem('mangoo-current-user');
+        const stored = raw ? JSON.parse(raw) : null;
+        if (stored && typeof stored === 'object') {
+          const roles = normalizeRoles(stored);
+          const nextRoles = roles.includes(nextRole) ? roles : Array.from(new Set([...roles, nextRole]));
+          setUser({ ...stored, roles: nextRoles, role: nextRole });
+        }
+      } catch {
+      }
+    }
+
+    if (lpView) {
+      const nextView = String(lpView);
+      try {
+        localStorage.setItem('mangoo-last-view', nextView);
+      } catch {
+      }
+      setCurrentView(nextView);
+    }
+  }, [searchParams]);
 
   const resolveUserId = useMemo(() => {
     return user?.id || user?.email || null;
@@ -5020,11 +5516,27 @@ function AppShell() {
   useEffect(() => {
     try {
       localStorage.setItem('mangoo-theme', isDark ? 'dark' : 'light');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      document.documentElement.classList.toggle('dark', isDark);
       document.body.classList.toggle('dark', isDark);
     } catch (e) {
       console.warn('Theme storage error', e);
     }
   }, [isDark]);
+
+  useEffect(() => {
+    const onStorage = (e) => {
+      try {
+        if (!e || e.key !== 'theme') return;
+        const v = String(e.newValue || '').toLowerCase();
+        if (v === 'dark') setTheme(true);
+        if (v === 'light') setTheme(false);
+      } catch {
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [setTheme]);
 
   // Chargement initial optimisé
   useEffect(() => {
@@ -5657,6 +6169,8 @@ function App() {
         <Route path="/livreur/inscription" element={<CourierRegister />} />
         <Route path="/livreur" element={<CourierScreen />} />
         <Route path="/shop/:shopSlug" element={<ShopPage />} />
+        <Route path="/service-checkout" element={<ServiceCheckout />} />
+        <Route path="/provider/dashboard" element={<ProviderDashboard />} />
         <Route path="/vendor-access-qr" element={<VendorAccessQRPage />} />
         <Route path="/webrtc" element={<WebRTCJoinPage />} />
         <Route path="/plan-checkout" element={<PlanCheckoutTest />} />
