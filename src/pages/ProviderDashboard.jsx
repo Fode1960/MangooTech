@@ -1,6 +1,7 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useThemeStore } from '../stores/themeStore';
+import { supabase } from '../config/supabase';
 
 function safeParseJson(raw, fallback) {
   try {
@@ -58,8 +59,31 @@ export default function ProviderDashboard() {
   const { isDark } = useThemeStore();
   const [searchParams] = useSearchParams();
   const [tab, setTab] = useState('overview');
+  const [providerProfile, setProviderProfile] = useState(null);
 
   const returnTo = String(searchParams.get('return') || '').trim();
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        const userId = auth?.user?.id;
+        if (!userId) return;
+        const { data } = await supabase
+          .from('providers')
+          .select('id, status, is_visible, slug, name, created_at, approved_at')
+          .eq('user_id', userId)
+          .maybeSingle();
+        if (!cancelled) setProviderProfile(data || null);
+      } catch {
+        if (!cancelled) setProviderProfile(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const currentUser = useMemo(() => {
     return safeParseJson(localStorage.getItem('mangoo-current-user') || localStorage.getItem('user'), null);
@@ -411,6 +435,42 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
               )}
             </select>
           </div>
+        </div>
+
+        <div className={`mb-6 rounded-2xl border p-4 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          {providerProfile ? (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="text-sm font-black">Profil prestataire (validation)</div>
+                <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm`}>
+                  Statut: <span className="font-bold">{String(providerProfile?.status || 'pending')}</span> · Visible: <span className="font-bold">{providerProfile?.is_visible ? 'Oui' : 'Non'}</span>
+                </div>
+              </div>
+              <a
+                href="/provider/apply"
+                className={`px-3 py-2 rounded-xl text-sm font-black border ${
+                  isDark ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                Modifier mon profil
+              </a>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="text-sm font-black">Profil prestataire (validation)</div>
+                <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm`}>
+                  Soumettez votre profil pour approbation admin avant visibilité publique.
+                </div>
+              </div>
+              <a
+                href="/provider/apply"
+                className="px-3 py-2 rounded-xl text-sm font-black bg-gradient-to-r from-orange-500 to-green-600 text-white"
+              >
+                Soumettre mon profil
+              </a>
+            </div>
+          )}
         </div>
 
         {allProviders.length === 0 ? (

@@ -2050,6 +2050,7 @@
         <button id="themeToggle" class="theme-toggle-btn" onclick="toggleTheme()" title="Jour/Nuit">🌙</button>
         <h1>🥭 Mangoo Local+</h1>
         <div class="subtitle">Trouvez les meilleures affaires autour de vous</div>
+        <div id="lpBuild" style="font-size:0.72rem; opacity:0.6; margin-top:2px;"></div>
         
         <!-- SEARCH BAR -->
         <div class="search-container">
@@ -2080,6 +2081,30 @@
         transition: transform 0.2s;
     " onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'" title="Mes Échéances">
         📅
+    </button>
+
+    <button id="providerDashFab" onclick="openMyProviderDashboard()" style="
+        position: absolute;
+        top: 200px;
+        right: 15px;
+        z-index: 1100;
+        background: #00b894;
+        color: white;
+        border: none;
+        height: 44px;
+        padding: 0 14px;
+        border-radius: 999px;
+        font-size: 0.9rem;
+        font-weight: 950;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.2s;
+        gap: 8px;
+    " onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform='scale(1)'" title="Mon dashboard">
+        📄 Mon dashboard
     </button>
 
     
@@ -4039,6 +4064,43 @@
             return false;
         }
 
+        function lpIsAdminToolsEnabled() {
+            try {
+                const url = new URL(window.location.href);
+                const p = String(url.searchParams.get('adminTools') || '').trim();
+                if (p === '1' || p === 'true') return true;
+            } catch {
+            }
+            try {
+                return String(localStorage.getItem('mangoo_admin_tools') || '') === '1';
+            } catch {
+            }
+            return false;
+        }
+
+        function setVendorApprovalStatus(vendorId, approvalStatus) {
+            const id = String(vendorId);
+            const next = String(approvalStatus || '').trim().toLowerCase();
+            if (!id || !next) return;
+
+            const v = VENDORS.find(x => String(x?.id) === id);
+            if (!v) return;
+
+            v.approvalStatus = next;
+            if (next === 'approved') v.approvedAt = new Date().toISOString();
+
+            try { upsertCustomVendor(v); } catch {}
+            try { localStorage.setItem('mangoo_vendors', JSON.stringify(VENDORS)); } catch {}
+
+            try {
+                const current = activeVendor && String(activeVendor?.id) === id ? v : activeVendor;
+                if (current) openVendorSheet(current);
+            } catch {
+            }
+
+            try { filterVendors(); } catch {}
+        }
+
         function updateBoostAdminVisibility() {
             const el = document.getElementById('boostAdminCard');
             if (!el) return;
@@ -4058,7 +4120,7 @@
             if (!sel) return;
             const cur = sel.value;
             sel.innerHTML = VENDORS.map(v => {
-                const kind = String(v.kind || '').toLowerCase();
+                const kind = lpGetVendorKind(v);
                 const tag = kind === 'shop' ? '🏪' : '🛠️';
                 return `<option value="${String(v.id)}">${tag} ${v.name}</option>`;
             }).join('');
@@ -4806,12 +4868,14 @@
             btn.style.opacity = '0.7';
 
             setTimeout(() => {
+                const autoApprove = String(location?.hostname || '').includes('localhost') || String(location?.hostname || '').includes('127.0.0.1');
                 const newVendor = {
                     id: Date.now(),
                     name,
                     category: '🔧 Services',
                     trade,
                     kind: 'service',
+                    approvalStatus: autoApprove ? 'approved' : 'pending',
                     verified: false,
                     rating: 4.5,
                     isMobile,
@@ -4919,9 +4983,27 @@
         function getFilteredVendors() {
             const query = (document.getElementById('searchInput')?.value || '').toLowerCase();
             return VENDORS.filter(v => {
-                const kind = String(v.kind || '').toLowerCase();
+                const kind = lpGetVendorKind(v);
                 const matchesKind = currentKindMode === 'all' || kind === currentKindMode;
                 if (!matchesKind) return false;
+
+                if (kind === 'service') {
+                    const rawStatus = String(v.approvalStatus || '').trim().toLowerCase();
+                    const status = rawStatus || 'approved';
+                    if (status !== 'approved') {
+                        if (isAdminUser()) {
+                        } else {
+                            try {
+                                const currentUser = getLpCurrentUser ? getLpCurrentUser() : null;
+                                const email = String(currentUser?.email || '').trim().toLowerCase();
+                                const ownerEmail = String(v?.ownerEmail || '').trim().toLowerCase();
+                                if (!email || email !== ownerEmail) return false;
+                            } catch {
+                                return false;
+                            }
+                        }
+                    }
+                }
 
                 if (window.onlyBoosted) {
                     const now = Date.now();
@@ -5276,6 +5358,16 @@
             if (appInitialized) return;
             appInitialized = true;
 
+            try { bindVendorCardClicks(); } catch {}
+
+            try {
+                const el = document.getElementById('lpBuild');
+                if (el) el.textContent = 'build v109';
+            } catch {
+            }
+
+            try { refreshProviderDashboardFab(); } catch {}
+
             try {
                 hydrateVendorsFromStorage();
             } catch {
@@ -5293,6 +5385,8 @@
             renderListView(VENDORS);
             renderStories();
             initMetiersUI();
+
+            try { refreshProviderDashboardFab(); } catch {}
 
             try {
                 refreshBoostPanel();
@@ -5326,6 +5420,17 @@
                     setTimeout(() => {
                         try { openVendorSheetById(openId); } catch {}
                     }, 400);
+                }
+            } catch {
+            }
+
+            try {
+                const url = new URL(window.location.href);
+                const vendorId = url.searchParams.get('vendor');
+                if (vendorId) {
+                    setTimeout(() => {
+                        try { openVendorSheetById(vendorId); } catch {}
+                    }, 450);
                 }
             } catch {
             }
@@ -5509,7 +5614,7 @@
                     ? '<span style="position:absolute; bottom:-8px; left:-8px; background:rgba(17, 24, 39, 0.85); color:white; font-size:9px; padding:2px 5px; border-radius:999px; font-weight:bold; z-index:10; border:1px solid rgba(255,255,255,0.65);">🏷️</span>'
                     : '';
 
-                const kind = String(vendor.kind || '').toLowerCase();
+                const kind = lpGetVendorKind(vendor);
                 const kindBadge = kind === 'shop'
                     ? '<span style="position:absolute; bottom:-8px; right:-8px; background:#16a34a; color:white; font-size:10px; padding:2px 5px; border-radius:999px; font-weight:bold; z-index:10; border:1px solid rgba(255,255,255,0.9);">🏪</span>'
                     : '<span style="position:absolute; bottom:-8px; right:-8px; background:#2563eb; color:white; font-size:10px; padding:2px 5px; border-radius:999px; font-weight:bold; z-index:10; border:1px solid rgba(255,255,255,0.9);">🛠️</span>';
@@ -5537,9 +5642,10 @@
                 }
 
                 const displayName = String(vendor.name || '').trim() || 'Boutique';
+                const safeVendorId = lpEscapeInlineArg(vendor.id);
 
                 let markerHtml = `
-                    <div style="position:relative; width:140px; height:78px;" onclick="openStory(${vendor.id}); event.stopPropagation();">
+                    <div style="position:relative; width:140px; height:78px;" onclick="openStory('${safeVendorId}'); event.stopPropagation();">
                         <div style="position:absolute; left:50%; top:0; transform:translateX(-50%); width:50px; height:50px;">
                             ${ringHtml}
                             <div style="
@@ -5603,7 +5709,7 @@
                 marker.on('click', function(e) {
                     L.DomEvent.stopPropagation(e);
                     if (sponsoredActive) recordAdClick(vendor.id);
-                    openVendorSheet(vendor);
+                    openVendorSheetById(vendor.id);
                     map.flyTo([vendor.lat, vendor.lng], 17, {animate: true, duration: 0.5});
                 });
                 
@@ -5619,7 +5725,7 @@
                             e.stopPropagation();
                             e.preventDefault();
                             if (sponsoredActive) recordAdClick(vendor.id);
-                            openVendorSheet(vendor);
+                            openVendorSheetById(vendor.id);
                             map.flyTo([vendor.lat, vendor.lng], 17, {animate: true, duration: 0.5});
                         }, true); 
                     }
@@ -5641,9 +5747,131 @@
         }
 
         function openVendorSheetById(id) {
-            const vendor = VENDORS.find(x => x.id == id);
+            let vendor = VENDORS.find(x => x.id == id);
+            if (!vendor) {
+                try { hydrateVendorsFromStorage(); } catch {}
+                vendor = VENDORS.find(x => x.id == id);
+            }
             if (vendor) {
-                openVendorSheet(vendor);
+                const openIt = () => {
+                    try {
+                        lpToast(`Ouverture: ${String(vendor.name || 'Prestataire')}`, 'info');
+                    } catch {
+                    }
+                    try {
+                        openVendorSheet(vendor);
+                        try {
+                            const url = new URL(window.location.href);
+                            url.searchParams.set('vendor', String(vendor.id));
+                            window.history.replaceState({}, '', url.toString());
+                        } catch {
+                        }
+                    } catch (e) {
+                        try { console.error('openVendorSheet failed', e); } catch {}
+                        try {
+                            const msg = e?.message ? String(e.message) : 'Erreur ouverture fiche.';
+                            try { lpToast(msg, 'error'); } catch {}
+                            if (typeof showError === 'function') showError(msg);
+                            else alert(msg);
+                        } catch {
+                        }
+                    }
+                    try {
+                        if (typeof map !== 'undefined' && map && typeof map.flyTo === 'function' && typeof vendor.lat === 'number' && typeof vendor.lng === 'number') {
+                            map.flyTo([vendor.lat, vendor.lng], 17, { animate: true, duration: 0.5 });
+                        }
+                    } catch {
+                    }
+                };
+
+                setTimeout(openIt, 50);
+            }
+        }
+
+        function lpToast(message, tone) {
+            try {
+                const text = String(message || '').trim();
+                if (!text) return;
+                const id = 'lpToast';
+                const old = document.getElementById(id);
+                if (old) old.remove();
+                const toast = document.createElement('div');
+                toast.id = id;
+                const bg = tone === 'error' ? '#d63031' : tone === 'ok' ? '#00b894' : '#374151';
+                toast.textContent = text;
+                toast.style.cssText = `position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:${bg}; color:white; padding:10px 14px; border-radius:999px; font-size:0.85rem; z-index:10050; font-weight:950; box-shadow:0 8px 18px rgba(0,0,0,0.25); max-width:92vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;`;
+                document.body.appendChild(toast);
+                setTimeout(() => {
+                    try { toast.remove(); } catch {}
+                }, 1800);
+            } catch {
+            }
+        }
+
+        function bindVendorCardClicks() {
+            try {
+                if (window.__lpVendorCardClickBound) return;
+                window.__lpVendorCardClickBound = true;
+                document.addEventListener('click', (e) => {
+                    const target = e?.target;
+                    if (!target || !target.closest) return;
+
+                    const actionEl = target.closest('[data-lp-action]');
+                    if (actionEl) {
+                        const action = String(actionEl.getAttribute('data-lp-action') || '');
+                        const id = String(actionEl.getAttribute('data-vendor-id') || '');
+                        if (!id) return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (action === 'connect') {
+                            try { openConnectByVendorId(id); } catch {}
+                            return;
+                        }
+                        if (action === 'sheet') {
+                            try { openVendorSheetById(id); } catch {}
+                            return;
+                        }
+                        if (action === 'itinerary') {
+                            try { openItineraryByVendorId(id); } catch {}
+                            return;
+                        }
+                        return;
+                    }
+
+                    const card = target.closest('.vendor-card');
+                    if (!card) return;
+                    const id = String(card.getAttribute('data-vendor-id') || '');
+                    if (!id) return;
+                    e.preventDefault();
+                    try { openVendorSheetById(id); } catch {}
+                }, true);
+            } catch {
+            }
+        }
+
+        function getMyProviderId() {
+            try {
+                const raw = localStorage.getItem('mangoo_my_provider_id');
+                return raw ? String(raw) : '';
+            } catch {
+                return '';
+            }
+        }
+
+        function refreshProviderDashboardFab() {
+            const btn = document.getElementById('providerDashFab');
+            if (!btn) return;
+            const id = getMyProviderId();
+            btn.style.display = id ? 'flex' : 'none';
+        }
+
+        function openMyProviderDashboard() {
+            const id = getMyProviderId();
+            if (!id) {
+                alert("Aucun profil prestataire lié à ce compte.");
+                return;
+            }
+            try { openProviderDashboard(id); } catch {
             }
         }
 
@@ -6816,6 +7044,39 @@
         function renderListView(vendors) {
             const listContainer = document.getElementById('listView');
             listContainer.innerHTML = '';
+
+            if (!listContainer.dataset.lpClickBound) {
+                listContainer.dataset.lpClickBound = '1';
+                listContainer.addEventListener('click', (e) => {
+                    const actionEl = e.target && e.target.closest ? e.target.closest('[data-lp-action]') : null;
+                    if (actionEl) {
+                        const action = String(actionEl.getAttribute('data-lp-action') || '');
+                        const id = String(actionEl.getAttribute('data-vendor-id') || '');
+                        if (!id) return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (action === 'connect') {
+                            try { openConnectByVendorId(id); } catch {}
+                            return;
+                        }
+                        if (action === 'sheet') {
+                            try { openVendorSheetById(id); } catch {}
+                            return;
+                        }
+                        if (action === 'itinerary') {
+                            try { openItineraryByVendorId(id); } catch {}
+                            return;
+                        }
+                        return;
+                    }
+
+                    const card = e.target && e.target.closest ? e.target.closest('.vendor-card') : null;
+                    if (!card) return;
+                    const id = String(card.getAttribute('data-vendor-id') || '');
+                    if (!id) return;
+                    try { openVendorSheetById(id); } catch {}
+                }, true);
+            }
             
             // Add padding top for header (Increased to 200px to clear fixed header)
             listContainer.style.paddingTop = "200px"; 
@@ -6876,17 +7137,27 @@
                 div.className = 'vendor-card';
                 div.style.flexDirection = 'column';
                 div.style.alignItems = 'flex-start';
-                div.onclick = () => openVendorSheet(vendor);
+                div.setAttribute('data-vendor-id', String(vendor.id));
+                div.onclick = (e) => {
+                    try {
+                        const actionEl = e && e.target && e.target.closest ? e.target.closest('[data-lp-action]') : null;
+                        if (actionEl) return;
+                    } catch {
+                    }
+                    try { openVendorSheetById(vendor.id); } catch {}
+                };
 
                 if (isService) {
                     const quartier = Array.isArray(vendor.coverage) && vendor.coverage.length ? String(vendor.coverage[0]) : '';
                     const trade = String(vendor.trade || '').trim();
+                    const vendorIdAttr = String(vendor.id);
+                    const safeVendorId = lpEscapeInlineArg(vendor.id);
 
                     const badges = [];
                     if (vendor.verified) badges.push({ label: 'Vérifié', tone: 'ok' });
                     if (vendor.isMobile) badges.push({ label: 'Se déplace', tone: 'info' });
                     if (Array.isArray(vendor.services) && vendor.services.length) badges.push({ label: 'Profil', tone: 'neutral' });
-                    if (String(vendor.kind || '').toLowerCase() === 'shop') badges.push({ label: 'Boutique', tone: 'neutral' });
+                    if (lpGetVendorKind(vendor) === 'shop') badges.push({ label: 'Boutique', tone: 'neutral' });
                     const shown = badges.slice(0, 2);
                     const extra = Math.max(0, badges.length - shown.length);
 
@@ -6917,9 +7188,9 @@
                             </div>
                         </div>
                         <div style="display:flex; gap:10px; width:100%; margin-top:12px;">
-                            <button onclick="event.stopPropagation(); openConnectByVendorId(${JSON.stringify(vendor.id)})" style="flex:1; background:#a16207; color:white; border:none; padding:10px 12px; border-radius:12px; font-size:0.9rem; font-weight:950; cursor:pointer;">Mangoo Connect+</button>
-                            <button onclick="event.stopPropagation(); openVendorSheetById(${JSON.stringify(vendor.id)})" style="flex:1; background:#2d3436; color:white; border:none; padding:10px 12px; border-radius:12px; font-size:0.9rem; font-weight:950; cursor:pointer;">Voir fiche</button>
-                            <button onclick="event.stopPropagation(); openItineraryByVendorId(${JSON.stringify(vendor.id)})" style="flex:1; background:#374151; color:white; border:none; padding:10px 12px; border-radius:12px; font-size:0.9rem; font-weight:950; cursor:pointer;">Itinéraire</button>
+                            <button type="button" data-lp-action="connect" data-vendor-id="${vendorIdAttr}" onclick="try{event&&event.stopPropagation&&event.stopPropagation()}catch{}; openConnectByVendorId('${safeVendorId}')" style="flex:1; background:#a16207; color:white; border:none; padding:10px 12px; border-radius:12px; font-size:0.9rem; font-weight:950; cursor:pointer;">Mangoo Connect+</button>
+                            <button type="button" data-lp-action="sheet" data-vendor-id="${vendorIdAttr}" onclick="try{event&&event.stopPropagation&&event.stopPropagation()}catch{}; openVendorSheetById('${safeVendorId}')" style="flex:1; background:#2d3436; color:white; border:none; padding:10px 12px; border-radius:12px; font-size:0.9rem; font-weight:950; cursor:pointer;">Voir fiche</button>
+                            <button type="button" data-lp-action="itinerary" data-vendor-id="${vendorIdAttr}" onclick="try{event&&event.stopPropagation&&event.stopPropagation()}catch{}; openItineraryByVendorId('${safeVendorId}')" style="flex:1; background:#374151; color:white; border:none; padding:10px 12px; border-radius:12px; font-size:0.9rem; font-weight:950; cursor:pointer;">Itinéraire</button>
                         </div>
                     `;
                     gridContainer.appendChild(div);
@@ -8436,11 +8707,29 @@
         // === GESTION DE LA FICHE VENDEUR ===
         function openVendorSheet(vendor) {
             activeVendor = vendor;
+
+            try {
+                const sheet = document.getElementById('vendorSheet');
+                if (sheet) sheet.classList.add('active');
+            } catch {
+            }
             
             // Remplissage des données
-            document.getElementById('vName').innerText = vendor.name;
-            document.getElementById('vCategory').innerText = vendor.category;
-            document.getElementById('vAvatar').src = vendor.avatar;
+            try {
+                const el = document.getElementById('vName');
+                if (el) el.innerText = String(vendor?.name || '');
+            } catch {
+            }
+            try {
+                const el = document.getElementById('vCategory');
+                if (el) el.innerText = String(vendor?.category || '');
+            } catch {
+            }
+            try {
+                const el = document.getElementById('vAvatar');
+                if (el) el.src = String(vendor?.avatar || '');
+            } catch {
+            }
 
             const tradeLine = document.getElementById('vTradeLine');
             if (tradeLine) {
@@ -8468,11 +8757,17 @@
             const badgesEl = document.getElementById('vBadges');
             if (badgesEl) {
                 const badges = [];
+                const approval = String(vendor.approvalStatus || '').trim().toLowerCase() || 'approved';
+                if (lpGetVendorKind(vendor) === 'service') {
+                    if (approval === 'pending') badges.push('⏳ En attente');
+                    if (approval === 'rejected') badges.push('⛔ Rejeté');
+                    if (approval === 'suspended') badges.push('⏸️ Suspendu');
+                }
                 if (vendor.verified) badges.push('🛡️ Vérifié');
                 if (vendor.isMobile) badges.push('🚗 Se déplace');
                 if (Array.isArray(vendor.services) && vendor.services.length) badges.push('🧰 Profil');
                 if (vendor.live) badges.push('🔴 Live');
-                if (String(vendor.kind || '').toLowerCase() === 'shop') badges.push('🏪 Boutique');
+                if (lpGetVendorKind(vendor) === 'shop') badges.push('🏪 Boutique');
                 if (typeof vendor.sponsoredUntil === 'number' && vendor.sponsoredUntil > Date.now()) badges.push('🏷️ Sponsorisé');
 
                 if (badges.length) {
@@ -8490,16 +8785,20 @@
             const playerText = document.querySelector('.voice-text');
             const waveVisual = document.querySelector('.wave-visual');
             
-            if (vendor.voiceAudio) {
+            if (vendor.voiceAudio && playerText && waveVisual) {
                 playerText.innerHTML = "<b>🎙️ Écouter le message vocal (Authentique)</b>";
-                playerText.style.color = "#d63031"; // Red accent
-                waveVisual.style.opacity = "1"; // More visible
-                waveVisual.style.filter = "invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%)"; // Reddish filter
+                playerText.style.color = "#d63031";
+                waveVisual.style.opacity = "1";
+                waveVisual.style.filter = "invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%)";
             } else {
-                playerText.innerText = "Écouter le message du vendeur";
-                playerText.style.color = "#636e72";
-                waveVisual.style.opacity = "0.5";
-                waveVisual.style.filter = "none";
+                if (playerText) {
+                    playerText.innerText = "Écouter le message du vendeur";
+                    playerText.style.color = "#636e72";
+                }
+                if (waveVisual) {
+                    waveVisual.style.opacity = "0.5";
+                    waveVisual.style.filter = "none";
+                }
             }
             
             // CHECK IF OWNER
@@ -8507,7 +8806,8 @@
             const myProviderId = localStorage.getItem('mangoo_my_provider_id');
             const ownerLink = document.getElementById('ownerEditLink');
             if (ownerLink) {
-                const kindMode = String(vendor.kind || '').toLowerCase();
+                const kindMode = lpGetVendorKind(vendor);
+                const safeVendorId = lpEscapeInlineArg(vendor.id);
                 const currentUser = getLpCurrentUser ? getLpCurrentUser() : null;
                 const email = String(currentUser?.email || '').trim().toLowerCase();
                 let isOwnerProvider = false;
@@ -8525,13 +8825,38 @@
                 if (!isOwnerProvider && myProviderId && String(vendor.id) === String(myProviderId)) isOwnerProvider = true;
                 if (!isOwnerProvider && email && String(vendor?.ownerEmail || '').toLowerCase() === email) isOwnerProvider = true;
 
+                const isAdmin = isAdminUser() && lpIsAdminToolsEnabled();
+
+                if (kindMode === 'service' && isAdmin) {
+                    ownerLink.style.display = 'block';
+                    ownerLink.innerHTML = `
+                        <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center;">
+                            <a href="#" onclick="setVendorApprovalStatus('${safeVendorId}', 'approved')" style="color:#00b894; font-size:0.85rem; text-decoration:none; border:1px solid #00b894; padding:8px 15px; border-radius:20px; font-weight:bold;">✅ Approuver</a>
+                            <a href="#" onclick="setVendorApprovalStatus('${safeVendorId}', 'pending')" style="color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px; font-weight:bold;">⏳ En attente</a>
+                            <a href="#" onclick="setVendorApprovalStatus('${safeVendorId}', 'rejected')" style="color:#d63031; font-size:0.85rem; text-decoration:none; border:1px solid #d63031; padding:8px 15px; border-radius:20px; font-weight:bold;">⛔ Rejeter</a>
+                            <a href="#" onclick="setVendorApprovalStatus('${safeVendorId}', 'suspended')" style="color:#f59e0b; font-size:0.85rem; text-decoration:none; border:1px solid #f59e0b; padding:8px 15px; border-radius:20px; font-weight:bold;">⏸️ Suspendre</a>
+                        </div>
+                    `;
+                    if (isOwnerProvider) {
+                        ownerLink.innerHTML += `
+                            <div style="height:10px;"></div>
+                            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+                                <a href="#" onclick="openProviderModalForVendor('${safeVendorId}')" style="color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px;">⚙️ Réglages</a>
+                                <a href="#" onclick="startServicePayment('${safeVendorId}')" style="color:#00b894; font-size:0.85rem; text-decoration:none; border:1px solid #00b894; padding:8px 15px; border-radius:20px; font-weight:bold;">💳 Paiement</a>
+                                <a href="#" onclick="openProviderDashboard('${safeVendorId}')" style="color:#f59e0b; font-size:0.85rem; text-decoration:none; border:1px solid #f59e0b; padding:8px 15px; border-radius:20px; font-weight:bold;">📄 Dashboard</a>
+                            </div>
+                        `;
+                    }
+                    // pas de return ici: on laisse openVendorSheet continuer pour masquer l'onglet Boutique, etc.
+                }
+
                 if (kindMode === 'service' && isOwnerProvider) {
                     ownerLink.style.display = 'block';
                     ownerLink.innerHTML = `
                         <div style="display:flex; gap:10px; justify-content:center;">
-                            <a href="#" onclick="openProviderModalForVendor(${JSON.stringify(vendor.id)})" style="color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px;">⚙️ Réglages</a>
-                            <a href="#" onclick="startServicePayment(${JSON.stringify(vendor.id)})" style="color:#00b894; font-size:0.85rem; text-decoration:none; border:1px solid #00b894; padding:8px 15px; border-radius:20px; font-weight:bold;">💳 Paiement</a>
-                            <a href="#" onclick="openProviderDashboard(${JSON.stringify(vendor.id)})" style="color:#f59e0b; font-size:0.85rem; text-decoration:none; border:1px solid #f59e0b; padding:8px 15px; border-radius:20px; font-weight:bold;">📄 Dashboard</a>
+                            <a href="#" onclick="openProviderModalForVendor('${safeVendorId}')" style="color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px;">⚙️ Réglages</a>
+                            <a href="#" onclick="startServicePayment('${safeVendorId}')" style="color:#00b894; font-size:0.85rem; text-decoration:none; border:1px solid #00b894; padding:8px 15px; border-radius:20px; font-weight:bold;">💳 Paiement</a>
+                            <a href="#" onclick="openProviderDashboard('${safeVendorId}')" style="color:#f59e0b; font-size:0.85rem; text-decoration:none; border:1px solid #f59e0b; padding:8px 15px; border-radius:20px; font-weight:bold;">📄 Dashboard</a>
                         </div>
                     `;
                 } else if (myShopId && vendor.id == myShopId) {
@@ -8583,7 +8908,7 @@
             // const shopBtn = document.getElementById('btnShop');
             // ...
 
-            const kind = String(vendor.kind || '').toLowerCase();
+            const kind = lpGetVendorKind(vendor);
 
             const tabBoutiqueBtn = document.getElementById('vendorSheetTabBoutique');
             const tabCarteBtn = document.getElementById('vendorSheetTabCarte');
@@ -8726,10 +9051,11 @@
                     </div>
                 `;
 
+                const safeVendorIdForActions = lpEscapeInlineArg(vendor.id);
                 profilTab.innerHTML = `
-                    ${String(vendor.kind || '').toLowerCase() === 'service' ? `
+                    ${lpGetVendorKind(vendor) === 'service' ? `
                         <div style="display:flex; gap:10px; margin-bottom:12px;">
-                            <button onclick="startServicePayment(${JSON.stringify(vendor.id)})" style="flex:1; background:#00b894; color:white; border:none; padding:14px 12px; border-radius:14px; font-weight:950; cursor:pointer;">💳 Payer une prestation</button>
+                            <button onclick="startServicePayment('${safeVendorIdForActions}')" style="flex:1; background:#00b894; color:white; border:none; padding:14px 12px; border-radius:14px; font-weight:950; cursor:pointer;">💳 Payer une prestation</button>
                             <button onclick="openChat()" style="flex:1; background:#2d3436; color:white; border:none; padding:14px 12px; border-radius:14px; font-weight:950; cursor:pointer;">💬 Demander un devis</button>
                         </div>
                     ` : ''}
@@ -8762,6 +9088,12 @@
 
         function closeSheet() {
             document.getElementById('vendorSheet').classList.remove('active');
+            try {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('vendor');
+                window.history.replaceState({}, '', url.toString());
+            } catch {
+            }
         }
 
         function launchItinerary() {
@@ -8856,9 +9188,124 @@
         }
 
         // === STORIES & COMMUNITY ===
+        function lpGetVendorKind(vendor) {
+            const rawKind = String(vendor?.kind || '').trim().toLowerCase();
+            if (rawKind === 'service' || rawKind === 'shop') return rawKind;
+            try {
+                const category = String(vendor?.category || '').toLowerCase();
+                if (category.includes('prestataire') || category.includes('presta') || category.includes('metier') || category.includes('métier') || category.includes('service') || category.includes('🧰')) return 'service';
+            } catch {
+            }
+            if (String(vendor?.trade || '').trim()) return 'service';
+            if (Array.isArray(vendor?.services) && vendor.services.length) return 'service';
+            if (Array.isArray(vendor?.coverage) && vendor.coverage.length) return 'service';
+            if (typeof vendor?.isMobile === 'boolean') return 'service';
+            return 'shop';
+        }
+
+        function lpEscapeInlineArg(value) {
+            return String(value ?? '')
+                .replace(/\\/g, '\\\\')
+                .replace(/'/g, "\\'")
+                .replace(/\r/g, '\\r')
+                .replace(/\n/g, '\\n');
+        }
+
+        function openStoryOpenSheet(vendorId, tab) {
+            const id = vendorId;
+            const desiredTab = tab || 'boutique';
+            const attemptOpen = (attempt) => {
+                try {
+                    openVendorSheetById(id);
+                } catch {
+                }
+
+                try {
+                    switchSheetTab(desiredTab);
+                } catch {
+                }
+
+                try {
+                    const sheet = document.getElementById('vendorSheet');
+                    if (sheet && sheet.classList.contains('active')) return;
+                } catch {
+                }
+
+                if ((attempt || 0) < 8) setTimeout(() => attemptOpen((attempt || 0) + 1), 120);
+            };
+
+            try { closeStory(); } catch {}
+            setTimeout(() => attemptOpen(0), 30);
+        }
+
+        function lpSlugifyName(name, fallback) {
+            const base = String(name || '').trim() || String(fallback || 'boutique');
+            const slug = base
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+            return slug || String(fallback || 'boutique');
+        }
+
+        function lpGetShopSlugForVendor(vendor) {
+            try {
+                const vid = String(vendor?.id || '').trim();
+                if (!vid) return null;
+                const raw = localStorage.getItem('demo_shops');
+                const parsed = raw ? JSON.parse(raw) : [];
+                const shops = Array.isArray(parsed) ? parsed : [];
+                const hit = shops.find((s) => String(s?.sourceVendorId) === vid || String(s?.vendorId) === vid);
+                const slug = String(hit?.slug || '').trim();
+                if (slug) return slug;
+            } catch {
+            }
+            const name = String(vendor?.name || '').trim();
+            return lpSlugifyName(name, vendor?.id);
+        }
+
+        function lpNavigate(url) {
+            try {
+                if (window.top && window.top.location) {
+                    window.top.location.href = url;
+                    return;
+                }
+            } catch {
+            }
+            window.location.href = url;
+        }
+
+        function lpGoToShopByVendorId(vendorId) {
+            try {
+                const vendor = VENDORS.find(v => v.id == vendorId);
+                if (!vendor) return;
+                const slug = lpGetShopSlugForVendor(vendor);
+                if (!slug) return;
+                lpNavigate(`${window.location.origin}/shop/${slug}`);
+            } catch {
+            }
+        }
+
+        function openStoryProviderCta(vendorId) {
+            openStoryOpenSheet(vendorId, 'profil');
+        }
+
+        function openStoryShopCta(vendorId) {
+            openStoryOpenSheet(vendorId, 'boutique');
+        }
+
         function openStory(vendorId) {
             const vendor = VENDORS.find(v => v.id == vendorId);
             if (!vendor) return;
+
+            const kind = lpGetVendorKind(vendor);
+            const isService = kind === 'service';
+            const ctaLabel = isService ? 'Voir le profil' : 'Visiter la boutique';
+            const safeId = lpEscapeInlineArg(vendor.id);
+            const ctaAction = isService
+              ? `openStoryProviderCta('${safeId}');`
+              : `openStoryShopCta('${safeId}');`;
 
             // Mock Story Content
             const storyOverlay = document.createElement('div');
@@ -8900,7 +9347,7 @@
                         <p>Arrivage frais ce matin. -20% pour les 5 premiers clients !</p>
                         
                         <div style="display:flex; gap:10px; justify-content:center; margin-top:15px;">
-                            <button onclick="closeStory(); openVendorSheetById(${vendor.id})" style="padding:10px 20px; background:white; color:black; border:none; border-radius:20px; font-weight:bold;">Visiter Boutique</button>
+                            <button onclick="event.stopPropagation(); event.preventDefault(); ${ctaAction}" style="padding:10px 20px; background:white; color:black; border:none; border-radius:20px; font-weight:bold;">${ctaLabel}</button>
                             <button onclick="reactStory('🔥')" style="padding:10px; background:rgba(255,255,255,0.2); border-radius:50%; border:none; font-size:1.2rem;">🔥</button>
                             <button onclick="reactStory('❤️')" style="padding:10px; background:rgba(255,255,255,0.2); border-radius:50%; border:none; font-size:1.2rem;">❤️</button>
                         </div>

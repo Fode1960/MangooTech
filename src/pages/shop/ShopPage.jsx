@@ -182,8 +182,12 @@ const ShopPage = () => {
             const name = String(v?.name || '').trim();
             if (!id || !name) return false;
             const base = slugify(name) || `boutique-${id}`;
-            const expected = `${base}-${id}`;
-            return expected === shopSlug;
+            const candidates = new Set([
+              base,
+              `${base}-${id}`,
+              `boutique-${id}`
+            ]);
+            return candidates.has(String(shopSlug || '').trim());
           }) || null;
         } catch {
           return null;

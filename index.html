@@ -50,6 +50,11 @@
         }
       };
 
+      try {
+        window.showBootError = showBootError;
+      } catch {
+      }
+
       window.addEventListener('error', (e) => {
         const msg = e?.error?.stack || e?.message || 'Erreur JavaScript au démarrage.';
         showBootError('Erreur au démarrage (JavaScript)', msg);
@@ -84,6 +89,20 @@
         <div style="font-size: 13px; opacity: 0.85;">Si cet écran reste affiché, l’application n’a pas démarré.</div>
       </div>
     </div>
-    <script type="module" src="/src/main.jsx"></script>
+    <script type="module">
+      import('/src/main.jsx')
+        .then(() => {
+          try {
+            window.__mangootech_main_loaded__ = true;
+          } catch {
+          }
+        })
+        .catch((e) => {
+          const showBootError = window.showBootError;
+          if (typeof showBootError === 'function') {
+            showBootError('Erreur au chargement du module', e?.stack || e?.message || String(e));
+          }
+        });
+    </script>
   </body>
 </html>

@@ -1,7 +1,7 @@
 // Configuration de l'API Backend
 export const API_CONFIG = {
   // URL de base pour le backend
-  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:3045',
+  BASE_URL: import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:3045'),
   
   // Endpoints des paiements
   PAYMENTS: {

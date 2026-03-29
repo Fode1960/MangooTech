@@ -21,6 +21,7 @@ import mobileMoneyRoutes from './routes/mobile-money.js'
 import mobileMoneyWebhooksRoutes from './routes/mobile-money-webhooks.js'
 import packsRoutes from './routes/packs.ts'
 import adminShopsRoutes from './routes/admin-shops.js'
+import adminProvidersRoutes from './routes/admin-providers.ts'
 import shopsSimpleRoutes from './routes/shops-simple.ts'
 import adminCommissionsRoutes from './routes/admin-commissions.js'
 import adminAnalyticsRoutes from './routes/admin-analytics.js'
@@ -81,6 +82,7 @@ app.use('/api/packs', packsRoutes)
  * Admin Routes
  */
 app.use('/api/admin/shops', adminShopsRoutes)
+app.use('/api/admin/providers', adminProvidersRoutes)
 app.use('/api/admin/commissions', adminCommissionsRoutes)
 app.use('/api/admin/analytics', adminAnalyticsRoutes)
 app.use('/api/admin/payments', adminPaymentsRoutes)

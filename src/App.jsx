@@ -8,6 +8,7 @@ import { PaymentAnalyticsDashboard } from './components/PaymentAnalyticsDashboar
 import { Routes, Route, Navigate, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminShops from './pages/AdminShops';
+import AdminProviders from './pages/AdminProviders';
 import AdminCommissions from './pages/AdminCommissions';
 import AdminUsers from './pages/AdminUsers';
 import AdminCreateShop from './pages/AdminCreateShop';
@@ -38,6 +39,7 @@ import WebRTCJoinPage from './pages/WebRTCJoinPage';
 import PlanCheckoutTest from './pages/PlanCheckoutTest';
 import ServiceCheckout from './pages/ServiceCheckout';
 import ProviderDashboard from './pages/ProviderDashboard';
+import ProviderApply from './pages/ProviderApply';
 import VendorMessagingCenter from './components/VendorMessagingCenter';
 import LiveShoppingManager from './components/LiveShoppingManager';
 import { NotificationProvider } from './contexts/NotificationContext';
@@ -740,7 +742,7 @@ const Register = ({ onRegister, onBack }) => {
   const [secondaryColor, setSecondaryColor] = useState('#FBBF24');
   const [createdShop, setCreatedShop] = useState(null);
   const [paletteMode, setPaletteMode] = useState('both');
-  const { isDark } = useThemeStore();
+  const { isDark, setTheme } = useThemeStore();
 
   const speakHelp = useCallback(() => {
     speakFR("Créer une boutique. Remplissez le nom, l’email, et le mot de passe. Ensuite écrivez le nom de la boutique. Choisissez une catégorie. Puis appuyez sur Créer ma boutique.");
@@ -1357,7 +1359,7 @@ const ClientRegister = ({ onRegister, onBack }) => {
   const [geolocationConsent, setGeolocationConsent] = useState(false);
   const [geoLoading, setGeoLoading] = useState(false);
   const [error, setError] = useState('');
-  const { isDark } = useThemeStore();
+  const { isDark, setTheme } = useThemeStore();
 
   const speakHelp = useCallback(() => {
     speakFR("Créer un compte client. Remplissez votre nom, l’email et le mot de passe. Puis appuyez sur Créer mon compte.");
@@ -5194,6 +5196,7 @@ const AdminLayout = () => {
               }`}>
                 {location.pathname === '/admin/dashboard' && 'Tableau de bord'}
                 {location.pathname === '/admin/shops' && 'Commerces'}
+                {location.pathname === '/admin/providers' && 'Prestataires'}
                 {location.pathname === '/admin/boosts' && 'Boost Carte'}
                 {location.pathname === '/admin/commissions' && 'Commissions'}
                 {location.pathname === '/admin/users' && 'Utilisateurs'}
@@ -5211,6 +5214,7 @@ const AdminLayout = () => {
             <Route index element={<AdminDashboard />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="shops" element={<AdminShops />} />
+            <Route path="providers" element={<AdminProviders />} />
             <Route path="boosts" element={<AdminBoosts />} />
             <Route path="vendor-access-qr" element={<VendorAccessQRPage />} />
             <Route path="commissions" element={<AdminCommissions />} />
@@ -5231,6 +5235,7 @@ const AdminLayout = () => {
 };
 
 // Composant optimisé pour l'iframe Mangoo Local+
+const MANGOO_LOCAL_VERSION = 109;
 const MangooLocalFrame = React.memo(({ user, onBack }) => {
   // Listen for exit messages from the iframe
   useEffect(() => {
@@ -5246,7 +5251,8 @@ const MangooLocalFrame = React.memo(({ user, onBack }) => {
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
       <iframe 
-        src="/mangoo-local.html?v=101" 
+        key={`mangoo-local-${MANGOO_LOCAL_VERSION}`}
+        src={`/mangoo-local.html?v=${MANGOO_LOCAL_VERSION}`} 
         style={{ width: '100%', height: '100%', border: 'none' }}
         title="Mangoo Local+"
       />
@@ -5303,7 +5309,7 @@ function AppShell() {
   const [currentView, setCurrentView] = useState(initialState.view);
   const [authReturn, setAuthReturn] = useState(null);
   const [spaceChooserOpen, setSpaceChooserOpen] = useState(false);
-  const { isDark } = useThemeStore();
+  const { isDark, setTheme } = useThemeStore();
   const [clientWalletBalance, setClientWalletBalance] = useState(null);
   const clientWalletKey = useMemo(() => getWalletKeyFromUser(user), [user]);
   const [activePack, setActivePack] = useState({ packId: null, packName: null, mode: 'unknown' });
@@ -6171,6 +6177,7 @@ function App() {
         <Route path="/shop/:shopSlug" element={<ShopPage />} />
         <Route path="/service-checkout" element={<ServiceCheckout />} />
         <Route path="/provider/dashboard" element={<ProviderDashboard />} />
+        <Route path="/provider/apply" element={<ProviderApply />} />
         <Route path="/vendor-access-qr" element={<VendorAccessQRPage />} />
         <Route path="/webrtc" element={<WebRTCJoinPage />} />
         <Route path="/plan-checkout" element={<PlanCheckoutTest />} />

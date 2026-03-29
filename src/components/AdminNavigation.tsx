@@ -11,6 +11,7 @@ import {
   FileText,
   Shield,
   MapPin,
+  Briefcase,
   Sun,
   Moon,
   LogOut,
@@ -25,6 +26,7 @@ export default function AdminNavigation() {
   const navigation = [
     { name: "Tableau de bord", href: "/admin/dashboard", icon: LayoutDashboard },
     { name: "Boutiques", href: "/admin/shops", icon: Store },
+    { name: "Prestataires", href: "/admin/providers", icon: Briefcase },
     { name: "Boost Carte", href: "/admin/boosts", icon: MapPin },
     { name: "Accès & QR", href: "/admin/vendor-access-qr", icon: QrCode },
     { name: "Commissions", href: "/admin/commissions", icon: Calculator },
