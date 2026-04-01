@@ -28,4 +28,4 @@ jobs:
           ls -la .vercel
           ls -la .vercel/output
 
-      - run: npx vercel deploy .vercel/output --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+      - run: npx vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
