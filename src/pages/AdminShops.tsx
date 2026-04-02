@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { CheckCircle, ExternalLink, Search, XCircle, FileText, X } from 'lucide-react';
+import { ExternalLink, Search, FileText, X } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 
-type ApprovalStatus = 'pending' | 'approved' | 'rejected';
+type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'suspended';
 
 type DemoShop = {
   id?: string;
@@ -22,6 +22,8 @@ type DemoShop = {
   approvedBy?: string;
   rejectedAt?: string;
   rejectedBy?: string;
+  suspendedAt?: string;
+  suspendedBy?: string;
   billingCountry?: 'sn' | 'ci' | 'cm';
   billingLegalName?: string;
   billingRegistrationId?: string;
@@ -80,7 +82,7 @@ const isLocalPlusProvider = (v: any) => {
 
 const normalizeApprovalStatus = (raw: any): ApprovalStatus => {
   const s = String(raw || '').trim().toLowerCase();
-  if (s === 'approved' || s === 'rejected' || s === 'pending') return s as ApprovalStatus;
+  if (s === 'approved' || s === 'rejected' || s === 'pending' || s === 'suspended') return s as ApprovalStatus;
   return 'pending';
 };
 
@@ -116,6 +118,7 @@ const normalizeStatus = (shop: DemoShop): DemoShop => {
 const statusBadge = (status: ApprovalStatus, isDark: boolean) => {
   if (status === 'approved') return isDark ? 'bg-emerald-900/30 text-emerald-200 border border-emerald-700' : 'bg-emerald-50 text-emerald-800 border border-emerald-200';
   if (status === 'rejected') return isDark ? 'bg-red-900/30 text-red-200 border border-red-700' : 'bg-red-50 text-red-800 border border-red-200';
+  if (status === 'suspended') return isDark ? 'bg-gray-900/40 text-gray-200 border border-gray-700' : 'bg-gray-100 text-gray-800 border border-gray-300';
   return isDark ? 'bg-amber-900/30 text-amber-200 border border-amber-700' : 'bg-amber-50 text-amber-800 border border-amber-200';
 };
 
@@ -235,6 +238,9 @@ export default function AdminShops() {
       if (status === 'rejected') {
         return { ...s, approvalStatus: 'rejected', rejectedAt: now, rejectedBy: ADMIN_EMAIL };
       }
+      if (status === 'suspended') {
+        return { ...s, approvalStatus: 'suspended', suspendedAt: now, suspendedBy: ADMIN_EMAIL };
+      }
       return { ...s, approvalStatus: 'pending' };
     });
     writeDemoShops(next);
@@ -314,7 +320,7 @@ export default function AdminShops() {
       .sort((a, b) => {
         const pa = (a.approvalStatus || 'pending') as ApprovalStatus;
         const pb = (b.approvalStatus || 'pending') as ApprovalStatus;
-        const score = (st: ApprovalStatus) => (st === 'pending' ? 0 : st === 'approved' ? 1 : 2);
+        const score = (st: ApprovalStatus) => (st === 'pending' ? 0 : st === 'approved' ? 1 : st === 'suspended' ? 2 : 3);
         const d = score(pa) - score(pb);
         if (d !== 0) return d;
         return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
@@ -357,6 +363,13 @@ export default function AdminShops() {
               className={`px-3 py-2 rounded-lg text-sm font-semibold border ${filterStatus === 'rejected' ? (isDark ? 'bg-red-900/30 text-red-100 border-red-700' : 'bg-red-50 text-red-900 border-red-200') : (isDark ? 'bg-gray-900 text-gray-300 border-gray-700 hover:bg-gray-800' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white')}`}
             >
               Rejetées
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterStatus('suspended')}
+              className={`px-3 py-2 rounded-lg text-sm font-semibold border ${filterStatus === 'suspended' ? (isDark ? 'bg-gray-900/40 text-gray-100 border-gray-700' : 'bg-gray-100 text-gray-900 border-gray-300') : (isDark ? 'bg-gray-900 text-gray-300 border-gray-700 hover:bg-gray-800' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white')}`}
+            >
+              Suspendues
             </button>
           </div>
         </div>
@@ -408,7 +421,7 @@ export default function AdminShops() {
                         <td className={`px-4 py-3 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{s.category || 'general'}</td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${statusBadge(status, isDark)}`}>
-                            {status === 'approved' ? 'Approuvée' : status === 'rejected' ? 'Rejetée' : 'En attente'}
+                            {status === 'approved' ? 'Approuvée' : status === 'rejected' ? 'Rejetée' : status === 'suspended' ? 'Suspendue' : 'En attente'}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -431,28 +444,42 @@ export default function AdminShops() {
                               <ExternalLink className="w-4 h-4" />
                               Ouvrir
                             </button>
-                            {status !== 'approved' && (
-                              <button
-                                type="button"
-                                onClick={() => setApproval(String(s.slug), 'approved')}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-semibold inline-flex items-center gap-2"
-                                title="Approuver"
-                              >
-                                <CheckCircle className="w-4 h-4" />
-                                Approuver
-                              </button>
-                            )}
-                            {status !== 'rejected' && (
-                              <button
-                                type="button"
-                                onClick={() => setApproval(String(s.slug), 'rejected')}
-                                className={`${isDark ? 'bg-gray-900 border border-gray-700 text-red-200 hover:bg-gray-800' : 'bg-white border border-gray-200 text-red-700 hover:bg-red-50'} px-3 py-2 rounded-lg text-xs font-semibold inline-flex items-center gap-2`}
-                                title="Rejeter"
-                              >
-                                <XCircle className="w-4 h-4" />
-                                Rejeter
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={() => setApproval(String(s.slug), 'approved')}
+                              disabled={status === 'approved'}
+                              className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold text-xs"
+                              title="Approuver"
+                            >
+                              Approuver
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setApproval(String(s.slug), 'rejected')}
+                              disabled={status === 'rejected'}
+                              className="px-3 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white font-bold text-xs"
+                              title="Rejeter"
+                            >
+                              Rejeter
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setApproval(String(s.slug), 'pending')}
+                              disabled={status === 'pending'}
+                              className="px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-800 disabled:opacity-60 text-white font-bold text-xs"
+                              title="Mettre en attente"
+                            >
+                              En attente
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setApproval(String(s.slug), 'suspended')}
+                              disabled={status === 'suspended'}
+                              className="px-3 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white font-bold text-xs"
+                              title="Suspendre"
+                            >
+                              Suspendre
+                            </button>
                           </div>
                         </td>
                       </tr>
