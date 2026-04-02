@@ -2582,6 +2582,14 @@
                         <span>❓ Aide & Support</span>
                         <span class="arrow">›</span>
                     </div>
+                    <div class="action-row" onclick="lpDisconnectShop()">
+                        <span>🏪 Quitter ma boutique</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="action-row" onclick="lpDisconnectProvider()">
+                        <span>🧰 Quitter mon profil prestataire</span>
+                        <span class="arrow">›</span>
+                    </div>
                     <div class="action-row" style="color: #d63031;" onclick="lpLogout()">
                         <span>🚪 Déconnexion</span>
                         <span class="arrow">›</span>
@@ -2677,6 +2685,14 @@
                 </div>
                 <div class="action-row" onclick="alert('Besoin d\'aide ? Contactez support@mangoo.cm')">
                     <span>❓ Aide & Support</span>
+                    <span class="arrow">›</span>
+                </div>
+                <div class="action-row" onclick="lpDisconnectShop()">
+                    <span>🏪 Quitter ma boutique</span>
+                    <span class="arrow">›</span>
+                </div>
+                <div class="action-row" onclick="lpDisconnectProvider()">
+                    <span>🧰 Quitter mon profil prestataire</span>
                     <span class="arrow">›</span>
                 </div>
                 <div class="action-row" style="color: #d63031;" onclick="lpLogout()">
@@ -4810,45 +4826,19 @@
                 const currentUser = getLpCurrentUser ? getLpCurrentUser() : null;
                 const ownerEmail = String(currentUser?.email || vendor?.ownerEmail || '').trim().toLowerCase();
                 const ownerName = String(currentUser?.name || vendor?.ownerName || '').trim();
-                if (window.parent && window.parent !== window && typeof vendor?.lat === 'number' && typeof vendor?.lng === 'number') {
-                    window.parent.postMessage({
-                        type: 'mangoo_local_creator_location',
-                        payload: {
-                            kind: 'provider',
-                            source: 'localplus',
-                            vendorId: String(vendor.id),
-                            name: String(vendor?.name || ''),
-                            trade: String(vendor?.trade || ''),
-                            category: String(vendor?.category || ''),
-                            ownerEmail,
-                            ownerName,
-                            lat: vendor.lat,
-                            lng: vendor.lng
-                        }
-                    }, window.location.origin);
-                }
-            } catch {
-            }
-
-            try {
-                const u = getLpCurrentUser ? getLpCurrentUser() : null;
-                const email = String(u?.email || vendor?.ownerEmail || '').trim().toLowerCase();
-                const ownerName = String(u?.name || vendor?.ownerName || '').trim();
-                if (window.parent && window.parent !== window && typeof vendor?.lat === 'number' && typeof vendor?.lng === 'number') {
-                    window.parent.postMessage({
-                        type: 'mangoo_local_creator_location',
-                        payload: {
-                            kind: 'shop',
-                            source: 'localplus',
-                            vendorId: String(vendor.id),
-                            name: String(vendor?.name || ''),
-                            category: String(vendor?.category || ''),
-                            ownerEmail: email,
-                            ownerName: ownerName,
-                            lat: vendor.lat,
-                            lng: vendor.lng
-                        }
-                    }, window.location.origin);
+                if (typeof vendor?.lat === 'number' && typeof vendor?.lng === 'number') {
+                    persistCreatorLocationEvent({
+                        kind: 'provider',
+                        source: 'localplus',
+                        vendorId: String(vendor.id),
+                        name: String(vendor?.name || ''),
+                        trade: String(vendor?.trade || ''),
+                        category: String(vendor?.category || ''),
+                        ownerEmail,
+                        ownerName,
+                        lat: vendor.lat,
+                        lng: vendor.lng
+                    })
                 }
             } catch {
             }
@@ -5166,23 +5156,18 @@
                 try { localStorage.setItem('mangoo_vendors', JSON.stringify(VENDORS)); } catch {}
 
                 try {
-                    if (window.parent && window.parent !== window) {
-                        window.parent.postMessage({
-                            type: 'mangoo_local_creator_location',
-                            payload: {
-                                kind: 'provider',
-                                source: 'localplus',
-                                vendorId: String(newVendor.id),
-                                name: newVendor.name,
-                                trade: newVendor.trade,
-                                category: newVendor.category,
-                                ownerEmail: ownerEmail,
-                                ownerName: ownerName,
-                                lat: newVendor.lat,
-                                lng: newVendor.lng
-                            }
-                        }, window.location.origin);
-                    }
+                    persistCreatorLocationEvent({
+                        kind: 'provider',
+                        source: 'localplus',
+                        vendorId: String(newVendor.id),
+                        name: newVendor.name,
+                        trade: newVendor.trade,
+                        category: newVendor.category,
+                        ownerEmail: ownerEmail,
+                        ownerName: ownerName,
+                        lat: newVendor.lat,
+                        lng: newVendor.lng
+                    })
                 } catch {
                 }
 
@@ -5652,7 +5637,7 @@
 
             try {
                 const el = document.getElementById('lpBuild');
-                if (el) el.textContent = 'build v109';
+                if (el) el.textContent = 'build v110';
             } catch {
             }
 
@@ -5660,6 +5645,11 @@
 
             try {
                 hydrateVendorsFromStorage();
+            } catch {
+            }
+
+            try {
+                backfillCreatorLocationEvents();
             } catch {
             }
 
@@ -7805,6 +7795,113 @@
             window.location.assign(url)
         }
 
+        function getLpSupabaseConfig() {
+            try {
+                const url = String(localStorage.getItem('mangoo_supabase_url') || '').trim()
+                const key = String(localStorage.getItem('mangoo_supabase_anon_key') || '').trim()
+                if (!url || !key) return null
+                return { url, key }
+            } catch {
+                return null
+            }
+        }
+
+        async function insertCreatorLocationEvent(payload) {
+            const cfg = getLpSupabaseConfig()
+            if (!cfg) return false
+            try {
+                const kind = String(payload?.kind || '').trim()
+                const vendorId = String(payload?.vendorId || '').trim()
+                const lat = Number(payload?.lat)
+                const lng = Number(payload?.lng)
+                if (kind !== 'shop' && kind !== 'provider') return false
+                if (!vendorId) return false
+                if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false
+                const body = {
+                    kind,
+                    source: 'localplus',
+                    vendor_id: vendorId,
+                    owner_email: payload?.ownerEmail ? String(payload.ownerEmail).trim().toLowerCase() : null,
+                    owner_name: payload?.ownerName ? String(payload.ownerName).trim() : null,
+                    name: payload?.name ? String(payload.name).trim() : null,
+                    category: payload?.category ? String(payload.category).trim() : null,
+                    trade: payload?.trade ? String(payload.trade).trim() : null,
+                    lat,
+                    lng,
+                    accuracy: (payload?.accuracy !== undefined && payload?.accuracy !== null) ? Number(payload.accuracy) : null
+                }
+                const r = await fetch(`${cfg.url.replace(/\/+$/, '')}/rest/v1/creator_location_events`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        apikey: cfg.key,
+                        Authorization: `Bearer ${cfg.key}`,
+                        Prefer: 'return=minimal'
+                    },
+                    body: JSON.stringify(body)
+                })
+                return r.ok
+            } catch {
+                return false
+            }
+        }
+
+        function persistCreatorLocationEvent(payload) {
+            try {
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type: 'mangoo_local_creator_location', payload }, window.location.origin)
+                    return
+                }
+            } catch {
+            }
+            try {
+                void insertCreatorLocationEvent(payload)
+            } catch {
+            }
+        }
+
+        function backfillCreatorLocationEvents() {
+            try {
+                const ids = []
+                const shopId = localStorage.getItem('mangoo_my_shop_id')
+                const providerId = localStorage.getItem('mangoo_my_provider_id')
+                if (shopId) ids.push({ id: String(shopId), kind: 'shop' })
+                if (providerId) ids.push({ id: String(providerId), kind: 'provider' })
+                if (!ids.length) return
+                ids.forEach((x) => {
+                    const sentKey = `mangoo_creator_location_sent:${x.kind}:${x.id}`
+                    try {
+                        if (localStorage.getItem(sentKey) === '1') return
+                    } catch {
+                    }
+                    const v = Array.isArray(VENDORS) ? VENDORS.find((it) => String(it?.id) === x.id) : null
+                    const lat = Number(v?.lat)
+                    const lng = Number(v?.lng)
+                    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
+                    const u = getLpCurrentUser ? getLpCurrentUser() : null
+                    const email = String(u?.email || v?.ownerEmail || '').trim().toLowerCase()
+                    const ownerName = String(u?.name || v?.ownerName || '').trim()
+                    persistCreatorLocationEvent({
+                        kind: x.kind,
+                        source: 'localplus',
+                        vendorId: x.id,
+                        name: String(v?.name || ''),
+                        category: String(v?.category || ''),
+                        trade: String(v?.trade || ''),
+                        ownerEmail: email,
+                        ownerName: ownerName,
+                        lat,
+                        lng
+                    })
+                    try {
+                        localStorage.setItem(sentKey, '1')
+                    } catch {
+                    }
+                })
+            } catch {
+            }
+        }
+
         function lpLogout() {
             try {
                 const ok = confirm('Voulez-vous vraiment vous déconnecter ?')
@@ -7830,6 +7927,14 @@
                         try { localStorage.removeItem(k) } catch {}
                         return
                     }
+                    if (k === 'mangoo_my_shop_id' || k === 'mangoo_my_provider_id') {
+                        try { localStorage.removeItem(k) } catch {}
+                        return
+                    }
+                    if (k.startsWith('mangoo_my_shop_ids:') || k.startsWith('mangoo_my_provider_ids:')) {
+                        try { localStorage.removeItem(k) } catch {}
+                        return
+                    }
                     if (k.startsWith('mangoo_local_profile:')) {
                         try { localStorage.removeItem(k) } catch {}
                     }
@@ -7838,6 +7943,8 @@
                 try { localStorage.removeItem('mangoo-current-user') } catch {}
                 try { localStorage.removeItem('user') } catch {}
                 try { localStorage.removeItem('mangoo_local_profile') } catch {}
+                try { localStorage.removeItem('mangoo_my_shop_id') } catch {}
+                try { localStorage.removeItem('mangoo_my_provider_id') } catch {}
             }
             try { applyLpHeaderUser() } catch {}
             try { closeLpIdentityModal() } catch {}
@@ -7850,6 +7957,40 @@
                 alert('✅ Déconnexion effectuée.')
             } catch {
             }
+        }
+
+        function lpDisconnectShop() {
+            try {
+                const id = localStorage.getItem('mangoo_my_shop_id')
+                if (!id) {
+                    alert('Aucune boutique active.')
+                    return
+                }
+                const ok = confirm('Quitter la boutique active ?')
+                if (!ok) return
+                localStorage.removeItem('mangoo_my_shop_id')
+            } catch {
+            }
+            try { checkUserShop() } catch {}
+            try { renderVendorsOnMap(VENDORS) } catch {}
+            try { renderListView(VENDORS) } catch {}
+        }
+
+        function lpDisconnectProvider() {
+            try {
+                const id = localStorage.getItem('mangoo_my_provider_id')
+                if (!id) {
+                    alert('Aucun profil prestataire actif.')
+                    return
+                }
+                const ok = confirm('Quitter le profil prestataire actif ?')
+                if (!ok) return
+                localStorage.removeItem('mangoo_my_provider_id')
+            } catch {
+            }
+            try { refreshProviderDashboardFab() } catch {}
+            try { renderVendorsOnMap(VENDORS) } catch {}
+            try { renderListView(VENDORS) } catch {}
         }
 
         function toggleTheme() {
@@ -10757,22 +10898,17 @@
                 }
 
                 try {
-                    if (window.parent && window.parent !== window) {
-                        window.parent.postMessage({
-                            type: 'mangoo_local_creator_location',
-                            payload: {
-                                kind: 'shop',
-                                source: 'localplus',
-                                vendorId: String(newVendor.id),
-                                name: newVendor.name,
-                                category: newVendor.category,
-                                ownerEmail: String(email || ''),
-                                ownerName: String(u?.name || ''),
-                                lat: newVendor.lat,
-                                lng: newVendor.lng
-                            }
-                        }, window.location.origin);
-                    }
+                    persistCreatorLocationEvent({
+                        kind: 'shop',
+                        source: 'localplus',
+                        vendorId: String(newVendor.id),
+                        name: newVendor.name,
+                        category: newVendor.category,
+                        ownerEmail: String(email || ''),
+                        ownerName: String(u?.name || ''),
+                        lat: newVendor.lat,
+                        lng: newVendor.lng
+                    })
                 } catch {
                 }
 
