@@ -2767,6 +2767,21 @@
             </div>
 
             <div class="input-group">
+                <label>Logo de la boutique (optionnel)</label>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:60px; height:60px; border-radius:14px; background:#f1f2f6; display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px dashed #b2bec3;">
+                        <img id="shopLogoPreview" alt="Logo" style="width:100%; height:100%; object-fit:cover; display:none;" />
+                        <span id="shopLogoFallback" style="font-size:1.5rem;">🏪</span>
+                    </div>
+                    <label for="shopLogoFile" style="background:#dfe6e9; color:#2d3436; padding:10px 15px; border-radius:20px; cursor:pointer; font-weight:bold; font-size:0.9rem;">
+                        Choisir une image
+                    </label>
+                    <input type="file" id="shopLogoFile" accept="image/*" style="display:none;" onchange="handleShopLogoFile(this.files && this.files[0])" />
+                </div>
+                <div style="font-size: 0.75rem; color: #999; margin-top: 8px;">PNG/JPG/WebP, max 1 MB.</div>
+            </div>
+
+            <div class="input-group">
                 <label>Catégorie</label>
                 <select class="input-field" id="shopCategoryInput">
                     <option>🥬 Vivres Frais</option>
@@ -10200,6 +10215,39 @@
         }
 
         // === MODAL SELLER LOGIC ===
+        let currentShopLogo = null;
+
+        function setShopLogoPreview(dataUrl) {
+            currentShopLogo = dataUrl || null;
+            const img = document.getElementById('shopLogoPreview');
+            const fb = document.getElementById('shopLogoFallback');
+            if (!img || !fb) return;
+            if (currentShopLogo) {
+                img.src = currentShopLogo;
+                img.style.display = 'block';
+                fb.style.display = 'none';
+            } else {
+                img.src = '';
+                img.style.display = 'none';
+                fb.style.display = 'block';
+            }
+        }
+
+        async function handleShopLogoFile(file) {
+            try {
+                const dataUrl = await readImageToDataUrl(file, 512, 0.78);
+                if (dataUrl && dataUrl.length > 260000) {
+                    alert('Image trop lourde. Choisissez une photo plus légère.');
+                    setShopLogoPreview(null);
+                    return;
+                }
+                setShopLogoPreview(dataUrl);
+            } catch {
+                alert('Impossible de charger le logo.');
+                setShopLogoPreview(null);
+            }
+        }
+
         function openSellerModal() {
             // FIX: If trying to open 'Mes Commandes', redirect
             // This is a safety catch if onclick is mis-assigned
@@ -10220,6 +10268,7 @@
             const nameInput = document.querySelector('.input-field[type="text"]');
             const categoryInput = document.getElementById('shopCategoryInput');
             const pitchInput = document.getElementById('shopPitchInput');
+            const logoFile = document.getElementById('shopLogoFile');
             
             // Pitch Controls
             // (Removed old controls in favor of native audio)
@@ -10242,6 +10291,8 @@
                 nameInput.value = myShop.name;
                 categoryInput.value = myShop.category;
                 pitchInput.value = myShop.voicePitch || "";
+                if (logoFile) logoFile.value = '';
+                setShopLogoPreview(String(myShop.avatar || '') || null);
                 
                 // Set GPS status to Valid
                 gpsBtn.innerHTML = `✅ Position Validée (${myShop.lat.toFixed(4)}, ${myShop.lng.toFixed(4)})`;
@@ -10283,6 +10334,8 @@
                 categoryInput.selectedIndex = 0;
                 pitchInput.value = "";
                 pitchInput.disabled = false;
+                if (logoFile) logoFile.value = '';
+                setShopLogoPreview(null);
                 
                 // Reset Audio UI cleanly without alert
                 currentAudioBase64 = null;
@@ -10378,6 +10431,8 @@
             btn.style.opacity = '0.7';
             
             setTimeout(() => {
+                const autoApprove = String(location?.hostname || '').includes('localhost') || String(location?.hostname || '').includes('127.0.0.1');
+                const approvalStatus = autoApprove ? 'approved' : 'pending';
                 const capturedLat = parseFloat(latInput.value);
                 const capturedLng = parseFloat(lngInput.value);
 
@@ -10393,7 +10448,9 @@
                     live: false,
                     voicePitch: pitch,
                     voiceAudio: currentAudioBase64, // Enregistrement vocal
-                    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(shopName)}&background=random&color=fff`
+                    avatar: currentShopLogo || `https://ui-avatars.com/api/?name=${encodeURIComponent(shopName)}&background=random&color=fff`,
+                    approvalStatus: approvalStatus,
+                    updatedAt: new Date().toISOString()
                 };
 
                 // Ajout à la liste et sauvegarde
@@ -10462,11 +10519,11 @@
                         category: shopCategory,
                         ownerName: String(u?.name || 'Vendeur'),
                         ownerEmail: email,
-                        logoDataUrl: '',
+                        logoDataUrl: currentShopLogo || '',
                         primaryColor: '#0EA5E9',
                         secondaryColor: '#38BDF8',
                         shopUrl,
-                        approvalStatus: 'approved',
+                        approvalStatus: approvalStatus,
                         source: 'localplus',
                         sourceVendorId: newVendor.id,
                         updatedAt: new Date().toISOString(),
@@ -10537,9 +10594,27 @@
             vendor.category = categoryInput.value;
             vendor.voicePitch = pitchInput.value;
             vendor.voiceAudio = currentAudioBase64; // UPDATE AUDIO
+            if (currentShopLogo) vendor.avatar = currentShopLogo;
+            vendor.updatedAt = new Date().toISOString();
 
             try { upsertCustomVendor(vendor); } catch {}
             try { localStorage.setItem('mangoo_vendors', JSON.stringify(VENDORS)); } catch {}
+
+            try {
+                let shops = [];
+                try {
+                    const raw = localStorage.getItem('demo_shops');
+                    const parsed = raw ? JSON.parse(raw) : [];
+                    shops = Array.isArray(parsed) ? parsed : [];
+                } catch { shops = []; }
+                const idx = shops.findIndex((s) => String(s?.sourceVendorId) === String(vendor.id));
+                if (idx >= 0) {
+                    shops[idx] = { ...shops[idx], name: vendor.name, category: String(vendor.category || ''), logoDataUrl: currentShopLogo || shops[idx].logoDataUrl || '', updatedAt: new Date().toISOString() };
+                    localStorage.setItem('demo_shops', JSON.stringify(shops));
+                    try { window.dispatchEvent(new Event('demo-shops-updated')); } catch {}
+                }
+            } catch {
+            }
             
             alert("✅ Boutique mise à jour avec succès !");
             document.getElementById('sellerModal').style.display = 'none';
