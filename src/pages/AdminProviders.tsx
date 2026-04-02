@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { buildApiUrl } from '../config/api'
+import { supabase } from '../config/supabase'
+import { useAuth } from '../hooks/useAuth'
 
 type ProviderStatus = 'pending' | 'approved' | 'rejected' | 'suspended'
 
@@ -34,6 +36,7 @@ const statusToBadge = (s: ProviderStatus) => {
 }
 
 export default function AdminProviders() {
+  const { isAdmin } = useAuth()
   const [providers, setProviders] = useState<Provider[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -235,6 +238,45 @@ export default function AdminProviders() {
     setNotice(null)
     setIsLocalMode(false)
     try {
+      if (isAdmin) {
+        try {
+          const term = search.trim()
+          let q = supabase
+            .from('providers')
+            .select('id, user_id, name, slug, email, phone, city, country, status, is_visible, created_at')
+            .order('created_at', { ascending: false })
+
+          if (status !== 'all') q = q.eq('status', status)
+          if (term) {
+            const safe = term.replace(/,/g, ' ')
+            q = q.or(`name.ilike.%${safe}%,slug.ilike.%${safe}%,email.ilike.%${safe}%`)
+          }
+
+          const { data, error: supaError } = await q
+          if (seq !== loadSeqRef.current) return
+          if (supaError) throw supaError
+          if (Array.isArray(data)) {
+            const rows = (data as any[]).filter((p) => Boolean((p as any)?.id))
+            if (rows.length > 0) {
+              setProviders(rows as any)
+              setIsLocalMode(false)
+              setNotice(null)
+              return
+            }
+            loadProvidersFromLocalPlus()
+            setNotice('Aucun prestataire Supabase (ou droits insuffisants) : affichage en mode local (démo)')
+            setIsLocalMode(true)
+            return
+          }
+        } catch {
+          if (seq !== loadSeqRef.current) return
+          loadProvidersFromLocalPlus()
+          setNotice('Lecture Supabase indisponible : affichage en mode local (démo)')
+          setIsLocalMode(true)
+          return
+        }
+      }
+
       const token = await getAdminToken()
       if (!token) {
         loadProvidersFromLocalPlus()
@@ -321,7 +363,6 @@ export default function AdminProviders() {
       setIsProcessing(true)
       setError(null)
       try {
-        const token = await getAdminToken()
         if (String(id).startsWith('localprov-')) {
           const safeParse = (raw: string | null, fallback: any) => {
             try {
@@ -344,6 +385,19 @@ export default function AdminProviders() {
           setProviders((prev) => prev.map((p) => (p.id === id ? ({ ...p, ...patch } as Provider) : p)))
           return
         }
+
+        if (isAdmin && !String(id).startsWith('localplus-')) {
+          const next: any = { ...patch }
+          if (patch.status === 'approved') next.approved_at = new Date().toISOString()
+          if (patch.status && patch.status !== 'approved') next.approved_at = null
+
+          const { error: supaError } = await supabase.from('providers').update(next).eq('id', id)
+          if (supaError) throw supaError
+          setProviders((prev) => prev.map((p) => (p.id === id ? ({ ...p, ...patch } as Provider) : p)))
+          return
+        }
+
+        const token = await getAdminToken()
         if (!token || String(id).startsWith('localplus-')) {
           const localId = String(id).replace(/^localplus-/, '')
           const safeParse = (raw: string | null, fallback: any) => {
@@ -395,7 +449,7 @@ export default function AdminProviders() {
         setIsProcessing(false)
       }
     },
-    [getAdminToken, isProcessing]
+    [getAdminToken, isAdmin, isProcessing]
   )
 
   const approve = useCallback(
