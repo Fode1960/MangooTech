@@ -5236,7 +5236,7 @@ const AdminLayout = () => {
 };
 
 // Composant optimisé pour l'iframe Mangoo Local+
-const MANGOO_LOCAL_VERSION = 109;
+const MANGOO_LOCAL_VERSION = 110;
 const MangooLocalFrame = React.memo(({ user, onBack }) => {
   const persistCreatorLocation = useCallback(async (payload) => {
     try {
@@ -5357,6 +5357,18 @@ function AppShell() {
   const [clientWalletBalance, setClientWalletBalance] = useState(null);
   const clientWalletKey = useMemo(() => getWalletKeyFromUser(user), [user]);
   const [activePack, setActivePack] = useState({ packId: null, packName: null, mode: 'unknown' });
+
+  useEffect(() => {
+    try {
+      const url = String(import.meta.env.VITE_SUPABASE_URL || '').trim();
+      const key = String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
+      if (url && key) {
+        localStorage.setItem('mangoo_supabase_url', url);
+        localStorage.setItem('mangoo_supabase_anon_key', key);
+      }
+    } catch {
+    }
+  }, []);
 
   useEffect(() => {
     const lpView = searchParams.get('lp_view');
