@@ -56,39 +56,91 @@
             const submitBtn = document.getElementById('btnSubmitShop');
             const latInput = document.getElementById('shopLat');
             const lngInput = document.getElementById('shopLng');
+            if (!btn || !submitBtn || !latInput || !lngInput) return;
             
             btn.innerHTML = '<div class="spinner" style="width:15px; height:15px; border-width:2px; border-left-color:#1a5f3f; display:inline-block; margin-right:5px;"></div> Recherche Satellites...';
             btn.disabled = true;
-            
-            // Simulate GPS Acquisition
-            setTimeout(() => {
-                // In real app: navigator.geolocation.getCurrentPosition(...)
-                // Here: Use user position or random near user
-                const lat = USER_POS[0] + (Math.random() * 0.002 - 0.001);
-                const lng = USER_POS[1] + (Math.random() * 0.002 - 0.001);
-                
+
+            const done = (lat, lng, accuracy) => {
                 latInput.value = lat;
                 lngInput.value = lng;
-                
-                btn.innerHTML = `✅ Position Validée (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+
+                try {
+                    USER_POS = [lat, lng];
+                    USER_POS_META = { accuracy: accuracy, timestamp: new Date().toISOString() };
+                } catch {
+                }
+                try {
+                    localStorage.setItem('user_geolocation_consent', JSON.stringify({
+                        consentTimestamp: new Date().toISOString(),
+                        locationData: {
+                            latitude: lat,
+                            longitude: lng,
+                            accuracy: typeof accuracy === 'number' ? accuracy : null,
+                            timestamp: new Date().toISOString()
+                        }
+                    }));
+                } catch {
+                }
+
+                btn.innerHTML = `✅ Position Validée (${Number(lat).toFixed(4)}, ${Number(lng).toFixed(4)})`;
                 btn.style.background = '#e8f5e9';
                 btn.style.border = '2px solid #27ae60';
                 btn.style.color = '#27ae60';
-                
-                // Enable Submit
+
                 submitBtn.disabled = false;
                 submitBtn.style.background = '#1a5f3f';
                 submitBtn.style.cursor = 'pointer';
                 submitBtn.style.opacity = '1';
-                
-                // Toast
+
+                try {
+                    if (typeof updateUserMarker === 'function') updateUserMarker();
+                    if (map && typeof map.flyTo === 'function') map.flyTo([lat, lng], 16);
+                    if (typeof relocateVendorsNearUser === 'function') relocateVendorsNearUser();
+                    if (typeof renderVendorsOnMap === 'function') renderVendorsOnMap(VENDORS);
+                    if (typeof renderListView === 'function') renderListView(VENDORS);
+                } catch {
+                }
+
                 const toast = document.createElement('div');
                 toast.style.cssText = "position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#333; color:white; padding:10px 20px; border-radius:20px; font-size:0.8rem; z-index:9999;";
-                toast.innerHTML = "📍 Coordonnées GPS ajoutées à la base Mangoo Maps";
+                toast.innerHTML = "📍 Position GPS enregistrée";
+                document.body.appendChild(toast);
+                setTimeout(()=>toast.remove(), 2500);
+            };
+
+            const fail = () => {
+                btn.innerHTML = '🎯 Capturer ma position GPS';
+                btn.disabled = false;
+                const toast = document.createElement('div');
+                toast.style.cssText = "position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#b91c1c; color:white; padding:10px 20px; border-radius:20px; font-size:0.8rem; z-index:9999;";
+                toast.innerHTML = "⚠️ Activez la géolocalisation (GPS) pour obtenir la bonne position.";
                 document.body.appendChild(toast);
                 setTimeout(()=>toast.remove(), 3000);
-                
-            }, 2000);
+            };
+
+            try {
+                if (!navigator.geolocation) {
+                    fail();
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        const lat = Number(pos?.coords?.latitude);
+                        const lng = Number(pos?.coords?.longitude);
+                        const acc = Number(pos?.coords?.accuracy);
+                        if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+                            fail();
+                            return;
+                        }
+                        done(lat, lng, Number.isFinite(acc) ? acc : null);
+                    },
+                    () => fail(),
+                    { enableHighAccuracy: true, timeout: 12000, maximumAge: 600000 }
+                );
+            } catch {
+                fail();
+            }
         }
 
         // === VENDOR TRUST PROFILE ===
@@ -3484,6 +3536,46 @@
         } catch {
         }
 
+        function requestUserGeolocation() {
+            try {
+                if (!navigator.geolocation) return;
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        const lat = Number(pos?.coords?.latitude);
+                        const lng = Number(pos?.coords?.longitude);
+                        const acc = Number(pos?.coords?.accuracy);
+                        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+                        USER_POS = [lat, lng];
+                        USER_POS_META = { accuracy: Number.isFinite(acc) ? acc : null, timestamp: new Date().toISOString() };
+                        try {
+                            localStorage.setItem('user_geolocation_consent', JSON.stringify({
+                                consentTimestamp: new Date().toISOString(),
+                                locationData: {
+                                    latitude: lat,
+                                    longitude: lng,
+                                    accuracy: Number.isFinite(acc) ? acc : null,
+                                    timestamp: new Date().toISOString()
+                                }
+                            }));
+                        } catch {
+                        }
+
+                        try {
+                            relocateVendorsNearUser();
+                            if (map && typeof map.flyTo === 'function') map.flyTo(USER_POS, 16);
+                            if (typeof updateUserMarker === 'function') updateUserMarker();
+                            if (typeof renderVendorsOnMap === 'function') renderVendorsOnMap(VENDORS);
+                            if (typeof renderListView === 'function') renderListView(VENDORS);
+                        } catch {
+                        }
+                    },
+                    () => {},
+                    { enableHighAccuracy: true, timeout: 12000, maximumAge: 600000 }
+                );
+            } catch {
+            }
+        }
+
         function haversineKm(a, b) {
             const toRad = (v) => (v * Math.PI) / 180;
             const R = 6371;
@@ -4714,6 +4806,53 @@
             try { upsertCustomVendor(vendor); } catch {}
             try { localStorage.setItem('mangoo_vendors', JSON.stringify(VENDORS)); } catch {}
 
+            try {
+                const currentUser = getLpCurrentUser ? getLpCurrentUser() : null;
+                const ownerEmail = String(currentUser?.email || vendor?.ownerEmail || '').trim().toLowerCase();
+                const ownerName = String(currentUser?.name || vendor?.ownerName || '').trim();
+                if (window.parent && window.parent !== window && typeof vendor?.lat === 'number' && typeof vendor?.lng === 'number') {
+                    window.parent.postMessage({
+                        type: 'mangoo_local_creator_location',
+                        payload: {
+                            kind: 'provider',
+                            source: 'localplus',
+                            vendorId: String(vendor.id),
+                            name: String(vendor?.name || ''),
+                            trade: String(vendor?.trade || ''),
+                            category: String(vendor?.category || ''),
+                            ownerEmail,
+                            ownerName,
+                            lat: vendor.lat,
+                            lng: vendor.lng
+                        }
+                    }, window.location.origin);
+                }
+            } catch {
+            }
+
+            try {
+                const u = getLpCurrentUser ? getLpCurrentUser() : null;
+                const email = String(u?.email || vendor?.ownerEmail || '').trim().toLowerCase();
+                const ownerName = String(u?.name || vendor?.ownerName || '').trim();
+                if (window.parent && window.parent !== window && typeof vendor?.lat === 'number' && typeof vendor?.lng === 'number') {
+                    window.parent.postMessage({
+                        type: 'mangoo_local_creator_location',
+                        payload: {
+                            kind: 'shop',
+                            source: 'localplus',
+                            vendorId: String(vendor.id),
+                            name: String(vendor?.name || ''),
+                            category: String(vendor?.category || ''),
+                            ownerEmail: email,
+                            ownerName: ownerName,
+                            lat: vendor.lat,
+                            lng: vendor.lng
+                        }
+                    }, window.location.origin);
+                }
+            } catch {
+            }
+
             const modal = document.getElementById('providerModal');
             if (modal) modal.style.display = 'none';
             if (btn) {
@@ -4870,13 +5009,29 @@
             btn.innerHTML = '<div class="spinner" style="width:15px; height:15px; border-width:2px; border-left-color:#1a5f3f; display:inline-block; margin-right:5px;"></div> Recherche Satellites...';
             btn.disabled = true;
 
-            setTimeout(() => {
-                const lat = USER_POS[0] + (Math.random() * 0.002 - 0.001);
-                const lng = USER_POS[1] + (Math.random() * 0.002 - 0.001);
+            const done = (lat, lng, accuracy) => {
                 latInput.value = lat;
                 lngInput.value = lng;
 
-                btn.innerHTML = `✅ Position Validée (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+                try {
+                    USER_POS = [lat, lng];
+                    USER_POS_META = { accuracy: accuracy, timestamp: new Date().toISOString() };
+                } catch {
+                }
+                try {
+                    localStorage.setItem('user_geolocation_consent', JSON.stringify({
+                        consentTimestamp: new Date().toISOString(),
+                        locationData: {
+                            latitude: lat,
+                            longitude: lng,
+                            accuracy: typeof accuracy === 'number' ? accuracy : null,
+                            timestamp: new Date().toISOString()
+                        }
+                    }));
+                } catch {
+                }
+
+                btn.innerHTML = `✅ Position Validée (${Number(lat).toFixed(4)}, ${Number(lng).toFixed(4)})`;
                 btn.style.background = '#e8f5e9';
                 btn.style.border = '2px solid #27ae60';
                 btn.style.color = '#27ae60';
@@ -4885,12 +5040,54 @@
                 submitBtn.style.opacity = '1';
                 submitBtn.style.cursor = 'pointer';
 
+                try {
+                    if (typeof updateUserMarker === 'function') updateUserMarker();
+                    if (map && typeof map.flyTo === 'function') map.flyTo([lat, lng], 16);
+                    if (typeof relocateVendorsNearUser === 'function') relocateVendorsNearUser();
+                    if (typeof renderVendorsOnMap === 'function') renderVendorsOnMap(VENDORS);
+                    if (typeof renderListView === 'function') renderListView(VENDORS);
+                } catch {
+                }
+
                 const toast = document.createElement('div');
                 toast.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#333; color:white; padding:10px 20px; border-radius:20px; font-size:0.8rem; z-index:9999;';
-                toast.innerHTML = '📍 Position ajoutée sur Mangoo Maps';
+                toast.innerHTML = '📍 Position GPS enregistrée';
                 document.body.appendChild(toast);
                 setTimeout(()=>toast.remove(), 2500);
-            }, 1800);
+            };
+
+            const fail = () => {
+                btn.innerHTML = '🎯 Capturer ma position GPS';
+                btn.disabled = false;
+                const toast = document.createElement('div');
+                toast.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#b91c1c; color:white; padding:10px 20px; border-radius:20px; font-size:0.8rem; z-index:9999;';
+                toast.innerHTML = '⚠️ Activez la géolocalisation (GPS) pour obtenir la bonne position.';
+                document.body.appendChild(toast);
+                setTimeout(()=>toast.remove(), 3000);
+            };
+
+            try {
+                if (!navigator.geolocation) {
+                    fail();
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        const lat = Number(pos?.coords?.latitude);
+                        const lng = Number(pos?.coords?.longitude);
+                        const acc = Number(pos?.coords?.accuracy);
+                        if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+                            fail();
+                            return;
+                        }
+                        done(lat, lng, Number.isFinite(acc) ? acc : null);
+                    },
+                    () => fail(),
+                    { enableHighAccuracy: true, timeout: 12000, maximumAge: 600000 }
+                );
+            } catch {
+                fail();
+            }
         }
 
         function submitProvider() {
@@ -4967,6 +5164,27 @@
                 VENDORS.push(newVendor);
                 try { upsertCustomVendor(newVendor); } catch {}
                 try { localStorage.setItem('mangoo_vendors', JSON.stringify(VENDORS)); } catch {}
+
+                try {
+                    if (window.parent && window.parent !== window) {
+                        window.parent.postMessage({
+                            type: 'mangoo_local_creator_location',
+                            payload: {
+                                kind: 'provider',
+                                source: 'localplus',
+                                vendorId: String(newVendor.id),
+                                name: newVendor.name,
+                                trade: newVendor.trade,
+                                category: newVendor.category,
+                                ownerEmail: ownerEmail,
+                                ownerName: ownerName,
+                                lat: newVendor.lat,
+                                lng: newVendor.lng
+                            }
+                        }, window.location.origin);
+                    }
+                } catch {
+                }
 
                 try {
                     localStorage.setItem('mangoo_my_provider_id', String(newVendor.id));
@@ -5429,6 +5647,8 @@
             appInitialized = true;
 
             try { bindVendorCardClicks(); } catch {}
+
+            try { requestUserGeolocation(); } catch {}
 
             try {
                 const el = document.getElementById('lpBuild');
@@ -10440,6 +10660,7 @@
                 const newVendor = {
                     id: Date.now(), // ID unique
                     name: shopName,
+                    kind: 'shop',
                     category: category,
                     language: language,
                     lat: capturedLat,
@@ -10532,6 +10753,26 @@
                     else shops.push({ ...record, createdAt: new Date().toISOString() });
                     localStorage.setItem('demo_shops', JSON.stringify(shops));
                     try { window.dispatchEvent(new Event('demo-shops-updated')); } catch {}
+                } catch {
+                }
+
+                try {
+                    if (window.parent && window.parent !== window) {
+                        window.parent.postMessage({
+                            type: 'mangoo_local_creator_location',
+                            payload: {
+                                kind: 'shop',
+                                source: 'localplus',
+                                vendorId: String(newVendor.id),
+                                name: newVendor.name,
+                                category: newVendor.category,
+                                ownerEmail: String(email || ''),
+                                ownerName: String(u?.name || ''),
+                                lat: newVendor.lat,
+                                lng: newVendor.lng
+                            }
+                        }, window.location.origin);
+                    }
                 } catch {
                 }
 

@@ -48,6 +48,7 @@ import CourierRegister from './pages/CourierRegister';
 import DeliveryCheckout from './pages/DeliveryCheckout';
 import OrderStatus from './pages/OrderStatus';
 import ClientInvoiceModal from './components/invoice/ClientInvoiceModal';
+import { supabase } from './config/supabase';
 
 // Store optimisé avec Zustand
 const useStore = create((set, get) => ({
@@ -5237,16 +5238,56 @@ const AdminLayout = () => {
 // Composant optimisé pour l'iframe Mangoo Local+
 const MANGOO_LOCAL_VERSION = 109;
 const MangooLocalFrame = React.memo(({ user, onBack }) => {
+  const persistCreatorLocation = useCallback(async (payload) => {
+    try {
+      const kind = String(payload?.kind || '').trim()
+      const source = String(payload?.source || 'localplus').trim()
+      const vendorId = String(payload?.vendorId || '').trim()
+      const name = String(payload?.name || '').trim()
+      const category = String(payload?.category || '').trim()
+      const trade = String(payload?.trade || '').trim()
+      const ownerEmail = String(payload?.ownerEmail || user?.email || '').trim().toLowerCase() || null
+      const ownerName = String(payload?.ownerName || user?.user_metadata?.full_name || '').trim() || null
+      const lat = Number(payload?.lat)
+      const lng = Number(payload?.lng)
+
+      if (kind !== 'shop' && kind !== 'provider') return
+      if (!vendorId) return
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
+
+      await supabase.from('creator_location_events').insert({
+        kind,
+        source,
+        vendor_id: vendorId,
+        owner_email: ownerEmail,
+        owner_name: ownerName,
+        name: name || null,
+        category: category || null,
+        trade: trade || null,
+        lat,
+        lng
+      })
+    } catch {
+    }
+  }, [user?.email, user?.user_metadata?.full_name])
+
   // Listen for exit messages from the iframe
   useEffect(() => {
     const handleMessage = (event) => {
       if (event.data === 'exit_mangoo_local') {
         onBack();
+        return
+      }
+      if (event?.origin !== window.location.origin) return
+      const data = event?.data
+      if (!data || typeof data !== 'object') return
+      if (data.type === 'mangoo_local_creator_location') {
+        void persistCreatorLocation(data.payload)
       }
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [onBack]);
+  }, [onBack, persistCreatorLocation]);
 
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
