@@ -81,6 +81,23 @@ export default function AdminProviders() {
   }, [])
 
   const loadProvidersFromLocalPlus = useCallback(() => {
+    const safeGetItem = (key: string) => {
+      try {
+        return localStorage.getItem(key)
+      } catch {
+        return null
+      }
+    }
+
+    const safeSetItem = (key: string, value: string) => {
+      try {
+        localStorage.setItem(key, value)
+        return true
+      } catch {
+        return false
+      }
+    }
+
     const safeParse = (raw: string | null, fallback: any) => {
       try {
         const parsed = raw ? JSON.parse(raw) : fallback
@@ -91,7 +108,7 @@ export default function AdminProviders() {
     }
 
     const readLocalProviders = (): Provider[] => {
-      const stored = safeParse(localStorage.getItem(LOCAL_PROVIDERS_KEY), [])
+      const stored = safeParse(safeGetItem(LOCAL_PROVIDERS_KEY), [])
       return Array.isArray(stored) ? (stored as Provider[]).filter((p) => Boolean(p?.id)) : []
     }
 
@@ -153,17 +170,14 @@ export default function AdminProviders() {
           created_at: now,
         },
       ]
-      try {
-        localStorage.setItem(LOCAL_PROVIDERS_KEY, JSON.stringify(seeded))
-      } catch {
-      }
+      safeSetItem(LOCAL_PROVIDERS_KEY, JSON.stringify(seeded))
       return seeded
     }
 
     const localProviders = readLocalProviders()
 
-    const legacy = safeParse(localStorage.getItem('mangoo_vendors'), [])
-    const custom = safeParse(localStorage.getItem('mangoo_custom_vendors'), [])
+    const legacy = safeParse(safeGetItem('mangoo_vendors'), [])
+    const custom = safeParse(safeGetItem('mangoo_custom_vendors'), [])
     const list = [...(Array.isArray(legacy) ? legacy : []), ...(Array.isArray(custom) ? custom : [])]
 
     const term = search.trim().toLowerCase()
@@ -253,11 +267,23 @@ export default function AdminProviders() {
 
           if (seq !== loadSeqRef.current) return
 
-          const data = Array.isArray(res?.json?.data) ? (res.json.data as Provider[]) : []
-          if (res.ok) {
-            setProviders(data.filter((p) => Boolean(p?.id)))
-            setIsLocalMode(false)
-            setNotice(null)
+          const isValidApiResponse =
+            res.ok &&
+            res?.json &&
+            typeof res.json === 'object' &&
+            (res.json as any).success === true &&
+            Array.isArray((res.json as any).data)
+
+          if (isValidApiResponse) {
+            const data = ((res.json as any).data as Provider[]).filter((p) => Boolean(p?.id))
+            if (data.length > 0) {
+              setProviders(data)
+              setIsLocalMode(false)
+              setNotice(null)
+              return
+            }
+            setNotice('Backend vide : conservation des données locales')
+            setIsLocalMode(true)
             return
           }
 
@@ -382,6 +408,13 @@ export default function AdminProviders() {
   const reject = useCallback(
     async (p: Provider) => {
       await updateProvider(p.id, { status: 'rejected', is_visible: false })
+    },
+    [updateProvider]
+  )
+
+  const setPending = useCallback(
+    async (p: Provider) => {
+      await updateProvider(p.id, { status: 'pending', is_visible: false })
     },
     [updateProvider]
   )
@@ -549,6 +582,14 @@ export default function AdminProviders() {
                         className="px-3 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white font-bold"
                       >
                         Rejeter
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPending(p)}
+                        disabled={isProcessing || p.status === 'pending'}
+                        className="px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-800 disabled:opacity-60 text-white font-bold"
+                      >
+                        En attente
                       </button>
                       <button
                         type="button"

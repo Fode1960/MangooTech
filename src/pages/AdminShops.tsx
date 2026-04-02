@@ -28,6 +28,8 @@ type DemoShop = {
   billingTaxId?: string;
   billingAddress?: string;
   billingPhone?: string;
+  source?: string;
+  sourceVendorId?: string | number;
 };
 
 const STORAGE_KEY = 'demo_shops';
@@ -41,6 +43,64 @@ const readDemoShops = (): DemoShop[] => {
   } catch {
     return [];
   }
+};
+
+const safeParseJson = (raw: string | null, fallback: any) => {
+  try {
+    const parsed = raw ? JSON.parse(raw) : fallback;
+    return parsed;
+  } catch {
+    return fallback;
+  }
+};
+
+const readLocalPlusVendors = (): any[] => {
+  const legacy = safeParseJson(localStorage.getItem('mangoo_vendors'), []);
+  const custom = safeParseJson(localStorage.getItem('mangoo_custom_vendors'), []);
+  const list = [...(Array.isArray(legacy) ? legacy : []), ...(Array.isArray(custom) ? custom : [])];
+  const byId = new Map<string, any>();
+  list.forEach((v) => {
+    const id = v?.id;
+    if (id === undefined || id === null) return;
+    const k = String(id);
+    if (!byId.has(k)) byId.set(k, v);
+  });
+  return Array.from(byId.values());
+};
+
+const isLocalPlusProvider = (v: any) => {
+  const kind = String(v?.kind || '').trim().toLowerCase();
+  if (kind === 'service') return true;
+  if (String(v?.trade || '').trim()) return true;
+  if (Array.isArray(v?.coverage) && v.coverage.length) return true;
+  const cat = String(v?.category || '').toLowerCase();
+  if (cat.includes('service') || cat.includes('métier') || cat.includes('metier')) return true;
+  return false;
+};
+
+const normalizeApprovalStatus = (raw: any): ApprovalStatus => {
+  const s = String(raw || '').trim().toLowerCase();
+  if (s === 'approved' || s === 'rejected' || s === 'pending') return s as ApprovalStatus;
+  return 'pending';
+};
+
+const slugify = (value: any) => {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 64);
+};
+
+const ensureUniqueSlug = (base: string, existing: Set<string>, suffix: string) => {
+  let slug = base;
+  if (!slug) slug = `boutique-${suffix}`;
+  if (!existing.has(slug)) return slug;
+  const alt = `${slug}-${suffix}`;
+  if (!existing.has(alt)) return alt;
+  return `${slug}-${Date.now()}`;
 };
 
 const writeDemoShops = (shops: DemoShop[]) => {
@@ -86,8 +146,65 @@ export default function AdminShops() {
       didMigrate = true;
       return { ...s, approvalStatus: 'pending', updatedAt: s.updatedAt || now };
     });
-    if (didMigrate) writeDemoShops(migrated);
-    const next = migrated.map(normalizeStatus).filter((s) => s.slug);
+
+    const vendors = readLocalPlusVendors();
+    const shopVendors = vendors.filter((v) => !isLocalPlusProvider(v));
+
+    const existingSlugs = new Set(migrated.map((s) => String(s?.slug || '')).filter(Boolean));
+    const bySourceId = new Map<string, DemoShop>();
+    migrated.forEach((s) => {
+      const sid = (s as any)?.sourceVendorId;
+      if (sid !== undefined && sid !== null) bySourceId.set(String(sid), s);
+    });
+
+    let merged = migrated.slice();
+    let didMerge = false;
+
+    shopVendors.forEach((v) => {
+      const id = v?.id;
+      if (id === undefined || id === null) return;
+      const sid = String(id);
+      const name = String(v?.name || '').trim() || 'Boutique';
+      const base = String(v?.slug || '').trim() || slugify(name);
+      const slug = bySourceId.has(sid)
+        ? String(bySourceId.get(sid)?.slug || base)
+        : ensureUniqueSlug(base, existingSlugs, sid);
+
+      const currentShop = bySourceId.get(sid);
+      const approvalStatus = currentShop?.approvalStatus
+        ? normalizeApprovalStatus(currentShop.approvalStatus)
+        : normalizeApprovalStatus(v?.approvalStatus);
+
+      const nextShop: DemoShop = {
+        ...(currentShop || {}),
+        id: String(currentShop?.id || `shop-${sid}`),
+        name,
+        slug,
+        category: String(v?.category || currentShop?.category || '').trim() || 'general',
+        ownerName: String(v?.ownerName || currentShop?.ownerName || ''),
+        ownerEmail: String(v?.ownerEmail || currentShop?.ownerEmail || ''),
+        approvalStatus,
+        source: 'localplus',
+        sourceVendorId: id,
+        updatedAt: String(v?.updatedAt || currentShop?.updatedAt || now),
+      };
+
+      if (currentShop) {
+        const idx = merged.findIndex((s) => String((s as any)?.sourceVendorId || '') === sid);
+        if (idx >= 0) {
+          merged[idx] = nextShop;
+          didMerge = true;
+          return;
+        }
+      }
+
+      merged.push({ ...nextShop, createdAt: String(v?.createdAt || now) });
+      existingSlugs.add(slug);
+      didMerge = true;
+    });
+
+    if (didMigrate || didMerge) writeDemoShops(merged);
+    const next = merged.map(normalizeStatus).filter((s) => s.slug);
     setShops(next);
   }, []);
 
@@ -108,6 +225,8 @@ export default function AdminShops() {
   const setApproval = useCallback((slug: string, status: ApprovalStatus) => {
     const now = new Date().toISOString();
     const current = readDemoShops();
+    const target = current.find((s) => String(s?.slug || '') === slug) as any;
+    const sourceVendorId = target?.sourceVendorId;
     const next = current.map((s) => {
       if (s?.slug !== slug) return s;
       if (status === 'approved') {
@@ -120,6 +239,29 @@ export default function AdminShops() {
     });
     writeDemoShops(next);
     setShops(next.map(normalizeStatus).filter((s) => s.slug));
+
+    if (sourceVendorId !== undefined && sourceVendorId !== null) {
+      const sid = String(sourceVendorId);
+      const applyToKey = (key: string) => {
+        const list = safeParseJson(localStorage.getItem(key), []);
+        if (!Array.isArray(list) || !list.length) return false;
+        let changed = false;
+        const updated = list.map((v: any) => {
+          if (String(v?.id || '') !== sid) return v;
+          changed = true;
+          return { ...v, approvalStatus: status, updatedAt: now };
+        });
+        if (!changed) return false;
+        try {
+          localStorage.setItem(key, JSON.stringify(updated));
+          return true;
+        } catch {
+          return false;
+        }
+      };
+      applyToKey('mangoo_vendors');
+      applyToKey('mangoo_custom_vendors');
+    }
   }, []);
 
   const openBilling = useCallback((shop: DemoShop) => {
