@@ -5269,8 +5269,11 @@ function AppShell() {
     let view = 'landing';
     try {
       const stored = localStorage.getItem('mangoo-last-view');
-      if (stored === 'landing' || stored === 'marketplace' || stored === 'shops' || stored === 'innovation' || stored === 'account') {
+      if (stored === 'landing' || stored === 'marketplace' || stored === 'shops' || stored === 'account') {
         view = stored;
+      }
+      if (stored === 'innovation') {
+        view = 'landing';
       }
     } catch {
       view = 'landing';
@@ -5564,7 +5567,9 @@ function AppShell() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('mangoo-last-view', currentView);
+      if (currentView !== 'innovation') {
+        localStorage.setItem('mangoo-last-view', currentView);
+      }
     } catch {
       // ignore
     }
