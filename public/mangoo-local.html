@@ -5637,7 +5637,7 @@
 
             try {
                 const el = document.getElementById('lpBuild');
-                if (el) el.textContent = 'build v110';
+                if (el) el.textContent = 'build v111';
             } catch {
             }
 
@@ -9275,6 +9275,7 @@
                                 <a href="#" onclick="openProviderModalForVendor('${safeVendorId}')" style="color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px;">⚙️ Réglages</a>
                                 <a href="#" onclick="startServicePayment('${safeVendorId}')" style="color:#00b894; font-size:0.85rem; text-decoration:none; border:1px solid #00b894; padding:8px 15px; border-radius:20px; font-weight:bold;">💳 Paiement</a>
                                 <a href="#" onclick="openProviderDashboard('${safeVendorId}')" style="color:#f59e0b; font-size:0.85rem; text-decoration:none; border:1px solid #f59e0b; padding:8px 15px; border-radius:20px; font-weight:bold;">📄 Dashboard</a>
+                                <a href="#" onclick="try{lpDisconnectProvider()}catch{}; try{closeSheet()}catch{}" style="color:#d63031; font-size:0.85rem; text-decoration:none; border:1px solid #d63031; padding:8px 15px; border-radius:20px; font-weight:bold;">🚪 Quitter</a>
                             </div>
                         `;
                     }
@@ -9288,6 +9289,7 @@
                             <a href="#" onclick="openProviderModalForVendor('${safeVendorId}')" style="color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px;">⚙️ Réglages</a>
                             <a href="#" onclick="startServicePayment('${safeVendorId}')" style="color:#00b894; font-size:0.85rem; text-decoration:none; border:1px solid #00b894; padding:8px 15px; border-radius:20px; font-weight:bold;">💳 Paiement</a>
                             <a href="#" onclick="openProviderDashboard('${safeVendorId}')" style="color:#f59e0b; font-size:0.85rem; text-decoration:none; border:1px solid #f59e0b; padding:8px 15px; border-radius:20px; font-weight:bold;">📄 Dashboard</a>
+                            <a href="#" onclick="try{lpDisconnectProvider()}catch{}; try{closeSheet()}catch{}" style="color:#d63031; font-size:0.85rem; text-decoration:none; border:1px solid #d63031; padding:8px 15px; border-radius:20px; font-weight:bold;">🚪 Quitter</a>
                         </div>
                     `;
                 } else if (myShopId && vendor.id == myShopId) {
@@ -9297,6 +9299,7 @@
                             <a href="#" onclick="openSellerModal()" style="color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px;">⚙️ Réglages</a>
                             <a href="#" onclick="openProductModal()" style="color:#e17055; font-size:0.85rem; text-decoration:none; border:1px solid #e17055; padding:8px 15px; border-radius:20px; font-weight:bold;">📦 Nouveau</a>
                             <a href="#" onclick="openSupplyModal()" style="color:#0984e3; font-size:0.85rem; text-decoration:none; border:1px solid #0984e3; padding:8px 15px; border-radius:20px; font-weight:bold;">🏭 S'approvisionner</a>
+                            <a href="#" onclick="try{lpDisconnectShop()}catch{}; try{closeSheet()}catch{}" style="color:#d63031; font-size:0.85rem; text-decoration:none; border:1px solid #d63031; padding:8px 15px; border-radius:20px; font-weight:bold;">🚪 Quitter</a>
                         </div>
                     `;
                 } else {
