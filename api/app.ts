@@ -93,6 +93,9 @@ app.use('/api/admin/reconciliation', reconciliationReportsRoutes)
 app.use('/api/admin', adminUsersRoutes)
 app.use('/api/commissions', commissionRoutes)
 
+app.use('/admin/shops', adminShopsRoutes)
+app.use('/admin/providers', adminProvidersRoutes)
+
 /**
  * Test Routes (debug)
  */
