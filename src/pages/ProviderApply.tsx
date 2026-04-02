@@ -12,6 +12,7 @@ export default function ProviderApply() {
   const [city, setCity] = useState('')
   const [country, setCountry] = useState('BF')
   const [services, setServices] = useState('')
+  const [avatarDataUrl, setAvatarDataUrl] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -57,6 +58,7 @@ export default function ProviderApply() {
             user_id: user.id,
             name: name.trim(),
             slug: normalizedSlug,
+            avatar_url: avatarDataUrl,
             phone: phone.trim() || null,
             email: user.email || null,
             city: city.trim() || null,
@@ -75,7 +77,33 @@ export default function ProviderApply() {
     } finally {
       setIsSaving(false)
     }
-  }, [city, country, isSaving, name, normalizedSlug, phone, services, user?.email, user?.id])
+  }, [avatarDataUrl, city, country, isSaving, name, normalizedSlug, phone, services, user?.email, user?.id])
+
+  const onPickAvatar = useCallback((file: File | null) => {
+    setError(null)
+    if (!file) {
+      setAvatarDataUrl(null)
+      return
+    }
+    if (!file.type.startsWith('image/')) {
+      setError('Veuillez choisir une image (PNG/JPG/WebP).')
+      return
+    }
+    const maxBytes = 1024 * 1024
+    if (file.size > maxBytes) {
+      setError('Image trop lourde. Maximum 1 MB.')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : null
+      setAvatarDataUrl(result)
+    }
+    reader.onerror = () => {
+      setError('Impossible de lire l’image sélectionnée.')
+    }
+    reader.readAsDataURL(file)
+  }, [])
 
   if (loading) {
     return <div className="p-6 text-gray-700 dark:text-gray-200">Chargement…</div>
@@ -109,6 +137,26 @@ export default function ProviderApply() {
       )}
 
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 space-y-3">
+        <div>
+          <div className="text-sm font-bold text-gray-700 dark:text-gray-200">Photo de profil (optionnel)</div>
+          <div className="mt-2 flex items-center gap-3">
+            <div className="h-14 w-14 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+              {avatarDataUrl ? (
+                <img src={avatarDataUrl} alt="Avatar" className="h-full w-full object-cover" />
+              ) : (
+                <div className="h-full w-full" />
+              )}
+            </div>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => onPickAvatar(e.target.files?.[0] || null)}
+              className="block w-full text-sm text-gray-700 dark:text-gray-200"
+            />
+          </div>
+          <div className="mt-1 text-xs text-gray-600 dark:text-gray-300">PNG/JPG/WebP, max 1 MB.</div>
+        </div>
+
         <div>
           <div className="text-sm font-bold text-gray-700 dark:text-gray-200">Nom</div>
           <input
