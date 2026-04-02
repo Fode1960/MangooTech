@@ -2854,6 +2854,21 @@
             </div>
 
             <div class="input-group">
+                <label>Photo de profil (optionnel)</label>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:60px; height:60px; border-radius:50%; background:#f1f2f6; display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px dashed #b2bec3;">
+                        <img id="providerAvatarPreview" alt="Avatar" style="width:100%; height:100%; object-fit:cover; display:none;" />
+                        <span id="providerAvatarFallback" style="font-size:1.5rem;">👤</span>
+                    </div>
+                    <label for="providerAvatarFile" style="background:#dfe6e9; color:#2d3436; padding:10px 15px; border-radius:20px; cursor:pointer; font-weight:bold; font-size:0.9rem;">
+                        Choisir une image
+                    </label>
+                    <input type="file" id="providerAvatarFile" accept="image/*" style="display:none;" onchange="handleProviderAvatarFile(this.files && this.files[0])" />
+                </div>
+                <div style="font-size: 0.75rem; color: #999; margin-top: 8px;">PNG/JPG/WebP, max 1 MB.</div>
+            </div>
+
+            <div class="input-group">
                 <label>Métier</label>
                 <select class="input-field" id="providerTradeSelect" onchange="onProviderTradeSelectChange()">
                     <option value="">Choisir un métier…</option>
@@ -4390,6 +4405,38 @@
         let currentProviderAudioBase64 = null;
         let providerAudioTimerInterval;
         let currentProviderPortfolio = [null, null, null];
+        let currentProviderAvatar = null;
+
+        function setProviderAvatarPreview(dataUrl) {
+            currentProviderAvatar = dataUrl || null;
+            const img = document.getElementById('providerAvatarPreview');
+            const fb = document.getElementById('providerAvatarFallback');
+            if (!img || !fb) return;
+            if (currentProviderAvatar) {
+                img.src = currentProviderAvatar;
+                img.style.display = 'block';
+                fb.style.display = 'none';
+            } else {
+                img.src = '';
+                img.style.display = 'none';
+                fb.style.display = 'block';
+            }
+        }
+
+        async function handleProviderAvatarFile(file) {
+            try {
+                const dataUrl = await readImageToDataUrl(file, 512, 0.78);
+                if (dataUrl && dataUrl.length > 260000) {
+                    alert('Image trop lourde. Choisissez une photo plus légère.');
+                    setProviderAvatarPreview(null);
+                    return;
+                }
+                setProviderAvatarPreview(dataUrl);
+            } catch {
+                alert('Impossible de charger la photo.');
+                setProviderAvatarPreview(null);
+            }
+        }
 
         function setProviderPortfolioPreview(index, dataUrl) {
             const i = Number(index);
@@ -4479,6 +4526,7 @@
             const tradeInput = document.getElementById('providerTradeInput');
             const covInput = document.getElementById('providerCoverageInput');
             const servicesInput = document.getElementById('providerServicesInput');
+            const avatarFile = document.getElementById('providerAvatarFile');
             const file1 = document.getElementById('providerPortfolioFile1');
             const file2 = document.getElementById('providerPortfolioFile2');
             const file3 = document.getElementById('providerPortfolioFile3');
@@ -4493,6 +4541,8 @@
             if (tradeInput) tradeInput.value = '';
             if (covInput) covInput.value = '';
             if (servicesInput) servicesInput.value = '';
+            if (avatarFile) avatarFile.value = '';
+            setProviderAvatarPreview(null);
             if (file1) file1.value = '';
             if (file2) file2.value = '';
             if (file3) file3.value = '';
@@ -4545,6 +4595,7 @@
             const tradeInput = document.getElementById('providerTradeInput');
             const covInput = document.getElementById('providerCoverageInput');
             const servicesInput = document.getElementById('providerServicesInput');
+            const avatarFile = document.getElementById('providerAvatarFile');
             const file1 = document.getElementById('providerPortfolioFile1');
             const file2 = document.getElementById('providerPortfolioFile2');
             const file3 = document.getElementById('providerPortfolioFile3');
@@ -4579,6 +4630,9 @@
             if (mobileToggle) mobileToggle.checked = !!v?.isMobile;
             if (latInput) latInput.value = String(v?.lat || '');
             if (lngInput) lngInput.value = String(v?.lng || '');
+
+            if (avatarFile) avatarFile.value = '';
+            setProviderAvatarPreview(String(v?.avatar || '') || null);
 
             if (file1) file1.value = '';
             if (file2) file2.value = '';
@@ -4638,6 +4692,7 @@
             vendor.portfolio = portfolio;
             vendor.voicePitch = String(pitchInput?.value || '').trim();
             vendor.voiceAudio = currentProviderAudioBase64;
+            if (currentProviderAvatar) vendor.avatar = currentProviderAvatar;
             if (latInput?.value) vendor.lat = parseFloat(latInput.value);
             if (lngInput?.value) vendor.lng = parseFloat(lngInput.value);
 
@@ -4888,7 +4943,7 @@
                     live: false,
                     voicePitch: pitch || `Bonjour, je suis ${name}. Je suis ${trade.toLowerCase()}.`,
                     voiceAudio: currentProviderAudioBase64,
-                    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff`,
+                    avatar: currentProviderAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff`,
                     ownerEmail,
                     ownerName,
                     isUserOwned: true
