@@ -184,8 +184,21 @@ export default function AdminProviders() {
     const list = [...(Array.isArray(legacy) ? legacy : []), ...(Array.isArray(custom) ? custom : [])]
 
     const term = search.trim().toLowerCase()
-    const servicesOnly = list.filter((v: any) => String(v?.kind || '').toLowerCase() === 'service')
-    const source = servicesOnly.length > 0 ? servicesOnly : list
+    const isLocalPlusProvider = (v: any) => {
+      const kind = String(v?.kind || '').trim().toLowerCase()
+      if (kind === 'service') return true
+      if (String(v?.trade || '').trim()) return true
+      if (String(v?.metier || '').trim()) return true
+      if (String(v?.job || '').trim()) return true
+      if (Array.isArray(v?.coverage) && v.coverage.length) return true
+      if (Array.isArray(v?.neighborhoods) && v.neighborhoods.length) return true
+      const cat = String(v?.category || '').toLowerCase()
+      if (cat.includes('service') || cat.includes('métier') || cat.includes('metier') || cat.includes('artisan')) return true
+      return false
+    }
+
+    const providerVendors = list.filter(isLocalPlusProvider)
+    const source = providerVendors.length > 0 ? providerVendors : list
 
     const rowsFromVendors = source
       .map((v: any) => {
@@ -218,8 +231,8 @@ export default function AdminProviders() {
         } as Provider
       })
 
-    const baseRows = localProviders.length > 0 ? localProviders : rowsFromVendors
-    const withSeed = baseRows.length > 0 ? baseRows : ensureSeeded()
+    const combined = [...localProviders, ...rowsFromVendors]
+    const withSeed = combined.length > 0 ? combined : ensureSeeded()
 
     const filtered = withSeed.filter((p: Provider) => {
       if (status !== 'all' && p.status !== status) return false
