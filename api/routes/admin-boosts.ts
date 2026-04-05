@@ -117,6 +117,92 @@ router.patch('/products/:id', authenticateAdmin, async (req, res) => {
   }
 });
 
+router.post('/products', authenticateAdmin, async (req, res) => {
+  try {
+    if (!requireSupabase(req, res)) return;
+
+    const kind = String(req.body?.kind || '').trim().toLowerCase();
+    const durationHours = Number(req.body?.duration_hours);
+    const priceXof = Number(req.body?.price_xof);
+    const currency = String(req.body?.currency || 'XOF').trim().toUpperCase();
+    const title = String(req.body?.title || '').trim();
+    const description = String(req.body?.description || '').trim();
+    const sponsoredTier = req.body?.sponsored_tier ? String(req.body.sponsored_tier).trim().toLowerCase() : null;
+    const active = req.body?.active === undefined ? true : Boolean(req.body.active);
+
+    if (kind !== 'sponsored' && kind !== 'promo' && kind !== 'new') {
+      return res.status(400).json({ success: false, error: 'kind invalide' });
+    }
+    if (![12, 24, 72].includes(durationHours)) {
+      return res.status(400).json({ success: false, error: 'duration_hours invalide (12/24/72)' });
+    }
+    if (!Number.isFinite(priceXof) || priceXof < 0) {
+      return res.status(400).json({ success: false, error: 'price_xof invalide' });
+    }
+    if (!title) return res.status(400).json({ success: false, error: 'title manquant' });
+    if (!description) return res.status(400).json({ success: false, error: 'description manquante' });
+    if (kind === 'sponsored' && sponsoredTier && sponsoredTier !== 'bronze' && sponsoredTier !== 'argent' && sponsoredTier !== 'or') {
+      return res.status(400).json({ success: false, error: 'sponsored_tier invalide' });
+    }
+
+    const nowIso = new Date().toISOString();
+    const { data, error } = await supabase!
+      .from('boost_products')
+      .insert({
+        kind,
+        duration_hours: Math.floor(durationHours),
+        price_xof: Math.floor(priceXof),
+        currency,
+        title,
+        description,
+        sponsored_tier: kind === 'sponsored' ? (sponsoredTier || 'bronze') : null,
+        active,
+        created_at: nowIso,
+        updated_at: nowIso,
+      })
+      .select('id, kind, duration_hours, price_xof, currency, title, description, sponsored_tier, active, created_at, updated_at')
+      .single();
+
+    if (error) return res.status(500).json({ success: false, error: error.message });
+    res.json({ success: true, product: data });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error?.message || String(error) });
+  }
+});
+
+router.post('/products/seed-defaults', authenticateAdmin, async (req, res) => {
+  try {
+    if (!requireSupabase(req, res)) return;
+
+    const nowIso = new Date().toISOString();
+    const defaults = [
+      { kind: 'sponsored', duration_hours: 12, price_xof: 2000, currency: 'XOF', title: 'Boost Sponsorisé (12h)', description: 'Sponsorisé sur la carte Mangoo Local+ (12h)', sponsored_tier: 'bronze', active: true },
+      { kind: 'sponsored', duration_hours: 24, price_xof: 5000, currency: 'XOF', title: 'Boost Sponsorisé (24h)', description: 'Sponsorisé sur la carte Mangoo Local+ (24h)', sponsored_tier: 'argent', active: true },
+      { kind: 'sponsored', duration_hours: 72, price_xof: 12000, currency: 'XOF', title: 'Boost Sponsorisé (72h)', description: 'Sponsorisé sur la carte Mangoo Local+ (72h)', sponsored_tier: 'or', active: true },
+      { kind: 'promo', duration_hours: 24, price_xof: 1000, currency: 'XOF', title: 'Boost Promo (24h)', description: 'Badge Promo sur la carte Mangoo Local+ (24h)', sponsored_tier: null, active: true },
+      { kind: 'promo', duration_hours: 72, price_xof: 2500, currency: 'XOF', title: 'Boost Promo (72h)', description: 'Badge Promo sur la carte Mangoo Local+ (72h)', sponsored_tier: null, active: true },
+      { kind: 'new', duration_hours: 24, price_xof: 500, currency: 'XOF', title: 'Boost Nouveau (24h)', description: 'Badge Nouveau sur la carte Mangoo Local+ (24h)', sponsored_tier: null, active: true },
+      { kind: 'new', duration_hours: 72, price_xof: 1500, currency: 'XOF', title: 'Boost Nouveau (72h)', description: 'Badge Nouveau sur la carte Mangoo Local+ (72h)', sponsored_tier: null, active: true },
+    ].map((x) => ({ ...x, created_at: nowIso, updated_at: nowIso }));
+
+    const { error } = await supabase!
+      .from('boost_products')
+      .upsert(defaults as any, { onConflict: 'kind,duration_hours' });
+
+    if (error) return res.status(500).json({ success: false, error: error.message });
+
+    const { data } = await supabase!
+      .from('boost_products')
+      .select('id, kind, duration_hours, price_xof, currency, title, description, sponsored_tier, active, created_at, updated_at')
+      .order('kind', { ascending: true })
+      .order('duration_hours', { ascending: true });
+
+    res.json({ success: true, products: data || [] });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error?.message || String(error) });
+  }
+});
+
 router.get('/users', authenticateAdmin, async (req, res) => {
   try {
     if (!requireSupabase(req, res)) return;

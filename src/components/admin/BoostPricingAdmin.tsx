@@ -37,6 +37,7 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
   const [notice, setNotice] = useState<string | null>(null)
   const [editing, setEditing] = useState<Record<string, Partial<AdminBoostProduct>>>({})
   const [savingId, setSavingId] = useState<string | null>(null)
+  const [seeding, setSeeding] = useState(false)
   const loadSeqRef = useRef(0)
 
   const getAdminToken = useCallback(async () => {
@@ -122,6 +123,54 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
       setLoading(false)
     }
   }, [fetchJsonOnce, getAdminToken, isEnabled])
+
+  const seedDefaults = useCallback(async () => {
+    if (!isEnabled) return
+    if (seeding) return
+    setError(null)
+    setNotice(null)
+    try {
+      const token = await getAdminToken()
+      if (!token || token === 'demo-admin') throw new Error('Connectez-vous avec un vrai compte admin.')
+      setSeeding(true)
+      const res = await fetchJsonOnce(
+        '/api/admin/boosts/products/seed-defaults',
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` }
+        },
+        8000
+      )
+      if (!res.ok || !res.json?.success) throw new Error(res.json?.error || `HTTP ${res.status}`)
+      const rows = Array.isArray(res.json.products) ? res.json.products : []
+      const parsed = rows
+        .map((p: any) => {
+          const kind = normalizeKind(p?.kind)
+          if (!kind) return null
+          return {
+            id: String(p.id),
+            kind,
+            duration_hours: Number(p.duration_hours),
+            price_xof: Number(p.price_xof),
+            currency: String(p.currency || 'XOF'),
+            title: String(p.title || ''),
+            description: String(p.description || ''),
+            sponsored_tier: p.sponsored_tier === 'bronze' || p.sponsored_tier === 'argent' || p.sponsored_tier === 'or' ? p.sponsored_tier : null,
+            active: Boolean(p.active),
+            created_at: String(p.created_at || ''),
+            updated_at: String(p.updated_at || ''),
+          } as AdminBoostProduct
+        })
+        .filter(Boolean) as AdminBoostProduct[]
+      setProducts(parsed)
+      setEditing({})
+      setNotice('Offres initialisées.')
+    } catch (e: any) {
+      setError(e?.message || 'Erreur initialisation offres')
+    } finally {
+      setSeeding(false)
+    }
+  }, [fetchJsonOnce, getAdminToken, isEnabled, seeding])
 
   useEffect(() => {
     load()
@@ -227,6 +276,23 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
         </div>
         {error && <div className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</div>}
         {notice && <div className="mt-3 text-sm text-emerald-700 dark:text-emerald-400">{notice}</div>}
+        {!error && !loading && products.length === 0 && (
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <div className="text-sm text-gray-600 dark:text-gray-300">Aucune offre en base. Initialise les offres par défaut.</div>
+            <button
+              type="button"
+              onClick={seedDefaults}
+              disabled={!isEnabled || seeding}
+              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                !isEnabled || seeding
+                  ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                  : 'bg-emerald-600 text-white hover:bg-emerald-700'
+              }`}
+            >
+              {seeding ? 'Initialisation…' : 'Initialiser les offres'}
+            </button>
+          </div>
+        )}
       </div>
 
       {kinds.map((k) => (
@@ -349,4 +415,3 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
     </div>
   )
 }
-
