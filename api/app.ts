@@ -38,6 +38,7 @@ import userPackRoutes from './routes/user-pack.ts'
 import geolocationRoutes from './routes/geolocation.ts'
 import routingRoutes from './routes/routing.ts'
 import ordersRoutes from './routes/orders.ts'
+import boostsRoutes from './routes/boosts.ts'
 
 // for esm mode
 const __filename = fileURLToPath(import.meta.url)
@@ -77,6 +78,7 @@ app.use('/api/analytics', analyticsRoutes)
 app.use('/api/mobile-money', mobileMoneyRoutes)
 app.use('/api/mobile-money-webhooks', mobileMoneyWebhooksRoutes)
 app.use('/api/packs', packsRoutes)
+app.use('/api/boosts', boostsRoutes)
 
 /**
  * Admin Routes
