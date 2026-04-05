@@ -40,6 +40,7 @@ import PlanCheckoutTest from './pages/PlanCheckoutTest';
 import ServiceCheckout from './pages/ServiceCheckout';
 import ProviderDashboard from './pages/ProviderDashboard';
 import ProviderApply from './pages/ProviderApply';
+import BoostReturn from './pages/BoostReturn'
 import VendorMessagingCenter from './components/VendorMessagingCenter';
 import LiveShoppingManager from './components/LiveShoppingManager';
 import { NotificationProvider } from './contexts/NotificationContext';
@@ -49,6 +50,7 @@ import DeliveryCheckout from './pages/DeliveryCheckout';
 import OrderStatus from './pages/OrderStatus';
 import ClientInvoiceModal from './components/invoice/ClientInvoiceModal';
 import { supabase } from './config/supabase';
+import { VendorBoosts } from './components/vendor/VendorBoosts'
 
 // Store optimisé avec Zustand
 const useStore = create((set, get) => ({
@@ -1664,7 +1666,7 @@ const VendorDashboard = ({ user }) => {
     try {
       const stored = localStorage.getItem('mangoo-vendor-active-tab');
       const value = stored ? String(stored) : '';
-      const allowed = ['overview', 'stock', 'products', 'orders', 'notifications', 'communication', 'shops', 'supply'];
+      const allowed = ['overview', 'stock', 'products', 'orders', 'notifications', 'communication', 'shops', 'supply', 'boosts'];
       return allowed.includes(value) ? value : 'overview';
     } catch {
       return 'overview';
@@ -2014,6 +2016,7 @@ const VendorDashboard = ({ user }) => {
     { id: 'products', name: 'Produits', icon: '🧾' },
     { id: 'orders', name: 'Commandes', icon: '🛒' },
     { id: 'notifications', name: 'Notifications', icon: '🔔' },
+    { id: 'boosts', name: 'Boost', icon: '🏷️' },
     { id: 'communication', name: 'Communication', icon: '📞' },
     { id: 'shops', name: 'Mes boutiques', icon: '🏪' },
     { id: 'supply', name: 'Approvisionnement', icon: '🏭' }
@@ -2033,6 +2036,8 @@ const VendorDashboard = ({ user }) => {
         return VendorOrderHistory ? <VendorOrderHistory vendorId="vendor-demo" /> : <div>Chargement...</div>;
       case 'notifications':
         return VendorNotifications ? <VendorNotifications vendorId="vendor-demo" /> : <div>Chargement...</div>;
+      case 'boosts':
+        return <VendorBoosts userEmail={String(user?.email || '')} />;
       case 'communication': {
         const contacts = [
           { id: 'customer_3', name: 'Client Demo', avatar: '🧑‍💻', hint: 'client@example.com' },
@@ -6228,6 +6233,8 @@ function App() {
     <NotificationProvider>
       <Toaster richColors position="top-right" />
       <Routes>
+        <Route path="/boost/success" element={<BoostReturn mode="success" />} />
+        <Route path="/boost/cancel" element={<BoostReturn mode="cancel" />} />
         <Route path="/checkout/livraison" element={<DeliveryCheckout />} />
         <Route path="/commande/:orderId" element={<OrderStatus />} />
         <Route path="/livreur/inscription" element={<CourierRegister />} />

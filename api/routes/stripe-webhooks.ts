@@ -4,7 +4,17 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { emailService } from '../services/emailService';
 import { processPaymentCommissions, processRefundCommissions } from '../services/commissionService';
-import { getBoostProduct, numberToSponsoredTierLabel, type BoostKind } from '../config/boostPricing';
+type BoostKind = 'sponsored' | 'promo' | 'new';
+type SponsoredTier = 'bronze' | 'argent' | 'or';
+
+function isBoostKind(value: unknown): value is BoostKind {
+  return value === 'sponsored' || value === 'promo' || value === 'new';
+}
+
+function toSponsoredTier(value: unknown): SponsoredTier | null {
+  if (value === 'bronze' || value === 'argent' || value === 'or') return value;
+  return null;
+}
 
 const router = Router();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -643,11 +653,11 @@ async function handleBoostCheckoutSessionCompleted(session: Stripe.Checkout.Sess
       return;
     }
 
-    const boostKind = String(order.boost_kind || '').trim().toLowerCase() as BoostKind;
+    const boostKindRaw = String(order.boost_kind || '').trim().toLowerCase();
+    const boostKind = isBoostKind(boostKindRaw) ? boostKindRaw : null;
     const durationHours = Number(order.duration_hours);
-    const product = getBoostProduct(boostKind, durationHours);
-    if (!product) {
-      console.error('Boost product not found for order:', orderId);
+    if (!boostKind || !Number.isFinite(durationHours) || durationHours <= 0) {
+      console.error('Boost order invalid kind/duration:', orderId);
       return;
     }
 
@@ -671,8 +681,8 @@ async function handleBoostCheckoutSessionCompleted(session: Stripe.Checkout.Sess
     await activateBoostForOrder({
       order,
       boostKind,
-      durationHours: product.durationHours,
-      sponsoredTier: boostKind === 'sponsored' ? numberToSponsoredTierLabel(product.sponsoredTier || null) : null,
+      durationHours,
+      sponsoredTier: boostKind === 'sponsored' ? toSponsoredTier(order.sponsored_tier) : null,
     });
   } catch (error) {
     console.error('Error in handleBoostCheckoutSessionCompleted:', error);
@@ -683,7 +693,7 @@ async function activateBoostForOrder(params: {
   order: any;
   boostKind: BoostKind;
   durationHours: number;
-  sponsoredTier: 'bronze' | 'argent' | 'or' | null;
+  sponsoredTier: SponsoredTier | null;
 }) {
   const { order, boostKind, durationHours, sponsoredTier } = params;
   const now = new Date();
