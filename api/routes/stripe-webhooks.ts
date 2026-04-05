@@ -4,6 +4,7 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { emailService } from '../services/emailService';
 import { processPaymentCommissions, processRefundCommissions } from '../services/commissionService';
+import { getBoostProduct, numberToSponsoredTierLabel, type BoostKind } from '../config/boostPricing';
 
 const router = Router();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -569,6 +570,19 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   console.log('Checkout session completed:', session.id);
   
   try {
+    // Boost (paiement unique)
+    const boostOrderId = String((session.metadata as any)?.boostOrderId || '').trim();
+    const isBoost = String((session.metadata as any)?.type || '').trim().toLowerCase() === 'boost' ||
+      (session.client_reference_id && String(session.client_reference_id).startsWith('boost_'));
+    if (isBoost) {
+      const fallbackId = session.client_reference_id ? String(session.client_reference_id).replace(/^boost_/, '') : '';
+      const orderId = boostOrderId || fallbackId;
+      if (orderId) {
+        await handleBoostCheckoutSessionCompleted(session, orderId);
+        return;
+      }
+    }
+
     // Si c'est un paiement réussi pour un abonnement
     if (session.subscription && session.client_reference_id) {
       // Extraire les informations du client_reference_id
@@ -607,6 +621,123 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   } catch (error) {
     console.error('Error in handleCheckoutSessionCompleted:', error);
   }
+}
+
+async function handleBoostCheckoutSessionCompleted(session: Stripe.Checkout.Session, orderId: string) {
+  try {
+    const nowIso = new Date().toISOString();
+
+    const { data: order, error: orderError } = await supabase
+      .from('boost_orders')
+      .select('*')
+      .eq('id', orderId)
+      .single();
+
+    if (orderError || !order) {
+      console.error('Boost order not found:', orderId, orderError);
+      return;
+    }
+
+    if (String(order.status) === 'active') {
+      console.log('Boost order already active:', orderId);
+      return;
+    }
+
+    const boostKind = String(order.boost_kind || '').trim().toLowerCase() as BoostKind;
+    const durationHours = Number(order.duration_hours);
+    const product = getBoostProduct(boostKind, durationHours);
+    if (!product) {
+      console.error('Boost product not found for order:', orderId);
+      return;
+    }
+
+    await supabase
+      .from('boost_orders')
+      .update({
+        status: 'paid',
+        stripe_session_id: session.id,
+        paid_at: nowIso,
+        updated_at: nowIso,
+        metadata: {
+          checkout_session_id: session.id,
+          amount_total: session.amount_total,
+          currency: session.currency,
+          customer_email: session.customer_details?.email,
+          processed_at: nowIso,
+        },
+      })
+      .eq('id', orderId);
+
+    await activateBoostForOrder({
+      order,
+      boostKind,
+      durationHours: product.durationHours,
+      sponsoredTier: boostKind === 'sponsored' ? numberToSponsoredTierLabel(product.sponsoredTier || null) : null,
+    });
+  } catch (error) {
+    console.error('Error in handleBoostCheckoutSessionCompleted:', error);
+  }
+}
+
+async function activateBoostForOrder(params: {
+  order: any;
+  boostKind: BoostKind;
+  durationHours: number;
+  sponsoredTier: 'bronze' | 'argent' | 'or' | null;
+}) {
+  const { order, boostKind, durationHours, sponsoredTier } = params;
+  const now = new Date();
+
+  const { data: current } = await supabase
+    .from('vendor_boosts')
+    .select('*')
+    .eq('vendor_id', String(order.vendor_id))
+    .eq('vendor_kind', String(order.vendor_kind))
+    .maybeSingle();
+
+  const baseUntil = (iso: any) => {
+    const d = iso ? new Date(String(iso)) : null;
+    if (!d || Number.isNaN(d.getTime())) return now;
+    return d.getTime() > now.getTime() ? d : now;
+  };
+
+  const addHours = (d: Date, hours: number) => new Date(d.getTime() + hours * 60 * 60 * 1000);
+
+  const patch: any = {
+    vendor_id: String(order.vendor_id),
+    vendor_kind: String(order.vendor_kind),
+    updated_at: new Date().toISOString(),
+  };
+
+  let expiresAt: Date | null = null;
+  if (boostKind === 'sponsored') {
+    const start = baseUntil(current?.sponsored_until);
+    expiresAt = addHours(start, durationHours);
+    patch.sponsored_until = expiresAt.toISOString();
+    patch.sponsored_tier = sponsoredTier;
+  } else if (boostKind === 'promo') {
+    const start = baseUntil(current?.promo_until);
+    expiresAt = addHours(start, durationHours);
+    patch.promo_until = expiresAt.toISOString();
+  } else if (boostKind === 'new') {
+    const start = baseUntil(current?.new_until);
+    expiresAt = addHours(start, durationHours);
+    patch.new_until = expiresAt.toISOString();
+  }
+
+  await supabase
+    .from('vendor_boosts')
+    .upsert(patch, { onConflict: 'vendor_id,vendor_kind' });
+
+  await supabase
+    .from('boost_orders')
+    .update({
+      status: 'active',
+      activated_at: new Date().toISOString(),
+      expires_at: expiresAt ? expiresAt.toISOString() : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', String(order.id));
 }
 
 // Gérer la création d'un abonnement

@@ -5236,7 +5236,7 @@ const AdminLayout = () => {
 };
 
 // Composant optimisé pour l'iframe Mangoo Local+
-const MANGOO_LOCAL_VERSION = 111;
+const MANGOO_LOCAL_VERSION = 112;
 const MangooLocalFrame = React.memo(({ user, onBack }) => {
   const persistCreatorLocation = useCallback(async (payload) => {
     try {

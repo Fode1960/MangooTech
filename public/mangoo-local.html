@@ -4155,6 +4155,73 @@
             }
         }
 
+        async function syncBoostConfigFromServer() {
+            try {
+                const last = Number(localStorage.getItem('mangoo_boost_sync_at') || 0)
+                if (Number.isFinite(last) && Date.now() - last < 60 * 1000) return
+            } catch {
+            }
+
+            const cfg = getLpSupabaseConfig ? getLpSupabaseConfig() : null
+            if (!cfg) return
+
+            const nowIso = new Date().toISOString()
+            const baseUrl = String(cfg.url || '').replace(/\/+$/, '')
+
+            try {
+                const params = new URLSearchParams()
+                params.set('select', 'vendor_id,vendor_kind,sponsored_until,sponsored_tier,promo_until,new_until')
+                params.set('or', `sponsored_until.gte.${nowIso},promo_until.gte.${nowIso},new_until.gte.${nowIso}`)
+
+                const r = await fetch(`${baseUrl}/rest/v1/vendor_boosts?${params.toString()}`, {
+                    method: 'GET',
+                    headers: {
+                        apikey: cfg.key,
+                        Authorization: `Bearer ${cfg.key}`,
+                        'Content-Type': 'application/json'
+                    }
+                })
+                if (!r.ok) return
+                const rows = await r.json()
+                if (!Array.isArray(rows) || !rows.length) {
+                    try { localStorage.setItem('mangoo_boost_sync_at', String(Date.now())) } catch {}
+                    return
+                }
+
+                const tierToNumber = (tier) => {
+                    const t = String(tier || '').trim().toLowerCase()
+                    if (t === 'bronze') return 1
+                    if (t === 'argent') return 2
+                    if (t === 'or') return 3
+                    return null
+                }
+
+                rows.forEach((row) => {
+                    const vendorId = String(row?.vendor_id || '').trim()
+                    if (!vendorId) return
+                    const patch = {}
+                    try {
+                        if (row?.sponsored_until) patch.sponsoredUntil = Date.parse(String(row.sponsored_until))
+                    } catch {}
+                    try {
+                        const n = tierToNumber(row?.sponsored_tier)
+                        if (n !== null) patch.sponsoredTier = n
+                    } catch {}
+                    try {
+                        if (row?.promo_until) patch.promoUntil = Date.parse(String(row.promo_until))
+                    } catch {}
+                    try {
+                        if (row?.new_until) patch.newUntil = Date.parse(String(row.new_until))
+                    } catch {}
+                    if (!Object.keys(patch).length) return
+                    try { setVendorBoost(vendorId, patch) } catch {}
+                })
+
+                try { localStorage.setItem('mangoo_boost_sync_at', String(Date.now())) } catch {}
+            } catch {
+            }
+        }
+
         function applyBoostConfigToVendors() {
             const cfg = getBoostConfig();
             VENDORS.forEach(v => {
@@ -5637,7 +5704,7 @@
 
             try {
                 const el = document.getElementById('lpBuild');
-                if (el) el.textContent = 'build v111';
+                if (el) el.textContent = 'build v112';
             } catch {
             }
 
@@ -5656,6 +5723,15 @@
             // console.log("Initializing App...");
             try {
                 applyBoostConfigToVendors();
+            } catch {
+            }
+
+            try {
+                Promise.resolve(syncBoostConfigFromServer()).then(() => {
+                    try { applyBoostConfigToVendors(); } catch {}
+                    try { filterVendors(); } catch {}
+                    try { refreshBoostPanel(); } catch {}
+                })
             } catch {
             }
 
