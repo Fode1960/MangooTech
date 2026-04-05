@@ -4171,7 +4171,7 @@
             try {
                 const params = new URLSearchParams()
                 params.set('select', 'vendor_id,vendor_kind,sponsored_until,sponsored_tier,promo_until,new_until')
-                params.set('or', `sponsored_until.gte.${nowIso},promo_until.gte.${nowIso},new_until.gte.${nowIso}`)
+                params.set('or', `(sponsored_until.gte.${nowIso},promo_until.gte.${nowIso},new_until.gte.${nowIso})`)
 
                 const r = await fetch(`${baseUrl}/rest/v1/vendor_boosts?${params.toString()}`, {
                     method: 'GET',
@@ -5704,7 +5704,7 @@
 
             try {
                 const el = document.getElementById('lpBuild');
-                if (el) el.textContent = 'build v112';
+                if (el) el.textContent = 'build v113';
             } catch {
             }
 
