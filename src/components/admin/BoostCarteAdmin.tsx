@@ -110,6 +110,9 @@ export function BoostCarteAdmin({ isEnabled }: { isEnabled: boolean }) {
         } catch {
           json = null
         }
+        if (res.ok && !json && text && (text.includes('<!DOCTYPE html') || text.includes('<html'))) {
+          json = { success: false, error: "API non disponible (réponse HTML). Vérifie le déploiement de l'API /api sur Vercel." }
+        }
         return { ok: res.ok, status: res.status, json }
       } catch (e: any) {
         const name = String(e?.name || '')
