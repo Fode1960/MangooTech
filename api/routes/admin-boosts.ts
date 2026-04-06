@@ -81,6 +81,40 @@ router.get('/products', authenticateAdmin, async (_req, res) => {
   }
 });
 
+router.get('/me', authenticateAdmin, async (req, res) => {
+  try {
+    if (!requireSupabase(req, res)) return;
+
+    const user = (req as any).user;
+    const adminUser = (req as any).adminUser;
+    const roleId = String(adminUser?.role_id || '').trim();
+    let roleName: string | null = null;
+
+    if (roleId) {
+      const { data: roleRow } = await supabase!
+        .from('admin_roles')
+        .select('name')
+        .eq('id', roleId)
+        .maybeSingle();
+      roleName = roleRow?.name ? String(roleRow.name) : null;
+    }
+
+    res.json({
+      success: true,
+      user: {
+        id: String(user?.id || ''),
+        email: String(user?.email || ''),
+      },
+      admin: {
+        roleId: roleId || null,
+        roleName,
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error?.message || String(error) });
+  }
+});
+
 router.patch('/products/:id', authenticateAdmin, async (req, res) => {
   try {
     if (!requireSupabase(req, res)) return;

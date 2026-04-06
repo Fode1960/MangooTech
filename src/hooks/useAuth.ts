@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+import { buildApiUrl } from '../config/api';
 import { supabase, supabaseConfig } from '../config/supabase';
 
 interface User {
@@ -57,13 +58,13 @@ export function useAuth() {
     // Écouter les changements d'authentification
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        await checkAdminStatus(session.user);
+        await checkAdminStatus(session.user, session.access_token || '');
       } else {
         // Vérifier si on a un utilisateur admin de démo
         const demoUser = localStorage.getItem('admin-demo-user');
         if (demoUser) {
           const userData = JSON.parse(demoUser);
-          await checkAdminStatus(userData);
+          await checkAdminStatus(userData, '');
         } else {
           setAuthState({
             user: null,
@@ -106,31 +107,19 @@ export function useAuth() {
       const demoUser = localStorage.getItem('admin-demo-user');
       if (demoUser) {
         const userData = JSON.parse(demoUser);
-        await checkAdminStatus(userData);
+        await checkAdminStatus(userData, '');
         return;
       }
 
-      // Sinon, vérifier Supabase normalement
-      const { data: { user }, error } = await supabase.auth.getUser();
-      
-      if (error) {
-        if (isAbortError(error)) {
-          setAuthState(prev => ({ ...prev, loading: true, error: null }));
-          scheduleRetry('user', () => {
-            checkUser();
-          });
-          return;
-        }
-        setAuthState(prev => ({ ...prev, loading: false, error: error.message }));
-        return;
-      }
+      const { data } = await supabase.auth.getSession()
+      const session = data.session
 
-      if (user) {
+      if (session?.user) {
         retryRef.current.user = 0
-        await checkAdminStatus(user);
+        await checkAdminStatus(session.user, session.access_token)
       } else {
         retryRef.current.user = 0
-        setAuthState(prev => ({ ...prev, loading: false }));
+        setAuthState(prev => ({ ...prev, loading: false }))
       }
     } catch (error) {
       if (isAbortError(error)) {
@@ -149,7 +138,29 @@ export function useAuth() {
     }
   };
 
-  const checkAdminStatus = async (user: any) => {
+  const fetchAdminMe = async (token: string) => {
+    const controller = new AbortController()
+    const t = window.setTimeout(() => controller.abort(), 20000)
+    try {
+      const res = await fetch(buildApiUrl('/api/admin/boosts/me'), {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal,
+      })
+      const text = await res.text()
+      let json: any = null
+      try {
+        json = text ? JSON.parse(text) : null
+      } catch {
+        json = null
+      }
+      return { ok: res.ok, status: res.status, json }
+    } finally {
+      window.clearTimeout(t)
+    }
+  }
+
+  const checkAdminStatus = async (user: any, token: string) => {
     try {
       // Pour le compte admin de démo, toujours considérer comme admin
       if (user.email === 'admin@mangoo.tech') {
@@ -163,70 +174,54 @@ export function useAuth() {
         return;
       }
 
-      const tryFetchAdmin = async (roleTable: 'admin_roles' | 'user_roles') => {
-        return await supabase
-          .from('admin_users')
-          .select(`*, role:${roleTable}(id, name, description, permissions)`)
-          .eq('user_id', user.id)
-          .eq('is_active', true)
-          .maybeSingle();
-      };
-
-      let adminUser: any = null;
-      let adminRoleName: string | null = null;
-
-      const primary = await tryFetchAdmin('admin_roles');
-      if (!primary.error && primary.data) {
-        retryRef.current.admin = 0
-        adminUser = primary.data;
-        adminRoleName = primary.data?.role?.name || null;
-      } else {
-        if (primary.error && isAbortError(primary.error)) {
-          setAuthState(prev => ({ ...prev, user: user as User, loading: true, error: null }));
-          scheduleRetry('admin', () => {
-            checkAdminStatus(user);
-          });
-          return;
-        }
-        const fallback = await tryFetchAdmin('user_roles');
-        if (!fallback.error && fallback.data) {
-          retryRef.current.admin = 0
-          adminUser = fallback.data;
-          adminRoleName = fallback.data?.role?.name || null;
-        } else {
-          if (fallback.error && isAbortError(fallback.error)) {
-            setAuthState(prev => ({ ...prev, user: user as User, loading: true, error: null }));
-            scheduleRetry('admin', () => {
-              checkAdminStatus(user);
-            });
-            return;
-          }
-        }
-      }
-
-      if (!adminUser) {
+      if (!token) {
         setAuthState({
           user: user as User,
           isAdmin: false,
           adminRole: null,
           loading: false,
-          error: null
-        });
-        return;
+          error: 'Session manquante. Reconnectez-vous.'
+        })
+        return
       }
 
+      const me = await fetchAdminMe(token)
+
+      if (!me.ok || !me.json?.success) {
+        const msg = String(me.json?.error || '')
+        if (me.status === 401 || me.status === 403) {
+          setAuthState({
+            user: user as User,
+            isAdmin: false,
+            adminRole: null,
+            loading: false,
+            error: null
+          })
+          return
+        }
+        if (msg.includes('signal is aborted') || msg.includes('aborted')) {
+          setAuthState(prev => ({ ...prev, user: user as User, loading: true, error: null }));
+          scheduleRetry('admin', () => {
+            checkAdminStatus(user, token);
+          });
+          return;
+        }
+        throw new Error(msg || `HTTP ${me.status}`)
+      }
+
+      retryRef.current.admin = 0
       setAuthState({
         user: user as User,
         isAdmin: true,
-        adminRole: adminRoleName,
+        adminRole: String(me.json?.admin?.roleName || '') || null,
         loading: false,
         error: null
-      });
+      })
     } catch (error) {
       if (isAbortError(error)) {
         setAuthState(prev => ({ ...prev, user: user as User, loading: true, error: null }));
         scheduleRetry('admin', () => {
-          checkAdminStatus(user);
+          checkAdminStatus(user, token);
         });
         return;
       }
@@ -255,7 +250,8 @@ export function useAuth() {
       }
 
       if (data.user) {
-        await checkAdminStatus(data.user);
+        const token = data.session?.access_token || ''
+        await checkAdminStatus(data.user, token);
       }
 
       return data;
