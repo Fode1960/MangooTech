@@ -144,7 +144,7 @@ export function BoostCarteAdmin({ isEnabled }: { isEnabled: boolean }) {
       const res = await fetchJsonOnce(
         `/api/admin/boosts/vendor-boosts?vendor_id=${encodeURIComponent(id)}&vendor_kind=${encodeURIComponent(kind)}`,
         { method: 'GET', headers: { Authorization: `Bearer ${token}` } },
-        6000
+        20000
       )
       if (seq !== loadSeqRef.current) return
       if (!res.ok || !res.json?.success) throw new Error(res.json?.error || `HTTP ${res.status}`)
@@ -175,7 +175,7 @@ export function BoostCarteAdmin({ isEnabled }: { isEnabled: boolean }) {
           headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
         },
-        8000
+        20000
       )
       if (!res.ok || !res.json?.success) throw new Error(res.json?.error || `HTTP ${res.status}`)
       setRow(res.json.row || null)

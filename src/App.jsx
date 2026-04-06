@@ -6347,6 +6347,22 @@ function AppShell() {
 }
 
 function App() {
+  useEffect(() => {
+    const handler = (event) => {
+      try {
+        const reason = event?.reason
+        const name = String(reason?.name || '')
+        const msg = String(reason?.message || '')
+        if (name === 'AbortError' || msg.includes('signal is aborted') || msg.includes('aborted')) {
+          event.preventDefault()
+        }
+      } catch {
+      }
+    }
+    window.addEventListener('unhandledrejection', handler)
+    return () => window.removeEventListener('unhandledrejection', handler)
+  }, [])
+
   return (
     <NotificationProvider>
       <Toaster richColors position="top-right" />
