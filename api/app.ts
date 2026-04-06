@@ -39,6 +39,7 @@ import geolocationRoutes from './routes/geolocation.ts'
 import routingRoutes from './routes/routing.ts'
 import ordersRoutes from './routes/orders.ts'
 import boostsRoutes from './routes/boosts.ts'
+import adminBoostsRoutes from './routes/admin-boosts.ts'
 
 // for esm mode
 const __filename = fileURLToPath(import.meta.url)
@@ -92,6 +93,7 @@ app.use('/api/admin/commissions', commissionManagementRoutes)
 app.use('/api/admin/payment-methods', paymentMethodsConfigRoutes)
 app.use('/api/admin/notifications', notificationsRoutes)
 app.use('/api/admin/reconciliation', reconciliationReportsRoutes)
+app.use('/api/admin/boosts', adminBoostsRoutes)
 app.use('/api/admin', adminUsersRoutes)
 app.use('/api/commissions', commissionRoutes)
 
