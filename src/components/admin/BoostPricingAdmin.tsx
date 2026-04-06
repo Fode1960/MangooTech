@@ -41,13 +41,15 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
   const loadSeqRef = useRef(0)
 
   const getAdminToken = useCallback(async () => {
+    const { data } = await supabase.auth.getSession()
+    const token = data.session?.access_token || ''
+    if (token) return token
     try {
       const demo = localStorage.getItem('admin-demo-user')
       if (demo) return 'demo-admin'
     } catch {
     }
-    const { data } = await supabase.auth.getSession()
-    return data.session?.access_token || ''
+    return ''
   }, [])
 
   const fetchJsonOnce = useCallback(async (endpoint: string, init: RequestInit, timeoutMs: number) => {
