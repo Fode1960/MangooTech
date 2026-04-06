@@ -41,6 +41,7 @@ import ServiceCheckout from './pages/ServiceCheckout';
 import ProviderDashboard from './pages/ProviderDashboard';
 import ProviderApply from './pages/ProviderApply';
 import BoostReturn from './pages/BoostReturn'
+import ResetPassword from './pages/ResetPassword'
 import VendorMessagingCenter from './components/VendorMessagingCenter';
 import LiveShoppingManager from './components/LiveShoppingManager';
 import { NotificationProvider } from './contexts/NotificationContext';
@@ -5364,6 +5365,20 @@ function AppShell() {
   const [activePack, setActivePack] = useState({ packId: null, packName: null, mode: 'unknown' });
 
   useEffect(() => {
+    if (location.pathname === '/reset-password') return
+    const raw = String(window.location.hash || '')
+    if (!raw) return
+    const hash = raw.startsWith('#') ? raw.slice(1) : raw
+    const params = new URLSearchParams(hash)
+    const type = String(params.get('type') || '').trim().toLowerCase()
+    const hasTokens = Boolean(params.get('access_token') && params.get('refresh_token'))
+    const hasError = Boolean(params.get('error') || params.get('error_code'))
+    if (type === 'recovery' || hasTokens || hasError) {
+      navigate('/reset-password', { replace: true })
+    }
+  }, [location.pathname, navigate])
+
+  useEffect(() => {
     try {
       const url = String(import.meta.env.VITE_SUPABASE_URL || '').trim();
       const key = String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
@@ -6233,6 +6248,7 @@ function App() {
     <NotificationProvider>
       <Toaster richColors position="top-right" />
       <Routes>
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/boost/success" element={<BoostReturn mode="success" />} />
         <Route path="/boost/cancel" element={<BoostReturn mode="cancel" />} />
         <Route path="/checkout/livraison" element={<DeliveryCheckout />} />
