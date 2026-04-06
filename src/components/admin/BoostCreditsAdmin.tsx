@@ -91,7 +91,7 @@ export function BoostCreditsAdmin({ isEnabled }: { isEnabled: boolean }) {
           method: 'GET',
           headers: { Authorization: `Bearer ${token}` }
         },
-        6000
+        20000
       )
       if (seq !== loadSeqRef.current) return
       if (!res.ok || !res.json?.success) throw new Error(res.json?.error || `HTTP ${res.status}`)
@@ -129,7 +129,7 @@ export function BoostCreditsAdmin({ isEnabled }: { isEnabled: boolean }) {
       const res = await fetchJsonOnce(
         `/api/admin/boosts/credits/balance?${qs.toString()}`,
         { method: 'GET', headers: { Authorization: `Bearer ${token}` } },
-        6000
+        20000
       )
       if (!res.ok || !res.json?.success) return
       setBalanceXof(Number(res.json.balanceXof || 0))
@@ -173,7 +173,7 @@ export function BoostCreditsAdmin({ isEnabled }: { isEnabled: boolean }) {
             description: description.trim() || 'Crédit boost (admin)'
           })
         },
-        6000
+        20000
       )
 
       if (!res.ok || !res.json?.success) throw new Error(res.json?.error || `HTTP ${res.status}`)

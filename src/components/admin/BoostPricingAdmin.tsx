@@ -99,12 +99,11 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
         '/api/admin/boosts/products',
         {
           method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` }
         },
-        6000
+        20000
       )
+
       if (seq !== loadSeqRef.current) return
       if (!res.ok || !res.json?.success) throw new Error(res.json?.error || `HTTP ${res.status}`)
       const rows = Array.isArray(res.json.products) ? res.json.products : []
@@ -152,7 +151,7 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` }
         },
-        8000
+        20000
       )
       if (!res.ok || !res.json?.success) throw new Error(res.json?.error || `HTTP ${res.status}`)
       const rows = Array.isArray(res.json.products) ? res.json.products : []
@@ -245,7 +244,7 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
             sponsored_tier: patch.sponsored_tier !== undefined ? patch.sponsored_tier : undefined,
           })
         },
-        6000
+        20000
       )
 
       if (!res.ok || !res.json?.success) throw new Error(res.json?.error || `HTTP ${res.status}`)
