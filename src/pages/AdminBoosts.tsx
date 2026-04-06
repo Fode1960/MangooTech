@@ -36,7 +36,8 @@ export default function AdminBoosts() {
     const isNetwork = msg.includes('Réseau instable') || msg.includes('signal is aborted') || msg.includes('aborted')
     const isMissingConfig = msg.includes('Configuration Supabase manquante')
     const isSessionMissing = msg.includes('Session manquante')
-    const showConnIssue = Boolean(msg) && (isNetwork || isMissingConfig || isSessionMissing)
+    const isApiHtml = msg.includes('réponse HTML') || msg.includes('API non disponible') || msg === 'HTTP 200'
+    const showConnIssue = Boolean(msg) && (isNetwork || isMissingConfig || isSessionMissing || isApiHtml)
 
     return (
       <div className="max-w-5xl mx-auto">
