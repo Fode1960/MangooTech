@@ -5440,6 +5440,22 @@ function AppShell() {
   const [activePack, setActivePack] = useState({ packId: null, packName: null, mode: 'unknown' });
 
   useEffect(() => {
+    const handler = (event) => {
+      try {
+        const reason = event?.reason
+        const name = String(reason?.name || '')
+        const msg = String(reason?.message || '')
+        if (name === 'AbortError' || msg.includes('signal is aborted') || msg.includes('aborted')) {
+          event.preventDefault()
+        }
+      } catch {
+      }
+    }
+    window.addEventListener('unhandledrejection', handler)
+    return () => window.removeEventListener('unhandledrejection', handler)
+  }, [])
+
+  useEffect(() => {
     if (location.pathname === '/reset-password') return
     const raw = String(window.location.hash || '')
     if (!raw) return

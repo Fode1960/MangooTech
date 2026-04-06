@@ -43,15 +43,23 @@ export function BoostCreditsAdmin({ isEnabled }: { isEnabled: boolean }) {
     const controller = new AbortController()
     const t = window.setTimeout(() => controller.abort(), timeoutMs)
     try {
-      const res = await fetch(url, { ...init, signal: controller.signal })
-      const text = await res.text()
-      let json: any = null
       try {
-        json = text ? JSON.parse(text) : null
-      } catch {
-        json = null
+        const res = await fetch(url, { ...init, signal: controller.signal })
+        const text = await res.text()
+        let json: any = null
+        try {
+          json = text ? JSON.parse(text) : null
+        } catch {
+          json = null
+        }
+        return { ok: res.ok, status: res.status, json }
+      } catch (e: any) {
+        const name = String(e?.name || '')
+        if (name === 'AbortError' || String(e?.message || '').includes('aborted')) {
+          return { ok: false, status: 0, json: { success: false, error: 'Requête annulée (timeout).' } }
+        }
+        return { ok: false, status: 0, json: { success: false, error: e?.message || 'Erreur réseau' } }
       }
-      return { ok: res.ok, status: res.status, json }
     } finally {
       window.clearTimeout(t)
     }
