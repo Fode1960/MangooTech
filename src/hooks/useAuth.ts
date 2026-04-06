@@ -154,6 +154,12 @@ export function useAuth() {
       } catch {
         json = null
       }
+      if (res.ok && !json && text && (text.includes('<!DOCTYPE html') || text.includes('<html'))) {
+        json = {
+          success: false,
+          error: "API non disponible (réponse HTML). Vérifie que Vercel sert bien les routes /api (Functions) sur ce domaine."
+        }
+      }
       return { ok: res.ok, status: res.status, json }
     } finally {
       window.clearTimeout(t)
