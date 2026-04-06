@@ -5600,10 +5600,18 @@ function AppShell() {
   }, [currentView, user]);
 
   useEffect(() => {
-    if (location?.pathname === '/connexion') {
-      openLogin();
+    if (location?.pathname !== '/connexion') return
+    if (user && user.role && user.role !== 'login_request') {
+      try {
+        navigate('/')
+      } catch {
+      }
+      return
     }
-  }, [location?.pathname, openLogin]);
+    if (!user || user.role === 'login_request') {
+      openLogin()
+    }
+  }, [location?.pathname, navigate, openLogin, user]);
 
   useEffect(() => {
     let shouldOpen = false;
