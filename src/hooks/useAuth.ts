@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { supabase } from '../config/supabase';
 
 interface User {
@@ -32,6 +32,23 @@ export function useAuth() {
     loading: true,
     error: null
   });
+
+  const retryRef = useRef({ user: 0, admin: 0 })
+
+  const scheduleRetry = (kind: 'user' | 'admin', fn: () => void) => {
+    const next = retryRef.current[kind] + 1
+    retryRef.current[kind] = next
+    if (next > 6) {
+      setAuthState((prev) => ({
+        ...prev,
+        loading: false,
+        error: 'Réseau instable. Recharge la page et réessaie.'
+      }))
+      return
+    }
+    const delay = Math.min(1200 + next * 600, 6000)
+    window.setTimeout(fn, delay)
+  }
 
   useEffect(() => {
     // Vérifier l'utilisateur actuel
@@ -88,9 +105,9 @@ export function useAuth() {
       if (error) {
         if (isAbortError(error)) {
           setAuthState(prev => ({ ...prev, loading: true, error: null }));
-          window.setTimeout(() => {
+          scheduleRetry('user', () => {
             checkUser();
-          }, 1200);
+          });
           return;
         }
         setAuthState(prev => ({ ...prev, loading: false, error: error.message }));
@@ -98,16 +115,18 @@ export function useAuth() {
       }
 
       if (user) {
+        retryRef.current.user = 0
         await checkAdminStatus(user);
       } else {
+        retryRef.current.user = 0
         setAuthState(prev => ({ ...prev, loading: false }));
       }
     } catch (error) {
       if (isAbortError(error)) {
         setAuthState(prev => ({ ...prev, loading: true, error: null }));
-        window.setTimeout(() => {
+        scheduleRetry('user', () => {
           checkUser();
-        }, 1200);
+        });
         return;
       }
 
@@ -147,26 +166,28 @@ export function useAuth() {
 
       const primary = await tryFetchAdmin('admin_roles');
       if (!primary.error && primary.data) {
+        retryRef.current.admin = 0
         adminUser = primary.data;
         adminRoleName = primary.data?.role?.name || null;
       } else {
         if (primary.error && isAbortError(primary.error)) {
           setAuthState(prev => ({ ...prev, user: user as User, loading: true, error: null }));
-          window.setTimeout(() => {
+          scheduleRetry('admin', () => {
             checkAdminStatus(user);
-          }, 1200);
+          });
           return;
         }
         const fallback = await tryFetchAdmin('user_roles');
         if (!fallback.error && fallback.data) {
+          retryRef.current.admin = 0
           adminUser = fallback.data;
           adminRoleName = fallback.data?.role?.name || null;
         } else {
           if (fallback.error && isAbortError(fallback.error)) {
             setAuthState(prev => ({ ...prev, user: user as User, loading: true, error: null }));
-            window.setTimeout(() => {
+            scheduleRetry('admin', () => {
               checkAdminStatus(user);
-            }, 1200);
+            });
             return;
           }
         }
@@ -193,9 +214,9 @@ export function useAuth() {
     } catch (error) {
       if (isAbortError(error)) {
         setAuthState(prev => ({ ...prev, user: user as User, loading: true, error: null }));
-        window.setTimeout(() => {
+        scheduleRetry('admin', () => {
           checkAdminStatus(user);
-        }, 1200);
+        });
         return;
       }
       setAuthState({
