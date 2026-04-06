@@ -260,6 +260,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const { isDark, setTheme } = useThemeStore();
   const navigate = useNavigate();
@@ -385,6 +386,9 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
 
   const handleLogin = useCallback(async (e) => {
     e.preventDefault();
+    if (submitting) return
+    setSubmitting(true)
+    setError('')
     
     const normalizedEmail = email.toLowerCase().trim();
 
@@ -458,8 +462,18 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
     const isDemoPassword = Boolean(demoPasswords[normalizedEmail]) && String(demoPasswords[normalizedEmail]) === password;
 
     if (user && (fromStored ? isStoredPassword : isDemoPassword)) {
+      if (normalizedEmail === 'admin@mangoo.tech') {
+        try {
+          localStorage.setItem('admin-demo-user', JSON.stringify({
+            id: 'admin-demo-123',
+            email: 'admin@mangoo.tech',
+            role: 'admin',
+            name: 'Administrateur'
+          }))
+        } catch {
+        }
+      }
       onLogin(user);
-      setError('');
       try {
         const sp = localStorage.getItem('mangoo-selected-plan');
         if (sp) {
@@ -471,6 +485,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         }
       } catch {
       }
+      setSubmitting(false)
       return;
     }
 
@@ -523,7 +538,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
             avatar,
           }
           onLogin(nextUser)
-          setError('')
+          setSubmitting(false)
           return
         }
       }
@@ -556,11 +571,13 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         }
       } catch {
       }
+      setSubmitting(false)
       return;
     }
 
     setError('Identifiants incorrects');
-  }, [email, navigate, onLogin, password]);
+    setSubmitting(false)
+  }, [email, navigate, onLogin, password, submitting]);
 
   return (
     <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 ${
@@ -675,9 +692,10 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
 
           <button
             type="submit"
+            disabled={submitting}
             className="w-full bg-gradient-to-r from-orange-500 to-green-600 text-white py-3 px-4 rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105"
           >
-            Se connecter
+            {submitting ? 'Connexion…' : 'Se connecter'}
           </button>
         </form>
 
@@ -5420,6 +5438,22 @@ function AppShell() {
   const [clientWalletBalance, setClientWalletBalance] = useState(null);
   const clientWalletKey = useMemo(() => getWalletKeyFromUser(user), [user]);
   const [activePack, setActivePack] = useState({ packId: null, packName: null, mode: 'unknown' });
+
+  useEffect(() => {
+    const handler = (event) => {
+      try {
+        const reason = event?.reason
+        const name = String(reason?.name || '')
+        const msg = String(reason?.message || '')
+        if (name === 'AbortError' || msg.includes('signal is aborted') || msg.includes('aborted')) {
+          event.preventDefault()
+        }
+      } catch {
+      }
+    }
+    window.addEventListener('unhandledrejection', handler)
+    return () => window.removeEventListener('unhandledrejection', handler)
+  }, [])
 
   useEffect(() => {
     if (location.pathname === '/reset-password') return

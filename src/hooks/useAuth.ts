@@ -112,18 +112,31 @@ export function useAuth() {
         return;
       }
 
-      // Vérifier si l'utilisateur est admin dans la base de données
-      const { data: adminUser, error: adminError } = await supabase
-        .from('admin_users')
-        .select(`
-          *,
-          role:user_roles(id, name, description, permissions)
-        `)
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .single();
+      const tryFetchAdmin = async (roleTable: 'admin_roles' | 'user_roles') => {
+        return await supabase
+          .from('admin_users')
+          .select(`*, role:${roleTable}(id, name, description, permissions)`)
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .maybeSingle();
+      };
 
-      if (adminError || !adminUser) {
+      let adminUser: any = null;
+      let adminRoleName: string | null = null;
+
+      const primary = await tryFetchAdmin('admin_roles');
+      if (!primary.error && primary.data) {
+        adminUser = primary.data;
+        adminRoleName = primary.data?.role?.name || null;
+      } else {
+        const fallback = await tryFetchAdmin('user_roles');
+        if (!fallback.error && fallback.data) {
+          adminUser = fallback.data;
+          adminRoleName = fallback.data?.role?.name || null;
+        }
+      }
+
+      if (!adminUser) {
         setAuthState({
           user: user as User,
           isAdmin: false,
@@ -137,7 +150,7 @@ export function useAuth() {
       setAuthState({
         user: user as User,
         isAdmin: true,
-        adminRole: adminUser.role?.name || null,
+        adminRole: adminRoleName,
         loading: false,
         error: null
       });
