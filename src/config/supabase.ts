@@ -28,4 +28,33 @@ export const supabaseConfig = {
   hasAnonKey: Boolean(supabaseAnonKey),
 } as const
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+const isAbortError = (error: any) => {
+  const name = String(error?.name || '')
+  const msg = String(error?.message || error || '')
+  return name === 'AbortError' || msg.includes('signal is aborted') || msg.includes('aborted')
+}
+
+const supabaseFetch: typeof fetch = async (input: any, init?: any) => {
+  const controller = new AbortController()
+  const timeoutMs = 25000
+  const t = window.setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    const { signal: _ignoredSignal, ...rest } = init || {}
+    try {
+      return await fetch(input, { ...rest, signal: controller.signal })
+    } catch (e: any) {
+      if (isAbortError(e)) {
+        return await fetch(input, { ...rest, signal: controller.signal })
+      }
+      throw e
+    }
+  } finally {
+    window.clearTimeout(t)
+  }
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  global: {
+    fetch: typeof window !== 'undefined' ? supabaseFetch : undefined
+  }
+})
