@@ -18,6 +18,12 @@ interface AuthState {
   error: string | null;
 }
 
+const isAbortError = (error: any) => {
+  const name = String(error?.name || '')
+  const msg = String(error?.message || error || '')
+  return name === 'AbortError' || msg.includes('signal is aborted') || msg.includes('aborted')
+}
+
 export function useAuth() {
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
@@ -80,6 +86,13 @@ export function useAuth() {
       const { data: { user }, error } = await supabase.auth.getUser();
       
       if (error) {
+        if (isAbortError(error)) {
+          setAuthState(prev => ({ ...prev, loading: true, error: null }));
+          window.setTimeout(() => {
+            checkUser();
+          }, 1200);
+          return;
+        }
         setAuthState(prev => ({ ...prev, loading: false, error: error.message }));
         return;
       }
@@ -90,10 +103,18 @@ export function useAuth() {
         setAuthState(prev => ({ ...prev, loading: false }));
       }
     } catch (error) {
-      setAuthState(prev => ({ 
-        ...prev, 
-        loading: false, 
-        error: error instanceof Error ? error.message : 'Erreur inconnue' 
+      if (isAbortError(error)) {
+        setAuthState(prev => ({ ...prev, loading: true, error: null }));
+        window.setTimeout(() => {
+          checkUser();
+        }, 1200);
+        return;
+      }
+
+      setAuthState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Erreur inconnue'
       }));
     }
   };
@@ -129,10 +150,25 @@ export function useAuth() {
         adminUser = primary.data;
         adminRoleName = primary.data?.role?.name || null;
       } else {
+        if (primary.error && isAbortError(primary.error)) {
+          setAuthState(prev => ({ ...prev, user: user as User, loading: true, error: null }));
+          window.setTimeout(() => {
+            checkAdminStatus(user);
+          }, 1200);
+          return;
+        }
         const fallback = await tryFetchAdmin('user_roles');
         if (!fallback.error && fallback.data) {
           adminUser = fallback.data;
           adminRoleName = fallback.data?.role?.name || null;
+        } else {
+          if (fallback.error && isAbortError(fallback.error)) {
+            setAuthState(prev => ({ ...prev, user: user as User, loading: true, error: null }));
+            window.setTimeout(() => {
+              checkAdminStatus(user);
+            }, 1200);
+            return;
+          }
         }
       }
 
@@ -155,6 +191,13 @@ export function useAuth() {
         error: null
       });
     } catch (error) {
+      if (isAbortError(error)) {
+        setAuthState(prev => ({ ...prev, user: user as User, loading: true, error: null }));
+        window.setTimeout(() => {
+          checkAdminStatus(user);
+        }, 1200);
+        return;
+      }
       setAuthState({
         user: user as User,
         isAdmin: false,
