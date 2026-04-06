@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import { supabase } from '../config/supabase';
+import { supabase, supabaseConfig } from '../config/supabase';
 
 interface User {
   id: string;
@@ -91,6 +91,17 @@ export function useAuth() {
 
   const checkUser = async () => {
     try {
+      if (supabaseConfig.source === 'missing') {
+        setAuthState({
+          user: null,
+          isAdmin: false,
+          adminRole: null,
+          loading: false,
+          error: 'Configuration Supabase manquante (Vercel: VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).'
+        })
+        return
+      }
+
       // Vérifier d'abord si on a un utilisateur admin de démo
       const demoUser = localStorage.getItem('admin-demo-user');
       if (demoUser) {
