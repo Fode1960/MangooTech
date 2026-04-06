@@ -383,7 +383,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
     onLogin(newUser);
   }, [email, onLogin, password]);
 
-  const handleLogin = useCallback((e) => {
+  const handleLogin = useCallback(async (e) => {
     e.preventDefault();
     
     const normalizedEmail = email.toLowerCase().trim();
@@ -474,7 +474,64 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
       return;
     }
 
-    if (!fromStored && !demoUsers[normalizedEmail] && normalizedEmail && password) {
+    try {
+      const hasSupabase = Boolean(String(import.meta.env.VITE_SUPABASE_URL || '').trim()) && Boolean(String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim())
+      if (hasSupabase && normalizedEmail && password) {
+        const { data, error: authError } = await supabase.auth.signInWithPassword({
+          email: normalizedEmail,
+          password
+        })
+        if (!authError && data?.user) {
+          let roles = ['client']
+          let role = 'client'
+          const displayName = String(data.user.user_metadata?.full_name || data.user.user_metadata?.name || '').trim() || (normalizedEmail.split('@')[0] || 'Utilisateur')
+          const avatar = '👤'
+
+          try {
+            const { data: adminRow } = await supabase
+              .from('admin_users')
+              .select('id, is_active')
+              .eq('user_id', data.user.id)
+              .eq('is_active', true)
+              .maybeSingle()
+            if (adminRow) {
+              roles = Array.from(new Set([...roles, 'admin']))
+              role = 'admin'
+            }
+          } catch {
+          }
+
+          try {
+            const { data: shopAuth } = await supabase
+              .from('shop_auth')
+              .select('shop_id')
+              .eq('user_id', data.user.id)
+              .maybeSingle()
+            if (shopAuth?.shop_id) {
+              roles = Array.from(new Set([...roles, 'vendor']))
+              if (role === 'client') role = 'vendor'
+            }
+          } catch {
+          }
+
+          const nextUser = {
+            id: data.user.id,
+            name: displayName,
+            email: normalizedEmail,
+            role,
+            roles,
+            avatar,
+          }
+          onLogin(nextUser)
+          setError('')
+          return
+        }
+      }
+    } catch {
+    }
+
+    const allowFallbackLocal = Boolean(import.meta.env.DEV) || !Boolean(String(import.meta.env.VITE_SUPABASE_URL || '').trim())
+    if (allowFallbackLocal && !fromStored && !demoUsers[normalizedEmail] && normalizedEmail && password) {
       const newUser = {
         id: `local_${Date.now()}`,
         name: normalizedEmail.split('@')[0] || 'Utilisateur',
@@ -5374,6 +5431,10 @@ function AppShell() {
     const hasTokens = Boolean(params.get('access_token') && params.get('refresh_token'))
     const hasError = Boolean(params.get('error') || params.get('error_code'))
     if (type === 'recovery' || hasTokens || hasError) {
+      try {
+        window.sessionStorage.setItem('mangoo_auth_hash', raw)
+      } catch {
+      }
       navigate('/reset-password', { replace: true })
     }
   }, [location.pathname, navigate])

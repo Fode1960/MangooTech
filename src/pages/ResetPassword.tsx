@@ -11,7 +11,15 @@ type HashState = {
 }
 
 const readHashState = (): HashState => {
-  const raw = typeof window !== 'undefined' ? String(window.location.hash || '') : ''
+  const rawHash = typeof window !== 'undefined' ? String(window.location.hash || '') : ''
+  const rawStored = (() => {
+    try {
+      return typeof window !== 'undefined' ? String(window.sessionStorage.getItem('mangoo_auth_hash') || '') : ''
+    } catch {
+      return ''
+    }
+  })()
+  const raw = rawHash || rawStored
   const hash = raw.startsWith('#') ? raw.slice(1) : raw
   const params = new URLSearchParams(hash)
   return {
@@ -27,6 +35,8 @@ const readHashState = (): HashState => {
 export default function ResetPassword() {
   const [password, setPassword] = useState('')
   const [password2, setPassword2] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showPassword2, setShowPassword2] = useState(false)
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -44,7 +54,13 @@ export default function ResetPassword() {
         return
       }
       const res = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
-      if (res.data.session?.access_token) setHasSession(true)
+      if (res.data.session?.access_token) {
+        setHasSession(true)
+        try {
+          window.sessionStorage.removeItem('mangoo_auth_hash')
+        } catch {
+        }
+      }
     } catch {
     }
   }, [hashState])
@@ -93,11 +109,18 @@ export default function ResetPassword() {
       }
       const { error: updateError } = await supabase.auth.updateUser({ password })
       if (updateError) throw updateError
-      setNotice('Mot de passe mis à jour. Vous pouvez maintenant vous connecter.')
+      setNotice('Mot de passe mis à jour. Redirection vers la connexion…')
       try {
         window.history.replaceState({}, document.title, '/reset-password')
       } catch {
       }
+      try {
+        await supabase.auth.signOut()
+      } catch {
+      }
+      window.setTimeout(() => {
+        window.location.href = '/connexion'
+      }, 600)
     } catch (e: any) {
       setError(e?.message || 'Erreur de mise à jour du mot de passe')
     } finally {
@@ -131,25 +154,47 @@ export default function ResetPassword() {
         <div className="mt-6 grid grid-cols-1 gap-4">
           <div>
             <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">Nouveau mot de passe</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-white"
-              placeholder="Minimum 8 caractères"
-              disabled={!hasSession || busy}
-            />
+            <div className="relative mt-1">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-3 py-2 pr-20 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-white"
+                placeholder="Minimum 8 caractères"
+                disabled={!hasSession || busy}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                disabled={!hasSession || busy}
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 rounded-md text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-60 dark:text-gray-200 dark:hover:bg-gray-800"
+                aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              >
+                {showPassword ? 'Masquer' : 'Afficher'}
+              </button>
+            </div>
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">Confirmer le mot de passe</label>
-            <input
-              type="password"
-              value={password2}
-              onChange={(e) => setPassword2(e.target.value)}
-              className="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-white"
-              disabled={!hasSession || busy}
-            />
+            <div className="relative mt-1">
+              <input
+                type={showPassword2 ? 'text' : 'password'}
+                value={password2}
+                onChange={(e) => setPassword2(e.target.value)}
+                className="w-full px-3 py-2 pr-20 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-white"
+                disabled={!hasSession || busy}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword2((v) => !v)}
+                disabled={!hasSession || busy}
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 rounded-md text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-60 dark:text-gray-200 dark:hover:bg-gray-800"
+                aria-label={showPassword2 ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              >
+                {showPassword2 ? 'Masquer' : 'Afficher'}
+              </button>
+            </div>
           </div>
 
           {error && <div className="text-sm text-red-600 dark:text-red-400">{error}</div>}
@@ -176,4 +221,3 @@ export default function ResetPassword() {
     </div>
   )
 }
-
