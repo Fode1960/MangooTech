@@ -56,11 +56,33 @@
       }
 
       window.addEventListener('error', (e) => {
+        try {
+          const err = e?.error;
+          const name = String(err?.name || '');
+          const msg0 = String(err?.message || e?.message || '');
+          if (name === 'AbortError' || msg0.includes('signal is aborted') || msg0.includes('aborted')) {
+            e.preventDefault();
+            return;
+          }
+        } catch {
+        }
+
         const msg = e?.error?.stack || e?.message || 'Erreur JavaScript au démarrage.';
         showBootError('Erreur au démarrage (JavaScript)', msg);
       });
 
       window.addEventListener('unhandledrejection', (e) => {
+        try {
+          const reason = e?.reason;
+          const name = String(reason?.name || '');
+          const msg0 = String(reason?.message || '');
+          if (name === 'AbortError' || msg0.includes('signal is aborted') || msg0.includes('aborted')) {
+            e.preventDefault();
+            return;
+          }
+        } catch {
+        }
+
         const reason = e?.reason;
         const msg = reason?.stack || reason?.message || String(reason || 'Promesse rejetée au démarrage.');
         showBootError('Erreur au démarrage (Promise)', msg);
