@@ -111,20 +111,6 @@
         <div style="font-size: 13px; opacity: 0.85;">Si cet écran reste affiché, l’application n’a pas démarré.</div>
       </div>
     </div>
-    <script type="module">
-      import('/src/main.jsx')
-        .then(() => {
-          try {
-            window.__mangootech_main_loaded__ = true;
-          } catch {
-          }
-        })
-        .catch((e) => {
-          const showBootError = window.showBootError;
-          if (typeof showBootError === 'function') {
-            showBootError('Erreur au chargement du module', e?.stack || e?.message || String(e));
-          }
-        });
-    </script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
