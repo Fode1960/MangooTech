@@ -2,7 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "functions": {
-    "api/*.ts": {}
+    "api/*.ts": {
+      "maxDuration": 30,
+      "memory": 1024
+    }
   },
   "routes": [
     { "handle": "filesystem" },
