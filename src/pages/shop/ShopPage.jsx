@@ -20,6 +20,21 @@ const ShopPage = () => {
   const [vendorEmail, setVendorEmail] = useState('');
   const [pendingMismatch, setPendingMismatch] = useState(false);
 
+  const openBoost = () => {
+    const idRaw = shop?.sourceVendorId ?? shop?.sourceVendorID ?? shop?.source_vendor_id ?? shop?.source_vendorId
+    const shopId = String(shop?.id || '')
+    const vendorId = idRaw !== undefined && idRaw !== null
+      ? String(idRaw)
+      : (shopId.startsWith('shop-') ? shopId.slice(5) : (shopId || String(shopSlug || '')))
+    try {
+      localStorage.setItem('mangoo-vendor-active-tab', 'boosts')
+      localStorage.setItem('mangoo_boost_target', JSON.stringify({ vendorId, vendorKind: 'shop' }))
+    } catch {
+    }
+    const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`
+    navigate(`/connexion?return=${encodeURIComponent(returnTo)}`)
+  }
+
   const maskEmail = (value) => {
     const email = String(value || '').trim();
     const [local, domain] = email.split('@');
@@ -241,7 +256,8 @@ const ShopPage = () => {
           contact_email: localShop.ownerEmail || demoShop.contact_email,
           primaryColor: primary,
           secondaryColor: secondary,
-          logoDataUrl: localShop.logoDataUrl || ''
+          logoDataUrl: localShop.logoDataUrl || '',
+          sourceVendorId: localShop.sourceVendorId ?? localShop.source_vendor_id ?? null
         });
         setProducts(localProducts);
         setError(null);
@@ -633,6 +649,13 @@ const ShopPage = () => {
                 <div className="flex flex-wrap items-center justify-center gap-2">
                   <button
                     type="button"
+                    onClick={openBoost}
+                    className="px-4 py-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold hover:from-amber-600 hover:to-orange-700 transition-all"
+                  >
+                    🚀 Booster
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => {
                       navigate(`/?lp_role=vendor&lp_vendor_tab=shops&lp_vendor_edit_shop=${encodeURIComponent(String(shopSlug || ''))}`);
                     }}
@@ -803,6 +826,15 @@ const ShopPage = () => {
                       className="btn-primary"
                     >
                       Ajouter un produit
+                    </button>
+                  )}
+                  {canManageProducts && (
+                    <button
+                      type="button"
+                      onClick={openBoost}
+                      className="btn-primary"
+                    >
+                      🚀 Booster
                     </button>
                   )}
                   {!canManageProducts && shopOwnerEmail && (
