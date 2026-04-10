@@ -87,6 +87,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
   const [balanceXof, setBalanceXof] = useState<number | null>(null)
   const [orders, setOrders] = useState<BoostOrder[]>([])
   const [boostRow, setBoostRow] = useState<VendorBoostRow | null>(null)
+  const [activeKind, setActiveKind] = useState<BoostKind>('sponsored')
   const [loading, setLoading] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -127,6 +128,25 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
       if (legacy) providerIds = [String(legacy)]
     }
 
+    const demoShopTargets: VendorTarget[] = []
+    try {
+      const raw = localStorage.getItem('demo_shops')
+      const parsed = raw ? JSON.parse(raw) : []
+      const shops = Array.isArray(parsed) ? parsed : []
+      for (const s of shops) {
+        const ownerEmail = String(s?.ownerEmail || s?.owner_email || '').trim().toLowerCase()
+        if (!ownerEmail || ownerEmail !== email) continue
+        const sourceVendorId = s?.sourceVendorId ?? s?.source_vendor_id
+        const idRaw = sourceVendorId ?? s?.id
+        if (idRaw === undefined || idRaw === null) continue
+        const vendorId = String(idRaw).startsWith('shop-') ? String(idRaw).slice(5) : String(idRaw)
+        if (!vendorId) continue
+        const name = String(s?.name || `Boutique ${vendorId}`)
+        demoShopTargets.push({ vendorId, vendorKind: 'shop', name })
+      }
+    } catch {
+    }
+
     const list: VendorTarget[] = []
     for (const id of shopIds) {
       const v = catalog.find((x) => String(x?.id) === String(id) && String(x?.kind || 'shop') === 'shop')
@@ -136,6 +156,8 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
       const v = catalog.find((x) => String(x?.id) === String(id) && String(x?.kind || '').toLowerCase() === 'service')
       list.push({ vendorId: String(id), vendorKind: 'provider', name: String(v?.name || `Prestataire ${id}`) })
     }
+
+    for (const t of demoShopTargets) list.push(t)
     const uniq = new Map<string, VendorTarget>()
     for (const t of list) uniq.set(`${t.vendorKind}:${t.vendorId}`, t)
     const finalList = Array.from(uniq.values())
@@ -353,6 +375,13 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
     load()
   }, [selectedTarget?.vendorId, selectedTarget?.vendorKind])
 
+  useEffect(() => {
+    try {
+      localStorage.setItem('mangoo_boost_target', JSON.stringify({ vendorId: selectedTarget?.vendorId, vendorKind: selectedTarget?.vendorKind }))
+    } catch {
+    }
+  }, [selectedTarget?.vendorId, selectedTarget?.vendorKind])
+
   const buyByCard = useCallback(
     async (p: PricingProduct) => {
       if (!selectedTarget || busy) return
@@ -518,60 +547,77 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {(['sponsored', 'promo', 'new'] as BoostKind[]).map((k) => (
-          <div key={k} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
-            <div className="text-base font-bold text-gray-900 dark:text-white">{kindLabel[k]}</div>
-            <div className="mt-3 space-y-3">
-              {(byKind[k] || []).map((p) => {
-                const canCredits = balanceXof !== null && balanceXof >= p.priceXof
-                return (
-                  <div key={`${p.kind}:${p.durationHours}`} className="border border-gray-200 dark:border-gray-700 rounded-xl p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="font-bold text-gray-900 dark:text-white">{p.title || `${kindLabel[p.kind]} ${p.durationHours}h`}</div>
-                        <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">{p.durationHours} h</div>
-                        {p.description && <div className="text-xs text-gray-600 dark:text-gray-400 mt-2">{p.description}</div>}
-                      </div>
-                      <div className="text-right">
-                        <div className="text-emerald-600 dark:text-emerald-400 font-black">{formatXof(p.priceXof)} XOF</div>
-                      </div>
-                    </div>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        disabled={!selectedTarget || busy || p.active === false}
-                        onClick={() => buyByCard(p)}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold ${
-                          !selectedTarget || busy || p.active === false
-                            ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
-                            : 'bg-blue-600 text-white hover:bg-blue-700'
-                        }`}
-                      >
-                        Payer par carte
-                      </button>
-                      <button
-                        type="button"
-                        disabled={!selectedTarget || busy || !canCredits || p.active === false}
-                        onClick={() => buyByCredits(p)}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold ${
-                          !selectedTarget || busy || !canCredits || p.active === false
-                            ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
-                            : 'bg-emerald-600 text-white hover:bg-emerald-700'
-                        }`}
-                      >
-                        Payer par crédits
-                      </button>
-                    </div>
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4">
+        <div className="grid grid-cols-3 gap-2">
+          {(['sponsored', 'promo', 'new'] as BoostKind[]).map((k) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => setActiveKind(k)}
+              className={`px-4 py-3 rounded-2xl font-black transition-colors ${
+                activeKind === k
+                  ? 'bg-orange-500 text-white'
+                  : 'bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              {kindLabel[k]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
+        <div className="text-base font-bold text-gray-900 dark:text-white">Offres {kindLabel[activeKind]}</div>
+        <div className="mt-3 space-y-3">
+          {(byKind[activeKind] || []).map((p) => {
+            const canCredits = balanceXof !== null && balanceXof >= p.priceXof
+            return (
+              <div key={`${p.kind}:${p.durationHours}`} className="border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-bold text-gray-900 dark:text-white">{p.title || `${kindLabel[p.kind]} ${p.durationHours}h`}</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">{p.durationHours} h</div>
+                    {p.description && <div className="text-xs text-gray-600 dark:text-gray-400 mt-2">{p.description}</div>}
                   </div>
-                )
-              })}
-              {!loading && (byKind[k] || []).length === 0 && (
-                <div className="text-sm text-gray-600 dark:text-gray-300">Aucune offre disponible.</div>
-              )}
+                  <div className="text-right">
+                    <div className="text-emerald-600 dark:text-emerald-400 font-black">{formatXof(p.priceXof)} XOF</div>
+                  </div>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={!selectedTarget || busy || p.active === false}
+                    onClick={() => buyByCard(p)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold ${
+                      !selectedTarget || busy || p.active === false
+                        ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }`}
+                  >
+                    Payer par carte
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!selectedTarget || busy || !canCredits || p.active === false}
+                    onClick={() => buyByCredits(p)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold ${
+                      !selectedTarget || busy || !canCredits || p.active === false
+                        ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                        : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                    }`}
+                  >
+                    Payer par crédits
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+          {!loading && (byKind[activeKind] || []).length === 0 && (
+            <div className="text-sm text-gray-600 dark:text-gray-300">
+              Aucune offre disponible. Ajoute des offres dans l’admin (Boost Carte) ou active les produits boost dans Supabase.
             </div>
-          </div>
-        ))}
+          )}
+        </div>
       </div>
 
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">

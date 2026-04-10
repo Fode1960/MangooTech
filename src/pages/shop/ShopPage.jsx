@@ -20,6 +20,16 @@ const ShopPage = () => {
   const [vendorEmail, setVendorEmail] = useState('');
   const [pendingMismatch, setPendingMismatch] = useState(false);
 
+  useEffect(() => {
+    if (!showVendorMode) return
+    try {
+      const key = `mangoo_vendor_email:${String(shopSlug || '')}`
+      const stored = String(localStorage.getItem(key) || '').trim()
+      if (stored) setVendorEmail(stored)
+    } catch {
+    }
+  }, [shopSlug, showVendorMode])
+
   const openBoost = () => {
     const idRaw = shop?.sourceVendorId ?? shop?.sourceVendorID ?? shop?.source_vendor_id ?? shop?.source_vendorId
     const shopId = String(shop?.id || '')
@@ -367,6 +377,7 @@ const ShopPage = () => {
     const userData = { role: 'vendor', name: 'Vendeur', avatar: '🏪', email: provided };
     try {
       localStorage.setItem('mangoo-current-user', JSON.stringify(userData));
+      localStorage.setItem(`mangoo_vendor_email:${String(shopSlug || '')}`, provided)
     } catch {
       // ignore
     }
@@ -389,6 +400,7 @@ const ShopPage = () => {
       const list = Array.isArray(shops) ? shops : [];
       const next = list.map((s) => (s?.slug === shopSlug ? { ...s, ownerEmail: provided } : s));
       localStorage.setItem('demo_shops', JSON.stringify(next));
+      localStorage.setItem(`mangoo_vendor_email:${String(shopSlug || '')}`, provided)
       window.dispatchEvent(new Event('demo-shops-updated'));
       setShopOwnerEmail(provided);
       setPendingMismatch(false);

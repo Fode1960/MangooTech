@@ -2549,7 +2549,13 @@ const VendorDashboard = ({ user }) => {
                 </div>
                 <button
                   type="button"
-                  onClick={() => toast.info('Suivi logistique : bientôt disponible')}
+                  onClick={() => {
+                    toast.info('Suivi logistique : bientôt disponible')
+                    try {
+                      window.alert('Suivi logistique : bientôt disponible')
+                    } catch {
+                    }
+                  }}
                   className={`${isDark ? 'bg-gray-900 border-gray-700 text-gray-200 hover:bg-gray-800' : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'} px-4 py-2 rounded-xl font-semibold transition-colors`}
                 >
                   📦 Suivi logistique
@@ -2561,7 +2567,10 @@ const VendorDashboard = ({ user }) => {
                   <button
                     key={r.id}
                     type="button"
-                    onClick={() => setSupplyRegion(r.id)}
+                    onClick={() => {
+                      setSupplyRegion(r.id)
+                      toast.success(`Région : ${r.label}`)
+                    }}
                     aria-pressed={supplyRegion === r.id}
                     className={
                       supplyRegion === r.id
@@ -2577,7 +2586,7 @@ const VendorDashboard = ({ user }) => {
             </div>
 
             <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-6 shadow-sm`}>
-              <div className={`${isDark ? 'text-gray-200' : 'text-gray-800'} font-semibold mb-4`}>Catalogue</div>
+              <div className={`${isDark ? 'text-gray-200' : 'text-gray-800'} font-semibold mb-4`}>Catalogue — {supplyRegions.find((r) => r.id === supplyRegion)?.label || ''}</div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 {(supplyCatalog[supplyRegion] || []).map((it) => (
                   <div key={it.sku} className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-4`}>
