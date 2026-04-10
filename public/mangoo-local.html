@@ -9358,10 +9358,11 @@
                     // pas de return ici: on laisse openVendorSheet continuer pour masquer l'onglet Boutique, etc.
                 }
 
-                if (kindMode === 'service' && isOwnerProvider) {
+                    if (kindMode === 'service' && isOwnerProvider) {
                     ownerLink.style.display = 'block';
                     ownerLink.innerHTML = `
                         <div style="display:flex; gap:10px; justify-content:center;">
+                                <a href="#" onclick="openBoostFromLocal('${safeVendorId}', 'provider')" style="background:#f59e0b; color:white; font-size:0.95rem; text-decoration:none; border:1px solid #f59e0b; padding:10px 16px; border-radius:999px; font-weight:950;">🚀 Booster</a>
                             <a href="#" onclick="openProviderModalForVendor('${safeVendorId}')" style="color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px;">⚙️ Réglages</a>
                             <a href="#" onclick="startServicePayment('${safeVendorId}')" style="color:#00b894; font-size:0.85rem; text-decoration:none; border:1px solid #00b894; padding:8px 15px; border-radius:20px; font-weight:bold;">💳 Paiement</a>
                             <a href="#" onclick="openProviderDashboard('${safeVendorId}')" style="color:#f59e0b; font-size:0.85rem; text-decoration:none; border:1px solid #f59e0b; padding:8px 15px; border-radius:20px; font-weight:bold;">📄 Dashboard</a>
@@ -9372,6 +9373,7 @@
                     ownerLink.style.display = 'block';
                     ownerLink.innerHTML = `
                         <div style="display:flex; gap:10px; justify-content:center;">
+                                <a href="#" onclick="openBoostFromLocal('${safeVendorId}', 'shop')" style="background:#f59e0b; color:white; font-size:0.95rem; text-decoration:none; border:1px solid #f59e0b; padding:10px 16px; border-radius:999px; font-weight:950;">🚀 Booster</a>
                             <a href="#" onclick="openSellerModal()" style="color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px;">⚙️ Réglages</a>
                             <a href="#" onclick="openProductModal()" style="color:#e17055; font-size:0.85rem; text-decoration:none; border:1px solid #e17055; padding:8px 15px; border-radius:20px; font-weight:bold;">📦 Nouveau</a>
                             <a href="#" onclick="openSupplyModal()" style="color:#0984e3; font-size:0.85rem; text-decoration:none; border:1px solid #0984e3; padding:8px 15px; border-radius:20px; font-weight:bold;">🏭 S'approvisionner</a>
@@ -9644,6 +9646,28 @@
             const returnTo = `${window.location.origin}${window.location.pathname}${window.location.search}${window.location.hash}`;
             const params = new URLSearchParams({ vendorId: String(v.id), return: returnTo });
             const target = `/provider/dashboard?${params.toString()}`;
+            try {
+                const topWin = window.top && window.top.location ? window.top : window;
+                topWin.location.href = target;
+            } catch {
+                window.location.href = target;
+            }
+        }
+
+        function openBoostFromLocal(vendorId, vendorKind) {
+            const v = VENDORS.find((x) => String(x?.id) === String(vendorId)) || activeVendor;
+            if (!v) return;
+            try {
+                localStorage.setItem('mangoo-vendor-active-tab', 'boosts');
+                localStorage.setItem(
+                    'mangoo_boost_target',
+                    JSON.stringify({ vendorId: String(v.id), vendorKind: String(vendorKind || '') })
+                );
+            } catch {
+            }
+            const returnTo = `${window.location.origin}${window.location.pathname}${window.location.search}${window.location.hash}`;
+            const params = new URLSearchParams({ return: returnTo, vendorId: String(v.id), vendorKind: String(vendorKind || '') });
+            const target = `/connexion?${params.toString()}`;
             try {
                 const topWin = window.top && window.top.location ? window.top : window;
                 topWin.location.href = target;

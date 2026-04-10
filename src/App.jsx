@@ -2088,11 +2088,11 @@ const VendorDashboard = ({ user }) => {
 
   const tabs = [
     { id: 'overview', name: 'Vue d\'ensemble', icon: '📊' },
+    { id: 'boosts', name: 'Booster', icon: '🚀' },
     { id: 'stock', name: 'Gestion Stock', icon: '📦' },
     { id: 'products', name: 'Produits', icon: '🧾' },
     { id: 'orders', name: 'Commandes', icon: '🛒' },
     { id: 'notifications', name: 'Notifications', icon: '🔔' },
-    { id: 'boosts', name: 'Boost', icon: '🏷️' },
     { id: 'communication', name: 'Communication', icon: '📞' },
     { id: 'shops', name: 'Mes boutiques', icon: '🏪' },
     { id: 'supply', name: 'Approvisionnement', icon: '🏭' }
