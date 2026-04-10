@@ -31,9 +31,11 @@ interface Conversation {
 
 interface VendorMessagingCenterProps {
   vendorId: string;
+  onStartAudioCall?: (customerId: string) => void;
+  onStartVideoCall?: (customerId: string) => void;
 }
 
-const VendorMessagingCenter: React.FC<VendorMessagingCenterProps> = ({ vendorId }) => {
+const VendorMessagingCenter: React.FC<VendorMessagingCenterProps> = ({ vendorId, onStartAudioCall, onStartVideoCall }) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -286,6 +288,16 @@ const VendorMessagingCenter: React.FC<VendorMessagingCenterProps> = ({ vendorId 
     return `Il y a ${days}j`;
   };
 
+  const startAudio = () => {
+    if (!selectedConversation) return
+    onStartAudioCall?.(selectedConversation.customerId)
+  }
+
+  const startVideo = () => {
+    if (!selectedConversation) return
+    onStartVideoCall?.(selectedConversation.customerId)
+  }
+
   return (
     <div className={`flex h-full min-h-0 rounded-lg shadow-lg overflow-hidden border ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'}`}>
       {/* Liste des conversations */}
@@ -396,10 +408,30 @@ const VendorMessagingCenter: React.FC<VendorMessagingCenterProps> = ({ vendorId 
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button className={`p-2 rounded-lg transition-colors ${isDark ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-800' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}>
+              <button
+                type="button"
+                onClick={startAudio}
+                disabled={!selectedConversation}
+                title={selectedConversation ? 'Appel audio' : 'Sélectionnez une conversation'}
+                className={`p-2 rounded-lg transition-colors ${
+                  !selectedConversation
+                    ? (isDark ? 'text-gray-600' : 'text-gray-300')
+                    : (isDark ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-800' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100')
+                }`}
+              >
                 <Phone className="w-4 h-4" />
               </button>
-              <button className={`p-2 rounded-lg transition-colors ${isDark ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-800' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}>
+              <button
+                type="button"
+                onClick={startVideo}
+                disabled={!selectedConversation}
+                title={selectedConversation ? 'Appel vidéo' : 'Sélectionnez une conversation'}
+                className={`p-2 rounded-lg transition-colors ${
+                  !selectedConversation
+                    ? (isDark ? 'text-gray-600' : 'text-gray-300')
+                    : (isDark ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-800' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100')
+                }`}
+              >
                 <Video className="w-4 h-4" />
               </button>
               <button className={`p-2 rounded-lg transition-colors ${isDark ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-800' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}>

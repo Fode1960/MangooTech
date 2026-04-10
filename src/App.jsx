@@ -2161,7 +2161,19 @@ const VendorDashboard = ({ user }) => {
 
             <div className="flex-1 min-h-0">
               {communicationMode === 'messages' && (
-                <VendorMessagingCenter vendorId={vendorPeerId} />
+                <VendorMessagingCenter
+                  vendorId={vendorPeerId}
+                  onStartAudioCall={(customerId) => {
+                    setCommunicationMode('call');
+                    setCallRoomId(buildCallRoomId(customerId));
+                    toast.success('Appel audio : démarrage');
+                  }}
+                  onStartVideoCall={(customerId) => {
+                    setCommunicationMode('call');
+                    setCallRoomId(buildCallRoomId(customerId));
+                    toast.success('Appel vidéo : démarrage');
+                  }}
+                />
               )}
 
               {communicationMode === 'contacts' && (
