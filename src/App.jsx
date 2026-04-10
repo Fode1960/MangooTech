@@ -2648,6 +2648,8 @@ const VendorDashboard = ({ user }) => {
                     type="button"
                     onClick={() => {
                       setSupplyRegion(r.id)
+                      setTrackingOpen(false)
+                      setTrackingShipment(null)
                       toast.success(`Région : ${r.label}`)
                     }}
                     aria-pressed={supplyRegion === r.id}
@@ -2670,9 +2672,37 @@ const VendorDashboard = ({ user }) => {
                 <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm mt-1`}>Délai typique : {supplyRegionMeta?.[supplyRegion]?.eta || '—'}</div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {(supplyRegionMeta?.[supplyRegion]?.bullets || []).map((b) => (
-                    <span key={b} className={`${isDark ? 'bg-gray-800 text-gray-200 border-gray-700' : 'bg-white text-gray-700 border-gray-200'} border px-3 py-1 rounded-full text-xs font-semibold`}>
+                    <button
+                      key={b}
+                      type="button"
+                      onClick={() => {
+                        const region = String(supplyRegion || 'china')
+                        const template = trackingTemplates?.[region] || trackingTemplates?.china
+                        const steps = template?.steps || []
+                        const found = steps.find((s) => String(s?.label || '').toLowerCase().includes(String(b).toLowerCase().split(' ')[0]))
+                        const pct = found ? Number(found.pct || 0) : 25
+                        setTrackingShipment((prev) => {
+                          if (prev && prev.region === region) return { ...prev, pct }
+                          const items = supplyCatalog?.[region] || []
+                          const picked = items[Math.floor(Math.random() * Math.max(1, items.length))] || null
+                          const now = Date.now()
+                          const seeded = String(now).slice(-3)
+                          return {
+                            id: `TRK-${region.toUpperCase()}-${seeded}`,
+                            region,
+                            title: template?.title || 'Suivi logistique',
+                            productName: picked?.name || 'Commande',
+                            eta: supplyRegionMeta?.[region]?.eta || '—',
+                            pct,
+                            steps,
+                          }
+                        })
+                        setTrackingOpen(true)
+                      }}
+                      className={`${isDark ? 'bg-gray-800 text-gray-200 border-gray-700 hover:bg-gray-700' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'} border px-3 py-1.5 rounded-full text-xs font-black transition-colors`}
+                    >
                       {b}
-                    </span>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -2814,6 +2844,13 @@ const VendorDashboard = ({ user }) => {
     showShopEditor,
     vendorPeerId,
     vendorShops,
+    supplyCatalog,
+    supplyRegion,
+    supplyRegionMeta,
+    supplyRegions,
+    trackingOpen,
+    trackingShipment,
+    trackingTemplates,
     webrtcUserId,
     user?.name
   ]);
