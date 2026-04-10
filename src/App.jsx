@@ -52,6 +52,11 @@ import OrderStatus from './pages/OrderStatus';
 import ClientInvoiceModal from './components/invoice/ClientInvoiceModal';
 import { supabase } from './config/supabase';
 import { VendorBoosts } from './components/vendor/VendorBoosts'
+import VendorStats from './components/VendorStats'
+import VendorStockManager from './components/VendorStockManager'
+import VendorOrderHistory from './components/VendorOrderHistory'
+import VendorNotifications from './components/VendorNotifications'
+import VendorProductManager from './components/VendorProductManager'
 
 // Store optimisé avec Zustand
 const useStore = create((set, get) => ({
@@ -1748,11 +1753,6 @@ const VendorDashboard = ({ user }) => {
       return 'overview';
     }
   });
-  const [VendorStats, setVendorStats] = useState(null);
-  const [VendorStockManager, setVendorStockManager] = useState(null);
-  const [VendorOrderHistory, setVendorOrderHistory] = useState(null);
-  const [VendorNotifications, setVendorNotifications] = useState(null);
-  const [VendorProductManager, setVendorProductManager] = useState(null);
   const [vendorShops, setVendorShops] = useState([]);
   const [editingShopSlug, setEditingShopSlug] = useState('');
   const [editName, setEditName] = useState('');
@@ -1971,32 +1971,6 @@ const VendorDashboard = ({ user }) => {
     { key: 'services', label: 'Services' }
   ], []);
 
-  // Chargement dynamique des composants
-  useEffect(() => {
-    const loadComponents = async () => {
-      try {
-        const statsModule = await import('./components/VendorStats');
-        setVendorStats(() => statsModule.default);
-        
-        const stockModule = await import('./components/VendorStockManager');
-        setVendorStockManager(() => stockModule.default);
-        
-        const ordersModule = await import('./components/VendorOrderHistory');
-        setVendorOrderHistory(() => ordersModule.default);
-        
-        const notificationsModule = await import('./components/VendorNotifications');
-        setVendorNotifications(() => notificationsModule.default);
-
-        const productsModule = await import('./components/VendorProductManager');
-        setVendorProductManager(() => productsModule.default);
-      } catch (error) {
-        console.error('Erreur lors du chargement des composants:', error);
-      }
-    };
-
-    loadComponents();
-  }, []);
-
   const loadVendorShops = useCallback(() => {
     try {
       importLocalPlusShopsForCurrentUser();
@@ -2101,17 +2075,15 @@ const VendorDashboard = ({ user }) => {
   const renderTabContent = useCallback(() => {
     switch (activeTab) {
       case 'overview':
-        return VendorStats ? <VendorStats vendorId="vendor-demo" /> : <div>Chargement...</div>;
+        return <VendorStats vendorId="vendor-demo" />;
       case 'stock':
-        return VendorStockManager ? <VendorStockManager vendorId="vendor-demo" /> : <div>Chargement...</div>;
+        return <VendorStockManager vendorId="vendor-demo" />;
       case 'products':
-        return VendorProductManager
-          ? <VendorProductManager shops={vendorShops} defaultShopSlug={vendorShops[0]?.slug || ''} />
-          : <div>Chargement...</div>;
+        return <VendorProductManager shops={vendorShops} defaultShopSlug={vendorShops[0]?.slug || ''} />;
       case 'orders':
-        return VendorOrderHistory ? <VendorOrderHistory vendorId="vendor-demo" /> : <div>Chargement...</div>;
+        return <VendorOrderHistory vendorId="vendor-demo" />;
       case 'notifications':
-        return VendorNotifications ? <VendorNotifications vendorId="vendor-demo" /> : <div>Chargement...</div>;
+        return <VendorNotifications vendorId="vendor-demo" />;
       case 'boosts':
         return <VendorBoosts userEmail={String(user?.email || '')} />;
       case 'communication': {
@@ -2590,6 +2562,7 @@ const VendorDashboard = ({ user }) => {
                     key={r.id}
                     type="button"
                     onClick={() => setSupplyRegion(r.id)}
+                    aria-pressed={supplyRegion === r.id}
                     className={
                       supplyRegion === r.id
                         ? `px-3 py-2 rounded-xl text-sm font-semibold text-white bg-gradient-to-r ${r.accent}`
@@ -2597,7 +2570,7 @@ const VendorDashboard = ({ user }) => {
                     }
                     title={r.hint}
                   >
-                    {r.label}
+                    {supplyRegion === r.id ? `✅ ${r.label}` : r.label}
                   </button>
                 ))}
               </div>
@@ -2649,14 +2622,9 @@ const VendorDashboard = ({ user }) => {
           </div>
         );
       default:
-        return VendorStats ? <VendorStats vendorId="vendor-demo" /> : <div>Chargement...</div>;
+        return <VendorStats vendorId="vendor-demo" />;
     }
   }, [
-    VendorNotifications,
-    VendorOrderHistory,
-    VendorProductManager,
-    VendorStats,
-    VendorStockManager,
     activeTab,
     buildCallRoomId,
     callRoomId,
@@ -2690,21 +2658,23 @@ const VendorDashboard = ({ user }) => {
           Tableau de bord vendeur
         </h1>
         
-        <div className="flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-all ${
-                activeTab === tab.id
-                  ? 'bg-orange-500 text-white shadow-md'
-                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-              }`}
-            >
-              <span>{tab.icon}</span>
-              <span>{tab.name}</span>
-            </button>
-          ))}
+        <div className="bg-gray-100 dark:bg-gray-800 p-1 rounded-lg overflow-x-auto">
+          <div className="flex gap-1 min-w-max">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`shrink-0 flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-all whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'bg-orange-500 text-white shadow-md'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                <span>{tab.icon}</span>
+                <span>{tab.name}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
