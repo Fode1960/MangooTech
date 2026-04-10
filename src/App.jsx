@@ -1769,6 +1769,8 @@ const VendorDashboard = ({ user }) => {
   const [manualRoomId, setManualRoomId] = useState('');
 
   const [supplyRegion, setSupplyRegion] = useState('china');
+  const [trackingOpen, setTrackingOpen] = useState(false);
+  const [trackingShipment, setTrackingShipment] = useState(null);
 
   const supplyRegions = useMemo(() => ([
     { id: 'china', label: '🇨🇳 Chine Direct', hint: 'Dropshipping & gros', accent: 'from-sky-500 to-blue-600' },
@@ -1776,22 +1778,76 @@ const VendorDashboard = ({ user }) => {
     { id: 'local', label: '🌍 Local & Gros', hint: 'Appro local / marchés', accent: 'from-emerald-500 to-green-600' }
   ]), []);
 
+  const supplyRegionMeta = useMemo(() => ({
+    china: {
+      subtitle: 'Gros & import express (démo)',
+      bullets: ['Commande en gros', 'Expédition internationale', 'Dédouanement', 'Livraison locale'],
+      eta: 'J+10 à J+14'
+    },
+    turkey: {
+      subtitle: 'Mode & accessoires (démo)',
+      bullets: ['Choix des tailles', 'Contrôle qualité', 'Expédition Turquie → Cameroun', 'Livraison'],
+      eta: 'J+7 à J+12'
+    },
+    local: {
+      subtitle: 'Marchés & grossistes (démo)',
+      bullets: ['Stock local', 'Paiement à la livraison', 'Livraison le jour même', 'Facture simple'],
+      eta: 'Aujourd’hui'
+    }
+  }), []);
+
   const supplyCatalog = useMemo(() => ({
     china: [
-      { sku: 'CN-EAR-i12', name: 'Écouteurs i12 TWS', price: '2 500 FCFA', moq: 'MOQ 10', eta: 'J+12', origin: 'Shenzhen' },
-      { sku: 'CN-CAB-USB', name: 'Câble USB-C renforcé', price: '1 200 FCFA', moq: 'MOQ 20', eta: 'J+10', origin: 'Guangzhou' },
-      { sku: 'CN-LED-STR', name: 'Ruban LED 5m', price: '3 900 FCFA', moq: 'MOQ 10', eta: 'J+14', origin: 'Yiwu' }
+      { sku: 'CN-EAR-i12', name: 'Écouteurs i12 TWS', price: '2 500 FCFA', moq: 'MOQ 10', eta: 'J+12', origin: 'Shenzhen', category: 'Tech', photo: 'https://images.unsplash.com/photo-1518441902117-f0a4d6eaf7f0?w=400&auto=format&fit=crop&q=60' },
+      { sku: 'CN-CAB-USB', name: 'Câble USB-C renforcé', price: '1 200 FCFA', moq: 'MOQ 20', eta: 'J+10', origin: 'Guangzhou', category: 'Tech', photo: 'https://images.unsplash.com/photo-1555617778-02518510b9fa?w=400&auto=format&fit=crop&q=60' },
+      { sku: 'CN-LED-STR', name: 'Ruban LED 5m', price: '3 900 FCFA', moq: 'MOQ 10', eta: 'J+14', origin: 'Yiwu', category: 'Maison', photo: 'https://images.unsplash.com/photo-1546549032-9571cd6b27df?w=400&auto=format&fit=crop&q=60' },
+      { sku: 'CN-CASE-001', name: 'Coques Téléphone (lot)', price: '5 500 FCFA', moq: 'MOQ 10 lots', eta: 'J+11', origin: 'Shenzhen', category: 'Téléphonie', photo: 'https://images.unsplash.com/photo-1585790050230-5dd28404ccb9?w=400&auto=format&fit=crop&q=60' }
     ],
     turkey: [
-      { sku: 'TR-DRS-001', name: 'Robe tissu premium', price: '9 500 FCFA', moq: 'MOQ 5', eta: 'J+9', origin: 'Istanbul' },
-      { sku: 'TR-SHO-002', name: 'Chaussures unisex', price: '12 500 FCFA', moq: 'MOQ 5', eta: 'J+11', origin: 'Bursa' },
-      { sku: 'TR-BAG-003', name: 'Sac bandoulière', price: '7 000 FCFA', moq: 'MOQ 10', eta: 'J+8', origin: 'Izmir' }
+      { sku: 'TR-DRS-001', name: 'Robe tissu premium', price: '9 500 FCFA', moq: 'MOQ 5', eta: 'J+9', origin: 'Istanbul', category: 'Mode', photo: 'https://images.unsplash.com/photo-1520975916090-3105956dac38?w=400&auto=format&fit=crop&q=60' },
+      { sku: 'TR-SHO-002', name: 'Chaussures unisex', price: '12 500 FCFA', moq: 'MOQ 5', eta: 'J+11', origin: 'Bursa', category: 'Mode', photo: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&auto=format&fit=crop&q=60' },
+      { sku: 'TR-BAG-003', name: 'Sac bandoulière', price: '7 000 FCFA', moq: 'MOQ 10', eta: 'J+8', origin: 'Izmir', category: 'Mode', photo: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=400&auto=format&fit=crop&q=60' },
+      { sku: 'TR-TSH-010', name: 'T-shirts (pack)', price: '14 000 FCFA', moq: 'MOQ 5 packs', eta: 'J+7', origin: 'Istanbul', category: 'Mode', photo: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&auto=format&fit=crop&q=60' }
     ],
     local: [
-      { sku: 'LC-RIZ-25', name: 'Riz 25kg', price: '18 500 FCFA', moq: 'MOQ 2', eta: 'Aujourd\'hui', origin: 'Gros local' },
-      { sku: 'LC-HUI-5', name: 'Huile 5L', price: '6 900 FCFA', moq: 'MOQ 4', eta: 'Aujourd\'hui', origin: 'Gros local' },
-      { sku: 'LC-SAV-BOX', name: 'Savon (carton)', price: '8 200 FCFA', moq: 'MOQ 1', eta: 'Aujourd\'hui', origin: 'Gros local' }
+      { sku: 'LC-RIZ-25', name: 'Riz 25kg', price: '18 500 FCFA', moq: 'MOQ 2', eta: 'Aujourd\'hui', origin: 'Gros local', category: 'Alimentation', photo: 'https://images.unsplash.com/photo-1604908554141-0ea2d3890081?w=400&auto=format&fit=crop&q=60' },
+      { sku: 'LC-HUI-5', name: 'Huile 5L', price: '6 900 FCFA', moq: 'MOQ 4', eta: 'Aujourd\'hui', origin: 'Gros local', category: 'Alimentation', photo: 'https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=400&auto=format&fit=crop&q=60' },
+      { sku: 'LC-SAV-BOX', name: 'Savon (carton)', price: '8 200 FCFA', moq: 'MOQ 1', eta: 'Aujourd\'hui', origin: 'Gros local', category: 'Maison', photo: 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=400&auto=format&fit=crop&q=60' },
+      { sku: 'LC-WAT-24', name: 'Eau (pack 24)', price: '3 600 FCFA', moq: 'MOQ 5 packs', eta: 'Aujourd\'hui', origin: 'Grossiste', category: 'Alimentation', photo: 'https://images.unsplash.com/photo-1559839914-17aae19cec71?w=400&auto=format&fit=crop&q=60' }
     ]
+  }), []);
+
+  const trackingTemplates = useMemo(() => ({
+    china: {
+      title: 'Expédition Chine → Cameroun',
+      steps: [
+        { label: 'Commande validée', hint: 'Fournisseur confirme le stock', pct: 15 },
+        { label: 'Préparation & emballage', hint: 'Tri + contrôle qualité', pct: 30 },
+        { label: 'En transit international', hint: 'Vol cargo', pct: 55 },
+        { label: 'Dédouanement', hint: 'Documents + taxes', pct: 75 },
+        { label: 'Livraison locale', hint: 'Dernier kilomètre', pct: 95 },
+        { label: 'Livré', hint: 'Réception confirmée', pct: 100 }
+      ]
+    },
+    turkey: {
+      title: 'Expédition Turquie → Cameroun',
+      steps: [
+        { label: 'Commande validée', hint: 'Tailles & couleurs confirmées', pct: 15 },
+        { label: 'Contrôle qualité', hint: 'Vérification couture', pct: 35 },
+        { label: 'En transit international', hint: 'Fret aérien', pct: 60 },
+        { label: 'Dédouanement', hint: 'Déclaration & taxes', pct: 80 },
+        { label: 'Livraison', hint: 'Livraison au point relais', pct: 100 }
+      ]
+    },
+    local: {
+      title: 'Livraison locale',
+      steps: [
+        { label: 'Commande confirmée', hint: 'Stock prêt', pct: 30 },
+        { label: 'Préparation', hint: 'Emballage', pct: 55 },
+        { label: 'En cours de livraison', hint: 'Livreur en route', pct: 85 },
+        { label: 'Livré', hint: 'Réception confirmée', pct: 100 }
+      ]
+    }
   }), []);
 
   const normalizeEmail = useCallback((value) => {
@@ -2562,11 +2618,22 @@ const VendorDashboard = ({ user }) => {
                 <button
                   type="button"
                   onClick={() => {
-                    toast.info('Suivi logistique : bientôt disponible')
-                    try {
-                      window.alert('Suivi logistique : bientôt disponible')
-                    } catch {
-                    }
+                    const region = String(supplyRegion || 'china')
+                    const template = trackingTemplates?.[region] || trackingTemplates?.china
+                    const items = supplyCatalog?.[region] || []
+                    const picked = items[Math.floor(Math.random() * Math.max(1, items.length))] || null
+                    const now = Date.now()
+                    const seeded = String(now).slice(-3)
+                    setTrackingShipment({
+                      id: `TRK-${region.toUpperCase()}-${seeded}`,
+                      region,
+                      title: template?.title || 'Suivi logistique',
+                      productName: picked?.name || 'Commande',
+                      eta: supplyRegionMeta?.[region]?.eta || '—',
+                      pct: Math.min(100, 25 + (now % 60)),
+                      steps: template?.steps || [],
+                    })
+                    setTrackingOpen(true)
                   }}
                   className={`${isDark ? 'bg-gray-900 border-gray-700 text-gray-200 hover:bg-gray-800' : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'} px-4 py-2 rounded-xl font-semibold transition-colors`}
                 >
@@ -2595,6 +2662,20 @@ const VendorDashboard = ({ user }) => {
                   </button>
                 ))}
               </div>
+
+              <div className={`mt-4 rounded-xl border ${isDark ? 'border-gray-700 bg-gray-900/30' : 'border-gray-200 bg-gray-50'} p-4`}>
+                <div className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  {supplyRegionMeta?.[supplyRegion]?.subtitle || 'Exemples'}
+                </div>
+                <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm mt-1`}>Délai typique : {supplyRegionMeta?.[supplyRegion]?.eta || '—'}</div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {(supplyRegionMeta?.[supplyRegion]?.bullets || []).map((b) => (
+                    <span key={b} className={`${isDark ? 'bg-gray-800 text-gray-200 border-gray-700' : 'bg-white text-gray-700 border-gray-200'} border px-3 py-1 rounded-full text-xs font-semibold`}>
+                      {b}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-6 shadow-sm`}>
@@ -2603,10 +2684,15 @@ const VendorDashboard = ({ user }) => {
                 {(supplyCatalog[supplyRegion] || []).map((it) => (
                   <div key={it.sku} className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-4`}>
                     <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>{it.name}</div>
-                        <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>{it.origin} • {it.eta}</div>
-                        <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm mt-2`}>{it.moq}</div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-14 h-14 rounded-xl overflow-hidden border border-gray-700/30 shrink-0">
+                          <img src={it.photo} alt={it.name} className="w-full h-full object-cover" />
+                        </div>
+                        <div>
+                          <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>{it.name}</div>
+                          <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>{it.category} • {it.origin} • {it.eta}</div>
+                          <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm mt-2`}>{it.moq}</div>
+                        </div>
                       </div>
                       <div className="text-right">
                         <div className="text-emerald-400 font-bold">{it.price}</div>
@@ -2640,6 +2726,68 @@ const VendorDashboard = ({ user }) => {
                 ))}
               </div>
             </div>
+
+            {trackingOpen && (
+              <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+                <div className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'} w-full max-w-2xl rounded-2xl border shadow-2xl overflow-hidden`}>
+                  <div className={`p-4 flex items-center justify-between border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+                    <div>
+                      <div className={`font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>{trackingShipment?.title || 'Suivi logistique'}</div>
+                      <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Commande: {trackingShipment?.productName || '—'}{trackingShipment?.id ? ` • ${trackingShipment.id}` : ''}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTrackingOpen(false)
+                        setTrackingShipment(null)
+                      }}
+                      className={`${isDark ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-xl text-sm font-bold transition-colors`}
+                    >
+                      Fermer
+                    </button>
+                  </div>
+
+                  <div className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm font-semibold`}>ETA : {trackingShipment?.eta || '—'}</div>
+                      <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm font-semibold`}>{Math.round(Number(trackingShipment?.pct || 0))}%</div>
+                    </div>
+                    <div className={`${isDark ? 'bg-gray-800' : 'bg-gray-100'} mt-2 h-3 rounded-full overflow-hidden`}>
+                      <div className="h-full bg-gradient-to-r from-orange-500 to-green-600" style={{ width: `${Math.max(0, Math.min(100, Number(trackingShipment?.pct || 0)))}%` }} />
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                      {(trackingShipment?.steps || []).map((s, idx) => {
+                        const pct = Number(s?.pct || 0)
+                        const done = pct <= Number(trackingShipment?.pct || 0)
+                        return (
+                          <div key={`${idx}_${s.label}`} className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-3 flex items-start justify-between gap-3`}>
+                            <div>
+                              <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-bold`}>{done ? '✅' : '⏳'} {s.label}</div>
+                              <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>{s.hint}</div>
+                            </div>
+                            <div className={`${done ? 'text-emerald-400' : (isDark ? 'text-gray-400' : 'text-gray-500')} text-sm font-bold`}>{pct}%</div>
+                          </div>
+                        )
+                      })}
+                    </div>
+
+                    <div className="mt-4 flex gap-2 flex-wrap justify-end">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const bumped = Math.min(100, Number(trackingShipment?.pct || 0) + 10)
+                          setTrackingShipment((prev) => (prev ? { ...prev, pct: bumped } : prev))
+                        }}
+                        className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-4 py-2 rounded-xl text-sm font-black hover:from-orange-600 hover:to-green-700 transition-all"
+                      >
+                        Simuler avancée
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       default:
