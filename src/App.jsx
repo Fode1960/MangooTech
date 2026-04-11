@@ -1123,6 +1123,37 @@ const Register = ({ onRegister, onBack }) => {
                   >
                     Copier
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      try {
+                        const payload = {
+                          id: createdShop?.id,
+                          name: createdShop?.name,
+                          slug: createdShop?.slug,
+                          category: createdShop?.category,
+                          ownerName: createdShop?.ownerName,
+                          ownerEmail: createdShop?.ownerEmail,
+                          ownerPassword: createdShop?.ownerPassword,
+                          logoDataUrl: createdShop?.logoDataUrl,
+                          primaryColor: createdShop?.primaryColor,
+                          secondaryColor: createdShop?.secondaryColor,
+                          shopUrl: createdShop?.shopUrl,
+                          approvalStatus: createdShop?.approvalStatus,
+                        }
+                        const json = JSON.stringify(payload)
+                        const base64 = btoa(unescape(encodeURIComponent(json)))
+                        const code = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+                        navigator.clipboard.writeText(code)
+                      } catch {
+                      }
+                    }}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white border border-gray-200 hover:bg-gray-100'
+                    }`}
+                  >
+                    Code
+                  </button>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -1817,6 +1848,9 @@ const VendorDashboard = ({ user }) => {
   const [editPrimaryColor, setEditPrimaryColor] = useState('#F97316');
   const [editSecondaryColor, setEditSecondaryColor] = useState('#FBBF24');
   const [showShopEditor, setShowShopEditor] = useState(false);
+  const [showShopImport, setShowShopImport] = useState(false);
+  const [shopImportCode, setShopImportCode] = useState('');
+  const [shopImportError, setShopImportError] = useState('');
   const { isDark } = useThemeStore();
 
   const [communicationMode, setCommunicationMode] = useState('messages');
@@ -2106,6 +2140,73 @@ const VendorDashboard = ({ user }) => {
       setVendorShops([]);
     }
   }, [importLocalPlusShopsForCurrentUser, normalizeEmail, user?.email]);
+
+  const importShopFromCode = useCallback(() => {
+    const raw = String(shopImportCode || '').trim()
+    if (!raw) {
+      setShopImportError('Code boutique manquant')
+      return
+    }
+
+    let parsed = null
+    try {
+      if (raw.startsWith('{')) {
+        parsed = JSON.parse(raw)
+      } else {
+        const b64 = raw.replace(/-/g, '+').replace(/_/g, '/')
+        const pad = '='.repeat((4 - (b64.length % 4)) % 4)
+        const json = decodeURIComponent(escape(atob(`${b64}${pad}`)))
+        parsed = JSON.parse(json)
+      }
+    } catch {
+      setShopImportError('Code boutique invalide')
+      return
+    }
+
+    const shop = parsed && typeof parsed === 'object' ? parsed : null
+    const slug = String(shop?.slug || '').trim()
+    const name = String(shop?.name || '').trim()
+    const ownerEmail = String(shop?.ownerEmail || shop?.owner_email || '').trim()
+    if (!slug || !name || !ownerEmail) {
+      setShopImportError('Code boutique incomplet')
+      return
+    }
+
+    try {
+      const rawExisting = localStorage.getItem('demo_shops')
+      const existing = rawExisting ? JSON.parse(rawExisting) : []
+      const list = Array.isArray(existing) ? existing : []
+      const next = list.filter((s) => String(s?.slug || '') !== slug)
+      next.push({
+        id: String(shop?.id || `shop-${Date.now()}`),
+        name,
+        slug,
+        category: String(shop?.category || 'general'),
+        ownerName: String(shop?.ownerName || user?.name || 'Vendeur'),
+        ownerEmail,
+        ownerPassword: String(shop?.ownerPassword || ''),
+        logoDataUrl: String(shop?.logoDataUrl || ''),
+        primaryColor: String(shop?.primaryColor || '#0EA5E9'),
+        secondaryColor: String(shop?.secondaryColor || '#38BDF8'),
+        shopUrl: String(shop?.shopUrl || `${window.location.origin}/shop/${slug}`),
+        approvalStatus: String(shop?.approvalStatus || 'approved'),
+        createdAt: String(shop?.createdAt || new Date().toISOString()),
+        updatedAt: new Date().toISOString(),
+      })
+      localStorage.setItem('demo_shops', JSON.stringify(next))
+      window.dispatchEvent(new Event('demo-shops-updated'))
+      setShopImportError('')
+      setShowShopImport(false)
+      setShopImportCode('')
+      loadVendorShops()
+      try {
+        toast.success('Boutique importée')
+      } catch {
+      }
+    } catch {
+      setShopImportError('Impossible d’importer la boutique')
+    }
+  }, [loadVendorShops, shopImportCode, user?.name])
 
   const importSupabaseShopsForCurrentUser = useCallback(async () => {
     const currentEmail = normalizeEmail(user?.email)
@@ -2552,13 +2653,26 @@ const VendorDashboard = ({ user }) => {
                 <div className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Mes boutiques</div>
                 <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm`}>{vendorShops.length} boutique(s) enregistrée(s)</div>
               </div>
-              <button
-                type="button"
-                onClick={loadVendorShops}
-                className={`${isDark ? 'bg-gray-800 text-white hover:bg-gray-700' : 'bg-white border border-gray-200 hover:bg-gray-50'} px-4 py-2 rounded-lg text-sm font-medium transition-colors`}
-              >
-                Actualiser
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShopImportError('')
+                    setShopImportCode('')
+                    setShowShopImport(true)
+                  }}
+                  className={`${isDark ? 'bg-gray-800 text-white hover:bg-gray-700' : 'bg-white border border-gray-200 hover:bg-gray-50'} px-4 py-2 rounded-lg text-sm font-medium transition-colors`}
+                >
+                  Importer
+                </button>
+                <button
+                  type="button"
+                  onClick={loadVendorShops}
+                  className={`${isDark ? 'bg-gray-800 text-white hover:bg-gray-700' : 'bg-white border border-gray-200 hover:bg-gray-50'} px-4 py-2 rounded-lg text-sm font-medium transition-colors`}
+                >
+                  Actualiser
+                </button>
+              </div>
             </div>
 
             {vendorShops.length === 0 ? (
@@ -2743,6 +2857,59 @@ const VendorDashboard = ({ user }) => {
                     >
                       Enregistrer
                     </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showShopImport && (
+              <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+                <div className={`w-full max-w-2xl rounded-2xl shadow-2xl border ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'}`}>
+                  <div className={`p-4 flex items-center justify-between border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+                    <div className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Importer une boutique</div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowShopImport(false)
+                        setShopImportCode('')
+                        setShopImportError('')
+                      }}
+                      className="px-3 py-2 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    >
+                      Fermer
+                    </button>
+                  </div>
+                  <div className="p-4">
+                    <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm`}>Collez le code (bouton “Code” lors de la création).</div>
+                    <textarea
+                      value={shopImportCode}
+                      onChange={(e) => setShopImportCode(e.target.value)}
+                      rows={6}
+                      className={`mt-3 w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'}`}
+                      placeholder="Collez le code ici…"
+                    />
+                    {shopImportError && (
+                      <div className="mt-2 text-sm text-red-500 font-semibold">{shopImportError}</div>
+                    )}
+                    <div className="mt-4 flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShopImportCode('')
+                          setShopImportError('')
+                        }}
+                        className={`${isDark ? 'bg-gray-800 text-white hover:bg-gray-700' : 'bg-white border border-gray-200 hover:bg-gray-50'} px-4 py-2 rounded-lg text-sm font-semibold transition-colors`}
+                      >
+                        Effacer
+                      </button>
+                      <button
+                        type="button"
+                        onClick={importShopFromCode}
+                        className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-orange-600 hover:to-green-700 transition-all"
+                      >
+                        Importer
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
