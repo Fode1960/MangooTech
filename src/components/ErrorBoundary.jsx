@@ -55,6 +55,7 @@ const ErrorFallback = ({ error, onReset }) => {
     await clearRuntimeCaches()
     try {
       const url = new URL(window.location.href)
+      if (url.hostname === 'www.mangoo.tech') url.hostname = 'mangoo.tech'
       url.searchParams.set('v', String(Date.now()))
       window.location.replace(url.toString())
     } catch {

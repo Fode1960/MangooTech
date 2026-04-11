@@ -7,6 +7,14 @@ import './index.css'
 
 if (typeof window !== 'undefined') {
   try {
+    try {
+      const url = new URL(window.location.href)
+      if (url.hostname === 'www.mangoo.tech') {
+        url.hostname = 'mangoo.tech'
+        window.location.replace(url.toString())
+      }
+    } catch {
+    }
     const w = window as any
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then((regs) => {
