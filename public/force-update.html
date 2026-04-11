@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>MangooTech – Mise à jour</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 24px; background: #f8fafc; color: #0f172a; }
+      .card { max-width: 560px; margin: 0 auto; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08); }
+      h1 { font-size: 18px; margin: 0 0 8px; }
+      p { margin: 8px 0; font-size: 14px; color: #334155; }
+      .btn { display: inline-block; margin-top: 12px; padding: 10px 14px; border-radius: 12px; border: 1px solid #e2e8f0; background: #0f172a; color: white; font-weight: 700; text-decoration: none; }
+      code { background: #f1f5f9; padding: 2px 6px; border-radius: 8px; }
+      .muted { color: #64748b; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Mise à jour de la plateforme</h1>
+      <p>Cette page force la suppression des caches (et des anciens service workers) puis recharge la dernière version.</p>
+      <p class="muted">Si vous étiez bloqué sur une page d’erreur, gardez cette page ouverte quelques secondes.</p>
+      <a class="btn" href="/">Revenir à la plateforme</a>
+      <p class="muted" id="status">Initialisation…</p>
+    </div>
+
+    <script>
+      (function () {
+        var statusEl = document.getElementById('status');
+        var setStatus = function (msg) {
+          try { if (statusEl) statusEl.textContent = msg; } catch (e) {}
+        };
+
+        var canonicalize = function () {
+          try {
+            var url = new URL(window.location.href);
+            if (url.hostname === 'www.mangoo.tech') {
+              url.hostname = 'mangoo.tech';
+              window.location.replace(url.toString());
+              return true;
+            }
+          } catch (e) {}
+          return false;
+        };
+
+        if (canonicalize()) return;
+
+        var clearCaches = async function () {
+          try {
+            if ('serviceWorker' in navigator) {
+              var regs = await navigator.serviceWorker.getRegistrations();
+              await Promise.all(regs.map(function (r) { return r.unregister(); }));
+            }
+          } catch (e) {}
+          try {
+            if (window.caches && window.caches.keys) {
+              var keys = await window.caches.keys();
+              await Promise.all(keys.map(function (k) { return window.caches.delete(k); }));
+            }
+          } catch (e) {}
+        };
+
+        (async function () {
+          setStatus('Nettoyage des caches…');
+          await clearCaches();
+          setStatus('Rechargement de la dernière version…');
+          try {
+            var url = new URL(window.location.origin + '/');
+            url.searchParams.set('v', String(Date.now()));
+            window.location.replace(url.toString());
+          } catch (e) {
+            window.location.href = '/';
+          }
+        })();
+      })();
+    </script>
+  </body>
+</html>

@@ -121,6 +121,17 @@ const ErrorFallback = ({ error, onReset }) => {
           >
             Recharger la page
           </button>
+
+          <a
+            href="/force-update.html"
+            className={`block w-full font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-center ${
+              isDark
+                ? 'bg-gray-900 hover:bg-gray-800 text-gray-200 border border-gray-700'
+                : 'bg-white hover:bg-gray-50 text-gray-900 border border-gray-200'
+            }`}
+          >
+            Nettoyer le cache
+          </a>
         </div>
         
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
