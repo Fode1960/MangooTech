@@ -964,11 +964,17 @@ const Register = ({ onRegister, onBack }) => {
       }
       localStorage.setItem('demo_shops', JSON.stringify(next));
       window.dispatchEvent(new Event('demo-shops-updated'));
-      void syncDemoShopToSupabase(shop)
+      try {
+        if (typeof syncDemoShopToSupabase === 'function') void syncDemoShopToSupabase(shop)
+      } catch {
+      }
     } catch {
       localStorage.setItem('demo_shops', JSON.stringify([{ ...shop, createdAt: new Date().toISOString() }]));
       window.dispatchEvent(new Event('demo-shops-updated'));
-      void syncDemoShopToSupabase(shop)
+      try {
+        if (typeof syncDemoShopToSupabase === 'function') void syncDemoShopToSupabase(shop)
+      } catch {
+      }
     }
   }, [syncDemoShopToSupabase]);
 
@@ -2234,7 +2240,7 @@ const VendorDashboard = ({ user }) => {
       window.dispatchEvent(new Event('demo-shops-updated'));
       try {
         const updated = next.find((s) => s?.slug === slug)
-        if (updated) void syncDemoShopToSupabase(updated)
+        if (updated && typeof syncDemoShopToSupabase === 'function') void syncDemoShopToSupabase(updated)
       } catch {
       }
       setShowShopEditor(false);
