@@ -1771,6 +1771,7 @@ const VendorDashboard = ({ user }) => {
   const [supplyRegion, setSupplyRegion] = useState('china');
   const [trackingOpen, setTrackingOpen] = useState(false);
   const [trackingShipment, setTrackingShipment] = useState(null);
+  const [supplyFilters, setSupplyFilters] = useState([]);
 
   const supplyRegions = useMemo(() => ([
     { id: 'china', label: '🇨🇳 Chine Direct', hint: 'Dropshipping & gros', accent: 'from-sky-500 to-blue-600' },
@@ -1798,24 +1799,34 @@ const VendorDashboard = ({ user }) => {
 
   const supplyCatalog = useMemo(() => ({
     china: [
-      { sku: 'CN-EAR-i12', name: 'Écouteurs i12 TWS', price: '2 500 FCFA', moq: 'MOQ 10', eta: 'J+12', origin: 'Shenzhen', category: 'Tech', photo: 'https://images.unsplash.com/photo-1518441902117-f0a4d6eaf7f0?w=400&auto=format&fit=crop&q=60' },
-      { sku: 'CN-CAB-USB', name: 'Câble USB-C renforcé', price: '1 200 FCFA', moq: 'MOQ 20', eta: 'J+10', origin: 'Guangzhou', category: 'Tech', photo: 'https://images.unsplash.com/photo-1555617778-02518510b9fa?w=400&auto=format&fit=crop&q=60' },
-      { sku: 'CN-LED-STR', name: 'Ruban LED 5m', price: '3 900 FCFA', moq: 'MOQ 10', eta: 'J+14', origin: 'Yiwu', category: 'Maison', photo: 'https://images.unsplash.com/photo-1546549032-9571cd6b27df?w=400&auto=format&fit=crop&q=60' },
-      { sku: 'CN-CASE-001', name: 'Coques Téléphone (lot)', price: '5 500 FCFA', moq: 'MOQ 10 lots', eta: 'J+11', origin: 'Shenzhen', category: 'Téléphonie', photo: 'https://images.unsplash.com/photo-1585790050230-5dd28404ccb9?w=400&auto=format&fit=crop&q=60' }
+      { sku: 'CN-EAR-i12', name: 'Écouteurs i12 TWS', price: '2 500 FCFA', moq: 'MOQ 10', eta: 'J+12', origin: 'Shenzhen', category: 'Tech', photo: 'https://images.unsplash.com/photo-1518441902117-f0a4d6eaf7f0?w=400&auto=format&fit=crop&q=60', tags: ['Commande en gros', 'Expédition internationale', 'Dédouanement', 'Livraison locale'] },
+      { sku: 'CN-CAB-USB', name: 'Câble USB-C renforcé', price: '1 200 FCFA', moq: 'MOQ 20', eta: 'J+10', origin: 'Guangzhou', category: 'Tech', photo: 'https://images.unsplash.com/photo-1555617778-02518510b9fa?w=400&auto=format&fit=crop&q=60', tags: ['Commande en gros', 'Expédition internationale', 'Dédouanement', 'Livraison locale'] },
+      { sku: 'CN-LED-STR', name: 'Ruban LED 5m', price: '3 900 FCFA', moq: 'MOQ 10', eta: 'J+14', origin: 'Yiwu', category: 'Maison', photo: 'https://images.unsplash.com/photo-1546549032-9571cd6b27df?w=400&auto=format&fit=crop&q=60', tags: ['Commande en gros', 'Expédition internationale', 'Dédouanement', 'Livraison locale'] },
+      { sku: 'CN-CASE-001', name: 'Coques Téléphone (lot)', price: '5 500 FCFA', moq: 'MOQ 10 lots', eta: 'J+11', origin: 'Shenzhen', category: 'Téléphonie', photo: 'https://images.unsplash.com/photo-1585790050230-5dd28404ccb9?w=400&auto=format&fit=crop&q=60', tags: ['Commande en gros', 'Expédition internationale', 'Dédouanement', 'Livraison locale'] }
     ],
     turkey: [
-      { sku: 'TR-DRS-001', name: 'Robe tissu premium', price: '9 500 FCFA', moq: 'MOQ 5', eta: 'J+9', origin: 'Istanbul', category: 'Mode', photo: 'https://images.unsplash.com/photo-1520975916090-3105956dac38?w=400&auto=format&fit=crop&q=60' },
-      { sku: 'TR-SHO-002', name: 'Chaussures unisex', price: '12 500 FCFA', moq: 'MOQ 5', eta: 'J+11', origin: 'Bursa', category: 'Mode', photo: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&auto=format&fit=crop&q=60' },
-      { sku: 'TR-BAG-003', name: 'Sac bandoulière', price: '7 000 FCFA', moq: 'MOQ 10', eta: 'J+8', origin: 'Izmir', category: 'Mode', photo: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=400&auto=format&fit=crop&q=60' },
-      { sku: 'TR-TSH-010', name: 'T-shirts (pack)', price: '14 000 FCFA', moq: 'MOQ 5 packs', eta: 'J+7', origin: 'Istanbul', category: 'Mode', photo: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&auto=format&fit=crop&q=60' }
+      { sku: 'TR-DRS-001', name: 'Robe tissu premium', price: '9 500 FCFA', moq: 'MOQ 5', eta: 'J+9', origin: 'Istanbul', category: 'Mode', photo: 'https://images.unsplash.com/photo-1520975916090-3105956dac38?w=400&auto=format&fit=crop&q=60', tags: ['Choix des tailles', 'Contrôle qualité', 'Expédition Turquie → Cameroun', 'Livraison'] },
+      { sku: 'TR-SHO-002', name: 'Chaussures unisex', price: '12 500 FCFA', moq: 'MOQ 5', eta: 'J+11', origin: 'Bursa', category: 'Mode', photo: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&auto=format&fit=crop&q=60', tags: ['Choix des tailles', 'Contrôle qualité', 'Expédition Turquie → Cameroun', 'Livraison'] },
+      { sku: 'TR-BAG-003', name: 'Sac bandoulière', price: '7 000 FCFA', moq: 'MOQ 10', eta: 'J+8', origin: 'Izmir', category: 'Mode', photo: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=400&auto=format&fit=crop&q=60', tags: ['Choix des tailles', 'Contrôle qualité', 'Expédition Turquie → Cameroun', 'Livraison'] },
+      { sku: 'TR-TSH-010', name: 'T-shirts (pack)', price: '14 000 FCFA', moq: 'MOQ 5 packs', eta: 'J+7', origin: 'Istanbul', category: 'Mode', photo: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&auto=format&fit=crop&q=60', tags: ['Choix des tailles', 'Contrôle qualité', 'Expédition Turquie → Cameroun', 'Livraison'] }
     ],
     local: [
-      { sku: 'LC-RIZ-25', name: 'Riz 25kg', price: '18 500 FCFA', moq: 'MOQ 2', eta: 'Aujourd\'hui', origin: 'Gros local', category: 'Alimentation', photo: 'https://images.unsplash.com/photo-1604908554141-0ea2d3890081?w=400&auto=format&fit=crop&q=60' },
-      { sku: 'LC-HUI-5', name: 'Huile 5L', price: '6 900 FCFA', moq: 'MOQ 4', eta: 'Aujourd\'hui', origin: 'Gros local', category: 'Alimentation', photo: 'https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=400&auto=format&fit=crop&q=60' },
-      { sku: 'LC-SAV-BOX', name: 'Savon (carton)', price: '8 200 FCFA', moq: 'MOQ 1', eta: 'Aujourd\'hui', origin: 'Gros local', category: 'Maison', photo: 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=400&auto=format&fit=crop&q=60' },
-      { sku: 'LC-WAT-24', name: 'Eau (pack 24)', price: '3 600 FCFA', moq: 'MOQ 5 packs', eta: 'Aujourd\'hui', origin: 'Grossiste', category: 'Alimentation', photo: 'https://images.unsplash.com/photo-1559839914-17aae19cec71?w=400&auto=format&fit=crop&q=60' }
+      { sku: 'LC-RIZ-25', name: 'Riz 25kg', price: '18 500 FCFA', moq: 'MOQ 2', eta: 'Aujourd\'hui', origin: 'Gros local', category: 'Alimentation', photo: 'https://images.unsplash.com/photo-1604908554141-0ea2d3890081?w=400&auto=format&fit=crop&q=60', tags: ['Stock local', 'Paiement à la livraison', 'Livraison le jour même', 'Facture simple'] },
+      { sku: 'LC-HUI-5', name: 'Huile 5L', price: '6 900 FCFA', moq: 'MOQ 4', eta: 'Aujourd\'hui', origin: 'Gros local', category: 'Alimentation', photo: 'https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=400&auto=format&fit=crop&q=60', tags: ['Stock local', 'Paiement à la livraison', 'Livraison le jour même', 'Facture simple'] },
+      { sku: 'LC-SAV-BOX', name: 'Savon (carton)', price: '8 200 FCFA', moq: 'MOQ 1', eta: 'Aujourd\'hui', origin: 'Gros local', category: 'Maison', photo: 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=400&auto=format&fit=crop&q=60', tags: ['Stock local', 'Paiement à la livraison', 'Livraison le jour même', 'Facture simple'] },
+      { sku: 'LC-WAT-24', name: 'Eau (pack 24)', price: '3 600 FCFA', moq: 'MOQ 5 packs', eta: 'Aujourd\'hui', origin: 'Grossiste', category: 'Alimentation', photo: 'https://images.unsplash.com/photo-1559839914-17aae19cec71?w=400&auto=format&fit=crop&q=60', tags: ['Stock local', 'Paiement à la livraison', 'Livraison le jour même', 'Facture simple'] }
     ]
   }), []);
+
+  const visibleSupplyItems = useMemo(() => {
+    const items = supplyCatalog?.[supplyRegion] || []
+    const filters = Array.isArray(supplyFilters) ? supplyFilters : []
+    if (!filters.length) return items
+    return items.filter((it) => {
+      const tags = Array.isArray(it?.tags) ? it.tags : []
+      return filters.some((f) => tags.includes(f))
+    })
+  }, [supplyCatalog, supplyFilters, supplyRegion]);
 
   const trackingTemplates = useMemo(() => ({
     china: {
@@ -2648,6 +2659,7 @@ const VendorDashboard = ({ user }) => {
                     type="button"
                     onClick={() => {
                       setSupplyRegion(r.id)
+                      setSupplyFilters([])
                       try {
                         window.setTimeout(() => {
                           const el = document.getElementById('vendor-supply-catalog')
@@ -2681,31 +2693,39 @@ const VendorDashboard = ({ user }) => {
                       key={b}
                       type="button"
                       onClick={() => {
-                        const region = String(supplyRegion || 'china')
-                        const template = trackingTemplates?.[region] || trackingTemplates?.china
-                        const steps = template?.steps || []
-                        const found = steps.find((s) => String(s?.label || '').toLowerCase() === String(b).toLowerCase())
-                        const pct = found ? Number(found.pct || 0) : 25
-                        const items = supplyCatalog?.[region] || []
-                        const picked = items[Math.floor(Math.random() * Math.max(1, items.length))] || null
-                        const now = Date.now()
-                        const seeded = String(now).slice(-3)
-                        setTrackingShipment({
-                          id: `TRK-${region.toUpperCase()}-${seeded}`,
-                          region,
-                          title: template?.title || 'Suivi logistique',
-                          productName: picked?.name || 'Commande',
-                          eta: supplyRegionMeta?.[region]?.eta || '—',
-                          pct,
-                          steps,
+                        setSupplyFilters((prev) => {
+                          const next = Array.isArray(prev) ? [...prev] : []
+                          const idx = next.indexOf(b)
+                          if (idx >= 0) next.splice(idx, 1)
+                          else next.push(b)
+                          return next
                         })
-                        setTrackingOpen(true)
+                        try {
+                          window.setTimeout(() => {
+                            const el = document.getElementById('vendor-supply-catalog')
+                            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                          }, 0)
+                        } catch {
+                        }
                       }}
-                      className={`${isDark ? 'bg-gray-800 text-gray-200 border-gray-700 hover:bg-gray-700' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'} border px-3 py-1 rounded-full text-xs font-semibold transition-colors`}
+                      className={`${
+                        (Array.isArray(supplyFilters) && supplyFilters.includes(b))
+                          ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white border-transparent'
+                          : (isDark ? 'bg-gray-800 text-gray-200 border-gray-700 hover:bg-gray-700' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50')
+                      } border px-3 py-1 rounded-full text-xs font-semibold transition-colors`}
                     >
                       {b}
                     </button>
                   ))}
+                  {Array.isArray(supplyFilters) && supplyFilters.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setSupplyFilters([])}
+                      className={`${isDark ? 'bg-gray-900 text-gray-200 border-gray-700 hover:bg-gray-800' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'} border px-3 py-1 rounded-full text-xs font-semibold transition-colors`}
+                    >
+                      ✖ Effacer
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -2713,7 +2733,7 @@ const VendorDashboard = ({ user }) => {
             <div id="vendor-supply-catalog" className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-6 shadow-sm`}>
               <div className={`${isDark ? 'text-gray-200' : 'text-gray-800'} font-semibold mb-4`}>Catalogue — {supplyRegions.find((r) => r.id === supplyRegion)?.label || ''}</div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                {(supplyCatalog[supplyRegion] || []).map((it) => (
+                {visibleSupplyItems.map((it) => (
                   <div key={it.sku} className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-4`}>
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3">
@@ -2724,6 +2744,15 @@ const VendorDashboard = ({ user }) => {
                           <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>{it.name}</div>
                           <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>{it.category} • {it.origin} • {it.eta}</div>
                           <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm mt-2`}>{it.moq}</div>
+                          {Array.isArray(it.tags) && it.tags.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {it.tags.slice(0, 3).map((t) => (
+                                <span key={t} className={`${isDark ? 'bg-gray-800 text-gray-200 border-gray-700' : 'bg-white text-gray-700 border-gray-200'} border px-2 py-0.5 rounded-full text-[11px] font-semibold`}>
+                                  {t}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="text-right">
