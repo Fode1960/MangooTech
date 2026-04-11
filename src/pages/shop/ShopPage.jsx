@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Store, MapPin, Star, Package, Calendar, Shield, Truck, Heart, Share2, MessageCircle, Users, ShoppingCart } from 'lucide-react';
 import VendorProductManager from '../../components/VendorProductManager';
+import { supabase } from '../../config/supabase';
 
 const ShopPage = () => {
   const { shopSlug } = useParams();
@@ -347,6 +348,63 @@ const ShopPage = () => {
         setError(null);
         setLoading(false);
         return;
+      }
+
+      try {
+        const { data: supaUserData } = await supabase.auth.getUser()
+        const supaUser = supaUserData?.user || null
+        const { data: shopData, error: shopError } = await supabase
+          .from('shops')
+          .select('*')
+          .eq('slug', shopSlug)
+          .maybeSingle()
+
+        if (!shopError && shopData) {
+          const status = String(shopData?.status || '').toLowerCase()
+          const shopEmail = String(shopData?.email || shopData?.contact_email || '').trim().toLowerCase()
+          const currentEmail = String(currentUser?.email || '').trim().toLowerCase()
+          const isOwner = Boolean(supaUser?.id) && String(shopData?.user_id || '') === String(supaUser.id)
+          const isAdmin = currentUser?.role === 'admin'
+
+          setShopOwnerEmail(shopEmail)
+          setCanManageProducts(Boolean(isOwner || isAdmin))
+
+          if (status !== 'approved' && !isOwner && !isAdmin && currentEmail !== shopEmail) {
+            setError('Boutique en attente d’approbation')
+            setLoading(false)
+            return
+          }
+
+          let productsData = []
+          try {
+            const { data: rows } = await supabase
+              .from('products')
+              .select('*')
+              .eq('shop_id', shopData.id)
+              .eq('is_active', true)
+            productsData = Array.isArray(rows) ? rows : []
+          } catch {
+            productsData = []
+          }
+
+          setShop({
+            ...demoShop,
+            ...shopData,
+            id: shopData.id,
+            name: shopData.name || demoShop.name,
+            slug: shopData.slug || shopSlug,
+            description: shopData.description || demoShop.description,
+            contact_email: shopEmail || demoShop.contact_email,
+            logoDataUrl: shopData.logo_url || '',
+            primaryColor: shopData.primary_color || '#0EA5E9',
+            secondaryColor: shopData.secondary_color || '#38BDF8',
+          })
+          setProducts(productsData)
+          setError(null)
+          setLoading(false)
+          return
+        }
+      } catch {
       }
 
       setError('Boutique non trouvée');

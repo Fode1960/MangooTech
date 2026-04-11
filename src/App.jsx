@@ -397,6 +397,37 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
     
     const normalizedEmail = email.toLowerCase().trim();
 
+    const hasSupabase = Boolean(String(import.meta.env.VITE_SUPABASE_URL || '').trim()) && Boolean(String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim())
+
+    const trySupabaseAuth = async () => {
+      if (!hasSupabase || !normalizedEmail || !password) return null
+      try {
+        const { data, error: authError } = await supabase.auth.signInWithPassword({
+          email: normalizedEmail,
+          password
+        })
+        if (!authError && data?.user) return data.user
+      } catch {
+      }
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email: normalizedEmail,
+          password
+        })
+        if (!error && data?.user) return data.user
+      } catch {
+      }
+      try {
+        const { data, error: retryError } = await supabase.auth.signInWithPassword({
+          email: normalizedEmail,
+          password
+        })
+        if (!retryError && data?.user) return data.user
+      } catch {
+      }
+      return null
+    }
+
     const storedUsers = (() => {
       try {
         const raw = localStorage.getItem('demo_users');
@@ -466,6 +497,59 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
     const isStoredPassword = fromStored && Boolean(user?.password) && String(user.password) === password;
     const isDemoPassword = Boolean(demoPasswords[normalizedEmail]) && String(demoPasswords[normalizedEmail]) === password;
 
+    try {
+      const isDemoAccount = Boolean(demoPasswords[normalizedEmail])
+      if (!isDemoAccount) {
+        const supaUser = await trySupabaseAuth()
+        if (supaUser) {
+          let roles = ['client']
+          let role = 'client'
+          const displayName = String(supaUser.user_metadata?.full_name || supaUser.user_metadata?.name || '').trim() || (normalizedEmail.split('@')[0] || 'Utilisateur')
+          const avatar = '👤'
+
+          try {
+            const { data: adminRow } = await supabase
+              .from('admin_users')
+              .select('id, is_active')
+              .eq('user_id', supaUser.id)
+              .eq('is_active', true)
+              .maybeSingle()
+            if (adminRow) {
+              roles = Array.from(new Set([...roles, 'admin']))
+              role = 'admin'
+            }
+          } catch {
+          }
+
+          try {
+            const { data: shopRow } = await supabase
+              .from('shops')
+              .select('id')
+              .eq('user_id', supaUser.id)
+              .limit(1)
+            if (Array.isArray(shopRow) && shopRow[0]?.id) {
+              roles = Array.from(new Set([...roles, 'vendor']))
+              if (role === 'client') role = 'vendor'
+            }
+          } catch {
+          }
+
+          const nextUser = {
+            id: supaUser.id,
+            name: displayName,
+            email: normalizedEmail,
+            role,
+            roles,
+            avatar,
+          }
+          onLogin(nextUser)
+          setSubmitting(false)
+          return
+        }
+      }
+    } catch {
+    }
+
     if (user && (fromStored ? isStoredPassword : isDemoPassword)) {
       if (normalizedEmail === 'admin@mangoo.tech') {
         try {
@@ -492,62 +576,6 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
       }
       setSubmitting(false)
       return;
-    }
-
-    try {
-      const hasSupabase = Boolean(String(import.meta.env.VITE_SUPABASE_URL || '').trim()) && Boolean(String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim())
-      if (hasSupabase && normalizedEmail && password) {
-        const { data, error: authError } = await supabase.auth.signInWithPassword({
-          email: normalizedEmail,
-          password
-        })
-        if (!authError && data?.user) {
-          let roles = ['client']
-          let role = 'client'
-          const displayName = String(data.user.user_metadata?.full_name || data.user.user_metadata?.name || '').trim() || (normalizedEmail.split('@')[0] || 'Utilisateur')
-          const avatar = '👤'
-
-          try {
-            const { data: adminRow } = await supabase
-              .from('admin_users')
-              .select('id, is_active')
-              .eq('user_id', data.user.id)
-              .eq('is_active', true)
-              .maybeSingle()
-            if (adminRow) {
-              roles = Array.from(new Set([...roles, 'admin']))
-              role = 'admin'
-            }
-          } catch {
-          }
-
-          try {
-            const { data: shopAuth } = await supabase
-              .from('shop_auth')
-              .select('shop_id')
-              .eq('user_id', data.user.id)
-              .maybeSingle()
-            if (shopAuth?.shop_id) {
-              roles = Array.from(new Set([...roles, 'vendor']))
-              if (role === 'client') role = 'vendor'
-            }
-          } catch {
-          }
-
-          const nextUser = {
-            id: data.user.id,
-            name: displayName,
-            email: normalizedEmail,
-            role,
-            roles,
-            avatar,
-          }
-          onLogin(nextUser)
-          setSubmitting(false)
-          return
-        }
-      }
-    } catch {
     }
 
     const allowFallbackLocal = Boolean(import.meta.env.DEV) || !Boolean(String(import.meta.env.VITE_SUPABASE_URL || '').trim())
@@ -907,24 +935,57 @@ const Register = ({ onRegister, onBack }) => {
   const syncDemoShopToSupabase = useCallback(async (shop) => {
     const slug = String(shop?.slug || '').trim()
     const email = String(shop?.ownerEmail || shop?.owner_email || '').trim()
+    const password = String(shop?.ownerPassword || '').trim()
     if (!slug || !email) return
+
+    const normalizedEmail = email.toLowerCase()
+
+    const ensureSession = async () => {
+      try {
+        const { data } = await supabase.auth.getUser()
+        const u = data?.user || null
+        if (u?.email && String(u.email).toLowerCase() === normalizedEmail) return u
+      } catch {
+      }
+
+      if (!password) return null
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password })
+        if (!error && data?.user) return data.user
+      } catch {
+      }
+
+      try {
+        await supabase.auth.signUp({ email: normalizedEmail, password })
+      } catch {
+      }
+
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password })
+        if (!error && data?.user) return data.user
+      } catch {
+      }
+      return null
+    }
 
     let userId = null
     try {
-      const { data } = await supabase.auth.getUser()
-      userId = data?.user?.id || null
+      const u = await ensureSession()
+      userId = u?.id || null
     } catch {
       userId = null
     }
 
+    if (!userId) return
+
     const nowIso = new Date().toISOString()
     const payload = {
-      ...(userId ? { user_id: userId } : {}),
+      user_id: userId,
       name: String(shop?.name || '').trim() || 'Boutique',
       slug,
       category: String(shop?.category || 'general'),
-      email,
-      status: String(shop?.approvalStatus || '').toLowerCase() === 'approved' ? 'approved' : 'pending',
+      email: normalizedEmail,
+      status: 'pending',
       is_verified: false,
       updated_at: nowIso,
       ...(String(shop?.logoDataUrl || '').startsWith('http') ? { logo_url: String(shop.logoDataUrl) } : {})
@@ -2127,19 +2188,84 @@ const VendorDashboard = ({ user }) => {
     { key: 'services', label: 'Services' }
   ], []);
 
-  const loadVendorShops = useCallback(() => {
+  const loadVendorShops = useCallback(async () => {
+    const currentEmail = normalizeEmail(user?.email)
     try {
       importLocalPlusShopsForCurrentUser();
-      const raw = localStorage.getItem('demo_shops');
-      const all = raw ? JSON.parse(raw) : [];
-      const list = Array.isArray(all) ? all : [];
-      const email = normalizeEmail(user?.email);
-      const filtered = email ? list.filter((s) => normalizeEmail(s?.ownerEmail || s?.owner_email) === email) : list;
-      setVendorShops(filtered);
     } catch {
-      setVendorShops([]);
     }
-  }, [importLocalPlusShopsForCurrentUser, normalizeEmail, user?.email]);
+
+    let localList = []
+    try {
+      const raw = localStorage.getItem('demo_shops')
+      const all = raw ? JSON.parse(raw) : []
+      const list = Array.isArray(all) ? all : []
+      localList = currentEmail ? list.filter((s) => normalizeEmail(s?.ownerEmail || s?.owner_email) === currentEmail) : list
+    } catch {
+      localList = []
+    }
+
+    let supaList = []
+    try {
+      const { data } = await supabase.auth.getUser()
+      const supaUser = data?.user || null
+      if (supaUser) {
+        const { data: rows } = await supabase
+          .from('shops')
+          .select('id,name,slug,category,email,logo_url,status,created_at,updated_at')
+          .eq('user_id', supaUser.id)
+          .order('created_at', { ascending: false })
+
+        const items = Array.isArray(rows) ? rows : []
+        supaList = items.map((r) => {
+          const slug = String(r?.slug || '').trim()
+          const shopUrl = `${window.location.origin}/shop/${slug}`
+          return {
+            id: String(r?.id || `shop-${Date.now()}`),
+            name: String(r?.name || 'Boutique'),
+            slug,
+            category: String(r?.category || 'general'),
+            ownerName: String(user?.name || 'Vendeur'),
+            ownerEmail: String(r?.email || currentEmail),
+            logoDataUrl: String(r?.logo_url || ''),
+            primaryColor: '#0EA5E9',
+            secondaryColor: '#38BDF8',
+            shopUrl,
+            approvalStatus: String(r?.status || '').toLowerCase() === 'approved' ? 'approved' : 'pending',
+            source: 'supabase',
+            sourceSupabaseId: r?.id,
+            createdAt: String(r?.created_at || new Date().toISOString()),
+            updatedAt: String(r?.updated_at || new Date().toISOString())
+          }
+        })
+      }
+    } catch {
+      supaList = []
+    }
+
+    const bySlug = new Map()
+    for (const s of localList) {
+      const slug = String(s?.slug || '').trim()
+      if (slug) bySlug.set(slug, s)
+    }
+    for (const s of supaList) {
+      const slug = String(s?.slug || '').trim()
+      if (slug) bySlug.set(slug, { ...(bySlug.get(slug) || {}), ...s })
+    }
+    const merged = Array.from(bySlug.values())
+
+    try {
+      const raw = localStorage.getItem('demo_shops')
+      const existing = raw ? JSON.parse(raw) : []
+      const all = Array.isArray(existing) ? existing : []
+      const others = currentEmail ? all.filter((s) => normalizeEmail(s?.ownerEmail || s?.owner_email) !== currentEmail) : []
+      localStorage.setItem('demo_shops', JSON.stringify([...others, ...merged]))
+      window.dispatchEvent(new Event('demo-shops-updated'))
+    } catch {
+    }
+
+    setVendorShops(merged)
+  }, [importLocalPlusShopsForCurrentUser, normalizeEmail, user?.email, user?.name]);
 
   const importShopFromCode = useCallback(() => {
     const raw = String(shopImportCode || '').trim()
@@ -2345,17 +2471,17 @@ const VendorDashboard = ({ user }) => {
       } catch {
       }
       setShowShopEditor(false);
-      loadVendorShops();
+      void loadVendorShops();
     } catch {
       setShowShopEditor(false);
     }
   }, [editCategory, editLogoDataUrl, editName, editOwnerEmail, editPrimaryColor, editSecondaryColor, editingShopSlug, loadVendorShops, syncDemoShopToSupabase]);
 
   useEffect(() => {
-    loadVendorShops();
+    void loadVendorShops();
     void importSupabaseShopsForCurrentUser()
     const onStorage = (e) => {
-      if (e.key === 'demo_shops') loadVendorShops();
+      if (e.key === 'demo_shops') void loadVendorShops();
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
