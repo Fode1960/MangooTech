@@ -2128,7 +2128,7 @@ const VendorDashboard = ({ user }) => {
     { id: 'supply', name: 'Approvisionnement', icon: '🏭' }
   ];
 
-  const renderTabContent = useCallback(() => {
+  const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':
         return <VendorStats vendorId="vendor-demo" />;
@@ -2648,6 +2648,13 @@ const VendorDashboard = ({ user }) => {
                     type="button"
                     onClick={() => {
                       setSupplyRegion(r.id)
+                      try {
+                        window.setTimeout(() => {
+                          const el = document.getElementById('vendor-supply-catalog')
+                          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                        }, 0)
+                      } catch {
+                      }
                       toast.success(`Région : ${r.label}`)
                     }}
                     aria-pressed={supplyRegion === r.id}
@@ -2670,15 +2677,40 @@ const VendorDashboard = ({ user }) => {
                 <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm mt-1`}>Délai typique : {supplyRegionMeta?.[supplyRegion]?.eta || '—'}</div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {(supplyRegionMeta?.[supplyRegion]?.bullets || []).map((b) => (
-                    <span key={b} className={`${isDark ? 'bg-gray-800 text-gray-200 border-gray-700' : 'bg-white text-gray-700 border-gray-200'} border px-3 py-1 rounded-full text-xs font-semibold`}>
+                    <button
+                      key={b}
+                      type="button"
+                      onClick={() => {
+                        const region = String(supplyRegion || 'china')
+                        const template = trackingTemplates?.[region] || trackingTemplates?.china
+                        const steps = template?.steps || []
+                        const found = steps.find((s) => String(s?.label || '').toLowerCase() === String(b).toLowerCase())
+                        const pct = found ? Number(found.pct || 0) : 25
+                        const items = supplyCatalog?.[region] || []
+                        const picked = items[Math.floor(Math.random() * Math.max(1, items.length))] || null
+                        const now = Date.now()
+                        const seeded = String(now).slice(-3)
+                        setTrackingShipment({
+                          id: `TRK-${region.toUpperCase()}-${seeded}`,
+                          region,
+                          title: template?.title || 'Suivi logistique',
+                          productName: picked?.name || 'Commande',
+                          eta: supplyRegionMeta?.[region]?.eta || '—',
+                          pct,
+                          steps,
+                        })
+                        setTrackingOpen(true)
+                      }}
+                      className={`${isDark ? 'bg-gray-800 text-gray-200 border-gray-700 hover:bg-gray-700' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'} border px-3 py-1 rounded-full text-xs font-semibold transition-colors`}
+                    >
                       {b}
-                    </span>
+                    </button>
                   ))}
                 </div>
               </div>
             </div>
 
-            <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-6 shadow-sm`}>
+            <div id="vendor-supply-catalog" className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-6 shadow-sm`}>
               <div className={`${isDark ? 'text-gray-200' : 'text-gray-800'} font-semibold mb-4`}>Catalogue — {supplyRegions.find((r) => r.id === supplyRegion)?.label || ''}</div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 {(supplyCatalog[supplyRegion] || []).map((it) => (
@@ -2793,30 +2825,7 @@ const VendorDashboard = ({ user }) => {
       default:
         return <VendorStats vendorId="vendor-demo" />;
     }
-  }, [
-    activeTab,
-    buildCallRoomId,
-    callRoomId,
-    communicationMode,
-    editCategory,
-    editLogoDataUrl,
-    editName,
-    editOwnerEmail,
-    editPrimaryColor,
-    editSecondaryColor,
-    handleEditLogoChange,
-    isDark,
-    loadVendorShops,
-    manualRoomId,
-    openShopEditor,
-    saveShopEdits,
-    shopCategories,
-    showShopEditor,
-    vendorPeerId,
-    vendorShops,
-    webrtcUserId,
-    user?.name
-  ]);
+  };
 
   return (
     <div className="p-6 flex-1 min-h-0 flex flex-col">
