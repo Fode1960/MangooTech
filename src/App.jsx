@@ -904,6 +904,53 @@ const Register = ({ onRegister, onBack }) => {
     e.target.value = '';
   }, []);
 
+  const syncDemoShopToSupabase = useCallback(async (shop) => {
+    const slug = String(shop?.slug || '').trim()
+    const email = String(shop?.ownerEmail || shop?.owner_email || '').trim()
+    if (!slug || !email) return
+
+    let userId = null
+    try {
+      const { data } = await supabase.auth.getUser()
+      userId = data?.user?.id || null
+    } catch {
+      userId = null
+    }
+
+    const nowIso = new Date().toISOString()
+    const payload = {
+      ...(userId ? { user_id: userId } : {}),
+      name: String(shop?.name || '').trim() || 'Boutique',
+      slug,
+      category: String(shop?.category || 'general'),
+      email,
+      status: String(shop?.approvalStatus || '').toLowerCase() === 'approved' ? 'approved' : 'pending',
+      is_verified: false,
+      updated_at: nowIso,
+      ...(String(shop?.logoDataUrl || '').startsWith('http') ? { logo_url: String(shop.logoDataUrl) } : {})
+    }
+
+    try {
+      const { data: existing, error: existingError } = await supabase
+        .from('shops')
+        .select('id')
+        .eq('slug', slug)
+        .limit(1)
+
+      if (existingError) throw existingError
+      if (Array.isArray(existing) && existing[0]?.id) {
+        await supabase.from('shops').update(payload).eq('id', existing[0].id)
+        return
+      }
+    } catch {
+    }
+
+    try {
+      await supabase.from('shops').insert([{ ...payload, created_at: nowIso }])
+    } catch {
+    }
+  }, [])
+
   const persistCreatedShop = useCallback((shop) => {
     try {
       const raw = localStorage.getItem('demo_shops');
@@ -917,11 +964,13 @@ const Register = ({ onRegister, onBack }) => {
       }
       localStorage.setItem('demo_shops', JSON.stringify(next));
       window.dispatchEvent(new Event('demo-shops-updated'));
+      void syncDemoShopToSupabase(shop)
     } catch {
       localStorage.setItem('demo_shops', JSON.stringify([{ ...shop, createdAt: new Date().toISOString() }]));
       window.dispatchEvent(new Event('demo-shops-updated'));
+      void syncDemoShopToSupabase(shop)
     }
-  }, []);
+  }, [syncDemoShopToSupabase]);
 
   const handleRegister = useCallback((e) => {
     e.preventDefault();
@@ -2052,6 +2101,78 @@ const VendorDashboard = ({ user }) => {
     }
   }, [importLocalPlusShopsForCurrentUser, normalizeEmail, user?.email]);
 
+  const importSupabaseShopsForCurrentUser = useCallback(async () => {
+    const currentEmail = normalizeEmail(user?.email)
+    if (!currentEmail) return
+
+    let rows = []
+    try {
+      const { data, error } = await supabase
+        .from('shops')
+        .select('id,name,slug,category,email,logo_url,status,created_at,updated_at')
+        .ilike('email', currentEmail)
+
+      if (error) throw error
+      rows = Array.isArray(data) ? data : []
+    } catch {
+      rows = []
+    }
+
+    if (!rows.length) return
+
+    let shops = []
+    try {
+      const raw = localStorage.getItem('demo_shops')
+      const parsed = raw ? JSON.parse(raw) : []
+      shops = Array.isArray(parsed) ? parsed : []
+    } catch {
+      shops = []
+    }
+
+    const existingSlugs = new Set(shops.map((s) => String(s?.slug || '')).filter(Boolean))
+    let changed = false
+
+    for (const r of rows) {
+      const slug = String(r?.slug || '').trim()
+      if (!slug || existingSlugs.has(slug)) continue
+
+      const shopUrl = `${window.location.origin}/shop/${slug}`
+      shops.push({
+        id: String(r?.id || `shop-${Date.now()}`),
+        name: String(r?.name || 'Boutique'),
+        slug,
+        category: String(r?.category || 'general'),
+        ownerName: String(user?.name || 'Vendeur'),
+        ownerEmail: String(r?.email || currentEmail),
+        logoDataUrl: String(r?.logo_url || ''),
+        primaryColor: '#0EA5E9',
+        secondaryColor: '#38BDF8',
+        shopUrl,
+        approvalStatus: String(r?.status || '').toLowerCase() === 'approved' ? 'approved' : 'pending',
+        source: 'supabase',
+        sourceSupabaseId: r?.id,
+        createdAt: String(r?.created_at || new Date().toISOString()),
+        updatedAt: String(r?.updated_at || new Date().toISOString())
+      })
+      existingSlugs.add(slug)
+      changed = true
+    }
+
+    if (!changed) return
+    try {
+      localStorage.setItem('demo_shops', JSON.stringify(shops))
+      window.dispatchEvent(new Event('demo-shops-updated'))
+    } catch {
+    }
+
+    try {
+      const email = normalizeEmail(user?.email)
+      const filtered = email ? shops.filter((s) => normalizeEmail(s?.ownerEmail || s?.owner_email) === email) : shops
+      setVendorShops(filtered)
+    } catch {
+    }
+  }, [normalizeEmail, user?.email, user?.name])
+
   const openShopEditor = useCallback((shop) => {
     setEditingShopSlug(shop?.slug || '');
     setEditName(shop?.name || '');
@@ -2111,21 +2232,27 @@ const VendorDashboard = ({ user }) => {
       });
       localStorage.setItem('demo_shops', JSON.stringify(next));
       window.dispatchEvent(new Event('demo-shops-updated'));
+      try {
+        const updated = next.find((s) => s?.slug === slug)
+        if (updated) void syncDemoShopToSupabase(updated)
+      } catch {
+      }
       setShowShopEditor(false);
       loadVendorShops();
     } catch {
       setShowShopEditor(false);
     }
-  }, [editCategory, editLogoDataUrl, editName, editOwnerEmail, editPrimaryColor, editSecondaryColor, editingShopSlug, loadVendorShops]);
+  }, [editCategory, editLogoDataUrl, editName, editOwnerEmail, editPrimaryColor, editSecondaryColor, editingShopSlug, loadVendorShops, syncDemoShopToSupabase]);
 
   useEffect(() => {
     loadVendorShops();
+    void importSupabaseShopsForCurrentUser()
     const onStorage = (e) => {
       if (e.key === 'demo_shops') loadVendorShops();
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
-  }, [loadVendorShops]);
+  }, [importSupabaseShopsForCurrentUser, loadVendorShops]);
 
   const tabs = [
     { id: 'overview', name: 'Vue d\'ensemble', icon: '📊' },
