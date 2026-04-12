@@ -85,13 +85,21 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
   const [targetKey, setTargetKey] = useState('')
   const [pricing, setPricing] = useState<PricingProduct[]>([])
   const [balanceXof, setBalanceXof] = useState<number | null>(null)
+  const [balanceStatus, setBalanceStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [orders, setOrders] = useState<BoostOrder[]>([])
   const [boostRow, setBoostRow] = useState<VendorBoostRow | null>(null)
   const [activeKind, setActiveKind] = useState<BoostKind>('sponsored')
   const [loading, setLoading] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [topupOpen, setTopupOpen] = useState(false)
+  const [topupAmount, setTopupAmount] = useState(5000)
+  const [topupBusy, setTopupBusy] = useState(false)
+  const [topupMethod, setTopupMethod] = useState<'mobile_money' | 'card'>('mobile_money')
+  const [topupOperator, setTopupOperator] = useState<'orange_money' | 'mtn' | 'moov' | 'wave'>('orange_money')
+  const [topupPhone, setTopupPhone] = useState('')
   const loadSeqRef = useRef(0)
+  const loadLockRef = useRef(false)
 
   const selectedTarget = useMemo(() => {
     const [vendorKind, vendorId] = String(targetKey || '').split(':')
@@ -202,6 +210,10 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         json = null
       }
       return { ok: res.ok, status: res.status, json }
+    } catch (e: any) {
+      const name = String(e?.name || '')
+      if (name === 'AbortError') return { ok: false, status: 0, json: null }
+      throw e
     } finally {
       window.clearTimeout(t)
     }
@@ -277,14 +289,18 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
   }, [])
 
   const load = useCallback(async () => {
+    if (loadLockRef.current) return
+    loadLockRef.current = true
     const seq = ++loadSeqRef.current
     setLoading(true)
     setError(null)
     try {
       computeTargets()
 
+      const token = await getToken()
+
       let normalizedPricing: PricingProduct[] = []
-      const pricingRes = await fetchJsonOnce('/api/boosts/pricing', { method: 'GET' }, 6000)
+      const pricingRes = await fetchJsonOnce('/api/boosts/pricing', { method: 'GET' }, 9000)
       if (seq !== loadSeqRef.current) return
       if (pricingRes.ok && Array.isArray(pricingRes.json?.products)) {
         const products = pricingRes.json.products
@@ -305,11 +321,75 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
           })
           .filter(Boolean) as PricingProduct[])
       } else {
-        normalizedPricing = await loadPricingFromSupabase()
+        if (token) {
+          try {
+            normalizedPricing = await loadPricingFromSupabase()
+          } catch {
+            normalizedPricing = []
+          }
+        } else {
+          normalizedPricing = []
+        }
       }
       setPricing(normalizedPricing)
 
-      const token = await getToken()
+      if (!token) {
+        if (selectedTarget) {
+          try {
+            const qs = new URLSearchParams({ vendorId: selectedTarget.vendorId, vendorKind: selectedTarget.vendorKind })
+            const rowRes = await fetchJsonOnce(`/api/boosts/vendor-boosts?${qs.toString()}`, { method: 'GET' }, 6000)
+            if (seq !== loadSeqRef.current) return
+            if (rowRes.ok) setBoostRow(rowRes.json?.row || null)
+            else setBoostRow(null)
+          } catch {
+            if (seq !== loadSeqRef.current) return
+            setBoostRow(null)
+          }
+        } else {
+          setBoostRow(null)
+        }
+
+        setBalanceStatus('loading')
+        try {
+          const qs = new URLSearchParams({ email: String(userEmail || '').trim().toLowerCase() })
+          const creditRes = await fetchJsonOnce(
+            `/api/boosts/credits-balance?${qs.toString()}`,
+            { method: 'GET' },
+            6000
+          )
+          if (seq !== loadSeqRef.current) return
+          if (creditRes.ok) {
+            setBalanceXof(Number(creditRes.json?.balanceXof || 0))
+            setBalanceStatus('ready')
+          } else {
+            setBalanceXof(null)
+            setBalanceStatus('error')
+          }
+        } catch {
+          if (seq !== loadSeqRef.current) return
+          setBalanceXof(null)
+          setBalanceStatus('error')
+        }
+        if (selectedTarget) {
+          try {
+            const qs = new URLSearchParams({
+              email: String(userEmail || '').trim().toLowerCase(),
+              vendorId: selectedTarget.vendorId,
+              vendorKind: selectedTarget.vendorKind,
+            })
+            const ordersRes = await fetchJsonOnce(`/api/boosts/my-orders-local?${qs.toString()}`, { method: 'GET' }, 9000)
+            if (seq !== loadSeqRef.current) return
+            if (ordersRes.ok && Array.isArray(ordersRes.json?.orders)) setOrders(ordersRes.json.orders as BoostOrder[])
+            else setOrders([])
+          } catch {
+            if (seq !== loadSeqRef.current) return
+            setOrders([])
+          }
+        } else {
+          setOrders([])
+        }
+        return
+      }
 
       if (selectedTarget) {
         const row = await loadBoostRowFromSupabase(selectedTarget.vendorId, selectedTarget.vendorKind)
@@ -319,24 +399,25 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         setBoostRow(null)
       }
 
-      if (!token) {
-        setBalanceXof(null)
-        setOrders([])
-        return
-      }
-
       try {
+        setBalanceStatus('loading')
         const creditRes = await fetchJsonOnce(
           '/api/boosts/credits-balance',
           { method: 'GET', headers: { Authorization: `Bearer ${token}` } },
           6000
         )
         if (seq !== loadSeqRef.current) return
-        if (creditRes.ok) setBalanceXof(Number(creditRes.json?.balanceXof || 0))
-        else setBalanceXof(await loadCreditsFromSupabase())
+        if (creditRes.ok) {
+          setBalanceXof(Number(creditRes.json?.balanceXof || 0))
+          setBalanceStatus('ready')
+        } else {
+          setBalanceXof(await loadCreditsFromSupabase())
+          setBalanceStatus('ready')
+        }
       } catch {
         if (seq !== loadSeqRef.current) return
         setBalanceXof(await loadCreditsFromSupabase())
+        setBalanceStatus('ready')
       }
 
       if (selectedTarget) {
@@ -363,8 +444,9 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
       setError(e?.message || 'Erreur chargement Boost')
     } finally {
       setLoading(false)
+      loadLockRef.current = false
     }
-  }, [computeTargets, fetchJsonOnce, getToken, loadBoostRowFromSupabase, loadCreditsFromSupabase, loadOrdersFromSupabase, loadPricingFromSupabase, selectedTarget])
+  }, [computeTargets, fetchJsonOnce, getToken, loadBoostRowFromSupabase, loadCreditsFromSupabase, loadOrdersFromSupabase, loadPricingFromSupabase, selectedTarget, userEmail])
 
   useEffect(() => {
     load()
@@ -381,6 +463,43 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
     } catch {
     }
   }, [selectedTarget?.vendorId, selectedTarget?.vendorKind])
+
+  const topup = useCallback(async () => {
+    if (topupBusy) return
+    const email = String(userEmail || '').trim().toLowerCase()
+    if (!email || !email.includes('@')) {
+      setError('Email vendeur manquant. Associe ton compte avant de recharger.')
+      return
+    }
+    const amount = Math.floor(Number(topupAmount || 0))
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setError('Montant invalide')
+      return
+    }
+    setTopupBusy(true)
+    setError(null)
+    try {
+      const res = await fetchJsonOnce(
+        '/api/boosts/credits/topup-local',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, amount_xof: amount })
+        },
+        9000
+      )
+      if (!res.ok || !res.json?.success) throw new Error(res.json?.error || `HTTP ${res.status}`)
+      setBalanceXof(Number(res.json?.balanceXof ?? balanceXof ?? 0))
+      setBalanceStatus('ready')
+      toast.success(`Crédits rechargés: +${formatXof(amount)} XOF`)
+      setTopupOpen(false)
+      await load()
+    } catch (e: any) {
+      setError(e?.message || 'Recharge indisponible')
+    } finally {
+      setTopupBusy(false)
+    }
+  }, [fetchJsonOnce, load, topupAmount, topupBusy, userEmail])
 
   const buyByCard = useCallback(
     async (p: PricingProduct) => {
@@ -433,7 +552,30 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
       setError(null)
       try {
         const token = await getToken()
-        if (!token) throw new Error('Connecte-toi avant d’acheter.')
+        if (!token) {
+          const email = String(userEmail || '').trim().toLowerCase()
+          if (!email) throw new Error('Email vendeur manquant.')
+          const res = await fetchJsonOnce(
+            '/api/boosts/purchase-with-credits-local',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email,
+                vendorId: selectedTarget.vendorId,
+                vendorKind: selectedTarget.vendorKind,
+                boostKind: p.kind,
+                durationHours: p.durationHours,
+              })
+            },
+            9000
+          )
+          if (!res.ok || !res.json?.success) throw new Error(res.json?.error || `HTTP ${res.status}`)
+          setBalanceXof(Number(res.json?.balanceXof ?? 0))
+          toast.success('Boost activé par crédits')
+          await load()
+          return
+        }
         const res = await fetchJsonOnce(
           '/api/boosts/purchase-with-credits',
           {
@@ -463,7 +605,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         setBusy(false)
       }
     },
-    [busy, fetchJsonOnce, getToken, load, selectedTarget]
+    [busy, fetchJsonOnce, getToken, load, selectedTarget, userEmail]
   )
 
   const byKind = useMemo(() => {
@@ -517,13 +659,151 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         </div>
 
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
-          <div className="text-sm font-bold text-gray-900 dark:text-white">Crédits</div>
-          <div className="mt-2 text-2xl font-black text-emerald-600 dark:text-emerald-400">
-            {balanceXof === null ? '—' : `${formatXof(balanceXof)} XOF`}
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div>
+              <div className="text-sm font-bold text-gray-900 dark:text-white">Crédits</div>
+              <div className="mt-2 text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                {balanceStatus === 'loading'
+                  ? 'Chargement…'
+                  : balanceStatus === 'error'
+                    ? 'Indisponible'
+                    : `${formatXof(balanceXof || 0)} XOF`}
+              </div>
+              <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">Utilisables pour payer des boosts sans carte.</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setTopupOpen(true)}
+              className="w-full sm:w-auto px-4 py-3 sm:px-3 sm:py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700"
+            >
+              Recharger mes crédits
+            </button>
           </div>
-          <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">Utilisables pour payer des boosts sans carte.</div>
+          <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">En test localhost: recharge instantanée.</div>
         </div>
       </div>
+
+      {topupOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="w-full max-w-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="text-lg font-bold text-gray-900 dark:text-white">Recharger mes crédits</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">Test localhost: ajoute des crédits instantanément.</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTopupOpen(false)}
+                className="px-3 py-2 rounded-xl text-sm font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="mt-4">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTopupMethod('mobile_money')}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
+                    topupMethod === 'mobile_money'
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  Mobile Money
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTopupMethod('card')}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
+                    topupMethod === 'card'
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  Carte bancaire
+                </button>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Priorité: Mobile Money.</div>
+              </div>
+
+              {topupMethod === 'mobile_money' && (
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300">Opérateur</label>
+                    <select
+                      value={topupOperator}
+                      onChange={(e) => setTopupOperator(e.target.value as any)}
+                      className="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-white"
+                    >
+                      <option value="orange_money">Orange Money</option>
+                      <option value="mtn">MTN Mobile Money</option>
+                      <option value="moov">Moov Money</option>
+                      <option value="wave">Wave</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300">Numéro</label>
+                    <input
+                      value={topupPhone}
+                      onChange={(e) => setTopupPhone(e.target.value)}
+                      placeholder="ex: +221…"
+                      className="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {topupMethod === 'card' && (
+                <div className="mt-3 text-sm text-gray-600 dark:text-gray-300">
+                  Paiement par carte: bientôt disponible (Stripe).
+                </div>
+              )}
+
+              <div className="mt-3 text-sm text-gray-600 dark:text-gray-300">
+                Solde actuel:{' '}
+                <span className="font-bold text-gray-900 dark:text-white">
+                  {balanceStatus === 'loading'
+                    ? '—'
+                    : balanceStatus === 'error'
+                      ? 'Indisponible'
+                      : `${formatXof(balanceXof || 0)} XOF`}
+                </span>
+              </div>
+
+              <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300">Montant (XOF)</label>
+              <input
+                type="number"
+                min={100}
+                value={topupAmount}
+                onChange={(e) => setTopupAmount(Number(e.target.value))}
+                className="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-white"
+              />
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => void topup()}
+                disabled={topupBusy}
+                className={`px-4 py-3 rounded-xl text-sm font-bold transition-colors ${
+                  topupBusy ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400' : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                }`}
+              >
+                {topupBusy ? 'Recharge…' : topupMethod === 'mobile_money' ? 'Recharger (test Mobile Money)' : 'Recharger (test Carte)'}
+              </button>
+              <button
+                type="button"
+                disabled
+                className="px-4 py-3 rounded-xl text-sm font-bold bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+              >
+                Paiement en ligne (bientôt)
+              </button>
+            </div>
+            <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">Le branchement Mobile Money / Carte / PayPal / Stripe sera ajouté ensuite.</div>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
         <div className="text-base font-bold text-gray-900 dark:text-white">Statut actuel</div>
@@ -547,126 +827,156 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         )}
       </div>
 
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4">
-        <div className="grid grid-cols-3 gap-2">
-          {(['sponsored', 'promo', 'new'] as BoostKind[]).map((k) => (
-            <button
-              key={k}
-              type="button"
-              onClick={() => setActiveKind(k)}
-              className={`px-4 py-3 rounded-2xl font-black transition-colors ${
-                activeKind === k
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
-              }`}
-            >
-              {kindLabel[k]}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
-        <div className="text-base font-bold text-gray-900 dark:text-white">Offres {kindLabel[activeKind]}</div>
-        <div className="mt-3 space-y-3">
-          {(byKind[activeKind] || []).map((p) => {
-            const canCredits = balanceXof !== null && balanceXof >= p.priceXof
-            return (
-              <div key={`${p.kind}:${p.durationHours}`} className="border border-gray-200 dark:border-gray-700 rounded-xl p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="font-bold text-gray-900 dark:text-white">{p.title || `${kindLabel[p.kind]} ${p.durationHours}h`}</div>
-                    <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">{p.durationHours} h</div>
-                    {p.description && <div className="text-xs text-gray-600 dark:text-gray-400 mt-2">{p.description}</div>}
-                  </div>
-                  <div className="text-right">
-                    <div className="text-emerald-600 dark:text-emerald-400 font-black">{formatXof(p.priceXof)} XOF</div>
-                  </div>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    disabled={!selectedTarget || busy || p.active === false}
-                    onClick={() => buyByCard(p)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold ${
-                      !selectedTarget || busy || p.active === false
-                        ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
-                        : 'bg-blue-600 text-white hover:bg-blue-700'
-                    }`}
-                  >
-                    Payer par carte
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!selectedTarget || busy || !canCredits || p.active === false}
-                    onClick={() => buyByCredits(p)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold ${
-                      !selectedTarget || busy || !canCredits || p.active === false
-                        ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
-                        : 'bg-emerald-600 text-white hover:bg-emerald-700'
-                    }`}
-                  >
-                    Payer par crédits
-                  </button>
-                </div>
-              </div>
-            )
-          })}
-          {!loading && (byKind[activeKind] || []).length === 0 && (
-            <div className="text-sm text-gray-600 dark:text-gray-300">
-              Aucune offre disponible. Ajoute des offres dans l’admin (Boost Carte) ou active les produits boost dans Supabase.
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 lg:col-span-2">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="text-base font-bold text-gray-900 dark:text-white">Offres</div>
+            <div className="flex items-center gap-2">
+              {(['sponsored', 'promo', 'new'] as BoostKind[]).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setActiveKind(k)}
+                  className={`px-4 py-2 rounded-2xl font-black transition-colors ${
+                    activeKind === k
+                      ? 'bg-orange-500 text-white'
+                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  {kindLabel[k]}
+                </button>
+              ))}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
 
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-base font-bold text-gray-900 dark:text-white">Historique</div>
-            <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">Dernières commandes boost pour cette cible.</div>
+          <div className="mt-4 space-y-3">
+            {(byKind[activeKind] || []).map((p) => {
+              const canCredits = balanceStatus === 'ready' && (balanceXof || 0) >= p.priceXof
+              return (
+                <div key={`${p.kind}:${p.durationHours}`} className="border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="font-bold text-gray-900 dark:text-white">{p.title || `${kindLabel[p.kind]} ${p.durationHours}h`}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">{p.durationHours} h</div>
+                      {p.description && <div className="text-xs text-gray-600 dark:text-gray-400 mt-2">{p.description}</div>}
+                    </div>
+                    <div className="text-right">
+                      <div className="text-emerald-600 dark:text-emerald-400 font-black">{formatXof(p.priceXof)} XOF</div>
+                    </div>
+                  </div>
+                  <div className="mt-4 grid grid-cols-1 sm:flex sm:flex-wrap gap-2">
+                    <button
+                      type="button"
+                      disabled={!selectedTarget || busy || p.active === false}
+                      onClick={() => buyByCard(p)}
+                      className={`w-full sm:w-auto px-4 py-3 sm:py-2 rounded-xl text-xs font-bold ${
+                        !selectedTarget || busy || p.active === false
+                          ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                      }`}
+                    >
+                      Payer par carte
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!selectedTarget || busy || !canCredits || p.active === false}
+                      onClick={() => buyByCredits(p)}
+                      className={`w-full sm:w-auto px-4 py-3 sm:py-2 rounded-xl text-xs font-bold ${
+                        !selectedTarget || busy || !canCredits || p.active === false
+                          ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                          : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                      }`}
+                    >
+                      Payer par crédits
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+            {!loading && (byKind[activeKind] || []).length === 0 && (
+              <div className="text-sm text-gray-600 dark:text-gray-300">
+                Aucune offre disponible. Ajoute des offres dans l’admin (Boost Carte) ou active les produits boost dans Supabase.
+              </div>
+            )}
           </div>
         </div>
-        <div className="mt-4 overflow-auto">
-          <table className="min-w-[900px] w-full text-sm">
-            <thead>
-              <tr className="text-left text-gray-600 dark:text-gray-300">
-                <th className="py-2 pr-3">Date</th>
-                <th className="py-2 pr-3">Type</th>
-                <th className="py-2 pr-3">Durée</th>
-                <th className="py-2 pr-3">Montant</th>
-                <th className="py-2 pr-3">Statut</th>
-                <th className="py-2 pr-3">Expire</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((o) => (
-                <tr key={o.id} className="border-t border-gray-100 dark:border-gray-800">
-                  <td className="py-3 pr-3 text-gray-900 dark:text-white">{new Date(o.created_at).toLocaleString('fr-FR')}</td>
-                  <td className="py-3 pr-3 text-gray-900 dark:text-white">{kindLabel[o.boost_kind]}</td>
-                  <td className="py-3 pr-3 text-gray-900 dark:text-white">{o.duration_hours} h</td>
-                  <td className="py-3 pr-3 text-gray-900 dark:text-white">{formatXof(o.amount_xof)} {String(o.currency || 'XOF').toUpperCase()}</td>
-                  <td className="py-3 pr-3">
-                    <span className={`px-2 py-1 rounded-lg text-xs font-bold ${
-                      o.status === 'active'
-                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
-                        : o.status === 'paid'
-                          ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
-                          : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-                    }`}>
-                      {o.status}
-                    </span>
-                  </td>
-                  <td className="py-3 pr-3 text-gray-700 dark:text-gray-300">{o.expires_at ? new Date(o.expires_at).toLocaleString('fr-FR') : '—'}</td>
+
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
+          <div className="text-base font-bold text-gray-900 dark:text-white">Historique</div>
+          <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">Dernières commandes boost pour cette cible.</div>
+          <div className="mt-4 md:hidden space-y-3">
+            {orders.map((o) => (
+              <div key={o.id} className="border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-bold text-gray-900 dark:text-white">{kindLabel[o.boost_kind]}</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">{o.duration_hours} h</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">{new Date(o.created_at).toLocaleString('fr-FR')}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-black text-emerald-600 dark:text-emerald-400">{formatXof(o.amount_xof)} {String(o.currency || 'XOF').toUpperCase()}</div>
+                    <div className="mt-2">
+                      <span className={`px-2 py-1 rounded-lg text-xs font-bold ${
+                        o.status === 'active'
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
+                          : o.status === 'paid'
+                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+                            : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                      }`}>
+                        {o.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 text-xs text-gray-600 dark:text-gray-400">
+                  Expire: {o.expires_at ? new Date(o.expires_at).toLocaleString('fr-FR') : '—'}
+                </div>
+              </div>
+            ))}
+            {!orders.length && <div className="py-2 text-sm text-gray-500 dark:text-gray-400">Aucune commande.</div>}
+          </div>
+
+          <div className="mt-4 hidden md:block overflow-auto">
+            <table className="min-w-[900px] w-full text-sm">
+              <thead>
+                <tr className="text-left text-gray-600 dark:text-gray-300">
+                  <th className="py-2 pr-3">Date</th>
+                  <th className="py-2 pr-3">Type</th>
+                  <th className="py-2 pr-3">Durée</th>
+                  <th className="py-2 pr-3">Montant</th>
+                  <th className="py-2 pr-3">Statut</th>
+                  <th className="py-2 pr-3">Expire</th>
                 </tr>
-              ))}
-              {!orders.length && (
-                <tr>
-                  <td colSpan={6} className="py-6 text-sm text-gray-500 dark:text-gray-400">Aucune commande.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {orders.map((o) => (
+                  <tr key={o.id} className="border-t border-gray-100 dark:border-gray-800">
+                    <td className="py-3 pr-3 text-gray-900 dark:text-white">{new Date(o.created_at).toLocaleString('fr-FR')}</td>
+                    <td className="py-3 pr-3 text-gray-900 dark:text-white">{kindLabel[o.boost_kind]}</td>
+                    <td className="py-3 pr-3 text-gray-900 dark:text-white">{o.duration_hours} h</td>
+                    <td className="py-3 pr-3 text-gray-900 dark:text-white">{formatXof(o.amount_xof)} {String(o.currency || 'XOF').toUpperCase()}</td>
+                    <td className="py-3 pr-3">
+                      <span className={`px-2 py-1 rounded-lg text-xs font-bold ${
+                        o.status === 'active'
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
+                          : o.status === 'paid'
+                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+                            : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                      }`}>
+                        {o.status}
+                      </span>
+                    </td>
+                    <td className="py-3 pr-3 text-gray-700 dark:text-gray-300">{o.expires_at ? new Date(o.expires_at).toLocaleString('fr-FR') : '—'}</td>
+                  </tr>
+                ))}
+                {!orders.length && (
+                  <tr>
+                    <td colSpan={6} className="py-6 text-sm text-gray-500 dark:text-gray-400">Aucune commande.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

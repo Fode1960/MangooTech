@@ -31,6 +31,7 @@ const formatXof = (value: number) => {
 }
 
 export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
+  const isDev = Boolean(import.meta.env.DEV)
   const [products, setProducts] = useState<AdminBoostProduct[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -38,19 +39,33 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
   const [editing, setEditing] = useState<Record<string, Partial<AdminBoostProduct>>>({})
   const [savingId, setSavingId] = useState<string | null>(null)
   const [seeding, setSeeding] = useState(false)
+  const [creatingKind, setCreatingKind] = useState<BoostKind | null>(null)
+  const [creating, setCreating] = useState(false)
+  const [createDraft, setCreateDraft] = useState<Partial<AdminBoostProduct>>({
+    kind: 'sponsored',
+    duration_hours: 24,
+    price_xof: 2000,
+    currency: 'XOF',
+    title: '',
+    description: '',
+    sponsored_tier: 'bronze',
+    active: true,
+  })
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const loadSeqRef = useRef(0)
 
   const getAdminToken = useCallback(async () => {
     const { data } = await supabase.auth.getSession()
     const token = data.session?.access_token || ''
     if (token) return token
+    if (isDev) return 'demo-admin'
     try {
       const demo = localStorage.getItem('admin-demo-user')
       if (demo) return 'demo-admin'
     } catch {
     }
     return ''
-  }, [])
+  }, [isDev])
 
   const fetchJsonOnce = useCallback(async (endpoint: string, init: RequestInit, timeoutMs: number) => {
     const url = buildApiUrl(endpoint)
@@ -90,7 +105,7 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
     setNotice(null)
     try {
       const token = await getAdminToken()
-      if (!token || token === 'demo-admin') {
+      if (!token || (!isDev && token === 'demo-admin')) {
         setError('Connectez-vous avec un vrai compte admin pour gérer les prix.')
         setProducts([])
         return
@@ -143,7 +158,7 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
     setNotice(null)
     try {
       const token = await getAdminToken()
-      if (!token || token === 'demo-admin') throw new Error('Connectez-vous avec un vrai compte admin.')
+      if (!token || (!isDev && token === 'demo-admin')) throw new Error('Connectez-vous avec un vrai compte admin.')
       setSeeding(true)
       const res = await fetchJsonOnce(
         '/api/admin/boosts/products/seed-defaults',
@@ -224,7 +239,7 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
 
     try {
       const token = await getAdminToken()
-      if (!token || token === 'demo-admin') throw new Error('Connectez-vous avec un vrai compte admin.')
+      if (!token || (!isDev && token === 'demo-admin')) throw new Error('Connectez-vous avec un vrai compte admin.')
       setSavingId(p.id)
 
       const res = await fetchJsonOnce(
@@ -258,6 +273,151 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
       setSavingId(null)
     }
   }, [editing, fetchJsonOnce, getAdminToken, isEnabled, resetDraft, savingId])
+
+  const openCreate = useCallback((kind: BoostKind) => {
+    setCreatingKind(kind)
+    setCreateDraft({
+      kind,
+      duration_hours: kind === 'sponsored' ? 24 : 24,
+      price_xof: kind === 'sponsored' ? 2000 : kind === 'promo' ? 1000 : 500,
+      currency: 'XOF',
+      title: kind === 'sponsored' ? 'Boost Sponsorisé' : kind === 'promo' ? 'Boost Promo' : 'Boost Nouveau',
+      description: '',
+      sponsored_tier: kind === 'sponsored' ? 'bronze' : null,
+      active: true,
+    })
+  }, [])
+
+  const closeCreate = useCallback(() => {
+    setCreatingKind(null)
+    setCreateDraft({
+      kind: 'sponsored',
+      duration_hours: 24,
+      price_xof: 2000,
+      currency: 'XOF',
+      title: '',
+      description: '',
+      sponsored_tier: 'bronze',
+      active: true,
+    })
+  }, [])
+
+  const createProduct = useCallback(async () => {
+    if (!creatingKind) return
+    if (!isEnabled || creating) return
+    setError(null)
+    setNotice(null)
+    try {
+      const token = await getAdminToken()
+      if (!token || (!isDev && token === 'demo-admin')) throw new Error('Connectez-vous avec un vrai compte admin.')
+      setCreating(true)
+      const kind = creatingKind
+      const duration_hours = Math.floor(Number(createDraft.duration_hours || 0))
+      const price_xof = Math.floor(Number(createDraft.price_xof || 0))
+      const currency = String(createDraft.currency || 'XOF').toUpperCase()
+      const titleRaw = String(createDraft.title || '').trim()
+      const title = titleRaw || (kind === 'sponsored' ? 'Boost Sponsorisé' : kind === 'promo' ? 'Boost Promo' : 'Boost Nouveau')
+      const descriptionRaw = String(createDraft.description || '').trim()
+      const description = descriptionRaw || `${title} (${duration_hours}h)`
+      const sponsored_tier = kind === 'sponsored' ? (createDraft.sponsored_tier || 'bronze') : null
+      const active = createDraft.active === undefined ? true : Boolean(createDraft.active)
+
+      const res = await fetchJsonOnce(
+        '/api/admin/boosts/products',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            kind,
+            duration_hours,
+            price_xof,
+            currency,
+            title,
+            description,
+            sponsored_tier,
+            active,
+          })
+        },
+        20000
+      )
+      if (!res.ok || !res.json?.success) throw new Error(res.json?.error || `HTTP ${res.status}`)
+      const product = res.json.product
+      setProducts((prev) => [...prev, product].map((p: any) => {
+        const kind = normalizeKind(p?.kind)
+        if (!kind) return null
+        return {
+          id: String(p.id),
+          kind,
+          duration_hours: Number(p.duration_hours),
+          price_xof: Number(p.price_xof),
+          currency: String(p.currency || 'XOF'),
+          title: String(p.title || ''),
+          description: String(p.description || ''),
+          sponsored_tier: p.sponsored_tier === 'bronze' || p.sponsored_tier === 'argent' || p.sponsored_tier === 'or' ? p.sponsored_tier : null,
+          active: Boolean(p.active),
+          created_at: String(p.created_at || ''),
+          updated_at: String(p.updated_at || ''),
+        } as AdminBoostProduct
+      }).filter(Boolean) as AdminBoostProduct[])
+      closeCreate()
+      setNotice('Offre créée.')
+    } catch (e: any) {
+      setError(e?.message || 'Erreur création offre')
+    } finally {
+      setCreating(false)
+    }
+  }, [closeCreate, createDraft, creating, creatingKind, fetchJsonOnce, getAdminToken, isDev, isEnabled])
+
+  useEffect(() => {
+    if (!isEnabled) return
+    if (!isDev) return
+    if (creatingKind) return
+    if (savingId) return
+    if (deletingId) return
+    let cancelled = false
+    const tick = async () => {
+      if (cancelled) return
+      try {
+        await load()
+      } catch {
+      }
+    }
+    const id = window.setInterval(() => void tick(), 4000)
+    return () => {
+      cancelled = true
+      window.clearInterval(id)
+    }
+  }, [creatingKind, deletingId, isDev, isEnabled, load, savingId])
+
+  const deleteProduct = useCallback(async (p: AdminBoostProduct) => {
+    if (!isEnabled || deletingId) return
+    setError(null)
+    setNotice(null)
+    try {
+      const token = await getAdminToken()
+      if (!token || (!isDev && token === 'demo-admin')) throw new Error('Connectez-vous avec un vrai compte admin.')
+      setDeletingId(p.id)
+      const res = await fetchJsonOnce(
+        `/api/admin/boosts/products/${encodeURIComponent(p.id)}`,
+        {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        },
+        20000
+      )
+      if (!res.ok || !res.json?.success) throw new Error(res.json?.error || `HTTP ${res.status}`)
+      setProducts((prev) => prev.filter((x) => x.id !== p.id))
+      resetDraft(p.id)
+      setNotice('Offre supprimée.')
+    } catch (e: any) {
+      setError(e?.message || 'Erreur suppression')
+    } finally {
+      setDeletingId(null)
+    }
+  }, [deletingId, fetchJsonOnce, getAdminToken, isDev, isEnabled, resetDraft])
 
   const kinds: { key: BoostKind; label: string; hint: string }[] = [
     { key: 'sponsored', label: 'Sponsorisé', hint: 'Boost premium (tier)' },
@@ -314,8 +474,118 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
               <div className="text-base font-bold text-gray-900 dark:text-white">{k.label}</div>
               <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">{k.hint}</div>
             </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 font-semibold">{(grouped[k.key] || []).length} offre(s)</div>
+            <div className="flex items-center gap-3">
+              <div className="text-xs text-gray-500 dark:text-gray-400 font-semibold">{(grouped[k.key] || []).length} offre(s)</div>
+              <button
+                type="button"
+                onClick={() => openCreate(k.key)}
+                disabled={!isEnabled}
+                className={`px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
+                  !isEnabled
+                    ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                    : 'bg-gray-900 text-white hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100'
+                }`}
+              >
+                Ajouter
+              </button>
+            </div>
           </div>
+
+          {creatingKind === k.key && (
+            <div className="mt-4 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 bg-gray-50 dark:bg-gray-950">
+              <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
+                <div className="md:col-span-1">
+                  <div className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Durée</div>
+                  <select
+                    value={Number(createDraft.duration_hours || 24)}
+                    onChange={(e) => setCreateDraft((prev) => ({ ...prev, duration_hours: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-white"
+                  >
+                    <option value={12}>12 h</option>
+                    <option value={24}>24 h</option>
+                    <option value={48}>48 h</option>
+                    <option value={72}>72 h</option>
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <div className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Titre</div>
+                  <input
+                    value={String(createDraft.title || '')}
+                    onChange={(e) => setCreateDraft((prev) => ({ ...prev, title: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-white"
+                  />
+                </div>
+                <div className="md:col-span-1">
+                  <div className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Prix (XOF)</div>
+                  <input
+                    type="number"
+                    min={0}
+                    value={Number(createDraft.price_xof || 0)}
+                    onChange={(e) => setCreateDraft((prev) => ({ ...prev, price_xof: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-white"
+                  />
+                </div>
+                <div className="md:col-span-1">
+                  <div className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Actif</div>
+                  <button
+                    type="button"
+                    onClick={() => setCreateDraft((prev) => ({ ...prev, active: !Boolean(prev.active) }))}
+                    className={`w-full px-3 py-2 rounded-lg text-xs font-bold ${
+                      createDraft.active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                    }`}
+                  >
+                    {createDraft.active ? 'Actif' : 'Off'}
+                  </button>
+                </div>
+                <div className="md:col-span-1">
+                  <div className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Tier</div>
+                  {k.key === 'sponsored' ? (
+                    <select
+                      value={String(createDraft.sponsored_tier || 'bronze')}
+                      onChange={(e) => setCreateDraft((prev) => ({ ...prev, sponsored_tier: e.target.value as any }))}
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-white"
+                    >
+                      <option value="bronze">Bronze</option>
+                      <option value="argent">Argent</option>
+                      <option value="or">Or</option>
+                    </select>
+                  ) : (
+                    <div className="px-3 py-2 rounded-lg bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-700 text-xs text-gray-400">—</div>
+                  )}
+                </div>
+                <div className="md:col-span-6">
+                  <div className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Description</div>
+                  <input
+                    value={String(createDraft.description || '')}
+                    onChange={(e) => setCreateDraft((prev) => ({ ...prev, description: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-white"
+                    placeholder="Ex: Sponsorisé sur la carte (24h)"
+                  />
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={createProduct}
+                  disabled={!isEnabled || creating}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors ${
+                    !isEnabled || creating
+                      ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                      : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                  }`}
+                >
+                  {creating ? 'Création…' : 'Créer'}
+                </button>
+                <button
+                  type="button"
+                  onClick={closeCreate}
+                  className="px-3 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="mt-4 overflow-auto">
             <table className="min-w-[900px] w-full text-sm">
@@ -399,6 +669,22 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
                             }`}
                           >
                             {savingId === p.id ? 'Sauvegarde…' : 'Enregistrer'}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={deletingId === p.id}
+                            onClick={() => {
+                              const ok = window.confirm('Supprimer cette offre ?')
+                              if (!ok) return
+                              void deleteProduct(p)
+                            }}
+                            className={`px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
+                              deletingId === p.id
+                                ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                                : 'bg-red-600 text-white hover:bg-red-700'
+                            }`}
+                          >
+                            {deletingId === p.id ? 'Suppression…' : 'Supprimer'}
                           </button>
                           {dirty && (
                             <button

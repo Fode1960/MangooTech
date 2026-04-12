@@ -128,6 +128,8 @@ export default function AdminShops() {
   const [filterStatus, setFilterStatus] = useState<'all' | ApprovalStatus>('all');
   const [shops, setShops] = useState<DemoShop[]>([]);
 
+  const canTryLocalSync = true
+
   const [billingOpen, setBillingOpen] = useState(false);
   const [billingSlug, setBillingSlug] = useState<string | null>(null);
   const [billingForm, setBillingForm] = useState({
@@ -140,6 +142,7 @@ export default function AdminShops() {
   });
 
   const refresh = useCallback(() => {
+    void (async () => {
     const now = new Date().toISOString();
     const current = readDemoShops();
     let didMigrate = false;
@@ -206,9 +209,48 @@ export default function AdminShops() {
       didMerge = true;
     });
 
+    if (canTryLocalSync) {
+      try {
+        const res = await fetch('/api/local-sync/shops')
+        const data = await res.json().catch(() => ({} as any))
+        const list = Array.isArray((data as any)?.shops) ? (data as any).shops : []
+        if (list.length) {
+          const bySlug = new Map<string, DemoShop>()
+          merged.forEach((s) => {
+            const slug = String(s?.slug || '').trim()
+            if (slug) bySlug.set(slug, s)
+          })
+          list.forEach((s: any) => {
+            const slug = String(s?.slug || '').trim()
+            if (!slug) return
+            const statusRaw = String(s?.status || 'pending').trim().toLowerCase()
+            const approvalStatus: ApprovalStatus = (statusRaw === 'approved' || statusRaw === 'rejected') ? (statusRaw as any) : 'pending'
+            const nextShop: DemoShop = {
+              ...(bySlug.get(slug) || {}),
+              id: String(s?.id || slug),
+              name: String(s?.name || 'Boutique'),
+              slug,
+              category: String(s?.category || 'general'),
+              ownerName: '',
+              ownerEmail: '',
+              approvalStatus,
+              source: 'local-sync',
+              updatedAt: String(s?.updatedAt || s?.updated_at || now),
+              createdAt: String(s?.createdAt || s?.created_at || now),
+            }
+            bySlug.set(slug, nextShop)
+          })
+          merged = Array.from(bySlug.values())
+          didMerge = true
+        }
+      } catch {
+      }
+    }
+
     if (didMigrate || didMerge) writeDemoShops(merged);
     const next = merged.map(normalizeStatus).filter((s) => s.slug);
     setShops(next);
+    })()
   }, []);
 
   useEffect(() => {
@@ -225,7 +267,7 @@ export default function AdminShops() {
     };
   }, [refresh]);
 
-  const setApproval = useCallback((slug: string, status: ApprovalStatus) => {
+  const setApproval = useCallback(async (slug: string, status: ApprovalStatus) => {
     const now = new Date().toISOString();
     const current = readDemoShops();
     const target = current.find((s) => String(s?.slug || '') === slug) as any;
@@ -245,6 +287,21 @@ export default function AdminShops() {
     });
     writeDemoShops(next);
     setShops(next.map(normalizeStatus).filter((s) => s.slug));
+
+    try {
+      const changed = next.find((s) => String(s?.slug || '') === slug) as any
+      const isLocalSyncShop = String(changed?.source || '') === 'local-sync' || String(changed?.id || '').startsWith('s_')
+      if (isLocalSyncShop && changed?.id) {
+        const mapped = status === 'approved' || status === 'rejected' ? status : 'pending'
+        await fetch(`/api/local-sync/admin/shops/${encodeURIComponent(String(changed.id))}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: mapped }),
+        })
+        refresh()
+      }
+    } catch {
+    }
 
     if (sourceVendorId !== undefined && sourceVendorId !== null) {
       const sid = String(sourceVendorId);
@@ -268,7 +325,7 @@ export default function AdminShops() {
       applyToKey('mangoo_vendors');
       applyToKey('mangoo_custom_vendors');
     }
-  }, []);
+  }, [refresh]);
 
   const openBilling = useCallback((shop: DemoShop) => {
     const slug = String(shop?.slug || '').trim();
@@ -446,7 +503,7 @@ export default function AdminShops() {
                             </button>
                             <button
                               type="button"
-                              onClick={() => setApproval(String(s.slug), 'approved')}
+                              onClick={() => void setApproval(String(s.slug), 'approved')}
                               disabled={status === 'approved'}
                               className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold text-xs"
                               title="Approuver"
@@ -455,7 +512,7 @@ export default function AdminShops() {
                             </button>
                             <button
                               type="button"
-                              onClick={() => setApproval(String(s.slug), 'rejected')}
+                              onClick={() => void setApproval(String(s.slug), 'rejected')}
                               disabled={status === 'rejected'}
                               className="px-3 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white font-bold text-xs"
                               title="Rejeter"
@@ -464,7 +521,7 @@ export default function AdminShops() {
                             </button>
                             <button
                               type="button"
-                              onClick={() => setApproval(String(s.slug), 'pending')}
+                              onClick={() => void setApproval(String(s.slug), 'pending')}
                               disabled={status === 'pending'}
                               className="px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-800 disabled:opacity-60 text-white font-bold text-xs"
                               title="Mettre en attente"
@@ -473,7 +530,7 @@ export default function AdminShops() {
                             </button>
                             <button
                               type="button"
-                              onClick={() => setApproval(String(s.slug), 'suspended')}
+                              onClick={() => void setApproval(String(s.slug), 'suspended')}
                               disabled={status === 'suspended'}
                               className="px-3 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white font-bold text-xs"
                               title="Suspendre"

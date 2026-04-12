@@ -46,6 +46,7 @@ const formatRemaining = (iso: string | null, nowMs: number) => {
 }
 
 export function BoostCarteAdmin({ isEnabled }: { isEnabled: boolean }) {
+  const isDev = Boolean(import.meta.env.DEV)
   const [catalog, setCatalog] = useState<VendorCatalogItem[]>([])
   const [vendorId, setVendorId] = useState('')
   const [vendorKind, setVendorKind] = useState<'shop' | 'provider'>('shop')
@@ -54,6 +55,8 @@ export function BoostCarteAdmin({ isEnabled }: { isEnabled: boolean }) {
   const [loading, setLoading] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [ownerEmail, setOwnerEmail] = useState('')
+  const [ownerSaving, setOwnerSaving] = useState(false)
   const loadSeqRef = useRef(0)
   const [nowTick, setNowTick] = useState(() => Date.now())
 
@@ -64,8 +67,16 @@ export function BoostCarteAdmin({ isEnabled }: { isEnabled: boolean }) {
 
   const getAdminToken = useCallback(async () => {
     const { data } = await supabase.auth.getSession()
-    return data.session?.access_token || ''
-  }, [])
+    const token = data.session?.access_token || ''
+    if (token) return token
+    if (isDev) return 'demo-admin'
+    try {
+      const demo = localStorage.getItem('admin-demo-user')
+      if (demo) return 'demo-admin'
+    } catch {
+    }
+    return ''
+  }, [isDev])
 
   const loadCatalog = useCallback(() => {
     const list = readJson<VendorCatalogItem[]>('mangoo_local_vendors_catalog', [])
@@ -90,6 +101,24 @@ export function BoostCarteAdmin({ isEnabled }: { isEnabled: boolean }) {
     if (!id) return null
     return catalog.find((v) => String(v.id) === id) || null
   }, [catalog, vendorId])
+
+  const fetchOwnerEmail = useCallback(async () => {
+    const id = String(vendorId || '').trim()
+    if (!id) {
+      setOwnerEmail('')
+      return
+    }
+    try {
+      const res = await fetch(buildApiUrl('/api/local-sync/localplus/vendors'), { method: 'GET' })
+      const data = await res.json().catch(() => ({} as any))
+      const list = Array.isArray((data as any)?.vendors) ? (data as any).vendors : []
+      const found = list.find((v: any) => String(v?.id || '') === id)
+      const email = String(found?.ownerEmail || found?.owner_email || '').trim().toLowerCase()
+      setOwnerEmail(email)
+    } catch {
+      setOwnerEmail('')
+    }
+  }, [vendorId])
 
   useEffect(() => {
     const k = String(selectedVendor?.kind || '').trim().toLowerCase()
@@ -160,6 +189,44 @@ export function BoostCarteAdmin({ isEnabled }: { isEnabled: boolean }) {
   useEffect(() => {
     refresh()
   }, [refresh])
+
+  useEffect(() => {
+    void fetchOwnerEmail()
+  }, [fetchOwnerEmail])
+
+  const saveOwnerEmail = useCallback(async () => {
+    const id = String(vendorId || '').trim()
+    const email = String(ownerEmail || '').trim().toLowerCase()
+    if (!id) return
+    if (!email || !email.includes('@')) {
+      setError('Email invalide')
+      return
+    }
+    if (ownerSaving) return
+    setError(null)
+    setNotice(null)
+    try {
+      const token = await getAdminToken()
+      if (!token) throw new Error('Connectez-vous avec un compte admin pour gérer le Boost.')
+      setOwnerSaving(true)
+      const res = await fetchJsonOnce(
+        `/api/admin/boosts/localplus/vendors/${encodeURIComponent(id)}/owner`,
+        {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ownerEmail: email })
+        },
+        20000
+      )
+      if (!res.ok || !res.json?.success) throw new Error(res.json?.error || `HTTP ${res.status}`)
+      setNotice('Email associé.')
+      await fetchOwnerEmail()
+    } catch (e: any) {
+      setError(e?.message || 'Erreur association email')
+    } finally {
+      setOwnerSaving(false)
+    }
+  }, [fetchJsonOnce, fetchOwnerEmail, getAdminToken, ownerEmail, ownerSaving, vendorId])
 
   const callAction = useCallback(async (action: string, body: any) => {
     setError(null)
@@ -345,6 +412,31 @@ export function BoostCarteAdmin({ isEnabled }: { isEnabled: boolean }) {
             <button type="button" onClick={() => activate('sponsored', 24)} disabled={!vendorId || loading} className="px-3 py-2 rounded-xl text-sm font-semibold bg-gray-100 text-gray-900 hover:bg-gray-200 disabled:opacity-60 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700">Activer 24h</button>
             <button type="button" onClick={() => activate('sponsored', 72)} disabled={!vendorId || loading} className="px-3 py-2 rounded-xl text-sm font-semibold bg-gray-100 text-gray-900 hover:bg-gray-200 disabled:opacity-60 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700">Activer 72h</button>
             <button type="button" onClick={() => stop('sponsored')} disabled={!vendorId || loading || !sponsorActive} className="px-3 py-2 rounded-xl text-sm font-semibold bg-gray-200 text-gray-600 disabled:opacity-60 dark:bg-gray-800 dark:text-gray-300">Stop</button>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
+          <div className="text-sm font-bold text-gray-900 dark:text-white">Compte vendeur</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Email requis pour débiter les crédits.</div>
+          <div className="mt-3 flex flex-col gap-2">
+            <input
+              value={ownerEmail}
+              onChange={(e) => setOwnerEmail(e.target.value)}
+              placeholder="ex: vendeur@exemple.com"
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-white"
+            />
+            <button
+              type="button"
+              onClick={() => void saveOwnerEmail()}
+              disabled={!isEnabled || ownerSaving}
+              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                !isEnabled || ownerSaving
+                  ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                  : 'bg-emerald-600 text-white hover:bg-emerald-700'
+              }`}
+            >
+              {ownerSaving ? 'Sauvegarde…' : 'Associer email'}
+            </button>
           </div>
         </div>
 

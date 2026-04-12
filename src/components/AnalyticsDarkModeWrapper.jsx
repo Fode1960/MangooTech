@@ -2,7 +2,8 @@ import React, { useEffect } from 'react';
 import { useThemeStore } from '../stores/themeStore';
 
 export const AnalyticsDarkModeWrapper = ({ children }) => {
-  const { isDarkMode } = useThemeStore();
+  const { isDark } = useThemeStore();
+  const isDarkMode = isDark;
 
   useEffect(() => {
     if (isDarkMode) {

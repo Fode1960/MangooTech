@@ -15,6 +15,7 @@ const formatXof = (value: number) => {
 }
 
 export function BoostCreditsAdmin({ isEnabled }: { isEnabled: boolean }) {
+  const isDev = Boolean(import.meta.env.DEV)
   const [search, setSearch] = useState('')
   const [users, setUsers] = useState<AppUser[]>([])
   const [selectedUserId, setSelectedUserId] = useState('')
@@ -30,13 +31,14 @@ export function BoostCreditsAdmin({ isEnabled }: { isEnabled: boolean }) {
     const { data } = await supabase.auth.getSession()
     const token = data.session?.access_token || ''
     if (token) return token
+    if (isDev) return 'demo-admin'
     try {
       const demo = localStorage.getItem('admin-demo-user')
       if (demo) return 'demo-admin'
     } catch {
     }
     return ''
-  }, [])
+  }, [isDev])
 
   const fetchJsonOnce = useCallback(async (endpoint: string, init: RequestInit, timeoutMs: number) => {
     const url = buildApiUrl(endpoint)
@@ -76,7 +78,7 @@ export function BoostCreditsAdmin({ isEnabled }: { isEnabled: boolean }) {
     setNotice(null)
     try {
       const token = await getAdminToken()
-      if (!token || token === 'demo-admin') {
+      if (!token || (!isDev && token === 'demo-admin')) {
         setError('Connectez-vous avec un vrai compte admin pour gérer les crédits.')
         setUsers([])
         setBalanceXof(null)
@@ -124,7 +126,7 @@ export function BoostCreditsAdmin({ isEnabled }: { isEnabled: boolean }) {
     setBalanceXof(null)
     try {
       const token = await getAdminToken()
-      if (!token || token === 'demo-admin') return
+      if (!token || (!isDev && token === 'demo-admin')) return
       const qs = new URLSearchParams({ user_id: userId })
       const res = await fetchJsonOnce(
         `/api/admin/boosts/credits/balance?${qs.toString()}`,
@@ -155,7 +157,7 @@ export function BoostCreditsAdmin({ isEnabled }: { isEnabled: boolean }) {
     setNotice(null)
     try {
       const token = await getAdminToken()
-      if (!token || token === 'demo-admin') throw new Error('Connectez-vous avec un vrai compte admin.')
+      if (!token || (!isDev && token === 'demo-admin')) throw new Error('Connectez-vous avec un vrai compte admin.')
       if (!selectedUserId) throw new Error('Sélectionne un utilisateur.')
       if (!Number.isFinite(amountXof) || amountXof <= 0) throw new Error('Montant invalide')
 

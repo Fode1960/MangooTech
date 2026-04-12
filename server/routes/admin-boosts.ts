@@ -1,12 +1,22 @@
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import { localBoostProductsStore } from '../services/localBoostProductsStore';
+import { localBoostCreditsStore } from '../services/localBoostCreditsStore';
+import { localVendorBoostsStore } from '../services/localVendorBoostsStore';
+import { localSyncStore } from '../services/localSyncStore';
 
 const router = express.Router();
 
 const supabaseUrl = String(process.env.SUPABASE_URL || '').trim();
 const supabaseServiceKey = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
 const supabase = supabaseUrl && supabaseServiceKey ? createClient(supabaseUrl, supabaseServiceKey) : null;
+
+const isLocalBoostPricingMode = () => {
+  const mode = String(process.env.BOOST_PRICING_MODE || 'local').trim().toLowerCase()
+  if (mode === 'supabase') return false
+  return String(process.env.NODE_ENV || '').trim().toLowerCase() !== 'production'
+}
 
 function requireSupabase(req: express.Request, res: express.Response): boolean {
   if (supabase) return true;
@@ -25,6 +35,17 @@ const authenticateAdmin = async (req: express.Request, res: express.Response, ne
         success: false,
         error: 'Token manquant'
       });
+    }
+
+    if (isLocalBoostPricingMode()) {
+      if (token !== 'demo-admin') {
+        (req as any).user = { id: 'local-admin', email: 'admin@localhost' };
+      } else {
+        (req as any).user = { id: 'demo-admin', email: 'admin@mangoo.tech' };
+      }
+      (req as any).adminUser = { id: 'local-admin', role_id: 'super_admin', is_active: true };
+      next();
+      return;
     }
 
     if (!requireSupabase(req, res)) return;
@@ -63,6 +84,12 @@ const authenticateAdmin = async (req: express.Request, res: express.Response, ne
 
 router.get('/products', authenticateAdmin, async (_req, res) => {
   try {
+    if (isLocalBoostPricingMode()) {
+      const products = localBoostProductsStore.list()
+      res.json({ success: true, products })
+      return
+    }
+
     if (!requireSupabase(_req, res)) return;
 
     const { data, error } = await supabase!
@@ -83,6 +110,22 @@ router.get('/products', authenticateAdmin, async (_req, res) => {
 
 router.get('/me', authenticateAdmin, async (req, res) => {
   try {
+    if (isLocalBoostPricingMode()) {
+      const user = (req as any).user
+      res.json({
+        success: true,
+        user: {
+          id: String(user?.id || 'local-admin'),
+          email: String(user?.email || 'admin@localhost'),
+        },
+        admin: {
+          roleId: 'super_admin',
+          roleName: 'Super Administrateur',
+        }
+      })
+      return
+    }
+
     if (!requireSupabase(req, res)) return;
 
     const user = (req as any).user;
@@ -117,10 +160,23 @@ router.get('/me', authenticateAdmin, async (req, res) => {
 
 router.patch('/products/:id', authenticateAdmin, async (req, res) => {
   try {
-    if (!requireSupabase(req, res)) return;
-
     const id = String(req.params.id || '').trim();
     if (!id) return res.status(400).json({ success: false, error: 'id manquant' });
+
+    if (isLocalBoostPricingMode()) {
+      const patch: any = {};
+      if (req.body?.price_xof !== undefined) patch.price_xof = Number(req.body.price_xof);
+      if (req.body?.currency !== undefined) patch.currency = String(req.body.currency || 'XOF').toUpperCase();
+      if (req.body?.title !== undefined) patch.title = String(req.body.title || '');
+      if (req.body?.description !== undefined) patch.description = String(req.body.description || '');
+      if (req.body?.active !== undefined) patch.active = Boolean(req.body.active);
+      if (req.body?.sponsored_tier !== undefined) patch.sponsored_tier = req.body.sponsored_tier;
+      const product = localBoostProductsStore.update(id, patch)
+      res.json({ success: true, product })
+      return
+    }
+
+    if (!requireSupabase(req, res)) return;
 
     const patch: any = {};
     if (req.body?.price_xof !== undefined) patch.price_xof = Number(req.body.price_xof);
@@ -153,6 +209,12 @@ router.patch('/products/:id', authenticateAdmin, async (req, res) => {
 
 router.post('/products', authenticateAdmin, async (req, res) => {
   try {
+    if (isLocalBoostPricingMode()) {
+      const product = localBoostProductsStore.create(req.body)
+      res.json({ success: true, product })
+      return
+    }
+
     if (!requireSupabase(req, res)) return;
 
     const kind = String(req.body?.kind || '').trim().toLowerCase();
@@ -204,8 +266,60 @@ router.post('/products', authenticateAdmin, async (req, res) => {
   }
 });
 
+router.delete('/products/:id', authenticateAdmin, async (req, res) => {
+  try {
+    const id = String(req.params.id || '').trim();
+    if (!id) return res.status(400).json({ success: false, error: 'id manquant' });
+
+    if (isLocalBoostPricingMode()) {
+      localBoostProductsStore.remove(id)
+      res.json({ success: true })
+      return
+    }
+
+    if (!requireSupabase(req, res)) return;
+
+    const { error } = await supabase!
+      .from('boost_products')
+      .delete()
+      .eq('id', id);
+
+    if (error) return res.status(500).json({ success: false, error: error.message });
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error?.message || String(error) });
+  }
+});
+
+router.patch('/localplus/vendors/:id/owner', authenticateAdmin, async (req, res) => {
+  try {
+    if (!isLocalBoostPricingMode()) {
+      res.status(404).json({ success: false, error: 'Not available' })
+      return
+    }
+    const id = String(req.params?.id || '').trim()
+    const ownerEmail = String(req.body?.ownerEmail || '').trim().toLowerCase()
+    if (!id) return res.status(400).json({ success: false, error: 'vendor id manquant' })
+    if (!ownerEmail || !ownerEmail.includes('@')) return res.status(400).json({ success: false, error: 'Email invalide' })
+
+    const existing = localSyncStore.listLocalPlusVendors().find((v: any) => String(v?.id || '') === id) as any
+    if (!existing) return res.status(404).json({ success: false, error: 'Vendeur introuvable' })
+
+    const updated = localSyncStore.upsertLocalPlusVendor(existing, ownerEmail)
+    res.json({ success: true, vendor: updated })
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: String(e?.message || e || 'Erreur') })
+  }
+})
+
 router.post('/products/seed-defaults', authenticateAdmin, async (req, res) => {
   try {
+    if (isLocalBoostPricingMode()) {
+      const products = localBoostProductsStore.seedDefaults()
+      res.json({ success: true, products })
+      return
+    }
+
     if (!requireSupabase(req, res)) return;
 
     const nowIso = new Date().toISOString();
@@ -239,6 +353,13 @@ router.post('/products/seed-defaults', authenticateAdmin, async (req, res) => {
 
 router.get('/users', authenticateAdmin, async (req, res) => {
   try {
+    if (isLocalBoostPricingMode()) {
+      const search = String(req.query.search || '').trim()
+      const users = localBoostCreditsStore.listUsers(search)
+      res.json({ success: true, users })
+      return
+    }
+
     if (!requireSupabase(req, res)) return;
     const search = String(req.query.search || '').trim().toLowerCase();
 
@@ -260,6 +381,14 @@ router.get('/users', authenticateAdmin, async (req, res) => {
 
 router.get('/credits/balance', authenticateAdmin, async (req, res) => {
   try {
+    if (isLocalBoostPricingMode()) {
+      const userId = String(req.query.user_id || '').trim();
+      if (!userId) return res.status(400).json({ success: false, error: 'user_id manquant' });
+      const balanceXof = localBoostCreditsStore.getBalanceXof(userId)
+      res.json({ success: true, balanceXof })
+      return
+    }
+
     if (!requireSupabase(req, res)) return;
     const userId = String(req.query.user_id || '').trim();
     if (!userId) return res.status(400).json({ success: false, error: 'user_id manquant' });
@@ -293,6 +422,17 @@ router.get('/credits/balance', authenticateAdmin, async (req, res) => {
 
 router.post('/credits/grant', authenticateAdmin, async (req, res) => {
   try {
+    if (isLocalBoostPricingMode()) {
+      const userId = String(req.body?.user_id || '').trim();
+      const amount = Number(req.body?.amount_xof);
+      const description = String(req.body?.description || 'Crédit admin').trim();
+      if (!userId) return res.status(400).json({ success: false, error: 'user_id manquant' });
+      if (!Number.isFinite(amount) || amount <= 0) return res.status(400).json({ success: false, error: 'amount_xof invalide' });
+      const credit = localBoostCreditsStore.grant(userId, Math.floor(amount), userId)
+      res.json({ success: true, credit: { ...credit, description } })
+      return
+    }
+
     if (!requireSupabase(req, res)) return;
 
     const userId = String(req.body?.user_id || '').trim();
@@ -329,6 +469,16 @@ router.post('/credits/grant', authenticateAdmin, async (req, res) => {
 
 router.get('/vendor-boosts', authenticateAdmin, async (req, res) => {
   try {
+    if (isLocalBoostPricingMode()) {
+      const vendorId = String(req.query.vendor_id || '').trim();
+      const vendorKind = String(req.query.vendor_kind || '').trim().toLowerCase();
+      if (!vendorId) return res.status(400).json({ success: false, error: 'vendor_id manquant' });
+      if (vendorKind !== 'shop' && vendorKind !== 'provider') return res.status(400).json({ success: false, error: 'vendor_kind invalide' });
+      const row = localVendorBoostsStore.get(vendorId, vendorKind)
+      res.json({ success: true, row })
+      return
+    }
+
     if (!requireSupabase(req, res)) return;
     const vendorId = String(req.query.vendor_id || '').trim();
     const vendorKind = String(req.query.vendor_kind || '').trim().toLowerCase();
@@ -361,6 +511,71 @@ function addHours(d: Date, hours: number): Date {
 
 router.post('/vendor-boosts/activate', authenticateAdmin, async (req, res) => {
   try {
+    if (isLocalBoostPricingMode()) {
+      const vendorId = String(req.body?.vendor_id || '').trim();
+      const vendorKind = String(req.body?.vendor_kind || '').trim().toLowerCase();
+      const boostKind = String(req.body?.boost_kind || '').trim().toLowerCase();
+      const durationHours = Number(req.body?.duration_hours);
+      const tier = req.body?.sponsored_tier ? String(req.body.sponsored_tier).trim().toLowerCase() : null;
+
+      if (!vendorId) return res.status(400).json({ success: false, error: 'vendor_id manquant' });
+      if (vendorKind !== 'shop' && vendorKind !== 'provider') return res.status(400).json({ success: false, error: 'vendor_kind invalide' });
+      if (boostKind !== 'sponsored' && boostKind !== 'promo' && boostKind !== 'new') return res.status(400).json({ success: false, error: 'boost_kind invalide' });
+      if (!Number.isFinite(durationHours) || durationHours <= 0) return res.status(400).json({ success: false, error: 'duration_hours invalide' });
+      if (boostKind === 'sponsored' && tier && tier !== 'bronze' && tier !== 'argent' && tier !== 'or') {
+        return res.status(400).json({ success: false, error: 'sponsored_tier invalide' });
+      }
+
+      const products = localBoostProductsStore.list().filter((p) => p.active)
+      const match = products.find((p) => {
+        if (String(p.kind) !== boostKind) return false
+        if (Number(p.duration_hours) !== Math.floor(durationHours)) return false
+        if (boostKind === 'sponsored') return String(p.sponsored_tier || 'bronze') === String(tier || 'bronze')
+        return true
+      })
+      if (!match) return res.status(400).json({ success: false, error: 'Aucune offre active correspondante' })
+
+      const vendor = localSyncStore.listLocalPlusVendors().find((v: any) => String(v?.id || '') === vendorId) as any
+      const ownerEmail = String(vendor?.ownerEmail || vendor?.owner_email || '').trim().toLowerCase()
+      if (!ownerEmail) return res.status(400).json({ success: false, error: "Boutique non associée à un compte (email manquant). Associez un email dans l’admin." })
+
+      try {
+        localBoostCreditsStore.debit(ownerEmail, Number(match.price_xof))
+      } catch (e: any) {
+        return res.status(400).json({ success: false, error: "Solde insuffisant. Le vendeur doit recharger (Mobile Money / Carte / PayPal / Stripe) ou être crédité en test via l’onglet Crédits." })
+      }
+
+      const row = localVendorBoostsStore.activate({
+        vendorId,
+        vendorKind,
+        boostKind: boostKind as any,
+        durationHours: Math.floor(durationHours),
+        sponsoredTier: boostKind === 'sponsored' ? (tier as any) : null,
+      })
+
+      try {
+        const toTierNum = (t: any) => (t === 'or' ? 3 : t === 'argent' ? 2 : t === 'bronze' ? 1 : null)
+        const patch: any = {}
+        if (row.sponsored_until) patch.sponsoredUntil = Date.parse(String(row.sponsored_until))
+        if (row.promo_until) patch.promoUntil = Date.parse(String(row.promo_until))
+        if (row.new_until) patch.newUntil = Date.parse(String(row.new_until))
+        if (row.sponsored_tier) patch.sponsoredTier = toTierNum(row.sponsored_tier)
+        if (Object.keys(patch).length) {
+          const upsert = localSyncStore.upsertLocalPlusVendor({
+            ...vendor,
+            id: vendorId,
+            kind: vendorKind,
+            ...patch,
+          }, ownerEmail)
+          void upsert
+        }
+      } catch {
+      }
+
+      res.json({ success: true, row })
+      return
+    }
+
     if (!requireSupabase(req, res)) return;
 
     const vendorId = String(req.body?.vendor_id || '').trim();
@@ -459,6 +674,19 @@ router.post('/vendor-boosts/activate', authenticateAdmin, async (req, res) => {
 
 router.post('/vendor-boosts/stop', authenticateAdmin, async (req, res) => {
   try {
+    if (isLocalBoostPricingMode()) {
+      const vendorId = String(req.body?.vendor_id || '').trim();
+      const vendorKind = String(req.body?.vendor_kind || '').trim().toLowerCase();
+      const boostKind = String(req.body?.boost_kind || '').trim().toLowerCase();
+
+      if (!vendorId) return res.status(400).json({ success: false, error: 'vendor_id manquant' });
+      if (vendorKind !== 'shop' && vendorKind !== 'provider') return res.status(400).json({ success: false, error: 'vendor_kind invalide' });
+      if (boostKind !== 'sponsored' && boostKind !== 'promo' && boostKind !== 'new') return res.status(400).json({ success: false, error: 'boost_kind invalide' });
+      const row = localVendorBoostsStore.stop(vendorId, vendorKind, boostKind as any)
+      res.json({ success: true, row })
+      return
+    }
+
     if (!requireSupabase(req, res)) return;
 
     const vendorId = String(req.body?.vendor_id || '').trim();
@@ -500,6 +728,16 @@ router.post('/vendor-boosts/stop', authenticateAdmin, async (req, res) => {
 
 router.post('/vendor-boosts/stop-all', authenticateAdmin, async (req, res) => {
   try {
+    if (isLocalBoostPricingMode()) {
+      const vendorId = String(req.body?.vendor_id || '').trim();
+      const vendorKind = String(req.body?.vendor_kind || '').trim().toLowerCase();
+      if (!vendorId) return res.status(400).json({ success: false, error: 'vendor_id manquant' });
+      if (vendorKind !== 'shop' && vendorKind !== 'provider') return res.status(400).json({ success: false, error: 'vendor_kind invalide' });
+      const row = localVendorBoostsStore.stopAll(vendorId, vendorKind)
+      res.json({ success: true, row })
+      return
+    }
+
     if (!requireSupabase(req, res)) return;
 
     const vendorId = String(req.body?.vendor_id || '').trim();

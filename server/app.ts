@@ -40,6 +40,7 @@ import routingRoutes from './routes/routing'
 import ordersRoutes from './routes/orders'
 import boostsRoutes from './routes/boosts'
 import adminBoostsRoutes from './routes/admin-boosts'
+import localSyncRoutes from './routes/local-sync'
 
 // for esm mode
 const __filename = fileURLToPath(import.meta.url)
@@ -80,6 +81,11 @@ app.use('/api/mobile-money', mobileMoneyRoutes)
 app.use('/api/mobile-money-webhooks', mobileMoneyWebhooksRoutes)
 app.use('/api/packs', packsRoutes)
 app.use('/api/boosts', boostsRoutes)
+
+/**
+ * Localhost sync API (PC ↔ téléphone en LAN)
+ */
+app.use('/api/local-sync', localSyncRoutes)
 
 /**
  * Admin Routes

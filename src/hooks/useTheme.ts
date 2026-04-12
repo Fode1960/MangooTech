@@ -19,7 +19,7 @@ export const useTheme = () => {
     
     const handleChange = (e: MediaQueryListEvent) => {
       // Ne pas écraser le choix utilisateur s'il a déjà fait un choix
-      const hasUserPreference = localStorage.getItem('theme-storage');
+      const hasUserPreference = localStorage.getItem('theme');
       if (!hasUserPreference) {
         setTheme(e.matches);
       }

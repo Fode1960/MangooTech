@@ -9,7 +9,8 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 const DARK_COLORS = ['#60A5FA', '#34D399', '#FBBF24', '#FB923C', '#A78BFA'];
 
 export const PaymentAnalyticsDashboard = () => {
-  const { isDarkMode } = useThemeStore();
+  const { isDark } = useThemeStore();
+  const isDarkMode = isDark;
   const [analyticsData, setAnalyticsData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState('30d');

@@ -28,6 +28,7 @@ import LandingPage from './components/LandingPage';
 import ShopPage from './pages/shop/ShopPage.jsx';
 import VendorAccessQRPage from './pages/VendorAccessQRPage';
 import { QRCodeCanvas } from 'qrcode.react';
+import { isLocalSyncEnabled, localSync, setLocalSyncToken } from './utils/localSyncClient';
 import { Toaster, toast } from 'sonner';
 import { ensureWalletBalance, getWalletBalance, getWalletKeyFromUser, creditWalletBalance } from './utils/demoWallet';
 import { usePaymentStore } from './stores/paymentStore';
@@ -494,6 +495,31 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
       return;
     }
 
+    if (isLocalSyncEnabled() && normalizedEmail && password) {
+      try {
+        const resp = await localSync.login({ email: normalizedEmail, password })
+        const u = resp?.user
+        if (u?.id) {
+          const nextUser = {
+            id: u.id,
+            name: u.name || normalizedEmail.split('@')[0] || 'Vendeur',
+            email: normalizedEmail,
+            role: 'vendor',
+            roles: ['vendor', 'client'],
+            avatar: '🏪',
+          }
+          try {
+            localStorage.setItem('mangoo-current-user', JSON.stringify(nextUser))
+          } catch {
+          }
+          onLogin(nextUser)
+          setSubmitting(false)
+          return
+        }
+      } catch {
+      }
+    }
+
     try {
       const hasSupabase = Boolean(String(import.meta.env.VITE_SUPABASE_URL || '').trim()) && Boolean(String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim())
       if (hasSupabase && normalizedEmail && password) {
@@ -925,6 +951,73 @@ const Register = ({ onRegister, onBack }) => {
 
   const handleRegister = useCallback((e) => {
     e.preventDefault();
+
+    if (isLocalSyncEnabled()) {
+      (async () => {
+        try {
+          const normalizedEmail = String(email || '').trim().toLowerCase();
+          const displayName = String(name || '').trim() || normalizedEmail.split('@')[0] || 'Vendeur'
+          const auth = await localSync.register({ email: normalizedEmail, password, name: displayName })
+          const nextUser = {
+            id: auth?.user?.id || `local_${Date.now()}`,
+            name: displayName,
+            email: normalizedEmail,
+            role: 'vendor',
+            roles: ['vendor', 'client'],
+            avatar: '🏪',
+          }
+          try {
+            localStorage.setItem('mangoo-current-user', JSON.stringify(nextUser))
+          } catch {
+          }
+          try {
+            onLogin(nextUser)
+          } catch {
+          }
+          const shopResp = await localSync.createShop({ name: shopName, category: shopCategory })
+          const shop = {
+            id: shopResp?.shop?.id || `shop-${Date.now()}`,
+            name: shopResp?.shop?.name || shopName,
+            slug: shopResp?.shop?.slug,
+            category: shopResp?.shop?.category || shopCategory,
+            ownerName: displayName,
+            ownerEmail: normalizedEmail,
+            ownerPassword: password,
+            logoDataUrl,
+            primaryColor,
+            secondaryColor,
+            shopUrl: `${window.location.origin}/shop/${shopResp?.shop?.slug}`,
+            approvalStatus: 'pending',
+          }
+          persistCreatedShop(shop)
+          try {
+            const rawUsers = localStorage.getItem('demo_users');
+            const data = rawUsers ? JSON.parse(rawUsers) : {};
+            const map = data && typeof data === 'object' ? data : {};
+            map[normalizedEmail] = {
+              id: auth?.user?.id || Date.now(),
+              name: displayName,
+              email: normalizedEmail,
+              role: 'vendor',
+              roles: ['vendor', 'client'],
+              shopName,
+              avatar: '🏪',
+              password
+            };
+            localStorage.setItem('demo_users', JSON.stringify(map));
+          } catch {
+          }
+          setCreatedShop(shop)
+        } catch (err) {
+          try {
+            setLocalSyncToken('')
+          } catch {
+          }
+        }
+      })()
+      return
+    }
+
     const existing = (() => {
       try {
         const raw = localStorage.getItem('demo_shops');
@@ -2038,7 +2131,41 @@ const VendorDashboard = ({ user }) => {
     { key: 'services', label: 'Services' }
   ], []);
 
-  const loadVendorShops = useCallback(() => {
+  const loadVendorShops = useCallback(async () => {
+    if (isLocalSyncEnabled()) {
+      try {
+        const email = normalizeEmail(user?.email);
+        const resp = await localSync.myShops();
+        const list = Array.isArray(resp?.shops) ? resp.shops : [];
+        const mapped = list.map((s) => ({
+          id: s?.id,
+          name: s?.name,
+          slug: s?.slug,
+          category: s?.category,
+          ownerName: user?.name || 'Vendeur',
+          ownerEmail: email,
+          shopUrl: `${window.location.origin}/shop/${s?.slug}`,
+          approvalStatus: s?.status || 'pending',
+          createdAt: s?.createdAt,
+          updatedAt: s?.updatedAt,
+        }));
+        setVendorShops(mapped);
+        try {
+          const raw = localStorage.getItem('demo_shops');
+          const all = raw ? JSON.parse(raw) : [];
+          const prev = Array.isArray(all) ? all : [];
+          const others = email ? prev.filter((x) => normalizeEmail(x?.ownerEmail || x?.owner_email) !== email) : prev;
+          localStorage.setItem('demo_shops', JSON.stringify([...others, ...mapped]));
+          window.dispatchEvent(new Event('demo-shops-updated'));
+        } catch {
+        }
+        return;
+      } catch {
+        setVendorShops([]);
+        return;
+      }
+    }
+
     try {
       importLocalPlusShopsForCurrentUser();
       const raw = localStorage.getItem('demo_shops');
@@ -2050,7 +2177,7 @@ const VendorDashboard = ({ user }) => {
     } catch {
       setVendorShops([]);
     }
-  }, [importLocalPlusShopsForCurrentUser, normalizeEmail, user?.email]);
+  }, [importLocalPlusShopsForCurrentUser, normalizeEmail, user?.email, user?.name]);
 
   const openShopEditor = useCallback((shop) => {
     setEditingShopSlug(shop?.slug || '');
@@ -2112,16 +2239,16 @@ const VendorDashboard = ({ user }) => {
       localStorage.setItem('demo_shops', JSON.stringify(next));
       window.dispatchEvent(new Event('demo-shops-updated'));
       setShowShopEditor(false);
-      loadVendorShops();
+      void loadVendorShops();
     } catch {
       setShowShopEditor(false);
     }
   }, [editCategory, editLogoDataUrl, editName, editOwnerEmail, editPrimaryColor, editSecondaryColor, editingShopSlug, loadVendorShops]);
 
   useEffect(() => {
-    loadVendorShops();
+    void loadVendorShops();
     const onStorage = (e) => {
-      if (e.key === 'demo_shops') loadVendorShops();
+      if (e.key === 'demo_shops') void loadVendorShops();
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
@@ -3354,6 +3481,7 @@ const ShopsDirectory = () => {
   const navigate = useNavigate();
   const [demoCreatedShops, setDemoCreatedShops] = useState([]);
   const [localPlusShops, setLocalPlusShops] = useState([]);
+  const [localSyncShops, setLocalSyncShops] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
@@ -3454,9 +3582,34 @@ const ShopsDirectory = () => {
     }
   }, []);
 
+  const loadLocalSyncShops = useCallback(async () => {
+    if (!isLocalSyncEnabled()) {
+      setLocalSyncShops([])
+      return
+    }
+    try {
+      const resp = await localSync.listShops()
+      const list = Array.isArray(resp?.shops) ? resp.shops : []
+      setLocalSyncShops(list.map((s) => ({
+        id: s?.id || s?.slug,
+        name: s?.name || 'Boutique',
+        slug: s?.slug,
+        category: s?.category || 'general',
+        primaryColor: '#0EA5E9',
+        secondaryColor: '#38BDF8',
+        logoDataUrl: '',
+        approvalStatus: s?.status || 'pending',
+        source: 'local-sync',
+      })))
+    } catch {
+      setLocalSyncShops([])
+    }
+  }, [])
+
   useEffect(() => {
     loadCreatedShops();
     loadLocalPlusShops();
+    void loadLocalSyncShops();
     const onStorage = (e) => {
       if (e.key === 'demo_shops') loadCreatedShops();
       if (e.key === 'mangoo_vendors') loadLocalPlusShops();
@@ -3469,7 +3622,7 @@ const ShopsDirectory = () => {
       window.removeEventListener('storage', onStorage);
       window.removeEventListener('demo-shops-updated', onCustom);
     };
-  }, [loadCreatedShops, loadLocalPlusShops]);
+  }, [loadCreatedShops, loadLocalPlusShops, loadLocalSyncShops]);
 
   useEffect(() => {
     const fromQuery = searchParams.get('categorie') || searchParams.get('category');
@@ -3508,12 +3661,12 @@ const ShopsDirectory = () => {
     }));
 
     const bySlug = new Map();
-    [...base, ...demoCreatedShops, ...localPlusShops, ...fromVendors].forEach((s) => {
+    [...base, ...demoCreatedShops, ...localPlusShops, ...localSyncShops, ...fromVendors].forEach((s) => {
       const key = `${s.slug}-${s.name}`;
       if (!bySlug.has(key)) bySlug.set(key, s);
     });
     return Array.from(bySlug.values());
-  }, [demoCreatedShops, localPlusShops, vendors]);
+  }, [demoCreatedShops, localPlusShops, localSyncShops, vendors]);
 
   const goToShop = useCallback((slug) => {
     try {
@@ -3634,7 +3787,7 @@ const ShopsDirectory = () => {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 justify-center mb-6 relative z-10">
+      <div className="-mx-4 px-4 flex gap-2 overflow-x-auto whitespace-nowrap mb-6 relative z-10">
         {categories.map((cat) => {
           const active = selectedCategory === cat;
           const label = cat === 'all' ? 'Toutes' : categoryLabel(cat);
@@ -3646,7 +3799,7 @@ const ShopsDirectory = () => {
                 setSelectedCategory(cat);
                 scrollToList();
               }}
-              className={`px-3 py-2 rounded-full text-sm font-semibold transition-colors ${
+              className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-semibold transition-colors ${
                 active
                   ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
                   : (isDark ? 'bg-gray-800 text-gray-200 border border-gray-700 hover:bg-gray-700' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50')
@@ -5412,6 +5565,7 @@ const AdminLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isDark } = useThemeStore();
+  const [navOpen, setNavOpen] = useState(false)
 
   const goBack = useCallback(() => {
     try {
@@ -5422,23 +5576,53 @@ const AdminLayout = () => {
     navigate('/');
   }, [navigate]);
 
+  useEffect(() => {
+    setNavOpen(false)
+  }, [location.pathname])
+
   return (
-    <div className={`min-h-screen flex transition-colors duration-300 ${
+    <div className={`min-h-screen w-full overflow-x-hidden flex transition-colors duration-300 ${
       isDark 
         ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
         : 'bg-gray-50'
     }`}>
-      <AdminNavigation />
+      <div className="hidden md:block">
+        <AdminNavigation />
+      </div>
+
+      {navOpen && (
+        <div className="md:hidden fixed inset-0 z-50">
+          <button
+            type="button"
+            onClick={() => setNavOpen(false)}
+            className="absolute inset-0 bg-black/40"
+          />
+          <div className={isDark ? 'relative h-full w-72 bg-gray-900' : 'relative h-full w-72 bg-white'}>
+            <AdminNavigation />
+          </div>
+        </div>
+      )}
       
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Barre d'outils */}
         <div className={`shadow-sm border-b transition-colors duration-300 ${
           isDark 
             ? 'bg-gray-800 border-gray-700' 
             : 'bg-white border-gray-200'
         }`}>
-          <div className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between gap-2 p-3 sm:p-4 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+              <button
+                type="button"
+                onClick={() => setNavOpen(true)}
+                className={`md:hidden px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                  isDark
+                    ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                ☰
+              </button>
               <button
                 type="button"
                 onClick={goBack}
@@ -5452,7 +5636,7 @@ const AdminLayout = () => {
               </button>
               <h1 className={`text-xl font-semibold transition-colors duration-300 ${
                 isDark ? 'text-white' : 'text-gray-900'
-              }`}>
+              } truncate max-w-[60vw] sm:max-w-none`}>
                 {location.pathname === '/admin/dashboard' && 'Tableau de bord'}
                 {location.pathname === '/admin/shops' && 'Commerces'}
                 {location.pathname === '/admin/providers' && 'Prestataires'}
@@ -5468,7 +5652,7 @@ const AdminLayout = () => {
         </div>
 
         {/* Contenu principal */}
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 p-3 sm:p-6 overflow-auto overflow-x-hidden">
           <Routes>
             <Route index element={<AdminDashboard />} />
             <Route path="dashboard" element={<AdminDashboard />} />
@@ -5548,7 +5732,7 @@ const MangooLocalFrame = React.memo(({ user, onBack }) => {
   }, [onBack, persistCreatorLocation]);
 
   return (
-    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ width: '100vw', height: 'var(--app-height, 100vh)', overflow: 'hidden' }}>
       <iframe 
         key={`mangoo-local-${MANGOO_LOCAL_VERSION}`}
         src={`/mangoo-local.html?v=${MANGOO_LOCAL_VERSION}`} 
@@ -5881,6 +6065,7 @@ function AppShell() {
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
       document.documentElement.classList.toggle('dark', isDark);
       document.body.classList.toggle('dark', isDark);
+      document.body.classList.toggle('dark-mode', isDark);
     } catch (e) {
       console.warn('Theme storage error', e);
     }
@@ -6228,6 +6413,41 @@ function AppShell() {
     }
   }, [seedDemoData, user]);
 
+  const boostsParams = useMemo(() => {
+    try {
+      return new URLSearchParams(location.search)
+    } catch {
+      return new URLSearchParams()
+    }
+  }, [location.search])
+
+  const boostsEmail = useMemo(() => {
+    const qp = String(boostsParams.get('email') || '').trim().toLowerCase()
+    if (qp) return qp
+    const u = String(user?.email || '').trim().toLowerCase()
+    if (u) return u
+    try {
+      const raw = localStorage.getItem('mangoo-current-user')
+      const parsed = raw ? JSON.parse(raw) : null
+      return String(parsed?.email || '').trim().toLowerCase()
+    } catch {
+      return ''
+    }
+  }, [boostsParams, user?.email])
+
+  useEffect(() => {
+    if (location.pathname !== '/boosts') return
+    const vendorId = String(boostsParams.get('vendorId') || '').trim()
+    const vendorKind = String(boostsParams.get('vendorKind') || '').trim().toLowerCase()
+    if (!vendorId) return
+    if (vendorKind !== 'shop' && vendorKind !== 'provider') return
+    try {
+      localStorage.setItem('mangoo-vendor-active-tab', 'boosts')
+      localStorage.setItem('mangoo_boost_target', JSON.stringify({ vendorId, vendorKind }))
+    } catch {
+    }
+  }, [boostsParams, location.pathname])
+
   // Auto-login effect for marketplace view REMOVED to prevent loops
   // User state is now handled directly in navigation logic
   
@@ -6238,6 +6458,78 @@ function AppShell() {
 
   // Ensure currentView is never undefined or null
   const safeCurrentView = currentView || 'landing';
+
+  if (location.pathname === '/boosts') {
+    const returnTo = String(boostsParams.get('return') || '')
+    return (
+      <div className={isDark ? 'min-h-screen bg-gray-950 text-white' : 'min-h-screen bg-gray-50 text-gray-900'}>
+        <div className="p-4 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              if (returnTo) {
+                window.location.href = returnTo
+                return
+              }
+              navigate('/')
+            }}
+            className={isDark ? 'px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 font-bold' : 'px-4 py-2 rounded-xl bg-white hover:bg-gray-100 font-bold border border-gray-200'}
+          >
+            ← Retour
+          </button>
+          <div className={isDark ? 'text-sm text-gray-300' : 'text-sm text-gray-600'}>Boost Carte</div>
+        </div>
+        <div className="px-4 pb-10">
+          {boostsEmail ? (
+            <VendorBoosts userEmail={boostsEmail} />
+          ) : (
+            <div className={isDark ? 'bg-gray-900 border border-gray-700 rounded-2xl p-5' : 'bg-white border border-gray-200 rounded-2xl p-5'}>
+              <div className="text-base font-bold">Email requis</div>
+              <div className={isDark ? 'text-sm text-gray-300 mt-2' : 'text-sm text-gray-600 mt-2'}>
+                Renseignez votre email Local+ pour continuer.
+              </div>
+
+              <div className="mt-4">
+                <label className={isDark ? 'block text-xs font-bold text-gray-300' : 'block text-xs font-bold text-gray-700'}>Email</label>
+                <input
+                  value={String(boostsParams.get('email') || '')}
+                  onChange={(e) => {
+                    const next = String(e.target.value || '')
+                    const nextParams = new URLSearchParams(location.search)
+                    if (next) nextParams.set('email', next)
+                    else nextParams.delete('email')
+                    navigate(`${location.pathname}?${nextParams.toString()}`, { replace: true })
+                  }}
+                  placeholder="ex: client@example.com"
+                  className={isDark ? 'mt-1 w-full px-3 py-3 rounded-xl bg-gray-950 border border-gray-700 text-white' : 'mt-1 w-full px-3 py-3 rounded-xl bg-white border border-gray-200 text-gray-900'}
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const email = String(boostsParams.get('email') || '').trim().toLowerCase()
+                  if (!email || !email.includes('@')) return
+                  try {
+                    const raw = localStorage.getItem('mangoo-current-user')
+                    const prev = raw ? JSON.parse(raw) : null
+                    localStorage.setItem('mangoo-current-user', JSON.stringify({ ...(prev || {}), email }))
+                  } catch {
+                  }
+                  const nextParams = new URLSearchParams(location.search)
+                  nextParams.set('email', email)
+                  navigate(`${location.pathname}?${nextParams.toString()}`, { replace: true })
+                }}
+                className={isDark ? 'mt-4 w-full px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-black' : 'mt-4 w-full px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black'}
+              >
+                Continuer
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   // 1. Mangoo Local+ (Map Interface via iframe DIRECTEMENT)
   if (safeCurrentView === 'innovation') {
@@ -6334,7 +6626,7 @@ function AppShell() {
             : 'bg-white'
         }`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-3 gap-3">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center items-stretch py-3 gap-3">
               <div className="flex items-center gap-4 cursor-pointer" onClick={() => { setCurrentView('landing'); setUser(null); }}>
                 <div className="text-2xl">🛍️</div>
                 <h1 className={`text-xl font-bold bg-gradient-to-r from-orange-500 to-green-600 bg-clip-text text-transparent`}>
@@ -6342,27 +6634,27 @@ function AppShell() {
                 </h1>
               </div>
               
-              <div className="flex items-center justify-end gap-2 flex-nowrap min-w-0">
+              <div className="flex items-center justify-start gap-2 flex-nowrap min-w-0 w-full sm:w-auto overflow-x-auto whitespace-nowrap -mx-4 px-4 sm:mx-0 sm:px-0 pb-1">
                 {user.role === 'client' && (
-                  <div className="hidden md:flex items-center gap-2 flex-nowrap">
+                  <div className="flex items-center gap-2 flex-nowrap">
                     <button
                       type="button"
                       onClick={() => setCurrentView('marketplace')}
-                      className={`${currentView === 'marketplace' ? 'bg-orange-500 text-white' : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} px-3 py-1 rounded-full text-sm font-bold transition-colors`}
+                      className={`${currentView === 'marketplace' ? 'bg-orange-500 text-white' : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} flex-shrink-0 px-3 py-1 rounded-full text-xs sm:text-sm font-bold transition-colors`}
                     >
                       Marketplace
                     </button>
                     <button
                       type="button"
                       onClick={() => setCurrentView('shops')}
-                      className={`${currentView === 'shops' ? 'bg-orange-500 text-white' : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} px-3 py-1 rounded-full text-sm font-bold transition-colors`}
+                      className={`${currentView === 'shops' ? 'bg-orange-500 text-white' : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} flex-shrink-0 px-3 py-1 rounded-full text-xs sm:text-sm font-bold transition-colors`}
                     >
                       Boutiques
                     </button>
                     <button
                       type="button"
                       onClick={() => navigate('/checkout/livraison')}
-                      className={`${isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} px-3 py-1 rounded-full text-sm font-bold transition-colors whitespace-nowrap leading-none`}
+                      className={`${isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} flex-shrink-0 px-3 py-1 rounded-full text-xs sm:text-sm font-bold transition-colors whitespace-nowrap leading-none`}
                       title="Demander une livraison"
                     >
                       🚚 Livraison
@@ -6370,10 +6662,9 @@ function AppShell() {
                     <button
                       type="button"
                       onClick={() => setCurrentView('account')}
-                      className={`${currentView === 'account' ? 'bg-orange-500 text-white' : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} px-2 py-1 rounded-2xl text-[11px] font-black transition-colors leading-[1.05] w-[78px] text-center`}
+                      className={`${currentView === 'account' ? 'bg-orange-500 text-white' : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} flex-shrink-0 px-3 py-1 rounded-full text-xs sm:text-sm font-black transition-colors whitespace-nowrap`}
                     >
-                      <span className="block">Mon</span>
-                      <span className="block">compte</span>
+                      Mon compte
                     </button>
                   </div>
                 )}
@@ -6403,7 +6694,7 @@ function AppShell() {
                 {/* Bouton Local+ ajouté */}
                 <button
                   onClick={() => setCurrentView('innovation')}
-                  className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold hover:bg-green-200 transition-colors"
+                  className="flex-shrink-0 bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold hover:bg-green-200 transition-colors"
                 >
                   Local+
                 </button>
@@ -6422,18 +6713,20 @@ function AppShell() {
                 <button
                   type="button"
                   onClick={() => {
-                    if (user.role === 'client') {
+                    const roles = normalizeRoles(user)
+                    const canChooseSpace = Array.isArray(roles) && roles.length > 1
+                    if (user.role === 'client' && !canChooseSpace) {
                       setCurrentView('account');
                       return;
                     }
                     setSpaceChooserOpen(true);
                   }}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors duration-300 cursor-pointer ${
+                  className={`flex-shrink-0 flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors duration-300 cursor-pointer ${
                     isDark 
                       ? 'bg-gray-700 text-white hover:bg-gray-600' 
                       : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                   }`}
-                  title={user.role === 'client' ? 'Ouvrir mon compte' : 'Changer d’espace'}
+                  title={user.role === 'client' ? 'Mon compte / Changer d’espace' : 'Changer d’espace'}
                 >
                   <span className="text-lg">{user.avatar}</span>
                   <span className="text-sm font-medium">{user.name}</span>
@@ -6460,7 +6753,7 @@ function AppShell() {
                   setCurrentView('landing');
                   setUser(null);
                 }}
-                className={`flex items-center gap-2 text-sm font-semibold transition-colors px-3 py-2 rounded-lg ${
+                className={`flex-shrink-0 flex items-center gap-2 text-sm font-semibold transition-colors px-3 py-2 rounded-lg ${
                   isDark
                     ? 'text-gray-200 hover:text-white hover:bg-gray-700'
                     : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
@@ -6524,6 +6817,60 @@ function AppShell() {
 }
 
 function App() {
+  useEffect(() => {
+    if (!isLocalSyncEnabled()) return
+    let cancelled = false
+
+    const syncOnce = async () => {
+      try {
+        const resp = await localSync.listShops()
+        const list = Array.isArray(resp?.shops) ? resp.shops : []
+        if (!list.length) return
+        const mapped = list
+          .filter((s) => s?.slug)
+          .map((s) => ({
+            id: s?.id || s?.slug,
+            name: s?.name || 'Boutique',
+            slug: s?.slug,
+            category: s?.category || 'general',
+            approvalStatus: s?.status || 'pending',
+            createdAt: s?.createdAt,
+            updatedAt: s?.updatedAt,
+            source: 'local-sync',
+          }))
+
+        if (cancelled) return
+        try {
+          const raw = localStorage.getItem('demo_shops')
+          const existing = raw ? JSON.parse(raw) : []
+          const arr = Array.isArray(existing) ? existing : []
+          const bySlug = new Map()
+          arr.forEach((x) => {
+            const slug = String(x?.slug || '').trim()
+            if (slug) bySlug.set(slug, x)
+          })
+          mapped.forEach((x) => {
+            const slug = String(x?.slug || '').trim()
+            if (!slug) return
+            bySlug.set(slug, { ...(bySlug.get(slug) || {}), ...x })
+          })
+          const next = Array.from(bySlug.values())
+          localStorage.setItem('demo_shops', JSON.stringify(next))
+          window.dispatchEvent(new Event('demo-shops-updated'))
+        } catch {
+        }
+      } catch {
+      }
+    }
+
+    void syncOnce()
+    const id = window.setInterval(() => void syncOnce(), 4000)
+    return () => {
+      cancelled = true
+      window.clearInterval(id)
+    }
+  }, [])
+
   useEffect(() => {
     const handler = (event) => {
       try {

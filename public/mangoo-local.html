@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#1a5f3f">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
     <meta http-equiv="Pragma" content="no-cache">
@@ -50,73 +50,171 @@
         } catch {
         }
       })();
+
+      (function() {
+        try {
+          const setVh = () => {
+            const vh = window.innerHeight * 0.01
+            document.documentElement.style.setProperty('--vh', `${vh}px`)
+          }
+          setVh()
+          window.addEventListener('resize', setVh)
+          window.addEventListener('orientationchange', setVh)
+        } catch {
+        }
+      })();
         // === GPS LOCATION LOGIC ===
+        window.__mangooPickShopLocation = false;
+        window.__mangooPickProviderLocation = false;
+
+        function showLocalToast(text, kind) {
+            const toast = document.createElement('div');
+            const bg = kind === 'error' ? '#b91c1c' : kind === 'success' ? '#14532d' : '#333';
+            toast.style.cssText = `position:fixed; bottom:calc(20px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); background:${bg}; color:white; padding:10px 20px; border-radius:20px; font-size:0.8rem; z-index:9999; max-width:90%; text-align:center;`;
+            toast.innerHTML = String(text || '');
+            document.body.appendChild(toast);
+            setTimeout(()=>toast.remove(), 3200);
+        }
+
+        async function syncLocalPlusFromServer() {
+            try {
+                const res = await fetch('/api/local-sync/localplus/vendors');
+                const data = await res.json().catch(() => ({}));
+                const list = Array.isArray(data?.vendors) ? data.vendors : [];
+                if (!list.length) return;
+
+                list.forEach((v) => {
+                    try { upsertCustomVendor(v); } catch {}
+                });
+                try { hydrateVendorsFromStorage(); } catch {}
+                try {
+                    if (typeof relocateVendorsNearUser === 'function') relocateVendorsNearUser();
+                    if (typeof renderVendorsOnMap === 'function') renderVendorsOnMap(VENDORS);
+                    if (typeof renderListView === 'function') renderListView(VENDORS);
+                } catch {
+                }
+            } catch {
+            }
+        }
+
+        function applyCapturedShopLocation(lat, lng, accuracy, source) {
+            const btn = document.getElementById('btnCaptureGPS');
+            const submitBtn = document.getElementById('btnSubmitShop');
+            const latInput = document.getElementById('shopLat');
+            const lngInput = document.getElementById('shopLng');
+            if (!btn || !submitBtn || !latInput || !lngInput) return;
+
+            latInput.value = lat;
+            lngInput.value = lng;
+
+            try {
+                USER_POS = [lat, lng];
+                USER_POS_META = { accuracy: accuracy, timestamp: new Date().toISOString(), source: source || null };
+            } catch {
+            }
+            try {
+                localStorage.setItem('user_geolocation_consent', JSON.stringify({
+                    consentTimestamp: new Date().toISOString(),
+                    locationData: {
+                        latitude: lat,
+                        longitude: lng,
+                        accuracy: typeof accuracy === 'number' ? accuracy : null,
+                        timestamp: new Date().toISOString(),
+                        source: source || null,
+                    }
+                }));
+            } catch {
+            }
+
+            btn.innerHTML = `✅ Position Validée (${Number(lat).toFixed(4)}, ${Number(lng).toFixed(4)})`;
+            btn.style.background = '#e8f5e9';
+            btn.style.border = '2px solid #27ae60';
+            btn.style.color = '#27ae60';
+            btn.disabled = false;
+
+            submitBtn.disabled = false;
+            submitBtn.style.background = '#1a5f3f';
+            submitBtn.style.cursor = 'pointer';
+            submitBtn.style.opacity = '1';
+
+            try {
+                if (typeof updateUserMarker === 'function') updateUserMarker();
+                if (map && typeof map.flyTo === 'function') map.flyTo([lat, lng], 16);
+                if (typeof relocateVendorsNearUser === 'function') relocateVendorsNearUser();
+                if (typeof renderVendorsOnMap === 'function') renderVendorsOnMap(VENDORS);
+                if (typeof renderListView === 'function') renderListView(VENDORS);
+            } catch {
+            }
+
+            showLocalToast(source === 'manual' ? '📍 Position enregistrée (choisie sur la carte)' : '📍 Position GPS enregistrée', 'success');
+        }
+
+        function enableManualShopLocationPick() {
+            window.__mangooPickShopLocation = true;
+            showLocalToast('Touchez la carte pour choisir l’emplacement de la boutique.', 'info');
+        }
+
+        function enableManualProviderLocationPick() {
+            try {
+                window.__mangooPickProviderLocation = true;
+                const modal = document.getElementById('providerModal');
+                if (modal) modal.style.display = 'none';
+                showLocalToast('Touchez la carte pour choisir votre position, puis revenez au formulaire.', 'success');
+            } catch {
+            }
+        }
+
+        function applyCapturedProviderLocation(lat, lng, accuracyMeters, source) {
+            try {
+                const latInput = document.getElementById('providerLat');
+                const lngInput = document.getElementById('providerLng');
+                if (latInput) latInput.value = String(lat);
+                if (lngInput) lngInput.value = String(lng);
+                const gpsBtn = document.getElementById('btnCaptureProviderGPS');
+                if (gpsBtn) {
+                    gpsBtn.style.borderColor = '#27ae60';
+                    gpsBtn.style.color = '#27ae60';
+                    gpsBtn.innerHTML = `✅ Position validée${accuracyMeters ? ` (${Math.round(accuracyMeters)}m)` : ''}`;
+                }
+                const submitBtn = document.getElementById('btnSubmitProvider');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+                }
+                window.__mangooPickProviderLocation = false;
+                const modal = document.getElementById('providerModal');
+                if (modal) modal.style.display = 'flex';
+                showLocalToast(source === 'map' ? 'Position sélectionnée sur la carte.' : 'Position GPS enregistrée.', 'success');
+            } catch {
+            }
+        }
+
         function captureShopLocation() {
             const btn = document.getElementById('btnCaptureGPS');
             const submitBtn = document.getElementById('btnSubmitShop');
             const latInput = document.getElementById('shopLat');
             const lngInput = document.getElementById('shopLng');
             if (!btn || !submitBtn || !latInput || !lngInput) return;
+
+            const hostname = String(location?.hostname || '').trim();
+            const secureOk = Boolean(window.isSecureContext) || hostname === 'localhost' || hostname === '127.0.0.1';
+            if (!secureOk) {
+                showLocalToast("GPS bloqué sur cette adresse (HTTP non sécurisé). Utilisez « Choisir sur la carte »." , 'error');
+                const pickBtn = document.getElementById('btnPickOnMap');
+                if (pickBtn) pickBtn.style.display = 'flex';
+                return;
+            }
             
             btn.innerHTML = '<div class="spinner" style="width:15px; height:15px; border-width:2px; border-left-color:#1a5f3f; display:inline-block; margin-right:5px;"></div> Recherche Satellites...';
             btn.disabled = true;
 
-            const done = (lat, lng, accuracy) => {
-                latInput.value = lat;
-                lngInput.value = lng;
-
-                try {
-                    USER_POS = [lat, lng];
-                    USER_POS_META = { accuracy: accuracy, timestamp: new Date().toISOString() };
-                } catch {
-                }
-                try {
-                    localStorage.setItem('user_geolocation_consent', JSON.stringify({
-                        consentTimestamp: new Date().toISOString(),
-                        locationData: {
-                            latitude: lat,
-                            longitude: lng,
-                            accuracy: typeof accuracy === 'number' ? accuracy : null,
-                            timestamp: new Date().toISOString()
-                        }
-                    }));
-                } catch {
-                }
-
-                btn.innerHTML = `✅ Position Validée (${Number(lat).toFixed(4)}, ${Number(lng).toFixed(4)})`;
-                btn.style.background = '#e8f5e9';
-                btn.style.border = '2px solid #27ae60';
-                btn.style.color = '#27ae60';
-
-                submitBtn.disabled = false;
-                submitBtn.style.background = '#1a5f3f';
-                submitBtn.style.cursor = 'pointer';
-                submitBtn.style.opacity = '1';
-
-                try {
-                    if (typeof updateUserMarker === 'function') updateUserMarker();
-                    if (map && typeof map.flyTo === 'function') map.flyTo([lat, lng], 16);
-                    if (typeof relocateVendorsNearUser === 'function') relocateVendorsNearUser();
-                    if (typeof renderVendorsOnMap === 'function') renderVendorsOnMap(VENDORS);
-                    if (typeof renderListView === 'function') renderListView(VENDORS);
-                } catch {
-                }
-
-                const toast = document.createElement('div');
-                toast.style.cssText = "position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#333; color:white; padding:10px 20px; border-radius:20px; font-size:0.8rem; z-index:9999;";
-                toast.innerHTML = "📍 Position GPS enregistrée";
-                document.body.appendChild(toast);
-                setTimeout(()=>toast.remove(), 2500);
-            };
-
             const fail = () => {
                 btn.innerHTML = '🎯 Capturer ma position GPS';
                 btn.disabled = false;
-                const toast = document.createElement('div');
-                toast.style.cssText = "position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#b91c1c; color:white; padding:10px 20px; border-radius:20px; font-size:0.8rem; z-index:9999;";
-                toast.innerHTML = "⚠️ Activez la géolocalisation (GPS) pour obtenir la bonne position.";
-                document.body.appendChild(toast);
-                setTimeout(()=>toast.remove(), 3000);
+                showLocalToast('⚠️ Activez la géolocalisation (GPS) pour obtenir la bonne position.', 'error');
+                const pickBtn = document.getElementById('btnPickOnMap');
+                if (pickBtn) pickBtn.style.display = 'flex';
             };
 
             try {
@@ -133,7 +231,7 @@
                             fail();
                             return;
                         }
-                        done(lat, lng, Number.isFinite(acc) ? acc : null);
+                        applyCapturedShopLocation(lat, lng, Number.isFinite(acc) ? acc : null, 'gps');
                     },
                     () => fail(),
                     { enableHighAccuracy: true, timeout: 12000, maximumAge: 600000 }
@@ -259,7 +357,8 @@
             transition: background-color 0.3s;
             display: flex;
             flex-direction: column;
-            height: 100vh;
+            height: calc(var(--vh, 1vh) * 100);
+            min-height: 100dvh;
         }
         html.dark body {
             background-color: #111827;
@@ -1610,7 +1709,7 @@
         /* === FLOATING ACTION BUTTON (GPS) === */
         .fab-geo {
             position: absolute;
-            bottom: 85px; /* Above nav bar */
+            bottom: calc(85px + env(safe-area-inset-bottom));
             right: 20px;
             width: 55px;
             height: 55px;
@@ -1640,7 +1739,7 @@
             bottom: -100%; /* Caché par défaut */
             left: 0;
             width: 100%;
-            height: 90vh; /* Fixed height to allow scrolling */
+            height: calc(var(--vh, 1vh) * 90);
             background: white;
             border-radius: 25px 25px 0 0;
             box-shadow: 0 -10px 40px rgba(0,0,0,0.15);
@@ -1650,7 +1749,7 @@
             flex-direction: column;
         }
         .sheet-content {
-            padding: 0 25px 25px 25px;
+            padding: 0 25px calc(25px + env(safe-area-inset-bottom)) 25px;
             overflow-y: auto; /* Enable scrolling */
             flex: 1;
         }
@@ -1836,7 +1935,7 @@
         /* === NAVIGATION BAR === */
         .nav-bar {
             position: fixed;
-            bottom: 20px;
+            bottom: calc(20px + env(safe-area-inset-bottom));
             left: 50%;
             transform: translateX(-50%);
             width: 90%;
@@ -1880,6 +1979,16 @@
             background: rgba(52, 211, 153, 0.1);
         }
         .nav-icon { font-size: 1.4rem; display: block; margin-bottom: 2px; }
+
+        @media (max-width: 360px) {
+            .nav-bar {
+                width: calc(100% - 20px);
+                height: 60px;
+                bottom: calc(12px + env(safe-area-inset-bottom));
+            }
+            .nav-item { width: 54px; }
+            .nav-icon { font-size: 1.25rem; }
+        }
 
         /* === MANGOO CONNECT+ CHAT === */
         .chat-overlay {
@@ -2914,6 +3023,9 @@
                 <button id="btnCaptureGPS" onclick="captureShopLocation()" style="width: 100%; padding: 12px; background: white; border: 2px solid #1a5f3f; color: #1a5f3f; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s;">
                     🎯 Capturer ma position GPS
                 </button>
+                <button id="btnPickOnMap" onclick="enableManualShopLocationPick()" style="width: 100%; margin-top: 10px; padding: 12px; background: #ffffff; border: 2px dashed #1a5f3f; color: #1a5f3f; border-radius: 10px; font-weight: bold; cursor: pointer; display: none; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s;">
+                    📍 Choisir sur la carte
+                </button>
                 <input type="hidden" id="shopLat">
                 <input type="hidden" id="shopLng">
             </div>
@@ -3088,12 +3200,13 @@
                 <label style="color: #1a5f3f; font-weight: bold; margin-bottom: 5px; display: block;">📍 Position Exacte (Obligatoire)</label>
                 <div style="font-size: 0.85rem; color: #555; margin-bottom: 10px; line-height: 1.4;">Validez votre position pour être visible sur Mangoo Maps.</div>
                 <button id="btnCaptureProviderGPS" onclick="captureProviderLocation()" style="width: 100%; padding: 12px; background: white; border: 2px solid #1a5f3f; color: #1a5f3f; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s;">🎯 Capturer ma position GPS</button>
+                <button type="button" onclick="enableManualProviderLocationPick()" style="width: 100%; margin-top: 10px; padding: 12px; background: #f1f2f6; border: 2px solid #dfe6e9; color: #2d3436; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s;">🗺️ Choisir sur la carte</button>
                 <input type="hidden" id="providerLat">
                 <input type="hidden" id="providerLng">
             </div>
 
             <button class="btn-submit" id="btnSubmitProvider" onclick="submitProvider()" style="margin-top: 5px;" disabled>Créer mon profil</button>
-            <div style="text-align: center; font-size: 0.75rem; color: #999; margin-top: 10px;">* La validation GPS débloque la création</div>
+            <div style="text-align: center; font-size: 0.75rem; color: #999; margin-top: 10px;">* GPS ou choix sur la carte débloque la création</div>
         </div>
     </div>
 
@@ -4163,7 +4276,42 @@
             }
 
             const cfg = getLpSupabaseConfig ? getLpSupabaseConfig() : null
-            if (!cfg) return
+            if (!cfg) {
+                try {
+                    const r = await fetch('/api/boosts/vendor-boosts-active', { method: 'GET' })
+                    if (!r.ok) return
+                    const rows = await r.json().catch(() => null)
+                    const list = Array.isArray(rows?.rows) ? rows.rows : []
+                    if (!list.length) {
+                        try { localStorage.setItem('mangoo_boost_sync_at', String(Date.now())) } catch {}
+                        return
+                    }
+                    const tierToNumber = (tier) => {
+                        const t = String(tier || '').trim().toLowerCase()
+                        if (t === 'bronze') return 1
+                        if (t === 'argent') return 2
+                        if (t === 'or') return 3
+                        return null
+                    }
+                    list.forEach((row) => {
+                        const vendorId = String(row?.vendor_id || '').trim()
+                        if (!vendorId) return
+                        const patch = {}
+                        try { if (row?.sponsored_until) patch.sponsoredUntil = Date.parse(String(row.sponsored_until)) } catch {}
+                        try {
+                            const n = tierToNumber(row?.sponsored_tier)
+                            if (n !== null) patch.sponsoredTier = n
+                        } catch {}
+                        try { if (row?.promo_until) patch.promoUntil = Date.parse(String(row.promo_until)) } catch {}
+                        try { if (row?.new_until) patch.newUntil = Date.parse(String(row.new_until)) } catch {}
+                        if (!Object.keys(patch).length) return
+                        try { setVendorBoost(vendorId, patch) } catch {}
+                    })
+                    try { localStorage.setItem('mangoo_boost_sync_at', String(Date.now())) } catch {}
+                } catch {
+                }
+                return
+            }
 
             const nowIso = new Date().toISOString()
             const baseUrl = String(cfg.url || '').replace(/\/+$/, '')
@@ -5063,6 +5211,13 @@
             const lngInput = document.getElementById('providerLng');
             if (!btn || !submitBtn || !latInput || !lngInput) return;
 
+            const secureOk = window.isSecureContext || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            if (!secureOk) {
+                try { showLocalToast('Le GPS est bloqué en HTTP sur mobile. Utilisez “Choisir sur la carte”.', 'error'); } catch {}
+                try { enableManualProviderLocationPick(); } catch {}
+                return;
+            }
+
             btn.innerHTML = '<div class="spinner" style="width:15px; height:15px; border-width:2px; border-left-color:#1a5f3f; display:inline-block; margin-right:5px;"></div> Recherche Satellites...';
             btn.disabled = true;
 
@@ -5106,18 +5261,14 @@
                 } catch {
                 }
 
-                const toast = document.createElement('div');
-                toast.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#333; color:white; padding:10px 20px; border-radius:20px; font-size:0.8rem; z-index:9999;';
-                toast.innerHTML = '📍 Position GPS enregistrée';
-                document.body.appendChild(toast);
-                setTimeout(()=>toast.remove(), 2500);
+                try { applyCapturedProviderLocation(lat, lng, accuracy, 'gps'); } catch {}
             };
 
             const fail = () => {
                 btn.innerHTML = '🎯 Capturer ma position GPS';
                 btn.disabled = false;
                 const toast = document.createElement('div');
-                toast.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#b91c1c; color:white; padding:10px 20px; border-radius:20px; font-size:0.8rem; z-index:9999;';
+                toast.style.cssText = 'position:fixed; bottom:calc(20px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); background:#b91c1c; color:white; padding:10px 20px; border-radius:20px; font-size:0.8rem; z-index:9999;';
                 toast.innerHTML = '⚠️ Activez la géolocalisation (GPS) pour obtenir la bonne position.';
                 document.body.appendChild(toast);
                 setTimeout(()=>toast.remove(), 3000);
@@ -5359,7 +5510,7 @@
                 const matchesCategory = currentCategory === 'all' || v.category === currentCategory;
 
                 const dist = (typeof v.lat === 'number' && typeof v.lng === 'number') ? distanceKm(USER_POS[0], USER_POS[1], v.lat, v.lng) : 0;
-                const matchesDistance = !maxDistanceKm || dist <= maxDistanceKm;
+                const matchesDistance = (currentKindMode !== 'service') ? true : (!maxDistanceKm || dist <= maxDistanceKm);
 
                 if (currentKindMode !== 'service') {
                     return matchesSearch && matchesCategory && matchesDistance;
@@ -5817,10 +5968,31 @@
             // Render Vendors
             renderVendorsOnMap(VENDORS);
 
-            // Close sheet on map click
+            try { void syncLocalPlusFromServer(); } catch {}
+
+            // Close sheet on map click (or pick shop location)
             map.on('click', (e) => {
-                // Only close if we are not clicking on a marker
-                // (Though stopPropagation on marker should handle this, checking target is safer)
+                try {
+                    if (window.__mangooPickProviderLocation && e && e.latlng) {
+                        window.__mangooPickProviderLocation = false;
+                        const lat = Number(e.latlng.lat);
+                        const lng = Number(e.latlng.lng);
+                        if (Number.isFinite(lat) && Number.isFinite(lng) && typeof applyCapturedProviderLocation === 'function') {
+                            applyCapturedProviderLocation(lat, lng, null, 'map');
+                            return;
+                        }
+                    }
+                    if (window.__mangooPickShopLocation && e && e.latlng) {
+                        window.__mangooPickShopLocation = false;
+                        const lat = Number(e.latlng.lat);
+                        const lng = Number(e.latlng.lng);
+                        if (Number.isFinite(lat) && Number.isFinite(lng) && typeof applyCapturedShopLocation === 'function') {
+                            applyCapturedShopLocation(lat, lng, null, 'manual');
+                            return;
+                        }
+                    }
+                } catch {
+                }
                 closeSheet();
             });
 
@@ -9361,23 +9533,23 @@
                     if (kindMode === 'service' && isOwnerProvider) {
                     ownerLink.style.display = 'block';
                     ownerLink.innerHTML = `
-                        <div style="display:flex; gap:10px; justify-content:center;">
-                                <a href="#" onclick="openBoostFromLocal('${safeVendorId}', 'provider')" style="background:#f59e0b; color:white; font-size:0.95rem; text-decoration:none; border:1px solid #f59e0b; padding:10px 16px; border-radius:999px; font-weight:950;">🚀 Booster</a>
-                            <a href="#" onclick="openProviderModalForVendor('${safeVendorId}')" style="color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px;">⚙️ Réglages</a>
-                            <a href="#" onclick="startServicePayment('${safeVendorId}')" style="color:#00b894; font-size:0.85rem; text-decoration:none; border:1px solid #00b894; padding:8px 15px; border-radius:20px; font-weight:bold;">💳 Paiement</a>
-                            <a href="#" onclick="openProviderDashboard('${safeVendorId}')" style="color:#f59e0b; font-size:0.85rem; text-decoration:none; border:1px solid #f59e0b; padding:8px 15px; border-radius:20px; font-weight:bold;">📄 Dashboard</a>
-                            <a href="#" onclick="try{lpDisconnectProvider()}catch{}; try{closeSheet()}catch{}" style="color:#d63031; font-size:0.85rem; text-decoration:none; border:1px solid #d63031; padding:8px 15px; border-radius:20px; font-weight:bold;">🚪 Quitter</a>
+                        <div style="display:flex; gap:10px; justify-content:flex-start; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:0 12px; scroll-snap-type:x proximity;">
+                                <a href="#" onclick="openBoostFromLocal('${safeVendorId}', 'provider')" style="flex:0 0 auto; white-space:nowrap; background:#f59e0b; color:white; font-size:0.95rem; text-decoration:none; border:1px solid #f59e0b; padding:10px 16px; border-radius:999px; font-weight:950; scroll-snap-align:start;">🚀 Booster</a>
+                            <a href="#" onclick="openProviderModalForVendor('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px; scroll-snap-align:start;">⚙️ Réglages</a>
+                            <a href="#" onclick="startServicePayment('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#00b894; font-size:0.85rem; text-decoration:none; border:1px solid #00b894; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">💳 Paiement</a>
+                            <a href="#" onclick="openProviderDashboard('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#f59e0b; font-size:0.85rem; text-decoration:none; border:1px solid #f59e0b; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">📄 Dashboard</a>
+                            <a href="#" onclick="try{lpDisconnectProvider()}catch{}; try{closeSheet()}catch{}" style="flex:0 0 auto; white-space:nowrap; color:#d63031; font-size:0.85rem; text-decoration:none; border:1px solid #d63031; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">🚪 Quitter</a>
                         </div>
                     `;
                 } else if (myShopId && vendor.id == myShopId) {
                     ownerLink.style.display = 'block';
                     ownerLink.innerHTML = `
-                        <div style="display:flex; gap:10px; justify-content:center;">
-                                <a href="#" onclick="openBoostFromLocal('${safeVendorId}', 'shop')" style="background:#f59e0b; color:white; font-size:0.95rem; text-decoration:none; border:1px solid #f59e0b; padding:10px 16px; border-radius:999px; font-weight:950;">🚀 Booster</a>
-                            <a href="#" onclick="openSellerModal()" style="color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px;">⚙️ Réglages</a>
-                            <a href="#" onclick="openProductModal()" style="color:#e17055; font-size:0.85rem; text-decoration:none; border:1px solid #e17055; padding:8px 15px; border-radius:20px; font-weight:bold;">📦 Nouveau</a>
-                            <a href="#" onclick="openSupplyModal()" style="color:#0984e3; font-size:0.85rem; text-decoration:none; border:1px solid #0984e3; padding:8px 15px; border-radius:20px; font-weight:bold;">🏭 S'approvisionner</a>
-                            <a href="#" onclick="try{lpDisconnectShop()}catch{}; try{closeSheet()}catch{}" style="color:#d63031; font-size:0.85rem; text-decoration:none; border:1px solid #d63031; padding:8px 15px; border-radius:20px; font-weight:bold;">🚪 Quitter</a>
+                        <div style="display:flex; gap:10px; justify-content:flex-start; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:0 12px; scroll-snap-type:x proximity;">
+                                <a href="#" onclick="openBoostFromLocal('${safeVendorId}', 'shop')" style="flex:0 0 auto; white-space:nowrap; background:#f59e0b; color:white; font-size:0.95rem; text-decoration:none; border:1px solid #f59e0b; padding:10px 16px; border-radius:999px; font-weight:950; scroll-snap-align:start;">🚀 Booster</a>
+                            <a href="#" onclick="openSellerModal()" style="flex:0 0 auto; white-space:nowrap; color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px; scroll-snap-align:start;">⚙️ Réglages</a>
+                            <a href="#" onclick="openProductModal()" style="flex:0 0 auto; white-space:nowrap; color:#e17055; font-size:0.85rem; text-decoration:none; border:1px solid #e17055; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">📦 Nouveau</a>
+                            <a href="#" onclick="openSupplyModal()" style="flex:0 0 auto; white-space:nowrap; color:#0984e3; font-size:0.85rem; text-decoration:none; border:1px solid #0984e3; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">🏭 S'approvisionner</a>
+                            <a href="#" onclick="try{lpDisconnectShop()}catch{}; try{closeSheet()}catch{}" style="flex:0 0 auto; white-space:nowrap; color:#d63031; font-size:0.85rem; text-decoration:none; border:1px solid #d63031; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">🚪 Quitter</a>
                         </div>
                     `;
                 } else {
@@ -9524,9 +9696,9 @@
                     });
 
                     feed.insertAdjacentHTML('beforeend', `
-                        <a href="mangoo-shop.html?${params.toString()}" style="display:block; text-align:center; margin-top:15px; padding:12px; background:#f1f2f6; color:#2d3436; border-radius:12px; text-decoration:none; font-weight:bold;">
+                        <button type="button" onclick="lpGoToShopByVendorId('${lpEscapeInlineArg(vendor.id)}')" style="display:block; width:100%; text-align:center; margin-top:15px; padding:12px; background:#f1f2f6; color:#2d3436; border-radius:12px; border:none; font-weight:bold; cursor:pointer;">
                             🏪 Visiter la boutique complète
-                        </a>
+                        </button>
                     `);
                 }
             }
@@ -9657,6 +9829,15 @@
         function openBoostFromLocal(vendorId, vendorKind) {
             const v = VENDORS.find((x) => String(x?.id) === String(vendorId)) || activeVendor;
             if (!v) return;
+
+            let email = '';
+            try {
+                const currentUser = getLpCurrentUser ? getLpCurrentUser() : null;
+                email = String(currentUser?.email || '').trim().toLowerCase();
+            } catch {
+                email = '';
+            }
+
             try {
                 localStorage.setItem('mangoo-vendor-active-tab', 'boosts');
                 localStorage.setItem(
@@ -9666,8 +9847,13 @@
             } catch {
             }
             const returnTo = `${window.location.origin}${window.location.pathname}${window.location.search}${window.location.hash}`;
-            const params = new URLSearchParams({ return: returnTo, vendorId: String(v.id), vendorKind: String(vendorKind || '') });
-            const target = `/connexion?${params.toString()}`;
+            const params = new URLSearchParams({
+                return: returnTo,
+                vendorId: String(v.id),
+                vendorKind: String(vendorKind || ''),
+                email: email
+            });
+            const target = `/boosts?${params.toString()}`;
             try {
                 const topWin = window.top && window.top.location ? window.top : window;
                 topWin.location.href = target;
@@ -10895,7 +11081,12 @@
             btn.style.opacity = '0.7';
             
             setTimeout(() => {
-                const autoApprove = String(location?.hostname || '').includes('localhost') || String(location?.hostname || '').includes('127.0.0.1');
+                const host = String(location?.hostname || '').trim();
+                const autoApprove = host === 'localhost'
+                    || host === '127.0.0.1'
+                    || host.startsWith('192.168.')
+                    || host.startsWith('10.')
+                    || /^172\.(1[6-9]|2\d|3[0-1])\./.test(host);
                 const approvalStatus = autoApprove ? 'approved' : 'pending';
                 const capturedLat = parseFloat(latInput.value);
                 const capturedLng = parseFloat(lngInput.value);
@@ -10922,6 +11113,21 @@
                 VENDORS.push(newVendor);
                 try { upsertCustomVendor(newVendor); } catch {}
                 try { localStorage.setItem('mangoo_vendors', JSON.stringify(VENDORS)); } catch {}
+
+                try {
+                    const token = String(localStorage.getItem('mangoo_local_sync_token') || '').trim();
+                    fetch('/api/local-sync/localplus/vendors', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                        },
+                        body: JSON.stringify({ vendor: newVendor })
+                    }).then(() => {
+                        try { return syncLocalPlusFromServer(); } catch { return null; }
+                    }).catch(() => null);
+                } catch {
+                }
                 
                 // SAVE USER SHOP ID
                 localStorage.setItem('mangoo_my_shop_id', newVendor.id);

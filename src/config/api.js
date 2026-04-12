@@ -40,12 +40,25 @@ export const buildApiUrl = (endpoint) => {
   if (endpoint.startsWith('http')) {
     return endpoint;
   }
+
+  let baseUrl = API_CONFIG.BASE_URL;
+  try {
+    const isDev = Boolean(import.meta.env.DEV);
+    if (isDev && typeof window !== 'undefined') {
+      const host = String(window.location.hostname || '').trim().toLowerCase();
+      if (host && host !== 'localhost' && host !== '127.0.0.1') {
+        baseUrl = '';
+      }
+    }
+  } catch {
+    baseUrl = API_CONFIG.BASE_URL;
+  }
   
   // Construire l'URL complète
-  const baseUrl = API_CONFIG.BASE_URL.replace(/\/$/, ''); // Enlever le slash final si présent
+  const cleanBase = String(baseUrl || '').replace(/\/$/, ''); // Enlever le slash final si présent
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   
-  return `${baseUrl}${cleanEndpoint}`;
+  return `${cleanBase}${cleanEndpoint}`;
 };
 
 // Fonction pour effectuer des appels API avec gestion d'erreur

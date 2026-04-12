@@ -262,7 +262,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
       <header className={`shadow-sm border-b sticky top-0 z-50 transition-colors ${
         isDark ? 'bg-gray-900 border-gray-800' : 'bg-white'
       }`}>
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center gap-3 flex-wrap">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-md transform rotate-3">
               <Store className="text-white w-5 h-5" />
@@ -276,7 +276,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
             <a href="#innovations" className="hover:text-orange-600 transition-colors">Innovations</a>
             <a href="#contact" className="hover:text-orange-600 transition-colors">Contact</a>
           </nav>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 flex-wrap justify-end max-w-full">
             <button 
               onClick={toggleTheme} 
               className={`p-2 rounded-full transition-colors ${isDark ? 'bg-gray-800 text-yellow-400' : 'bg-gray-100 text-gray-600'}`} 
@@ -288,7 +288,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
               <button
                 type="button"
                 onClick={onAdminDashboard}
-                className={`px-4 py-2 rounded-full font-bold text-sm transition-colors whitespace-nowrap flex-shrink-0 ${
+                className={`px-3 sm:px-4 py-2 rounded-full font-bold text-sm transition-colors whitespace-nowrap ${
                   isDark ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-purple-600 hover:bg-purple-700 text-white'
                 }`}
               >
@@ -299,7 +299,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
               <button 
                 type="button"
                 onClick={() => onLogin && onLogin(null)}
-                className={`px-5 py-2 rounded-full font-bold text-sm transition-colors whitespace-nowrap flex-shrink-0 ${
+                className={`px-3 sm:px-5 py-2 rounded-full font-bold text-sm transition-colors whitespace-nowrap ${
                   isDark ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-gray-900 hover:bg-gray-800 text-white'
                 }`}
               >
@@ -309,7 +309,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
               <button 
                 type="button"
                 onClick={() => onLogin({ role: 'login_request' })} 
-                className={`px-5 py-2 rounded-full font-bold text-sm transition-colors whitespace-nowrap flex-shrink-0 ${
+                className={`px-3 sm:px-5 py-2 rounded-full font-bold text-sm transition-colors whitespace-nowrap ${
                   isDark ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-gray-900 hover:bg-gray-800 text-white'
                 }`}
               >

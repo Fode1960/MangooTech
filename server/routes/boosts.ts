@@ -3,6 +3,11 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import { BOOST_PRODUCTS } from '../config/boostPricing';
+import { localBoostProductsStore } from '../services/localBoostProductsStore';
+import { localVendorBoostsStore } from '../services/localVendorBoostsStore';
+import { localBoostCreditsStore } from '../services/localBoostCreditsStore';
+import { localSyncStore } from '../services/localSyncStore';
+import { localBoostOrdersStore } from '../services/localBoostOrdersStore';
 
 const router = Router();
 
@@ -29,6 +34,12 @@ type DbBoostProduct = {
   sponsored_tier: SponsoredTier | null;
   active: boolean;
 };
+
+function isLocalBoostPricingMode() {
+  const mode = String(process.env.BOOST_PRICING_MODE || 'local').trim().toLowerCase()
+  if (mode === 'supabase') return false
+  return String(process.env.NODE_ENV || '').trim().toLowerCase() !== 'production'
+}
 
 function toStripeUnitAmount(amountXof: number, currency: string): number {
   const c = String(currency || 'xof').toLowerCase();
@@ -205,6 +216,58 @@ async function activateBoostForOrder(params: {
 }
 
 router.get('/pricing', (_req, res) => {
+  if (isLocalBoostPricingMode()) {
+    try {
+      const list = localBoostProductsStore.seedDefaults()
+
+      const score = (p: any) => {
+        const hasTitle = String(p?.title || '').trim().length ? 1 : 0
+        const hasDesc = String(p?.description || '').trim().length ? 1 : 0
+        const updated = Date.parse(String(p?.updated_at || ''))
+        const t = Number.isFinite(updated) ? updated : 0
+        const price = Math.floor(Number(p?.price_xof || 0))
+        return { hasTitle, hasDesc, t, price }
+      }
+
+      const better = (a: any, b: any) => {
+        const sa = score(a)
+        const sb = score(b)
+        if (sa.t !== sb.t) return sa.t > sb.t
+        if (sa.hasTitle !== sb.hasTitle) return sa.hasTitle > sb.hasTitle
+        if (sa.hasDesc !== sb.hasDesc) return sa.hasDesc > sb.hasDesc
+        return sa.price >= sb.price
+      }
+
+      const picked = new Map<string, any>()
+      for (const p of list) {
+        if (!p?.active) continue
+        const kind = String(p.kind)
+        const dur = Number(p.duration_hours)
+        const key = `${kind}:${dur}`
+        const existing = picked.get(key)
+        if (!existing || better(p, existing)) picked.set(key, p)
+      }
+
+      const products = Array.from(picked.values()).map((p) => ({
+        kind: p.kind,
+        durationHours: p.duration_hours,
+        priceXof: p.price_xof,
+        currency: String(p.currency || 'XOF').toUpperCase(),
+        title: p.title,
+        description: p.description,
+        sponsoredTier: p.kind === 'sponsored' ? (p.sponsored_tier === 'or' ? 3 : p.sponsored_tier === 'argent' ? 2 : 1) : null,
+        active: p.active,
+      }))
+
+      const finalProducts = products.length ? products : BOOST_PRODUCTS
+      res.json({ products: finalProducts })
+      return
+    } catch {
+      res.json({ products: BOOST_PRODUCTS })
+      return
+    }
+  }
+
   fetchBoostProductsFromDb()
     .then((rows) => {
       if (!rows) return res.json({ products: BOOST_PRODUCTS });
@@ -225,8 +288,162 @@ router.get('/pricing', (_req, res) => {
     .catch(() => res.json({ products: BOOST_PRODUCTS }));
 });
 
+router.get('/vendor-boosts-active', (_req, res) => {
+  try {
+    if (!isLocalBoostPricingMode()) {
+      res.json({ rows: [] })
+      return
+    }
+    const rows = localVendorBoostsStore.listActive()
+    res.json({ rows })
+  } catch {
+    res.json({ rows: [] })
+  }
+})
+
+router.get('/vendor-boosts', (req, res) => {
+  try {
+    if (!isLocalBoostPricingMode()) {
+      res.json({ row: null })
+      return
+    }
+    const vendorId = String(req.query?.vendorId || '').trim()
+    const vendorKind = String(req.query?.vendorKind || '').trim().toLowerCase()
+    if (!vendorId) return res.status(400).json({ error: 'vendorId manquant' })
+    if (vendorKind !== 'shop' && vendorKind !== 'provider') return res.status(400).json({ error: 'vendorKind invalide' })
+    const row = localVendorBoostsStore.get(vendorId, vendorKind)
+    res.json({ row })
+  } catch {
+    res.json({ row: null })
+  }
+})
+
+router.post('/purchase-with-credits-local', async (req, res) => {
+  try {
+    if (!isLocalBoostPricingMode()) {
+      res.status(404).json({ success: false, error: 'Not available' })
+      return
+    }
+    const email = String(req.body?.email || '').trim().toLowerCase()
+    const vendorId = String(req.body?.vendorId || '').trim()
+    const vendorKind = String(req.body?.vendorKind || '').trim().toLowerCase()
+    const boostKind = String(req.body?.boostKind || '').trim().toLowerCase()
+    const durationHours = Math.floor(Number(req.body?.durationHours || 0))
+    if (!email || !email.includes('@')) return res.status(400).json({ success: false, error: 'Email invalide' })
+    if (!vendorId) return res.status(400).json({ success: false, error: 'vendorId manquant' })
+    if (vendorKind !== 'shop' && vendorKind !== 'provider') return res.status(400).json({ success: false, error: 'vendorKind invalide' })
+    if (boostKind !== 'sponsored' && boostKind !== 'promo' && boostKind !== 'new') return res.status(400).json({ success: false, error: 'boostKind invalide' })
+    if (!Number.isFinite(durationHours) || durationHours <= 0) return res.status(400).json({ success: false, error: 'durationHours invalide' })
+
+    const products = localBoostProductsStore.seedDefaults().filter((p) => p.active)
+    const candidates = products.filter((p) => String(p.kind) === boostKind && Number(p.duration_hours) === durationHours)
+    const pickBest = (list: any[]) => {
+      let best: any = null
+      for (const p of list) {
+        if (!best) {
+          best = p
+          continue
+        }
+        const ta = Date.parse(String(p?.updated_at || ''))
+        const tb = Date.parse(String(best?.updated_at || ''))
+        const a = Number.isFinite(ta) ? ta : 0
+        const b = Number.isFinite(tb) ? tb : 0
+        if (a !== b) {
+          if (a > b) best = p
+          continue
+        }
+        const pa = Math.floor(Number(p?.price_xof || 0))
+        const pb = Math.floor(Number(best?.price_xof || 0))
+        if (pa >= pb) best = p
+      }
+      return best
+    }
+    const match = pickBest(candidates)
+    if (!match) return res.status(400).json({ success: false, error: 'Aucune offre active correspondante' })
+
+    try {
+      localBoostCreditsStore.debit(email, Number(match.price_xof))
+    } catch (e: any) {
+      return res.status(400).json({ success: false, error: e?.message || 'Solde insuffisant' })
+    }
+
+    const row = localVendorBoostsStore.activate({
+      vendorId,
+      vendorKind,
+      boostKind: boostKind as any,
+      durationHours,
+      sponsoredTier: boostKind === 'sponsored' ? (match.sponsored_tier as any) : null,
+    })
+
+    try {
+      const expiresAt =
+        boostKind === 'sponsored'
+          ? row.sponsored_until
+          : boostKind === 'promo'
+            ? row.promo_until
+            : row.new_until
+
+      localBoostOrdersStore.create({
+        vendor_id: vendorId,
+        vendor_kind: vendorKind as any,
+        boost_kind: boostKind as any,
+        duration_hours: durationHours,
+        amount_xof: Number(match.price_xof) || 0,
+        currency: String(match.currency || 'XOF'),
+        status: 'active',
+        expires_at: expiresAt ? String(expiresAt) : null,
+      })
+    } catch {
+    }
+
+    try {
+      const vendor = localSyncStore.listLocalPlusVendors().find((v: any) => String(v?.id || '') === vendorId) as any
+      const toTierNum = (t: any) => (t === 'or' ? 3 : t === 'argent' ? 2 : t === 'bronze' ? 1 : null)
+      const patch: any = {}
+      if (row.sponsored_until) patch.sponsoredUntil = Date.parse(String(row.sponsored_until))
+      if (row.promo_until) patch.promoUntil = Date.parse(String(row.promo_until))
+      if (row.new_until) patch.newUntil = Date.parse(String(row.new_until))
+      if (row.sponsored_tier) patch.sponsoredTier = toTierNum(row.sponsored_tier)
+      if (vendor && Object.keys(patch).length) {
+        void localSyncStore.upsertLocalPlusVendor({ ...vendor, ...patch }, email)
+      }
+    } catch {
+    }
+
+    const balanceXof = localBoostCreditsStore.getBalanceXof(email)
+    res.json({ success: true, row, balanceXof })
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: String(e?.message || e || 'Erreur') })
+  }
+})
+
+router.get('/my-orders-local', async (req, res) => {
+  try {
+    if (!isLocalBoostPricingMode()) {
+      res.status(404).json({ success: false, error: 'Not available' })
+      return
+    }
+    const email = String(req.query?.email || '').trim().toLowerCase()
+    const vendorId = String(req.query?.vendorId || '').trim()
+    const vendorKind = String(req.query?.vendorKind || '').trim().toLowerCase()
+    if (!email || !email.includes('@')) return res.status(400).json({ success: false, error: 'email invalide' })
+    if (!vendorId) return res.status(400).json({ success: false, error: 'vendorId manquant' })
+    if (vendorKind !== 'shop' && vendorKind !== 'provider') return res.status(400).json({ success: false, error: 'vendorKind invalide' })
+    const orders = localBoostOrdersStore.listByVendor(vendorId, vendorKind, 30)
+    res.json({ success: true, orders })
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: String(e?.message || e || 'Erreur') })
+  }
+})
+
 router.get('/credits-balance', async (req, res) => {
   try {
+    if (isLocalBoostPricingMode()) {
+      const email = String(req.query?.email || '').trim().toLowerCase()
+      const balanceXof = email ? localBoostCreditsStore.getBalanceXof(email) : 0
+      res.json({ balanceXof })
+      return
+    }
     const auth = await authenticateUser(req, res);
     if (!auth) return;
     const balanceXof = await getUserCreditBalanceXof(auth.user.id);
@@ -235,6 +452,24 @@ router.get('/credits-balance', async (req, res) => {
     res.status(500).json({ error: 'Erreur serveur', details: error?.message || String(error) });
   }
 });
+
+router.post('/credits/topup-local', async (req, res) => {
+  try {
+    if (!isLocalBoostPricingMode()) {
+      res.status(404).json({ success: false, error: 'Not available' })
+      return
+    }
+    const email = String(req.body?.email || '').trim().toLowerCase()
+    const amount = Number(req.body?.amount_xof)
+    if (!email || !email.includes('@')) return res.status(400).json({ success: false, error: 'Email invalide' })
+    if (!Number.isFinite(amount) || amount <= 0) return res.status(400).json({ success: false, error: 'Montant invalide' })
+    localBoostCreditsStore.grant(email, Math.floor(amount), email)
+    const balanceXof = localBoostCreditsStore.getBalanceXof(email)
+    res.json({ success: true, balanceXof })
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: String(e?.message || e || 'Erreur') })
+  }
+})
 
 router.get('/my-orders', async (req, res) => {
   try {

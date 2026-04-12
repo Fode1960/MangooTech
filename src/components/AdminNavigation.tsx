@@ -43,7 +43,7 @@ export default function AdminNavigation() {
   };
 
   return (
-    <div className="h-full w-64 bg-white dark:bg-gray-900 shadow-lg border-r border-gray-200 dark:border-gray-700 flex-shrink-0">
+    <div className="h-full w-64 bg-white dark:bg-gray-900 shadow-lg border-r border-gray-200 dark:border-gray-700 flex-shrink-0 flex flex-col overflow-hidden">
       <div className="flex items-center justify-center h-16 bg-gradient-to-r from-blue-600 to-purple-600">
         <div className="flex items-center space-x-2">
           <Shield className="h-8 w-8 text-white" />
@@ -69,7 +69,7 @@ export default function AdminNavigation() {
         </button>
       </div>
       
-      <nav className="mt-6 px-4">
+      <nav className="mt-6 px-4 flex-1 overflow-auto">
         <ul className="space-y-2">
           {navigation.map((item) => {
             const Icon = item.icon;

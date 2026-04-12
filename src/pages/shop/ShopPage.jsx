@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Store, MapPin, Star, Package, Calendar, Shield, Truck, Heart, Share2, MessageCircle, Users, ShoppingCart } from 'lucide-react';
 import VendorProductManager from '../../components/VendorProductManager';
+import { isLocalSyncEnabled, localSync } from '../../utils/localSyncClient';
 
 const ShopPage = () => {
   const { shopSlug } = useParams();
@@ -181,6 +182,56 @@ const ShopPage = () => {
           return null;
         }
       })();
+
+      if (isLocalSyncEnabled()) {
+        try {
+          const resp = await localSync.getShopBySlug(shopSlug)
+          const s = resp?.shop
+          if (s?.slug) {
+            let canManage = false
+            try {
+              const me = await localSync.me()
+              const uid = String(me?.user?.id || '').trim()
+              const ownerId = String(s?.userId || s?.user_id || '').trim()
+              canManage = Boolean(uid && ownerId && uid === ownerId)
+            } catch {
+              canManage = false
+            }
+
+            const status = String(s?.status || 'pending').trim().toLowerCase()
+            const normalizedStatus = status === 'approved' || status === 'rejected' ? status : 'pending'
+            const isAdmin = currentUser?.role === 'admin'
+
+            if (normalizedStatus !== 'approved' && !canManage && !isAdmin) {
+              setError('Boutique en attente d’approbation')
+              setLoading(false)
+              return
+            }
+
+            setShop({
+              ...demoShop,
+              id: s.id || demoShop.id,
+              name: s.name || demoShop.name,
+              slug: s.slug || shopSlug,
+              description: demoShop.description,
+              status: normalizedStatus,
+              contact_email: '',
+              address: { city: 'Paris', country: 'France' },
+              created_at: String(s?.createdAt || s?.created_at || demoShop.created_at),
+              primaryColor: '#0EA5E9',
+              secondaryColor: '#38BDF8',
+              logoDataUrl: '',
+            })
+            setProducts([])
+            setCanManageProducts(Boolean(canManage || isAdmin))
+            setShopOwnerEmail('')
+            setError(null)
+            setLoading(false)
+            return
+          }
+        } catch {
+        }
+      }
 
       const localPlusVendor = (() => {
         const slugify = (value) => {
