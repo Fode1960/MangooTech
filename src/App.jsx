@@ -29,6 +29,7 @@ import ShopPage from './pages/shop/ShopPage.jsx';
 import VendorAccessQRPage from './pages/VendorAccessQRPage';
 import { QRCodeCanvas } from 'qrcode.react';
 import { isLocalSyncEnabled, localSync, setLocalSyncToken } from './utils/localSyncClient';
+import { fetchActiveBoostRows, getBoostDiscoveryFlags, indexActiveBoosts, readBoostConfigCacheRows } from './utils/boostDiscovery';
 import { Toaster, toast } from 'sonner';
 import { ensureWalletBalance, getWalletBalance, getWalletKeyFromUser, creditWalletBalance } from './utils/demoWallet';
 import { usePaymentStore } from './stores/paymentStore';
@@ -270,6 +271,21 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const { isDark, setTheme } = useThemeStore();
   const navigate = useNavigate();
+
+  const handleBack = useCallback(() => {
+    if (typeof onBack === 'function') {
+      onBack()
+      return
+    }
+    try {
+      if (window.history.length > 1) {
+        navigate(-1)
+        return
+      }
+    } catch {
+    }
+    navigate('/')
+  }, [navigate, onBack])
 
   const speakHelp = useCallback(() => {
     speakFR("Pour vous connecter, tapez votre email et votre mot de passe, puis appuyez sur Se connecter. Exemple vendeur : vendor arrobase example point com, mot de passe vendor 1 2 3. Exemple client : client arrobase example point com, mot de passe client 1 2 3.");
@@ -621,9 +637,10 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
           ? 'bg-gray-800 border border-gray-700' 
           : 'bg-white'
       }`}>
-        {onBack && (
-          <button 
-            onClick={onBack}
+        {onBack !== false && (
+          <button
+            type="button"
+            onClick={handleBack}
             className={`mb-6 flex items-center gap-2 text-sm font-medium transition-colors duration-300 hover:text-orange-500 ${
               isDark ? 'text-gray-400' : 'text-gray-600'
             }`}
@@ -3054,7 +3071,68 @@ const ClientMarketplace = ({ user }) => {
   const [showPayment, setShowPayment] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const { isDark } = useThemeStore();
+  const navigate = useNavigate();
   const email = String(user?.email || '').trim().toLowerCase();
+  const boostFlags = useMemo(() => getBoostDiscoveryFlags(), []);
+  const [boostSummary, setBoostSummary] = useState({ sponsored: 0, promo: 0, new: 0 });
+
+
+  const buildBoostLink = useCallback((basePath) => {
+    try {
+      const qs = new URLSearchParams()
+      const current = new URLSearchParams(window.location.search)
+      const v = current.get('ff_boost_vitrine')
+      const p = current.get('ff_boost_promo')
+      if (v) qs.set('ff_boost_vitrine', v)
+      if (p) qs.set('ff_boost_promo', p)
+      const out = qs.toString()
+      return out ? `${basePath}?${out}` : basePath
+    } catch {
+      return basePath
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!boostFlags.vitrine && !boostFlags.promo) return
+    let mounted = true
+    ;(async () => {
+      const now = Date.now()
+      const countUnique = (rows) => {
+        const seen = new Set()
+        let sponsored = 0
+        let promo = 0
+        let neu = 0
+        ;(Array.isArray(rows) ? rows : []).forEach((r) => {
+          const vendorId = String(r?.vendor_id || '').trim()
+          const vendorKind = String(r?.vendor_kind || '').trim().toLowerCase()
+          if (!vendorId || (vendorKind !== 'shop' && vendorKind !== 'provider')) return
+          const key = `${vendorKind}:${vendorId}`
+          if (seen.has(key)) return
+          seen.add(key)
+          const s = Date.parse(String(r?.sponsored_until || ''))
+          const pr = Date.parse(String(r?.promo_until || ''))
+          const nw = Date.parse(String(r?.new_until || ''))
+          if (Number.isFinite(s) && s > now) sponsored += 1
+          if (Number.isFinite(pr) && pr > now) promo += 1
+          if (Number.isFinite(nw) && nw > now) neu += 1
+        })
+        return { sponsored, promo, new: neu }
+      }
+
+      try {
+        const rows = await fetchActiveBoostRows({ timeoutMs: 6500 })
+        const next = countUnique(rows)
+        if (mounted) setBoostSummary(next)
+      } catch {
+        const rows = readBoostConfigCacheRows()
+        const next = countUnique(rows)
+        if (mounted) setBoostSummary(next)
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [boostFlags.promo, boostFlags.vitrine])
 
   const categories = useMemo(() => [
     { id: 'all', name: 'Tous', icon: '🛍️' },
@@ -3256,6 +3334,73 @@ const ClientMarketplace = ({ user }) => {
           )}
         </div>
       </div>
+
+      {(boostFlags.vitrine || boostFlags.promo) && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {boostFlags.vitrine && (
+            <div className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-5 shadow-sm`}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-black`}>Sponsorisé</div>
+                  <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm mt-1`}>Plus de visibilité sur les écrans de découverte.</div>
+                </div>
+                <div className={`${isDark ? 'bg-amber-500/15 text-amber-200 border-amber-400/30' : 'bg-amber-50 text-amber-700 border-amber-200'} border text-xs font-black px-2 py-1 rounded-full`}>
+                  {boostSummary.sponsored}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate(buildBoostLink('/shops'))}
+                className="mt-4 w-full bg-gradient-to-r from-orange-500 to-green-600 text-white py-2.5 px-4 rounded-xl font-black hover:from-orange-600 hover:to-green-700 transition-all"
+              >
+                Voir les boutiques
+              </button>
+            </div>
+          )}
+
+          {boostFlags.promo && (
+            <div className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-5 shadow-sm`}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-black`}>Promotions</div>
+                  <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm mt-1`}>Offres mises en avant pour déclencher l’achat.</div>
+                </div>
+                <div className={`${isDark ? 'bg-fuchsia-500/15 text-fuchsia-200 border-fuchsia-400/30' : 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200'} border text-xs font-black px-2 py-1 rounded-full`}>
+                  {boostSummary.promo}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate(buildBoostLink('/shops'))}
+                className={`${isDark ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'} mt-4 w-full py-2.5 px-4 rounded-xl font-black transition-colors`}
+              >
+                Découvrir
+              </button>
+            </div>
+          )}
+
+          {boostFlags.promo && (
+            <div className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-5 shadow-sm`}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-black`}>Nouveautés</div>
+                  <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm mt-1`}>Nouvelles boutiques mises en lumière.</div>
+                </div>
+                <div className={`${isDark ? 'bg-sky-500/15 text-sky-200 border-sky-400/30' : 'bg-sky-50 text-sky-700 border-sky-200'} border text-xs font-black px-2 py-1 rounded-full`}>
+                  {boostSummary.new}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate(buildBoostLink('/shops'))}
+                className={`${isDark ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'} mt-4 w-full py-2.5 px-4 rounded-xl font-black transition-colors`}
+              >
+                Explorer
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Interface de paiement */}
       {showPayment && (
@@ -3483,10 +3628,20 @@ const ShopsDirectory = () => {
   const [localPlusShops, setLocalPlusShops] = useState([]);
   const [localPlusRemoteShops, setLocalPlusRemoteShops] = useState([]);
   const [localSyncShops, setLocalSyncShops] = useState([]);
+  const [boostIndex, setBoostIndex] = useState(() => new Map());
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const listRef = useRef(null);
+  const boostFlags = useMemo(() => getBoostDiscoveryFlags(), []);
+  const debugBoosts = useMemo(() => {
+    try {
+      const qs = new URLSearchParams(window.location.search)
+      return String(qs.get('ff_boost_debug') || '') === '1'
+    } catch {
+      return false
+    }
+  }, [])
 
   const shopCategories = useMemo(() => [
     { key: 'general', label: 'Général' },
@@ -3547,6 +3702,8 @@ const ShopsDirectory = () => {
             primaryColor: '#0EA5E9',
             secondaryColor: '#38BDF8',
             logoDataUrl: '',
+            vendorId: id,
+            vendorKind: 'shop',
             source: 'localplus'
           };
         });
@@ -3582,6 +3739,8 @@ const ShopsDirectory = () => {
             primaryColor: '#0EA5E9',
             secondaryColor: '#38BDF8',
             logoDataUrl: '',
+            vendorId: id,
+            vendorKind: 'shop',
             source: 'localplus-remote',
           }
         })
@@ -3610,6 +3769,8 @@ const ShopsDirectory = () => {
             primaryColor: s.primaryColor || '#F97316',
             secondaryColor: s.secondaryColor || '#FBBF24',
             logoDataUrl: s.logoDataUrl || '',
+            vendorId: String(s?.sourceVendorId ?? s?.source_vendor_id ?? s?.vendorId ?? s?.vendor_id ?? s?.id ?? '').replace(/^shop-/, ''),
+            vendorKind: 'shop',
             source: 'created'
           }))
       );
@@ -3634,6 +3795,8 @@ const ShopsDirectory = () => {
         primaryColor: '#0EA5E9',
         secondaryColor: '#38BDF8',
         logoDataUrl: '',
+        vendorId: String(s?.id || '').trim(),
+        vendorKind: 'shop',
         approvalStatus: s?.status || 'pending',
         source: 'local-sync',
       })))
@@ -3641,6 +3804,25 @@ const ShopsDirectory = () => {
       setLocalSyncShops([])
     }
   }, [])
+
+  useEffect(() => {
+    if (!boostFlags.vitrine && !boostFlags.promo) return
+    let mounted = true
+    ;(async () => {
+      try {
+        const rows = await fetchActiveBoostRows({ timeoutMs: 6500 })
+        const mapped = indexActiveBoosts(rows)
+        if (mounted) setBoostIndex(mapped)
+      } catch {
+        const fallbackRows = readBoostConfigCacheRows()
+        const mapped = indexActiveBoosts(fallbackRows)
+        if (mounted) setBoostIndex(mapped)
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [boostFlags.promo, boostFlags.vitrine])
 
   useEffect(() => {
     loadCreatedShops();
@@ -3686,23 +3868,61 @@ const ShopsDirectory = () => {
       return c;
     };
 
-    const fromVendors = (vendors || []).map((v) => ({
-      id: `vendor-${v.id}`,
-      name: v.name,
-      slug: 'boutique-demo',
-      category: normalizeVendorCategory(v.category) || 'general',
-      primaryColor: '#0EA5E9',
-      secondaryColor: '#38BDF8',
-      logoDataUrl: '',
-      source: 'vendor'
-    }));
-
-    const bySlug = new Map();
-    [...base, ...demoCreatedShops, ...localPlusShops, ...localPlusRemoteShops, ...localSyncShops, ...fromVendors].forEach((s) => {
-      const key = `${s.slug}-${s.name}`;
-      if (!bySlug.has(key)) bySlug.set(key, s);
+    const fromVendors = (vendors || []).map((v) => {
+      const rawKind = String(v?.kind || 'shop').trim().toLowerCase()
+      const vendorKind = rawKind === 'provider' || rawKind === 'service' ? 'provider' : 'shop'
+      const vendorId = String(v?.id ?? '').trim()
+      const slug = String(v?.slug || '').trim() || 'boutique-demo'
+      return {
+        id: `vendor-${v.id}`,
+        name: v.name,
+        slug,
+        category: normalizeVendorCategory(v.category) || 'general',
+        primaryColor: '#0EA5E9',
+        secondaryColor: '#38BDF8',
+        logoDataUrl: '',
+        vendorId,
+        vendorKind,
+        source: 'vendor'
+      }
     });
-    return Array.from(bySlug.values());
+
+    const sourceRank = {
+      'local-sync': 60,
+      'localplus-remote': 50,
+      localplus: 40,
+      created: 30,
+      vendor: 20,
+      demo: 10,
+    }
+
+    const toKey = (s) => {
+      const vendorId = String(s?.vendorId || '').trim()
+      const vendorKind = String(s?.vendorKind || '').trim().toLowerCase()
+      if (vendorId && (vendorKind === 'shop' || vendorKind === 'provider')) return `${vendorKind}:${vendorId}`
+      const slug = String(s?.slug || '').trim()
+      if (slug) return `slug:${slug}`
+      const name = String(s?.name || '').trim()
+      return name ? `name:${name}` : `id:${String(s?.id || '')}`
+    }
+
+    const rankOf = (s) => {
+      const src = String(s?.source || '').trim()
+      return Number(sourceRank[src] ?? 0)
+    }
+
+    const byKey = new Map()
+    ;[...base, ...demoCreatedShops, ...localPlusShops, ...localPlusRemoteShops, ...localSyncShops, ...fromVendors].forEach((s) => {
+      const key = toKey(s)
+      const prev = byKey.get(key)
+      if (!prev) {
+        byKey.set(key, s)
+        return
+      }
+      const keepNext = rankOf(s) > rankOf(prev)
+      if (keepNext) byKey.set(key, s)
+    })
+    return Array.from(byKey.values());
   }, [demoCreatedShops, localPlusShops, localPlusRemoteShops, localSyncShops, vendors]);
 
   const goToShop = useCallback((slug) => {
@@ -3713,6 +3933,7 @@ const ShopsDirectory = () => {
     }
     navigate(`/shop/${slug}`);
   }, [navigate]);
+
 
   const scrollToList = useCallback(() => {
     requestAnimationFrame(() => {
@@ -3753,13 +3974,46 @@ const ShopsDirectory = () => {
       ? directory
       : directory.filter((s) => (s?.category || 'general') === selectedCategory);
 
-    if (!term) return byCategory;
-    return byCategory.filter((s) => {
+    const filtered = !term ? byCategory : byCategory.filter((s) => {
       const name = normalize(s?.name);
       const slug = normalize(s?.slug);
       return name.includes(term) || slug.includes(term);
     });
+
+    return filtered
+      .slice()
+      .sort((a, b) => {
+        const an = String(a?.name || '').localeCompare(String(b?.name || ''), 'fr', { sensitivity: 'base' })
+        if (an !== 0) return an
+        return String(a?.slug || '').localeCompare(String(b?.slug || ''), 'fr', { sensitivity: 'base' })
+      })
   }, [directory, searchTerm, selectedCategory]);
+
+  const getBoostForShop = useCallback((shop) => {
+    const vendorId = String(shop?.vendorId || '').trim()
+    const vendorKind = String(shop?.vendorKind || 'shop').trim().toLowerCase()
+    if (vendorId && (vendorKind === 'shop' || vendorKind === 'provider')) {
+      return boostIndex.get(`${vendorKind}:${vendorId}`) || boostIndex.get(vendorId) || null
+    }
+    const fallbackId = String(shop?.id || '').trim()
+    return fallbackId ? boostIndex.get(fallbackId) || null : null
+  }, [boostIndex])
+
+  const sponsoredTop = useMemo(() => {
+    if (!boostFlags.vitrine) return []
+    const now = Date.now()
+    const list = visibleShops.filter((s) => {
+      const b = getBoostForShop(s)
+      return b && Number(b.sponsoredUntilMs || 0) > now
+    })
+    return list.slice(0, 6)
+  }, [boostFlags.vitrine, getBoostForShop, visibleShops])
+
+  const sponsoredIds = useMemo(() => new Set(sponsoredTop.map((s) => String(s.id))), [sponsoredTop])
+  const mainList = useMemo(() => {
+    if (!boostFlags.vitrine) return visibleShops
+    return visibleShops.filter((s) => !sponsoredIds.has(String(s.id)))
+  }, [boostFlags.vitrine, sponsoredIds, visibleShops])
 
   useEffect(() => {
     const next = new URLSearchParams(searchParams);
@@ -3848,6 +4102,90 @@ const ShopsDirectory = () => {
         })}
       </div>
 
+      {debugBoosts && (boostFlags.vitrine || boostFlags.promo) && (
+        <div className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-4 mb-6`}>
+          <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-black`}>Tester Boosts</div>
+          <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm mt-1`}>Active des boosts sur la 1ère boutique visible.</div>
+          <div className="mt-3 flex flex-col sm:flex-row gap-3">
+            <button
+              type="button"
+              onClick={async () => {
+                const shop = (mainList[0] || sponsoredTop[0] || visibleShops[0])
+                if (!shop) return
+                const vendorId = String(shop.vendorId || '').trim()
+                if (!vendorId) return
+                try {
+                  await fetch('/api/boosts/dev/activate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ vendorId, vendorKind: 'shop', boostKind: 'sponsored', durationHours: 12, sponsoredTier: 'argent' }),
+                  })
+                } catch {
+                }
+                try {
+                  const rows = await fetchActiveBoostRows({ timeoutMs: 6500 })
+                  setBoostIndex(indexActiveBoosts(rows))
+                } catch {
+                }
+              }}
+              className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-4 py-2 rounded-xl font-black"
+            >
+              Sponsoring (12h)
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                const shop = (mainList[0] || sponsoredTop[0] || visibleShops[0])
+                if (!shop) return
+                const vendorId = String(shop.vendorId || '').trim()
+                if (!vendorId) return
+                try {
+                  await fetch('/api/boosts/dev/activate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ vendorId, vendorKind: 'shop', boostKind: 'promo', durationHours: 12 }),
+                  })
+                } catch {
+                }
+                try {
+                  const rows = await fetchActiveBoostRows({ timeoutMs: 6500 })
+                  setBoostIndex(indexActiveBoosts(rows))
+                } catch {
+                }
+              }}
+              className={`${isDark ? 'bg-gray-800 text-white hover:bg-gray-700' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'} px-4 py-2 rounded-xl font-black transition-colors`}
+            >
+              Promotion (12h)
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                const shop = (mainList[0] || sponsoredTop[0] || visibleShops[0])
+                if (!shop) return
+                const vendorId = String(shop.vendorId || '').trim()
+                if (!vendorId) return
+                try {
+                  await fetch('/api/boosts/dev/activate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ vendorId, vendorKind: 'shop', boostKind: 'new', durationHours: 12 }),
+                  })
+                } catch {
+                }
+                try {
+                  const rows = await fetchActiveBoostRows({ timeoutMs: 6500 })
+                  setBoostIndex(indexActiveBoosts(rows))
+                } catch {
+                }
+              }}
+              className={`${isDark ? 'bg-gray-800 text-white hover:bg-gray-700' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'} px-4 py-2 rounded-xl font-black transition-colors`}
+            >
+              Nouveau (12h)
+            </button>
+          </div>
+        </div>
+      )}
+
       {visibleShops.length === 0 ? (
         <div ref={listRef} className="text-center py-12">
           <div className="text-6xl mb-4">🏪</div>
@@ -3879,8 +4217,101 @@ const ShopsDirectory = () => {
           </div>
         </div>
       ) : (
-        <div ref={listRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-2">
-          {visibleShops.map((shop) => (
+        <div ref={listRef} className="space-y-5 pb-2">
+          {boostFlags.vitrine && sponsoredTop.length > 0 && (
+            <div>
+              <div className={`text-xs font-black uppercase tracking-wide mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Sponsorisé</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {sponsoredTop.map((shop) => (
+                  <div
+                    key={`sponsored-${shop.id}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => goToShop(shop.slug)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        goToShop(shop.slug);
+                      }
+                    }}
+                    className={`text-left rounded-2xl border shadow-lg hover:shadow-xl transition-all overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500/60 ${
+                      isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
+                    }`}
+                  >
+                    <div className="h-16" style={{ background: `linear-gradient(90deg, ${shop.primaryColor}, ${shop.secondaryColor})` }} />
+                    <div className="p-4">
+                      <div className="flex items-center gap-3">
+                        {shop.logoDataUrl ? (
+                          <img src={shop.logoDataUrl} alt="Logo" className="w-12 h-12 rounded-xl object-cover" />
+                        ) : (
+                          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold" style={{ backgroundColor: shop.primaryColor }}>
+                            {shop.name?.charAt(0)?.toUpperCase() || 'B'}
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <div className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{shop.name}</div>
+                            <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-amber-500/15 text-amber-200 border-amber-400/30' : 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-amber-50 text-amber-700 border-amber-200'}>
+                              Sponsorisé
+                            </span>
+                            {shop.source === 'localplus' && (
+                              <span
+                                className={`text-[10px] px-2 py-0.5 rounded-full font-black border ${
+                                  isDark
+                                    ? 'bg-emerald-500/15 text-emerald-200 border-emerald-400/30'
+                                    : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                }`}
+                                title="Boutique créée dans Mangoo Local+"
+                              >
+                                Local+
+                              </span>
+                            )}
+                          </div>
+                          <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{shop.slug}</div>
+                        </div>
+                      </div>
+                      <div className="mt-4 flex items-center justify-between">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedCategory(shop.category || 'general');
+                            scrollToList();
+                          }}
+                          className={`text-xs px-2 py-1 rounded-full font-semibold transition-colors ${
+                            isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                          title="Filtrer par catégorie"
+                        >
+                          {categoryLabel(shop.category)}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            goToShop(shop.slug);
+                          }}
+                          className={`text-xs font-semibold underline underline-offset-4 transition-colors ${
+                            isDark ? 'text-gray-200 hover:text-white' : 'text-gray-700 hover:text-gray-900'
+                          }`}
+                        >
+                          Voir
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {mainList.map((shop) => {
+            const b = (boostFlags.vitrine || boostFlags.promo) ? getBoostForShop(shop) : null
+            const now = Date.now()
+            const isPromo = Boolean(boostFlags.promo && b && Number(b.promoUntilMs || 0) > now)
+            const isNew = Boolean(boostFlags.promo && b && Number(b.newUntilMs || 0) > now)
+            return (
             <div
               key={shop.id}
               role="button"
@@ -3912,6 +4343,16 @@ const ShopsDirectory = () => {
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <div className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{shop.name}</div>
+                      {isPromo && (
+                        <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-fuchsia-500/15 text-fuchsia-200 border-fuchsia-400/30' : 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200'}>
+                          Promo
+                        </span>
+                      )}
+                      {isNew && (
+                        <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-sky-500/15 text-sky-200 border-sky-400/30' : 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-sky-50 text-sky-700 border-sky-200'}>
+                          Nouveau
+                        </span>
+                      )}
                       {shop.source === 'localplus' && (
                         <span
                           className={`text-[10px] px-2 py-0.5 rounded-full font-black border ${
@@ -3958,7 +4399,9 @@ const ShopsDirectory = () => {
                 </div>
               </div>
             </div>
-          ))}
+            )
+          })}
+          </div>
         </div>
       )}
     </div>
@@ -6954,6 +7397,7 @@ function App() {
         <Route path="/commande/:orderId" element={<OrderStatus />} />
         <Route path="/livreur/inscription" element={<CourierRegister />} />
         <Route path="/livreur" element={<CourierScreen />} />
+        <Route path="/shops" element={<ShopsDirectory />} />
         <Route path="/shop/:shopSlug" element={<ShopPage />} />
         <Route path="/service-checkout" element={<ServiceCheckout />} />
         <Route path="/provider/dashboard" element={<ProviderDashboard />} />

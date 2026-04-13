@@ -2,7 +2,7 @@
 $ErrorActionPreference = 'SilentlyContinue'
 
 # Ports à libérer
-$ports = @(3009, 3005, 3015)
+$ports = @(3009, 3005, 3015, 3045)
 Write-Host "Liberation des ports: $($ports -join ', ')" -ForegroundColor Yellow
 
 foreach ($p in $ports) {

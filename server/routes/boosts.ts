@@ -41,6 +41,13 @@ function isLocalBoostPricingMode() {
   return String(process.env.NODE_ENV || '').trim().toLowerCase() !== 'production'
 }
 
+function isBoostDiscoveryEnabled() {
+  const flag = String(process.env.BOOST_DISCOVERY_ENABLED || '').trim()
+  if (flag === '1') return true
+  if (flag === '0') return false
+  return String(process.env.NODE_ENV || '').trim().toLowerCase() !== 'production'
+}
+
 function toStripeUnitAmount(amountXof: number, currency: string): number {
   const c = String(currency || 'xof').toLowerCase();
   const zeroDecimal = new Set(['xof', 'xaf', 'jpy', 'krw', 'vnd']);
@@ -291,7 +298,21 @@ router.get('/pricing', (_req, res) => {
 router.get('/vendor-boosts-active', (_req, res) => {
   try {
     if (!isLocalBoostPricingMode()) {
-      res.json({ rows: [] })
+      if (!isBoostDiscoveryEnabled()) {
+        res.json({ rows: [] })
+        return
+      }
+      const nowIso = new Date().toISOString()
+      supabase
+        .from('vendor_boosts')
+        .select('vendor_id,vendor_kind,sponsored_until,sponsored_tier,promo_until,new_until,updated_at')
+        .or(`sponsored_until.gte.${nowIso},promo_until.gte.${nowIso},new_until.gte.${nowIso}`)
+        .then(({ data, error }) => {
+          if (error || !data) return res.json({ rows: [] })
+          const rows = Array.isArray(data) ? data : []
+          res.json({ rows })
+        })
+        .catch(() => res.json({ rows: [] }))
       return
     }
     const rows = localVendorBoostsStore.listActive()
@@ -304,7 +325,25 @@ router.get('/vendor-boosts-active', (_req, res) => {
 router.get('/vendor-boosts', (req, res) => {
   try {
     if (!isLocalBoostPricingMode()) {
-      res.json({ row: null })
+      if (!isBoostDiscoveryEnabled()) {
+        res.json({ row: null })
+        return
+      }
+      const vendorId = String(req.query?.vendorId || '').trim()
+      const vendorKind = String(req.query?.vendorKind || '').trim().toLowerCase()
+      if (!vendorId) return res.status(400).json({ error: 'vendorId manquant' })
+      if (vendorKind !== 'shop' && vendorKind !== 'provider') return res.status(400).json({ error: 'vendorKind invalide' })
+      supabase
+        .from('vendor_boosts')
+        .select('vendor_id,vendor_kind,sponsored_until,sponsored_tier,promo_until,new_until,updated_at')
+        .eq('vendor_id', vendorId)
+        .eq('vendor_kind', vendorKind)
+        .maybeSingle()
+        .then(({ data, error }) => {
+          if (error || !data) return res.json({ row: null })
+          res.json({ row: data })
+        })
+        .catch(() => res.json({ row: null }))
       return
     }
     const vendorId = String(req.query?.vendorId || '').trim()
@@ -315,6 +354,74 @@ router.get('/vendor-boosts', (req, res) => {
     res.json({ row })
   } catch {
     res.json({ row: null })
+  }
+})
+
+router.post('/dev/activate', (req, res) => {
+  try {
+    const isDev = String(process.env.NODE_ENV || '').trim().toLowerCase() !== 'production'
+    if (!isDev || !isLocalBoostPricingMode()) {
+      res.status(404).json({ success: false, error: 'Not available' })
+      return
+    }
+    const vendorId = String(req.body?.vendorId || '').trim()
+    const vendorKind = String(req.body?.vendorKind || '').trim().toLowerCase()
+    const boostKind = String(req.body?.boostKind || '').trim().toLowerCase() as any
+    const durationHours = Math.floor(Number(req.body?.durationHours || 12))
+    const sponsoredTier = String(req.body?.sponsoredTier || '').trim().toLowerCase() as any
+    if (!vendorId) return res.status(400).json({ success: false, error: 'vendorId manquant' })
+    if (vendorKind !== 'shop' && vendorKind !== 'provider') return res.status(400).json({ success: false, error: 'vendorKind invalide' })
+    if (boostKind !== 'sponsored' && boostKind !== 'promo' && boostKind !== 'new') return res.status(400).json({ success: false, error: 'boostKind invalide' })
+    if (![12, 24, 48, 72].includes(durationHours)) return res.status(400).json({ success: false, error: 'durationHours invalide' })
+    const tier = sponsoredTier === 'bronze' || sponsoredTier === 'argent' || sponsoredTier === 'or' ? sponsoredTier : null
+    const row = localVendorBoostsStore.activate({
+      vendorId,
+      vendorKind,
+      boostKind,
+      durationHours,
+      sponsoredTier: tier,
+    })
+    res.json({ success: true, row })
+  } catch (e: any) {
+    res.status(400).json({ success: false, error: e?.message || 'Erreur' })
+  }
+})
+
+router.post('/dev/stop', (req, res) => {
+  try {
+    const isDev = String(process.env.NODE_ENV || '').trim().toLowerCase() !== 'production'
+    if (!isDev || !isLocalBoostPricingMode()) {
+      res.status(404).json({ success: false, error: 'Not available' })
+      return
+    }
+    const vendorId = String(req.body?.vendorId || '').trim()
+    const vendorKind = String(req.body?.vendorKind || '').trim().toLowerCase()
+    const boostKind = String(req.body?.boostKind || '').trim().toLowerCase() as any
+    if (!vendorId) return res.status(400).json({ success: false, error: 'vendorId manquant' })
+    if (vendorKind !== 'shop' && vendorKind !== 'provider') return res.status(400).json({ success: false, error: 'vendorKind invalide' })
+    if (boostKind !== 'sponsored' && boostKind !== 'promo' && boostKind !== 'new') return res.status(400).json({ success: false, error: 'boostKind invalide' })
+    const row = localVendorBoostsStore.stop(vendorId, vendorKind, boostKind)
+    res.json({ success: true, row })
+  } catch (e: any) {
+    res.status(400).json({ success: false, error: e?.message || 'Erreur' })
+  }
+})
+
+router.post('/dev/stop-all', (req, res) => {
+  try {
+    const isDev = String(process.env.NODE_ENV || '').trim().toLowerCase() !== 'production'
+    if (!isDev || !isLocalBoostPricingMode()) {
+      res.status(404).json({ success: false, error: 'Not available' })
+      return
+    }
+    const vendorId = String(req.body?.vendorId || '').trim()
+    const vendorKind = String(req.body?.vendorKind || '').trim().toLowerCase()
+    if (!vendorId) return res.status(400).json({ success: false, error: 'vendorId manquant' })
+    if (vendorKind !== 'shop' && vendorKind !== 'provider') return res.status(400).json({ success: false, error: 'vendorKind invalide' })
+    const row = localVendorBoostsStore.stopAll(vendorId, vendorKind)
+    res.json({ success: true, row })
+  } catch (e: any) {
+    res.status(400).json({ success: false, error: e?.message || 'Erreur' })
   }
 })
 

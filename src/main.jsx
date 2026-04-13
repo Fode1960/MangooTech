@@ -5,10 +5,11 @@ import './index.css'
 import { ErrorBoundary } from './components/ErrorBoundary.jsx'
 import { BrowserRouter } from 'react-router-dom'
 
-console.log('Main.jsx starting...');
+const root = document.getElementById('root')
+if (!root) throw new Error('Élément #root introuvable')
 
 try {
-  window.__mangootech_main_started__ = true
+  window.__mangootech_main_started__ = Date.now()
 } catch {
 }
 
@@ -18,7 +19,7 @@ try {
 } catch {
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(root).render(
   <React.StrictMode>
     <ErrorBoundary>
       <BrowserRouter>
@@ -27,3 +28,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </ErrorBoundary>
   </React.StrictMode>,
 )
+
+try {
+  requestAnimationFrame(() => {
+    try {
+      window.__mangootech_app_rendered__ = Date.now()
+    } catch {
+    }
+  })
+} catch {
+}

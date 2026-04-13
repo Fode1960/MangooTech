@@ -12,6 +12,14 @@ export default defineConfig({
     port: 3015,
     strictPort: false,
     host: '0.0.0.0',
+    hmr: false,
+    watch: {
+      ignored: [
+        '**/server/data/**',
+        '**/dist/**',
+        '**/.version-backups/**',
+      ],
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:3045',

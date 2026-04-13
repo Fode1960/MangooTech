@@ -444,7 +444,87 @@ export default function AdminShops() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="md:hidden">
+            {filtered.length === 0 ? (
+              <div className={`px-4 py-10 text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Aucune boutique.</div>
+            ) : (
+              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                {filtered.map((s) => {
+                  const status = (s.approvalStatus || 'pending') as ApprovalStatus;
+                  return (
+                    <div key={String(s.slug)} className="p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{s.name || 'Boutique'}</div>
+                          <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-xs break-all`}>{s.slug}</div>
+                          <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm mt-1`}>{s.category || 'general'}</div>
+                          <div className="mt-2">
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${statusBadge(status, isDark)}`}>
+                              {status === 'approved' ? 'Approuvée' : status === 'rejected' ? 'Rejetée' : status === 'suspended' ? 'Suspendue' : 'En attente'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => void setApproval(String(s.slug), 'approved')}
+                            disabled={status === 'approved'}
+                            className="touch-manipulation px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold text-sm"
+                          >
+                            Approuver
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void setApproval(String(s.slug), 'rejected')}
+                            disabled={status === 'rejected'}
+                            className="touch-manipulation px-3 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white font-bold text-sm"
+                          >
+                            Rejeter
+                          </button>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openBilling(s)}
+                          className={`touch-manipulation ${isDark ? 'bg-gray-900 border border-gray-700 text-gray-200 hover:bg-gray-800' : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-lg text-sm font-semibold inline-flex items-center gap-2`}
+                        >
+                          <FileText className="w-4 h-4" />
+                          Facturation
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => window.open(`/shop/${encodeURIComponent(String(s.slug))}`, '_blank', 'noopener,noreferrer')}
+                          className={`touch-manipulation ${isDark ? 'bg-gray-900 border border-gray-700 text-gray-200 hover:bg-gray-800' : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-lg text-sm font-semibold inline-flex items-center gap-2`}
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          Ouvrir
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void setApproval(String(s.slug), 'pending')}
+                          disabled={status === 'pending'}
+                          className="touch-manipulation px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-800 disabled:opacity-60 text-white font-bold text-sm"
+                        >
+                          En attente
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void setApproval(String(s.slug), 'suspended')}
+                          disabled={status === 'suspended'}
+                          className="touch-manipulation px-3 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white font-bold text-sm"
+                        >
+                          Suspendre
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead className={isDark ? 'bg-gray-900/50' : 'bg-gray-50'}>
                 <tr className={isDark ? 'text-gray-300' : 'text-gray-700'}>

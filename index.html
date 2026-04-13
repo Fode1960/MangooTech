@@ -15,6 +15,22 @@
       };
       initTheme();
 
+      try {
+        const host = String(location.hostname || '')
+        const isDevHost = host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')
+        if (isDevHost && 'serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations()
+            .then((regs) => Promise.all((regs || []).map((r) => r.unregister().catch(() => false))))
+            .catch(() => {})
+          if (window.caches && typeof window.caches.keys === 'function') {
+            window.caches.keys()
+              .then((keys) => Promise.all((keys || []).map((k) => window.caches.delete(k).catch(() => false))))
+              .catch(() => {})
+          }
+        }
+      } catch {
+      }
+
       const showBootError = (title, detail) => {
         try {
           const existing = document.getElementById('boot-error-overlay');
@@ -27,9 +43,23 @@
           const box = document.createElement('div');
           box.style.cssText = 'max-width:980px;width:100%;border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:16px;background:rgba(255,255,255,0.06);';
 
+          const header = document.createElement('div');
+          header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;';
+
           const h = document.createElement('div');
           h.textContent = title;
-          h.style.cssText = 'font-weight:800;font-size:14px;margin-bottom:12px;';
+          h.style.cssText = 'font-weight:800;font-size:14px;';
+
+          const close = document.createElement('button');
+          close.type = 'button';
+          close.textContent = 'Fermer';
+          close.style.cssText = 'background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.25);border-radius:10px;padding:8px 12px;font-weight:800;cursor:pointer;';
+          close.onclick = () => {
+            try { overlay.remove(); } catch {}
+          };
+
+          header.appendChild(h);
+          header.appendChild(close);
 
           const pre = document.createElement('pre');
           pre.textContent = String(detail || '');
@@ -41,7 +71,7 @@
           btn.style.cssText = 'margin-top:12px;background:#f97316;color:#111;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;';
           btn.onclick = () => window.location.reload();
 
-          box.appendChild(h);
+          box.appendChild(header);
           box.appendChild(pre);
           box.appendChild(btn);
           overlay.appendChild(box);
@@ -88,20 +118,6 @@
         showBootError('Erreur au démarrage (Promise)', msg);
       });
 
-      setTimeout(() => {
-        try {
-          const root = document.getElementById('root');
-          const fallback = document.getElementById('boot-fallback');
-          const hasBootOverlay = document.getElementById('boot-error-overlay');
-          if (fallback && !hasBootOverlay) {
-            showBootError(
-              'Application non chargée',
-              'L’application ne s’est pas rendue dans #root après un délai. Ouvrez la console (F12) pour voir l’erreur, puis rechargez.'
-            );
-          }
-        } catch {
-        }
-      }, 12000);
     </script>
   </head>
   <body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
