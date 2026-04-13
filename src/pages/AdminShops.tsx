@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ExternalLink, Search, FileText, X } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
+import { supabase, supabaseConfig } from '../config/supabase';
 
 type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'suspended';
 
@@ -128,6 +129,8 @@ export default function AdminShops() {
   const [filterStatus, setFilterStatus] = useState<'all' | ApprovalStatus>('all');
   const [shops, setShops] = useState<DemoShop[]>([]);
 
+  const canUseSupabase = useMemo(() => Boolean(supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey), [])
+
   const canTryLocalSync = true
 
   const [billingOpen, setBillingOpen] = useState(false);
@@ -143,6 +146,54 @@ export default function AdminShops() {
 
   const refresh = useCallback(() => {
     void (async () => {
+      if (canUseSupabase) {
+        try {
+          const { data, error } = await supabase
+            .from('shops')
+            .select('*')
+            .order('created_at', { ascending: false })
+
+          if (error || !Array.isArray(data)) {
+            setShops([])
+            return
+          }
+
+          const mapped: DemoShop[] = data
+            .map((s: any) => {
+              const slug = String(s?.slug || '').trim()
+              if (!slug) return null
+              const statusRaw = String(s?.status || 'pending').trim().toLowerCase()
+              const approvalStatus: ApprovalStatus = (statusRaw === 'approved' || statusRaw === 'rejected' || statusRaw === 'suspended') ? (statusRaw as any) : 'pending'
+              return {
+                id: String(s?.id || slug),
+                name: String(s?.name || 'Boutique'),
+                slug,
+                category: String(s?.category || 'general'),
+                ownerName: String(s?.owner_name || s?.ownerName || ''),
+                ownerEmail: String(s?.owner_email || s?.ownerEmail || s?.email || ''),
+                approvalStatus,
+                approvedAt: String(s?.approved_at || s?.approvedAt || ''),
+                approvedBy: String(s?.approved_by || s?.approvedBy || ''),
+                rejectedAt: String(s?.rejected_at || s?.rejectedAt || ''),
+                rejectedBy: String(s?.rejected_by || s?.rejectedBy || ''),
+                suspendedAt: String(s?.suspended_at || s?.suspendedAt || ''),
+                suspendedBy: String(s?.suspended_by || s?.suspendedBy || ''),
+                createdAt: String(s?.created_at || s?.createdAt || ''),
+                updatedAt: String(s?.updated_at || s?.updatedAt || ''),
+                shopUrl: String(s?.shop_url || s?.shopUrl || ''),
+                source: 'supabase',
+              } as DemoShop
+            })
+            .filter(Boolean) as DemoShop[]
+
+          setShops(mapped)
+          return
+        } catch {
+          setShops([])
+          return
+        }
+      }
+
     const now = new Date().toISOString();
     const current = readDemoShops();
     let didMigrate = false;
@@ -268,6 +319,34 @@ export default function AdminShops() {
   }, [refresh]);
 
   const setApproval = useCallback(async (slug: string, status: ApprovalStatus) => {
+    if (canUseSupabase) {
+      try {
+        const now = new Date().toISOString()
+        const update: any = { status, updated_at: now }
+        if (status === 'approved') {
+          update.approved_at = now
+          update.approved_by = ADMIN_EMAIL
+        }
+        if (status === 'rejected') {
+          update.rejected_at = now
+          update.rejected_by = ADMIN_EMAIL
+        }
+        if (status === 'suspended') {
+          update.suspended_at = now
+          update.suspended_by = ADMIN_EMAIL
+        }
+
+        await supabase
+          .from('shops')
+          .update(update)
+          .eq('slug', slug)
+
+        refresh()
+      } catch {
+      }
+      return
+    }
+
     const now = new Date().toISOString();
     const current = readDemoShops();
     const target = current.find((s) => String(s?.slug || '') === slug) as any;

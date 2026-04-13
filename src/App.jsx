@@ -52,7 +52,7 @@ import CourierRegister from './pages/CourierRegister';
 import DeliveryCheckout from './pages/DeliveryCheckout';
 import OrderStatus from './pages/OrderStatus';
 import ClientInvoiceModal from './components/invoice/ClientInvoiceModal';
-import { supabase } from './config/supabase';
+import { supabase, supabaseConfig } from './config/supabase';
 import { VendorBoosts } from './components/vendor/VendorBoosts'
 import VendorStats from './components/VendorStats'
 import VendorStockManager from './components/VendorStockManager'
@@ -966,7 +966,7 @@ const Register = ({ onRegister, onBack }) => {
     }
   }, []);
 
-  const handleRegister = useCallback((e) => {
+  const handleRegister = useCallback(async (e) => {
     e.preventDefault();
 
     if (isLocalSyncEnabled()) {
@@ -1050,7 +1050,17 @@ const Register = ({ onRegister, onBack }) => {
     const slug = ensureUniqueSlug(baseSlug, existing);
     const shopUrl = `${window.location.origin}/shop/${slug}`;
 
-    const shop = {
+    const host = (() => {
+      try {
+        return String(window.location.hostname || '')
+      } catch {
+        return ''
+      }
+    })()
+    const isDevHost = host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')
+    const useSupabase = !isDevHost && Boolean(supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey)
+
+    let shop = {
       id: `shop-${Date.now()}`,
       name: shopName,
       slug,
@@ -1062,10 +1072,60 @@ const Register = ({ onRegister, onBack }) => {
       primaryColor,
       secondaryColor,
       shopUrl,
-      approvalStatus: 'approved'
+      approvalStatus: useSupabase ? 'pending' : 'approved'
     };
 
-    persistCreatedShop(shop);
+    if (useSupabase) {
+      try {
+        const normalizedEmail = String(email || '').trim().toLowerCase()
+        let finalSlug = String(slug || '').trim()
+        for (let i = 0; i < 10; i += 1) {
+          const { data } = await supabase
+            .from('shops')
+            .select('id')
+            .eq('slug', finalSlug)
+            .maybeSingle()
+          if (!data) break
+          finalSlug = `${slug}-${i + 2}`
+        }
+
+        const nowIso = new Date().toISOString()
+        const payload = {
+          name: String(shopName || '').trim(),
+          slug: finalSlug,
+          category: String(shopCategory || 'general'),
+          status: 'pending',
+          is_verified: false,
+          email: normalizedEmail,
+          phone: '',
+          description: '',
+          created_at: nowIso,
+          updated_at: nowIso,
+        }
+
+        const { data: inserted, error } = await supabase
+          .from('shops')
+          .insert([payload])
+          .select('id,slug,status')
+          .single()
+
+        if (!error && inserted?.id) {
+          shop = {
+            ...shop,
+            id: `shop-${inserted.id}`,
+            slug: inserted.slug || finalSlug,
+            shopUrl: `${window.location.origin}/shop/${inserted.slug || finalSlug}`,
+            approvalStatus: 'pending',
+            source: 'supabase',
+            vendorId: String(inserted.id),
+            vendorKind: 'shop',
+          }
+        }
+      } catch {
+      }
+    } else {
+      persistCreatedShop(shop);
+    }
 
     try {
       const normalizedEmail = String(email || '').trim().toLowerCase();
@@ -3625,6 +3685,8 @@ const ShopsDirectory = () => {
   const { isDark } = useThemeStore();
   const navigate = useNavigate();
   const [demoCreatedShops, setDemoCreatedShops] = useState([]);
+  const [supabaseShops, setSupabaseShops] = useState([])
+  const [supabaseShopsLoading, setSupabaseShopsLoading] = useState(false)
   const [localPlusShops, setLocalPlusShops] = useState([]);
   const [localPlusRemoteShops, setLocalPlusRemoteShops] = useState([]);
   const [localSyncShops, setLocalSyncShops] = useState([]);
@@ -3779,6 +3841,49 @@ const ShopsDirectory = () => {
     }
   }, []);
 
+  const loadSupabaseApprovedShops = useCallback(async () => {
+    const hasSupabase = Boolean(supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey)
+    if (!hasSupabase) {
+      setSupabaseShops([])
+      return
+    }
+
+    setSupabaseShopsLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('shops')
+        .select('id,name,slug,category,logo_url,status,created_at,updated_at')
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false })
+
+      if (error || !Array.isArray(data)) {
+        setSupabaseShops([])
+        return
+      }
+
+      const mapped = data
+        .filter((s) => s?.id && s?.slug)
+        .map((s) => ({
+          id: `supabase-${s.id}`,
+          name: s.name || 'Boutique',
+          slug: s.slug,
+          category: s.category || 'general',
+          primaryColor: '#0EA5E9',
+          secondaryColor: '#38BDF8',
+          logoDataUrl: s.logo_url || '',
+          vendorId: String(s.id),
+          vendorKind: 'shop',
+          source: 'supabase',
+        }))
+
+      setSupabaseShops(mapped)
+    } catch {
+      setSupabaseShops([])
+    } finally {
+      setSupabaseShopsLoading(false)
+    }
+  }, [])
+
   const loadLocalSyncShops = useCallback(async () => {
     if (!isLocalSyncEnabled()) {
       setLocalSyncShops([])
@@ -3826,6 +3931,7 @@ const ShopsDirectory = () => {
 
   useEffect(() => {
     loadCreatedShops();
+    void loadSupabaseApprovedShops();
     loadLocalPlusShops();
     void loadLocalPlusRemoteShops();
     void loadLocalSyncShops();
@@ -3841,7 +3947,7 @@ const ShopsDirectory = () => {
       window.removeEventListener('storage', onStorage);
       window.removeEventListener('demo-shops-updated', onCustom);
     };
-  }, [loadCreatedShops, loadLocalPlusShops, loadLocalPlusRemoteShops, loadLocalSyncShops]);
+  }, [loadCreatedShops, loadLocalPlusShops, loadLocalPlusRemoteShops, loadLocalSyncShops, loadSupabaseApprovedShops]);
 
   useEffect(() => {
     const fromQuery = searchParams.get('categorie') || searchParams.get('category');
@@ -3887,7 +3993,19 @@ const ShopsDirectory = () => {
       }
     });
 
+    const hasSupabase = Boolean(supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey)
+    const host = (() => {
+      try {
+        return String(window.location.hostname || '')
+      } catch {
+        return ''
+      }
+    })()
+    const isDevHost = host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')
+    const includeVendorSeeds = isDevHost && (!hasSupabase || !supabaseShops.length)
+
     const sourceRank = {
+      supabase: 80,
       'local-sync': 60,
       'localplus-remote': 50,
       localplus: 40,
@@ -3912,7 +4030,17 @@ const ShopsDirectory = () => {
     }
 
     const byKey = new Map()
-    ;[...base, ...demoCreatedShops, ...localPlusShops, ...localPlusRemoteShops, ...localSyncShops, ...fromVendors].forEach((s) => {
+    const all = [
+      ...base,
+      ...demoCreatedShops,
+      ...supabaseShops,
+      ...localPlusShops,
+      ...localPlusRemoteShops,
+      ...localSyncShops,
+      ...(includeVendorSeeds ? fromVendors : []),
+    ]
+
+    ;all.forEach((s) => {
       const key = toKey(s)
       const prev = byKey.get(key)
       if (!prev) {
@@ -3923,7 +4051,7 @@ const ShopsDirectory = () => {
       if (keepNext) byKey.set(key, s)
     })
     return Array.from(byKey.values());
-  }, [demoCreatedShops, localPlusShops, localPlusRemoteShops, localSyncShops, vendors]);
+  }, [demoCreatedShops, localPlusShops, localPlusRemoteShops, localSyncShops, supabaseShops, vendors]);
 
   const goToShop = useCallback((slug) => {
     try {
