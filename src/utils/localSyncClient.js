@@ -94,6 +94,9 @@ export const localSync = {
   listShops: async () => {
     return apiFetch('/shops', { method: 'GET' })
   },
+  listLocalPlusVendors: async () => {
+    return apiFetch('/localplus/vendors', { method: 'GET' })
+  },
   getShopBySlug: async (slug) => {
     const s = String(slug || '').trim()
     return apiFetch(`/shops/${encodeURIComponent(s)}`, { method: 'GET' })

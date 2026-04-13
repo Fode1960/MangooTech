@@ -3481,6 +3481,7 @@ const ShopsDirectory = () => {
   const navigate = useNavigate();
   const [demoCreatedShops, setDemoCreatedShops] = useState([]);
   const [localPlusShops, setLocalPlusShops] = useState([]);
+  const [localPlusRemoteShops, setLocalPlusRemoteShops] = useState([]);
   const [localSyncShops, setLocalSyncShops] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchParams, setSearchParams] = useSearchParams();
@@ -3555,6 +3556,41 @@ const ShopsDirectory = () => {
     }
   }, [normalizeCategoryFromLocalPlus, slugifyLocalPlus]);
 
+  const loadLocalPlusRemoteShops = useCallback(async () => {
+    if (!isLocalSyncEnabled()) {
+      setLocalPlusRemoteShops([])
+      return
+    }
+    try {
+      const resp = await localSync.listLocalPlusVendors()
+      const list = Array.isArray(resp?.vendors) ? resp.vendors : []
+      const mapped = list
+        .filter((v) => {
+          const kind = String(v?.kind || 'shop').trim().toLowerCase()
+          return kind === 'shop'
+        })
+        .map((v) => {
+          const id = String(v?.id ?? '')
+          const name = String(v?.name || 'Boutique').trim() || 'Boutique'
+          const base = slugifyLocalPlus(name) || `boutique-${id || 'localplus'}`
+          const slug = id ? `${base}-${id}` : base
+          return {
+            id: `localplus-remote-${id || slug}`,
+            name,
+            slug,
+            category: normalizeCategoryFromLocalPlus(v?.category) || 'general',
+            primaryColor: '#0EA5E9',
+            secondaryColor: '#38BDF8',
+            logoDataUrl: '',
+            source: 'localplus-remote',
+          }
+        })
+      setLocalPlusRemoteShops(mapped)
+    } catch {
+      setLocalPlusRemoteShops([])
+    }
+  }, [normalizeCategoryFromLocalPlus, slugifyLocalPlus])
+
   const loadCreatedShops = useCallback(() => {
     try {
       const raw = localStorage.getItem('demo_shops');
@@ -3609,6 +3645,7 @@ const ShopsDirectory = () => {
   useEffect(() => {
     loadCreatedShops();
     loadLocalPlusShops();
+    void loadLocalPlusRemoteShops();
     void loadLocalSyncShops();
     const onStorage = (e) => {
       if (e.key === 'demo_shops') loadCreatedShops();
@@ -3622,7 +3659,7 @@ const ShopsDirectory = () => {
       window.removeEventListener('storage', onStorage);
       window.removeEventListener('demo-shops-updated', onCustom);
     };
-  }, [loadCreatedShops, loadLocalPlusShops, loadLocalSyncShops]);
+  }, [loadCreatedShops, loadLocalPlusShops, loadLocalPlusRemoteShops, loadLocalSyncShops]);
 
   useEffect(() => {
     const fromQuery = searchParams.get('categorie') || searchParams.get('category');
@@ -3661,12 +3698,12 @@ const ShopsDirectory = () => {
     }));
 
     const bySlug = new Map();
-    [...base, ...demoCreatedShops, ...localPlusShops, ...localSyncShops, ...fromVendors].forEach((s) => {
+    [...base, ...demoCreatedShops, ...localPlusShops, ...localPlusRemoteShops, ...localSyncShops, ...fromVendors].forEach((s) => {
       const key = `${s.slug}-${s.name}`;
       if (!bySlug.has(key)) bySlug.set(key, s);
     });
     return Array.from(bySlug.values());
-  }, [demoCreatedShops, localPlusShops, localSyncShops, vendors]);
+  }, [demoCreatedShops, localPlusShops, localPlusRemoteShops, localSyncShops, vendors]);
 
   const goToShop = useCallback((slug) => {
     try {
@@ -6421,19 +6458,39 @@ function AppShell() {
     }
   }, [location.search])
 
+  const isProbablyEmail = useCallback((value) => {
+    const v = String(value || '').trim().toLowerCase()
+    if (!v) return false
+    const at = v.indexOf('@')
+    if (at <= 0) return false
+    const dot = v.lastIndexOf('.')
+    if (dot <= at + 1) return false
+    if (dot >= v.length - 1) return false
+    return true
+  }, [])
+
   const boostsEmail = useMemo(() => {
     const qp = String(boostsParams.get('email') || '').trim().toLowerCase()
-    if (qp) return qp
+    if (isProbablyEmail(qp)) return qp
     const u = String(user?.email || '').trim().toLowerCase()
-    if (u) return u
+    if (isProbablyEmail(u)) return u
     try {
       const raw = localStorage.getItem('mangoo-current-user')
       const parsed = raw ? JSON.parse(raw) : null
-      return String(parsed?.email || '').trim().toLowerCase()
+      const e = String(parsed?.email || '').trim().toLowerCase()
+      return isProbablyEmail(e) ? e : ''
     } catch {
       return ''
     }
-  }, [boostsParams, user?.email])
+  }, [boostsParams, isProbablyEmail, user?.email])
+
+  const [boostsEmailDraft, setBoostsEmailDraft] = useState('')
+
+  useEffect(() => {
+    if (location.pathname !== '/boosts') return
+    const qp = String(boostsParams.get('email') || '')
+    setBoostsEmailDraft(qp)
+  }, [boostsParams, location.pathname])
 
   useEffect(() => {
     if (location.pathname !== '/boosts') return
@@ -6492,15 +6549,13 @@ function AppShell() {
               <div className="mt-4">
                 <label className={isDark ? 'block text-xs font-bold text-gray-300' : 'block text-xs font-bold text-gray-700'}>Email</label>
                 <input
-                  value={String(boostsParams.get('email') || '')}
+                  value={boostsEmailDraft}
                   onChange={(e) => {
-                    const next = String(e.target.value || '')
-                    const nextParams = new URLSearchParams(location.search)
-                    if (next) nextParams.set('email', next)
-                    else nextParams.delete('email')
-                    navigate(`${location.pathname}?${nextParams.toString()}`, { replace: true })
+                    setBoostsEmailDraft(String(e.target.value || ''))
                   }}
                   placeholder="ex: client@example.com"
+                  inputMode="email"
+                  autoComplete="email"
                   className={isDark ? 'mt-1 w-full px-3 py-3 rounded-xl bg-gray-950 border border-gray-700 text-white' : 'mt-1 w-full px-3 py-3 rounded-xl bg-white border border-gray-200 text-gray-900'}
                 />
               </div>
@@ -6508,8 +6563,8 @@ function AppShell() {
               <button
                 type="button"
                 onClick={() => {
-                  const email = String(boostsParams.get('email') || '').trim().toLowerCase()
-                  if (!email || !email.includes('@')) return
+                  const email = String(boostsEmailDraft || '').trim().toLowerCase()
+                  if (!isProbablyEmail(email)) return
                   try {
                     const raw = localStorage.getItem('mangoo-current-user')
                     const prev = raw ? JSON.parse(raw) : null
@@ -6520,7 +6575,8 @@ function AppShell() {
                   nextParams.set('email', email)
                   navigate(`${location.pathname}?${nextParams.toString()}`, { replace: true })
                 }}
-                className={isDark ? 'mt-4 w-full px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-black' : 'mt-4 w-full px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black'}
+                disabled={!isProbablyEmail(boostsEmailDraft)}
+                className={isDark ? 'mt-4 w-full px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-black disabled:opacity-50 disabled:cursor-not-allowed' : 'mt-4 w-full px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black disabled:opacity-50 disabled:cursor-not-allowed'}
               >
                 Continuer
               </button>
