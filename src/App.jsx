@@ -1976,7 +1976,7 @@ const VendorDashboard = ({ user }) => {
     try {
       const stored = localStorage.getItem('mangoo-vendor-active-tab');
       const value = stored ? String(stored) : '';
-      const allowed = ['overview', 'stock', 'products', 'orders', 'notifications', 'communication', 'shops', 'supply', 'boosts'];
+      const allowed = ['overview', 'stock', 'products', 'orders', 'notifications', 'communication', 'shops', 'supply', 'boosts', 'settings'];
       return allowed.includes(value) ? value : 'overview';
     } catch {
       return 'overview';
@@ -2257,7 +2257,7 @@ const VendorDashboard = ({ user }) => {
   }, [activeTab]);
 
   useEffect(() => {
-    const allowed = ['overview', 'stock', 'products', 'orders', 'notifications', 'communication', 'shops', 'supply', 'boosts'];
+    const allowed = ['overview', 'stock', 'products', 'orders', 'notifications', 'communication', 'shops', 'supply', 'boosts', 'settings'];
     let nextTab = '';
     let editShop = '';
     try {
@@ -2266,7 +2266,7 @@ const VendorDashboard = ({ user }) => {
       const lpVendorEditShop = String(params.get('lp_vendor_edit_shop') || '').trim();
       if (lpVendorEditShop) {
         editShop = lpVendorEditShop;
-        nextTab = 'shops';
+        nextTab = lpVendorTab && allowed.includes(lpVendorTab) ? lpVendorTab : 'shops';
       } else if (lpVendorTab && allowed.includes(lpVendorTab)) {
         nextTab = lpVendorTab;
       }
@@ -2280,6 +2280,7 @@ const VendorDashboard = ({ user }) => {
         localStorage.setItem('mangoo-vendor-edit-shop-slug', editShop);
       } catch {
       }
+      setEditingShopSlug(editShop);
     }
 
     if (nextTab && nextTab !== activeTab) {
@@ -2423,6 +2424,132 @@ const VendorDashboard = ({ user }) => {
     }
   }, [importLocalPlusShopsForCurrentUser, normalizeEmail, user?.email, user?.name]);
 
+  const loadShopForSettings = useCallback(async (slug) => {
+    const targetSlug = String(slug || '').trim();
+    if (!targetSlug) return null;
+
+    const local = (() => {
+      try {
+        const raw = localStorage.getItem('demo_shops');
+        const parsed = raw ? JSON.parse(raw) : [];
+        const list = Array.isArray(parsed) ? parsed : [];
+        return list.find((s) => String(s?.slug || '').trim() === targetSlug) || null;
+      } catch {
+        return null;
+      }
+    })();
+
+    if (supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey) {
+      try {
+        const { data, error } = await supabase
+          .from('shops')
+          .select('id,name,slug,category,status,email,owner_email,owner_name,shop_url,logo_url,created_at,updated_at')
+          .eq('slug', targetSlug)
+          .maybeSingle();
+        if (!error && data?.slug) {
+          return {
+            id: String(data?.id || data.slug),
+            name: String(data?.name || ''),
+            slug: String(data?.slug || ''),
+            category: String(data?.category || 'general'),
+            approvalStatus: String(data?.status || 'pending'),
+            ownerEmail: String(data?.owner_email || data?.email || ''),
+            ownerName: String(data?.owner_name || ''),
+            shopUrl: String(data?.shop_url || `${window.location.origin}/shop/${targetSlug}`),
+            logoDataUrl: String(data?.logo_url || ''),
+            source: 'supabase',
+          };
+        }
+      } catch {
+      }
+    }
+
+    return local;
+  }, [normalizeEmail]);
+
+  const syncShopToLocalStorage = useCallback((shop) => {
+    const slug = String(shop?.slug || '').trim();
+    if (!slug) return;
+    try {
+      const raw = localStorage.getItem('demo_shops');
+      const parsed = raw ? JSON.parse(raw) : [];
+      const list = Array.isArray(parsed) ? parsed : [];
+      const next = [
+        {
+          ...shop,
+          ownerEmail: shop?.ownerEmail || shop?.owner_email || user?.email,
+          ownerName: shop?.ownerName || shop?.owner_name || user?.name,
+        },
+        ...list.filter((s) => String(s?.slug || '').trim() !== slug)
+      ];
+      localStorage.setItem('demo_shops', JSON.stringify(next));
+      window.dispatchEvent(new Event('demo-shops-updated'));
+    } catch {
+    }
+  }, [user?.email, user?.name]);
+
+  const saveShopSettings = useCallback(async () => {
+    const slug = String(editingShopSlug || '').trim();
+    if (!slug) {
+      toast.error('Boutique introuvable');
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const nextLocal = {
+      slug,
+      name: String(editName || '').trim(),
+      category: String(editCategory || 'general').trim(),
+      logoDataUrl: String(editLogoDataUrl || '').trim(),
+      primaryColor: editPrimaryColor,
+      secondaryColor: editSecondaryColor,
+      updatedAt: now,
+    };
+
+    let didSupabase = false;
+    if (supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey) {
+      try {
+        const updateBase = {
+          name: nextLocal.name,
+          category: nextLocal.category,
+          updated_at: now,
+        };
+        const logo = nextLocal.logoDataUrl;
+        const canStoreLogoUrl = logo && /^https?:\/\//i.test(logo);
+        const updateWithLogo = canStoreLogoUrl ? { ...updateBase, logo_url: logo } : updateBase;
+
+        const attempt = async (payload) => {
+          return await supabase
+            .from('shops')
+            .update(payload)
+            .eq('slug', slug);
+        };
+
+        let r = await attempt(updateWithLogo);
+        if (r.error) {
+          const msg = String(r.error.message || '').toLowerCase();
+          const missingLogo = msg.includes('could not find') && msg.includes('logo_url');
+          const missingUpdated = msg.includes('could not find') && msg.includes('updated_at');
+          if (missingLogo) {
+            r = await attempt(updateBase);
+          }
+          if (r.error && missingUpdated) {
+            r = await attempt({ name: nextLocal.name, category: nextLocal.category });
+          }
+        }
+
+        if (!r.error) {
+          didSupabase = true;
+        }
+      } catch {
+      }
+    }
+
+    syncShopToLocalStorage(nextLocal);
+    toast.success(didSupabase ? 'Réglages enregistrés' : 'Réglages enregistrés (local)');
+    void loadVendorShops();
+  }, [editCategory, editLogoDataUrl, editName, editPrimaryColor, editSecondaryColor, editingShopSlug, loadVendorShops, syncShopToLocalStorage]);
+
   const openShopEditor = useCallback((shop) => {
     setEditingShopSlug(shop?.slug || '');
     setEditName(shop?.name || '');
@@ -2435,6 +2562,7 @@ const VendorDashboard = ({ user }) => {
   }, [user?.email]);
 
   useEffect(() => {
+    if (activeTab !== 'shops') return;
     if (!vendorShops.length) return;
     let slug = '';
     try {
@@ -2447,7 +2575,37 @@ const VendorDashboard = ({ user }) => {
     const match = vendorShops.find((s) => String(s?.slug || '').trim() === slug);
     if (!match) return;
     openShopEditor(match);
-  }, [openShopEditor, vendorShops]);
+  }, [activeTab, openShopEditor, vendorShops]);
+
+  useEffect(() => {
+    if (activeTab !== 'settings') return;
+    const fromState = String(editingShopSlug || '').trim();
+    let slug = fromState;
+    if (!slug) {
+      try {
+        slug = String(localStorage.getItem('mangoo-vendor-edit-shop-slug') || '').trim();
+      } catch {
+        slug = '';
+      }
+    }
+    if (!slug) return;
+    setShowShopEditor(false);
+    void (async () => {
+      const shop = await loadShopForSettings(slug);
+      if (!shop?.slug) {
+        toast.error('Boutique introuvable');
+        return;
+      }
+      setEditingShopSlug(String(shop.slug || slug));
+      setEditName(String(shop?.name || ''));
+      setEditOwnerEmail(String(shop?.ownerEmail || user?.email || ''));
+      setEditCategory(String(shop?.category || 'general'));
+      setEditLogoDataUrl(String(shop?.logoDataUrl || ''));
+      setEditPrimaryColor(String(shop?.primaryColor || '#0EA5E9'));
+      setEditSecondaryColor(String(shop?.secondaryColor || '#38BDF8'));
+      syncShopToLocalStorage(shop);
+    })();
+  }, [activeTab, editingShopSlug, loadShopForSettings, syncShopToLocalStorage, user?.email]);
 
   const handleEditLogoChange = useCallback((e) => {
     const file = e.target.files?.[0];
@@ -2507,6 +2665,7 @@ const VendorDashboard = ({ user }) => {
     { id: 'notifications', name: 'Notifications', icon: '🔔' },
     { id: 'communication', name: 'Communication', icon: '📞' },
     { id: 'shops', name: 'Mes boutiques', icon: '🏪' },
+    { id: 'settings', name: 'Réglages', icon: '⚙️' },
     { id: 'supply', name: 'Approvisionnement', icon: '🏭' }
   ];
 
@@ -2987,10 +3146,114 @@ const VendorDashboard = ({ user }) => {
             )}
           </div>
         );
+      case 'settings': {
+        const slug = String(editingShopSlug || '').trim();
+        const shopUrl = slug ? `${window.location.origin}/shop/${slug}` : '';
+        return (
+          <div className="space-y-4">
+            <div className={`${isDark ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'} border rounded-2xl p-6 shadow-sm`}>
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                <div>
+                  <div className="text-lg font-semibold">Réglages boutique</div>
+                  <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1 break-all`}>{slug || 'Sélectionnez une boutique'}</div>
+                </div>
+                <div className="flex gap-2 flex-wrap justify-end">
+                  {shopUrl && (
+                    <a
+                      href={shopUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-4 py-2 rounded-xl font-semibold hover:from-orange-600 hover:to-green-700 transition-all"
+                    >
+                      Ouvrir la boutique
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    onClick={saveShopSettings}
+                    disabled={!slug}
+                    className="bg-sky-600 hover:bg-sky-700 disabled:opacity-60 text-white px-4 py-2 rounded-xl font-semibold transition-colors"
+                  >
+                    Enregistrer
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-xs font-black`}>Nom</div>
+                  <input
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className={`mt-1 w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'}`}
+                    placeholder="Nom de la boutique"
+                  />
+                </div>
+
+                <div>
+                  <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-xs font-black`}>Catégorie</div>
+                  <select
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value)}
+                    className={`mt-1 w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                  >
+                    {shopCategories.map((c) => (
+                      <option key={c.key} value={c.key}>{c.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="md:col-span-2">
+                  <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-xs font-black`}>Logo (URL)</div>
+                  <input
+                    value={editLogoDataUrl}
+                    onChange={(e) => setEditLogoDataUrl(e.target.value)}
+                    className={`mt-1 w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'}`}
+                    placeholder="https://..."
+                  />
+                  <div className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-xs mt-1`}>Astuce : sur Supabase, seules les URLs http(s) sont enregistrées.</div>
+                </div>
+              </div>
+            </div>
+
+            <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-6 shadow-sm`}>
+              <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>Mes boutiques</div>
+              <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Cliquez sur une boutique pour charger ses réglages.</div>
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                {vendorShops.map((s) => (
+                  <button
+                    key={String(s?.id || s?.slug)}
+                    type="button"
+                    onClick={() => {
+                      const nextSlug = String(s?.slug || '').trim();
+                      if (!nextSlug) return;
+                      setEditingShopSlug(nextSlug);
+                      setEditName(String(s?.name || ''));
+                      setEditOwnerEmail(String(s?.ownerEmail || user?.email || ''));
+                      setEditCategory(String(s?.category || 'general'));
+                      setEditLogoDataUrl(String(s?.logoDataUrl || ''));
+                      setEditPrimaryColor(String(s?.primaryColor || '#0EA5E9'));
+                      setEditSecondaryColor(String(s?.secondaryColor || '#38BDF8'));
+                      try {
+                        localStorage.setItem('mangoo-vendor-edit-shop-slug', nextSlug);
+                      } catch {
+                      }
+                    }}
+                    className={`${isDark ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50'} border rounded-xl p-4 text-left transition-colors`}
+                  >
+                    <div className="font-semibold">{s?.name || 'Boutique'}</div>
+                    <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-xs break-all`}>{s?.slug}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      }
 
       case 'supply':
         return (
-          <div className="space-y-4">
+          <>
             <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-6 shadow-sm`}>
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                 <div>
@@ -3220,7 +3483,7 @@ const VendorDashboard = ({ user }) => {
                 </div>
               </div>
             )}
-          </div>
+        </>
         );
       default:
         return <VendorStats vendorId="vendor-demo" />;

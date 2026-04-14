@@ -33,16 +33,15 @@ const ShopPage = () => {
   }, [shopSlug, showVendorMode])
 
   const openVendorDashboard = (nextTab, opts) => {
-    const tab = String(nextTab || '').trim()
     const edit = Boolean(opts?.edit)
-    const forcedTab = edit ? 'shops' : tab
+    const tab = String(nextTab || (edit ? 'settings' : '')).trim()
     const params = new URLSearchParams()
     params.set('lp_view', 'account')
     params.set('lp_role', 'vendor')
-    if (forcedTab) params.set('lp_vendor_tab', forcedTab)
+    if (tab) params.set('lp_vendor_tab', tab)
     if (edit) params.set('lp_vendor_edit_shop', String(shopSlug || ''))
     try {
-      if (forcedTab) localStorage.setItem('mangoo-vendor-active-tab', forcedTab)
+      if (tab) localStorage.setItem('mangoo-vendor-active-tab', tab)
     } catch {
     }
     if (edit) {
@@ -790,7 +789,7 @@ const ShopPage = () => {
                   <button
                     type="button"
                     onClick={() => {
-                      openVendorDashboard('shops', { edit: true })
+                      openVendorDashboard('settings', { edit: true })
                     }}
                     className="px-4 py-2 rounded-full bg-white/10 text-white border border-white/25 hover:bg-white/20 transition-colors"
                   >
