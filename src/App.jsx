@@ -2246,6 +2246,79 @@ const VendorDashboard = ({ user }) => {
       }
     }
 
+    if (supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey) {
+      const email = normalizeEmail(user?.email)
+      if (email) {
+        try {
+          const select = 'id,name,slug,category,status,created_at,updated_at,owner_name,owner_email,email,shop_url,logo_url'
+          const attempt = async (withOwnerEmail) => {
+            const q = supabase
+              .from('shops')
+              .select(select)
+              .order('created_at', { ascending: false })
+
+            if (withOwnerEmail) {
+              return await q.or(`owner_email.eq.${email},email.eq.${email}`)
+            }
+
+            return await q.eq('email', email)
+          }
+
+          let r = await attempt(true)
+          if (r.error) {
+            const msg = String(r.error.message || '').toLowerCase()
+            const missingOwnerEmail = msg.includes('could not find') && msg.includes('owner_email')
+            if (missingOwnerEmail) {
+              r = await attempt(false)
+            }
+          }
+
+          if (r.error || !Array.isArray(r.data)) {
+            setVendorShops([])
+            return
+          }
+
+          const mapped = r.data
+            .map((s) => {
+              const slug = String(s?.slug || '').trim()
+              if (!slug) return null
+              return {
+                id: String(s?.id || slug),
+                name: String(s?.name || 'Boutique'),
+                slug,
+                category: String(s?.category || 'general'),
+                ownerName: String(s?.owner_name || user?.name || 'Vendeur'),
+                ownerEmail: String(s?.owner_email || s?.email || email),
+                shopUrl: String(s?.shop_url || `${window.location.origin}/shop/${slug}`),
+                approvalStatus: String(s?.status || 'pending'),
+                createdAt: String(s?.created_at || ''),
+                updatedAt: String(s?.updated_at || ''),
+                logoDataUrl: String(s?.logo_url || ''),
+                primaryColor: '#0EA5E9',
+                secondaryColor: '#38BDF8',
+                source: 'supabase',
+              }
+            })
+            .filter(Boolean)
+
+          setVendorShops(mapped)
+          try {
+            const raw = localStorage.getItem('demo_shops');
+            const all = raw ? JSON.parse(raw) : [];
+            const prev = Array.isArray(all) ? all : [];
+            const others = prev.filter((x) => normalizeEmail(x?.ownerEmail || x?.owner_email) !== email);
+            localStorage.setItem('demo_shops', JSON.stringify([...others, ...mapped]));
+            window.dispatchEvent(new Event('demo-shops-updated'));
+          } catch {
+          }
+          return
+        } catch {
+          setVendorShops([])
+          return
+        }
+      }
+    }
+
     try {
       importLocalPlusShopsForCurrentUser();
       const raw = localStorage.getItem('demo_shops');

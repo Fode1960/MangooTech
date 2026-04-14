@@ -32,6 +32,17 @@ const ShopPage = () => {
     }
   }, [shopSlug, showVendorMode])
 
+  const openVendorDashboard = (nextTab, opts) => {
+    const tab = String(nextTab || '').trim()
+    const edit = Boolean(opts?.edit)
+    const params = new URLSearchParams()
+    params.set('lp_view', 'account')
+    params.set('lp_role', 'vendor')
+    if (tab) params.set('lp_vendor_tab', tab)
+    if (edit) params.set('lp_vendor_edit_shop', String(shopSlug || ''))
+    navigate(`/?${params.toString()}`)
+  }
+
   const openBoost = () => {
     const idRaw = shop?.sourceVendorId ?? shop?.sourceVendorID ?? shop?.source_vendor_id ?? shop?.source_vendorId
     const shopId = String(shop?.id || '')
@@ -748,12 +759,7 @@ const ShopPage = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    try {
-                      localStorage.setItem('mangoo-last-view', 'landing');
-                    } catch {
-                      // ignore
-                    }
-                    navigate('/');
+                    openVendorDashboard('overview')
                   }}
                   className="text-lg px-8 py-4 inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 backdrop-blur-sm bg-white text-gray-900 hover:bg-gray-100 hover:-translate-y-0.5"
                 >
@@ -765,7 +771,7 @@ const ShopPage = () => {
                 <div className="flex flex-wrap items-center justify-center gap-2">
                   <button
                     type="button"
-                    onClick={openBoost}
+                    onClick={() => openVendorDashboard('boosts')}
                     className="px-4 py-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold hover:from-amber-600 hover:to-orange-700 transition-all"
                   >
                     🚀 Booster
@@ -773,7 +779,7 @@ const ShopPage = () => {
                   <button
                     type="button"
                     onClick={() => {
-                      navigate(`/?lp_role=vendor&lp_vendor_tab=shops&lp_vendor_edit_shop=${encodeURIComponent(String(shopSlug || ''))}`);
+                      openVendorDashboard('shops', { edit: true })
                     }}
                     className="px-4 py-2 rounded-full bg-white/10 text-white border border-white/25 hover:bg-white/20 transition-colors"
                   >
@@ -792,7 +798,7 @@ const ShopPage = () => {
                   <button
                     type="button"
                     onClick={() => {
-                      navigate('/?lp_role=vendor&lp_vendor_tab=supply');
+                      openVendorDashboard('supply')
                     }}
                     className="px-4 py-2 rounded-full bg-white/10 text-white border border-white/25 hover:bg-white/20 transition-colors"
                   >
