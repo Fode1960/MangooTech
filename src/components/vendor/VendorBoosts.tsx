@@ -45,6 +45,92 @@ type VendorBoostRow = {
   updated_at: string
 }
 
+type LocalBoostConfig = {
+  sponsoredUntil?: number | null
+  sponsoredTier?: number | null
+  promoUntil?: number | null
+  newUntil?: number | null
+}
+
+const LOCAL_CREDITS_PREFIX = 'mangoo_boost_credits:'
+const LOCAL_ORDERS_PREFIX = 'mangoo_boost_orders:'
+const LOCAL_CONFIG_KEY = 'mangoo_boost_config'
+
+function safeNowMs() {
+  return Date.now()
+}
+
+function readLocalCredits(email: string): number {
+  try {
+    const key = `${LOCAL_CREDITS_PREFIX}${String(email || '').trim().toLowerCase()}`
+    const raw = localStorage.getItem(key)
+    const n = Number(raw)
+    return Number.isFinite(n) ? Math.floor(n) : 0
+  } catch {
+    return 0
+  }
+}
+
+function writeLocalCredits(email: string, value: number) {
+  try {
+    const key = `${LOCAL_CREDITS_PREFIX}${String(email || '').trim().toLowerCase()}`
+    localStorage.setItem(key, String(Math.max(0, Math.floor(Number(value) || 0))))
+  } catch {
+  }
+}
+
+function readLocalBoostConfig(): Record<string, LocalBoostConfig> {
+  try {
+    const raw = localStorage.getItem(LOCAL_CONFIG_KEY)
+    const parsed = raw ? JSON.parse(raw) : {}
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+function writeLocalBoostConfig(next: Record<string, LocalBoostConfig>) {
+  try {
+    localStorage.setItem(LOCAL_CONFIG_KEY, JSON.stringify(next || {}))
+  } catch {
+  }
+}
+
+function readLocalOrders(email: string): BoostOrder[] {
+  try {
+    const key = `${LOCAL_ORDERS_PREFIX}${String(email || '').trim().toLowerCase()}`
+    const raw = localStorage.getItem(key)
+    const parsed = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? (parsed as BoostOrder[]) : []
+  } catch {
+    return []
+  }
+}
+
+function writeLocalOrders(email: string, orders: BoostOrder[]) {
+  try {
+    const key = `${LOCAL_ORDERS_PREFIX}${String(email || '').trim().toLowerCase()}`
+    localStorage.setItem(key, JSON.stringify(Array.isArray(orders) ? orders : []))
+  } catch {
+  }
+}
+
+function tierLabelFromNumber(tier: number | null | undefined): VendorBoostRow['sponsored_tier'] {
+  const n = Number(tier || 0)
+  if (n === 3) return 'or'
+  if (n === 2) return 'argent'
+  if (n === 1) return 'bronze'
+  return null
+}
+
+const fallbackPricing: PricingProduct[] = [
+  { kind: 'sponsored', durationHours: 24, priceXof: 2000, currency: 'XOF', title: 'Sponsorisé 24h (Bronze)', description: 'Plus de visibilité sur les écrans de découverte.', sponsoredTier: 1, active: true },
+  { kind: 'sponsored', durationHours: 72, priceXof: 5000, currency: 'XOF', title: 'Sponsorisé 3j (Argent)', description: 'Plus de visibilité sur les écrans de découverte.', sponsoredTier: 2, active: true },
+  { kind: 'sponsored', durationHours: 168, priceXof: 12000, currency: 'XOF', title: 'Sponsorisé 7j (Or)', description: 'Maximum de visibilité sur les écrans de découverte.', sponsoredTier: 3, active: true },
+  { kind: 'promo', durationHours: 72, priceXof: 3000, currency: 'XOF', title: 'Promo 3j', description: 'Offres mises en avant pour déclencher l’achat.', active: true },
+  { kind: 'new', durationHours: 48, priceXof: 1000, currency: 'XOF', title: 'Nouveau 48h', description: 'Nouvelles boutiques mises en lumière.', active: true },
+]
+
 const formatXof = (value: number) => {
   const n = Math.floor(Number(value) || 0)
   return new Intl.NumberFormat('fr-FR').format(n)
@@ -334,57 +420,48 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
       setPricing(normalizedPricing)
 
       if (!token) {
+        const email = String(userEmail || '').trim().toLowerCase()
+
+        if (!normalizedPricing.length) setPricing(fallbackPricing)
+
         if (selectedTarget) {
+          let row: VendorBoostRow | null = null
           try {
             const qs = new URLSearchParams({ vendorId: selectedTarget.vendorId, vendorKind: selectedTarget.vendorKind })
             const rowRes = await fetchJsonOnce(`/api/boosts/vendor-boosts?${qs.toString()}`, { method: 'GET' }, 6000)
             if (seq !== loadSeqRef.current) return
-            if (rowRes.ok) setBoostRow(rowRes.json?.row || null)
-            else setBoostRow(null)
+            if (rowRes.ok) row = (rowRes.json?.row || null) as VendorBoostRow | null
           } catch {
-            if (seq !== loadSeqRef.current) return
-            setBoostRow(null)
+            row = null
           }
+
+          if (!row) {
+            const cfg = readLocalBoostConfig()[String(selectedTarget.vendorId)] || {}
+            const toIso = (ms?: number | null) => {
+              const n = Number(ms || 0)
+              return Number.isFinite(n) && n > 0 ? new Date(n).toISOString() : null
+            }
+            row = {
+              vendor_id: String(selectedTarget.vendorId),
+              vendor_kind: String(selectedTarget.vendorKind),
+              sponsored_until: toIso(cfg.sponsoredUntil),
+              sponsored_tier: tierLabelFromNumber(cfg.sponsoredTier ?? null),
+              promo_until: toIso(cfg.promoUntil),
+              new_until: toIso(cfg.newUntil),
+              updated_at: new Date().toISOString(),
+            }
+          }
+          setBoostRow(row)
         } else {
           setBoostRow(null)
         }
 
-        setBalanceStatus('loading')
-        try {
-          const qs = new URLSearchParams({ email: String(userEmail || '').trim().toLowerCase() })
-          const creditRes = await fetchJsonOnce(
-            `/api/boosts/credits-balance?${qs.toString()}`,
-            { method: 'GET' },
-            6000
-          )
-          if (seq !== loadSeqRef.current) return
-          if (creditRes.ok) {
-            setBalanceXof(Number(creditRes.json?.balanceXof || 0))
-            setBalanceStatus('ready')
-          } else {
-            setBalanceXof(null)
-            setBalanceStatus('error')
-          }
-        } catch {
-          if (seq !== loadSeqRef.current) return
-          setBalanceXof(null)
-          setBalanceStatus('error')
-        }
-        if (selectedTarget) {
-          try {
-            const qs = new URLSearchParams({
-              email: String(userEmail || '').trim().toLowerCase(),
-              vendorId: selectedTarget.vendorId,
-              vendorKind: selectedTarget.vendorKind,
-            })
-            const ordersRes = await fetchJsonOnce(`/api/boosts/my-orders-local?${qs.toString()}`, { method: 'GET' }, 9000)
-            if (seq !== loadSeqRef.current) return
-            if (ordersRes.ok && Array.isArray(ordersRes.json?.orders)) setOrders(ordersRes.json.orders as BoostOrder[])
-            else setOrders([])
-          } catch {
-            if (seq !== loadSeqRef.current) return
-            setOrders([])
-          }
+        setBalanceStatus('ready')
+        setBalanceXof(email ? readLocalCredits(email) : 0)
+
+        if (selectedTarget && email) {
+          const all = readLocalOrders(email)
+          setOrders(all.filter((o) => String(o?.vendor_id || '') === String(selectedTarget.vendorId) && String(o?.vendor_kind || '') === String(selectedTarget.vendorKind)).slice(0, 50))
         } else {
           setOrders([])
         }
@@ -488,14 +565,30 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         },
         9000
       )
-      if (!res.ok || !res.json?.success) throw new Error(res.json?.error || `HTTP ${res.status}`)
-      setBalanceXof(Number(res.json?.balanceXof ?? balanceXof ?? 0))
+      if (res.ok && res.json?.success) {
+        setBalanceXof(Number(res.json?.balanceXof ?? balanceXof ?? 0))
+        setBalanceStatus('ready')
+        toast.success(`Crédits rechargés: +${formatXof(amount)} XOF`)
+        setTopupOpen(false)
+        await load()
+        return
+      }
+
+      const next = readLocalCredits(email) + amount
+      writeLocalCredits(email, next)
+      setBalanceXof(next)
       setBalanceStatus('ready')
       toast.success(`Crédits rechargés: +${formatXof(amount)} XOF`)
       setTopupOpen(false)
       await load()
     } catch (e: any) {
-      setError(e?.message || 'Recharge indisponible')
+      const next = readLocalCredits(email) + amount
+      writeLocalCredits(email, next)
+      setBalanceXof(next)
+      setBalanceStatus('ready')
+      toast.success(`Crédits rechargés: +${formatXof(amount)} XOF`)
+      setTopupOpen(false)
+      await load()
     } finally {
       setTopupBusy(false)
     }
@@ -555,23 +648,77 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         if (!token) {
           const email = String(userEmail || '').trim().toLowerCase()
           if (!email) throw new Error('Email vendeur manquant.')
-          const res = await fetchJsonOnce(
-            '/api/boosts/purchase-with-credits-local',
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                email,
-                vendorId: selectedTarget.vendorId,
-                vendorKind: selectedTarget.vendorKind,
-                boostKind: p.kind,
-                durationHours: p.durationHours,
-              })
-            },
-            9000
-          )
-          if (!res.ok || !res.json?.success) throw new Error(res.json?.error || `HTTP ${res.status}`)
-          setBalanceXof(Number(res.json?.balanceXof ?? 0))
+
+          try {
+            const res = await fetchJsonOnce(
+              '/api/boosts/purchase-with-credits-local',
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  email,
+                  vendorId: selectedTarget.vendorId,
+                  vendorKind: selectedTarget.vendorKind,
+                  boostKind: p.kind,
+                  durationHours: p.durationHours,
+                })
+              },
+              9000
+            )
+            if (res.ok && res.json?.success) {
+              setBalanceXof(Number(res.json?.balanceXof ?? 0))
+              toast.success('Boost activé par crédits')
+              await load()
+              return
+            }
+          } catch {
+          }
+
+          const price = Math.floor(Number(p?.priceXof || 0))
+          if (!Number.isFinite(price) || price <= 0) throw new Error('Prix invalide')
+          const currentCredits = readLocalCredits(email)
+          if (currentCredits < price) throw new Error('Crédits insuffisants')
+          const nextCredits = currentCredits - price
+          writeLocalCredits(email, nextCredits)
+          setBalanceXof(nextCredits)
+
+          const ms = safeNowMs()
+          const cfgAll = readLocalBoostConfig()
+          const key = String(selectedTarget.vendorId)
+          const prev = cfgAll[key] || {}
+          const bump = (prevMs?: number | null) => {
+            const t = Number(prevMs || 0)
+            const base = Number.isFinite(t) && t > ms ? t : ms
+            return base + Number(p.durationHours || 0) * 60 * 60 * 1000
+          }
+          if (p.kind === 'sponsored') {
+            cfgAll[key] = {
+              ...prev,
+              sponsoredUntil: bump(prev.sponsoredUntil ?? null),
+              sponsoredTier: Number(p.sponsoredTier || 1),
+            }
+          } else if (p.kind === 'promo') {
+            cfgAll[key] = { ...prev, promoUntil: bump(prev.promoUntil ?? null) }
+          } else {
+            cfgAll[key] = { ...prev, newUntil: bump(prev.newUntil ?? null) }
+          }
+          writeLocalBoostConfig(cfgAll)
+
+          const order: BoostOrder = {
+            id: `local_${ms}_${Math.random().toString(36).slice(2, 10)}`,
+            vendor_id: String(selectedTarget.vendorId),
+            vendor_kind: String(selectedTarget.vendorKind),
+            boost_kind: p.kind,
+            duration_hours: Number(p.durationHours),
+            amount_xof: price,
+            currency: String(p.currency || 'XOF'),
+            status: 'active',
+            expires_at: new Date(cfgAll[key]?.[p.kind === 'sponsored' ? 'sponsoredUntil' : p.kind === 'promo' ? 'promoUntil' : 'newUntil'] as any).toISOString(),
+            created_at: new Date(ms).toISOString(),
+          }
+          const allOrders = readLocalOrders(email)
+          writeLocalOrders(email, [order, ...allOrders].slice(0, 100))
+
           toast.success('Boost activé par crédits')
           await load()
           return
@@ -982,4 +1129,3 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
     </div>
   )
 }
-

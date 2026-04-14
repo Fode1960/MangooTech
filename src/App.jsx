@@ -469,6 +469,17 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
     
     const normalizedEmail = email.toLowerCase().trim();
 
+    const normalizePasswordInput = (value) => {
+      return String(value ?? '')
+        .replace(/\u00A0/g, ' ')
+        .replace(/[\u200B-\u200D\uFEFF]/g, '')
+        .replace(/[\r\n\t]/g, '')
+        .trim()
+    }
+
+    const passwordRaw = String(password ?? '')
+    const passwordNormalized = normalizePasswordInput(passwordRaw)
+
     const storedUsers = (() => {
       try {
         const raw = localStorage.getItem('demo_users');
@@ -535,8 +546,12 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
       'vendeur@exemple.com': 'vendor123',
       'vendeur@example.com': 'vendor123'
     };
-    const isStoredPassword = fromStored && Boolean(user?.password) && String(user.password) === password;
-    const isDemoPassword = Boolean(demoPasswords[normalizedEmail]) && String(demoPasswords[normalizedEmail]) === password;
+    const storedPasswordRaw = fromStored ? String(user?.password ?? '') : ''
+    const storedPasswordNormalized = normalizePasswordInput(storedPasswordRaw)
+    const isStoredPassword = fromStored && Boolean(storedPasswordRaw) && (storedPasswordRaw === passwordRaw || storedPasswordNormalized === passwordNormalized);
+    const demoPasswordRaw = String(demoPasswords[normalizedEmail] ?? '')
+    const demoPasswordNormalized = normalizePasswordInput(demoPasswordRaw)
+    const isDemoPassword = Boolean(demoPasswordRaw) && (demoPasswordRaw === passwordRaw || demoPasswordNormalized === passwordNormalized);
 
     if (user && (fromStored ? isStoredPassword : isDemoPassword)) {
       if (normalizedEmail === 'admin@mangoo.tech') {
@@ -573,8 +588,9 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         const list = Array.isArray(shops) ? shops : [];
         return list.find((s) => {
           const ownerEmail = String(s?.ownerEmail || s?.owner_email || s?.email || '').trim().toLowerCase();
-          const ownerPassword = String(s?.ownerPassword || s?.owner_password || '').trim();
-          return ownerEmail === normalizedEmail && ownerPassword && ownerPassword === password;
+          const ownerPasswordRaw = String(s?.ownerPassword || s?.owner_password || '')
+          const ownerPasswordNormalized = normalizePasswordInput(ownerPasswordRaw)
+          return ownerEmail === normalizedEmail && ownerPasswordRaw && (ownerPasswordRaw === passwordRaw || ownerPasswordNormalized === passwordNormalized);
         }) || null;
       } catch {
         return null;
