@@ -1916,6 +1916,7 @@ const ClientRegister = ({ onRegister, onBack }) => {
 
 // Interface Vendeur optimisée
 const VendorDashboard = ({ user }) => {
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState(() => {
     try {
       const stored = localStorage.getItem('mangoo-vendor-active-tab');
@@ -2199,6 +2200,41 @@ const VendorDashboard = ({ user }) => {
     } catch {
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    const allowed = ['overview', 'stock', 'products', 'orders', 'notifications', 'communication', 'shops', 'supply', 'boosts'];
+    let nextTab = '';
+    let editShop = '';
+    try {
+      const params = new URLSearchParams(String(location?.search || ''));
+      const lpVendorTab = String(params.get('lp_vendor_tab') || '').trim();
+      const lpVendorEditShop = String(params.get('lp_vendor_edit_shop') || '').trim();
+      if (lpVendorEditShop) {
+        editShop = lpVendorEditShop;
+        nextTab = 'shops';
+      } else if (lpVendorTab && allowed.includes(lpVendorTab)) {
+        nextTab = lpVendorTab;
+      }
+    } catch {
+      nextTab = '';
+      editShop = '';
+    }
+
+    if (editShop) {
+      try {
+        localStorage.setItem('mangoo-vendor-edit-shop-slug', editShop);
+      } catch {
+      }
+    }
+
+    if (nextTab && nextTab !== activeTab) {
+      setActiveTab(nextTab);
+      try {
+        localStorage.setItem('mangoo-vendor-active-tab', nextTab);
+      } catch {
+      }
+    }
+  }, [activeTab, location?.search]);
 
   const shopCategories = useMemo(() => [
     { key: 'general', label: 'Général' },
