@@ -360,50 +360,105 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
       return;
     }
 
-    const shop = (() => {
-      try {
-        const raw = localStorage.getItem('demo_shops');
-        const shops = raw ? JSON.parse(raw) : [];
-        const list = Array.isArray(shops) ? shops : [];
-        return list.find((s) => String(s?.ownerEmail || '').trim().toLowerCase() === normalizedEmail) || null;
-      } catch {
-        return null;
+    void (async () => {
+      const readLocalShop = () => {
+        try {
+          const raw = localStorage.getItem('demo_shops');
+          const shops = raw ? JSON.parse(raw) : [];
+          const list = Array.isArray(shops) ? shops : [];
+          return list.find((s) => {
+            const ownerEmail = String(s?.ownerEmail || s?.owner_email || s?.email || '').trim().toLowerCase();
+            return ownerEmail === normalizedEmail;
+          }) || null;
+        } catch {
+          return null;
+        }
+      };
+
+      let shop = readLocalShop();
+
+      if (!shop && supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey) {
+        try {
+          const select = 'id,name,slug,status,owner_name,owner_email,email,created_at'
+          const attempt = async (withOwnerEmail) => {
+            const q = supabase
+              .from('shops')
+              .select(select)
+              .order('created_at', { ascending: false })
+
+            if (withOwnerEmail) {
+              return await q.or(`owner_email.eq.${normalizedEmail},email.eq.${normalizedEmail}`)
+            }
+            return await q.eq('email', normalizedEmail)
+          }
+
+          let r = await attempt(true)
+          if (r?.error) {
+            const msg = String(r.error.message || '').toLowerCase()
+            const missingOwnerEmail = msg.includes('could not find') && msg.includes('owner_email')
+            if (missingOwnerEmail) r = await attempt(false)
+          }
+
+          const found = Array.isArray(r?.data) ? r.data[0] : null
+          if (found?.slug) {
+            shop = {
+              id: String(found?.id || found.slug),
+              name: String(found?.name || 'Boutique'),
+              slug: String(found?.slug || ''),
+              ownerName: String(found?.owner_name || ''),
+              ownerEmail: normalizedEmail,
+              approvalStatus: String(found?.status || 'pending'),
+              source: 'supabase',
+              createdAt: String(found?.created_at || ''),
+            }
+            try {
+              const raw = localStorage.getItem('demo_shops');
+              const all = raw ? JSON.parse(raw) : [];
+              const prev = Array.isArray(all) ? all : [];
+              const others = prev.filter((x) => String(x?.slug || '').trim() !== String(shop.slug || '').trim());
+              localStorage.setItem('demo_shops', JSON.stringify([shop, ...others]));
+              window.dispatchEvent(new Event('demo-shops-updated'));
+            } catch {
+            }
+          }
+        } catch {
+        }
       }
+
+      if (!shop) {
+        setError('Aucune boutique trouvée pour cet email');
+        return;
+      }
+
+      if (String(shop?.approvalStatus || 'pending') !== 'approved') {
+        setError('Votre boutique est en attente d’approbation par l’administrateur');
+        return;
+      }
+
+      const newUser = {
+        id: Date.now(),
+        name: shop?.ownerName || shop?.name || 'Vendeur',
+        email: normalizedEmail,
+        role: 'vendor',
+        roles: ['vendor', 'client'],
+        shopName: shop?.name || 'Boutique',
+        avatar: '🏪',
+        password
+      };
+
+      try {
+        const raw = localStorage.getItem('demo_users');
+        const data = raw ? JSON.parse(raw) : {};
+        const map = data && typeof data === 'object' ? data : {};
+        map[normalizedEmail] = newUser;
+        localStorage.setItem('demo_users', JSON.stringify(map));
+        localStorage.setItem('mangoo-current-user', JSON.stringify(newUser));
+      } catch {
+      }
+
+      setError('');
+      onLogin(newUser);
     })();
-
-    if (!shop) {
-      setError('Aucune boutique trouvée pour cet email');
-      return;
-    }
-
-    if (String(shop?.approvalStatus || 'pending') !== 'approved') {
-      setError('Votre boutique est en attente d’approbation par l’administrateur');
-      return;
-    }
-
-    const newUser = {
-      id: Date.now(),
-      name: shop?.ownerName || shop?.name || 'Vendeur',
-      email: normalizedEmail,
-      role: 'vendor',
-      roles: ['vendor', 'client'],
-      shopName: shop?.name || 'Boutique',
-      avatar: '🏪',
-      password
-    };
-
-    try {
-      const raw = localStorage.getItem('demo_users');
-      const data = raw ? JSON.parse(raw) : {};
-      const map = data && typeof data === 'object' ? data : {};
-      map[normalizedEmail] = newUser;
-      localStorage.setItem('demo_users', JSON.stringify(map));
-    } catch {
-      // ignore
-    }
-
-    setError('');
-    onLogin(newUser);
   }, [email, onLogin, password]);
 
   const handleLogin = useCallback(async (e) => {

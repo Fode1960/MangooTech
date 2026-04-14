@@ -35,11 +35,22 @@ const ShopPage = () => {
   const openVendorDashboard = (nextTab, opts) => {
     const tab = String(nextTab || '').trim()
     const edit = Boolean(opts?.edit)
+    const forcedTab = edit ? 'shops' : tab
     const params = new URLSearchParams()
     params.set('lp_view', 'account')
     params.set('lp_role', 'vendor')
-    if (tab) params.set('lp_vendor_tab', tab)
+    if (forcedTab) params.set('lp_vendor_tab', forcedTab)
     if (edit) params.set('lp_vendor_edit_shop', String(shopSlug || ''))
+    try {
+      if (forcedTab) localStorage.setItem('mangoo-vendor-active-tab', forcedTab)
+    } catch {
+    }
+    if (edit) {
+      try {
+        localStorage.setItem('mangoo-vendor-edit-shop-slug', String(shopSlug || ''))
+      } catch {
+      }
+    }
     navigate(`/?${params.toString()}`)
   }
 
