@@ -6782,7 +6782,7 @@ const MangooLocalFrame = React.memo(({ user, onBack }) => {
   }, [onBack, persistCreatorLocation]);
 
   return (
-    <div style={{ width: '100vw', height: 'var(--app-height, 100vh)', overflow: 'hidden' }}>
+    <div style={{ width: '100%', maxWidth: '100vw', height: 'var(--app-height, 100vh)', overflow: 'hidden' }}>
       <iframe 
         key={`mangoo-local-${MANGOO_LOCAL_VERSION}`}
         src={`/mangoo-local.html?v=${MANGOO_LOCAL_VERSION}`} 
