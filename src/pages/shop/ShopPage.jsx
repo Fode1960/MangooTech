@@ -4,6 +4,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Store, MapPin, Star, Package, Calendar, Shield, Truck, Heart, Share2, MessageCircle, Users, ShoppingCart } from 'lucide-react';
 import VendorProductManager from '../../components/VendorProductManager';
 import { isLocalSyncEnabled, localSync } from '../../utils/localSyncClient';
+import { supabase, supabaseConfig } from '../../config/supabase';
 
 const ShopPage = () => {
   const { shopSlug } = useParams();
@@ -164,12 +165,73 @@ const ShopPage = () => {
   const loadShopData = async () => {
     try {
       setLoading(true);
+
+      const currentUser = (() => {
+        try {
+          const raw = localStorage.getItem('mangoo-current-user');
+          return raw ? JSON.parse(raw) : null;
+        } catch {
+          return null;
+        }
+      })();
       
       // Si le shopSlug est une route ShopApp, ne pas traiter comme une boutique
       if (['create', 'products', 'dashboard'].includes(shopSlug)) {
         setError('Cette page n\'est pas une boutique');
         setLoading(false);
         return;
+      }
+
+      const hasSupabase = Boolean(supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey)
+      if (hasSupabase) {
+        try {
+          const { data, error } = await supabase
+            .from('shops')
+            .select('*')
+            .eq('slug', String(shopSlug || '').trim())
+            .maybeSingle()
+
+          if (!error && data?.slug) {
+            const statusRaw = String(data?.status || 'pending').trim().toLowerCase()
+            const normalizedStatus = (statusRaw === 'approved' || statusRaw === 'rejected' || statusRaw === 'suspended') ? statusRaw : 'pending'
+
+            const ownerEmail = String(data?.email || '').trim().toLowerCase()
+            const currentEmail = String(currentUser?.email || '').trim().toLowerCase()
+            const isOwner = Boolean(ownerEmail && currentEmail && ownerEmail === currentEmail)
+            const isAdmin = currentUser?.role === 'admin'
+
+            setShopOwnerEmail(ownerEmail)
+            setCanManageProducts(Boolean(isOwner || isAdmin))
+
+            if (normalizedStatus !== 'approved' && !isOwner && !isAdmin) {
+              setError('Boutique en attente d’approbation')
+              setLoading(false)
+              return
+            }
+
+            setShop({
+              ...demoShop,
+              id: String(data?.id || demoShop.id),
+              name: String(data?.name || demoShop.name),
+              slug: String(data?.slug || shopSlug),
+              description: String(data?.description || demoShop.description),
+              status: normalizedStatus,
+              business_type: String(data?.business_type || demoShop.business_type),
+              contact_email: ownerEmail,
+              address: { city: String(data?.city || 'Douala'), country: String(data?.country || 'Cameroun') },
+              created_at: String(data?.created_at || demoShop.created_at),
+              primaryColor: '#0EA5E9',
+              secondaryColor: '#38BDF8',
+              logoDataUrl: String(data?.logo_url || ''),
+            })
+
+            setProducts([])
+            setError(null)
+            setLoading(false)
+            return
+          }
+        } catch {
+        }
       }
 
       const localShop = (() => {
@@ -265,15 +327,6 @@ const ShopPage = () => {
             ]);
             return candidates.has(String(shopSlug || '').trim());
           }) || null;
-        } catch {
-          return null;
-        }
-      })();
-
-      const currentUser = (() => {
-        try {
-          const raw = localStorage.getItem('mangoo-current-user');
-          return raw ? JSON.parse(raw) : null;
         } catch {
           return null;
         }

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ExternalLink, Search, FileText, X } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 import { supabase, supabaseConfig } from '../config/supabase';
+import { toast } from 'sonner';
 
 type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'suspended';
 
@@ -320,6 +321,14 @@ export default function AdminShops() {
 
   const setApproval = useCallback(async (slug: string, status: ApprovalStatus) => {
     if (canUseSupabase) {
+      setShops((prev) => prev.map((s) => {
+        if (String(s?.slug || '') !== slug) return s
+        const now0 = new Date().toISOString()
+        if (status === 'approved') return { ...s, approvalStatus: 'approved', approvedAt: now0, approvedBy: ADMIN_EMAIL, updatedAt: now0 }
+        if (status === 'rejected') return { ...s, approvalStatus: 'rejected', rejectedAt: now0, rejectedBy: ADMIN_EMAIL, updatedAt: now0 }
+        if (status === 'suspended') return { ...s, approvalStatus: 'suspended', suspendedAt: now0, suspendedBy: ADMIN_EMAIL, updatedAt: now0 }
+        return { ...s, approvalStatus: 'pending', updatedAt: now0 }
+      }))
       try {
         const now = new Date().toISOString()
         const update: any = { status, updated_at: now }
@@ -336,13 +345,22 @@ export default function AdminShops() {
           update.suspended_by = ADMIN_EMAIL
         }
 
-        await supabase
+        const { error } = await supabase
           .from('shops')
           .update(update)
           .eq('slug', slug)
 
+        if (error) {
+          toast.error(`Impossible de mettre à jour (Supabase): ${error.message}`)
+          refresh()
+          return
+        }
+
+        toast.success('Statut mis à jour')
         refresh()
       } catch {
+        toast.error('Erreur lors de la mise à jour')
+        refresh()
       }
       return
     }
