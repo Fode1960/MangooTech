@@ -2464,8 +2464,23 @@ const VendorDashboard = ({ user }) => {
       }
     }
 
-    return local;
-  }, [normalizeEmail]);
+    if (local) return local;
+
+    return {
+      id: targetSlug,
+      name: '',
+      slug: targetSlug,
+      category: 'general',
+      approvalStatus: 'pending',
+      ownerEmail: String(user?.email || ''),
+      ownerName: String(user?.name || ''),
+      shopUrl: `${window.location.origin}/shop/${targetSlug}`,
+      logoDataUrl: '',
+      source: 'fallback',
+      primaryColor: '#0EA5E9',
+      secondaryColor: '#38BDF8',
+    };
+  }, [user?.email, user?.name]);
 
   const syncShopToLocalStorage = useCallback((shop) => {
     const slug = String(shop?.slug || '').trim();
@@ -2592,12 +2607,9 @@ const VendorDashboard = ({ user }) => {
     setShowShopEditor(false);
     void (async () => {
       const shop = await loadShopForSettings(slug);
-      if (!shop?.slug) {
-        toast.error('Boutique introuvable');
-        return;
-      }
-      setEditingShopSlug(String(shop.slug || slug));
-      setEditName(String(shop?.name || ''));
+      const shopSlug = String(shop?.slug || slug).trim();
+      setEditingShopSlug(shopSlug);
+      setEditName(String(shop?.name || shopSlug || ''));
       setEditOwnerEmail(String(shop?.ownerEmail || user?.email || ''));
       setEditCategory(String(shop?.category || 'general'));
       setEditLogoDataUrl(String(shop?.logoDataUrl || ''));
