@@ -566,6 +566,46 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
       return;
     }
 
+    const shopAuthMatch = (() => {
+      try {
+        const raw = localStorage.getItem('demo_shops');
+        const shops = raw ? JSON.parse(raw) : [];
+        const list = Array.isArray(shops) ? shops : [];
+        return list.find((s) => {
+          const ownerEmail = String(s?.ownerEmail || s?.owner_email || s?.email || '').trim().toLowerCase();
+          const ownerPassword = String(s?.ownerPassword || s?.owner_password || '').trim();
+          return ownerEmail === normalizedEmail && ownerPassword && ownerPassword === password;
+        }) || null;
+      } catch {
+        return null;
+      }
+    })();
+
+    if (shopAuthMatch) {
+      const newUser = {
+        id: `vendor_${Date.now()}`,
+        name: String(shopAuthMatch?.ownerName || normalizedEmail.split('@')[0] || 'Vendeur'),
+        email: normalizedEmail,
+        role: 'vendor',
+        roles: ['vendor', 'client'],
+        shopName: String(shopAuthMatch?.name || shopAuthMatch?.shopName || 'Boutique'),
+        avatar: '🏪',
+        password,
+      };
+      try {
+        localStorage.setItem('mangoo-current-user', JSON.stringify(newUser));
+        const rawUsers = localStorage.getItem('demo_users');
+        const data = rawUsers ? JSON.parse(rawUsers) : {};
+        const map = data && typeof data === 'object' ? data : {};
+        map[normalizedEmail] = { ...(map[normalizedEmail] || {}), ...newUser };
+        localStorage.setItem('demo_users', JSON.stringify(map));
+      } catch {
+      }
+      onLogin(newUser);
+      setSubmitting(false)
+      return;
+    }
+
     if (isLocalSyncEnabled() && normalizedEmail && password) {
       try {
         const resp = await localSync.login({ email: normalizedEmail, password })
@@ -1178,6 +1218,11 @@ const Register = ({ onRegister, onBack }) => {
             vendorId: String(inserted.id),
             vendorKind: 'shop',
           }
+          persistCreatedShop({
+            ...shop,
+            ownerEmail: normalizedEmail,
+            ownerPassword: password,
+          })
         }
       } catch {
       }
@@ -7886,6 +7931,26 @@ function AppShell() {
 }
 
 function App() {
+  const [toasterPosition, setToasterPosition] = useState(() => {
+    try {
+      return window.innerWidth < 640 ? 'top-center' : 'top-right'
+    } catch {
+      return 'top-right'
+    }
+  })
+
+  useEffect(() => {
+    const update = () => {
+      try {
+        setToasterPosition(window.innerWidth < 640 ? 'top-center' : 'top-right')
+      } catch {
+      }
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+
   useEffect(() => {
     if (!isLocalSyncEnabled()) return
     let cancelled = false
@@ -7958,7 +8023,7 @@ function App() {
 
   return (
     <NotificationProvider>
-      <Toaster richColors position="top-right" />
+      <Toaster richColors position={toasterPosition} />
       <Routes>
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/boost/success" element={<BoostReturn mode="success" />} />
