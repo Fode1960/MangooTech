@@ -331,27 +331,59 @@ export default function AdminShops() {
       }))
       try {
         const now = new Date().toISOString()
-        const update: any = { status, updated_at: now }
+        const updateBase: any = { status, updated_at: now }
+        const updateWithMeta: any = { ...updateBase }
         if (status === 'approved') {
-          update.approved_at = now
-          update.approved_by = ADMIN_EMAIL
+          updateWithMeta.approved_at = now
+          updateWithMeta.approved_by = ADMIN_EMAIL
         }
         if (status === 'rejected') {
-          update.rejected_at = now
-          update.rejected_by = ADMIN_EMAIL
+          updateWithMeta.rejected_at = now
+          updateWithMeta.rejected_by = ADMIN_EMAIL
         }
         if (status === 'suspended') {
-          update.suspended_at = now
-          update.suspended_by = ADMIN_EMAIL
+          updateWithMeta.suspended_at = now
+          updateWithMeta.suspended_by = ADMIN_EMAIL
         }
 
-        const { error } = await supabase
-          .from('shops')
-          .update(update)
-          .eq('slug', slug)
+        const attempt = async (payload: any) => {
+          return await supabase
+            .from('shops')
+            .update(payload)
+            .eq('slug', slug)
+        }
 
-        if (error) {
-          toast.error(`Impossible de mettre à jour (Supabase): ${error.message}`)
+        const r1 = await attempt(updateWithMeta)
+        if (r1.error) {
+          const msg = String(r1.error.message || '')
+          const isMissingColumn = msg.toLowerCase().includes("could not find") && msg.toLowerCase().includes('column')
+          if (isMissingColumn) {
+            const r2 = await attempt(updateBase)
+            if (r2.error) {
+              const msg2 = String(r2.error.message || '')
+              const isMissingColumn2 = msg2.toLowerCase().includes("could not find") && msg2.toLowerCase().includes('column')
+              if (isMissingColumn2) {
+                const r3 = await attempt({ status })
+                if (r3.error) {
+                  toast.error(`Impossible de mettre à jour (Supabase): ${r3.error.message}`)
+                  refresh()
+                  return
+                }
+                toast.success('Statut mis à jour')
+                refresh()
+                return
+              }
+              toast.error(`Impossible de mettre à jour (Supabase): ${r2.error.message}`)
+              refresh()
+              return
+            }
+
+            toast.success('Statut mis à jour')
+            refresh()
+            return
+          }
+
+          toast.error(`Impossible de mettre à jour (Supabase): ${r1.error.message}`)
           refresh()
           return
         }
