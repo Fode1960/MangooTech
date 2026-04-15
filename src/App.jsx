@@ -1262,29 +1262,7 @@ const Register = ({ onRegister, onBack }) => {
     } catch {
     }
 
-    if (!isDevHost) {
-      const r = await createOnServer()
-      const inserted = r.ok ? r.json?.shop : null
-      if (inserted?.id) {
-        shop = {
-          ...shop,
-          id: `shop-${inserted.id}`,
-          slug: String(inserted.slug || slug).trim() || shop.slug,
-          shopUrl: `${window.location.origin}/shop/${String(inserted.slug || slug).trim() || shop.slug}`,
-          approvalStatus: String(inserted.status || 'pending'),
-          source: 'supabase',
-          vendorId: String(inserted.id),
-          vendorKind: 'shop',
-        }
-        persistCreatedShop({
-          ...shop,
-          ownerEmail: String(email || '').trim().toLowerCase(),
-          ownerPassword: password,
-        })
-      } else {
-        persistCreatedShop(shop)
-      }
-    } else if (canUseSupabase) {
+    const createInSupabase = async () => {
       try {
         const normalizedEmail = String(email || '').trim().toLowerCase()
         let finalSlug = String(slug || '').trim()
@@ -1337,9 +1315,40 @@ const Register = ({ onRegister, onBack }) => {
             ownerEmail: normalizedEmail,
             ownerPassword: password,
           })
+          return true
         }
       } catch {
       }
+      return false
+    }
+
+    if (!isDevHost) {
+      const r = await createOnServer()
+      const inserted = r.ok ? r.json?.shop : null
+      if (inserted?.id) {
+        shop = {
+          ...shop,
+          id: `shop-${inserted.id}`,
+          slug: String(inserted.slug || slug).trim() || shop.slug,
+          shopUrl: `${window.location.origin}/shop/${String(inserted.slug || slug).trim() || shop.slug}`,
+          approvalStatus: String(inserted.status || 'pending'),
+          source: 'supabase',
+          vendorId: String(inserted.id),
+          vendorKind: 'shop',
+        }
+        persistCreatedShop({
+          ...shop,
+          ownerEmail: String(email || '').trim().toLowerCase(),
+          ownerPassword: password,
+        })
+      } else if (canUseSupabase) {
+        const ok = await createInSupabase()
+        if (!ok) persistCreatedShop(shop)
+      } else {
+        persistCreatedShop(shop)
+      }
+    } else if (canUseSupabase) {
+      await createInSupabase()
       persistCreatedShop(shop)
     }
 
