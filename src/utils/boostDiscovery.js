@@ -1,3 +1,5 @@
+import { supabase, supabaseConfig } from '../config/supabase'
+
 const readBool = (value) => {
   const v = String(value ?? '').trim().toLowerCase()
   if (v === '1' || v === 'true' || v === 'yes' || v === 'on') return true
@@ -60,25 +62,38 @@ export const getBoostDiscoveryFlags = () => {
 }
 
 export const fetchActiveBoostRows = async ({ timeoutMs = 6000 } = {}) => {
-  try {
-    const { supabase, supabaseConfig } = await import('../config/supabase')
-    const hasSupabase = Boolean(supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey)
-    if (hasSupabase) {
-      const controller = new AbortController()
-      const t = window.setTimeout(() => controller.abort(), timeoutMs)
-      try {
-        const { data, error } = await supabase
+  const hasSupabase = Boolean(supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey)
+  if (hasSupabase) {
+    const controller = new AbortController()
+    const t = window.setTimeout(() => controller.abort(), timeoutMs)
+    try {
+      const attempt = async (withOrder) => {
+        let q = supabase
           .from('vendor_boosts')
-          .select('vendor_id,vendor_kind,sponsored_until,sponsored_tier,promo_until,new_until')
-          .order('updated_at', { ascending: false })
+          .select('vendor_id,vendor_kind,sponsored_until,sponsored_tier,promo_until,new_until,updated_at')
           .limit(200)
-        if (!error && Array.isArray(data)) return data
-      } catch {
-      } finally {
-        window.clearTimeout(t)
+        if (withOrder) q = q.order('updated_at', { ascending: false })
+        return await q
       }
+
+      let r = await attempt(true)
+      if (r?.error) {
+        const msg = String(r.error.message || '').toLowerCase()
+        const missingUpdatedAt = msg.includes('could not find') && msg.includes('updated_at')
+        if (missingUpdatedAt) r = await attempt(false)
+      }
+
+      if (!r?.error && Array.isArray(r?.data)) {
+        try {
+          localStorage.setItem('mangoo_boost_active_cache_rows', JSON.stringify(r.data))
+        } catch {
+        }
+        return r.data
+      }
+    } catch {
+    } finally {
+      window.clearTimeout(t)
     }
-  } catch {
   }
 
   const controller = new AbortController()
@@ -87,7 +102,20 @@ export const fetchActiveBoostRows = async ({ timeoutMs = 6000 } = {}) => {
     const res = await fetch('/api/boosts/vendor-boosts-active', { method: 'GET', signal: controller.signal })
     const json = await res.json().catch(() => null)
     const rows = Array.isArray(json?.rows) ? json.rows : []
-    return rows
+    if (rows.length) {
+      try {
+        localStorage.setItem('mangoo_boost_active_cache_rows', JSON.stringify(rows))
+      } catch {
+      }
+      return rows
+    }
+    try {
+      const raw = localStorage.getItem('mangoo_boost_active_cache_rows')
+      const parsed = raw ? JSON.parse(raw) : []
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
   } finally {
     window.clearTimeout(t)
   }

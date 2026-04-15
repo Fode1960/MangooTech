@@ -4822,12 +4822,17 @@ const ShopsDirectory = () => {
                 const vendorId = String(shop.vendorId || '').trim()
                 if (!vendorId) return
                 try {
-                  await fetch('/api/boosts/dev/activate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ vendorId, vendorKind: 'shop', boostKind: 'sponsored', durationHours: 12, sponsoredTier: 'argent' }),
-                  })
+                  const until = new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString()
+                  await supabase.from('vendor_boosts').upsert({
+                    vendor_kind: 'shop',
+                    vendor_id: vendorId,
+                    sponsored_until: until,
+                    sponsored_tier: 'argent',
+                    updated_at: new Date().toISOString(),
+                  }, { onConflict: 'vendor_kind,vendor_id' })
+                  toast.success(`Sponsoring activé: ${shop.name}`)
                 } catch {
+                  toast.error('Impossible d’activer le sponsoring (debug)')
                 }
                 try {
                   const rows = await fetchActiveBoostRows({ timeoutMs: 6500 })
@@ -4847,12 +4852,16 @@ const ShopsDirectory = () => {
                 const vendorId = String(shop.vendorId || '').trim()
                 if (!vendorId) return
                 try {
-                  await fetch('/api/boosts/dev/activate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ vendorId, vendorKind: 'shop', boostKind: 'promo', durationHours: 12 }),
-                  })
+                  const until = new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString()
+                  await supabase.from('vendor_boosts').upsert({
+                    vendor_kind: 'shop',
+                    vendor_id: vendorId,
+                    promo_until: until,
+                    updated_at: new Date().toISOString(),
+                  }, { onConflict: 'vendor_kind,vendor_id' })
+                  toast.success(`Promotion activée: ${shop.name}`)
                 } catch {
+                  toast.error('Impossible d’activer la promotion (debug)')
                 }
                 try {
                   const rows = await fetchActiveBoostRows({ timeoutMs: 6500 })
@@ -4872,12 +4881,16 @@ const ShopsDirectory = () => {
                 const vendorId = String(shop.vendorId || '').trim()
                 if (!vendorId) return
                 try {
-                  await fetch('/api/boosts/dev/activate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ vendorId, vendorKind: 'shop', boostKind: 'new', durationHours: 12 }),
-                  })
+                  const until = new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString()
+                  await supabase.from('vendor_boosts').upsert({
+                    vendor_kind: 'shop',
+                    vendor_id: vendorId,
+                    new_until: until,
+                    updated_at: new Date().toISOString(),
+                  }, { onConflict: 'vendor_kind,vendor_id' })
+                  toast.success(`Nouveau activé: ${shop.name}`)
                 } catch {
+                  toast.error('Impossible d’activer Nouveau (debug)')
                 }
                 try {
                   const rows = await fetchActiveBoostRows({ timeoutMs: 6500 })
@@ -5016,6 +5029,7 @@ const ShopsDirectory = () => {
           {mainList.map((shop) => {
             const b = (boostFlags.vitrine || boostFlags.promo) ? getBoostForShop(shop) : null
             const now = Date.now()
+            const isSponsored = Boolean(boostFlags.vitrine && b && Number(b.sponsoredUntilMs || 0) > now)
             const isPromo = Boolean(boostFlags.promo && b && Number(b.promoUntilMs || 0) > now)
             const isNew = Boolean(boostFlags.promo && b && Number(b.newUntilMs || 0) > now)
             return (
@@ -5050,6 +5064,11 @@ const ShopsDirectory = () => {
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <div className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{shop.name}</div>
+                      {isSponsored && (
+                        <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-amber-500/15 text-amber-200 border-amber-400/30' : 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-amber-50 text-amber-700 border-amber-200'}>
+                          Sponsorisé
+                        </span>
+                      )}
                       {isPromo && (
                         <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-fuchsia-500/15 text-fuchsia-200 border-fuchsia-400/30' : 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200'}>
                           Promo
