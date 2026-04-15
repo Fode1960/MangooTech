@@ -55,6 +55,7 @@ type LocalBoostConfig = {
 const LOCAL_CREDITS_PREFIX = 'mangoo_boost_credits:'
 const LOCAL_ORDERS_PREFIX = 'mangoo_boost_orders:'
 const LOCAL_CONFIG_KEY = 'mangoo_boost_config'
+const TARGET_PREF_KEY = 'mangoo_boost_target:'
 
 function safeNowMs() {
   return Date.now()
@@ -193,6 +194,17 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
     return targets.find((t) => t.vendorKind === vendorKind && t.vendorId === vendorId) || null
   }, [targetKey, targets])
 
+  const preferredTargetKey = useMemo(() => {
+    const email = String(userEmail || '').trim().toLowerCase()
+    if (!email) return ''
+    try {
+      const raw = localStorage.getItem(`${TARGET_PREF_KEY}${email}`)
+      return raw ? String(raw) : ''
+    } catch {
+      return ''
+    }
+  }, [userEmail])
+
   const computeTargets = useCallback(async () => {
     const email = String(userEmail || '').trim().toLowerCase()
     const catalog = readJson<any[]>('mangoo_local_vendors_catalog', [])
@@ -244,21 +256,31 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
     const supabaseShopTargets: VendorTarget[] = []
     if (email) {
       try {
-        const { data, error } = await supabase
-          .from('shops')
-          .select('id,name,owner_email,email')
-          .or(`owner_email.eq.${email},email.eq.${email}`)
-          .order('created_at', { ascending: false })
-          .limit(20)
+        const attempt = async (withOwnerEmail: boolean) => {
+          const q = supabase
+            .from('shops')
+            .select('id,name,owner_email,email,created_at')
+            .order('created_at', { ascending: false })
+            .limit(20)
 
-        if (!error && Array.isArray(data)) {
-          for (const s of data as any[]) {
-            const idRaw = s?.id
-            const vendorId = idRaw ? String(idRaw) : ''
-            if (!vendorId) continue
-            const name = String(s?.name || `Boutique ${vendorId}`)
-            supabaseShopTargets.push({ vendorId, vendorKind: 'shop', name })
-          }
+          if (withOwnerEmail) return await q.or(`owner_email.eq.${email},email.eq.${email}`)
+          return await q.eq('email', email)
+        }
+
+        let r: any = await attempt(true)
+        if (r?.error) {
+          const msg = String(r.error.message || '').toLowerCase()
+          const missingOwnerEmail = msg.includes('could not find') && msg.includes('owner_email')
+          if (missingOwnerEmail) r = await attempt(false)
+        }
+
+        const rows = Array.isArray(r?.data) ? r.data : []
+        for (const s of rows as any[]) {
+          const idRaw = s?.id
+          const vendorId = idRaw ? String(idRaw) : ''
+          if (!vendorId) continue
+          const name = String(s?.name || `Boutique ${vendorId}`)
+          supabaseShopTargets.push({ vendorId, vendorKind: 'shop', name })
         }
       } catch {
       }
@@ -280,19 +302,12 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
     for (const t of list) uniq.set(`${t.vendorKind}:${t.vendorId}`, t)
     const finalList = Array.from(uniq.values())
     setTargets(finalList)
-    if (!targetKey && finalList.length) {
-      let preferred = ''
-      try {
-        const raw = localStorage.getItem('mangoo_boost_target')
-        const parsed = raw ? JSON.parse(raw) : null
-        const vendorId = String(parsed?.vendorId || '')
-        const vendorKind = String(parsed?.vendorKind || '')
-        if (vendorId && vendorKind) preferred = `${vendorKind}:${vendorId}`
-      } catch {
-        preferred = ''
-      }
-      const match = preferred ? finalList.find((t) => `${t.vendorKind}:${t.vendorId}` === preferred) : null
-      setTargetKey(match ? preferred : `${finalList[0].vendorKind}:${finalList[0].vendorId}`)
+    const exists = targetKey ? finalList.some((t) => `${t.vendorKind}:${t.vendorId}` === targetKey) : false
+    if ((!targetKey || !exists) && finalList.length) {
+      const match = preferredTargetKey
+        ? finalList.find((t) => `${t.vendorKind}:${t.vendorId}` === preferredTargetKey)
+        : null
+      setTargetKey(match ? preferredTargetKey : `${finalList[0].vendorKind}:${finalList[0].vendorId}`)
     }
   }, [targetKey, userEmail])
 
@@ -505,6 +520,10 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
 
       try {
         setBalanceStatus('loading')
+        if (localCredits > 0) {
+          setBalanceXof(localCredits)
+          setBalanceStatus('ready')
+        }
         const creditRes = await fetchJsonOnce(
           '/api/boosts/credits-balance',
           { method: 'GET', headers: { Authorization: `Bearer ${token}` } },
@@ -566,10 +585,13 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
 
   useEffect(() => {
     try {
-      localStorage.setItem('mangoo_boost_target', JSON.stringify({ vendorId: selectedTarget?.vendorId, vendorKind: selectedTarget?.vendorKind }))
+      const email = String(userEmail || '').trim().toLowerCase()
+      if (email && selectedTarget?.vendorId && selectedTarget?.vendorKind) {
+        localStorage.setItem(`${TARGET_PREF_KEY}${email}`, `${selectedTarget.vendorKind}:${selectedTarget.vendorId}`)
+      }
     } catch {
     }
-  }, [selectedTarget?.vendorId, selectedTarget?.vendorKind])
+  }, [selectedTarget?.vendorId, selectedTarget?.vendorKind, userEmail])
 
   const topup = useCallback(async () => {
     if (topupBusy) return
@@ -653,7 +675,9 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         )
 
         if (!res.ok) {
-          if (res.status === 404) throw new Error('Paiement carte indisponible sur ce déploiement (API /api manquante).')
+          if (res.status === 404 || res.status === 405) {
+            throw new Error('Paiement carte indisponible sur ce déploiement.')
+          }
           throw new Error(res.json?.error || `HTTP ${res.status}`)
         }
         const url = String(res.json?.sessionUrl || '')
@@ -777,7 +801,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
           9000
         )
         if (!res.ok) {
-          if (res.status === 404) {
+          if (res.status === 404 || res.status === 405) {
             await localFallbackPurchase()
             return
           }
