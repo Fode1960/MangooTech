@@ -147,6 +147,7 @@ export default function AdminShops() {
 
   const refresh = useCallback(() => {
     void (async () => {
+      let supabaseMapped: DemoShop[] = []
       if (canUseSupabase) {
         try {
           const { data, error } = await supabase
@@ -155,43 +156,38 @@ export default function AdminShops() {
             .order('created_at', { ascending: false })
 
           if (error || !Array.isArray(data)) {
-            setShops([])
-            return
+            supabaseMapped = []
+          } else {
+            supabaseMapped = data
+              .map((s: any) => {
+                const slug = String(s?.slug || '').trim()
+                if (!slug) return null
+                const statusRaw = String(s?.status || 'pending').trim().toLowerCase()
+                const approvalStatus: ApprovalStatus = (statusRaw === 'approved' || statusRaw === 'rejected' || statusRaw === 'suspended') ? (statusRaw as any) : 'pending'
+                return {
+                  id: String(s?.id || slug),
+                  name: String(s?.name || 'Boutique'),
+                  slug,
+                  category: String(s?.category || 'general'),
+                  ownerName: String(s?.owner_name || s?.ownerName || ''),
+                  ownerEmail: String(s?.owner_email || s?.ownerEmail || s?.email || ''),
+                  approvalStatus,
+                  approvedAt: String(s?.approved_at || s?.approvedAt || ''),
+                  approvedBy: String(s?.approved_by || s?.approvedBy || ''),
+                  rejectedAt: String(s?.rejected_at || s?.rejectedAt || ''),
+                  rejectedBy: String(s?.rejected_by || s?.rejectedBy || ''),
+                  suspendedAt: String(s?.suspended_at || s?.suspendedAt || ''),
+                  suspendedBy: String(s?.suspended_by || s?.suspendedBy || ''),
+                  createdAt: String(s?.created_at || s?.createdAt || ''),
+                  updatedAt: String(s?.updated_at || s?.updatedAt || ''),
+                  shopUrl: String(s?.shop_url || s?.shopUrl || ''),
+                  source: 'supabase',
+                } as DemoShop
+              })
+              .filter(Boolean) as DemoShop[]
           }
-
-          const mapped: DemoShop[] = data
-            .map((s: any) => {
-              const slug = String(s?.slug || '').trim()
-              if (!slug) return null
-              const statusRaw = String(s?.status || 'pending').trim().toLowerCase()
-              const approvalStatus: ApprovalStatus = (statusRaw === 'approved' || statusRaw === 'rejected' || statusRaw === 'suspended') ? (statusRaw as any) : 'pending'
-              return {
-                id: String(s?.id || slug),
-                name: String(s?.name || 'Boutique'),
-                slug,
-                category: String(s?.category || 'general'),
-                ownerName: String(s?.owner_name || s?.ownerName || ''),
-                ownerEmail: String(s?.owner_email || s?.ownerEmail || s?.email || ''),
-                approvalStatus,
-                approvedAt: String(s?.approved_at || s?.approvedAt || ''),
-                approvedBy: String(s?.approved_by || s?.approvedBy || ''),
-                rejectedAt: String(s?.rejected_at || s?.rejectedAt || ''),
-                rejectedBy: String(s?.rejected_by || s?.rejectedBy || ''),
-                suspendedAt: String(s?.suspended_at || s?.suspendedAt || ''),
-                suspendedBy: String(s?.suspended_by || s?.suspendedBy || ''),
-                createdAt: String(s?.created_at || s?.createdAt || ''),
-                updatedAt: String(s?.updated_at || s?.updatedAt || ''),
-                shopUrl: String(s?.shop_url || s?.shopUrl || ''),
-                source: 'supabase',
-              } as DemoShop
-            })
-            .filter(Boolean) as DemoShop[]
-
-          setShops(mapped)
-          return
         } catch {
-          setShops([])
-          return
+          supabaseMapped = []
         }
       }
 
@@ -297,6 +293,22 @@ export default function AdminShops() {
         }
       } catch {
       }
+    }
+
+    if (supabaseMapped.length) {
+      const bySlug = new Map<string, DemoShop>()
+      merged.forEach((s) => {
+        const slug = String(s?.slug || '').trim()
+        if (slug) bySlug.set(slug, s)
+      })
+      supabaseMapped.forEach((s) => {
+        const slug = String(s?.slug || '').trim()
+        if (!slug) return
+        const prev = bySlug.get(slug) || {}
+        bySlug.set(slug, { ...prev, ...s, source: 'supabase' })
+      })
+      merged = Array.from(bySlug.values())
+      didMerge = true
     }
 
     if (didMigrate || didMerge) writeDemoShops(merged);
