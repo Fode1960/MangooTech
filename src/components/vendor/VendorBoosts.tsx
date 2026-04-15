@@ -57,6 +57,7 @@ const LOCAL_CREDITS_PREFIX = 'mangoo_boost_credits:'
 const LOCAL_ORDERS_PREFIX = 'mangoo_boost_orders:'
 const LOCAL_CONFIG_KEY = 'mangoo_boost_config'
 const TARGET_PREF_KEY = 'mangoo_boost_target:'
+const PENDING_BOOST_PREFIX = 'mangoo_boost_pending:'
 
 function safeNowMs() {
   return Date.now()
@@ -123,6 +124,37 @@ function tierLabelFromNumber(tier: number | null | undefined): VendorBoostRow['s
   if (n === 2) return 'argent'
   if (n === 1) return 'bronze'
   return null
+}
+
+async function upsertVendorBoostRow(params: {
+  vendorKind: string
+  vendorId: string
+  kind: BoostKind
+  durationHours: number
+  sponsoredTier?: number | null
+}) {
+  try {
+    const vendorKind = String(params.vendorKind || 'shop')
+    const vendorId = String(params.vendorId || '')
+    if (!vendorId) return
+    const now = Date.now()
+    const until = new Date(now + Math.max(0, Number(params.durationHours || 0)) * 60 * 60 * 1000).toISOString()
+    const payload: any = {
+      vendor_kind: vendorKind,
+      vendor_id: vendorId,
+      updated_at: new Date().toISOString(),
+    }
+    if (params.kind === 'sponsored') {
+      payload.sponsored_until = until
+      payload.sponsored_tier = tierLabelFromNumber(params.sponsoredTier ?? null)
+    } else if (params.kind === 'promo') {
+      payload.promo_until = until
+    } else {
+      payload.new_until = until
+    }
+    await supabase.from('vendor_boosts').upsert(payload, { onConflict: 'vendor_kind,vendor_id' })
+  } catch {
+  }
 }
 
 const fallbackPricing: PricingProduct[] = [
@@ -713,6 +745,23 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         }
         const url = String(res.json?.sessionUrl || '')
         if (!url) throw new Error('URL Stripe manquante')
+        try {
+          const email = String(userEmail || '').trim().toLowerCase()
+          if (email && selectedTarget?.vendorId && selectedTarget?.vendorKind) {
+            localStorage.setItem(
+              `${PENDING_BOOST_PREFIX}${email}`,
+              JSON.stringify({
+                vendorId: String(selectedTarget.vendorId),
+                vendorKind: String(selectedTarget.vendorKind),
+                kind: p.kind,
+                durationHours: Number(p.durationHours),
+                sponsoredTier: Number((p as any)?.sponsoredTier || 0) || null,
+                savedAt: Date.now(),
+              })
+            )
+          }
+        } catch {
+        }
         window.location.href = url
       } catch (e: any) {
         setError(e?.message || 'Erreur paiement carte')
@@ -860,6 +909,15 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
           }
           throw new Error(res.json?.error || `HTTP ${res.status}`)
         }
+
+        await upsertVendorBoostRow({
+          vendorKind: selectedTarget.vendorKind,
+          vendorId: selectedTarget.vendorId,
+          kind: p.kind,
+          durationHours: p.durationHours,
+          sponsoredTier: (p as any)?.sponsoredTier ?? null,
+        })
+
         toast.success('Boost activé par crédits')
         await load()
       } catch (e: any) {

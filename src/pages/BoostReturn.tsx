@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
+import { supabase } from '../config/supabase'
 
 export default function BoostReturn({ mode }: { mode: 'success' | 'cancel' }) {
   const [params] = useSearchParams()
@@ -13,6 +14,44 @@ export default function BoostReturn({ mode }: { mode: 'success' | 'cancel' }) {
 
   const sessionId = useMemo(() => String(params.get('session_id') || '').trim(), [params, tick])
   const orderId = useMemo(() => String(params.get('order_id') || '').trim(), [params, tick])
+
+  useEffect(() => {
+    if (mode !== 'success') return
+    ;(async () => {
+      try {
+        const rawUser = localStorage.getItem('mangoo-current-user')
+        const parsedUser = rawUser ? JSON.parse(rawUser) : null
+        const email = String(parsedUser?.email || '').trim().toLowerCase()
+        if (!email) return
+        const raw = localStorage.getItem(`mangoo_boost_pending:${email}`)
+        const pending = raw ? JSON.parse(raw) : null
+        if (!pending?.vendorId || !pending?.vendorKind || !pending?.kind || !pending?.durationHours) return
+        const savedAt = Number(pending?.savedAt || 0)
+        if (!Number.isFinite(savedAt) || Date.now() - savedAt > 60 * 60 * 1000) return
+
+        const now = Date.now()
+        const until = new Date(now + Math.max(0, Number(pending.durationHours || 0)) * 60 * 60 * 1000).toISOString()
+        const payload: any = {
+          vendor_kind: String(pending.vendorKind || 'shop'),
+          vendor_id: String(pending.vendorId),
+          updated_at: new Date().toISOString(),
+        }
+        if (pending.kind === 'sponsored') {
+          payload.sponsored_until = until
+          const tier = Number(pending?.sponsoredTier || 0)
+          payload.sponsored_tier = tier === 3 ? 'or' : tier === 2 ? 'argent' : tier === 1 ? 'bronze' : null
+        } else if (pending.kind === 'promo') {
+          payload.promo_until = until
+        } else {
+          payload.new_until = until
+        }
+
+        await supabase.from('vendor_boosts').upsert(payload, { onConflict: 'vendor_kind,vendor_id' })
+        localStorage.removeItem(`mangoo_boost_pending:${email}`)
+      } catch {
+      }
+    })()
+  }, [mode])
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-6">

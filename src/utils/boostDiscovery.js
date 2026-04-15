@@ -47,6 +47,9 @@ export const getBoostDiscoveryFlags = () => {
   } catch {
   }
 
+  if (vitrine === null || vitrine === undefined) vitrine = true
+  if (promo === null || promo === undefined) promo = true
+
   return {
     vitrine: Boolean(vitrine),
     promo: Boolean(promo),
