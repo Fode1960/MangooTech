@@ -1467,7 +1467,7 @@ const Register = ({ onRegister, onBack }) => {
   }
 
   return (
-    <div className={`min-h-screen flex items-center justify-center p-4 overflow-x-hidden transition-colors duration-300 ${
+    <div className={`min-h-screen flex items-center justify-center p-4 overflow-x-hidden overscroll-x-none touch-pan-y transition-colors duration-300 ${
       isDark 
         ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
         : 'bg-gradient-to-br from-orange-50 to-green-50'
@@ -1711,7 +1711,7 @@ const Register = ({ onRegister, onBack }) => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-8 gap-2 mb-3">
+              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 mb-3">
                 {colorPalettes.map((p) => (
                   <button
                     key={p.name}
@@ -1762,7 +1762,7 @@ const Register = ({ onRegister, onBack }) => {
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-orange-500 to-green-600 text-white py-2 px-4 rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105"
+              className="w-full bg-gradient-to-r from-orange-500 to-green-600 text-white py-2 px-4 rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-colors duration-300"
             >
               Créer ma boutique
             </button>
