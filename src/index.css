@@ -67,10 +67,19 @@ svg {
 
 html {
   background-color: #f9fafb;
+  -webkit-text-size-adjust: 100%;
 }
 
 html.dark {
   background-color: #111827;
+}
+
+@supports (-webkit-touch-callout: none) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
 
 html,
