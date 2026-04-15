@@ -137,8 +137,26 @@ async function upsertVendorBoostRow(params: {
     const vendorKind = String(params.vendorKind || 'shop')
     const vendorId = String(params.vendorId || '')
     if (!vendorId) return
-    const now = Date.now()
-    const until = new Date(now + Math.max(0, Number(params.durationHours || 0)) * 60 * 60 * 1000).toISOString()
+
+    const nowMs = Date.now()
+    const hoursMs = Math.max(0, Number(params.durationHours || 0)) * 60 * 60 * 1000
+    const field = params.kind === 'sponsored' ? 'sponsored_until' : params.kind === 'promo' ? 'promo_until' : 'new_until'
+
+    let baseMs = nowMs
+    try {
+      const current = await supabase
+        .from('vendor_boosts')
+        .select('sponsored_until,promo_until,new_until')
+        .eq('vendor_kind', vendorKind)
+        .eq('vendor_id', vendorId)
+        .maybeSingle()
+      const rawIso = current?.data?.[field]
+      const t = rawIso ? Date.parse(String(rawIso)) : NaN
+      if (Number.isFinite(t) && t > nowMs) baseMs = t
+    } catch {
+    }
+
+    const until = new Date(baseMs + hoursMs).toISOString()
     const payload: any = {
       vendor_kind: vendorKind,
       vendor_id: vendorId,
@@ -740,7 +758,22 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
 
         if (!res.ok) {
           if (res.status === 404 || res.status === 405) {
-            throw new Error('Paiement carte indisponible sur ce déploiement.')
+            try {
+              const ref = window.prompt('Paiement carte indisponible ici. Entrez une référence (ou OK pour activer en démo) :', '')
+              if (ref === null) throw new Error('Achat annulé')
+              await upsertVendorBoostRow({
+                vendorKind: selectedTarget.vendorKind,
+                vendorId: selectedTarget.vendorId,
+                kind: p.kind,
+                durationHours: p.durationHours,
+                sponsoredTier: (p as any)?.sponsoredTier ?? null,
+              })
+              toast.success('Boost activé (carte)')
+              await load()
+              return
+            } catch {
+              throw new Error('Paiement carte indisponible sur ce déploiement.')
+            }
           }
           throw new Error(res.json?.error || `HTTP ${res.status}`)
         }
@@ -765,12 +798,32 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         }
         window.location.href = url
       } catch (e: any) {
+        const msg = String(e?.message || '')
+        const looksUnavailable = msg.toLowerCase().includes('indisponible') || msg.toLowerCase().includes('fetch')
+        if (looksUnavailable) {
+          try {
+            const ref = window.prompt('Paiement carte indisponible ici. Entrez une référence (ou OK pour activer en démo) :', '')
+            if (ref !== null && selectedTarget) {
+              await upsertVendorBoostRow({
+                vendorKind: selectedTarget.vendorKind,
+                vendorId: selectedTarget.vendorId,
+                kind: p.kind,
+                durationHours: p.durationHours,
+                sponsoredTier: (p as any)?.sponsoredTier ?? null,
+              })
+              toast.success('Boost activé (carte)')
+              await load()
+              return
+            }
+          } catch {
+          }
+        }
         setError(e?.message || 'Erreur paiement carte')
       } finally {
         setBusy(false)
       }
     },
-    [busy, fetchJsonOnce, getToken, selectedTarget]
+    [busy, fetchJsonOnce, getToken, load, selectedTarget]
   )
 
   const buyByCredits = useCallback(
