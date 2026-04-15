@@ -3723,6 +3723,13 @@ const ClientMarketplace = ({ user }) => {
       const p = current.get('ff_boost_promo')
       if (v) qs.set('ff_boost_vitrine', v)
       if (p) qs.set('ff_boost_promo', p)
+
+      try {
+        const returnTo = `${window.location.pathname}${window.location.search}`
+        if (returnTo) qs.set('return', returnTo)
+      } catch {
+      }
+
       const out = qs.toString()
       return out ? `${basePath}?${out}` : basePath
     } catch {
@@ -4745,26 +4752,29 @@ const ShopsDirectory = () => {
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 pt-6 pb-16">
-      <div className="flex items-center justify-between mb-4">
-        <button
-          type="button"
-          onClick={() => {
-            try {
-              if (window.history.length > 1) {
-                navigate(-1)
-                return
-              }
-            } catch {
-            }
-            navigate('/')
-          }}
-          className={isDark ? 'px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 font-bold text-white' : 'px-4 py-2 rounded-xl bg-white hover:bg-gray-100 font-bold border border-gray-200'}
-        >
-          ← Retour
-        </button>
-        <div className={isDark ? 'text-sm text-gray-300' : 'text-sm text-gray-600'}>Boutiques</div>
-        <div className="w-[92px]" />
-      </div>
+      {(() => {
+        let returnTo = ''
+        try {
+          returnTo = String(searchParams.get('return') || '')
+        } catch {
+          returnTo = ''
+        }
+        const safeReturn = returnTo.startsWith('/') ? returnTo : ''
+        if (!safeReturn) return null
+        return (
+          <div className="flex items-center justify-between mb-4">
+            <button
+              type="button"
+              onClick={() => navigate(safeReturn)}
+              className={isDark ? 'px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 font-bold text-white' : 'px-4 py-2 rounded-xl bg-white hover:bg-gray-100 font-bold border border-gray-200'}
+            >
+              ← Retour
+            </button>
+            <div className={isDark ? 'text-sm text-gray-300' : 'text-sm text-gray-600'}>Boutiques</div>
+            <div className="w-[92px]" />
+          </div>
+        )
+      })()}
 
       <div className="mb-6 text-center">
         <h1 className="text-3xl sm:text-4xl font-bold mb-3 bg-gradient-to-r from-orange-500 to-green-600 bg-clip-text text-transparent">
