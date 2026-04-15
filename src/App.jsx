@@ -4745,6 +4745,27 @@ const ShopsDirectory = () => {
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 pt-6 pb-16">
+      <div className="flex items-center justify-between mb-4">
+        <button
+          type="button"
+          onClick={() => {
+            try {
+              if (window.history.length > 1) {
+                navigate(-1)
+                return
+              }
+            } catch {
+            }
+            navigate('/')
+          }}
+          className={isDark ? 'px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 font-bold text-white' : 'px-4 py-2 rounded-xl bg-white hover:bg-gray-100 font-bold border border-gray-200'}
+        >
+          ← Retour
+        </button>
+        <div className={isDark ? 'text-sm text-gray-300' : 'text-sm text-gray-600'}>Boutiques</div>
+        <div className="w-[92px]" />
+      </div>
+
       <div className="mb-6 text-center">
         <h1 className="text-3xl sm:text-4xl font-bold mb-3 bg-gradient-to-r from-orange-500 to-green-600 bg-clip-text text-transparent">
           Boutiques MangooTech
