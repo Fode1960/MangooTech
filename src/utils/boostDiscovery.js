@@ -25,17 +25,17 @@ export const getBoostDiscoveryFlags = () => {
   }
 
   try {
-    const lsVitrine = readBool(localStorage.getItem('mangoo_ff_boost_vitrine'))
-    const lsPromo = readBool(localStorage.getItem('mangoo_ff_boost_promo'))
-    if (lsVitrine !== null) vitrine = lsVitrine
-    if (lsPromo !== null) promo = lsPromo
-  } catch {
-  }
-
-  try {
     const host = String(window.location.hostname || '')
     const isDevHost = host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')
     if (isDevHost) {
+      try {
+        const lsVitrine = readBool(localStorage.getItem('mangoo_ff_boost_vitrine'))
+        const lsPromo = readBool(localStorage.getItem('mangoo_ff_boost_promo'))
+        if (lsVitrine !== null) vitrine = lsVitrine
+        if (lsPromo !== null) promo = lsPromo
+      } catch {
+      }
+
       if (vitrine === null || vitrine === undefined) vitrine = true
       if (promo === null || promo === undefined) promo = true
       try {
@@ -43,6 +43,9 @@ export const getBoostDiscoveryFlags = () => {
         localStorage.setItem('mangoo_ff_boost_promo', promo ? '1' : '0')
       } catch {
       }
+    } else {
+      if (vitrine === null || vitrine === undefined) vitrine = true
+      if (promo === null || promo === undefined) promo = true
     }
   } catch {
   }
