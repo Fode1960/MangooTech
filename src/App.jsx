@@ -1467,12 +1467,12 @@ const Register = ({ onRegister, onBack }) => {
   }
 
   return (
-    <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 ${
+    <div className={`min-h-screen flex items-center justify-center p-4 overflow-x-hidden transition-colors duration-300 ${
       isDark 
         ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
         : 'bg-gradient-to-br from-orange-50 to-green-50'
     }`}>
-      <div className={`max-w-4xl w-full rounded-2xl shadow-2xl p-6 transition-colors duration-300 ${
+      <div className={`max-w-4xl w-full overflow-hidden rounded-2xl shadow-2xl p-6 transition-colors duration-300 ${
         isDark 
           ? 'bg-gray-800 border border-gray-700' 
           : 'bg-white'
@@ -1552,7 +1552,7 @@ const Register = ({ onRegister, onBack }) => {
                   placeholder="Ma Super Boutique"
                   required
                 />
-                <div className={`text-[11px] mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                <div className={`text-[11px] mt-1 max-w-full break-all ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                   Lien: {window.location.origin}/shop/{slugify(shopName) || 'ma-boutique'}
                 </div>
               </div>
@@ -1650,7 +1650,7 @@ const Register = ({ onRegister, onBack }) => {
                     <button
                       type="button"
                       onClick={() => setLogoDataUrl('')}
-                      className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white text-xs"
+                      className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 text-white text-xs"
                       aria-label="Supprimer le logo"
                     >
                       ×
