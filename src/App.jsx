@@ -4437,7 +4437,7 @@ const ShopsDirectory = () => {
     try {
       const { data, error } = await supabase
         .from('shops')
-        .select('id,name,slug,category,logo_url,status,created_at,updated_at')
+        .select('id,name,slug,category,logo_url,status,created_at,updated_at,owner_email,email')
         .eq('status', 'approved')
         .order('created_at', { ascending: false })
 
@@ -4456,6 +4456,7 @@ const ShopsDirectory = () => {
           primaryColor: '#0EA5E9',
           secondaryColor: '#38BDF8',
           logoDataUrl: s.logo_url || '',
+          ownerEmail: String(s?.owner_email || s?.email || '').trim().toLowerCase(),
           vendorId: String(s.id),
           vendorKind: 'shop',
           source: 'supabase',
@@ -4708,6 +4709,13 @@ const ShopsDirectory = () => {
     if (vendorId && (vendorKind === 'shop' || vendorKind === 'provider')) {
       return boostIndex.get(`${vendorKind}:${vendorId}`) || boostIndex.get(vendorId) || null
     }
+
+    const ownerEmail = String(shop?.ownerEmail || shop?.owner_email || '').trim().toLowerCase()
+    if (ownerEmail) {
+      const localId = `local-${ownerEmail}`
+      return boostIndex.get(`shop:${localId}`) || boostIndex.get(localId) || null
+    }
+
     const fallbackId = String(shop?.id || '').trim()
     return fallbackId ? boostIndex.get(fallbackId) || null : null
   }, [boostIndex])

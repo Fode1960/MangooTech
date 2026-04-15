@@ -348,7 +348,8 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
       list.push({ vendorId: String(id), vendorKind: 'provider', name: String(v?.name || `Prestataire ${id}`) })
     }
 
-    if (currentUserShopTarget) list.push(currentUserShopTarget)
+    const currentLooksLocal = Boolean(currentUserShopTarget && String(currentUserShopTarget.vendorId || '').startsWith('local-'))
+    if (currentUserShopTarget && !(currentLooksLocal && supabaseShopTargets.length)) list.push(currentUserShopTarget)
     for (const t of demoShopTargets) list.push(t)
     for (const t of supabaseShopTargets) list.push(t)
     const uniq = new Map<string, VendorTarget>()

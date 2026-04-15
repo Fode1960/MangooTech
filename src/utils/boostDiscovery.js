@@ -155,8 +155,19 @@ export const indexActiveBoosts = (rows) => {
   const now = Date.now()
   const toMs = (iso) => {
     if (!iso) return 0
-    const t = Date.parse(String(iso))
-    return Number.isFinite(t) ? t : 0
+    const raw = String(iso)
+    let t = Date.parse(raw)
+    if (Number.isFinite(t)) return t
+    try {
+      const normalized = raw
+        .replace(' ', 'T')
+        .replace(/\.(\d{3})\d+/, '.$1')
+        .replace(/\+00$/, 'Z')
+      t = Date.parse(normalized)
+      return Number.isFinite(t) ? t : 0
+    } catch {
+      return 0
+    }
   }
   ;(Array.isArray(rows) ? rows : []).forEach((r) => {
     const vendorId = String(r?.vendor_id || '').trim()
