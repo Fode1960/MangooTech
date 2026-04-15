@@ -54,6 +54,27 @@ export const getBoostDiscoveryFlags = () => {
 }
 
 export const fetchActiveBoostRows = async ({ timeoutMs = 6000 } = {}) => {
+  try {
+    const { supabase, supabaseConfig } = await import('../config/supabase')
+    const hasSupabase = Boolean(supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey)
+    if (hasSupabase) {
+      const controller = new AbortController()
+      const t = window.setTimeout(() => controller.abort(), timeoutMs)
+      try {
+        const { data, error } = await supabase
+          .from('vendor_boosts')
+          .select('vendor_id,vendor_kind,sponsored_until,sponsored_tier,promo_until,new_until')
+          .order('updated_at', { ascending: false })
+          .limit(200)
+        if (!error && Array.isArray(data)) return data
+      } catch {
+      } finally {
+        window.clearTimeout(t)
+      }
+    }
+  } catch {
+  }
+
   const controller = new AbortController()
   const t = window.setTimeout(() => controller.abort(), timeoutMs)
   try {

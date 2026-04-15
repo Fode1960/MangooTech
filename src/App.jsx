@@ -1286,7 +1286,13 @@ const Register = ({ onRegister, onBack }) => {
 
     if (canUseSupabase) {
       const ok = await createInSupabase()
-      if (!ok) persistCreatedShop(shop)
+      if (!ok) {
+        try {
+          toast.error('Création boutique impossible. Vérifiez la connexion puis réessayez.')
+        } catch {
+        }
+        return
+      }
     } else {
       persistCreatedShop(shop)
     }

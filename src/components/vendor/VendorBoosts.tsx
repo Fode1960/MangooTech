@@ -33,6 +33,7 @@ type VendorTarget = {
   vendorId: string
   vendorKind: 'shop' | 'provider'
   name: string
+  slug?: string
 }
 
 type VendorBoostRow = {
@@ -277,7 +278,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         const attempt = async (withOwnerEmail: boolean) => {
           const q = supabase
             .from('shops')
-            .select('id,name,owner_email,email,created_at')
+            .select('id,name,slug,owner_email,email,created_at')
             .order('created_at', { ascending: false })
             .limit(20)
 
@@ -298,7 +299,8 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
           const vendorId = idRaw ? String(idRaw) : ''
           if (!vendorId) continue
           const name = String(s?.name || `Boutique ${vendorId}`)
-          supabaseShopTargets.push({ vendorId, vendorKind: 'shop', name })
+          const slug = String(s?.slug || '').trim()
+          supabaseShopTargets.push({ vendorId, vendorKind: 'shop', name, ...(slug ? { slug } : {}) })
         }
       } catch {
       }
@@ -761,6 +763,28 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
             cfgAll[key] = { ...prev, newUntil: bump(prev.newUntil ?? null) }
           }
           writeLocalBoostConfig(cfgAll)
+
+          try {
+            const vendorKind = String(selectedTarget.vendorKind || 'shop')
+            const vendorId = String(selectedTarget.vendorId || '')
+            const key = String(selectedTarget.vendorId)
+            const toIso = (ms?: number | null) => {
+              const n = Number(ms || 0)
+              return Number.isFinite(n) && n > 0 ? new Date(n).toISOString() : null
+            }
+            await supabase
+              .from('vendor_boosts')
+              .upsert({
+                vendor_kind: vendorKind,
+                vendor_id: vendorId,
+                sponsored_until: toIso(cfgAll[key]?.sponsoredUntil ?? null),
+                sponsored_tier: tierLabelFromNumber(cfgAll[key]?.sponsoredTier ?? null),
+                promo_until: toIso(cfgAll[key]?.promoUntil ?? null),
+                new_until: toIso(cfgAll[key]?.newUntil ?? null),
+                updated_at: new Date().toISOString(),
+              }, { onConflict: 'vendor_kind,vendor_id' })
+          } catch {
+          }
 
           const expiresKey = p.kind === 'sponsored' ? 'sponsoredUntil' : p.kind === 'promo' ? 'promoUntil' : 'newUntil'
           const expiresAtMs = Number((cfgAll[key] as any)?.[expiresKey] || 0)
