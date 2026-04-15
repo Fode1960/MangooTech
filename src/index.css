@@ -6,6 +6,8 @@ html,
 body {
   width: 100%;
   overflow-x: hidden;
+  overscroll-behavior-x: none;
+  touch-action: pan-y;
 }
 
 @supports (overflow: clip) {
@@ -18,12 +20,15 @@ body {
 html,
 body,
 #root {
-  max-width: 100vw;
+  max-width: 100%;
 }
 
 #root {
   width: 100%;
   overflow-x: hidden;
+  overscroll-behavior-x: none;
+  touch-action: pan-y;
+  position: relative;
 }
 
 [data-sonner-toaster] {
@@ -82,6 +87,7 @@ body,
 /* Animations fluides pour le changement de thème - Optimisé */
 body {
   transition: background-color 0.3s ease, color 0.3s ease;
+  position: relative;
 }
 
 @keyframes fadeIn {

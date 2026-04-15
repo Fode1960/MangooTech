@@ -402,7 +402,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
             onClick={() => {
                 // LIVE SHOPPING DEMO OVERLAY
                 const liveOverlay = document.createElement('div');
-                liveOverlay.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; animation: fadeIn 0.3s; padding: 20px; box-sizing: border-box;";
+                liveOverlay.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; animation: fadeIn 0.3s; padding: 20px; box-sizing: border-box;";
                 
                 // Add global close button for safety
                 const globalClose = document.createElement('button');
@@ -517,7 +517,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
             onClick={() => {
                 // MOBILE DEMO MODAL
                 const mobileOverlay = document.createElement('div');
-                mobileOverlay.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.8); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; animation: fadeIn 0.3s; backdrop-filter: blur(5px); padding: 20px; box-sizing: border-box;";
+                mobileOverlay.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; animation: fadeIn 0.3s; backdrop-filter: blur(5px); padding: 20px; box-sizing: border-box;";
                 
                 // Add global close button for safety
                 const globalClose = document.createElement('button');
