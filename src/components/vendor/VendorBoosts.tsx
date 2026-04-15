@@ -205,6 +205,24 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
     }
   }, [userEmail])
 
+  const currentUserShopTarget = useMemo(() => {
+    const email = String(userEmail || '').trim().toLowerCase()
+    if (!email) return null
+    try {
+      const raw = localStorage.getItem('mangoo-current-user')
+      const parsed = raw ? JSON.parse(raw) : null
+      const parsedEmail = String(parsed?.email || '').trim().toLowerCase()
+      if (!parsed || parsedEmail !== email) return null
+      const label = String(parsed?.shopName || parsed?.shop_name || parsed?.name || '').trim()
+      if (!label) return null
+      const explicitId = String(parsed?.shopId || parsed?.shop_id || parsed?.vendorId || parsed?.vendor_id || '').trim()
+      const vendorId = explicitId || `local-${email}`
+      return { vendorId, vendorKind: 'shop' as const, name: label }
+    } catch {
+      return null
+    }
+  }, [userEmail])
+
   const computeTargets = useCallback(async () => {
     const email = String(userEmail || '').trim().toLowerCase()
     const catalog = readJson<any[]>('mangoo_local_vendors_catalog', [])
@@ -296,20 +314,31 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
       list.push({ vendorId: String(id), vendorKind: 'provider', name: String(v?.name || `Prestataire ${id}`) })
     }
 
+    if (currentUserShopTarget) list.push(currentUserShopTarget)
     for (const t of demoShopTargets) list.push(t)
     for (const t of supabaseShopTargets) list.push(t)
     const uniq = new Map<string, VendorTarget>()
     for (const t of list) uniq.set(`${t.vendorKind}:${t.vendorId}`, t)
-    const finalList = Array.from(uniq.values())
+    const finalList = Array.from(uniq.values()).sort((a, b) => {
+      const aCurrent = currentUserShopTarget && a.vendorKind === currentUserShopTarget.vendorKind && a.vendorId === currentUserShopTarget.vendorId
+      const bCurrent = currentUserShopTarget && b.vendorKind === currentUserShopTarget.vendorKind && b.vendorId === currentUserShopTarget.vendorId
+      if (aCurrent && !bCurrent) return -1
+      if (!aCurrent && bCurrent) return 1
+      return String(a.name || '').localeCompare(String(b.name || ''), 'fr', { sensitivity: 'base' })
+    })
     setTargets(finalList)
     const exists = targetKey ? finalList.some((t) => `${t.vendorKind}:${t.vendorId}` === targetKey) : false
     if ((!targetKey || !exists) && finalList.length) {
-      const match = preferredTargetKey
+      const currentMatch = currentUserShopTarget
+        ? finalList.find((t) => t.vendorKind === currentUserShopTarget.vendorKind && t.vendorId === currentUserShopTarget.vendorId)
+        : null
+      const preferredMatch = preferredTargetKey
         ? finalList.find((t) => `${t.vendorKind}:${t.vendorId}` === preferredTargetKey)
         : null
-      setTargetKey(match ? preferredTargetKey : `${finalList[0].vendorKind}:${finalList[0].vendorId}`)
+      const target = currentMatch || preferredMatch || finalList[0]
+      setTargetKey(`${target.vendorKind}:${target.vendorId}`)
     }
-  }, [targetKey, userEmail])
+  }, [currentUserShopTarget, preferredTargetKey, targetKey, userEmail])
 
   const getToken = useCallback(async () => {
     const { data } = await supabase.auth.getSession()

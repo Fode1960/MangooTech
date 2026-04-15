@@ -4453,10 +4453,10 @@ const ShopsDirectory = () => {
   }, [loadCreatedShops, loadLocalPlusShops, loadLocalPlusRemoteShops, loadLocalSyncShops, loadSupabaseApprovedShops]);
 
   useEffect(() => {
-    const fromQuery = searchParams.get('categorie') || searchParams.get('category');
+    const fromQuery = searchParams.get('categorie') || searchParams.get('category') || 'all';
     const q = searchParams.get('q') || '';
-    if (fromQuery) setSelectedCategory(fromQuery);
-    setSearchTerm(q);
+    setSelectedCategory((prev) => (prev === fromQuery ? prev : fromQuery));
+    setSearchTerm((prev) => (prev === q ? prev : q));
   }, [searchParams]);
 
   const directory = useMemo(() => {
@@ -4647,7 +4647,8 @@ const ShopsDirectory = () => {
   }, [boostFlags.vitrine, sponsoredIds, visibleShops])
 
   useEffect(() => {
-    const next = new URLSearchParams(searchParams);
+    const current = new URLSearchParams(location.search);
+    const next = new URLSearchParams(current);
     if (selectedCategory === 'all') {
       next.delete('category');
       next.delete('categorie');
@@ -4662,10 +4663,10 @@ const ShopsDirectory = () => {
       next.delete('q');
     }
 
-    if (next.toString() !== searchParams.toString()) {
+    if (next.toString() !== current.toString()) {
       setSearchParams(next, { replace: true });
     }
-  }, [searchParams, searchTerm, selectedCategory, setSearchParams]);
+  }, [location.search, searchTerm, selectedCategory, setSearchParams]);
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 pt-6 pb-16">
