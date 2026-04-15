@@ -1168,7 +1168,6 @@ const Register = ({ onRegister, onBack }) => {
         return ''
       }
     })()
-    const isDevHost = host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')
     const canUseSupabase = Boolean(supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey)
 
     let shop = {
@@ -1186,82 +1185,6 @@ const Register = ({ onRegister, onBack }) => {
       approvalStatus: canUseSupabase ? 'pending' : 'approved'
     };
 
-    const createOnServer = async () => {
-      const controller = new AbortController()
-      const t = window.setTimeout(() => controller.abort(), 9000)
-      try {
-        const payload = {
-          name: String(shopName || '').trim(),
-          slug: String(slug || '').trim(),
-          category: String(shopCategory || 'general'),
-          ownerEmail: String(email || '').trim().toLowerCase(),
-          ownerName: String(name || '').trim(),
-        }
-        const res = await fetch('/api/shops/create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          signal: controller.signal,
-        })
-        const json = await res.json().catch(() => null)
-        return { ok: res.ok && Boolean(json?.success), json }
-      } catch {
-        return { ok: false, json: null }
-      } finally {
-        window.clearTimeout(t)
-      }
-    }
-
-    try {
-      const email = normalizeEmail(user?.email)
-      if (email) {
-        const controller = new AbortController()
-        const t = window.setTimeout(() => controller.abort(), 7000)
-        const res = await fetch(`/api/shops/by-owner?email=${encodeURIComponent(email)}`, { signal: controller.signal })
-        const json = await res.json().catch(() => null)
-        window.clearTimeout(t)
-        if (res.ok && json?.success && Array.isArray(json?.shops)) {
-          const mapped = json.shops
-            .map((s) => {
-              const slug = String(s?.slug || '').trim()
-              if (!slug) return null
-              return {
-                id: String(s?.id || slug),
-                name: String(s?.name || 'Boutique'),
-                slug,
-                category: String(s?.category || 'general'),
-                ownerName: String(s?.owner_name || user?.name || 'Vendeur'),
-                ownerEmail: String(s?.owner_email || s?.email || email),
-                shopUrl: String(s?.shop_url || `${window.location.origin}/shop/${slug}`),
-                approvalStatus: String(s?.status || 'pending'),
-                createdAt: String(s?.created_at || ''),
-                updatedAt: String(s?.updated_at || ''),
-                logoDataUrl: String(s?.logo_url || ''),
-                primaryColor: '#0EA5E9',
-                secondaryColor: '#38BDF8',
-                source: 'supabase',
-              }
-            })
-            .filter(Boolean)
-
-          if (mapped.length) {
-            setVendorShops(mapped)
-            try {
-              const raw = localStorage.getItem('demo_shops');
-              const all = raw ? JSON.parse(raw) : [];
-              const prev = Array.isArray(all) ? all : [];
-              const others = prev.filter((x) => normalizeEmail(x?.ownerEmail || x?.owner_email) !== email);
-              localStorage.setItem('demo_shops', JSON.stringify([...others, ...mapped]));
-              window.dispatchEvent(new Event('demo-shops-updated'));
-            } catch {
-            }
-            return
-          }
-        }
-      }
-    } catch {
-    }
-
     const createInSupabase = async () => {
       try {
         const normalizedEmail = String(email || '').trim().toLowerCase()
@@ -1277,7 +1200,7 @@ const Register = ({ onRegister, onBack }) => {
         }
 
         const nowIso = new Date().toISOString()
-        const payload = {
+        const base = {
           name: String(shopName || '').trim(),
           slug: finalSlug,
           category: String(shopCategory || 'general'),
@@ -1293,13 +1216,52 @@ const Register = ({ onRegister, onBack }) => {
           updated_at: nowIso,
         }
 
-        const { data: inserted, error } = await supabase
-          .from('shops')
-          .insert([payload])
-          .select('id,slug,status')
-          .single()
+        const tryInsert = async (payload) => {
+          return await supabase
+            .from('shops')
+            .insert([payload])
+            .select('id,slug,status')
+            .single()
+        }
 
-        if (!error && inserted?.id) {
+        let attemptPayload = { ...base }
+        let inserted = null
+        for (let attempt = 0; attempt < 5; attempt += 1) {
+          const r = await tryInsert(attemptPayload)
+          if (!r.error && r.data?.id) {
+            inserted = r.data
+            break
+          }
+
+          const msg = String(r.error?.message || '').toLowerCase()
+          const missingColumn = msg.includes('could not find') && msg.includes('column')
+          if (missingColumn) {
+            const dropIfMissing = (col) => {
+              if (msg.includes(col)) delete attemptPayload[col]
+            }
+            dropIfMissing('owner_email')
+            dropIfMissing('owner_name')
+            dropIfMissing('shop_url')
+            dropIfMissing('is_verified')
+            dropIfMissing('status')
+            dropIfMissing('category')
+            dropIfMissing('created_at')
+            dropIfMissing('updated_at')
+            dropIfMissing('phone')
+            dropIfMissing('description')
+            continue
+          }
+
+          if (msg.includes('duplicate') && msg.includes('slug')) {
+            finalSlug = `${String(finalSlug).slice(0, 50)}-${String(Date.now()).slice(-6)}`
+            attemptPayload = { ...attemptPayload, slug: finalSlug }
+            continue
+          }
+
+          break
+        }
+
+        if (inserted?.id) {
           shop = {
             ...shop,
             id: `shop-${inserted.id}`,
@@ -1322,60 +1284,11 @@ const Register = ({ onRegister, onBack }) => {
       return false
     }
 
-    if (!isDevHost) {
-      const r = await createOnServer()
-      const inserted = r.ok ? r.json?.shop : null
-      if (inserted?.id) {
-        shop = {
-          ...shop,
-          id: `shop-${inserted.id}`,
-          slug: String(inserted.slug || slug).trim() || shop.slug,
-          shopUrl: `${window.location.origin}/shop/${String(inserted.slug || slug).trim() || shop.slug}`,
-          approvalStatus: String(inserted.status || 'pending'),
-          source: 'supabase',
-          vendorId: String(inserted.id),
-          vendorKind: 'shop',
-        }
-        persistCreatedShop({
-          ...shop,
-          ownerEmail: String(email || '').trim().toLowerCase(),
-          ownerPassword: password,
-        })
-      } else if (canUseSupabase) {
-        const ok = await createInSupabase()
-        if (!ok) persistCreatedShop(shop)
-      } else {
-        persistCreatedShop(shop)
-      }
-    } else if (canUseSupabase) {
-      await createInSupabase()
+    if (canUseSupabase) {
+      const ok = await createInSupabase()
+      if (!ok) persistCreatedShop(shop)
+    } else {
       persistCreatedShop(shop)
-    }
-
-    try {
-      const emailKey = String(email || '').trim().toLowerCase()
-      if (emailKey) {
-        const markerKey = `mangoo_shops_last_sync:${emailKey}`
-        const last = Number(localStorage.getItem(markerKey) || 0)
-        const now = Date.now()
-        if (!Number.isFinite(last) || now - last > 60_000) {
-          localStorage.setItem(markerKey, String(now))
-          const raw = localStorage.getItem('demo_shops')
-          const parsed = raw ? JSON.parse(raw) : []
-          const list = Array.isArray(parsed) ? parsed : []
-          const toSync = list
-            .filter((s) => s?.slug && String(s?.source || '') !== 'supabase')
-            .slice(0, 20)
-          if (toSync.length) {
-            fetch('/api/shops/sync-local', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ shops: toSync }),
-            }).catch(() => {})
-          }
-        }
-      }
-    } catch {
     }
 
     try {
