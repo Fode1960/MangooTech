@@ -203,6 +203,55 @@ const ShopPage = () => {
         return;
       }
 
+      try {
+        const controller = new AbortController()
+        const t = window.setTimeout(() => controller.abort(), 7000)
+        const res = await fetch(`/api/shops/slug/${encodeURIComponent(String(shopSlug || '').trim())}`, { signal: controller.signal })
+        const json = await res.json().catch(() => null)
+        window.clearTimeout(t)
+        if (res.ok && json?.success && json?.shop?.slug) {
+          const data = json.shop
+          const statusRaw = String(data?.status || 'pending').trim().toLowerCase()
+          const normalizedStatus = (statusRaw === 'approved' || statusRaw === 'rejected' || statusRaw === 'suspended') ? statusRaw : 'pending'
+
+          const ownerEmail = String(data?.owner_email || data?.email || '').trim().toLowerCase()
+          const currentEmail = String(currentUser?.email || '').trim().toLowerCase()
+          const isOwner = Boolean(ownerEmail && currentEmail && ownerEmail === currentEmail)
+          const isAdmin = currentUser?.role === 'admin'
+
+          setShopOwnerEmail(ownerEmail)
+          setCanManageProducts(Boolean(isOwner || isAdmin))
+
+          if (normalizedStatus !== 'approved' && !isOwner && !isAdmin) {
+            setError('Boutique en attente d’approbation')
+            setLoading(false)
+            return
+          }
+
+          setShop({
+            ...demoShop,
+            id: String(data?.id || demoShop.id),
+            name: String(data?.name || demoShop.name),
+            slug: String(data?.slug || shopSlug),
+            description: String(data?.description || demoShop.description),
+            status: normalizedStatus,
+            business_type: String(data?.business_type || demoShop.business_type),
+            contact_email: ownerEmail,
+            address: { city: String(data?.city || 'Douala'), country: String(data?.country || 'Cameroun') },
+            created_at: String(data?.created_at || demoShop.created_at),
+            primaryColor: '#0EA5E9',
+            secondaryColor: '#38BDF8',
+            logoDataUrl: String(data?.logo_url || ''),
+          })
+
+          setProducts([])
+          setError(null)
+          setLoading(false)
+          return
+        }
+      } catch {
+      }
+
       const hasSupabase = Boolean(supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey)
       if (hasSupabase) {
         try {

@@ -23,6 +23,7 @@ import packsRoutes from './routes/packs'
 import adminShopsRoutes from './routes/admin-shops'
 import adminProvidersRoutes from './routes/admin-providers'
 import shopsSimpleRoutes from './routes/shops-simple'
+import shopsRoutes from './routes/shops'
 import adminCommissionsRoutes from './routes/admin-commissions'
 import adminAnalyticsRoutes from './routes/admin-analytics'
 import adminUsersRoutes from './routes/admin-users'
@@ -71,6 +72,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }))
  * API Route
  */
 app.use('/api/shops/simple', shopsSimpleRoutes)
+app.use('/api/shops', shopsRoutes)
 app.use('/api/auth', authRoutes)
 app.use('/api/payments', paymentRoutes)
 app.use('/api/stripe-subscriptions', stripeSubscriptionRoutes)

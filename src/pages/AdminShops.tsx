@@ -147,6 +147,38 @@ export default function AdminShops() {
 
   const refresh = useCallback(() => {
     void (async () => {
+      try {
+        const res = await fetch('/api/shops/list')
+        const json = await res.json().catch(() => null as any)
+        if (res.ok && json?.success && Array.isArray(json?.shops)) {
+          const mapped: DemoShop[] = (json.shops as any[])
+            .map((s: any) => {
+              const slug = String(s?.slug || '').trim()
+              if (!slug) return null
+              const statusRaw = String(s?.status || 'pending').trim().toLowerCase()
+              const approvalStatus: ApprovalStatus = (statusRaw === 'approved' || statusRaw === 'rejected' || statusRaw === 'suspended') ? (statusRaw as any) : 'pending'
+              return {
+                id: String(s?.id || slug),
+                name: String(s?.name || 'Boutique'),
+                slug,
+                category: String(s?.category || 'general'),
+                ownerName: String(s?.owner_name || ''),
+                ownerEmail: String(s?.owner_email || s?.email || ''),
+                approvalStatus,
+                createdAt: String(s?.created_at || ''),
+                updatedAt: String(s?.updated_at || ''),
+                source: 'supabase',
+              } as DemoShop
+            })
+            .filter(Boolean) as DemoShop[]
+          if (mapped.length) {
+            setShops(mapped)
+            return
+          }
+        }
+      } catch {
+      }
+
       let supabaseMapped: DemoShop[] = []
       if (canUseSupabase) {
         try {
