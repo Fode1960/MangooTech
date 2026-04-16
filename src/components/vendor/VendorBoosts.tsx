@@ -140,12 +140,38 @@ function parseMs(value: any): number {
   return Number.isFinite(t) ? t : 0
 }
 
-function pickNewestBoostRow(rows: VendorBoostRow[]): VendorBoostRow | null {
+function mergeBoostRows(rows: VendorBoostRow[]): VendorBoostRow | null {
   const list = Array.isArray(rows) ? rows.filter(Boolean) : []
   if (!list.length) return null
-  return list
-    .slice()
-    .sort((a, b) => parseMs(b.updated_at) - parseMs(a.updated_at))[0]
+  const first = list[0]
+  const merged: VendorBoostRow = {
+    vendor_id: String(first.vendor_id),
+    vendor_kind: String(first.vendor_kind),
+    sponsored_until: null,
+    sponsored_tier: null,
+    promo_until: null,
+    new_until: null,
+    updated_at: String(first.updated_at || new Date().toISOString()),
+  }
+  for (const r of list) {
+    const sA = parseMs(merged.sponsored_until)
+    const sB = parseMs(r?.sponsored_until)
+    if (sB > sA) {
+      merged.sponsored_until = r?.sponsored_until || null
+      merged.sponsored_tier = (r as any)?.sponsored_tier ?? merged.sponsored_tier
+    }
+    const pA = parseMs(merged.promo_until)
+    const pB = parseMs(r?.promo_until)
+    if (pB > pA) merged.promo_until = r?.promo_until || null
+    const nA = parseMs(merged.new_until)
+    const nB = parseMs(r?.new_until)
+    if (nB > nA) merged.new_until = r?.new_until || null
+    const uA = parseMs(merged.updated_at)
+    const uB = parseMs(r?.updated_at)
+    if (uB > uA) merged.updated_at = String(r?.updated_at || merged.updated_at)
+    if (!merged.sponsored_tier && (r as any)?.sponsored_tier) merged.sponsored_tier = (r as any).sponsored_tier
+  }
+  return merged
 }
 
 function mergeOrders(remote: BoostOrder[], local: BoostOrder[]): BoostOrder[] {
@@ -632,7 +658,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
     const { data, error } = await q
     if (error) throw error
     const rows = Array.isArray(data) ? (data as any as VendorBoostRow[]) : []
-    return pickNewestBoostRow(rows)
+    return mergeBoostRows(rows)
   }, [selectedTarget?.slug, userEmail])
 
   const load = useCallback(async () => {

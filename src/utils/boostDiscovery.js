@@ -62,6 +62,35 @@ export const getBoostDiscoveryFlags = () => {
 }
 
 export const fetchActiveBoostRows = async ({ timeoutMs = 6000 } = {}) => {
+  const host = (() => {
+    try {
+      return String(window.location.hostname || '')
+    } catch {
+      return ''
+    }
+  })()
+  const isDevHost = host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')
+
+  if (!isDevHost) {
+    const controller = new AbortController()
+    const t = window.setTimeout(() => controller.abort(), timeoutMs)
+    try {
+      const res = await fetch('/api/boosts/vendor-boosts-active', { method: 'GET', signal: controller.signal })
+      const json = await res.json().catch(() => null)
+      const rows = Array.isArray(json?.rows) ? json.rows : []
+      if (rows.length) {
+        try {
+          localStorage.setItem('mangoo_boost_active_cache_rows', JSON.stringify(rows))
+        } catch {
+        }
+        return rows
+      }
+    } catch {
+    } finally {
+      window.clearTimeout(t)
+    }
+  }
+
   const hasSupabase = Boolean(supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey)
   if (hasSupabase) {
     const controller = new AbortController()

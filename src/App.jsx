@@ -4459,8 +4459,31 @@ const ShopsDirectory = () => {
       const error = r?.error
 
       if (error || !Array.isArray(data)) {
-        setSupabaseShops([])
-        return
+        try {
+          const resp = await fetch('/api/shops/list', { method: 'GET' })
+          const json = await resp.json().catch(() => null)
+          const rows = Array.isArray(json?.shops) ? json.shops : []
+          const mappedFallback = rows
+            .filter((s) => s?.id && s?.slug)
+            .map((s) => ({
+              id: `supabase-${s.id}`,
+              name: s.name || 'Boutique',
+              slug: s.slug,
+              category: s.category || 'general',
+              primaryColor: '#0EA5E9',
+              secondaryColor: '#38BDF8',
+              logoDataUrl: s.logo_url || '',
+              ownerEmail: String(s?.owner_email || s?.email || '').trim().toLowerCase(),
+              vendorId: String(s.id),
+              vendorKind: 'shop',
+              source: 'supabase',
+            }))
+          setSupabaseShops(mappedFallback)
+          return
+        } catch {
+          setSupabaseShops([])
+          return
+        }
       }
 
       const mapped = data
