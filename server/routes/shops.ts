@@ -75,13 +75,45 @@ router.get('/by-owner', async (req, res) => {
 
 router.get('/list', async (_req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('shops')
-      .select('id,name,slug,category,status,owner_email,owner_name,email,created_at,updated_at')
-      .order('created_at', { ascending: false })
+    const baseCols = [
+      'id',
+      'name',
+      'slug',
+      'category',
+      'status',
+      'owner_email',
+      'owner_name',
+      'email',
+      'logo_url',
+      'city',
+      'country',
+      'created_at',
+      'updated_at',
+    ]
 
-    if (error) return res.status(500).json({ success: false, error: error.message })
-    res.json({ success: true, shops: Array.isArray(data) ? data : [] })
+    let cols = baseCols.slice()
+    let lastError: any = null
+    for (let i = 0; i < 6; i++) {
+      const r = await supabase
+        .from('shops')
+        .select(cols.join(','))
+        .order('created_at', { ascending: false })
+
+      if (!r?.error) {
+        res.json({ success: true, shops: Array.isArray(r?.data) ? r.data : [] })
+        return
+      }
+
+      lastError = r.error
+      const msg = String(r.error.message || '').toLowerCase()
+      const match = msg.match(/could not find the '([^']+)' column/) || msg.match(/column "([^"]+)" does not exist/)
+      const missing = match?.[1]
+      if (!missing) break
+      cols = cols.filter((c) => c !== missing)
+      if (!cols.length) break
+    }
+
+    return res.status(500).json({ success: false, error: String(lastError?.message || 'Erreur serveur') })
   } catch {
     res.status(500).json({ success: false, error: 'Erreur serveur' })
   }
