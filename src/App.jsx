@@ -4633,11 +4633,11 @@ const ShopsDirectory = () => {
     }
 
     const toKey = (s) => {
+      const slug = String(s?.slug || '').trim()
+      if (slug) return `slug:${slug}`
       const vendorId = String(s?.vendorId || '').trim()
       const vendorKind = String(s?.vendorKind || '').trim().toLowerCase()
       if (vendorId && (vendorKind === 'shop' || vendorKind === 'provider')) return `${vendorKind}:${vendorId}`
-      const slug = String(s?.slug || '').trim()
-      if (slug) return `slug:${slug}`
       const name = String(s?.name || '').trim()
       return name ? `name:${name}` : `id:${String(s?.id || '')}`
     }
