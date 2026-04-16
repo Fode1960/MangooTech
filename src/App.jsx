@@ -4280,7 +4280,7 @@ const ShopsDirectory = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const listRef = useRef(null);
-  const boostFlags = useMemo(() => getBoostDiscoveryFlags(), []);
+  const boostFlags = useMemo(() => ({ vitrine: true, promo: true }), []);
   const debugBoosts = useMemo(() => {
     try {
       const qs = new URLSearchParams(window.location.search)
