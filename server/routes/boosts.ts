@@ -307,10 +307,86 @@ router.get('/vendor-boosts-active', (_req, res) => {
         .from('vendor_boosts')
         .select('vendor_id,vendor_kind,sponsored_until,sponsored_tier,promo_until,new_until,updated_at')
         .or(`sponsored_until.gte.${nowIso},promo_until.gte.${nowIso},new_until.gte.${nowIso}`)
-        .then(({ data, error }) => {
+        .then(async ({ data, error }) => {
           if (error || !data) return res.json({ rows: [] })
-          const rows = Array.isArray(data) ? data : []
-          res.json({ rows })
+
+          const input = Array.isArray(data) ? data : []
+          const parseMs = (v: any) => {
+            const t = v ? Date.parse(String(v)) : NaN
+            return Number.isFinite(t) ? t : 0
+          }
+
+          const isLocalShopId = (id: string) => id.startsWith('local-') && id.includes('@')
+
+          const emails = Array.from(
+            new Set(
+              input
+                .filter((r: any) => String(r?.vendor_kind || '').trim().toLowerCase() === 'shop')
+                .map((r: any) => String(r?.vendor_id || '').trim())
+                .filter((id: string) => isLocalShopId(id))
+                .map((id: string) => id.slice(6).trim().toLowerCase())
+                .filter(Boolean)
+            )
+          )
+
+          let emailToShopId = new Map<string, string>()
+          if (emails.length) {
+            try {
+              const r = await supabase
+                .from('shops')
+                .select('id,email')
+                .in('email', emails)
+
+              const shops = Array.isArray((r as any)?.data) ? (r as any).data : []
+              for (const s of shops) {
+                const email = String((s as any)?.email || '').trim().toLowerCase()
+                const id = String((s as any)?.id || '').trim()
+                if (email && id) emailToShopId.set(email, id)
+              }
+            } catch {
+            }
+          }
+
+          const mergeRow = (a: any, b: any) => {
+            const out: any = { ...a }
+            out.vendor_id = a.vendor_id
+            out.vendor_kind = a.vendor_kind
+            const sA = parseMs(a?.sponsored_until)
+            const sB = parseMs(b?.sponsored_until)
+            const pA = parseMs(a?.promo_until)
+            const pB = parseMs(b?.promo_until)
+            const nA = parseMs(a?.new_until)
+            const nB = parseMs(b?.new_until)
+            if (sB > sA) {
+              out.sponsored_until = b?.sponsored_until
+              out.sponsored_tier = b?.sponsored_tier ?? out.sponsored_tier
+            }
+            if (pB > pA) out.promo_until = b?.promo_until
+            if (nB > nA) out.new_until = b?.new_until
+            const uA = parseMs(a?.updated_at)
+            const uB = parseMs(b?.updated_at)
+            if (uB > uA) out.updated_at = b?.updated_at
+            if (!out.sponsored_tier && b?.sponsored_tier) out.sponsored_tier = b.sponsored_tier
+            return out
+          }
+
+          const uniq = new Map<string, any>()
+          for (const r of input) {
+            const vendorKind = String((r as any)?.vendor_kind || '').trim().toLowerCase()
+            let vendorId = String((r as any)?.vendor_id || '').trim()
+            if (!vendorId || (vendorKind !== 'shop' && vendorKind !== 'provider')) continue
+            if (vendorKind === 'shop' && isLocalShopId(vendorId)) {
+              const email = vendorId.slice(6).trim().toLowerCase()
+              const mapped = emailToShopId.get(email)
+              if (mapped) vendorId = mapped
+            }
+            const key = `${vendorKind}:${vendorId}`
+            const normalized = { ...r, vendor_kind: vendorKind, vendor_id: vendorId }
+            const existing = uniq.get(key)
+            uniq.set(key, existing ? mergeRow(existing, normalized) : normalized)
+          }
+
+          res.json({ rows: Array.from(uniq.values()) })
         })
         .catch(() => res.json({ rows: [] }))
       return
