@@ -4730,6 +4730,44 @@ const ShopsDirectory = () => {
     return list.slice(0, 6)
   }, [boostFlags.vitrine, getBoostForShop, visibleShops])
 
+  useEffect(() => {
+    const hasSupabase = Boolean(supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey)
+    if (!hasSupabase) return
+    let cancelled = false
+    const t = window.setTimeout(() => {
+      ;(async () => {
+        try {
+          const ids = new Set()
+          for (const s of (Array.isArray(visibleShops) ? visibleShops : []).slice(0, 80)) {
+            const vendorId = String(s?.vendorId || '').trim()
+            if (vendorId) ids.add(vendorId)
+            const ownerEmail = String(s?.ownerEmail || s?.owner_email || '').trim().toLowerCase()
+            if (ownerEmail) ids.add(`local-${ownerEmail}`)
+          }
+          const list = Array.from(ids)
+          if (!list.length) return
+          const { data, error } = await supabase
+            .from('vendor_boosts')
+            .select('vendor_id,vendor_kind,sponsored_until,sponsored_tier,promo_until,new_until,updated_at')
+            .in('vendor_kind', ['shop', 'provider'])
+            .in('vendor_id', list)
+          if (cancelled || error || !Array.isArray(data)) return
+          const mapped = indexActiveBoosts(data)
+          setBoostIndex((prev) => {
+            const next = new Map(prev)
+            mapped.forEach((v, k) => next.set(k, v))
+            return next
+          })
+        } catch {
+        }
+      })()
+    }, 250)
+    return () => {
+      cancelled = true
+      window.clearTimeout(t)
+    }
+  }, [visibleShops])
+
   const sponsoredIds = useMemo(() => new Set(sponsoredTop.map((s) => String(s.id))), [sponsoredTop])
   const mainList = useMemo(() => {
     if (!boostFlags.vitrine) return visibleShops
