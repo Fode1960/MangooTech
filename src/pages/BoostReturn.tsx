@@ -47,6 +47,10 @@ export default function BoostReturn({ mode }: { mode: 'success' | 'cancel' }) {
         }
 
         await supabase.from('vendor_boosts').upsert(payload, { onConflict: 'vendor_kind,vendor_id' })
+        try {
+          window.dispatchEvent(new Event('mangoo-boosts-updated'))
+        } catch {
+        }
         localStorage.removeItem(`mangoo_boost_pending:${email}`)
       } catch {
       }

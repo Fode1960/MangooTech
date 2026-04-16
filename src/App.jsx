@@ -3779,6 +3779,31 @@ const ClientMarketplace = ({ user }) => {
     }
   }, [boostFlags.promo, boostFlags.vitrine])
 
+  useEffect(() => {
+    if (!boostFlags.vitrine && !boostFlags.promo) return
+    let cancelled = false
+    const refresh = async () => {
+      try {
+        const rows = await fetchActiveBoostRows({ timeoutMs: 6500 })
+        if (cancelled) return
+        const mapped = indexActiveBoosts(rows)
+        setBoostIndex((prev) => {
+          if (!mapped.size) return prev
+          const next = new Map(prev)
+          mapped.forEach((v, k) => next.set(k, v))
+          return next
+        })
+      } catch {
+      }
+    }
+    const onUpdated = () => void refresh()
+    window.addEventListener('mangoo-boosts-updated', onUpdated)
+    return () => {
+      cancelled = true
+      window.removeEventListener('mangoo-boosts-updated', onUpdated)
+    }
+  }, [boostFlags.promo, boostFlags.vitrine])
+
   const categories = useMemo(() => [
     { id: 'all', name: 'Tous', icon: '🛍️' },
     { id: 'electronics', name: 'Électronique', icon: '📱' },
@@ -4434,8 +4459,45 @@ const ShopsDirectory = () => {
       return
     }
 
+    const host = (() => {
+      try {
+        return String(window.location.hostname || '')
+      } catch {
+        return ''
+      }
+    })()
+    const isDevHost = host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')
+
     setSupabaseShopsLoading(true)
     try {
+      if (!isDevHost) {
+        try {
+          const resp = await fetch('/api/shops/list', { method: 'GET' })
+          const json = await resp.json().catch(() => null)
+          const rows = Array.isArray(json?.shops) ? json.shops : []
+          const mappedFallback = rows
+            .filter((s) => s?.id && s?.slug)
+            .map((s) => ({
+              id: `supabase-${s.id}`,
+              name: s.name || 'Boutique',
+              slug: s.slug,
+              category: s.category || 'general',
+              primaryColor: '#0EA5E9',
+              secondaryColor: '#38BDF8',
+              logoDataUrl: s.logo_url || '',
+              ownerEmail: String(s?.owner_email || s?.email || '').trim().toLowerCase(),
+              vendorId: String(s.id),
+              vendorKind: 'shop',
+              source: 'supabase',
+            }))
+          if (mappedFallback.length) {
+            setSupabaseShops(mappedFallback)
+            return
+          }
+        } catch {
+        }
+      }
+
       const attempt = async (selectCols) => {
         return await supabase
           .from('shops')
@@ -4459,31 +4521,8 @@ const ShopsDirectory = () => {
       const error = r?.error
 
       if (error || !Array.isArray(data)) {
-        try {
-          const resp = await fetch('/api/shops/list', { method: 'GET' })
-          const json = await resp.json().catch(() => null)
-          const rows = Array.isArray(json?.shops) ? json.shops : []
-          const mappedFallback = rows
-            .filter((s) => s?.id && s?.slug)
-            .map((s) => ({
-              id: `supabase-${s.id}`,
-              name: s.name || 'Boutique',
-              slug: s.slug,
-              category: s.category || 'general',
-              primaryColor: '#0EA5E9',
-              secondaryColor: '#38BDF8',
-              logoDataUrl: s.logo_url || '',
-              ownerEmail: String(s?.owner_email || s?.email || '').trim().toLowerCase(),
-              vendorId: String(s.id),
-              vendorKind: 'shop',
-              source: 'supabase',
-            }))
-          setSupabaseShops(mappedFallback)
-          return
-        } catch {
-          setSupabaseShops([])
-          return
-        }
+        setSupabaseShops([])
+        return
       }
 
       const mapped = data
@@ -4644,6 +4683,7 @@ const ShopsDirectory = () => {
     })()
     const isDevHost = host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')
     const includeVendorSeeds = isDevHost && (!hasSupabase || !supabaseShops.length)
+    const includeLocalSources = isDevHost
 
     const sourceRank = {
       supabase: 80,
@@ -4671,15 +4711,17 @@ const ShopsDirectory = () => {
     }
 
     const byKey = new Map()
-    const all = [
-      ...base,
-      ...demoCreatedShops,
-      ...supabaseShops,
-      ...localPlusShops,
-      ...localPlusRemoteShops,
-      ...localSyncShops,
-      ...(includeVendorSeeds ? fromVendors : []),
-    ]
+    const all = includeLocalSources
+      ? [
+          ...base,
+          ...demoCreatedShops,
+          ...supabaseShops,
+          ...localPlusShops,
+          ...localPlusRemoteShops,
+          ...localSyncShops,
+          ...(includeVendorSeeds ? fromVendors : []),
+        ]
+      : [...base, ...supabaseShops]
 
     ;all.forEach((s) => {
       const key = toKey(s)
@@ -5076,7 +5118,18 @@ const ShopsDirectory = () => {
           <div className="mt-5 flex flex-col sm:flex-row gap-3 justify-center">
             <button
               type="button"
-              onClick={() => setSelectedCategory('all')}
+              onClick={() => {
+                setSelectedCategory('all')
+                setSearchTerm('')
+                try {
+                  const qs = new URLSearchParams(searchParams)
+                  qs.delete('q')
+                  qs.delete('categorie')
+                  qs.delete('category')
+                  setSearchParams(qs)
+                } catch {
+                }
+              }}
               className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
                 isDark ? 'bg-gray-800 text-white border border-gray-700 hover:bg-gray-700' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
               }`}

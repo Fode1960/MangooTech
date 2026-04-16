@@ -21,6 +21,7 @@ const ShopPage = () => {
   const [showVendorMode, setShowVendorMode] = useState(false);
   const [vendorEmail, setVendorEmail] = useState('');
   const [pendingMismatch, setPendingMismatch] = useState(false);
+  const [boostStatus, setBoostStatus] = useState({ sponsored: false, promo: false, neu: false });
 
   useEffect(() => {
     if (!showVendorMode) return
@@ -172,6 +173,52 @@ const ShopPage = () => {
   }, [shopSlug]);
 
   useEffect(() => {
+    const onUpdated = () => {
+      if (shop?.id && shopOwnerEmail) void loadBoostStatus(String(shop.id), String(shopOwnerEmail))
+    }
+    window.addEventListener('mangoo-boosts-updated', onUpdated)
+    return () => window.removeEventListener('mangoo-boosts-updated', onUpdated)
+  }, [shop?.id, shopOwnerEmail])
+
+  const loadBoostStatus = async (shopId, email) => {
+    try {
+      const controller = new AbortController()
+      const t = window.setTimeout(() => controller.abort(), 6500)
+      const res = await fetch('/api/boosts/vendor-boosts-active', { method: 'GET', signal: controller.signal })
+      const json = await res.json().catch(() => null)
+      window.clearTimeout(t)
+      const rows = Array.isArray(json?.rows) ? json.rows : []
+      const uuid = String(shopId || '').trim()
+      const localId = email ? `local-${String(email).trim().toLowerCase()}` : ''
+      const candidates = rows.filter((r) => {
+        if (String(r?.vendor_kind || '').trim().toLowerCase() !== 'shop') return false
+        const id = String(r?.vendor_id || '').trim()
+        return id === uuid || (localId && id === localId)
+      })
+      const parseMs = (v) => {
+        const x = v ? Date.parse(String(v)) : NaN
+        return Number.isFinite(x) ? x : 0
+      }
+      const now = Date.now()
+      let sponsoredUntil = 0
+      let promoUntil = 0
+      let newUntil = 0
+      for (const r of candidates) {
+        sponsoredUntil = Math.max(sponsoredUntil, parseMs(r?.sponsored_until))
+        promoUntil = Math.max(promoUntil, parseMs(r?.promo_until))
+        newUntil = Math.max(newUntil, parseMs(r?.new_until))
+      }
+      setBoostStatus({
+        sponsored: sponsoredUntil > now,
+        promo: promoUntil > now,
+        neu: newUntil > now,
+      })
+    } catch {
+      setBoostStatus({ sponsored: false, promo: false, neu: false })
+    }
+  }
+
+  useEffect(() => {
     try {
       const raw = localStorage.getItem('followed_shops');
       const followed = raw ? JSON.parse(raw) : [];
@@ -244,6 +291,8 @@ const ShopPage = () => {
             logoDataUrl: String(data?.logo_url || ''),
           })
 
+          void loadBoostStatus(String(data?.id || demoShop.id), ownerEmail)
+
           setProducts([])
           setError(null)
           setLoading(false)
@@ -294,6 +343,8 @@ const ShopPage = () => {
               secondaryColor: '#38BDF8',
               logoDataUrl: String(data?.logo_url || ''),
             })
+
+            void loadBoostStatus(String(data?.id || demoShop.id), ownerEmail)
 
             setProducts([])
             setError(null)
@@ -793,6 +844,21 @@ const ShopPage = () => {
                   <div className="flex items-center gap-1 bg-green-100/20 text-green-100 px-3 py-1 rounded-full text-sm">
                     <Shield className="w-4 h-4" />
                     Vérifié
+                  </div>
+                )}
+                {boostStatus.sponsored && (
+                  <div className="bg-amber-100/20 text-amber-50 px-3 py-1 rounded-full text-sm border border-amber-200/30">
+                    Sponsorisé
+                  </div>
+                )}
+                {boostStatus.promo && (
+                  <div className="bg-fuchsia-100/20 text-fuchsia-50 px-3 py-1 rounded-full text-sm border border-fuchsia-200/30">
+                    Promo
+                  </div>
+                )}
+                {boostStatus.neu && (
+                  <div className="bg-sky-100/20 text-sky-50 px-3 py-1 rounded-full text-sm border border-sky-200/30">
+                    Nouveau
                   </div>
                 )}
               </div>

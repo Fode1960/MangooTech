@@ -983,6 +983,10 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
               } catch {
               }
               toast.success('Boost activé (carte)')
+              try {
+                window.dispatchEvent(new Event('mangoo-boosts-updated'))
+              } catch {
+              }
               await load()
               return
             } catch {
@@ -1048,6 +1052,10 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
               } catch {
               }
               toast.success('Boost activé (carte)')
+              try {
+                window.dispatchEvent(new Event('mangoo-boosts-updated'))
+              } catch {
+              }
               await load()
               return
             }
@@ -1143,6 +1151,10 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
           writeLocalOrders(email, [order, ...allOrders].slice(0, 100))
 
           toast.success('Boost activé par crédits')
+          try {
+            window.dispatchEvent(new Event('mangoo-boosts-updated'))
+          } catch {
+          }
           await load()
         }
 
@@ -1166,6 +1178,10 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
             if (res.ok && res.json?.success) {
               setBalanceXof(Number(res.json?.balanceXof ?? 0))
               toast.success('Boost activé par crédits')
+              try {
+                window.dispatchEvent(new Event('mangoo-boosts-updated'))
+              } catch {
+              }
               await load()
               return
             }
@@ -1210,6 +1226,10 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         })
 
         toast.success('Boost activé par crédits')
+        try {
+          window.dispatchEvent(new Event('mangoo-boosts-updated'))
+        } catch {
+        }
         await load()
       } catch (e: any) {
         setError(e?.message || 'Erreur achat crédits')
