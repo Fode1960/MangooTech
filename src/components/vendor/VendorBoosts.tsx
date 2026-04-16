@@ -186,13 +186,16 @@ function makeLocalOrder(params: {
   }
 }
 
-async function resolveShopAliases(params: { vendorId: string; vendorKind: string; slug?: string | null }) {
+async function resolveShopAliases(params: { vendorId: string; vendorKind: string; slug?: string | null; userEmail?: string | null }) {
   const vendorKind = String(params.vendorKind || '').trim().toLowerCase()
   const vendorId = String(params.vendorId || '').trim()
   const slug = String(params.slug || '').trim()
   const ids = new Set<string>()
   if (vendorId) ids.add(vendorId)
   if (vendorKind !== 'shop') return { vendorKind, vendorIds: Array.from(ids) }
+
+  const userEmail = String(params.userEmail || '').trim().toLowerCase()
+  if (userEmail && userEmail.includes('@')) ids.add(`local-${userEmail}`)
 
   try {
     if (slug) {
@@ -605,7 +608,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
   }, [getUserId])
 
   const loadOrdersFromSupabase = useCallback(async (vendorId: string, vendorKind: string) => {
-    const aliases = await resolveShopAliases({ vendorId, vendorKind, slug: selectedTarget?.slug || null })
+    const aliases = await resolveShopAliases({ vendorId, vendorKind, slug: selectedTarget?.slug || null, userEmail })
     let q = supabase
       .from('boost_orders')
       .select('id, vendor_id, vendor_kind, boost_kind, duration_hours, amount_xof, currency, status, expires_at, created_at')
@@ -616,10 +619,10 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
     const { data, error } = await q
     if (error) throw error
     return (Array.isArray(data) ? data : []) as any as BoostOrder[]
-  }, [selectedTarget?.slug])
+  }, [selectedTarget?.slug, userEmail])
 
   const loadBoostRowFromSupabase = useCallback(async (vendorId: string, vendorKind: string) => {
-    const aliases = await resolveShopAliases({ vendorId, vendorKind, slug: selectedTarget?.slug || null })
+    const aliases = await resolveShopAliases({ vendorId, vendorKind, slug: selectedTarget?.slug || null, userEmail })
     let q = supabase
       .from('vendor_boosts')
       .select('vendor_id, vendor_kind, sponsored_until, sponsored_tier, promo_until, new_until, updated_at')
@@ -630,7 +633,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
     if (error) throw error
     const rows = Array.isArray(data) ? (data as any as VendorBoostRow[]) : []
     return pickNewestBoostRow(rows)
-  }, [selectedTarget?.slug])
+  }, [selectedTarget?.slug, userEmail])
 
   const load = useCallback(async () => {
     if (loadLockRef.current) return
@@ -778,7 +781,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
             const rows = Array.isArray(ordersRes.json?.orders) ? ordersRes.json.orders : []
             const email = String(userEmail || '').trim().toLowerCase()
             const local = email ? readLocalOrders(email) : []
-            const aliases = await resolveShopAliases({ vendorId: selectedTarget.vendorId, vendorKind: selectedTarget.vendorKind, slug: selectedTarget.slug || null })
+            const aliases = await resolveShopAliases({ vendorId: selectedTarget.vendorId, vendorKind: selectedTarget.vendorKind, slug: selectedTarget.slug || null, userEmail })
             const filteredLocal = local.filter((o) => {
               if (String(o?.vendor_kind || '') !== String(selectedTarget.vendorKind)) return false
               const id = String(o?.vendor_id || '')
@@ -789,7 +792,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
             const remote = await loadOrdersFromSupabase(selectedTarget.vendorId, selectedTarget.vendorKind)
             const email = String(userEmail || '').trim().toLowerCase()
             const local = email ? readLocalOrders(email) : []
-            const aliases = await resolveShopAliases({ vendorId: selectedTarget.vendorId, vendorKind: selectedTarget.vendorKind, slug: selectedTarget.slug || null })
+            const aliases = await resolveShopAliases({ vendorId: selectedTarget.vendorId, vendorKind: selectedTarget.vendorKind, slug: selectedTarget.slug || null, userEmail })
             const filteredLocal = local.filter((o) => {
               if (String(o?.vendor_kind || '') !== String(selectedTarget.vendorKind)) return false
               const id = String(o?.vendor_id || '')
@@ -802,7 +805,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
           const remote = await loadOrdersFromSupabase(selectedTarget.vendorId, selectedTarget.vendorKind)
           const email = String(userEmail || '').trim().toLowerCase()
           const local = email ? readLocalOrders(email) : []
-          const aliases = await resolveShopAliases({ vendorId: selectedTarget.vendorId, vendorKind: selectedTarget.vendorKind, slug: selectedTarget.slug || null })
+          const aliases = await resolveShopAliases({ vendorId: selectedTarget.vendorId, vendorKind: selectedTarget.vendorKind, slug: selectedTarget.slug || null, userEmail })
           const filteredLocal = local.filter((o) => {
             if (String(o?.vendor_kind || '') !== String(selectedTarget.vendorKind)) return false
             const id = String(o?.vendor_id || '')
@@ -936,7 +939,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                 const email = String(userEmail || '').trim().toLowerCase()
                 if (email) {
                   const allOrders = readLocalOrders(email)
-                  const aliases = await resolveShopAliases({ vendorId: selectedTarget.vendorId, vendorKind: selectedTarget.vendorKind, slug: (selectedTarget as any)?.slug || null })
+                  const aliases = await resolveShopAliases({ vendorId: selectedTarget.vendorId, vendorKind: selectedTarget.vendorKind, slug: (selectedTarget as any)?.slug || null, userEmail })
                   const canonicalVendorId = pickCanonicalVendorId(aliases.vendorIds) || selectedTarget.vendorId
                   const expiresAtIso = new Date(Date.now() + Math.max(0, Number(p.durationHours || 0)) * 60 * 60 * 1000).toISOString()
                   const order = makeLocalOrder({
@@ -1001,7 +1004,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                 const email = String(userEmail || '').trim().toLowerCase()
                 if (email) {
                   const allOrders = readLocalOrders(email)
-                  const aliases = await resolveShopAliases({ vendorId: selectedTarget.vendorId, vendorKind: selectedTarget.vendorKind, slug: (selectedTarget as any)?.slug || null })
+                  const aliases = await resolveShopAliases({ vendorId: selectedTarget.vendorId, vendorKind: selectedTarget.vendorKind, slug: (selectedTarget as any)?.slug || null, userEmail })
                   const canonicalVendorId = pickCanonicalVendorId(aliases.vendorIds) || selectedTarget.vendorId
                   const expiresAtIso = new Date(Date.now() + Math.max(0, Number(p.durationHours || 0)) * 60 * 60 * 1000).toISOString()
                   const order = makeLocalOrder({

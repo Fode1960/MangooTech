@@ -4407,7 +4407,7 @@ const ShopsDirectory = () => {
       }
       setDemoCreatedShops(
         shops
-          .filter((s) => s?.slug && String(s?.approvalStatus || 'pending') === 'approved')
+          .filter((s) => s?.slug)
           .map((s) => ({
             id: s.id || s.slug,
             name: s.name || 'Boutique',
@@ -4417,6 +4417,7 @@ const ShopsDirectory = () => {
             secondaryColor: s.secondaryColor || '#FBBF24',
             logoDataUrl: s.logoDataUrl || '',
             vendorId: String(s?.sourceVendorId ?? s?.source_vendor_id ?? s?.vendorId ?? s?.vendor_id ?? s?.id ?? '').replace(/^shop-/, ''),
+            ownerEmail: String(s?.ownerEmail || s?.owner_email || s?.email || '').trim().toLowerCase(),
             vendorKind: 'shop',
             source: 'created'
           }))
