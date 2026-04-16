@@ -45,7 +45,7 @@ function isBoostDiscoveryEnabled() {
   const flag = String(process.env.BOOST_DISCOVERY_ENABLED || '').trim()
   if (flag === '1') return true
   if (flag === '0') return false
-  return String(process.env.NODE_ENV || '').trim().toLowerCase() !== 'production'
+  return true
 }
 
 function toStripeUnitAmount(amountXof: number, currency: string): number {
