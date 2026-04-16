@@ -171,6 +171,34 @@ async function upsertVendorBoostRow(params: {
       payload.new_until = until
     }
     await supabase.from('vendor_boosts').upsert(payload, { onConflict: 'vendor_kind,vendor_id' })
+
+    if (vendorKind === 'shop' && vendorId.startsWith('local-')) {
+      const email = vendorId.slice(6)
+      if (email.includes('@')) {
+        try {
+          const attempt = async (withOwnerEmail: boolean) => {
+            const q = supabase
+              .from('shops')
+              .select('id,owner_email,email,created_at')
+              .order('created_at', { ascending: false })
+              .limit(1)
+            if (withOwnerEmail) return await q.or(`owner_email.eq.${email},email.eq.${email}`)
+            return await q.eq('email', email)
+          }
+          let r: any = await attempt(true)
+          if (r?.error) {
+            const msg = String(r.error.message || '').toLowerCase()
+            const missingOwnerEmail = msg.includes('could not find') && msg.includes('owner_email')
+            if (missingOwnerEmail) r = await attempt(false)
+          }
+          const shopId = String(Array.isArray(r?.data) ? r.data[0]?.id : '').trim()
+          if (shopId) {
+            await supabase.from('vendor_boosts').upsert({ ...payload, vendor_id: shopId }, { onConflict: 'vendor_kind,vendor_id' })
+          }
+        } catch {
+        }
+      }
+    }
   } catch {
   }
 }

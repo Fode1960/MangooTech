@@ -4435,11 +4435,28 @@ const ShopsDirectory = () => {
 
     setSupabaseShopsLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('shops')
-        .select('id,name,slug,category,logo_url,status,created_at,updated_at,owner_email,email')
-        .eq('status', 'approved')
-        .order('created_at', { ascending: false })
+      const attempt = async (selectCols) => {
+        return await supabase
+          .from('shops')
+          .select(selectCols)
+          .eq('status', 'approved')
+          .order('created_at', { ascending: false })
+      }
+
+      let r = await attempt('id,name,slug,category,logo_url,status,created_at,updated_at,owner_email,email')
+      if (r?.error) {
+        const msg = String(r.error.message || '').toLowerCase()
+        const missingOwnerEmail = msg.includes('could not find') && msg.includes('owner_email')
+        if (missingOwnerEmail) r = await attempt('id,name,slug,category,logo_url,status,created_at,updated_at,email')
+      }
+      if (r?.error) {
+        const msg = String(r.error.message || '').toLowerCase()
+        const missingEmail = msg.includes('could not find') && msg.includes('email')
+        if (missingEmail) r = await attempt('id,name,slug,category,logo_url,status,created_at,updated_at')
+      }
+
+      const data = r?.data
+      const error = r?.error
 
       if (error || !Array.isArray(data)) {
         setSupabaseShops([])
@@ -4752,13 +4769,37 @@ const ShopsDirectory = () => {
     const t = window.setTimeout(() => {
       ;(async () => {
         try {
-          const ids = new Set()
+          const vendorIds = []
           for (const s of (Array.isArray(visibleShops) ? visibleShops : []).slice(0, 80)) {
             const vendorId = String(s?.vendorId || '').trim()
-            if (vendorId) ids.add(vendorId)
-            const ownerEmail = String(s?.ownerEmail || s?.owner_email || '').trim().toLowerCase()
-            if (ownerEmail) ids.add(`local-${ownerEmail}`)
+            if (vendorId) vendorIds.push(vendorId)
           }
+
+          const ids = new Set(vendorIds)
+          try {
+            const attempt = async (selectCols) => {
+              return await supabase
+                .from('shops')
+                .select(selectCols)
+                .in('id', vendorIds)
+                .limit(80)
+            }
+
+            let r = await attempt('id,owner_email,email')
+            if (r?.error) {
+              const msg = String(r.error.message || '').toLowerCase()
+              const missingOwnerEmail = msg.includes('could not find') && msg.includes('owner_email')
+              if (missingOwnerEmail) r = await attempt('id,email')
+            }
+            if (!r?.error && Array.isArray(r?.data)) {
+              for (const row of r.data) {
+                const email = String(row?.owner_email || row?.email || '').trim().toLowerCase()
+                if (email) ids.add(`local-${email}`)
+              }
+            }
+          } catch {
+          }
+
           const list = Array.from(ids)
           if (!list.length) return
           const { data, error } = await supabase
