@@ -126,12 +126,22 @@ function tierLabelFromNumber(tier: number | null | undefined): VendorBoostRow['s
   return null
 }
 
+function slugifyValue(value: string) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
 async function upsertVendorBoostRow(params: {
   vendorKind: string
   vendorId: string
   kind: BoostKind
   durationHours: number
   sponsoredTier?: number | null
+  shopSlug?: string | null
 }) {
   try {
     const vendorKind = String(params.vendorKind || 'shop')
@@ -174,29 +184,42 @@ async function upsertVendorBoostRow(params: {
 
     if (vendorKind === 'shop' && vendorId.startsWith('local-')) {
       const email = vendorId.slice(6)
-      if (email.includes('@')) {
-        try {
-          const attempt = async (withOwnerEmail: boolean) => {
-            const q = supabase
-              .from('shops')
-              .select('id,owner_email,email,created_at')
-              .order('created_at', { ascending: false })
-              .limit(1)
-            if (withOwnerEmail) return await q.or(`owner_email.eq.${email},email.eq.${email}`)
-            return await q.eq('email', email)
-          }
-          let r: any = await attempt(true)
-          if (r?.error) {
-            const msg = String(r.error.message || '').toLowerCase()
-            const missingOwnerEmail = msg.includes('could not find') && msg.includes('owner_email')
-            if (missingOwnerEmail) r = await attempt(false)
-          }
-          const shopId = String(Array.isArray(r?.data) ? r.data[0]?.id : '').trim()
-          if (shopId) {
-            await supabase.from('vendor_boosts').upsert({ ...payload, vendor_id: shopId }, { onConflict: 'vendor_kind,vendor_id' })
-          }
-        } catch {
+      const candidateSlug = String(params.shopSlug || '').trim() || slugifyValue(email.includes('@') ? email.split('@')[0] : email) || null
+
+      const resolveBySlug = async () => {
+        const slug = String(candidateSlug || '').trim()
+        if (!slug) return ''
+        const r = await supabase.from('shops').select('id,slug').eq('slug', slug).maybeSingle()
+        if (r?.error) return ''
+        return String(r?.data?.id || '').trim()
+      }
+
+      const resolveByEmail = async () => {
+        if (!email.includes('@')) return ''
+        const attempt = async (withOwnerEmail: boolean) => {
+          const q = supabase
+            .from('shops')
+            .select('id,owner_email,email,created_at')
+            .order('created_at', { ascending: false })
+            .limit(1)
+          if (withOwnerEmail) return await q.or(`owner_email.eq.${email},email.eq.${email}`)
+          return await q.eq('email', email)
         }
+        let r: any = await attempt(true)
+        if (r?.error) {
+          const msg = String(r.error.message || '').toLowerCase()
+          const missingOwnerEmail = msg.includes('could not find') && msg.includes('owner_email')
+          if (missingOwnerEmail) r = await attempt(false)
+        }
+        return String(Array.isArray(r?.data) ? r.data[0]?.id : '').trim()
+      }
+
+      try {
+        const shopId = (await resolveBySlug()) || (await resolveByEmail())
+        if (shopId) {
+          await supabase.from('vendor_boosts').upsert({ ...payload, vendor_id: shopId }, { onConflict: 'vendor_kind,vendor_id' })
+        }
+      } catch {
       }
     }
   } catch {
@@ -795,6 +818,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                 kind: p.kind,
                 durationHours: p.durationHours,
                 sponsoredTier: (p as any)?.sponsoredTier ?? null,
+                shopSlug: (selectedTarget as any)?.slug || null,
               })
               toast.success('Boost activé (carte)')
               await load()
@@ -838,6 +862,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                 kind: p.kind,
                 durationHours: p.durationHours,
                 sponsoredTier: (p as any)?.sponsoredTier ?? null,
+                shopSlug: (selectedTarget as any)?.slug || null,
               })
               toast.success('Boost activé (carte)')
               await load()
@@ -998,6 +1023,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
           kind: p.kind,
           durationHours: p.durationHours,
           sponsoredTier: (p as any)?.sponsoredTier ?? null,
+          shopSlug: (selectedTarget as any)?.slug || null,
         })
 
         toast.success('Boost activé par crédits')
