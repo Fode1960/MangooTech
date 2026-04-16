@@ -29,7 +29,7 @@ import ShopPage from './pages/shop/ShopPage.jsx';
 import VendorAccessQRPage from './pages/VendorAccessQRPage';
 import { QRCodeCanvas } from 'qrcode.react';
 import { isLocalSyncEnabled, localSync, setLocalSyncToken } from './utils/localSyncClient';
-import { fetchActiveBoostRows, getBoostDiscoveryFlags, indexActiveBoosts, readBoostConfigCacheRows } from './utils/boostDiscovery';
+import { fetchActiveBoostRows, getBoostDiscoveryFlags, indexActiveBoosts, readBoostActiveCacheRows, readBoostConfigCacheRows } from './utils/boostDiscovery';
 import { Toaster, toast } from 'sonner';
 import { ensureWalletBalance, getWalletBalance, getWalletKeyFromUser, creditWalletBalance } from './utils/demoWallet';
 import { usePaymentStore } from './stores/paymentStore';
@@ -4503,11 +4503,26 @@ const ShopsDirectory = () => {
       try {
         const rows = await fetchActiveBoostRows({ timeoutMs: 6500 })
         const mapped = indexActiveBoosts(rows)
-        if (mounted) setBoostIndex(mapped)
+        if (mounted) {
+          setBoostIndex((prev) => {
+            if (!mapped.size) return prev
+            const next = new Map(prev)
+            mapped.forEach((v, k) => next.set(k, v))
+            return next
+          })
+        }
       } catch {
-        const fallbackRows = readBoostConfigCacheRows()
+        const cachedRows = readBoostActiveCacheRows()
+        const fallbackRows = cachedRows.length ? cachedRows : readBoostConfigCacheRows()
         const mapped = indexActiveBoosts(fallbackRows)
-        if (mounted) setBoostIndex(mapped)
+        if (mounted) {
+          setBoostIndex((prev) => {
+            if (!mapped.size) return prev
+            const next = new Map(prev)
+            mapped.forEach((v, k) => next.set(k, v))
+            return next
+          })
+        }
       }
     })()
     return () => {

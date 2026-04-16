@@ -150,6 +150,16 @@ export const readBoostConfigCacheRows = () => {
   }
 }
 
+export const readBoostActiveCacheRows = () => {
+  try {
+    const raw = localStorage.getItem('mangoo_boost_active_cache_rows')
+    const parsed = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
 export const indexActiveBoosts = (rows) => {
   const map = new Map()
   const now = Date.now()
