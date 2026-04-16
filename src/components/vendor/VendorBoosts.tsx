@@ -135,6 +135,87 @@ function slugifyValue(value: string) {
     .replace(/^-+|-+$/g, '')
 }
 
+function parseMs(value: any): number {
+  const t = value ? Date.parse(String(value)) : NaN
+  return Number.isFinite(t) ? t : 0
+}
+
+function pickNewestBoostRow(rows: VendorBoostRow[]): VendorBoostRow | null {
+  const list = Array.isArray(rows) ? rows.filter(Boolean) : []
+  if (!list.length) return null
+  return list
+    .slice()
+    .sort((a, b) => parseMs(b.updated_at) - parseMs(a.updated_at))[0]
+}
+
+function mergeOrders(remote: BoostOrder[], local: BoostOrder[]): BoostOrder[] {
+  const a = Array.isArray(remote) ? remote : []
+  const b = Array.isArray(local) ? local : []
+  const map = new Map<string, BoostOrder>()
+  for (const o of [...b, ...a]) {
+    const id = String(o?.id || '')
+    if (!id) continue
+    map.set(id, o)
+  }
+  return Array.from(map.values()).sort((x, y) => parseMs(y.created_at) - parseMs(x.created_at))
+}
+
+function makeLocalOrder(params: {
+  email: string
+  vendorId: string
+  vendorKind: string
+  kind: BoostKind
+  durationHours: number
+  amountXof: number
+  currency: string
+  expiresAtIso: string | null
+}): BoostOrder {
+  const nowIso = new Date().toISOString()
+  const suffix = Math.random().toString(16).slice(2, 8)
+  return {
+    id: `local_${Date.now()}_${suffix}`,
+    vendor_id: params.vendorId,
+    vendor_kind: params.vendorKind,
+    boost_kind: params.kind,
+    duration_hours: Math.floor(Number(params.durationHours || 0)),
+    amount_xof: Math.floor(Number(params.amountXof || 0)),
+    currency: String(params.currency || 'XOF'),
+    status: 'active',
+    expires_at: params.expiresAtIso,
+    created_at: nowIso,
+  }
+}
+
+async function resolveShopAliases(params: { vendorId: string; vendorKind: string; slug?: string | null }) {
+  const vendorKind = String(params.vendorKind || '').trim().toLowerCase()
+  const vendorId = String(params.vendorId || '').trim()
+  const slug = String(params.slug || '').trim()
+  const ids = new Set<string>()
+  if (vendorId) ids.add(vendorId)
+  if (vendorKind !== 'shop') return { vendorKind, vendorIds: Array.from(ids) }
+
+  try {
+    if (slug) {
+      const r = await supabase.from('shops').select('id,slug,email').eq('slug', slug).maybeSingle()
+      if (!r?.error && r?.data) {
+        const shopId = String((r.data as any)?.id || '').trim()
+        const email = String((r.data as any)?.email || '').trim().toLowerCase()
+        if (shopId) ids.add(shopId)
+        if (email) ids.add(`local-${email}`)
+      }
+    }
+  } catch {
+  }
+
+  return { vendorKind, vendorIds: Array.from(ids) }
+}
+
+function pickCanonicalVendorId(vendorIds: string[]): string {
+  const list = Array.isArray(vendorIds) ? vendorIds : []
+  const nonLocal = list.find((x) => x && !String(x).startsWith('local-'))
+  return nonLocal || list[0] || ''
+}
+
 async function upsertVendorBoostRow(params: {
   vendorKind: string
   vendorId: string
@@ -524,27 +605,32 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
   }, [getUserId])
 
   const loadOrdersFromSupabase = useCallback(async (vendorId: string, vendorKind: string) => {
-    const { data, error } = await supabase
+    const aliases = await resolveShopAliases({ vendorId, vendorKind, slug: selectedTarget?.slug || null })
+    let q = supabase
       .from('boost_orders')
       .select('id, vendor_id, vendor_kind, boost_kind, duration_hours, amount_xof, currency, status, expires_at, created_at')
-      .eq('vendor_id', vendorId)
-      .eq('vendor_kind', vendorKind)
+      .eq('vendor_kind', aliases.vendorKind)
       .order('created_at', { ascending: false })
       .limit(30)
+    if (aliases.vendorIds.length) q = q.in('vendor_id', aliases.vendorIds)
+    const { data, error } = await q
     if (error) throw error
     return (Array.isArray(data) ? data : []) as any as BoostOrder[]
-  }, [])
+  }, [selectedTarget?.slug])
 
   const loadBoostRowFromSupabase = useCallback(async (vendorId: string, vendorKind: string) => {
-    const { data, error } = await supabase
+    const aliases = await resolveShopAliases({ vendorId, vendorKind, slug: selectedTarget?.slug || null })
+    let q = supabase
       .from('vendor_boosts')
       .select('vendor_id, vendor_kind, sponsored_until, sponsored_tier, promo_until, new_until, updated_at')
-      .eq('vendor_id', vendorId)
-      .eq('vendor_kind', vendorKind)
-      .maybeSingle()
+      .eq('vendor_kind', aliases.vendorKind)
+      .limit(20)
+    if (aliases.vendorIds.length) q = q.in('vendor_id', aliases.vendorIds)
+    const { data, error } = await q
     if (error) throw error
-    return (data || null) as any as VendorBoostRow | null
-  }, [])
+    const rows = Array.isArray(data) ? (data as any as VendorBoostRow[]) : []
+    return pickNewestBoostRow(rows)
+  }, [selectedTarget?.slug])
 
   const load = useCallback(async () => {
     if (loadLockRef.current) return
@@ -690,13 +776,39 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
           if (seq !== loadSeqRef.current) return
           if (ordersRes.ok) {
             const rows = Array.isArray(ordersRes.json?.orders) ? ordersRes.json.orders : []
-            setOrders(rows as BoostOrder[])
+            const email = String(userEmail || '').trim().toLowerCase()
+            const local = email ? readLocalOrders(email) : []
+            const aliases = await resolveShopAliases({ vendorId: selectedTarget.vendorId, vendorKind: selectedTarget.vendorKind, slug: selectedTarget.slug || null })
+            const filteredLocal = local.filter((o) => {
+              if (String(o?.vendor_kind || '') !== String(selectedTarget.vendorKind)) return false
+              const id = String(o?.vendor_id || '')
+              return aliases.vendorIds.includes(id)
+            })
+            setOrders(mergeOrders(rows as BoostOrder[], filteredLocal))
           } else {
-            setOrders(await loadOrdersFromSupabase(selectedTarget.vendorId, selectedTarget.vendorKind))
+            const remote = await loadOrdersFromSupabase(selectedTarget.vendorId, selectedTarget.vendorKind)
+            const email = String(userEmail || '').trim().toLowerCase()
+            const local = email ? readLocalOrders(email) : []
+            const aliases = await resolveShopAliases({ vendorId: selectedTarget.vendorId, vendorKind: selectedTarget.vendorKind, slug: selectedTarget.slug || null })
+            const filteredLocal = local.filter((o) => {
+              if (String(o?.vendor_kind || '') !== String(selectedTarget.vendorKind)) return false
+              const id = String(o?.vendor_id || '')
+              return aliases.vendorIds.includes(id)
+            })
+            setOrders(mergeOrders(remote, filteredLocal))
           }
         } catch {
           if (seq !== loadSeqRef.current) return
-          setOrders(await loadOrdersFromSupabase(selectedTarget.vendorId, selectedTarget.vendorKind))
+          const remote = await loadOrdersFromSupabase(selectedTarget.vendorId, selectedTarget.vendorKind)
+          const email = String(userEmail || '').trim().toLowerCase()
+          const local = email ? readLocalOrders(email) : []
+          const aliases = await resolveShopAliases({ vendorId: selectedTarget.vendorId, vendorKind: selectedTarget.vendorKind, slug: selectedTarget.slug || null })
+          const filteredLocal = local.filter((o) => {
+            if (String(o?.vendor_kind || '') !== String(selectedTarget.vendorKind)) return false
+            const id = String(o?.vendor_id || '')
+            return aliases.vendorIds.includes(id)
+          })
+          setOrders(mergeOrders(remote, filteredLocal))
         }
       }
     } catch (e: any) {
@@ -820,6 +932,27 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                 sponsoredTier: (p as any)?.sponsoredTier ?? null,
                 shopSlug: (selectedTarget as any)?.slug || null,
               })
+              try {
+                const email = String(userEmail || '').trim().toLowerCase()
+                if (email) {
+                  const allOrders = readLocalOrders(email)
+                  const aliases = await resolveShopAliases({ vendorId: selectedTarget.vendorId, vendorKind: selectedTarget.vendorKind, slug: (selectedTarget as any)?.slug || null })
+                  const canonicalVendorId = pickCanonicalVendorId(aliases.vendorIds) || selectedTarget.vendorId
+                  const expiresAtIso = new Date(Date.now() + Math.max(0, Number(p.durationHours || 0)) * 60 * 60 * 1000).toISOString()
+                  const order = makeLocalOrder({
+                    email,
+                    vendorId: canonicalVendorId,
+                    vendorKind: selectedTarget.vendorKind,
+                    kind: p.kind,
+                    durationHours: p.durationHours,
+                    amountXof: Number(p.priceXof || 0),
+                    currency: String(p.currency || 'XOF'),
+                    expiresAtIso,
+                  })
+                  writeLocalOrders(email, [order, ...allOrders].slice(0, 100))
+                }
+              } catch {
+              }
               toast.success('Boost activé (carte)')
               await load()
               return
@@ -864,6 +997,27 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                 sponsoredTier: (p as any)?.sponsoredTier ?? null,
                 shopSlug: (selectedTarget as any)?.slug || null,
               })
+              try {
+                const email = String(userEmail || '').trim().toLowerCase()
+                if (email) {
+                  const allOrders = readLocalOrders(email)
+                  const aliases = await resolveShopAliases({ vendorId: selectedTarget.vendorId, vendorKind: selectedTarget.vendorKind, slug: (selectedTarget as any)?.slug || null })
+                  const canonicalVendorId = pickCanonicalVendorId(aliases.vendorIds) || selectedTarget.vendorId
+                  const expiresAtIso = new Date(Date.now() + Math.max(0, Number(p.durationHours || 0)) * 60 * 60 * 1000).toISOString()
+                  const order = makeLocalOrder({
+                    email,
+                    vendorId: canonicalVendorId,
+                    vendorKind: selectedTarget.vendorKind,
+                    kind: p.kind,
+                    durationHours: p.durationHours,
+                    amountXof: Number(p.priceXof || 0),
+                    currency: String(p.currency || 'XOF'),
+                    expiresAtIso,
+                  })
+                  writeLocalOrders(email, [order, ...allOrders].slice(0, 100))
+                }
+              } catch {
+              }
               toast.success('Boost activé (carte)')
               await load()
               return

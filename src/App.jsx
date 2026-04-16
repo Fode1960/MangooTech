@@ -4439,7 +4439,6 @@ const ShopsDirectory = () => {
         return await supabase
           .from('shops')
           .select(selectCols)
-          .eq('status', 'approved')
           .order('created_at', { ascending: false })
       }
 
