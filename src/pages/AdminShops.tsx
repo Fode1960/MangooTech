@@ -148,7 +148,7 @@ export default function AdminShops() {
   const refresh = useCallback(() => {
     void (async () => {
       try {
-        const res = await fetch('/api/shops/list')
+        const res = await fetch('/api/shops-list')
         const json = await res.json().catch(() => null as any)
         if (res.ok && json?.success && Array.isArray(json?.shops)) {
           const mapped: DemoShop[] = (json.shops as any[])

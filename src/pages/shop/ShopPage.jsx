@@ -184,8 +184,18 @@ const ShopPage = () => {
     try {
       const controller = new AbortController()
       const t = window.setTimeout(() => controller.abort(), 6500)
-      const res = await fetch('/api/boosts/vendor-boosts-active', { method: 'GET', signal: controller.signal })
-      const json = await res.json().catch(() => null)
+      const tryFetch = async (url) => {
+        const r = await fetch(url, { method: 'GET', signal: controller.signal })
+        const j = await r.json().catch(() => null)
+        return { r, j }
+      }
+
+      const first = await tryFetch('/api/boosts-vendor-boosts-active')
+      let json = first?.j
+      if (!Array.isArray(json?.rows)) {
+        const second = await tryFetch('/api/boosts/vendor-boosts-active')
+        json = second?.j
+      }
       window.clearTimeout(t)
       const rows = Array.isArray(json?.rows) ? json.rows : []
       const uuid = String(shopId || '').trim()
@@ -253,7 +263,7 @@ const ShopPage = () => {
       try {
         const controller = new AbortController()
         const t = window.setTimeout(() => controller.abort(), 7000)
-        const res = await fetch(`/api/shops/slug/${encodeURIComponent(String(shopSlug || '').trim())}`, { signal: controller.signal })
+        const res = await fetch(`/api/shops-slug?slug=${encodeURIComponent(String(shopSlug || '').trim())}`, { signal: controller.signal })
         const json = await res.json().catch(() => null)
         window.clearTimeout(t)
         if (res.ok && json?.success && json?.shop?.slug) {

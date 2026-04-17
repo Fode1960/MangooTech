@@ -75,9 +75,19 @@ export const fetchActiveBoostRows = async ({ timeoutMs = 6000 } = {}) => {
     const controller = new AbortController()
     const t = window.setTimeout(() => controller.abort(), timeoutMs)
     try {
-      const res = await fetch('/api/boosts/vendor-boosts-active', { method: 'GET', signal: controller.signal })
-      const json = await res.json().catch(() => null)
-      const rows = Array.isArray(json?.rows) ? json.rows : []
+      const tryFetch = async (url) => {
+        const res = await fetch(url, { method: 'GET', signal: controller.signal })
+        const json = await res.json().catch(() => null)
+        return { res, json }
+      }
+
+      const first = await tryFetch('/api/boosts-vendor-boosts-active')
+      let rows = Array.isArray(first?.json?.rows) ? first.json.rows : []
+      if (!rows.length) {
+        const second = await tryFetch('/api/boosts/vendor-boosts-active')
+        rows = Array.isArray(second?.json?.rows) ? second.json.rows : []
+      }
+
       if (rows.length) {
         try {
           localStorage.setItem('mangoo_boost_active_cache_rows', JSON.stringify(rows))
@@ -128,9 +138,18 @@ export const fetchActiveBoostRows = async ({ timeoutMs = 6000 } = {}) => {
   const controller = new AbortController()
   const t = window.setTimeout(() => controller.abort(), timeoutMs)
   try {
-    const res = await fetch('/api/boosts/vendor-boosts-active', { method: 'GET', signal: controller.signal })
-    const json = await res.json().catch(() => null)
-    const rows = Array.isArray(json?.rows) ? json.rows : []
+    const tryFetch = async (url) => {
+      const res = await fetch(url, { method: 'GET', signal: controller.signal })
+      const json = await res.json().catch(() => null)
+      return { res, json }
+    }
+
+    const first = await tryFetch('/api/boosts-vendor-boosts-active')
+    let rows = Array.isArray(first?.json?.rows) ? first.json.rows : []
+    if (!rows.length) {
+      const second = await tryFetch('/api/boosts/vendor-boosts-active')
+      rows = Array.isArray(second?.json?.rows) ? second.json.rows : []
+    }
     if (rows.length) {
       try {
         localStorage.setItem('mangoo_boost_active_cache_rows', JSON.stringify(rows))
