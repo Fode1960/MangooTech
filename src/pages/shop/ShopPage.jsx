@@ -263,7 +263,7 @@ const ShopPage = () => {
       try {
         const controller = new AbortController()
         const t = window.setTimeout(() => controller.abort(), 7000)
-        const res = await fetch(`/api/shops-slug?slug=${encodeURIComponent(String(shopSlug || '').trim())}`, { signal: controller.signal })
+        const res = await fetch(`/api/shops/slug/${encodeURIComponent(String(shopSlug || '').trim())}`, { signal: controller.signal })
         const json = await res.json().catch(() => null)
         window.clearTimeout(t)
         if (res.ok && json?.success && json?.shop?.slug) {

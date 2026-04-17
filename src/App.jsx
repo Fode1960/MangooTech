@@ -2543,7 +2543,7 @@ const VendorDashboard = ({ user }) => {
     try {
       const controller = new AbortController()
       const t = window.setTimeout(() => controller.abort(), 7000)
-      const res = await fetch(`/api/shops-slug?slug=${encodeURIComponent(targetSlug)}`, { signal: controller.signal })
+      const res = await fetch(`/api/shops/slug/${encodeURIComponent(targetSlug)}`, { signal: controller.signal })
       const json = await res.json().catch(() => null)
       window.clearTimeout(t)
       if (res.ok && json?.success && json?.shop?.slug) {
@@ -4472,7 +4472,7 @@ const ShopsDirectory = () => {
     try {
       if (!isDevHost) {
         try {
-          const resp = await fetch('/api/shops-list', { method: 'GET' })
+          const resp = await fetch('/api/shops/list', { method: 'GET' })
           const json = await resp.json().catch(() => null)
           const rows = Array.isArray(json?.shops) ? json.shops : []
           const mappedFallback = rows
