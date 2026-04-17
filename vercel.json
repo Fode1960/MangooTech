@@ -1,5 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }]
+  "rewrites": [
+    { "source": "/api/shops/list", "destination": "/api/shops-list" },
+    { "source": "/api/shops/slug/(.*)", "destination": "/api/shops-slug?slug=$1" },
+    { "source": "/api/boosts/vendor-boosts-active", "destination": "/api/boosts-vendor-boosts-active" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
 }
