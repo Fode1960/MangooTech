@@ -9,10 +9,9 @@
       ]
     }
   ],
-  "rewrites": [
-    { "source": "/api/health", "destination": "/api/health.ts" },
-    { "source": "/api/env-check", "destination": "/api/env-check.js" },
-    { "source": "/api/shops/list", "destination": "/api/shops/list.ts" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
