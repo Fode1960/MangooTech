@@ -1,5 +1,18 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }]
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/api/health", "destination": "/api/health.ts" },
+    { "source": "/api/env-check", "destination": "/api/env-check.js" },
+    { "source": "/api/shops/list", "destination": "/api/shops/list.ts" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
 }
