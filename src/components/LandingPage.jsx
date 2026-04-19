@@ -24,6 +24,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
     }
     return false;
   });
+  const [activeFeature, setActiveFeature] = React.useState('live')
 
   const openChatWidget = () => {
     // Prevent multiple widgets
@@ -236,6 +237,157 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
     setIsDark(!isDark);
   };
 
+  const openLiveDemo = () => {
+    const liveOverlay = document.createElement('div');
+    liveOverlay.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; animation: fadeIn 0.3s; padding: 20px; box-sizing: border-box;";
+    
+    const globalClose = document.createElement('button');
+    globalClose.innerHTML = "✕";
+    globalClose.style.cssText = "position:fixed; top:20px; right:20px; background:white; color:black; border:none; width:40px; height:40px; border-radius:50%; font-size:1.5rem; cursor:pointer; z-index:10002; display:flex; align-items:center; justify-content:center; box-shadow: 0 0 10px rgba(255,255,255,0.5);";
+    globalClose.onclick = () => liveOverlay.remove();
+    liveOverlay.appendChild(globalClose);
+
+    const container = document.createElement('div');
+    container.style.cssText = "width:100%; max-width:400px; height:100%; max-height:85vh; aspect-ratio:9/19.5; background:#000; border-radius:30px; position:relative; overflow:hidden; box-shadow:0 0 50px rgba(0,0,0,0.5); border:4px solid #333; display: flex; flex-direction: column;";
+    
+    container.innerHTML = `
+            <div style="width:100%; height:100%; background:linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%); display:flex; align-items:center; justify-content:center; color:white; font-size:2rem; font-weight:bold; position:absolute; top:0; left:0; z-index:0;">
+                🔴 LIVE MODE
+            </div>
+            
+            <div style="position:absolute; top:40px; left:20px; display:flex; align-items:center; gap:10px; z-index:10;">
+                <div style="background:red; color:white; padding:2px 8px; border-radius:5px; font-weight:bold; font-size:0.8rem;">🔴 EN DIRECT</div>
+                <div style="background:rgba(0,0,0,0.5); color:white; padding:2px 8px; border-radius:5px; font-size:0.8rem;">👁️ 1.2k</div>
+            </div>
+
+            <div style="position:absolute; bottom:120px; left:20px; width:250px; height:150px; overflow-y:hidden; display:flex; flex-direction:column; justify-content:flex-end; gap:5px; mask-image: linear-gradient(to top, black 80%, transparent 100%); z-index:10;">
+                <div style="color:white; font-size:0.9rem; text-shadow:0 1px 2px black;"><b>Sophie:</b> Trop beau ! 😍</div>
+                <div style="color:white; font-size:0.9rem; text-shadow:0 1px 2px black;"><b>Marc:</b> Le prix svp ?</div>
+                <div style="color:white; font-size:0.9rem; text-shadow:0 1px 2px black;"><b>Julie:</b> Je valide la couleur ❤️</div>
+            </div>
+
+            <div style="position:absolute; bottom:20px; left:10px; right:10px; background:white; padding:10px; border-radius:15px; display:flex; align-items:center; gap:10px; animation: slideUp 0.5s; z-index:20;">
+                <div style="width:50px; height:50px; background:#eee; border-radius:10px; display:flex; align-items:center; justify-content:center;">👗</div>
+                <div style="flex:1;">
+                    <div style="font-weight:bold; font-size:0.9rem;">Robe d'été Fleurie</div>
+                    <div style="color:#e67e22; font-weight:bold;">15.000 FCFA</div>
+                </div>
+                <button style="background:#e67e22; color:white; border:none; padding:8px 15px; border-radius:20px; font-weight:bold;">Acheter</button>
+            </div>
+            
+            <div id="hearts-container" style="position:absolute; bottom:100px; right:20px; width:50px; height:200px; pointer-events:none; z-index:15;"></div>
+    `;
+    liveOverlay.appendChild(container);
+    document.body.appendChild(liveOverlay);
+    
+    liveOverlay.onclick = (e) => {
+        if(e.target === liveOverlay) liveOverlay.remove();
+    };
+
+    const heartsContainer = document.getElementById('hearts-container');
+    const interval = setInterval(() => {
+        if(!document.body.contains(liveOverlay)) { clearInterval(interval); return; }
+        const heart = document.createElement('div');
+        heart.innerText = ['❤️', '🔥', '😍', '👍'][Math.floor(Math.random() * 4)];
+        heart.style.cssText = `position:absolute; bottom:0; right:${Math.random()*20}px; font-size:1.5rem; animation: floatUp 2s linear forwards; opacity:0;`;
+        heartsContainer.appendChild(heart);
+        setTimeout(() => heart.remove(), 2000);
+    }, 400);
+
+    const style = document.createElement('style');
+    style.innerHTML = `
+        @keyframes floatUp { 0% { transform: translateY(0) scale(0.5); opacity:1; } 100% { transform: translateY(-200px) scale(1.5); opacity:0; } }
+        @keyframes slideUp { from { transform: translateY(100px); } to { transform: translateY(0); } }
+    `;
+    liveOverlay.appendChild(style);
+  }
+
+  const openMobileDemo = () => {
+    const mobileOverlay = document.createElement('div');
+    mobileOverlay.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; animation: fadeIn 0.3s; backdrop-filter: blur(5px); padding: 20px; box-sizing: border-box;";
+    
+    const globalClose = document.createElement('button');
+    globalClose.innerHTML = "✕";
+    globalClose.style.cssText = "position:fixed; top:20px; right:20px; background:white; color:black; border:none; width:40px; height:40px; border-radius:50%; font-size:1.5rem; cursor:pointer; z-index:10002; display:flex; align-items:center; justify-content:center; box-shadow: 0 0 10px rgba(0,0,0,0.2);";
+    globalClose.onclick = () => mobileOverlay.remove();
+    mobileOverlay.appendChild(globalClose);
+
+    const container = document.createElement('div');
+    container.style.cssText = "width:100%; max-width:340px; height:100%; max-height:85vh; aspect-ratio:9/19.5; background:white; border-radius:45px; border:8px solid #1a1a1a; overflow:hidden; position:relative; box-shadow:0 30px 60px rgba(0,0,0,0.4); display: flex; flex-direction: column;";
+
+    container.innerHTML = `
+            <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); width:120px; height:28px; background:#1a1a1a; border-radius:0 0 18px 18px; z-index:20;"></div>
+            <div style="flex:1; width:100%; overflow-y:auto; background:#f8f9fa; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; scrollbar-width: thin; display: flex; flex-direction: column;">
+                <div style="background:#1f6d3a; color:white; padding:45px 20px 15px 20px; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position:sticky; top:0; z-index:10; flex-shrink: 0;">
+                    <div style="font-weight:800; font-size:1.1rem; letter-spacing:-0.5px;">Mangoo App</div>
+                    <div style="font-size:1.2rem;">🍔</div>
+                </div>
+                <div style="padding:20px 0 10px 20px; display:flex; gap:15px; overflow-x:auto; scrollbar-width: none; flex-shrink: 0;">
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
+                        <div style="width:65px; height:65px; background:linear-gradient(45deg, #f0932b, #e55039); padding:2px; border-radius:50%;">
+                            <div style="width:100%; height:100%; background:white; border-radius:50%; padding:2px;">
+                                <img src="https://ui-avatars.com/api/?name=Store+A&background=random" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
+                            </div>
+                        </div>
+                        <span style="font-size:0.7rem; font-weight:600;">Promo 🔥</span>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
+                        <div style="width:65px; height:65px; background:linear-gradient(45deg, #f0932b, #e55039); padding:2px; border-radius:50%;">
+                            <div style="width:100%; height:100%; background:white; border-radius:50%; padding:2px;">
+                                <img src="https://ui-avatars.com/api/?name=Store+B&background=random" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
+                            </div>
+                        </div>
+                        <span style="font-size:0.7rem; font-weight:600;">Nouveauté</span>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
+                        <div style="width:65px; height:65px; background:#ddd; padding:2px; border-radius:50%;">
+                            <div style="width:100%; height:100%; background:white; border-radius:50%; padding:2px;">
+                                <img src="https://ui-avatars.com/api/?name=Store+C&background=random" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
+                            </div>
+                        </div>
+                        <span style="font-size:0.7rem; color:#777;">Vus</span>
+                    </div>
+                </div>
+                <div style="padding:15px; display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                    <div style="background:white; padding:10px; border-radius:15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                        <div style="height:120px; background:#f1f2f6; border-radius:10px; margin-bottom:10px; display:flex; align-items:center; justify-content:center; font-size:2rem;">👟</div>
+                        <div style="font-weight:bold; font-size:0.9rem; margin-bottom:2px;">Nike Air</div>
+                        <div style="color:#1f6d3a; font-weight:800; font-size:0.9rem;">25.000 F</div>
+                    </div>
+                    <div style="background:white; padding:10px; border-radius:15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                        <div style="height:120px; background:#f1f2f6; border-radius:10px; margin-bottom:10px; display:flex; align-items:center; justify-content:center; font-size:2rem;">👜</div>
+                        <div style="font-weight:bold; font-size:0.9rem; margin-bottom:2px;">Sac Cuir</div>
+                        <div style="color:#1f6d3a; font-weight:800; font-size:0.9rem;">12.000 F</div>
+                    </div>
+                    <div style="background:white; padding:10px; border-radius:15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                        <div style="height:120px; background:#f1f2f6; border-radius:10px; margin-bottom:10px; display:flex; align-items:center; justify-content:center; font-size:2rem;">🎧</div>
+                        <div style="font-weight:bold; font-size:0.9rem; margin-bottom:2px;">Casque Pro</div>
+                        <div style="color:#1f6d3a; font-weight:800; font-size:0.9rem;">8.500 F</div>
+                    </div>
+                    <div style="background:white; padding:10px; border-radius:15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                        <div style="height:120px; background:#f1f2f6; border-radius:10px; margin-bottom:10px; display:flex; align-items:center; justify-content:center; font-size:2rem;">⌚</div>
+                        <div style="font-weight:bold; font-size:0.9rem; margin-bottom:2px;">Watch 5</div>
+                        <div style="color:#1f6d3a; font-weight:800; font-size:0.9rem;">15.000 F</div>
+                    </div>
+                </div>
+                <div style="height:80px; flex-shrink: 0;"></div>
+            </div>
+            <div style="position:absolute; bottom:0; left:0; width:100%; height:70px; background:white; border-top:1px solid #f0f0f0; display:flex; justify-content:space-around; align-items:center; padding-bottom:15px; box-sizing:border-box; z-index: 15;">
+                <div style="color:#1f6d3a; font-size:1.5rem;">🏠</div>
+                <div style="color:#bdc3c7; font-size:1.5rem;">🔍</div>
+                <div style="width:50px; height:50px; background:#1f6d3a; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:1.2rem; margin-top:-20px; box-shadow: 0 5px 15px rgba(31, 109, 58, 0.3);">🛒</div>
+                <div style="color:#bdc3c7; font-size:1.5rem;">❤️</div>
+                <div style="color:#bdc3c7; font-size:1.5rem;">👤</div>
+            </div>
+    `;
+    mobileOverlay.appendChild(container);
+    document.body.appendChild(mobileOverlay);
+    
+    mobileOverlay.onclick = (e) => {
+        if(e.target === mobileOverlay) mobileOverlay.remove();
+    };
+  }
+
   const selectPlan = (plan) => {
     try {
       localStorage.setItem('mangoo-selected-plan', String(plan || 'free'));
@@ -405,239 +557,140 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
         </div>
 
         {/* Features Preview */}
-        <div id="features" className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl w-full animate-fadeIn scroll-mt-24" style={{ animationDelay: '0.2s' }}>
-          
-          {/* Live Shopping */}
-          <button 
-            onClick={() => {
-                // LIVE SHOPPING DEMO OVERLAY
-                const liveOverlay = document.createElement('div');
-                liveOverlay.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; animation: fadeIn 0.3s; padding: 20px; box-sizing: border-box;";
-                
-                // Add global close button for safety
-                const globalClose = document.createElement('button');
-                globalClose.innerHTML = "✕";
-                globalClose.style.cssText = "position:fixed; top:20px; right:20px; background:white; color:black; border:none; width:40px; height:40px; border-radius:50%; font-size:1.5rem; cursor:pointer; z-index:10002; display:flex; align-items:center; justify-content:center; box-shadow: 0 0 10px rgba(255,255,255,0.5);";
-                globalClose.onclick = () => liveOverlay.remove();
-                liveOverlay.appendChild(globalClose);
-
-                const container = document.createElement('div');
-                // Responsive Container Logic:
-                // Max height 85vh to ensure it fits on screen
-                // Aspect ratio preserved as much as possible, but flexible
-                container.style.cssText = "width:100%; max-width:400px; height:100%; max-height:85vh; aspect-ratio:9/19.5; background:#000; border-radius:30px; position:relative; overflow:hidden; box-shadow:0 0 50px rgba(0,0,0,0.5); border:4px solid #333; display: flex; flex-direction: column;";
-                
-                container.innerHTML = `
-                        <!-- Video Background Placeholder -->
-                        <div style="width:100%; height:100%; background:linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%); display:flex; align-items:center; justify-content:center; color:white; font-size:2rem; font-weight:bold; position:absolute; top:0; left:0; z-index:0;">
-                            🔴 LIVE MODE
-                        </div>
-                        
-                        <!-- UI Overlays -->
-                        <div style="position:absolute; top:40px; left:20px; display:flex; align-items:center; gap:10px; z-index:10;">
-                            <div style="background:red; color:white; padding:2px 8px; border-radius:5px; font-weight:bold; font-size:0.8rem;">🔴 EN DIRECT</div>
-                            <div style="background:rgba(0,0,0,0.5); color:white; padding:2px 8px; border-radius:5px; font-size:0.8rem;">👁️ 1.2k</div>
-                        </div>
-
-                        <!-- Comments -->
-                        <div style="position:absolute; bottom:120px; left:20px; width:250px; height:150px; overflow-y:hidden; display:flex; flex-direction:column; justify-content:flex-end; gap:5px; mask-image: linear-gradient(to top, black 80%, transparent 100%); z-index:10;">
-                            <div style="color:white; font-size:0.9rem; text-shadow:0 1px 2px black;"><b>Sophie:</b> Trop beau ! 😍</div>
-                            <div style="color:white; font-size:0.9rem; text-shadow:0 1px 2px black;"><b>Marc:</b> Le prix svp ?</div>
-                            <div style="color:white; font-size:0.9rem; text-shadow:0 1px 2px black;"><b>Julie:</b> Je valide la couleur ❤️</div>
-                        </div>
-
-                        <!-- Product Card -->
-                        <div style="position:absolute; bottom:20px; left:10px; right:10px; background:white; padding:10px; border-radius:15px; display:flex; align-items:center; gap:10px; animation: slideUp 0.5s; z-index:20;">
-                            <div style="width:50px; height:50px; background:#eee; border-radius:10px; display:flex; align-items:center; justify-content:center;">👗</div>
-                            <div style="flex:1;">
-                                <div style="font-weight:bold; font-size:0.9rem;">Robe d'été Fleurie</div>
-                                <div style="color:#e67e22; font-weight:bold;">15.000 FCFA</div>
-                            </div>
-                            <button style="background:#e67e22; color:white; border:none; padding:8px 15px; border-radius:20px; font-weight:bold;">Acheter</button>
-                        </div>
-                        
-                        <!-- Floating Hearts -->
-                        <div id="hearts-container" style="position:absolute; bottom:100px; right:20px; width:50px; height:200px; pointer-events:none; z-index:15;"></div>
-                `;
-                liveOverlay.appendChild(container);
-                document.body.appendChild(liveOverlay);
-                
-                // Close on backdrop click
-                liveOverlay.onclick = (e) => {
-                    if(e.target === liveOverlay) liveOverlay.remove();
-                };
-
-                const heartsContainer = document.getElementById('hearts-container');
-                const interval = setInterval(() => {
-                    if(!document.body.contains(liveOverlay)) { clearInterval(interval); return; }
-                    const heart = document.createElement('div');
-                    heart.innerText = ['❤️', '🔥', '😍', '👍'][Math.floor(Math.random() * 4)];
-                    heart.style.cssText = `position:absolute; bottom:0; right:${Math.random()*20}px; font-size:1.5rem; animation: floatUp 2s linear forwards; opacity:0;`;
-                    heartsContainer.appendChild(heart);
-                    setTimeout(() => heart.remove(), 2000);
-                }, 400);
-
-                // Add CSS for animations
-                const style = document.createElement('style');
-                style.innerHTML = `
-                    @keyframes floatUp { 0% { transform: translateY(0) scale(0.5); opacity:1; } 100% { transform: translateY(-200px) scale(1.5); opacity:0; } }
-                    @keyframes slideUp { from { transform: translateY(100px); } to { transform: translateY(0); } }
-                `;
-                liveOverlay.appendChild(style);
-            }}
-            className={`p-6 rounded-2xl shadow-sm border flex items-center gap-4 transition-all hover:scale-105 hover:shadow-lg text-left w-full ${isDark ? 'bg-gray-800 border-gray-700 hover:bg-gray-700' : 'bg-white border-gray-100 hover:bg-gray-50'}`}
-          >
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-600 shrink-0">
-              <Video className="w-6 h-6" />
+        <div id="features" className="mt-20 max-w-5xl w-full animate-fadeIn scroll-mt-24" style={{ animationDelay: '0.2s' }}>
+          <div className={`rounded-3xl border shadow-sm overflow-hidden ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+            <div role="tablist" aria-label="Fonctionnalités" className={`flex gap-2 p-3 overflow-x-auto whitespace-nowrap ${isDark ? 'bg-gray-900/30' : 'bg-gray-50'}`}>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeFeature === 'live'}
+                onClick={() => setActiveFeature('live')}
+                className={`${activeFeature === 'live' ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white' : isDark ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-white text-gray-700 hover:bg-gray-100'} px-4 py-2 rounded-full text-sm font-bold transition-colors flex items-center gap-2`}
+              >
+                <Video className="w-4 h-4" />
+                Live Shopping
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeFeature === 'chat'}
+                onClick={() => setActiveFeature('chat')}
+                className={`${activeFeature === 'chat' ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white' : isDark ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-white text-gray-700 hover:bg-gray-100'} px-4 py-2 rounded-full text-sm font-bold transition-colors flex items-center gap-2`}
+              >
+                <MessageCircle className="w-4 h-4" />
+                Chat intégré
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeFeature === 'mobile'}
+                onClick={() => setActiveFeature('mobile')}
+                className={`${activeFeature === 'mobile' ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white' : isDark ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-white text-gray-700 hover:bg-gray-100'} px-4 py-2 rounded-full text-sm font-bold transition-colors flex items-center gap-2`}
+              >
+                <Smartphone className="w-4 h-4" />
+                Mobile First
+              </button>
             </div>
-            <div>
-              <h3 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Live Shopping</h3>
-              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Vendez en direct vidéo</p>
+
+            <div className="p-6">
+              {activeFeature === 'live' && (
+                <div role="tabpanel" className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                  <div>
+                    <h3 className={`text-2xl font-extrabold ${isDark ? 'text-white' : 'text-gray-900'}`}>Live Shopping</h3>
+                    <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Vendez en direct vidéo et convertissez plus vite.</p>
+                    <ul className={`mt-4 space-y-2 text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      <li>✅ Présentation produit en temps réel</li>
+                      <li>✅ Questions/réponses pendant le live</li>
+                      <li>✅ Achat immédiat depuis la vidéo</li>
+                    </ul>
+                    <div className="mt-5 flex flex-col sm:flex-row gap-3">
+                      <button type="button" onClick={openLiveDemo} className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-5 py-3 rounded-xl font-black hover:shadow-lg transition-all">
+                        Voir une démo
+                      </button>
+                      <button type="button" onClick={() => onNavigate('marketplace')} className={`${isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'} px-5 py-3 rounded-xl font-black transition-colors`}>
+                        Découvrir
+                      </button>
+                    </div>
+                  </div>
+                  <div className={`rounded-2xl overflow-hidden border ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-100 bg-gray-50'}`}>
+                    <div className="aspect-video w-full flex items-center justify-center bg-gradient-to-br from-orange-200 to-green-200 text-gray-900 font-extrabold">
+                      Produits en direct
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeFeature === 'chat' && (
+                <div role="tabpanel" className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                  <div>
+                    <h3 className={`text-2xl font-extrabold ${isDark ? 'text-white' : 'text-gray-900'}`}>Chat intégré</h3>
+                    <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Répondez vite, rassurez, et concluez.</p>
+                    <ul className={`mt-4 space-y-2 text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      <li>✅ Discussion client ↔ vendeur en temps réel</li>
+                      <li>✅ Partage rapide (prix, photos, infos)</li>
+                      <li>✅ Support et suivi des commandes</li>
+                    </ul>
+                    <div className="mt-5 flex flex-col sm:flex-row gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          openChatWidget();
+                          setTimeout(() => {
+                            const messages = document.getElementById('chat-messages');
+                            if(messages) {
+                                const demoMsg = document.createElement('div');
+                                demoMsg.style.cssText = "background:white; color:#333; padding:10px 15px; border-radius:15px 15px 15px 0; max-width:80%; align-self:flex-start; box-shadow:0 2px 5px rgba(0,0,0,0.05); margin-top:10px; border-left: 3px solid #2ecc71;";
+                                demoMsg.innerHTML = "<b>Mode Démo :</b><br>Vous testez actuellement le Chat Intégré. C'est ici que vos clients vous contacteront en temps réel !";
+                                messages.appendChild(demoMsg);
+                                messages.scrollTop = messages.scrollHeight;
+                            }
+                          }, 400);
+                        }}
+                        className="bg-gradient-to-r from-green-600 to-emerald-700 text-white px-5 py-3 rounded-xl font-black hover:shadow-lg transition-all"
+                      >
+                        Tester le chat
+                      </button>
+                      <button type="button" onClick={() => onNavigate('marketplace')} className={`${isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'} px-5 py-3 rounded-xl font-black transition-colors`}>
+                        Découvrir
+                      </button>
+                    </div>
+                  </div>
+                  <div className={`rounded-2xl overflow-hidden border ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-100 bg-gray-50'}`}>
+                    <div className="aspect-video w-full flex items-center justify-center bg-gradient-to-br from-emerald-200 to-sky-200 text-gray-900 font-extrabold">
+                      Conversations clients
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeFeature === 'mobile' && (
+                <div role="tabpanel" className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                  <div>
+                    <h3 className={`text-2xl font-extrabold ${isDark ? 'text-white' : 'text-gray-900'}`}>Mobile First</h3>
+                    <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Pensé pour les connexions faibles et les petits écrans.</p>
+                    <ul className={`mt-4 space-y-2 text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      <li>✅ Navigation simple et rapide</li>
+                      <li>✅ Lisible sur tous les téléphones</li>
+                      <li>✅ Expérience fluide en mobilité</li>
+                    </ul>
+                    <div className="mt-5 flex flex-col sm:flex-row gap-3">
+                      <button type="button" onClick={openMobileDemo} className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-5 py-3 rounded-xl font-black hover:shadow-lg transition-all">
+                        Voir une démo
+                      </button>
+                      <button type="button" onClick={() => onNavigate('shops')} className={`${isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'} px-5 py-3 rounded-xl font-black transition-colors`}>
+                        Voir les boutiques
+                      </button>
+                    </div>
+                  </div>
+                  <div className={`rounded-2xl overflow-hidden border ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-100 bg-gray-50'}`}>
+                    <div className="aspect-video w-full flex items-center justify-center bg-gradient-to-br from-purple-200 to-pink-200 text-gray-900 font-extrabold">
+                      Produits & mobile
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </button>
-
-          {/* Chat Intégré */}
-          <button 
-            onClick={() => {
-                openChatWidget();
-                setTimeout(() => {
-                    const messages = document.getElementById('chat-messages');
-                    if(messages) {
-                        const demoMsg = document.createElement('div');
-                        demoMsg.style.cssText = "background:white; color:#333; padding:10px 15px; border-radius:15px 15px 15px 0; max-width:80%; align-self:flex-start; box-shadow:0 2px 5px rgba(0,0,0,0.05); margin-top:10px; border-left: 3px solid #2ecc71;";
-                        demoMsg.innerHTML = "<b>Mode Démo :</b><br>Vous testez actuellement le Chat Intégré. C'est ici que vos clients vous contacteront en temps réel !";
-                        messages.appendChild(demoMsg);
-                        messages.scrollTop = messages.scrollHeight;
-                    }
-                }, 500);
-            }}
-            className={`p-6 rounded-2xl shadow-sm border flex items-center gap-4 transition-all hover:scale-105 hover:shadow-lg text-left w-full ${isDark ? 'bg-gray-800 border-gray-700 hover:bg-gray-700' : 'bg-white border-gray-100 hover:bg-gray-50'}`}
-          >
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 shrink-0">
-              <MessageCircle className="w-6 h-6" />  
-            </div>
-            <div>
-              <h3 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Chat Intégré</h3>
-              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Discutez avec vos clients</p>
-            </div>
-          </button>
-
-          {/* Mobile First */}
-          <button 
-            onClick={() => {
-                // MOBILE DEMO MODAL
-                const mobileOverlay = document.createElement('div');
-                mobileOverlay.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; animation: fadeIn 0.3s; backdrop-filter: blur(5px); padding: 20px; box-sizing: border-box;";
-                
-                // Add global close button for safety
-                const globalClose = document.createElement('button');
-                globalClose.innerHTML = "✕";
-                globalClose.style.cssText = "position:fixed; top:20px; right:20px; background:white; color:black; border:none; width:40px; height:40px; border-radius:50%; font-size:1.5rem; cursor:pointer; z-index:10002; display:flex; align-items:center; justify-content:center; box-shadow: 0 0 10px rgba(0,0,0,0.2);";
-                globalClose.onclick = () => mobileOverlay.remove();
-                mobileOverlay.appendChild(globalClose);
-
-                const container = document.createElement('div');
-                // Responsive Container
-                container.style.cssText = "width:100%; max-width:340px; height:100%; max-height:85vh; aspect-ratio:9/19.5; background:white; border-radius:45px; border:8px solid #1a1a1a; overflow:hidden; position:relative; box-shadow:0 30px 60px rgba(0,0,0,0.4); display: flex; flex-direction: column;";
-
-                container.innerHTML = `
-                        <!-- Notch -->
-                        <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); width:120px; height:28px; background:#1a1a1a; border-radius:0 0 18px 18px; z-index:20;"></div>
-                        
-                        <!-- Mobile Screen Content -->
-                        <div style="flex:1; width:100%; overflow-y:auto; background:#f8f9fa; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; scrollbar-width: thin; display: flex; flex-direction: column;">
-                            <!-- Header -->
-                            <div style="background:#1f6d3a; color:white; padding:45px 20px 15px 20px; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position:sticky; top:0; z-index:10; flex-shrink: 0;">
-                                <div style="font-weight:800; font-size:1.1rem; letter-spacing:-0.5px;">Mangoo App</div>
-                                <div style="font-size:1.2rem;">🍔</div>
-                            </div>
-                            
-                            <!-- Stories -->
-                            <div style="padding:20px 0 10px 20px; display:flex; gap:15px; overflow-x:auto; scrollbar-width: none; flex-shrink: 0;">
-                                <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
-                                    <div style="width:65px; height:65px; background:linear-gradient(45deg, #f0932b, #e55039); padding:2px; border-radius:50%;">
-                                        <div style="width:100%; height:100%; background:white; border-radius:50%; padding:2px;">
-                                            <img src="https://ui-avatars.com/api/?name=Store+A&background=random" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
-                                        </div>
-                                    </div>
-                                    <span style="font-size:0.7rem; font-weight:600;">Promo 🔥</span>
-                                </div>
-                                <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
-                                    <div style="width:65px; height:65px; background:linear-gradient(45deg, #f0932b, #e55039); padding:2px; border-radius:50%;">
-                                        <div style="width:100%; height:100%; background:white; border-radius:50%; padding:2px;">
-                                            <img src="https://ui-avatars.com/api/?name=Store+B&background=random" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
-                                        </div>
-                                    </div>
-                                    <span style="font-size:0.7rem; font-weight:600;">Nouveauté</span>
-                                </div>
-                                <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
-                                    <div style="width:65px; height:65px; background:#ddd; padding:2px; border-radius:50%;">
-                                        <div style="width:100%; height:100%; background:white; border-radius:50%; padding:2px;">
-                                            <img src="https://ui-avatars.com/api/?name=Store+C&background=random" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
-                                        </div>
-                                    </div>
-                                    <span style="font-size:0.7rem; color:#777;">Vus</span>
-                                </div>
-                            </div>
-
-                            <!-- Product Grid -->
-                            <div style="padding:15px; display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-                                <!-- Product 1 -->
-                                <div style="background:white; padding:10px; border-radius:15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                                    <div style="height:120px; background:#f1f2f6; border-radius:10px; margin-bottom:10px; display:flex; align-items:center; justify-content:center; font-size:2rem;">👟</div>
-                                    <div style="font-weight:bold; font-size:0.9rem; margin-bottom:2px;">Nike Air</div>
-                                    <div style="color:#1f6d3a; font-weight:800; font-size:0.9rem;">25.000 F</div>
-                                </div>
-                                <!-- Product 2 -->
-                                <div style="background:white; padding:10px; border-radius:15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                                    <div style="height:120px; background:#f1f2f6; border-radius:10px; margin-bottom:10px; display:flex; align-items:center; justify-content:center; font-size:2rem;">👜</div>
-                                    <div style="font-weight:bold; font-size:0.9rem; margin-bottom:2px;">Sac Cuir</div>
-                                    <div style="color:#1f6d3a; font-weight:800; font-size:0.9rem;">12.000 F</div>
-                                </div>
-                                 <!-- Product 3 -->
-                                <div style="background:white; padding:10px; border-radius:15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                                    <div style="height:120px; background:#f1f2f6; border-radius:10px; margin-bottom:10px; display:flex; align-items:center; justify-content:center; font-size:2rem;">🎧</div>
-                                    <div style="font-weight:bold; font-size:0.9rem; margin-bottom:2px;">Casque Pro</div>
-                                    <div style="color:#1f6d3a; font-weight:800; font-size:0.9rem;">8.500 F</div>
-                                </div>
-                                <!-- Product 4 -->
-                                <div style="background:white; padding:10px; border-radius:15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                                    <div style="height:120px; background:#f1f2f6; border-radius:10px; margin-bottom:10px; display:flex; align-items:center; justify-content:center; font-size:2rem;">⌚</div>
-                                    <div style="font-weight:bold; font-size:0.9rem; margin-bottom:2px;">Watch 5</div>
-                                    <div style="color:#1f6d3a; font-weight:800; font-size:0.9rem;">15.000 F</div>
-                                </div>
-                            </div>
-                            <div style="height:80px; flex-shrink: 0;"></div> <!-- Spacer for bottom nav -->
-                        </div>
-                        
-                        <!-- Bottom Nav -->
-                        <div style="position:absolute; bottom:0; left:0; width:100%; height:70px; background:white; border-top:1px solid #f0f0f0; display:flex; justify-content:space-around; align-items:center; padding-bottom:15px; box-sizing:border-box; z-index: 15;">
-                            <div style="color:#1f6d3a; font-size:1.5rem;">🏠</div>
-                            <div style="color:#bdc3c7; font-size:1.5rem;">🔍</div>
-                            <div style="width:50px; height:50px; background:#1f6d3a; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:1.2rem; margin-top:-20px; box-shadow: 0 5px 15px rgba(31, 109, 58, 0.3);">🛒</div>
-                            <div style="color:#bdc3c7; font-size:1.5rem;">❤️</div>
-                            <div style="color:#bdc3c7; font-size:1.5rem;">👤</div>
-                        </div>
-                `;
-                mobileOverlay.appendChild(container);
-                document.body.appendChild(mobileOverlay);
-                
-                // Add close on click outside
-                mobileOverlay.onclick = (e) => {
-                    if(e.target === mobileOverlay) mobileOverlay.remove();
-                };
-            }}
-            className={`p-6 rounded-2xl shadow-sm border flex items-center gap-4 transition-all hover:scale-105 hover:shadow-lg text-left w-full ${isDark ? 'bg-gray-800 border-gray-700 hover:bg-gray-700' : 'bg-white border-gray-100 hover:bg-gray-50'}`}
-          >
-            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 shrink-0">
-              <Smartphone className="w-6 h-6" />      
-            </div>
-            <div>
-              <h3 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Mobile First</h3> 
-              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Optimisé pour tous les écrans</p>
-            </div>
-          </button>
-
+          </div>
         </div>
 
         {/* PRICING SECTION (Added for Pagination/Navigation) */}
