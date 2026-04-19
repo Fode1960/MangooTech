@@ -687,6 +687,30 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
           } catch {
           }
 
+          if (role === 'client') {
+            try {
+              const attempt = async (withOwnerEmail) => {
+                const q = supabase
+                  .from('shops')
+                  .select('id')
+                  .limit(1)
+                if (withOwnerEmail) return await q.or(`owner_email.eq.${normalizedEmail},email.eq.${normalizedEmail}`)
+                return await q.eq('email', normalizedEmail)
+              }
+              let r = await attempt(true)
+              if (r?.error) {
+                const msg = String(r.error.message || '').toLowerCase()
+                if (msg.includes('could not find') && msg.includes('owner_email')) r = await attempt(false)
+              }
+              const hasOwnedShop = Array.isArray(r?.data) && r.data.length > 0
+              if (hasOwnedShop) {
+                roles = Array.from(new Set([...roles, 'vendor']))
+                role = 'vendor'
+              }
+            } catch {
+            }
+          }
+
           const nextUser = {
             id: data.user.id,
             name: displayName,
@@ -1185,6 +1209,36 @@ const Register = ({ onRegister, onBack }) => {
       approvalStatus: canUseSupabase ? 'pending' : 'approved'
     };
 
+    const ensureAuthAccount = async () => {
+      try {
+        const normalizedEmail = String(email || '').trim().toLowerCase()
+        if (!normalizedEmail || !password) return false
+        const { error } = await supabase.auth.signUp({
+          email: normalizedEmail,
+          password,
+          options: {
+            data: {
+              full_name: String(name || '').trim() || normalizedEmail.split('@')[0] || 'Vendeur',
+              name: String(name || '').trim() || normalizedEmail.split('@')[0] || 'Vendeur',
+              user_type: 'vendor',
+              shop_name: String(shopName || '').trim(),
+            }
+          }
+        })
+        if (!error) return true
+        const msg = String(error.message || '').toLowerCase()
+        const alreadyExists = msg.includes('already') || msg.includes('exists') || msg.includes('registered')
+        if (alreadyExists) return true
+        throw error
+      } catch {
+        try {
+          toast.error('Création du compte de connexion impossible. Vérifiez l’email et réessayez.')
+        } catch {
+        }
+        return false
+      }
+    }
+
     const createInSupabase = async () => {
       try {
         const normalizedEmail = String(email || '').trim().toLowerCase()
@@ -1285,6 +1339,8 @@ const Register = ({ onRegister, onBack }) => {
     }
 
     if (canUseSupabase) {
+      const authReady = await ensureAuthAccount()
+      if (!authReady) return
       const ok = await createInSupabase()
       if (!ok) {
         try {
@@ -1860,9 +1916,41 @@ const ClientRegister = ({ onRegister, onBack }) => {
     }
 
     const consentTimestamp = new Date().toISOString();
+    const hasSupabase = Boolean(String(import.meta.env.VITE_SUPABASE_URL || '').trim()) && Boolean(String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim())
+    let authUserId = null
+
+    if (hasSupabase) {
+      try {
+        const { data, error: authError } = await supabase.auth.signUp({
+          email: normalizedEmail,
+          password,
+          options: {
+            data: {
+              full_name: String(name || '').trim() || normalizedEmail.split('@')[0] || 'Client',
+              name: String(name || '').trim() || normalizedEmail.split('@')[0] || 'Client',
+              user_type: 'client',
+              phone: String(phone || '').trim(),
+              address: String(address || '').trim(),
+            }
+          }
+        })
+        if (authError) {
+          const msg = String(authError.message || '').toLowerCase()
+          const alreadyExists = msg.includes('already') || msg.includes('exists') || msg.includes('registered')
+          setGeoLoading(false)
+          setError(alreadyExists ? 'Un compte existe déjà avec cet email' : 'Création du compte de connexion impossible')
+          return
+        }
+        authUserId = data?.user?.id || null
+      } catch {
+        setGeoLoading(false)
+        setError('Création du compte de connexion impossible')
+        return
+      }
+    }
 
     const newUser = {
-      id: Date.now(),
+      id: authUserId || Date.now(),
       name: name || normalizedEmail.split('@')[0],
       email: normalizedEmail,
       role: 'client',
