@@ -122,9 +122,110 @@
   </head>
   <body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
     <div id="root" style="min-height: 100vh; box-sizing:border-box;">
-      <div id="boot-fallback" style="max-width: 560px; width:100%; text-align:center; color:#374151; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 120px auto; padding: 0 24px; box-sizing:border-box;">
-        <div style="font-weight: 800; font-size: 18px; margin-bottom: 8px;">Chargement de MangooTech…</div>
-        <div style="font-size: 13px; opacity: 0.85;">Si cet écran reste affiché, l’application n’a pas démarré.</div>
+      <style>
+        #boot-fallback {
+          max-width: 560px;
+          width: 100%;
+          text-align: center;
+          color: #111827;
+          font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+          margin: 96px auto;
+          padding: 0 24px;
+          box-sizing: border-box;
+        }
+        html.dark #boot-fallback { color: #f9fafb; }
+        .boot-card {
+          border-radius: 24px;
+          padding: 22px 18px;
+          background: rgba(255, 255, 255, 0.92);
+          border: 1px solid rgba(17, 24, 39, 0.08);
+          box-shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
+          backdrop-filter: blur(8px);
+        }
+        html.dark .boot-card {
+          background: rgba(17, 24, 39, 0.65);
+          border: 1px solid rgba(255, 255, 255, 0.10);
+          box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+        }
+        .boot-brand {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 56px;
+          height: 56px;
+          border-radius: 16px;
+          background: linear-gradient(135deg, #f97316 0%, #10b981 100%);
+          color: #0b1220;
+          font-weight: 900;
+          letter-spacing: -0.02em;
+          font-size: 18px;
+          margin-bottom: 14px;
+          box-shadow: 0 14px 28px rgba(0, 0, 0, 0.12);
+        }
+        .boot-title {
+          font-weight: 900;
+          font-size: 18px;
+          margin: 0;
+        }
+        .boot-subtitle {
+          font-size: 13px;
+          opacity: 0.82;
+          margin: 6px 0 0 0;
+        }
+        .boot-row {
+          margin-top: 16px;
+          display: inline-flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .boot-spinner {
+          width: 34px;
+          height: 34px;
+          border-radius: 999px;
+          border: 3px solid rgba(249, 115, 22, 0.18);
+          border-top-color: #f97316;
+          border-right-color: #10b981;
+          animation: boot-spin 0.9s linear infinite;
+        }
+        .boot-dots {
+          display: inline-flex;
+          gap: 6px;
+        }
+        .boot-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 999px;
+          background: rgba(16, 185, 129, 0.9);
+          animation: boot-bounce 1.2s ease-in-out infinite;
+        }
+        .boot-dot:nth-child(2) { animation-delay: 0.12s; opacity: 0.85; }
+        .boot-dot:nth-child(3) { animation-delay: 0.24s; opacity: 0.7; }
+        @keyframes boot-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes boot-bounce {
+          0%, 80%, 100% { transform: translateY(0); }
+          40% { transform: translateY(-6px); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .boot-spinner, .boot-dot { animation: none; }
+        }
+      </style>
+      <div id="boot-fallback" role="status" aria-live="polite" aria-label="Chargement de MangooTech">
+        <div class="boot-card">
+          <div class="boot-brand">MT</div>
+          <p class="boot-title">Chargement de MangooTech</p>
+          <p class="boot-subtitle">Selon votre réseau (2G/3G/4G), cela peut prendre quelques secondes.</p>
+          <div class="boot-row" aria-hidden="true">
+            <div class="boot-spinner"></div>
+            <div class="boot-dots">
+              <span class="boot-dot"></span>
+              <span class="boot-dot"></span>
+              <span class="boot-dot"></span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <script type="module" src="./src/main.jsx"></script>
