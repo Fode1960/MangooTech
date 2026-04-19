@@ -46,7 +46,11 @@ const main = async () => {
   let cols = baseCols.slice()
   let lastError = null
   for (let i = 0; i < 8; i++) {
-    const r = await supabase.from('shops').select(cols.join(',')).order('created_at', { ascending: false })
+    const r = await supabase
+      .from('shops')
+      .select(cols.join(','))
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false })
     if (!r?.error) {
       await writeFile(outPath, JSON.stringify({ success: true, shops: Array.isArray(r?.data) ? r.data : [] }))
       return
@@ -67,4 +71,3 @@ main().catch(async (e) => {
   await writeFile(outPath, JSON.stringify({ success: false, shops: [], error: String(e?.message || e || 'server_error') }))
   process.exitCode = 0
 })
-
