@@ -4605,7 +4605,7 @@ const ShopsDirectory = () => {
         return await q
       }
 
-      let cols = ['id', 'name', 'slug', 'category', 'logo_url', 'status']
+      let cols = ['id', 'name', 'slug', 'category', 'logo_url', 'status', 'owner_email', 'email']
       let withOrder = false
       let r = null
 
