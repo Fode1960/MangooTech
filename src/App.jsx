@@ -5101,12 +5101,21 @@ const ShopsDirectory = () => {
           returnTo = ''
         }
         const safeReturn = returnTo.startsWith('/') ? returnTo : ''
-        if (!safeReturn) return null
+        const onBack = () => {
+          try {
+            if (window.history.length > 1) {
+              navigate(-1)
+              return
+            }
+          } catch {
+          }
+          navigate('/marketplace')
+        }
         return (
           <div className="flex items-center justify-between mb-4">
             <button
               type="button"
-              onClick={() => navigate(safeReturn)}
+              onClick={() => (safeReturn ? navigate(safeReturn) : onBack())}
               className={isDark ? 'px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 font-bold text-white' : 'px-4 py-2 rounded-xl bg-white hover:bg-gray-100 font-bold border border-gray-200'}
             >
               ← Retour
@@ -8367,9 +8376,9 @@ function AppShell() {
                     <span className="block">d’espace</span>
                   </button>
                 )}
-                {/* Bouton Local+ ajouté */}
                 <button
-                  onClick={() => setCurrentView('innovation')}
+                  type="button"
+                  onClick={() => goToClientView('innovation')}
                   className="flex-shrink-0 bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold hover:bg-green-200 transition-colors"
                 >
                   Local+
