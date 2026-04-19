@@ -8328,6 +8328,13 @@ function AppShell() {
                   <div className="flex items-center gap-2 flex-nowrap">
                     <button
                       type="button"
+                      onClick={() => navigate('/')}
+                      className={`${location.pathname === '/' ? 'bg-orange-500 text-white' : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} flex-shrink-0 px-3 py-1 rounded-full text-xs sm:text-sm font-bold transition-colors`}
+                    >
+                      Accueil
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => goToClientView('marketplace')}
                       className={`${currentView === 'marketplace' ? 'bg-orange-500 text-white' : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} flex-shrink-0 px-3 py-1 rounded-full text-xs sm:text-sm font-bold transition-colors`}
                     >
