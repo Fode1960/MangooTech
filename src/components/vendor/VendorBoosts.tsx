@@ -542,6 +542,8 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
     })
     setTargets(finalList)
     const exists = targetKey ? finalList.some((t) => `${t.vendorKind}:${t.vendorId}` === targetKey) : false
+    let nextSelected: VendorTarget | null =
+      (targetKey && exists ? finalList.find((t) => `${t.vendorKind}:${t.vendorId}` === targetKey) || null : null)
     if ((!targetKey || !exists) && finalList.length) {
       const currentMatch = currentUserShopTarget
         ? finalList.find((t) => t.vendorKind === currentUserShopTarget.vendorKind && t.vendorId === currentUserShopTarget.vendorId)
@@ -551,7 +553,9 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         : null
       const target = currentMatch || preferredMatch || finalList[0]
       setTargetKey(`${target.vendorKind}:${target.vendorId}`)
+      nextSelected = target
     }
+    return { list: finalList, selected: nextSelected }
   }, [currentUserShopTarget, preferredTargetKey, targetKey, userEmail])
 
   const getToken = useCallback(async () => {
@@ -668,7 +672,8 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
     setLoading(true)
     setError(null)
     try {
-      await computeTargets()
+      const computed = await computeTargets()
+      const effectiveTarget = computed?.selected || selectedTarget
 
       const token = await getToken()
 
@@ -714,10 +719,10 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
 
         if (!normalizedPricing.length) setPricing(fallbackPricing)
 
-        if (selectedTarget) {
+        if (effectiveTarget) {
           let row: VendorBoostRow | null = null
           try {
-            const qs = new URLSearchParams({ vendorId: selectedTarget.vendorId, vendorKind: selectedTarget.vendorKind })
+            const qs = new URLSearchParams({ vendorId: effectiveTarget.vendorId, vendorKind: effectiveTarget.vendorKind })
             const rowRes = await fetchJsonOnce(`/api/boosts/vendor-boosts?${qs.toString()}`, { method: 'GET' }, 6000)
             if (seq !== loadSeqRef.current) return
             if (rowRes.ok) row = (rowRes.json?.row || null) as VendorBoostRow | null
@@ -732,8 +737,8 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
               return Number.isFinite(n) && n > 0 ? new Date(n).toISOString() : null
             }
             row = {
-              vendor_id: String(selectedTarget.vendorId),
-              vendor_kind: String(selectedTarget.vendorKind),
+              vendor_id: String(effectiveTarget.vendorId),
+              vendor_kind: String(effectiveTarget.vendorKind),
               sponsored_until: toIso(cfg.sponsoredUntil),
               sponsored_tier: tierLabelFromNumber(cfg.sponsoredTier ?? null),
               promo_until: toIso(cfg.promoUntil),
@@ -749,17 +754,18 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         setBalanceStatus('ready')
         setBalanceXof(email ? readLocalCredits(email) : 0)
 
-        if (selectedTarget && email) {
+        if (effectiveTarget && email) {
           const all = readLocalOrders(email)
-          setOrders(all.filter((o) => String(o?.vendor_id || '') === String(selectedTarget.vendorId) && String(o?.vendor_kind || '') === String(selectedTarget.vendorKind)).slice(0, 50))
+          const aliases = await resolveShopAliases({ vendorId: effectiveTarget.vendorId, vendorKind: effectiveTarget.vendorKind, slug: effectiveTarget.slug || null, userEmail })
+          setOrders(all.filter((o) => String(o?.vendor_kind || '') === String(effectiveTarget.vendorKind) && aliases.vendorIds.includes(String(o?.vendor_id || ''))).slice(0, 50))
         } else {
           setOrders([])
         }
         return
       }
 
-      if (selectedTarget) {
-        const row = await loadBoostRowFromSupabase(selectedTarget.vendorId, selectedTarget.vendorKind)
+      if (effectiveTarget) {
+        const row = await loadBoostRowFromSupabase(effectiveTarget.vendorId, effectiveTarget.vendorKind)
         if (seq !== loadSeqRef.current) return
         setBoostRow(row)
       } else {
@@ -794,9 +800,9 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         setBalanceStatus('ready')
       }
 
-      if (selectedTarget) {
+      if (effectiveTarget) {
         try {
-          const qs = new URLSearchParams({ vendorId: selectedTarget.vendorId, vendorKind: selectedTarget.vendorKind })
+          const qs = new URLSearchParams({ vendorId: effectiveTarget.vendorId, vendorKind: effectiveTarget.vendorKind })
           const ordersRes = await fetchJsonOnce(
             `/api/boosts/my-orders?${qs.toString()}`,
             { method: 'GET', headers: { Authorization: `Bearer ${token}` } },
@@ -807,20 +813,20 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
             const rows = Array.isArray(ordersRes.json?.orders) ? ordersRes.json.orders : []
             const email = String(userEmail || '').trim().toLowerCase()
             const local = email ? readLocalOrders(email) : []
-            const aliases = await resolveShopAliases({ vendorId: selectedTarget.vendorId, vendorKind: selectedTarget.vendorKind, slug: selectedTarget.slug || null, userEmail })
+            const aliases = await resolveShopAliases({ vendorId: effectiveTarget.vendorId, vendorKind: effectiveTarget.vendorKind, slug: effectiveTarget.slug || null, userEmail })
             const filteredLocal = local.filter((o) => {
-              if (String(o?.vendor_kind || '') !== String(selectedTarget.vendorKind)) return false
+              if (String(o?.vendor_kind || '') !== String(effectiveTarget.vendorKind)) return false
               const id = String(o?.vendor_id || '')
               return aliases.vendorIds.includes(id)
             })
             setOrders(mergeOrders(rows as BoostOrder[], filteredLocal))
           } else {
-            const remote = await loadOrdersFromSupabase(selectedTarget.vendorId, selectedTarget.vendorKind)
+            const remote = await loadOrdersFromSupabase(effectiveTarget.vendorId, effectiveTarget.vendorKind)
             const email = String(userEmail || '').trim().toLowerCase()
             const local = email ? readLocalOrders(email) : []
-            const aliases = await resolveShopAliases({ vendorId: selectedTarget.vendorId, vendorKind: selectedTarget.vendorKind, slug: selectedTarget.slug || null, userEmail })
+            const aliases = await resolveShopAliases({ vendorId: effectiveTarget.vendorId, vendorKind: effectiveTarget.vendorKind, slug: effectiveTarget.slug || null, userEmail })
             const filteredLocal = local.filter((o) => {
-              if (String(o?.vendor_kind || '') !== String(selectedTarget.vendorKind)) return false
+              if (String(o?.vendor_kind || '') !== String(effectiveTarget.vendorKind)) return false
               const id = String(o?.vendor_id || '')
               return aliases.vendorIds.includes(id)
             })
@@ -828,12 +834,12 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
           }
         } catch {
           if (seq !== loadSeqRef.current) return
-          const remote = await loadOrdersFromSupabase(selectedTarget.vendorId, selectedTarget.vendorKind)
+          const remote = await loadOrdersFromSupabase(effectiveTarget.vendorId, effectiveTarget.vendorKind)
           const email = String(userEmail || '').trim().toLowerCase()
           const local = email ? readLocalOrders(email) : []
-          const aliases = await resolveShopAliases({ vendorId: selectedTarget.vendorId, vendorKind: selectedTarget.vendorKind, slug: selectedTarget.slug || null, userEmail })
+          const aliases = await resolveShopAliases({ vendorId: effectiveTarget.vendorId, vendorKind: effectiveTarget.vendorKind, slug: effectiveTarget.slug || null, userEmail })
           const filteredLocal = local.filter((o) => {
-            if (String(o?.vendor_kind || '') !== String(selectedTarget.vendorKind)) return false
+            if (String(o?.vendor_kind || '') !== String(effectiveTarget.vendorKind)) return false
             const id = String(o?.vendor_id || '')
             return aliases.vendorIds.includes(id)
           })
@@ -856,6 +862,21 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
     if (!selectedTarget) return
     load()
   }, [selectedTarget?.vendorId, selectedTarget?.vendorKind])
+
+  useEffect(() => {
+    const refresh = () => void load()
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') refresh()
+    }
+    window.addEventListener('focus', refresh)
+    window.addEventListener('mangoo-boosts-updated', refresh)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.removeEventListener('focus', refresh)
+      window.removeEventListener('mangoo-boosts-updated', refresh)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [load])
 
   useEffect(() => {
     try {

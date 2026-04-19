@@ -4922,13 +4922,21 @@ const ShopsDirectory = () => {
     const vendorId = String(shop?.vendorId || '').trim()
     const vendorKind = String(shop?.vendorKind || 'shop').trim().toLowerCase()
     if (vendorId && (vendorKind === 'shop' || vendorKind === 'provider')) {
-      return boostIndex.get(`${vendorKind}:${vendorId}`) || boostIndex.get(vendorId) || null
+      const exact = boostIndex.get(`${vendorKind}:${vendorId}`) || boostIndex.get(vendorId) || null
+      if (exact) return exact
     }
 
     const ownerEmail = String(shop?.ownerEmail || shop?.owner_email || '').trim().toLowerCase()
     if (ownerEmail) {
       const localId = `local-${ownerEmail}`
-      return boostIndex.get(`shop:${localId}`) || boostIndex.get(localId) || null
+      const localMatch = boostIndex.get(`shop:${localId}`) || boostIndex.get(localId) || null
+      if (localMatch) return localMatch
+    }
+
+    const slug = String(shop?.slug || '').trim()
+    if (slug) {
+      const bySlug = boostIndex.get(`shop:${slug}`) || boostIndex.get(slug) || null
+      if (bySlug) return bySlug
     }
 
     const fallbackId = String(shop?.id || '').trim()
