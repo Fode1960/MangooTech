@@ -7337,11 +7337,47 @@ function AppShell() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
+  const pathToClientView = useCallback((pathname, hasUser = false) => {
+    const path = String(pathname || '').trim()
+    if (path === '/marketplace') return 'marketplace'
+    if (path === '/account') return 'account'
+    if (path === '/shops' || path === '/boutiques') return 'shops'
+    if (path === '/localplus') return 'innovation'
+    if (path === '/') return hasUser ? 'marketplace' : 'landing'
+    return null
+  }, [])
+  const clientViewToPath = useCallback((view) => {
+    if (view === 'marketplace') return '/marketplace'
+    if (view === 'account') return '/account'
+    if (view === 'shops') return '/shops'
+    if (view === 'innovation') return '/localplus'
+    return '/'
+  }, [])
   const [initialState] = useState(() => {
+    const currentPath = (() => {
+      try {
+        return String(window.location.pathname || '/')
+      } catch {
+        return '/'
+      }
+    })()
     let view = 'landing';
+    let storedUser = null
     try {
+      const rawUser = localStorage.getItem('mangoo-current-user');
+      storedUser = rawUser ? JSON.parse(rawUser) : null;
       const stored = localStorage.getItem('mangoo-last-view');
-      if (stored === 'landing' || stored === 'marketplace' || stored === 'shops' || stored === 'account') {
+      const routeView =
+        currentPath === '/marketplace' ? 'marketplace'
+        : currentPath === '/account' ? 'account'
+        : currentPath === '/shops' || currentPath === '/boutiques' ? 'shops'
+        : currentPath === '/localplus' ? 'innovation'
+        : null
+      if (routeView) {
+        view = routeView
+      } else if (currentPath === '/') {
+        view = storedUser?.role ? 'marketplace' : 'landing'
+      } else if (stored === 'landing' || stored === 'marketplace' || stored === 'shops' || stored === 'account') {
         view = stored;
       }
       if (stored === 'innovation') {
@@ -7422,6 +7458,13 @@ function AppShell() {
       navigate('/reset-password', { replace: true })
     }
   }, [location.pathname, navigate])
+
+  useEffect(() => {
+    if (location.pathname === '/reset-password' || location.pathname === '/connexion' || location.pathname === '/boosts') return
+    const derivedView = pathToClientView(location.pathname, Boolean(user))
+    if (!derivedView) return
+    setCurrentView((prev) => (prev === derivedView ? prev : derivedView))
+  }, [location.pathname, pathToClientView, user])
 
   useEffect(() => {
     try {
@@ -7986,8 +8029,10 @@ function AppShell() {
 
     if (role === 'client') {
       setCurrentView('marketplace');
+      navigate('/marketplace');
     } else if (role === 'prestataire') {
       setCurrentView('innovation');
+      navigate('/localplus');
     } else if (role === 'livreur') {
       navigate('/livreur');
     }
@@ -8144,20 +8189,33 @@ function AppShell() {
     return <MangooLocalFrame user={user} onBack={handleBackFromLocal} />;
   }
 
+  const goToClientView = useCallback((view) => {
+    const nextPath = clientViewToPath(view)
+    setCurrentView(view)
+    navigate(nextPath)
+  }, [clientViewToPath, navigate])
+
   if (!user) {
     return (
       <LandingPage 
         onNavigate={(view) => {
-          if (view === 'marketplace' || view === 'shops') {
+          if (view === 'marketplace') {
             handleLogin({ role: 'client', name: 'Invité', avatar: '👤', email: 'guest@mangoo.tech' });
-            setCurrentView(view);
+            setCurrentView('marketplace');
+            navigate('/marketplace');
+            return;
+          }
+          if (view === 'shops') {
+            navigate('/shops');
             return;
           }
           if (view === 'innovation') {
             setCurrentView('innovation');
+            navigate('/localplus');
             return;
           }
           setCurrentView(view);
+          navigate('/');
         }} 
         onLogin={setUser} 
       />
@@ -8196,16 +8254,23 @@ function AppShell() {
       return (
         <LandingPage
           onNavigate={(view) => {
-            if (view === 'marketplace' || view === 'shops') {
+            if (view === 'marketplace') {
               handleLogin({ role: 'client', name: 'Invité', avatar: '👤', email: 'guest@mangoo.tech' });
-              setCurrentView(view);
+              setCurrentView('marketplace');
+              navigate('/marketplace');
+              return;
+            }
+            if (view === 'shops') {
+              navigate('/shops');
               return;
             }
             if (view === 'innovation') {
               setCurrentView('innovation');
+              navigate('/localplus');
               return;
             }
             setCurrentView(view);
+            navigate('/');
           }}
           onLogin={(u) => {
             if (!u) {
@@ -8247,14 +8312,14 @@ function AppShell() {
                   <div className="flex items-center gap-2 flex-nowrap">
                     <button
                       type="button"
-                      onClick={() => setCurrentView('marketplace')}
+                      onClick={() => goToClientView('marketplace')}
                       className={`${currentView === 'marketplace' ? 'bg-orange-500 text-white' : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} flex-shrink-0 px-3 py-1 rounded-full text-xs sm:text-sm font-bold transition-colors`}
                     >
                       Marketplace
                     </button>
                     <button
                       type="button"
-                      onClick={() => setCurrentView('shops')}
+                      onClick={() => goToClientView('shops')}
                       className={`${currentView === 'shops' ? 'bg-orange-500 text-white' : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} flex-shrink-0 px-3 py-1 rounded-full text-xs sm:text-sm font-bold transition-colors`}
                     >
                       Boutiques
@@ -8269,7 +8334,7 @@ function AppShell() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setCurrentView('account')}
+                      onClick={() => goToClientView('account')}
                       className={`${currentView === 'account' ? 'bg-orange-500 text-white' : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} flex-shrink-0 px-3 py-1 rounded-full text-xs sm:text-sm font-black transition-colors whitespace-nowrap`}
                     >
                       Mon compte
