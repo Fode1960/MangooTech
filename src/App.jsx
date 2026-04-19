@@ -4643,7 +4643,7 @@ const ShopsDirectory = () => {
         return
       }
 
-      const mapped = data
+      let mapped = data
         .filter((s) => s?.id && s?.slug)
         .map((s) => ({
           id: `supabase-${s.id}`,
@@ -4658,6 +4658,42 @@ const ShopsDirectory = () => {
           vendorKind: 'shop',
           source: 'supabase',
         }))
+
+      try {
+        const ids = mapped.map((s) => String(s.vendorId || '').trim()).filter(Boolean)
+        if (ids.length) {
+          const enrichAttempt = async (cols) => {
+            return await supabase
+              .from('shops')
+              .select(cols.join(','))
+              .in('id', ids)
+              .limit(ids.length)
+          }
+          let extra = await enrichAttempt(['id', 'slug', 'name', 'category', 'logo_url', 'owner_email', 'email'])
+          if (extra?.error) {
+            const msg = String(extra.error.message || '').toLowerCase()
+            if (msg.includes('could not find') && msg.includes('owner_email')) {
+              extra = await enrichAttempt(['id', 'slug', 'name', 'category', 'logo_url', 'email'])
+            }
+          }
+          if (!extra?.error && Array.isArray(extra?.data)) {
+            const byId = new Map(extra.data.map((row) => [String(row?.id || '').trim(), row]))
+            mapped = mapped.map((shop) => {
+              const row = byId.get(String(shop.vendorId || '').trim())
+              if (!row) return shop
+              return {
+                ...shop,
+                name: row?.name || shop.name,
+                slug: row?.slug || shop.slug,
+                category: row?.category || shop.category,
+                logoDataUrl: row?.logo_url || shop.logoDataUrl,
+                ownerEmail: String(row?.owner_email || row?.email || shop.ownerEmail || '').trim().toLowerCase(),
+              }
+            })
+          }
+        }
+      } catch {
+      }
 
       setSupabaseShops(mapped)
     } catch {
