@@ -25,6 +25,26 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
     return false;
   });
   const [activeFeature, setActiveFeature] = React.useState('live')
+  const stockMedia = React.useMemo(() => {
+    const img = (id) => `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=1400`
+    return {
+      live: {
+        primary: img('167703'),
+        secondary: img('8283211'),
+        tertiary: img('5386592'),
+        video1: 'https://www.pexels.com/video/a-person-browsing-the-internet-with-a-cellphone-while-holding-a-credit-card-6898100/',
+        video2: 'https://www.pexels.com/video/browsing-an-online-store-5585939/',
+      },
+      chat: {
+        primary: img('9154413'),
+        secondary: img('14979022'),
+      },
+      mobile: {
+        primary: img('4104847'),
+        secondary: img('8283211'),
+      }
+    }
+  }, [])
 
   const openChatWidget = () => {
     // Prevent multiple widgets
@@ -607,14 +627,49 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                       <button type="button" onClick={openLiveDemo} className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-5 py-3 rounded-xl font-black hover:shadow-lg transition-all">
                         Voir une démo
                       </button>
+                      <a
+                        href={stockMedia.live.video1}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={`${isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'} px-5 py-3 rounded-xl font-black transition-colors text-center`}
+                      >
+                        Voir une vidéo
+                      </a>
                       <button type="button" onClick={() => onNavigate('marketplace')} className={`${isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'} px-5 py-3 rounded-xl font-black transition-colors`}>
                         Découvrir
                       </button>
                     </div>
                   </div>
                   <div className={`rounded-2xl overflow-hidden border ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-100 bg-gray-50'}`}>
-                    <div className="aspect-video w-full flex items-center justify-center bg-gradient-to-br from-orange-200 to-green-200 text-gray-900 font-extrabold">
-                      Produits en direct
+                    <div className="aspect-video w-full grid grid-cols-3 gap-0">
+                      <div className="col-span-2 h-full">
+                        <img
+                          src={stockMedia.live.primary}
+                          alt="Produit (démo)"
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="col-span-1 h-full grid grid-rows-2">
+                        <img
+                          src={stockMedia.live.secondary}
+                          alt="Produit (démo)"
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover"
+                        />
+                        <img
+                          src={stockMedia.live.tertiary}
+                          alt="Produit (démo)"
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
+                    <div className={`px-4 py-3 text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                      Images de démonstration (stock)
                     </div>
                   </div>
                 </div>
@@ -656,8 +711,24 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                     </div>
                   </div>
                   <div className={`rounded-2xl overflow-hidden border ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-100 bg-gray-50'}`}>
-                    <div className="aspect-video w-full flex items-center justify-center bg-gradient-to-br from-emerald-200 to-sky-200 text-gray-900 font-extrabold">
-                      Conversations clients
+                    <div className="aspect-video w-full grid grid-cols-2">
+                      <img
+                        src={stockMedia.chat.primary}
+                        alt="Produit (démo)"
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-cover"
+                      />
+                      <img
+                        src={stockMedia.chat.secondary}
+                        alt="Produit (démo)"
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className={`px-4 py-3 text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                      Images de démonstration (stock)
                     </div>
                   </div>
                 </div>
@@ -683,8 +754,28 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                     </div>
                   </div>
                   <div className={`rounded-2xl overflow-hidden border ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-100 bg-gray-50'}`}>
-                    <div className="aspect-video w-full flex items-center justify-center bg-gradient-to-br from-purple-200 to-pink-200 text-gray-900 font-extrabold">
-                      Produits & mobile
+                    <div className="aspect-video w-full grid grid-cols-3">
+                      <div className="col-span-2">
+                        <img
+                          src={stockMedia.mobile.primary}
+                          alt="Marché local (démo)"
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="col-span-1">
+                        <img
+                          src={stockMedia.mobile.secondary}
+                          alt="Produit (démo)"
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
+                    <div className={`px-4 py-3 text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                      Images de démonstration (stock)
                     </div>
                   </div>
                 </div>
