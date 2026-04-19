@@ -7,6 +7,55 @@ const readBool = (value) => {
   return null
 }
 
+const parseMs = (value) => {
+  if (!value) return 0
+  const raw = String(value)
+  let t = Date.parse(raw)
+  if (Number.isFinite(t)) return t
+  try {
+    const normalized = raw
+      .replace(' ', 'T')
+      .replace(/\.(\d{3})\d+/, '.$1')
+      .replace(/\+00$/, 'Z')
+    t = Date.parse(normalized)
+    return Number.isFinite(t) ? t : 0
+  } catch {
+    return 0
+  }
+}
+
+const mergeActiveRows = (...groups) => {
+  const map = new Map()
+  for (const group of groups) {
+    for (const row of Array.isArray(group) ? group : []) {
+      const vendorId = String(row?.vendor_id || '').trim()
+      const vendorKind = String(row?.vendor_kind || '').trim().toLowerCase()
+      if (!vendorId || (vendorKind !== 'shop' && vendorKind !== 'provider')) continue
+      const key = `${vendorKind}:${vendorId}`
+      const prev = map.get(key)
+      if (!prev) {
+        map.set(key, row)
+        continue
+      }
+      const nextSponsored = parseMs(row?.sponsored_until)
+      const prevSponsored = parseMs(prev?.sponsored_until)
+      const nextPromo = parseMs(row?.promo_until)
+      const prevPromo = parseMs(prev?.promo_until)
+      const nextNew = parseMs(row?.new_until)
+      const prevNew = parseMs(prev?.new_until)
+      const nextUpdated = parseMs(row?.updated_at)
+      const prevUpdated = parseMs(prev?.updated_at)
+      const shouldReplace =
+        nextSponsored > prevSponsored ||
+        nextPromo > prevPromo ||
+        nextNew > prevNew ||
+        nextUpdated > prevUpdated
+      if (shouldReplace) map.set(key, { ...prev, ...row })
+    }
+  }
+  return Array.from(map.values())
+}
+
 export const getBoostDiscoveryFlags = () => {
   let vitrine = readBool(import.meta.env.VITE_BOOST_VITRINE)
   let promo = readBool(import.meta.env.VITE_BOOST_PROMO)
@@ -62,6 +111,8 @@ export const getBoostDiscoveryFlags = () => {
 }
 
 export const fetchActiveBoostRows = async ({ timeoutMs = 6000 } = {}) => {
+  const cachedRows = readBoostActiveCacheRows()
+  const configRows = readBoostConfigCacheRows()
   const host = (() => {
     try {
       return String(window.location.hostname || '')
@@ -79,11 +130,12 @@ export const fetchActiveBoostRows = async ({ timeoutMs = 6000 } = {}) => {
       const json = await res.json().catch(() => null)
       const rows = Array.isArray(json?.rows) ? json.rows : []
       if (rows.length) {
+        const merged = mergeActiveRows(rows, cachedRows, configRows)
         try {
-          localStorage.setItem('mangoo_boost_active_cache_rows', JSON.stringify(rows))
+          localStorage.setItem('mangoo_boost_active_cache_rows', JSON.stringify(merged))
         } catch {
         }
-        return rows
+        return merged
       }
     } catch {
     } finally {
@@ -113,11 +165,12 @@ export const fetchActiveBoostRows = async ({ timeoutMs = 6000 } = {}) => {
       }
 
       if (!r?.error && Array.isArray(r?.data)) {
+        const merged = mergeActiveRows(r.data, cachedRows, configRows)
         try {
-          localStorage.setItem('mangoo_boost_active_cache_rows', JSON.stringify(r.data))
+          localStorage.setItem('mangoo_boost_active_cache_rows', JSON.stringify(merged))
         } catch {
         }
-        return r.data
+        return merged
       }
     } catch {
     } finally {
@@ -132,18 +185,17 @@ export const fetchActiveBoostRows = async ({ timeoutMs = 6000 } = {}) => {
     const json = await res.json().catch(() => null)
     const rows = Array.isArray(json?.rows) ? json.rows : []
     if (rows.length) {
+      const merged = mergeActiveRows(rows, cachedRows, configRows)
       try {
-        localStorage.setItem('mangoo_boost_active_cache_rows', JSON.stringify(rows))
+        localStorage.setItem('mangoo_boost_active_cache_rows', JSON.stringify(merged))
       } catch {
       }
-      return rows
+      return merged
     }
     try {
-      const raw = localStorage.getItem('mangoo_boost_active_cache_rows')
-      const parsed = raw ? JSON.parse(raw) : []
-      return Array.isArray(parsed) ? parsed : []
+      return mergeActiveRows(cachedRows, configRows)
     } catch {
-      return []
+      return configRows
     }
   } finally {
     window.clearTimeout(t)
@@ -192,29 +244,13 @@ export const readBoostActiveCacheRows = () => {
 export const indexActiveBoosts = (rows) => {
   const map = new Map()
   const now = Date.now()
-  const toMs = (iso) => {
-    if (!iso) return 0
-    const raw = String(iso)
-    let t = Date.parse(raw)
-    if (Number.isFinite(t)) return t
-    try {
-      const normalized = raw
-        .replace(' ', 'T')
-        .replace(/\.(\d{3})\d+/, '.$1')
-        .replace(/\+00$/, 'Z')
-      t = Date.parse(normalized)
-      return Number.isFinite(t) ? t : 0
-    } catch {
-      return 0
-    }
-  }
   ;(Array.isArray(rows) ? rows : []).forEach((r) => {
     const vendorId = String(r?.vendor_id || '').trim()
     const vendorKind = String(r?.vendor_kind || '').trim().toLowerCase()
     if (!vendorId || (vendorKind !== 'shop' && vendorKind !== 'provider')) return
-    const sponsoredUntilMs = toMs(r?.sponsored_until)
-    const promoUntilMs = toMs(r?.promo_until)
-    const newUntilMs = toMs(r?.new_until)
+    const sponsoredUntilMs = parseMs(r?.sponsored_until)
+    const promoUntilMs = parseMs(r?.promo_until)
+    const newUntilMs = parseMs(r?.new_until)
     if (!(sponsoredUntilMs > now || promoUntilMs > now || newUntilMs > now)) return
     map.set(`${vendorKind}:${vendorId}`, {
       vendorId,
