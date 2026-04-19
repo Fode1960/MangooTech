@@ -8126,6 +8126,40 @@ function AppShell() {
   // Ensure currentView is never undefined or null
   const safeCurrentView = currentView || 'landing';
 
+  const goToClientView = useCallback((view) => {
+    const nextPath = clientViewToPath(view)
+    setCurrentView(view)
+    navigate(nextPath)
+  }, [clientViewToPath, navigate])
+
+  const handleLandingNavigate = useCallback((view) => {
+    if (view === 'marketplace') {
+      if (user) {
+        goToClientView('marketplace')
+      } else {
+        handleLogin({ role: 'client', name: 'Invité', avatar: '👤', email: 'guest@mangoo.tech' });
+        setCurrentView('marketplace');
+        navigate('/marketplace');
+      }
+      return;
+    }
+    if (view === 'shops') {
+      if (user) {
+        goToClientView('shops')
+      } else {
+        navigate('/shops');
+      }
+      return;
+    }
+    if (view === 'innovation') {
+      setCurrentView('innovation');
+      navigate('/localplus');
+      return;
+    }
+    setCurrentView('landing');
+    navigate('/');
+  }, [goToClientView, handleLogin, navigate, user])
+
   if (location.pathname === '/boosts') {
     const returnTo = String(boostsParams.get('return') || '')
     return (
@@ -8196,40 +8230,6 @@ function AppShell() {
       </div>
     )
   }
-
-  const goToClientView = useCallback((view) => {
-    const nextPath = clientViewToPath(view)
-    setCurrentView(view)
-    navigate(nextPath)
-  }, [clientViewToPath, navigate])
-
-  const handleLandingNavigate = useCallback((view) => {
-    if (view === 'marketplace') {
-      if (user) {
-        goToClientView('marketplace')
-      } else {
-        handleLogin({ role: 'client', name: 'Invité', avatar: '👤', email: 'guest@mangoo.tech' });
-        setCurrentView('marketplace');
-        navigate('/marketplace');
-      }
-      return;
-    }
-    if (view === 'shops') {
-      if (user) {
-        goToClientView('shops')
-      } else {
-        navigate('/shops');
-      }
-      return;
-    }
-    if (view === 'innovation') {
-      setCurrentView('innovation');
-      navigate('/localplus');
-      return;
-    }
-    setCurrentView('landing');
-    navigate('/');
-  }, [goToClientView, handleLogin, navigate, user])
 
   // 1. Mangoo Local+ (Map Interface via iframe DIRECTEMENT)
   if (safeCurrentView === 'innovation') {
