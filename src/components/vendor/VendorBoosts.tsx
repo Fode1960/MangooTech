@@ -1005,9 +1005,13 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
               JSON.stringify({
                 vendorId: String(selectedTarget.vendorId),
                 vendorKind: String(selectedTarget.vendorKind),
+                vendorName: String(selectedTarget.name || ''),
+                shopSlug: String((selectedTarget as any)?.slug || ''),
                 kind: p.kind,
                 durationHours: Number(p.durationHours),
                 sponsoredTier: Number((p as any)?.sponsoredTier || 0) || null,
+                amountXof: Number(p.priceXof || 0),
+                currency: String(p.currency || 'XOF'),
                 savedAt: Date.now(),
               })
             )
