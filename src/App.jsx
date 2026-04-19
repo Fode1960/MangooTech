@@ -4498,23 +4498,47 @@ const ShopsDirectory = () => {
         }
       }
 
-      const attempt = async (selectCols) => {
-        return await supabase
-          .from('shops')
-          .select(selectCols)
-          .order('created_at', { ascending: false })
+      const parseMissingColumn = (message) => {
+        const msg = String(message || '')
+        const m1 = msg.match(/could not find the '([^']+)' column/i)
+        if (m1?.[1]) return m1[1]
+        const m2 = msg.match(/column "([^"]+)" does not exist/i)
+        if (m2?.[1]) return m2[1]
+        return ''
       }
 
-      let r = await attempt('id,name,slug,category,logo_url,status,created_at,updated_at,owner_email,email')
-      if (r?.error) {
-        const msg = String(r.error.message || '').toLowerCase()
-        const missingOwnerEmail = msg.includes('could not find') && msg.includes('owner_email')
-        if (missingOwnerEmail) r = await attempt('id,name,slug,category,logo_url,status,created_at,updated_at,email')
+      const trySelect = async (cols, withOrder = true) => {
+        let q = supabase
+          .from('shops')
+          .select(cols.join(','))
+          .eq('status', 'approved')
+
+        if (withOrder) q = q.order('created_at', { ascending: false })
+        return await q
       }
-      if (r?.error) {
-        const msg = String(r.error.message || '').toLowerCase()
-        const missingEmail = msg.includes('could not find') && msg.includes('email')
-        if (missingEmail) r = await attempt('id,name,slug,category,logo_url,status,created_at,updated_at')
+
+      let cols = ['id', 'name', 'slug', 'category', 'logo_url', 'status', 'created_at', 'updated_at', 'owner_email', 'email']
+      let withOrder = true
+      let r = null
+
+      for (let i = 0; i < 10; i++) {
+        r = await trySelect(cols, withOrder)
+        if (!r?.error) break
+
+        const msg = String(r.error.message || '')
+        const missing = parseMissingColumn(msg)
+        if (missing && cols.includes(missing)) {
+          cols = cols.filter((c) => c !== missing)
+          continue
+        }
+
+        const lower = msg.toLowerCase()
+        const orderIssue = lower.includes('created_at') && (lower.includes('order') || lower.includes('sort'))
+        if (withOrder && orderIssue) {
+          withOrder = false
+          continue
+        }
+        break
       }
 
       const data = r?.data
