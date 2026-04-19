@@ -380,11 +380,39 @@ function readJson<T>(key: string, fallback: T): T {
 }
 
 export function VendorBoosts({ userEmail }: { userEmail: string }) {
-  const [targets, setTargets] = useState<VendorTarget[]>([])
-  const [targetKey, setTargetKey] = useState('')
-  const [pricing, setPricing] = useState<PricingProduct[]>([])
-  const [balanceXof, setBalanceXof] = useState<number | null>(null)
-  const [balanceStatus, setBalanceStatus] = useState<'loading' | 'ready' | 'error'>('loading')
+  const initialEmail = String(userEmail || '').trim().toLowerCase()
+  const [targets, setTargets] = useState<VendorTarget[]>(() => {
+    if (!initialEmail) return []
+    try {
+      const raw = localStorage.getItem('mangoo-current-user')
+      const parsed = raw ? JSON.parse(raw) : null
+      const parsedEmail = String(parsed?.email || '').trim().toLowerCase()
+      const label = String(parsed?.shopName || parsed?.shop_name || parsed?.name || '').trim()
+      const explicitId = String(parsed?.shopId || parsed?.shop_id || parsed?.vendorId || parsed?.vendor_id || '').trim()
+      if (!parsed || parsedEmail !== initialEmail || !label) return []
+      return [{ vendorId: explicitId || `local-${initialEmail}`, vendorKind: 'shop', name: label }]
+    } catch {
+      return []
+    }
+  })
+  const [targetKey, setTargetKey] = useState(() => {
+    if (!initialEmail) return ''
+    try {
+      const preferred = localStorage.getItem(`${TARGET_PREF_KEY}${initialEmail}`)
+      if (preferred) return String(preferred)
+      const raw = localStorage.getItem('mangoo-current-user')
+      const parsed = raw ? JSON.parse(raw) : null
+      const parsedEmail = String(parsed?.email || '').trim().toLowerCase()
+      const explicitId = String(parsed?.shopId || parsed?.shop_id || parsed?.vendorId || parsed?.vendor_id || '').trim()
+      if (parsed && parsedEmail === initialEmail) return `shop:${explicitId || `local-${initialEmail}`}`
+      return ''
+    } catch {
+      return ''
+    }
+  })
+  const [pricing, setPricing] = useState<PricingProduct[]>(fallbackPricing)
+  const [balanceXof, setBalanceXof] = useState<number | null>(() => (initialEmail ? readLocalCredits(initialEmail) : 0))
+  const [balanceStatus, setBalanceStatus] = useState<'loading' | 'ready' | 'error'>('ready')
   const [orders, setOrders] = useState<BoostOrder[]>([])
   const [boostRow, setBoostRow] = useState<VendorBoostRow | null>(null)
   const [activeKind, setActiveKind] = useState<BoostKind>('sponsored')
@@ -434,6 +462,16 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
       return null
     }
   }, [userEmail])
+
+  useEffect(() => {
+    if (!currentUserShopTarget) return
+    setTargets((prev) => {
+      const key = `${currentUserShopTarget.vendorKind}:${currentUserShopTarget.vendorId}`
+      if (prev.some((t) => `${t.vendorKind}:${t.vendorId}` === key)) return prev
+      return [currentUserShopTarget, ...prev]
+    })
+    setTargetKey((prev) => prev || `${currentUserShopTarget.vendorKind}:${currentUserShopTarget.vendorId}`)
+  }, [currentUserShopTarget])
 
   const computeTargets = useCallback(async () => {
     const email = String(userEmail || '').trim().toLowerCase()
@@ -773,7 +811,9 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
       }
 
       try {
-        setBalanceStatus('loading')
+        if (!(balanceStatus === 'ready' && Number(balanceXof || 0) >= 0)) {
+          setBalanceStatus('loading')
+        }
         if (localCredits > 0) {
           setBalanceXof(localCredits)
           setBalanceStatus('ready')
@@ -852,7 +892,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
       setLoading(false)
       loadLockRef.current = false
     }
-  }, [computeTargets, fetchJsonOnce, getToken, loadBoostRowFromSupabase, loadCreditsFromSupabase, loadOrdersFromSupabase, loadPricingFromSupabase, selectedTarget, userEmail])
+  }, [balanceStatus, balanceXof, computeTargets, fetchJsonOnce, getToken, loadBoostRowFromSupabase, loadCreditsFromSupabase, loadOrdersFromSupabase, loadPricingFromSupabase, selectedTarget, userEmail])
 
   useEffect(() => {
     load()
