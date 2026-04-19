@@ -4517,8 +4517,8 @@ const ShopsDirectory = () => {
         return await q
       }
 
-      let cols = ['id', 'name', 'slug', 'category', 'logo_url', 'status', 'created_at', 'updated_at', 'owner_email', 'email']
-      let withOrder = true
+      let cols = ['id', 'name', 'slug', 'category', 'logo_url', 'status']
+      let withOrder = false
       let r = null
 
       for (let i = 0; i < 10; i++) {
@@ -4539,6 +4539,12 @@ const ShopsDirectory = () => {
           continue
         }
         break
+      }
+
+      if (r?.error) {
+        cols = ['id', 'slug', 'status']
+        withOrder = false
+        r = await trySelect(cols, withOrder)
       }
 
       const data = r?.data
