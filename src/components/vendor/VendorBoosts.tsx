@@ -56,6 +56,7 @@ type LocalBoostConfig = {
 const LOCAL_CREDITS_PREFIX = 'mangoo_boost_credits:'
 const LOCAL_ORDERS_PREFIX = 'mangoo_boost_orders:'
 const LOCAL_CONFIG_KEY = 'mangoo_boost_config'
+const LOCAL_ACTIVE_ROWS_KEY = 'mangoo_boost_active_cache_rows'
 const TARGET_PREF_KEY = 'mangoo_boost_target:'
 const PENDING_BOOST_PREFIX = 'mangoo_boost_pending:'
 
@@ -95,6 +96,23 @@ function readLocalBoostConfig(): Record<string, LocalBoostConfig> {
 function writeLocalBoostConfig(next: Record<string, LocalBoostConfig>) {
   try {
     localStorage.setItem(LOCAL_CONFIG_KEY, JSON.stringify(next || {}))
+  } catch {
+  }
+}
+
+function readLocalActiveRows(): VendorBoostRow[] {
+  try {
+    const raw = localStorage.getItem(LOCAL_ACTIVE_ROWS_KEY)
+    const parsed = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? (parsed as VendorBoostRow[]) : []
+  } catch {
+    return []
+  }
+}
+
+function writeLocalActiveRows(rows: VendorBoostRow[]) {
+  try {
+    localStorage.setItem(LOCAL_ACTIVE_ROWS_KEY, JSON.stringify(Array.isArray(rows) ? rows : []))
   } catch {
   }
 }
@@ -243,6 +261,43 @@ function pickCanonicalVendorId(vendorIds: string[]): string {
   const list = Array.isArray(vendorIds) ? vendorIds : []
   const nonLocal = list.find((x) => x && !String(x).startsWith('local-'))
   return nonLocal || list[0] || ''
+}
+
+function cacheBoostState(vendorKind: string, vendorIds: string[], row: VendorBoostRow | null) {
+  if (!row || !Array.isArray(vendorIds) || !vendorIds.length) return
+  try {
+    const cfgAll = readLocalBoostConfig()
+    const activeRows = readLocalActiveRows()
+    const nextRows = new Map<string, VendorBoostRow>()
+    for (const existing of activeRows) {
+      const key = `${String(existing?.vendor_kind || '')}:${String(existing?.vendor_id || '')}`
+      if (key !== ':') nextRows.set(key, existing)
+    }
+    for (const vendorId of vendorIds) {
+      const id = String(vendorId || '').trim()
+      if (!id) continue
+      nextRows.set(`${vendorKind}:${id}`, {
+        vendor_id: id,
+        vendor_kind: vendorKind as any,
+        sponsored_until: row.sponsored_until,
+        sponsored_tier: row.sponsored_tier,
+        promo_until: row.promo_until,
+        new_until: row.new_until,
+        updated_at: row.updated_at || new Date().toISOString(),
+      })
+      if (String(vendorKind) === 'shop') {
+        cfgAll[id] = {
+          sponsoredUntil: parseMs(row.sponsored_until) || null,
+          sponsoredTier: row.sponsored_tier === 'or' ? 3 : row.sponsored_tier === 'argent' ? 2 : row.sponsored_tier === 'bronze' ? 1 : null,
+          promoUntil: parseMs(row.promo_until) || null,
+          newUntil: parseMs(row.new_until) || null,
+        }
+      }
+    }
+    writeLocalBoostConfig(cfgAll)
+    writeLocalActiveRows(Array.from(nextRows.values()))
+  } catch {
+  }
 }
 
 async function upsertVendorBoostRow(params: {
@@ -472,6 +527,14 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
     })
     setTargetKey((prev) => prev || `${currentUserShopTarget.vendorKind}:${currentUserShopTarget.vendorId}`)
   }, [currentUserShopTarget])
+
+  useEffect(() => {
+    const email = String(userEmail || '').trim().toLowerCase()
+    if (!email) return
+    setPricing((prev) => (prev?.length ? prev : fallbackPricing))
+    setBalanceXof(readLocalCredits(email))
+    setBalanceStatus('ready')
+  }, [userEmail])
 
   const computeTargets = useCallback(async () => {
     const email = String(userEmail || '').trim().toLowerCase()
@@ -802,9 +865,11 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         return
       }
 
-      if (effectiveTarget) {
-        const row = await loadBoostRowFromSupabase(effectiveTarget.vendorId, effectiveTarget.vendorKind)
+        if (effectiveTarget) {
+          const row = await loadBoostRowFromSupabase(effectiveTarget.vendorId, effectiveTarget.vendorKind)
         if (seq !== loadSeqRef.current) return
+          const aliases = await resolveShopAliases({ vendorId: effectiveTarget.vendorId, vendorKind: effectiveTarget.vendorKind, slug: effectiveTarget.slug || null, userEmail })
+          cacheBoostState(effectiveTarget.vendorKind, aliases.vendorIds, row)
         setBoostRow(row)
       } else {
         setBoostRow(null)
@@ -1012,8 +1077,6 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         if (!res.ok) {
           if (res.status === 404 || res.status === 405) {
             try {
-              const ref = window.prompt('Paiement carte indisponible ici. Entrez une référence (ou OK pour activer en démo) :', '')
-              if (ref === null) throw new Error('Achat annulé')
               await upsertVendorBoostRow({
                 vendorKind: selectedTarget.vendorKind,
                 vendorId: selectedTarget.vendorId,
@@ -1040,6 +1103,15 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                     expiresAtIso,
                   })
                   writeLocalOrders(email, [order, ...allOrders].slice(0, 100))
+                  cacheBoostState(selectedTarget.vendorKind, aliases.vendorIds, {
+                    vendor_id: canonicalVendorId,
+                    vendor_kind: selectedTarget.vendorKind,
+                    sponsored_until: p.kind === 'sponsored' ? expiresAtIso : null,
+                    sponsored_tier: p.kind === 'sponsored' ? tierLabelFromNumber((p as any)?.sponsoredTier ?? null) : null,
+                    promo_until: p.kind === 'promo' ? expiresAtIso : null,
+                    new_until: p.kind === 'new' ? expiresAtIso : null,
+                    updated_at: new Date().toISOString(),
+                  })
                 }
               } catch {
               }
@@ -1085,8 +1157,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         const looksUnavailable = msg.toLowerCase().includes('indisponible') || msg.toLowerCase().includes('fetch')
         if (looksUnavailable) {
           try {
-            const ref = window.prompt('Paiement carte indisponible ici. Entrez une référence (ou OK pour activer en démo) :', '')
-            if (ref !== null && selectedTarget) {
+            if (selectedTarget) {
               await upsertVendorBoostRow({
                 vendorKind: selectedTarget.vendorKind,
                 vendorId: selectedTarget.vendorId,
@@ -1113,6 +1184,15 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                     expiresAtIso,
                   })
                   writeLocalOrders(email, [order, ...allOrders].slice(0, 100))
+                  cacheBoostState(selectedTarget.vendorKind, aliases.vendorIds, {
+                    vendor_id: canonicalVendorId,
+                    vendor_kind: selectedTarget.vendorKind,
+                    sponsored_until: p.kind === 'sponsored' ? expiresAtIso : null,
+                    sponsored_tier: p.kind === 'sponsored' ? tierLabelFromNumber((p as any)?.sponsoredTier ?? null) : null,
+                    promo_until: p.kind === 'promo' ? expiresAtIso : null,
+                    new_until: p.kind === 'new' ? expiresAtIso : null,
+                    updated_at: new Date().toISOString(),
+                  })
                 }
               } catch {
               }
