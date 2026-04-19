@@ -354,7 +354,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
   
             {/* Carte Acheteur */}
             <button 
-              onClick={() => onNavigate('shops')}
+              onClick={() => onNavigate('marketplace')}
               className={`group flex-1 rounded-3xl p-8 border shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1 relative overflow-hidden text-left ${
                 isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
               }`}
@@ -366,8 +366,18 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
               <h2 className={`text-2xl font-bold mb-2 text-center ${isDark ? 'text-white' : 'text-gray-900'}`}>Je suis Acheteur</h2>
               <p className={`mb-6 text-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Découvrez des produits uniques et achetez en direct.</p>
               <div className="bg-blue-50 text-blue-700 py-3 rounded-xl font-bold group-hover:bg-blue-600 group-hover:text-white transition-colors flex items-center justify-center gap-2">
-                Voir les boutiques <ArrowRight className="w-4 h-4" />
+                Entrer dans la marketplace <ArrowRight className="w-4 h-4" />
               </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onNavigate('shops');
+                }}
+                className="mt-3 w-full bg-white text-blue-700 border border-blue-200 py-3 rounded-xl font-bold hover:bg-blue-50 transition-colors"
+              >
+                Voir les boutiques
+              </button>
             </button>
   
           </div>

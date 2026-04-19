@@ -7343,7 +7343,7 @@ function AppShell() {
     if (path === '/account') return 'account'
     if (path === '/shops' || path === '/boutiques') return 'shops'
     if (path === '/localplus') return 'innovation'
-    if (path === '/') return hasUser ? 'marketplace' : 'landing'
+    if (path === '/') return 'landing'
     return null
   }, [])
   const clientViewToPath = useCallback((view) => {
@@ -7376,7 +7376,7 @@ function AppShell() {
       if (routeView) {
         view = routeView
       } else if (currentPath === '/') {
-        view = storedUser?.role ? 'marketplace' : 'landing'
+        view = 'landing'
       } else if (stored === 'landing' || stored === 'marketplace' || stored === 'shops' || stored === 'account') {
         view = stored;
       }
@@ -8195,28 +8195,49 @@ function AppShell() {
     navigate(nextPath)
   }, [clientViewToPath, navigate])
 
+  const handleLandingNavigate = useCallback((view) => {
+    if (view === 'marketplace') {
+      if (user) {
+        goToClientView('marketplace')
+      } else {
+        handleLogin({ role: 'client', name: 'Invité', avatar: '👤', email: 'guest@mangoo.tech' });
+        setCurrentView('marketplace');
+        navigate('/marketplace');
+      }
+      return;
+    }
+    if (view === 'shops') {
+      if (user) {
+        goToClientView('shops')
+      } else {
+        navigate('/shops');
+      }
+      return;
+    }
+    if (view === 'innovation') {
+      setCurrentView('innovation');
+      navigate('/localplus');
+      return;
+    }
+    setCurrentView('landing');
+    navigate('/');
+  }, [goToClientView, handleLogin, navigate, user])
+
+  if (location.pathname === '/') {
+    return (
+      <LandingPage
+        onNavigate={handleLandingNavigate}
+        onLogin={setUser}
+        showAdminDashboard={user?.role === 'admin'}
+        onAdminDashboard={() => navigate('/admin/dashboard')}
+      />
+    )
+  }
+
   if (!user) {
     return (
       <LandingPage 
-        onNavigate={(view) => {
-          if (view === 'marketplace') {
-            handleLogin({ role: 'client', name: 'Invité', avatar: '👤', email: 'guest@mangoo.tech' });
-            setCurrentView('marketplace');
-            navigate('/marketplace');
-            return;
-          }
-          if (view === 'shops') {
-            navigate('/shops');
-            return;
-          }
-          if (view === 'innovation') {
-            setCurrentView('innovation');
-            navigate('/localplus');
-            return;
-          }
-          setCurrentView(view);
-          navigate('/');
-        }} 
+        onNavigate={handleLandingNavigate} 
         onLogin={setUser} 
       />
     );
@@ -8253,25 +8274,7 @@ function AppShell() {
 
       return (
         <LandingPage
-          onNavigate={(view) => {
-            if (view === 'marketplace') {
-              handleLogin({ role: 'client', name: 'Invité', avatar: '👤', email: 'guest@mangoo.tech' });
-              setCurrentView('marketplace');
-              navigate('/marketplace');
-              return;
-            }
-            if (view === 'shops') {
-              navigate('/shops');
-              return;
-            }
-            if (view === 'innovation') {
-              setCurrentView('innovation');
-              navigate('/localplus');
-              return;
-            }
-            setCurrentView(view);
-            navigate('/');
-          }}
+          onNavigate={handleLandingNavigate}
           onLogin={(u) => {
             if (!u) {
               logout();
