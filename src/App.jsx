@@ -4975,6 +4975,18 @@ const ShopsDirectory = () => {
       if (bySlug) return bySlug
     }
 
+    try {
+      const raw = localStorage.getItem('mangoo_boost_public_aliases')
+      const aliases = raw ? JSON.parse(raw) : {}
+      const byId = vendorId ? aliases?.[`id:${vendorKind}:${vendorId}`] : null
+      if (byId) return byId
+      const byEmail = ownerEmail ? aliases?.[`email:${vendorKind}:${ownerEmail}`] : null
+      if (byEmail) return byEmail
+      const bySlugAlias = slug ? aliases?.[`slug:${vendorKind}:${slug.toLowerCase()}`] : null
+      if (bySlugAlias) return bySlugAlias
+    } catch {
+    }
+
     const fallbackId = String(shop?.id || '').trim()
     return fallbackId ? boostIndex.get(fallbackId) || null : null
   }, [boostIndex])

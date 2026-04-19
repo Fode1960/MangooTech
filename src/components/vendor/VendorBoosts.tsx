@@ -57,6 +57,7 @@ const LOCAL_CREDITS_PREFIX = 'mangoo_boost_credits:'
 const LOCAL_ORDERS_PREFIX = 'mangoo_boost_orders:'
 const LOCAL_CONFIG_KEY = 'mangoo_boost_config'
 const LOCAL_ACTIVE_ROWS_KEY = 'mangoo_boost_active_cache_rows'
+const LOCAL_PUBLIC_ALIASES_KEY = 'mangoo_boost_public_aliases'
 const TARGET_PREF_KEY = 'mangoo_boost_target:'
 const PENDING_BOOST_PREFIX = 'mangoo_boost_pending:'
 
@@ -113,6 +114,23 @@ function readLocalActiveRows(): VendorBoostRow[] {
 function writeLocalActiveRows(rows: VendorBoostRow[]) {
   try {
     localStorage.setItem(LOCAL_ACTIVE_ROWS_KEY, JSON.stringify(Array.isArray(rows) ? rows : []))
+  } catch {
+  }
+}
+
+function readPublicBoostAliases(): Record<string, any> {
+  try {
+    const raw = localStorage.getItem(LOCAL_PUBLIC_ALIASES_KEY)
+    const parsed = raw ? JSON.parse(raw) : {}
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+function writePublicBoostAliases(next: Record<string, any>) {
+  try {
+    localStorage.setItem(LOCAL_PUBLIC_ALIASES_KEY, JSON.stringify(next || {}))
   } catch {
   }
 }
@@ -266,11 +284,12 @@ function pickCanonicalVendorId(vendorIds: string[]): string {
   return nonLocal || list[0] || ''
 }
 
-function cacheBoostState(vendorKind: string, vendorIds: string[], row: VendorBoostRow | null) {
+function cacheBoostState(vendorKind: string, vendorIds: string[], row: VendorBoostRow | null, extraAliases: string[] = []) {
   if (!row || !Array.isArray(vendorIds) || !vendorIds.length) return
   try {
     const cfgAll = readLocalBoostConfig()
     const activeRows = readLocalActiveRows()
+    const publicAliases = readPublicBoostAliases()
     const nextRows = new Map<string, VendorBoostRow>()
     for (const existing of activeRows) {
       const key = `${String(existing?.vendor_kind || '')}:${String(existing?.vendor_id || '')}`
@@ -299,6 +318,28 @@ function cacheBoostState(vendorKind: string, vendorIds: string[], row: VendorBoo
     }
     writeLocalBoostConfig(cfgAll)
     writeLocalActiveRows(Array.from(nextRows.values()))
+
+    const publicPayload = {
+      vendorId: String(row.vendor_id || vendorIds[0] || ''),
+      vendorKind: String(vendorKind || 'shop'),
+      sponsoredUntilMs: parseMs(row.sponsored_until),
+      sponsoredTier: row.sponsored_tier || null,
+      promoUntilMs: parseMs(row.promo_until),
+      newUntilMs: parseMs(row.new_until),
+      updatedAt: row.updated_at || new Date().toISOString(),
+    }
+    for (const vendorId of vendorIds) {
+      const id = String(vendorId || '').trim()
+      if (!id) continue
+      publicAliases[`id:${vendorKind}:${id}`] = publicPayload
+    }
+    for (const alias of extraAliases) {
+      const value = String(alias || '').trim().toLowerCase()
+      if (!value) continue
+      if (value.includes('@')) publicAliases[`email:${vendorKind}:${value}`] = publicPayload
+      else publicAliases[`slug:${vendorKind}:${value}`] = publicPayload
+    }
+    writePublicBoostAliases(publicAliases)
   } catch {
   }
 }
@@ -876,7 +917,10 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
           const row = await loadBoostRowFromSupabase(effectiveTarget.vendorId, effectiveTarget.vendorKind)
         if (seq !== loadSeqRef.current) return
           const aliases = await resolveShopAliases({ vendorId: effectiveTarget.vendorId, vendorKind: effectiveTarget.vendorKind, slug: effectiveTarget.slug || null, userEmail })
-          cacheBoostState(effectiveTarget.vendorKind, aliases.vendorIds, row)
+          cacheBoostState(effectiveTarget.vendorKind, aliases.vendorIds, row, [
+            String(effectiveTarget.slug || ''),
+            String(userEmail || ''),
+          ])
         setBoostRow(row)
       } else {
         setBoostRow(null)
@@ -1118,7 +1162,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                     promo_until: p.kind === 'promo' ? expiresAtIso : null,
                     new_until: p.kind === 'new' ? expiresAtIso : null,
                     updated_at: new Date().toISOString(),
-                  })
+                  }, [String((selectedTarget as any)?.slug || ''), String(userEmail || '')])
                 }
               } catch {
               }
@@ -1199,7 +1243,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                     promo_until: p.kind === 'promo' ? expiresAtIso : null,
                     new_until: p.kind === 'new' ? expiresAtIso : null,
                     updated_at: new Date().toISOString(),
-                  })
+                  }, [String((selectedTarget as any)?.slug || ''), String(userEmail || '')])
                 }
               } catch {
               }
