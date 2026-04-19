@@ -4875,7 +4875,11 @@ const ShopsDirectory = () => {
           ...localSyncShops,
           ...(includeVendorSeeds ? fromVendors : []),
         ]
-      : [...base, ...supabaseShops]
+      : [
+          ...base,
+          ...supabaseShops,
+          ...localPlusShops,
+        ]
 
     ;all.forEach((s) => {
       const key = toKey(s)
@@ -8193,11 +8197,6 @@ function AppShell() {
     )
   }
 
-  // 1. Mangoo Local+ (Map Interface via iframe DIRECTEMENT)
-  if (safeCurrentView === 'innovation') {
-    return <MangooLocalFrame user={user} onBack={handleBackFromLocal} />;
-  }
-
   const goToClientView = useCallback((view) => {
     const nextPath = clientViewToPath(view)
     setCurrentView(view)
@@ -8231,6 +8230,11 @@ function AppShell() {
     setCurrentView('landing');
     navigate('/');
   }, [goToClientView, handleLogin, navigate, user])
+
+  // 1. Mangoo Local+ (Map Interface via iframe DIRECTEMENT)
+  if (safeCurrentView === 'innovation') {
+    return <MangooLocalFrame user={user} onBack={handleBackFromLocal} />;
+  }
 
   if (location.pathname === '/') {
     return (
