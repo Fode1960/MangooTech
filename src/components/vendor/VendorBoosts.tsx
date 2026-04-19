@@ -236,6 +236,7 @@ async function resolveShopAliases(params: { vendorId: string; vendorKind: string
   const slug = String(params.slug || '').trim()
   const ids = new Set<string>()
   if (vendorId) ids.add(vendorId)
+  if (slug) ids.add(slug)
   if (vendorKind !== 'shop') return { vendorKind, vendorIds: Array.from(ids) }
 
   const userEmail = String(params.userEmail || '').trim().toLowerCase()
@@ -246,8 +247,10 @@ async function resolveShopAliases(params: { vendorId: string; vendorKind: string
       const r = await supabase.from('shops').select('id,slug,email').eq('slug', slug).maybeSingle()
       if (!r?.error && r?.data) {
         const shopId = String((r.data as any)?.id || '').trim()
+        const shopSlug = String((r.data as any)?.slug || '').trim()
         const email = String((r.data as any)?.email || '').trim().toLowerCase()
         if (shopId) ids.add(shopId)
+        if (shopSlug) ids.add(shopSlug)
         if (email) ids.add(`local-${email}`)
       }
     }
@@ -364,7 +367,7 @@ async function upsertVendorBoostRow(params: {
         const attempt = async (withOwnerEmail: boolean) => {
           const q = supabase
             .from('shops')
-            .select('id,owner_email,email,created_at')
+            .select('id,slug,owner_email,email,created_at')
             .order('created_at', { ascending: false })
             .limit(1)
           if (withOwnerEmail) return await q.or(`owner_email.eq.${email},email.eq.${email}`)
@@ -376,7 +379,11 @@ async function upsertVendorBoostRow(params: {
           const missingOwnerEmail = msg.includes('could not find') && msg.includes('owner_email')
           if (missingOwnerEmail) r = await attempt(false)
         }
-        return String(Array.isArray(r?.data) ? r.data[0]?.id : '').trim()
+        const first = Array.isArray(r?.data) ? r.data[0] : null
+        const shopId = String(first?.id || '').trim()
+        const shopSlug = String(first?.slug || '').trim()
+        if (shopSlug) ids.add(shopSlug)
+        return shopId
       }
 
       try {
