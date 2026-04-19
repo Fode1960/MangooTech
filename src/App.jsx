@@ -1003,11 +1003,15 @@ const Register = ({ onRegister, onBack }) => {
   const [primaryColor, setPrimaryColor] = useState('#F97316');
   const [secondaryColor, setSecondaryColor] = useState('#FBBF24');
   const [createdShop, setCreatedShop] = useState(null);
-  const [paletteMode, setPaletteMode] = useState('both');
+  const [geolocationConsent, setGeolocationConsent] = useState(false);
+  const [geoLoading, setGeoLoading] = useState(false);
+  const [geoError, setGeoError] = useState('');
+  const [shopLat, setShopLat] = useState('');
+  const [shopLng, setShopLng] = useState('');
   const { isDark, setTheme } = useThemeStore();
 
   const speakHelp = useCallback(() => {
-    speakFR("Créer une boutique. Remplissez le nom, l’email, et le mot de passe. Ensuite écrivez le nom de la boutique. Choisissez une catégorie. Puis appuyez sur Créer ma boutique.");
+    speakFR("Créer une boutique. Remplissez le nom, l’email, et le mot de passe. Ensuite écrivez le nom de la boutique. Choisissez une catégorie. Vous pouvez aussi ajouter la position GPS. Puis appuyez sur Créer ma boutique.");
   }, []);
 
   useEffect(() => {
@@ -1019,16 +1023,16 @@ const Register = ({ onRegister, onBack }) => {
     speakHelp();
   }, [speakHelp]);
 
-  const colorPalettes = useMemo(() => [
-    { name: 'Orange Mangoo', primary: '#F97316', secondary: '#FBBF24' },
-    { name: 'Bleu Ciel', primary: '#0EA5E9', secondary: '#38BDF8' },
-    { name: 'Vert Nature', primary: '#10B981', secondary: '#34D399' },
-    { name: 'Rouge Passion', primary: '#EF4444', secondary: '#F87171' },
-    { name: 'Violet Royal', primary: '#8B5CF6', secondary: '#A78BFA' },
-    { name: 'Rose Doux', primary: '#EC4899', secondary: '#F472B6' },
-    { name: 'Marron Terre', primary: '#A16207', secondary: '#CA8A04' },
-    { name: 'Gris Moderne', primary: '#6B7280', secondary: '#9CA3AF' }
-  ], []);
+  const defaultThemeByCategory = useMemo(() => ({
+    general: { primary: '#F97316', secondary: '#10B981' },
+    food: { primary: '#10B981', secondary: '#F59E0B' },
+    tech: { primary: '#0EA5E9', secondary: '#6366F1' },
+    telephony: { primary: '#2563EB', secondary: '#06B6D4' },
+    fashion: { primary: '#EC4899', secondary: '#F97316' },
+    beauty: { primary: '#A855F7', secondary: '#EC4899' },
+    home: { primary: '#A16207', secondary: '#10B981' },
+    services: { primary: '#6B7280', secondary: '#0EA5E9' },
+  }), []);
 
   const shopCategories = useMemo(() => [
     { key: 'general', label: 'Général' },
@@ -1058,18 +1062,11 @@ const Register = ({ onRegister, onBack }) => {
     return `${baseSlug}-${i}`;
   }, []);
 
-  const applyPalette = useCallback((palette) => {
-    if (paletteMode === 'primary') {
-      setPrimaryColor(palette.primary);
-      return;
-    }
-    if (paletteMode === 'secondary') {
-      setSecondaryColor(palette.secondary);
-      return;
-    }
-    setPrimaryColor(palette.primary);
-    setSecondaryColor(palette.secondary);
-  }, [paletteMode]);
+  useEffect(() => {
+    const theme = defaultThemeByCategory[String(shopCategory || 'general')] || defaultThemeByCategory.general
+    setPrimaryColor(String(theme.primary))
+    setSecondaryColor(String(theme.secondary))
+  }, [defaultThemeByCategory, shopCategory])
 
   const handleLogoChange = useCallback(async (e) => {
     const file = e.target.files?.[0];
@@ -1081,6 +1078,58 @@ const Register = ({ onRegister, onBack }) => {
     reader.readAsDataURL(file);
     e.target.value = '';
   }, []);
+
+  const captureShopPosition = useCallback(async () => {
+    setGeoError('')
+    if (!geolocationConsent) {
+      setGeoError("Veuillez accepter de partager votre position avant de capturer le GPS.")
+      return
+    }
+    if (!navigator?.geolocation?.getCurrentPosition) {
+      setGeoError("Votre appareil ne supporte pas la géolocalisation.")
+      return
+    }
+    setGeoLoading(true)
+    await new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          try {
+            const lat = Number(pos?.coords?.latitude)
+            const lng = Number(pos?.coords?.longitude)
+            if (Number.isFinite(lat) && Number.isFinite(lng)) {
+              setShopLat(String(lat))
+              setShopLng(String(lng))
+            } else {
+              setGeoError("Position GPS invalide. Entrez la position manuellement.")
+            }
+          } catch {
+            setGeoError("Impossible de lire la position. Entrez la position manuellement.")
+          } finally {
+            setGeoLoading(false)
+            resolve(null)
+          }
+        },
+        () => {
+          setGeoLoading(false)
+          setGeoError("Impossible d'obtenir votre position. Autorisez la géolocalisation ou saisissez la position manuellement.")
+          resolve(null)
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+      )
+    })
+  }, [geolocationConsent])
+
+  const buildShopLocation = useCallback(() => {
+    const lat = Number(String(shopLat || '').trim())
+    const lng = Number(String(shopLng || '').trim())
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+    return {
+      lat,
+      lng,
+      consent: Boolean(geolocationConsent),
+      capturedAt: new Date().toISOString(),
+    }
+  }, [geolocationConsent, shopLat, shopLng])
 
   const persistCreatedShop = useCallback((shop) => {
     try {
@@ -1138,6 +1187,7 @@ const Register = ({ onRegister, onBack }) => {
             logoDataUrl,
             primaryColor,
             secondaryColor,
+            location: buildShopLocation(),
             shopUrl: `${window.location.origin}/shop/${shopResp?.shop?.slug}`,
             approvalStatus: 'pending',
           }
@@ -1205,6 +1255,7 @@ const Register = ({ onRegister, onBack }) => {
       logoDataUrl,
       primaryColor,
       secondaryColor,
+      location: buildShopLocation(),
       shopUrl,
       approvalStatus: canUseSupabase ? 'pending' : 'approved'
     };
@@ -1551,7 +1602,7 @@ const Register = ({ onRegister, onBack }) => {
           <p className={`text-xs mt-1 transition-colors duration-300 ${
             isDark ? 'text-gray-400' : 'text-gray-600'
           }`}>
-            Logo, couleurs, lien et QR Code inclus
+            Logo, lien et QR Code inclus
           </p>
         </div>
 
@@ -1696,7 +1747,7 @@ const Register = ({ onRegister, onBack }) => {
               isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'
             }`}>
               <div className={`text-xs font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                Logo & couleurs
+                Logo
               </div>
 
               <div className="flex items-center gap-3 mb-3">
@@ -1726,92 +1777,69 @@ const Register = ({ onRegister, onBack }) => {
                 </label>
               </div>
 
-              <div className="flex items-center justify-between mb-2">
-                <div className={`text-[11px] font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Palettes
-                </div>
-                <div className="flex gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setPaletteMode('both')}
-                    className={`px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                      paletteMode === 'both'
-                        ? (isDark ? 'bg-white text-gray-900' : 'bg-gray-900 text-white')
-                        : (isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white border border-gray-200 hover:bg-gray-100')
-                    }`}
-                  >
-                    2 couleurs
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaletteMode('primary')}
-                    className={`px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                      paletteMode === 'primary'
-                        ? (isDark ? 'bg-white text-gray-900' : 'bg-gray-900 text-white')
-                        : (isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white border border-gray-200 hover:bg-gray-100')
-                    }`}
-                  >
-                    Primaire
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaletteMode('secondary')}
-                    className={`px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                      paletteMode === 'secondary'
-                        ? (isDark ? 'bg-white text-gray-900' : 'bg-gray-900 text-white')
-                        : (isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white border border-gray-200 hover:bg-gray-100')
-                    }`}
-                  >
-                    Secondaire
-                  </button>
-                </div>
+              <div className={`text-[11px] ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                Couleurs appliquées automatiquement. Personnalisation disponible dans Paramètres de ma boutique.
+              </div>
+            </div>
+
+            <div className={`rounded-xl p-3 border transition-colors duration-300 ${
+              isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'
+            }`}>
+              <div className={`text-xs font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                Localisation (optionnel)
               </div>
 
-              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 mb-3">
-                {colorPalettes.map((p) => (
-                  <button
-                    key={p.name}
-                    type="button"
-                    onClick={() => applyPalette(p)}
-                    className={`h-8 rounded-lg border transition-all ${
-                      primaryColor === p.primary && secondaryColor === p.secondary
-                        ? (isDark ? 'border-white' : 'border-gray-900')
-                        : (isDark ? 'border-gray-700' : 'border-gray-200')
+              <label className={`flex items-start gap-2 text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                <input
+                  type="checkbox"
+                  checked={geolocationConsent}
+                  onChange={(e) => setGeolocationConsent(e.target.checked)}
+                  className="mt-0.5"
+                />
+                <span>J’accepte de partager ma position pour localiser ma boutique</span>
+              </label>
+
+              <button
+                type="button"
+                onClick={captureShopPosition}
+                disabled={!geolocationConsent || geoLoading}
+                className={`mt-3 w-full px-4 py-3 rounded-xl text-sm font-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white border border-gray-200 hover:bg-gray-100'
+                }`}
+              >
+                {geoLoading ? 'Capture en cours…' : '🎯 Capturer ma position GPS'}
+              </button>
+
+              {geoError && (
+                <div className="mt-2 text-xs font-semibold text-red-500">
+                  {geoError}
+                </div>
+              )}
+
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <div>
+                  <label className={`block text-[11px] mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Latitude</label>
+                  <input
+                    type="text"
+                    value={shopLat}
+                    onChange={(e) => setShopLat(e.target.value)}
+                    placeholder="ex: 5.348"
+                    className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors duration-300 ${
+                      isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
                     }`}
-                    title={p.name}
-                    style={{ background: `linear-gradient(90deg, ${p.primary}, ${p.secondary})` }}
                   />
-                ))}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={`block text-[11px] mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Primaire</label>
-                  <div className="flex gap-2 items-center">
-                    <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-10 h-9 rounded" />
-                    <input
-                      type="text"
-                      value={primaryColor}
-                      onChange={(e) => setPrimaryColor(e.target.value)}
-                      className={`flex-1 px-2 py-2 text-sm rounded-lg border transition-colors duration-300 ${
-                        isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
-                      }`}
-                    />
-                  </div>
                 </div>
                 <div>
-                  <label className={`block text-[11px] mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Secondaire</label>
-                  <div className="flex gap-2 items-center">
-                    <input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-10 h-9 rounded" />
-                    <input
-                      type="text"
-                      value={secondaryColor}
-                      onChange={(e) => setSecondaryColor(e.target.value)}
-                      className={`flex-1 px-2 py-2 text-sm rounded-lg border transition-colors duration-300 ${
-                        isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
-                      }`}
-                    />
-                  </div>
+                  <label className={`block text-[11px] mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Longitude</label>
+                  <input
+                    type="text"
+                    value={shopLng}
+                    onChange={(e) => setShopLng(e.target.value)}
+                    placeholder="ex: -4.002"
+                    className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors duration-300 ${
+                      isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
+                    }`}
+                  />
                 </div>
               </div>
             </div>
@@ -3338,26 +3366,18 @@ const VendorDashboard = ({ user }) => {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Couleur primaire</label>
+                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Couleur des boutons</label>
                       <div className="flex gap-2 items-center">
                         <input type="color" value={editPrimaryColor} onChange={(e) => setEditPrimaryColor(e.target.value)} className="w-10 h-9 rounded" />
-                        <input
-                          value={editPrimaryColor}
-                          onChange={(e) => setEditPrimaryColor(e.target.value)}
-                          className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"
-                        />
+                        <div className="flex-1 h-9 rounded-lg border border-gray-200 dark:border-gray-700" style={{ background: `linear-gradient(90deg, ${editPrimaryColor}, ${editPrimaryColor})` }} />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Couleur secondaire</label>
+                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Couleur d’accent</label>
                       <div className="flex gap-2 items-center">
                         <input type="color" value={editSecondaryColor} onChange={(e) => setEditSecondaryColor(e.target.value)} className="w-10 h-9 rounded" />
-                        <input
-                          value={editSecondaryColor}
-                          onChange={(e) => setEditSecondaryColor(e.target.value)}
-                          className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"
-                        />
+                        <div className="flex-1 h-9 rounded-lg border border-gray-200 dark:border-gray-700" style={{ background: `linear-gradient(90deg, ${editSecondaryColor}, ${editSecondaryColor})` }} />
                       </div>
                     </div>
                   </div>
