@@ -7979,11 +7979,13 @@ function AppShell() {
   const handleLogin = useCallback(async (userData) => {
     const normalizedEmail = String(userData?.email || '').trim().toLowerCase();
     const baseUser = normalizedEmail === 'admin@mangoo.tech' ? { ...userData, role: 'admin' } : userData;
-    const roles = normalizeRoles(baseUser);
+    const isGuest = normalizedEmail === 'guest@mangoo.tech';
+    const roles = isGuest ? ['client'] : normalizeRoles(baseUser);
     let activeRole = String(baseUser?.role || '').trim();
+    if (isGuest) activeRole = 'client';
     try {
       const saved = normalizedEmail ? localStorage.getItem(`mangoo-active-role:${normalizedEmail}`) : null;
-      if (saved) activeRole = String(saved);
+      if (saved && !isGuest) activeRole = String(saved);
     } catch {
     }
     if (!activeRole || !roles.includes(activeRole)) activeRole = roles[0] || 'client';
@@ -8256,6 +8258,18 @@ function AppShell() {
     return <MangooLocalFrame user={user} onBack={handleBackFromLocal} />;
   }
 
+  if (user?.role === 'register_request') {
+    return <Register onRegister={(u) => { setAuthReturn(null); handleLogin(u); }} onBack={backFromAuth} />;
+  }
+
+  if (user?.role === 'login_request') {
+    return <Login onLogin={(u) => { setAuthReturn(null); handleLogin(u); }} onBack={backFromAuth} onCreateClient={openClientRegister} onCreateVendor={openRegister} />;
+  }
+
+  if (user?.role === 'client_register_request') {
+    return <ClientRegister onRegister={(u) => { setAuthReturn(null); handleLogin(u); setCurrentView('marketplace'); }} onBack={backFromAuth} />;
+  }
+
   if (location.pathname === '/') {
     return (
       <LandingPage
@@ -8278,19 +8292,6 @@ function AppShell() {
 
   // Utilisateur connecté
 
-
-
-    if (user.role === 'register_request') {
-      return <Register onRegister={(u) => { setAuthReturn(null); handleLogin(u); }} onBack={backFromAuth} />;
-    }
-
-    if (user.role === 'login_request') {
-      return <Login onLogin={(u) => { setAuthReturn(null); handleLogin(u); }} onBack={backFromAuth} onCreateClient={openClientRegister} onCreateVendor={openRegister} />;
-    }
-
-    if (user.role === 'client_register_request') {
-      return <ClientRegister onRegister={(u) => { setAuthReturn(null); handleLogin(u); setCurrentView('marketplace'); }} onBack={backFromAuth} />;
-    }
 
     if (user.role === 'admin') {
       const logout = () => {
