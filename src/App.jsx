@@ -3222,6 +3222,16 @@ const VendorDashboard = ({ user }) => {
               </button>
             </div>
 
+            <div className={`${isDark ? 'bg-gray-800 border-gray-700 text-gray-200' : 'bg-white border-gray-200 text-gray-700'} border rounded-xl p-4 text-sm`}>
+              <div className="font-black">Boutiques multiples : oui</div>
+              <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm mt-1`}>
+                Pour gérer plusieurs boutiques, créez chaque boutique avec le même <span className="font-semibold">email vendeur</span>. Elles apparaîtront toutes ici, avec un bouton <span className="font-semibold">Modifier</span> pour chacune.
+              </div>
+              <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm mt-1`}>
+                Une boutique en <span className="font-semibold">attente</span> peut ne pas être visible publiquement tant qu’elle n’est pas approuvée.
+              </div>
+            </div>
+
             {vendorShops.length === 0 ? (
               <div className={`${isDark ? 'bg-gray-800 border-gray-700 text-gray-300' : 'bg-white border-gray-200 text-gray-700'} border rounded-xl p-6 text-center`}>
                 <div className="text-4xl mb-2">🏪</div>
