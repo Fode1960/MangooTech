@@ -1361,14 +1361,19 @@ const Register = ({ onRegister, onBack }) => {
         const nowIso = new Date().toISOString()
         const base = {
           name: String(shopName || '').trim(),
+          shop_name: String(shopName || '').trim(),
           slug: finalSlug,
           category: String(shopCategory || 'general'),
+          shop_category: String(shopCategory || 'general'),
           status: 'pending',
           is_verified: false,
           email: normalizedEmail,
           owner_name: String(name || '').trim(),
           owner_email: normalizedEmail,
           shop_url: `${window.location.origin}/shop/${finalSlug}`,
+          logo_url: String(logoDataUrl || '').trim(),
+          primary_color: String(primaryColor || '').trim(),
+          secondary_color: String(secondaryColor || '').trim(),
           phone: '',
           description: '',
           created_at: nowIso,
@@ -1398,12 +1403,18 @@ const Register = ({ onRegister, onBack }) => {
             const dropIfMissing = (col) => {
               if (msg.includes(col)) delete attemptPayload[col]
             }
+            dropIfMissing('shop_name')
+            dropIfMissing('name')
             dropIfMissing('owner_email')
             dropIfMissing('owner_name')
             dropIfMissing('shop_url')
             dropIfMissing('is_verified')
             dropIfMissing('status')
             dropIfMissing('category')
+            dropIfMissing('shop_category')
+            dropIfMissing('logo_url')
+            dropIfMissing('primary_color')
+            dropIfMissing('secondary_color')
             dropIfMissing('created_at')
             dropIfMissing('updated_at')
             dropIfMissing('phone')
@@ -1421,6 +1432,39 @@ const Register = ({ onRegister, onBack }) => {
         }
 
         if (inserted?.id) {
+          try {
+            const updateBase = {
+              logo_url: String(logoDataUrl || '').trim(),
+              primary_color: String(primaryColor || '').trim(),
+              secondary_color: String(secondaryColor || '').trim(),
+              updated_at: new Date().toISOString(),
+            }
+            const updateTry = async (payload) => {
+              return await supabase
+                .from('shops')
+                .update(payload)
+                .eq('id', inserted.id)
+            }
+            let updatePayload = { ...updateBase }
+            for (let attempt = 0; attempt < 3; attempt += 1) {
+              const ur = await updateTry(updatePayload)
+              if (!ur?.error) break
+              const msg = String(ur.error?.message || '').toLowerCase()
+              const missingColumn = msg.includes('could not find') && msg.includes('column')
+              if (missingColumn) {
+                const dropIfMissing = (col) => {
+                  if (msg.includes(col)) delete updatePayload[col]
+                }
+                dropIfMissing('logo_url')
+                dropIfMissing('primary_color')
+                dropIfMissing('secondary_color')
+                dropIfMissing('updated_at')
+                continue
+              }
+              break
+            }
+          } catch {
+          }
           shop = {
             ...shop,
             id: `shop-${inserted.id}`,
@@ -4592,6 +4636,28 @@ const ShopsDirectory = () => {
     { key: 'services', label: 'Services' }
   ], []);
 
+  const themeByCategory = useMemo(() => ({
+    general: { primary: '#F97316', secondary: '#10B981' },
+    food: { primary: '#10B981', secondary: '#F59E0B' },
+    tech: { primary: '#0EA5E9', secondary: '#6366F1' },
+    telephony: { primary: '#2563EB', secondary: '#06B6D4' },
+    fashion: { primary: '#EC4899', secondary: '#F97316' },
+    beauty: { primary: '#A855F7', secondary: '#EC4899' },
+    home: { primary: '#A16207', secondary: '#10B981' },
+    services: { primary: '#6B7280', secondary: '#0EA5E9' },
+  }), [])
+
+  const resolveTheme = useCallback((category, row) => {
+    const c = String(category || 'general')
+    const t = themeByCategory[c] || themeByCategory.general
+    const p = String(row?.primary_color || row?.primaryColor || row?.primary || '').trim()
+    const s = String(row?.secondary_color || row?.secondaryColor || row?.secondary || '').trim()
+    return {
+      primaryColor: p || t.primary,
+      secondaryColor: s || t.secondary,
+    }
+  }, [themeByCategory])
+
   const normalizeCategoryFromLocalPlus = useCallback((raw) => {
     const c = String(raw || '').trim().toLowerCase();
     if (!c) return 'general';
@@ -4637,8 +4703,7 @@ const ShopsDirectory = () => {
             name,
             slug,
             category: normalizeCategoryFromLocalPlus(v?.category) || 'general',
-            primaryColor: '#0EA5E9',
-            secondaryColor: '#38BDF8',
+            ...resolveTheme(normalizeCategoryFromLocalPlus(v?.category) || 'general', v),
             logoDataUrl: '',
             vendorId: id,
             vendorKind: 'shop',
@@ -4674,8 +4739,7 @@ const ShopsDirectory = () => {
             name,
             slug,
             category: normalizeCategoryFromLocalPlus(v?.category) || 'general',
-            primaryColor: '#0EA5E9',
-            secondaryColor: '#38BDF8',
+            ...resolveTheme(normalizeCategoryFromLocalPlus(v?.category) || 'general', v),
             logoDataUrl: '',
             vendorId: id,
             vendorKind: 'shop',
@@ -4745,11 +4809,10 @@ const ShopsDirectory = () => {
             .filter((s) => s?.id && s?.slug)
             .map((s) => ({
               id: `supabase-${s.id}`,
-              name: s.name || 'Boutique',
+              name: s.name || s.shop_name || 'Boutique',
               slug: s.slug,
-              category: s.category || 'general',
-              primaryColor: '#0EA5E9',
-              secondaryColor: '#38BDF8',
+              category: s.category || s.shop_category || s.shopCategory || 'general',
+              ...resolveTheme(s.category || s.shop_category || s.shopCategory || 'general', s),
               logoDataUrl: s.logo_url || '',
               ownerEmail: String(s?.owner_email || s?.email || '').trim().toLowerCase(),
               vendorId: String(s.id),
@@ -4783,7 +4846,7 @@ const ShopsDirectory = () => {
         return await q
       }
 
-      let cols = ['id', 'name', 'slug', 'category', 'logo_url', 'status', 'owner_email', 'email']
+      let cols = ['id', 'name', 'shop_name', 'slug', 'category', 'shop_category', 'logo_url', 'primary_color', 'secondary_color', 'status', 'owner_email', 'email']
       let withOrder = false
       let r = null
 
@@ -4823,19 +4886,21 @@ const ShopsDirectory = () => {
 
       let mapped = data
         .filter((s) => s?.id && s?.slug)
-        .map((s) => ({
+        .map((s) => {
+          const category = s.category || s.shop_category || s.shopCategory || 'general'
+          const themed = resolveTheme(category, s)
+          return ({
           id: `supabase-${s.id}`,
-          name: s.name || 'Boutique',
+          name: s.name || s.shop_name || 'Boutique',
           slug: s.slug,
-          category: s.category || 'general',
-          primaryColor: '#0EA5E9',
-          secondaryColor: '#38BDF8',
+          category,
+          ...themed,
           logoDataUrl: s.logo_url || '',
           ownerEmail: String(s?.owner_email || s?.email || '').trim().toLowerCase(),
           vendorId: String(s.id),
           vendorKind: 'shop',
           source: 'supabase',
-        }))
+        })})
 
       try {
         const ids = mapped.map((s) => String(s.vendorId || '').trim()).filter(Boolean)
@@ -4847,11 +4912,11 @@ const ShopsDirectory = () => {
               .in('id', ids)
               .limit(ids.length)
           }
-          let extra = await enrichAttempt(['id', 'slug', 'name', 'category', 'logo_url', 'owner_email', 'email'])
+          let extra = await enrichAttempt(['id', 'slug', 'name', 'shop_name', 'category', 'shop_category', 'logo_url', 'primary_color', 'secondary_color', 'owner_email', 'email'])
           if (extra?.error) {
             const msg = String(extra.error.message || '').toLowerCase()
             if (msg.includes('could not find') && msg.includes('owner_email')) {
-              extra = await enrichAttempt(['id', 'slug', 'name', 'category', 'logo_url', 'email'])
+              extra = await enrichAttempt(['id', 'slug', 'name', 'shop_name', 'category', 'shop_category', 'logo_url', 'primary_color', 'secondary_color', 'email'])
             }
           }
           if (!extra?.error && Array.isArray(extra?.data)) {
@@ -4859,12 +4924,15 @@ const ShopsDirectory = () => {
             mapped = mapped.map((shop) => {
               const row = byId.get(String(shop.vendorId || '').trim())
               if (!row) return shop
+              const rowCategory = row?.category || row?.shop_category || shop.category
+              const themed = resolveTheme(rowCategory, row)
               return {
                 ...shop,
-                name: row?.name || shop.name,
+                name: row?.name || row?.shop_name || shop.name,
                 slug: row?.slug || shop.slug,
-                category: row?.category || shop.category,
+                category: rowCategory,
                 logoDataUrl: row?.logo_url || shop.logoDataUrl,
+                ...themed,
                 ownerEmail: String(row?.owner_email || row?.email || shop.ownerEmail || '').trim().toLowerCase(),
               }
             })
@@ -4991,13 +5059,13 @@ const ShopsDirectory = () => {
       const vendorKind = rawKind === 'provider' || rawKind === 'service' ? 'provider' : 'shop'
       const vendorId = String(v?.id ?? '').trim()
       const slug = String(v?.slug || '').trim() || 'boutique-demo'
+      const category = normalizeVendorCategory(v.category) || 'general'
       return {
         id: `vendor-${v.id}`,
         name: v.name,
         slug,
-        category: normalizeVendorCategory(v.category) || 'general',
-        primaryColor: '#0EA5E9',
-        secondaryColor: '#38BDF8',
+        category,
+        ...resolveTheme(category, v),
         logoDataUrl: '',
         vendorId,
         vendorKind,

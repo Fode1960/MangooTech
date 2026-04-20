@@ -33,8 +33,12 @@ export default async function handler(req: any, res: any) {
     const baseCols = [
       'id',
       'name',
+      'shop_name',
       'slug',
       'category',
+      'shop_category',
+      'primary_color',
+      'secondary_color',
       'status',
       'owner_email',
       'owner_name',
@@ -71,4 +75,3 @@ export default async function handler(req: any, res: any) {
     res.status(500).json({ success: false, error: String(e?.message || 'Erreur serveur') })
   }
 }
-
