@@ -931,30 +931,71 @@ const ShopPage = () => {
                   </button>
                 </div>
               )}
-              <button
-                type="button"
-                onClick={toggleFollow}
-                className={`text-lg px-8 py-4 inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 backdrop-blur-sm hover:-translate-y-0.5 ${
-                  isFollowing
-                    ? 'bg-white text-gray-900 hover:bg-gray-100'
-                    : 'bg-white/15 text-white border border-white/30 hover:bg-white/25'
-                }`}
-              >
-                <Users className="w-5 h-5 mr-2" />
-                {isFollowing ? 'Suivi' : 'Suivre'}
-              </button>
-              <button
-                type="button"
-                onClick={shareShop}
-                className="text-lg px-8 py-4 inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 backdrop-blur-sm bg-white/10 text-white border border-white/25 hover:bg-white/20 hover:-translate-y-0.5"
-              >
-                <Share2 className="w-5 h-5 mr-2" />
-                Partager
-              </button>
-              <button type="button" onClick={contactShop} className="text-lg px-8 py-4 inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 backdrop-blur-sm bg-white/10 text-white border border-white/25 hover:bg-white/20 hover:-translate-y-0.5">
-                <MessageCircle className="w-5 h-5 mr-2" />
-                Contacter
-              </button>
+              {canManageProducts ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => openVendorDashboard('orders')}
+                    className="text-lg px-8 py-4 inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 backdrop-blur-sm bg-white text-gray-900 hover:bg-gray-100 hover:-translate-y-0.5"
+                  >
+                    <Package className="w-5 h-5 mr-2" />
+                    Gérer les commandes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={shareShop}
+                    className="text-lg px-8 py-4 inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 backdrop-blur-sm bg-white/10 text-white border border-white/25 hover:bg-white/20 hover:-translate-y-0.5"
+                  >
+                    <Share2 className="w-5 h-5 mr-2" />
+                    Partager ma boutique
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openVendorDashboard('communication')}
+                    className="text-lg px-8 py-4 inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 backdrop-blur-sm bg-white/10 text-white border border-white/25 hover:bg-white/20 hover:-translate-y-0.5"
+                  >
+                    <MessageCircle className="w-5 h-5 mr-2" />
+                    Messages clients
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={toggleFollow}
+                    className={`text-lg px-8 py-4 inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 backdrop-blur-sm hover:-translate-y-0.5 ${
+                      isFollowing
+                        ? 'bg-white text-gray-900 hover:bg-gray-100'
+                        : 'bg-white/15 text-white border border-white/30 hover:bg-white/25'
+                    }`}
+                  >
+                    <Users className="w-5 h-5 mr-2" />
+                    {isFollowing ? 'Retirer le suivi' : 'Suivre cette boutique'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={shareShop}
+                    className="text-lg px-8 py-4 inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 backdrop-blur-sm bg-white/10 text-white border border-white/25 hover:bg-white/20 hover:-translate-y-0.5"
+                  >
+                    <Share2 className="w-5 h-5 mr-2" />
+                    Partager la boutique
+                  </button>
+                  <button
+                    type="button"
+                    onClick={contactShop}
+                    disabled={!shop?.contact_email}
+                    className="text-lg px-8 py-4 inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 backdrop-blur-sm bg-white/10 text-white border border-white/25 hover:bg-white/20 hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                  >
+                    <MessageCircle className="w-5 h-5 mr-2" />
+                    {shop?.contact_email ? 'Contacter le vendeur' : 'Contact vendeur indisponible'}
+                  </button>
+                </>
+              )}
+            </div>
+            <div className="mt-3 text-sm text-white/85">
+              {canManageProducts
+                ? 'Vous consultez votre boutique : utilisez ces actions pour la gestion.'
+                : `Vous consultez une boutique publique : “Contacter le vendeur” envoie un email à ${shop?.contact_email || 'l’adresse renseignée'}.`}
             </div>
           </div>
         </div>
