@@ -757,7 +757,11 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
       return;
     }
 
-    setError('Identifiants incorrects');
+    if (normalizedEmail && passwordNormalized && normalizedEmail === passwordNormalized) {
+      setError("Mot de passe incorrect. Le mot de passe n’est pas votre email. Utilisez le mot de passe choisi lors de la création (ou réinitialisez-le).");
+    } else {
+      setError('Identifiants incorrects');
+    }
     setSubmitting(false)
   }, [email, navigate, onLogin, password, submitting]);
 
@@ -8192,6 +8196,17 @@ function AppShell() {
     navigate('/');
   }, [goToClientView, handleLogin, navigate, user])
 
+  const hasLpParams = useMemo(() => {
+    try {
+      for (const [k, v] of searchParams.entries()) {
+        if (!String(v || '').trim()) continue
+        if (String(k || '').startsWith('lp_')) return true
+      }
+    } catch {
+    }
+    return false
+  }, [searchParams])
+
   if (location.pathname === '/boosts') {
     const returnTo = String(boostsParams.get('return') || '')
     return (
@@ -8280,7 +8295,7 @@ function AppShell() {
     return <ClientRegister onRegister={(u) => { setAuthReturn(null); handleLogin(u); setCurrentView('marketplace'); }} onBack={backFromAuth} />;
   }
 
-  if (location.pathname === '/') {
+  if (location.pathname === '/' && !hasLpParams) {
     return (
       <LandingPage
         onNavigate={handleLandingNavigate}
