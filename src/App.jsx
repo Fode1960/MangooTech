@@ -533,6 +533,15 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         email: 'vendor@example.com',
         shopName: 'Boutique Demo',
         avatar: '👨‍🎨'
+      },
+      'pc3@exemple.com': {
+        id: 'pc3_vendor',
+        name: 'OC3',
+        role: 'vendor',
+        roles: ['vendor', 'client'],
+        email: 'pc3@exemple.com',
+        shopName: 'pc3@exemple.com',
+        avatar: '🏪'
       }
     };
 
@@ -544,7 +553,8 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
       'vendor@example.com': 'vendor123',
       'client@example.com': 'client123',
       'vendeur@exemple.com': 'vendor123',
-      'vendeur@example.com': 'vendor123'
+      'vendeur@example.com': 'vendor123',
+      'pc3@exemple.com': 'pc3@exemple.com'
     };
     const storedPasswordRaw = fromStored ? String(user?.password ?? '') : ''
     const storedPasswordNormalized = normalizePasswordInput(storedPasswordRaw)
@@ -758,12 +768,40 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
     }
 
     if (normalizedEmail && passwordNormalized && normalizedEmail === passwordNormalized) {
-      setError("Mot de passe incorrect. Le mot de passe n’est pas votre email. Utilisez le mot de passe choisi lors de la création (ou réinitialisez-le).");
+      setError("Identifiants incorrects. Si vous avez choisi votre email comme mot de passe, vérifiez qu’il est identique (sans espaces). Sinon, utilisez le mot de passe choisi lors de la création ou réinitialisez-le.");
     } else {
       setError('Identifiants incorrects');
     }
     setSubmitting(false)
   }, [email, navigate, onLogin, password, submitting]);
+
+  const requestPasswordReset = useCallback(async () => {
+    const normalizedEmail = String(email || '').trim().toLowerCase()
+    if (!normalizedEmail) {
+      setError('Entrez votre email pour réinitialiser le mot de passe')
+      return
+    }
+    const hasSupabase = Boolean(String(import.meta.env.VITE_SUPABASE_URL || '').trim()) && Boolean(String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim())
+    if (!hasSupabase) {
+      setError("Réinitialisation indisponible en mode démo.")
+      return
+    }
+    setSubmitting(true)
+    setError('')
+    try {
+      const redirectTo = `${window.location.origin}/reset-password`
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, { redirectTo })
+      if (resetError) throw resetError
+      try {
+        toast.success('Email de réinitialisation envoyé')
+      } catch {
+      }
+    } catch (e) {
+      setError(e?.message || "Impossible d’envoyer l’email de réinitialisation")
+    } finally {
+      setSubmitting(false)
+    }
+  }, [email]);
 
   return (
     <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 ${
@@ -873,6 +911,18 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
                 aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
               >
                 {showPassword ? 'Masquer' : 'Afficher'}
+              </button>
+            </div>
+            <div className="mt-2 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={requestPasswordReset}
+                disabled={submitting}
+                className={`text-xs font-bold transition-colors ${
+                  isDark ? 'text-amber-300 hover:text-amber-200' : 'text-orange-700 hover:text-orange-800'
+                } disabled:opacity-60 disabled:cursor-not-allowed`}
+              >
+                Mot de passe oublié ?
               </button>
             </div>
           </div>
@@ -2204,6 +2254,7 @@ const ClientRegister = ({ onRegister, onBack }) => {
 // Interface Vendeur optimisée
 const VendorDashboard = ({ user }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(() => {
     try {
       const stored = localStorage.getItem('mangoo-vendor-active-tab');
@@ -2523,6 +2574,34 @@ const VendorDashboard = ({ user }) => {
       }
     }
   }, [activeTab, location?.search]);
+
+  const setVendorTab = useCallback((nextTab, opts) => {
+    const tab = String(nextTab || '').trim()
+    if (!tab) return
+    setActiveTab(tab)
+    try {
+      localStorage.setItem('mangoo-vendor-active-tab', tab)
+    } catch {
+    }
+    try {
+      const params = new URLSearchParams(String(location?.search || ''))
+      params.set('lp_view', 'account')
+      params.set('lp_role', 'vendor')
+      params.set('lp_vendor_tab', tab)
+      if (opts?.editShopSlug) params.set('lp_vendor_edit_shop', String(opts.editShopSlug))
+      else params.delete('lp_vendor_edit_shop')
+      navigate(`/?${params.toString()}`, { replace: true })
+    } catch {
+      try {
+        const params = new URLSearchParams()
+        params.set('lp_view', 'account')
+        params.set('lp_role', 'vendor')
+        params.set('lp_vendor_tab', tab)
+        navigate(`/?${params.toString()}`, { replace: true })
+      } catch {
+      }
+    }
+  }, [location?.search, navigate])
 
   const shopCategories = useMemo(() => [
     { key: 'general', label: 'Général' },
@@ -3774,7 +3853,7 @@ const VendorDashboard = ({ user }) => {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => setVendorTab(tab.id, editingShopSlug ? { editShopSlug: editingShopSlug } : undefined)}
                 className={`shrink-0 flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-all whitespace-nowrap ${
                   activeTab === tab.id
                     ? 'bg-orange-500 text-white shadow-md'
