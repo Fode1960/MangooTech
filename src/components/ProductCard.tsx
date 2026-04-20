@@ -26,6 +26,7 @@ interface Product {
   icon: string;
   vendor: string;
   image?: string;
+  images?: Array<{ url?: string; alt_text?: string } | string>;
   inStock: boolean;
   discount?: number;
 }
@@ -52,6 +53,13 @@ export default function ProductCard({
   const { isDark } = useTheme();
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const imageSrc =
+    product.image ||
+    (Array.isArray(product.images)
+      ? (typeof product.images[0] === 'string'
+        ? product.images[0]
+        : (product.images[0] as any)?.url)
+      : null);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -155,12 +163,14 @@ export default function ProductCard({
 
       {/* Image du produit */}
       <div className="relative h-56 overflow-hidden bg-gradient-to-br from-orange-100 to-green-100 dark:from-gray-700 dark:to-gray-600">
-        {product.image && !imageError ? (
+        {imageSrc && !imageError ? (
           <img 
-            src={product.image} 
+            src={imageSrc} 
             alt={product.name}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
             onError={() => setImageError(true)}
+            loading="lazy"
+            decoding="async"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">

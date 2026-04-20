@@ -3909,6 +3909,7 @@ const ClientMarketplace = ({ user }) => {
   const { products, cart, wishlist, searchQuery, selectedCategory, priceRange, selectedRating, selectedSort } = useStore();
   const [showPayment, setShowPayment] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProductImageIdx, setSelectedProductImageIdx] = useState(0);
   const { isDark } = useThemeStore();
   const navigate = useNavigate();
   const email = String(user?.email || '').trim().toLowerCase();
@@ -4039,6 +4040,7 @@ const ClientMarketplace = ({ user }) => {
   }, []);
 
   const handleQuickView = useCallback((product) => {
+    setSelectedProductImageIdx(0);
     setSelectedProduct(product);
   }, []);
 
@@ -4416,7 +4418,7 @@ const ClientMarketplace = ({ user }) => {
                   isDark ? 'text-white' : 'text-gray-900'
                 }`}>{selectedProduct.name}</h2>
                 <button
-                  onClick={() => setSelectedProduct(null)}
+                  onClick={() => { setSelectedProductImageIdx(0); setSelectedProduct(null); }}
                   className={`text-2xl transition-colors duration-300 ${
                     isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-600 hover:text-gray-800'
                   }`}
@@ -4426,13 +4428,75 @@ const ClientMarketplace = ({ user }) => {
               </div>
               
               <div className="grid md:grid-cols-2 gap-6">
-                <div className={`h-64 flex items-center justify-center rounded-lg ${
-                  isDark 
-                    ? 'bg-gradient-to-br from-gray-700 to-gray-600' 
-                    : 'bg-gradient-to-br from-orange-100 to-green-100'
-                }`}>
-                  <span className="text-8xl">{selectedProduct.icon}</span>
-                </div>
+                {(() => {
+                  const rawImages = Array.isArray(selectedProduct?.images) ? selectedProduct.images : [];
+                  const urls = rawImages
+                    .map((it) => {
+                      if (!it) return '';
+                      if (typeof it === 'string') return it;
+                      return String(it?.url || it?.preview || '');
+                    })
+                    .map((s) => String(s || '').trim())
+                    .filter(Boolean);
+
+                  const single = String(selectedProduct?.image || '').trim();
+                  const all = single ? [single, ...urls] : urls;
+                  const uniq = Array.from(new Set(all));
+
+                  const idx = Math.min(Math.max(0, Number(selectedProductImageIdx) || 0), Math.max(0, uniq.length - 1));
+                  const activeUrl = uniq[idx] || '';
+
+                  if (!uniq.length) {
+                    return (
+                      <div className={`h-64 flex items-center justify-center rounded-lg ${
+                        isDark
+                          ? 'bg-gradient-to-br from-gray-700 to-gray-600'
+                          : 'bg-gradient-to-br from-orange-100 to-green-100'
+                      }`}>
+                        <span className="text-8xl">{selectedProduct.icon}</span>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-3">
+                      <div className={`h-64 rounded-lg overflow-hidden border ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-white'}`}>
+                        <img
+                          src={activeUrl}
+                          alt={selectedProduct?.name || 'Produit'}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                          onError={(e) => {
+                            try {
+                              e.currentTarget.style.display = 'none';
+                            } catch {
+                            }
+                          }}
+                        />
+                      </div>
+                      {uniq.length > 1 && (
+                        <div className="flex gap-2 overflow-x-auto pb-1">
+                          {uniq.map((u, i) => (
+                            <button
+                              key={`${u}-${i}`}
+                              type="button"
+                              onClick={() => setSelectedProductImageIdx(i)}
+                              className={`shrink-0 w-16 h-16 rounded-lg overflow-hidden border transition-colors ${
+                                i === idx
+                                  ? (isDark ? 'border-white' : 'border-gray-900')
+                                  : (isDark ? 'border-gray-700 hover:border-gray-500' : 'border-gray-200 hover:border-gray-400')
+                              }`}
+                              aria-label={`Image ${i + 1}`}
+                            >
+                              <img src={u} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
                 
                 <div>
                   <p className={`text-lg mb-4 transition-colors duration-300 ${
@@ -4462,6 +4526,7 @@ const ClientMarketplace = ({ user }) => {
                     <button
                       onClick={() => {
                         addToCart(selectedProduct);
+                        setSelectedProductImageIdx(0);
                         setSelectedProduct(null);
                       }}
                       className="flex-1 bg-gradient-to-r from-orange-500 to-green-600 text-white py-3 px-6 rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all"
