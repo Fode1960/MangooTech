@@ -2893,12 +2893,12 @@ const VendorDashboard = ({ user }) => {
     return 'general'
   }, [shopCategories])
 
-  const uploadShopLogoToSupabase = useCallback(async (file, slug) => {
+  const uploadShopLogoToSupabase = useCallback(async (file, slug, token) => {
     const safeSlug = String(slug || '').trim() || 'shop'
     const dataUrl = String(editLogoDataUrl || '').trim()
     const resp = await fetch('/api/shops/logo-upload', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${String(token || '').trim()}` },
       body: JSON.stringify({ slug: safeSlug, dataUrl }),
     })
     const json = await resp.json().catch(() => null)
@@ -2940,10 +2940,21 @@ const VendorDashboard = ({ user }) => {
     const now = new Date().toISOString();
     const normalizedCategory = normalizeEditCategoryKey(editCategory || 'general')
 
-    let logoForStorage = String(editLogoDataUrl || '').trim()
-    if (editLogoFile && supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey) {
+    const hasSupabase = Boolean(supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey)
+    const getToken = async () => {
       try {
-        const uploaded = await uploadShopLogoToSupabase(editLogoFile, slug)
+        const { data } = await supabase.auth.getSession()
+        return String(data?.session?.access_token || '').trim()
+      } catch {
+        return ''
+      }
+    }
+    const token = hasSupabase ? await getToken() : ''
+
+    let logoForStorage = String(editLogoDataUrl || '').trim()
+    if (editLogoFile && hasSupabase && token) {
+      try {
+        const uploaded = await uploadShopLogoToSupabase(editLogoFile, slug, token)
         logoForStorage = uploaded
         setEditLogoDataUrl(uploaded)
         setEditLogoFile(null)
@@ -2966,7 +2977,34 @@ const VendorDashboard = ({ user }) => {
     };
 
     let didSupabase = false;
-    if (supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey) {
+    if (hasSupabase && token) {
+      try {
+        const logo = String(nextLocal.logoDataUrl || '').trim();
+        const canStoreLogoUrl = logo && /^https?:\/\//i.test(logo);
+        const payload = {
+          name: nextLocal.name,
+          category: nextLocal.category,
+          shop_category: nextLocal.category,
+          primary_color: String(nextLocal.primaryColor || '').trim(),
+          secondary_color: String(nextLocal.secondaryColor || '').trim(),
+          ...(canStoreLogoUrl ? { logo_url: logo } : {}),
+        }
+        const resp = await fetch('/api/shops/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ slug, updates: payload }),
+        })
+        const json = await resp.json().catch(() => null)
+        if (resp.ok && json?.success) {
+          didSupabase = true
+        } else {
+          throw new Error(String(json?.error || 'Enregistrement serveur impossible'))
+        }
+      } catch {
+      }
+    }
+
+    if (!didSupabase && hasSupabase) {
       try {
         const updateBase = {
           name: nextLocal.name,
