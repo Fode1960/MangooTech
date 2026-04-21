@@ -2747,7 +2747,7 @@ const VendorDashboard = ({ user }) => {
             .map((s) => {
               const slug = String(s?.slug || '').trim()
               if (!slug) return null
-              const category = String(s?.category || s?.shop_category || 'general')
+              const category = String(s?.shop_category || s?.category || 'general')
               const primaryColor = String(s?.primary_color || '').trim() || '#F97316'
               const secondaryColor = String(s?.secondary_color || '').trim() || '#FBBF24'
               return {
@@ -2816,7 +2816,7 @@ const VendorDashboard = ({ user }) => {
           id: String(s?.id || s.slug),
           name: String(s?.name || ''),
           slug: String(s?.slug || ''),
-          category: String(s?.category || s?.shop_category || 'general'),
+          category: String(s?.shop_category || s?.category || 'general'),
           approvalStatus: String(s?.status || 'pending'),
           ownerEmail: String(s?.owner_email || s?.email || ''),
           ownerName: String(s?.owner_name || ''),
@@ -2895,15 +2895,19 @@ const VendorDashboard = ({ user }) => {
 
   const uploadShopLogoToSupabase = useCallback(async (file, slug) => {
     const safeSlug = String(slug || '').trim() || 'shop'
-    const safeName = String(file?.name || 'logo.png').replace(/[^a-zA-Z0-9._-]+/g, '-')
-    const fileName = `shop-logos/${safeSlug}-${Date.now()}-${safeName}`
-    const { error } = await supabase.storage.from('boutique-images').upload(fileName, file, { upsert: true })
-    if (error) throw error
-    const { data } = supabase.storage.from('boutique-images').getPublicUrl(fileName)
-    const publicUrl = String(data?.publicUrl || '').trim()
-    if (!publicUrl) throw new Error('Logo upload failed')
-    return publicUrl
-  }, [])
+    const dataUrl = String(editLogoDataUrl || '').trim()
+    const resp = await fetch('/api/shops/logo-upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug: safeSlug, dataUrl }),
+    })
+    const json = await resp.json().catch(() => null)
+    const url = String(json?.logo_url || '').trim()
+    if (!resp.ok || !url) {
+      throw new Error(String(json?.error || 'Upload logo impossible'))
+    }
+    return url
+  }, [editLogoDataUrl])
 
   const syncShopToLocalStorage = useCallback((shop) => {
     const slug = String(shop?.slug || '').trim();
@@ -2943,7 +2947,11 @@ const VendorDashboard = ({ user }) => {
         logoForStorage = uploaded
         setEditLogoDataUrl(uploaded)
         setEditLogoFile(null)
-      } catch {
+      } catch (e) {
+        try {
+          toast.error(String(e?.message || 'Upload logo impossible'))
+        } catch {
+        }
       }
     }
 
@@ -4896,7 +4904,7 @@ const ShopsDirectory = () => {
             id: s.id || s.slug,
             name: s.name || 'Boutique',
             slug: s.slug,
-            category: normalizeShopCategoryKey(s.category || s.shop_category || s.shopCategory || 'general'),
+            category: normalizeShopCategoryKey(s.shop_category || s.category || s.shopCategory || 'general'),
             primaryColor: s.primaryColor || '#F97316',
             secondaryColor: s.secondaryColor || '#FBBF24',
             logoDataUrl: s.logoDataUrl || '',
@@ -4937,7 +4945,7 @@ const ShopsDirectory = () => {
           const mappedFallback = rows
             .filter((s) => s?.id && s?.slug)
             .map((s) => {
-              const rawCategory = s.category || s.shop_category || s.shopCategory || 'general'
+              const rawCategory = s.shop_category || s.category || s.shopCategory || 'general'
               const category = normalizeShopCategoryKey(rawCategory)
               return ({
               id: `supabase-${s.id}`,
@@ -5019,7 +5027,7 @@ const ShopsDirectory = () => {
       let mapped = data
         .filter((s) => s?.id && s?.slug)
         .map((s) => {
-          const rawCategory = s.category || s.shop_category || s.shopCategory || 'general'
+          const rawCategory = s.shop_category || s.category || s.shopCategory || 'general'
           const category = normalizeShopCategoryKey(rawCategory)
           const themed = resolveTheme(category, s)
           return ({
@@ -5057,7 +5065,7 @@ const ShopsDirectory = () => {
             mapped = mapped.map((shop) => {
               const row = byId.get(String(shop.vendorId || '').trim())
               if (!row) return shop
-              const rawRowCategory = row?.category || row?.shop_category || row?.shopCategory || shop.category
+              const rawRowCategory = row?.shop_category || row?.category || row?.shopCategory || shop.category
               const rowCategory = normalizeShopCategoryKey(rawRowCategory)
               const themed = resolveTheme(rowCategory, row)
               return {
