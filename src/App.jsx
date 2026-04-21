@@ -4658,6 +4658,22 @@ const ShopsDirectory = () => {
     }
   }, [themeByCategory])
 
+  const normalizeShopCategoryKey = useCallback((raw) => {
+    const v = String(raw || '').trim().toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+    if (!v) return 'general'
+    if (v === 'general' || v === 'generale' || v === 'generaliste' || v.includes('general')) return 'general'
+    if (v === 'food' || v.includes('aliment') || v.includes('epicer') || v.includes('epicerie') || v.includes('vivre')) return 'food'
+    if (v === 'tech' || v.includes('tech') || v.includes('electron') || v.includes('electro') || v.includes('electronics') || v.includes('informat')) return 'tech'
+    if (v === 'telephony' || v.includes('teleph') || v.includes('telephone') || v.includes('mobile')) return 'telephony'
+    if (v === 'fashion' || v.includes('mode') || v.includes('fashion') || v.includes('vet') || v.includes('habil')) return 'fashion'
+    if (v === 'beauty' || v.includes('beaute') || v.includes('beaut') || v.includes('cosm')) return 'beauty'
+    if (v === 'home' || v.includes('maison') || v.includes('home') || v.includes('deco')) return 'home'
+    if (v === 'services' || v === 'service' || v.includes('service') || v.includes('prestation')) return 'services'
+    return 'general'
+  }, [])
+
   const prettifyShopNameFromSlug = useCallback((slug) => {
     const raw = String(slug || '').trim()
     if (!raw) return ''
@@ -4666,7 +4682,7 @@ const ShopsDirectory = () => {
     if (last && /^[a-z0-9]{6,}$/i.test(last)) parts = parts.slice(0, -1)
     const words = parts.join(' ').split(' ').filter(Boolean)
     return words.map((w) => w ? `${w.charAt(0).toUpperCase()}${w.slice(1)}` : '').join(' ')
-  }, [])
+  }, [normalizeShopCategoryKey, resolveTheme])
 
   const getShopDisplayName = useCallback((shop) => {
     const name = String(shop?.name || '').trim()
@@ -4785,7 +4801,7 @@ const ShopsDirectory = () => {
             id: s.id || s.slug,
             name: s.name || 'Boutique',
             slug: s.slug,
-            category: s.category || 'general',
+            category: normalizeShopCategoryKey(s.category || s.shop_category || s.shopCategory || 'general'),
             primaryColor: s.primaryColor || '#F97316',
             secondaryColor: s.secondaryColor || '#FBBF24',
             logoDataUrl: s.logoDataUrl || '',
@@ -4798,7 +4814,7 @@ const ShopsDirectory = () => {
     } catch {
       setDemoCreatedShops([]);
     }
-  }, []);
+  }, [normalizeShopCategoryKey]);
 
   const loadSupabaseApprovedShops = useCallback(async () => {
     const hasSupabase = Boolean(supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey)
@@ -4825,18 +4841,21 @@ const ShopsDirectory = () => {
           const rows = Array.isArray(json?.shops) ? json.shops : []
           const mappedFallback = rows
             .filter((s) => s?.id && s?.slug)
-            .map((s) => ({
+            .map((s) => {
+              const rawCategory = s.category || s.shop_category || s.shopCategory || 'general'
+              const category = normalizeShopCategoryKey(rawCategory)
+              return ({
               id: `supabase-${s.id}`,
               name: s.name || s.shop_name || 'Boutique',
               slug: s.slug,
-              category: s.category || s.shop_category || s.shopCategory || 'general',
-              ...resolveTheme(s.category || s.shop_category || s.shopCategory || 'general', s),
+              category,
+              ...resolveTheme(category, s),
               logoDataUrl: s.logo_url || '',
               ownerEmail: String(s?.owner_email || s?.email || '').trim().toLowerCase(),
               vendorId: String(s.id),
               vendorKind: 'shop',
               source: 'supabase',
-            }))
+            })})
           if (mappedFallback.length) {
             setSupabaseShops(mappedFallback)
             return
@@ -4905,7 +4924,8 @@ const ShopsDirectory = () => {
       let mapped = data
         .filter((s) => s?.id && s?.slug)
         .map((s) => {
-          const category = s.category || s.shop_category || s.shopCategory || 'general'
+          const rawCategory = s.category || s.shop_category || s.shopCategory || 'general'
+          const category = normalizeShopCategoryKey(rawCategory)
           const themed = resolveTheme(category, s)
           return ({
           id: `supabase-${s.id}`,
@@ -4942,7 +4962,8 @@ const ShopsDirectory = () => {
             mapped = mapped.map((shop) => {
               const row = byId.get(String(shop.vendorId || '').trim())
               if (!row) return shop
-              const rowCategory = row?.category || row?.shop_category || shop.category
+              const rawRowCategory = row?.category || row?.shop_category || row?.shopCategory || shop.category
+              const rowCategory = normalizeShopCategoryKey(rawRowCategory)
               const themed = resolveTheme(rowCategory, row)
               return {
                 ...shop,
@@ -4979,7 +5000,7 @@ const ShopsDirectory = () => {
         id: s?.id || s?.slug,
         name: s?.name || 'Boutique',
         slug: s?.slug,
-        category: s?.category || 'general',
+        category: normalizeShopCategoryKey(s?.category || s?.shop_category || s?.shopCategory || 'general'),
         primaryColor: '#0EA5E9',
         secondaryColor: '#38BDF8',
         logoDataUrl: '',
@@ -5077,7 +5098,7 @@ const ShopsDirectory = () => {
       const vendorKind = rawKind === 'provider' || rawKind === 'service' ? 'provider' : 'shop'
       const vendorId = String(v?.id ?? '').trim()
       const slug = String(v?.slug || '').trim() || 'boutique-demo'
-      const category = normalizeVendorCategory(v.category) || 'general'
+      const category = normalizeShopCategoryKey(normalizeVendorCategory(v.category) || 'general')
       return {
         id: `vendor-${v.id}`,
         name: v.name,
@@ -5205,7 +5226,7 @@ const ShopsDirectory = () => {
     const term = normalize(searchTerm).trim();
     const byCategory = selectedCategory === 'all'
       ? directory
-      : directory.filter((s) => (s?.category || 'general') === selectedCategory);
+      : directory.filter((s) => normalizeShopCategoryKey(s?.category || 'general') === selectedCategory);
 
     const filtered = !term ? byCategory : byCategory.filter((s) => {
       const name = normalize(s?.name);
@@ -5658,7 +5679,7 @@ const ShopsDirectory = () => {
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSelectedCategory(shop.category || 'general');
+                            setSelectedCategory(normalizeShopCategoryKey(shop.category || 'general'));
                             scrollToList();
                           }}
                           className={`text-xs px-2 py-1 rounded-full font-semibold transition-colors ${
@@ -5666,7 +5687,7 @@ const ShopsDirectory = () => {
                           }`}
                           title="Filtrer par catégorie"
                         >
-                          {categoryLabel(shop.category)}
+                          {categoryLabel(normalizeShopCategoryKey(shop.category))}
                         </button>
                         <button
                           type="button"
@@ -5766,7 +5787,7 @@ const ShopsDirectory = () => {
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setSelectedCategory(shop.category || 'general');
+                      setSelectedCategory(normalizeShopCategoryKey(shop.category || 'general'));
                       scrollToList();
                     }}
                     className={`text-xs px-2 py-1 rounded-full font-semibold transition-colors ${
@@ -5774,7 +5795,7 @@ const ShopsDirectory = () => {
                     }`}
                     title="Filtrer par catégorie"
                   >
-                    {categoryLabel(shop.category)}
+                    {categoryLabel(normalizeShopCategoryKey(shop.category))}
                   </button>
                   <button
                     type="button"
