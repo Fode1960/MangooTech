@@ -4658,6 +4658,24 @@ const ShopsDirectory = () => {
     }
   }, [themeByCategory])
 
+  const prettifyShopNameFromSlug = useCallback((slug) => {
+    const raw = String(slug || '').trim()
+    if (!raw) return ''
+    let parts = raw.split('-').map((p) => String(p || '').trim()).filter(Boolean)
+    const last = parts[parts.length - 1] || ''
+    if (last && /^[a-z0-9]{6,}$/i.test(last)) parts = parts.slice(0, -1)
+    const words = parts.join(' ').split(' ').filter(Boolean)
+    return words.map((w) => w ? `${w.charAt(0).toUpperCase()}${w.slice(1)}` : '').join(' ')
+  }, [])
+
+  const getShopDisplayName = useCallback((shop) => {
+    const name = String(shop?.name || '').trim()
+    if (name && name.toLowerCase() !== 'boutique') return name
+    const slug = String(shop?.slug || '').trim()
+    const fromSlug = prettifyShopNameFromSlug(slug)
+    return fromSlug || name || 'Boutique'
+  }, [prettifyShopNameFromSlug])
+
   const normalizeCategoryFromLocalPlus = useCallback((raw) => {
     const c = String(raw || '').trim().toLowerCase();
     if (!c) return 'general';
@@ -5584,7 +5602,10 @@ const ShopsDirectory = () => {
             <div>
               <div className={`text-xs font-black uppercase tracking-wide mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Sponsorisé</div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {sponsoredTop.map((shop) => (
+                {sponsoredTop.map((shop) => {
+                  const displayName = getShopDisplayName(shop)
+                  const displayInitial = displayName?.charAt(0)?.toUpperCase() || 'B'
+                  return (
                   <div
                     key={`sponsored-${shop.id}`}
                     role="button"
@@ -5607,12 +5628,12 @@ const ShopsDirectory = () => {
                           <img src={shop.logoDataUrl} alt="Logo" className="w-12 h-12 rounded-xl object-cover" />
                         ) : (
                           <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold" style={{ backgroundColor: shop.primaryColor }}>
-                            {shop.name?.charAt(0)?.toUpperCase() || 'B'}
+                            {displayInitial}
                           </div>
                         )}
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <div className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{shop.name}</div>
+                            <div className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{displayName}</div>
                             <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-amber-500/15 text-amber-200 border-amber-400/30' : 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-amber-50 text-amber-700 border-amber-200'}>
                               Sponsorisé
                             </span>
@@ -5662,13 +5683,16 @@ const ShopsDirectory = () => {
                       </div>
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {mainList.map((shop) => {
+            const displayName = getShopDisplayName(shop)
+            const displayInitial = displayName?.charAt(0)?.toUpperCase() || 'B'
             const b = (boostFlags.vitrine || boostFlags.promo) ? getBoostForShop(shop) : null
             const now = Date.now()
             const isSponsored = Boolean(boostFlags.vitrine && b && Number(b.sponsoredUntilMs || 0) > now)
@@ -5700,12 +5724,12 @@ const ShopsDirectory = () => {
                     <img src={shop.logoDataUrl} alt="Logo" className="w-12 h-12 rounded-xl object-cover" />
                   ) : (
                     <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold" style={{ backgroundColor: shop.primaryColor }}>
-                      {shop.name?.charAt(0)?.toUpperCase() || 'B'}
+                      {displayInitial}
                     </div>
                   )}
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <div className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{shop.name}</div>
+                      <div className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{displayName}</div>
                       {isSponsored && (
                         <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-amber-500/15 text-amber-200 border-amber-400/30' : 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-amber-50 text-amber-700 border-amber-200'}>
                           Sponsorisé
