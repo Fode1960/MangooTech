@@ -2315,6 +2315,7 @@ const VendorDashboard = ({ user }) => {
   const [editOwnerEmail, setEditOwnerEmail] = useState('');
   const [editCategory, setEditCategory] = useState('general');
   const [editLogoDataUrl, setEditLogoDataUrl] = useState('');
+  const [editLogoFile, setEditLogoFile] = useState(null);
   const [editPrimaryColor, setEditPrimaryColor] = useState('#F97316');
   const [editSecondaryColor, setEditSecondaryColor] = useState('#FBBF24');
   const [showShopEditor, setShowShopEditor] = useState(false);
@@ -2697,11 +2698,12 @@ const VendorDashboard = ({ user }) => {
       const email = normalizeEmail(user?.email)
       if (email) {
         try {
-          const select = 'id,name,slug,category,status,created_at,updated_at,owner_name,owner_email,email,shop_url,logo_url'
-          const attempt = async (withOwnerEmail) => {
+          const baseSelect = 'id,name,slug,category,status,created_at,updated_at,owner_name,owner_email,email,shop_url,logo_url'
+          let select = 'id,name,slug,category,shop_category,primary_color,secondary_color,status,created_at,updated_at,owner_name,owner_email,email,shop_url,logo_url'
+          const attempt = async (withOwnerEmail, cols) => {
             const q = supabase
               .from('shops')
-              .select(select)
+              .select(cols)
               .order('created_at', { ascending: false })
 
             if (withOwnerEmail) {
@@ -2711,12 +2713,28 @@ const VendorDashboard = ({ user }) => {
             return await q.eq('email', email)
           }
 
-          let r = await attempt(true)
+          let r = await attempt(true, select)
           if (r.error) {
             const msg = String(r.error.message || '').toLowerCase()
             const missingOwnerEmail = msg.includes('could not find') && msg.includes('owner_email')
             if (missingOwnerEmail) {
-              r = await attempt(false)
+              r = await attempt(false, select)
+            }
+          }
+
+          if (r.error) {
+            const msg = String(r.error.message || '').toLowerCase()
+            const missingColumn = msg.includes('could not find') && msg.includes('column')
+            if (missingColumn) {
+              select = baseSelect
+              r = await attempt(true, select)
+              if (r.error) {
+                const msg2 = String(r.error.message || '').toLowerCase()
+                const missingOwnerEmail2 = msg2.includes('could not find') && msg2.includes('owner_email')
+                if (missingOwnerEmail2) {
+                  r = await attempt(false, select)
+                }
+              }
             }
           }
 
@@ -2729,11 +2747,14 @@ const VendorDashboard = ({ user }) => {
             .map((s) => {
               const slug = String(s?.slug || '').trim()
               if (!slug) return null
+              const category = String(s?.category || s?.shop_category || 'general')
+              const primaryColor = String(s?.primary_color || '').trim() || '#F97316'
+              const secondaryColor = String(s?.secondary_color || '').trim() || '#FBBF24'
               return {
                 id: String(s?.id || slug),
                 name: String(s?.name || 'Boutique'),
                 slug,
-                category: String(s?.category || 'general'),
+                category,
                 ownerName: String(s?.owner_name || user?.name || 'Vendeur'),
                 ownerEmail: String(s?.owner_email || s?.email || email),
                 shopUrl: String(s?.shop_url || `${window.location.origin}/shop/${slug}`),
@@ -2741,8 +2762,8 @@ const VendorDashboard = ({ user }) => {
                 createdAt: String(s?.created_at || ''),
                 updatedAt: String(s?.updated_at || ''),
                 logoDataUrl: String(s?.logo_url || ''),
-                primaryColor: '#0EA5E9',
-                secondaryColor: '#38BDF8',
+                primaryColor,
+                secondaryColor,
                 source: 'supabase',
               }
             })
@@ -2795,7 +2816,7 @@ const VendorDashboard = ({ user }) => {
           id: String(s?.id || s.slug),
           name: String(s?.name || ''),
           slug: String(s?.slug || ''),
-          category: String(s?.category || 'general'),
+          category: String(s?.category || s?.shop_category || 'general'),
           approvalStatus: String(s?.status || 'pending'),
           ownerEmail: String(s?.owner_email || s?.email || ''),
           ownerName: String(s?.owner_name || ''),
@@ -2822,7 +2843,7 @@ const VendorDashboard = ({ user }) => {
       try {
         const { data, error } = await supabase
           .from('shops')
-          .select('id,name,slug,category,status,email,owner_email,owner_name,shop_url,logo_url,created_at,updated_at')
+          .select('id,name,slug,category,shop_category,primary_color,secondary_color,status,email,owner_email,owner_name,shop_url,logo_url,created_at,updated_at')
           .eq('slug', targetSlug)
           .maybeSingle();
         if (!error && data?.slug) {
@@ -2830,7 +2851,7 @@ const VendorDashboard = ({ user }) => {
             id: String(data?.id || data.slug),
             name: String(data?.name || ''),
             slug: String(data?.slug || ''),
-            category: String(data?.category || 'general'),
+            category: String(data?.category || data?.shop_category || 'general'),
             approvalStatus: String(data?.status || 'pending'),
             ownerEmail: String(data?.owner_email || data?.email || ''),
             ownerName: String(data?.owner_name || ''),
@@ -2861,6 +2882,29 @@ const VendorDashboard = ({ user }) => {
     };
   }, [user?.email, user?.name]);
 
+  const normalizeEditCategoryKey = useCallback((value) => {
+    const raw = String(value || '').trim()
+    if (!raw) return 'general'
+    const lower = raw.toLowerCase()
+    const byKey = shopCategories.find((c) => String(c.key).toLowerCase() === lower)
+    if (byKey?.key) return byKey.key
+    const byLabel = shopCategories.find((c) => String(c.label || '').trim().toLowerCase() === lower)
+    if (byLabel?.key) return byLabel.key
+    return 'general'
+  }, [shopCategories])
+
+  const uploadShopLogoToSupabase = useCallback(async (file, slug) => {
+    const safeSlug = String(slug || '').trim() || 'shop'
+    const safeName = String(file?.name || 'logo.png').replace(/[^a-zA-Z0-9._-]+/g, '-')
+    const fileName = `shop-logos/${safeSlug}-${Date.now()}-${safeName}`
+    const { error } = await supabase.storage.from('boutique-images').upload(fileName, file, { upsert: true })
+    if (error) throw error
+    const { data } = supabase.storage.from('boutique-images').getPublicUrl(fileName)
+    const publicUrl = String(data?.publicUrl || '').trim()
+    if (!publicUrl) throw new Error('Logo upload failed')
+    return publicUrl
+  }, [])
+
   const syncShopToLocalStorage = useCallback((shop) => {
     const slug = String(shop?.slug || '').trim();
     if (!slug) return;
@@ -2890,11 +2934,24 @@ const VendorDashboard = ({ user }) => {
     }
 
     const now = new Date().toISOString();
+    const normalizedCategory = normalizeEditCategoryKey(editCategory || 'general')
+
+    let logoForStorage = String(editLogoDataUrl || '').trim()
+    if (editLogoFile && supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey) {
+      try {
+        const uploaded = await uploadShopLogoToSupabase(editLogoFile, slug)
+        logoForStorage = uploaded
+        setEditLogoDataUrl(uploaded)
+        setEditLogoFile(null)
+      } catch {
+      }
+    }
+
     const nextLocal = {
       slug,
       name: String(editName || '').trim(),
-      category: String(editCategory || 'general').trim(),
-      logoDataUrl: String(editLogoDataUrl || '').trim(),
+      category: normalizedCategory,
+      logoDataUrl: logoForStorage,
       primaryColor: editPrimaryColor,
       secondaryColor: editSecondaryColor,
       updatedAt: now,
@@ -2906,9 +2963,12 @@ const VendorDashboard = ({ user }) => {
         const updateBase = {
           name: nextLocal.name,
           category: nextLocal.category,
+          shop_category: nextLocal.category,
+          primary_color: String(nextLocal.primaryColor || '').trim(),
+          secondary_color: String(nextLocal.secondaryColor || '').trim(),
           updated_at: now,
         };
-        const logo = nextLocal.logoDataUrl;
+        const logo = String(nextLocal.logoDataUrl || '').trim();
         const canStoreLogoUrl = logo && /^https?:\/\//i.test(logo);
         const updateWithLogo = canStoreLogoUrl ? { ...updateBase, logo_url: logo } : updateBase;
 
@@ -2924,11 +2984,21 @@ const VendorDashboard = ({ user }) => {
           const msg = String(r.error.message || '').toLowerCase();
           const missingLogo = msg.includes('could not find') && msg.includes('logo_url');
           const missingUpdated = msg.includes('could not find') && msg.includes('updated_at');
+          const missingShopCategory = msg.includes('could not find') && msg.includes('shop_category');
+          const missingPrimary = msg.includes('could not find') && msg.includes('primary_color');
+          const missingSecondary = msg.includes('could not find') && msg.includes('secondary_color');
+          const missingCategory = msg.includes('could not find') && msg.includes('category');
           if (missingLogo) {
             r = await attempt(updateBase);
           }
-          if (r.error && missingUpdated) {
-            r = await attempt({ name: nextLocal.name, category: nextLocal.category });
+          if (r.error && (missingShopCategory || missingPrimary || missingSecondary || missingCategory || missingUpdated)) {
+            const nextPayload = { ...updateBase }
+            if (missingShopCategory) delete nextPayload.shop_category
+            if (missingPrimary) delete nextPayload.primary_color
+            if (missingSecondary) delete nextPayload.secondary_color
+            if (missingCategory) delete nextPayload.category
+            if (missingUpdated) delete nextPayload.updated_at
+            r = await attempt(nextPayload);
           }
         }
 
@@ -2942,7 +3012,7 @@ const VendorDashboard = ({ user }) => {
     syncShopToLocalStorage(nextLocal);
     toast.success(didSupabase ? 'Réglages enregistrés' : 'Réglages enregistrés (local)');
     void loadVendorShops();
-  }, [editCategory, editLogoDataUrl, editName, editPrimaryColor, editSecondaryColor, editingShopSlug, loadVendorShops, syncShopToLocalStorage]);
+  }, [editCategory, editLogoDataUrl, editLogoFile, editName, editPrimaryColor, editSecondaryColor, editingShopSlug, loadVendorShops, normalizeEditCategoryKey, syncShopToLocalStorage, uploadShopLogoToSupabase]);
 
   const openShopEditor = useCallback((shop) => {
     setEditingShopSlug(shop?.slug || '');
@@ -2990,7 +3060,7 @@ const VendorDashboard = ({ user }) => {
       setEditingShopSlug(shopSlug);
       setEditName(String(shop?.name || shopSlug || ''));
       setEditOwnerEmail(String(shop?.ownerEmail || user?.email || ''));
-      setEditCategory(String(shop?.category || 'general'));
+      setEditCategory(String(shop?.category || shop?.shop_category || 'general'));
       setEditLogoDataUrl(String(shop?.logoDataUrl || ''));
       setEditPrimaryColor(String(shop?.primaryColor || '#0EA5E9'));
       setEditSecondaryColor(String(shop?.secondaryColor || '#38BDF8'));
@@ -3001,6 +3071,7 @@ const VendorDashboard = ({ user }) => {
   const handleEditLogoChange = useCallback((e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setEditLogoFile(file);
     const reader = new FileReader();
     reader.onload = (ev) => {
       setEditLogoDataUrl(String(ev.target?.result || ''));
@@ -3597,14 +3668,38 @@ const VendorDashboard = ({ user }) => {
                 </div>
 
                 <div className="md:col-span-2">
-                  <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-xs font-black`}>Logo (URL)</div>
+                  <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-xs font-black`}>Logo</div>
+                  <div className="mt-2 flex items-center gap-3">
+                    {editLogoDataUrl ? (
+                      <img src={editLogoDataUrl} alt="Logo" className="w-12 h-12 rounded-xl object-cover" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold" style={{ backgroundColor: editPrimaryColor }}>
+                        {(editName || 'B').charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <label className={`${isDark ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800' : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-lg text-sm font-semibold cursor-pointer transition-colors`}>
+                      Télécharger un logo
+                      <input type="file" accept="image/*" onChange={handleEditLogoChange} className="hidden" />
+                    </label>
+                    {editLogoDataUrl && (
+                      <button
+                        type="button"
+                        onClick={() => { setEditLogoDataUrl(''); setEditLogoFile(null); }}
+                        className="px-3 py-2 rounded-lg text-sm font-semibold bg-red-50 text-red-700 hover:bg-red-100"
+                      >
+                        Supprimer
+                      </button>
+                    )}
+                  </div>
+
+                  <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-xs font-black mt-4`}>Logo (URL) (optionnel)</div>
                   <input
                     value={editLogoDataUrl}
                     onChange={(e) => setEditLogoDataUrl(e.target.value)}
                     className={`mt-1 w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'}`}
                     placeholder="https://..."
                   />
-                  <div className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-xs mt-1`}>Astuce : sur Supabase, seules les URLs http(s) sont enregistrées.</div>
+                  <div className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-xs mt-1`}>Si vous téléchargez un logo, il sera enregistré comme URL publique quand Supabase est actif.</div>
                 </div>
               </div>
             </div>
