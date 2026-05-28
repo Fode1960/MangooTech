@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Shopping WebRTC - Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .video-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .video-box {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        video {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            background: black;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #da190b;
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background: #2196F3;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #0b7dda;
+            transform: translateY(-2px);
+        }
+        .status {
+            text-align: center;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .status.connected {
+            background: rgba(76, 175, 80, 0.3);
+            border: 2px solid #4CAF50;
+        }
+        .status.disconnected {
+            background: rgba(244, 67, 54, 0.3);
+            border: 2px solid #f44336;
+        }
+        .status.connecting {
+            background: rgba(255, 193, 7, 0.3);
+            border: 2px solid #FFC107;
+        }
+        .chat-container {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .chat-messages {
+            height: 200px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .chat-input input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .product-showcase {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .product-item {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .price {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .hidden {
+            display: none;
+        }
+        .audio-levels {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .audio-meter {
+            text-align: center;
+        }
+        .audio-bar {
+            width: 100px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .audio-fill {
+            height: 100%;
+            background: #4CAF50;
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+        .private-call-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .available-users {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 15px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .user-item {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .user-item.selected {
+            background: rgba(76, 175, 80, 0.3);
+            border: 2px solid #4CAF50;
+        }
+        .private-call-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        .user-status {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .call-mode-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .mode-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .user-card {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .user-card:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .user-card.selected {
+            background: rgba(76, 175, 80, 0.3);
+            border: 2px solid #4CAF50;
+        }
+        .user-card .user-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .user-card .user-role {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .selected-info {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(76, 175, 80, 0.2);
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .user-selection {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛍️ Live Shopping WebRTC</h1>
+            <div id="userInfo" class="status"></div>
+        </div>
+
+        <div id="connectionStatus" class="status disconnected">
+            Déconnecté
+        </div>
+
+        <div class="video-container">
+            <div class="video-box">
+                <h3>Votre vidéo</h3>
+                <video id="localVideo" autoplay muted playsinline></video>
+                <div class="audio-meter">
+                    <div>Votre audio</div>
+                    <div class="audio-bar">
+                        <div id="localAudioLevel" class="audio-fill"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="video-box">
+                <h3>Vidéo du vendeur</h3>
+                <video id="remoteVideo" autoplay playsinline></video>
+                <div class="audio-meter">
+                    <div>Audio entrant</div>
+                    <div class="audio-bar">
+                        <div id="remoteAudioLevel" class="audio-fill"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="startCamera" class="btn-secondary">🎤 Activer caméra/micro</button>
+            <button id="connect" class="btn-primary">🔗 Se connecter</button>
+            <button id="call" class="btn-primary">📞 Appeler Groupe</button>
+            <button id="callPrivate" class="btn-primary">🔒 Appel Privé</button>
+            <button id="answer" class="btn-primary">📱 Répondre</button>
+            <button id="hangup" class="btn-danger">📴 Raccrocher</button>
+            <button id="disconnect" class="btn-danger">🔌 Déconnecter</button>
+            <button id="audioDiagnostic" class="btn-secondary">🔍 Diagnostic Audio</button>
+        </div>
+
+        <div id="callModeSelection" class="call-mode-section hidden">
+            <h3>🎯 Mode d'appel</h3>
+            <div class="mode-buttons">
+                <button id="groupCallBtn" class="btn-primary">� Appel GROUPE (tous)</button>
+                <button id="privateCallBtn" class="btn-secondary">� Appel PRIVÉ (1 personne)</button>
+            </div>
+            <div id="userSelectionDiv" class="user-selection hidden">
+                <h4>👥 Sélectionnez une personne :</h4>
+                <div id="availableUsersList" class="users-grid"></div>
+                <div id="selectedUserInfo" class="selected-info"></div>
+            </div>
+        </div>
+        
+        <div id="privateCallSection" class="private-call-section hidden">
+            <h3>🔒 Appel Privé</h3>
+            <div id="availableUsers" class="available-users"></div>
+            <div class="private-call-controls">
+                <button id="requestPrivateCall" class="btn-primary">📞 Appeler Client Sélectionné</button>
+                <button id="cancelPrivateCall" class="btn-secondary">❌ Annuler</button>
+            </div>
+        </div>
+
+        <div id="productSection" class="product-showcase hidden">
+            <h2>🛍️ Produits en vente</h2>
+            <div class="product-item">
+                <div>
+                    <h4>iPhone 15 Pro</h4>
+                    <p>Le dernier smartphone Apple</p>
+                </div>
+                <div class="price">€1,199</div>
+            </div>
+            <div class="product-item">
+                <div>
+                    <h4>MacBook Air M2</h4>
+                    <p>Ordinateur portable ultra-fin</p>
+                </div>
+                <div class="price">€1,499</div>
+            </div>
+        </div>
+
+        <div class="chat-container">
+            <h3>💬 Chat en direct</h3>
+            <div id="chatMessages" class="chat-messages"></div>
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="Tapez votre message...">
+                <button id="sendMessage" class="btn-primary">Envoyer</button>
+            </div>
+        </div>
+
+        <div id="logs" style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-top: 20px; max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px;"></div>
+    </div>
+
+    <script>
+        // Configuration WebRTC - Système multi-connexions
+        let localStream = null;
+        let audioContext = null;
+        let localAnalyser = null;
+        let localDataArray = null;
+        let isConnected = false;
+        let currentRoom = null;
+        let userRole = null;
+        let userId = null;
+        let callMode = null; // 'group' ou 'private'
+        let targetUserId = null; // Pour appels privés
+        
+        // Gestionnaire multi-connexions WebRTC
+        const peerConnections = new Map(); // Map<userId, RTCPeerConnection>
+        const remoteStreams = new Map(); // Map<userId, MediaStream>
+        const remoteAnalysers = new Map(); // Map<userId, AnalyserNode>
+        const remoteDataArrays = new Map(); // Map<userId, Uint8Array>
+
+        // Récupération des paramètres URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('roomId') || 'default-room';
+        userId = urlParams.get('userId') || 'user-' + Math.random().toString(36).substr(2, 9);
+        userRole = urlParams.get('role') || 'viewer';
+
+        // Éléments DOM
+        const localVideo = document.getElementById('localVideo');
+        const remoteVideo = document.getElementById('remoteVideo');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const userInfo = document.getElementById('userInfo');
+        const productSection = document.getElementById('productSection');
+        const logs = document.getElementById('logs');
+
+        // Affichage des informations utilisateur
+        userInfo.innerHTML = `
+            <strong>Room:</strong> ${roomId} | 
+            <strong>User:</strong> ${userId} | 
+            <strong>Role:</strong> ${userRole}
+        `;
+
+        // Fonction de log
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logs.innerHTML += `[${timestamp}] ${message}\n`;
+            logs.scrollTop = logs.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        // Configuration des serveurs STUN/TURN
+        const iceServers = [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
+        ];
+
+        // Configuration WebRTC
+        const peerConnectionConfig = {
+            iceServers: iceServers,
+            iceCandidatePoolSize: 10
+        };
+
+        // Système de signalisation via localStorage
+        class LocalStorageSignaling {
+            constructor(roomId, userId) {
+                this.roomId = roomId;
+                this.userId = userId;
+                this.prefix = `webrtc-${roomId}-`;
+                this.listeners = new Map();
+                
+                window.addEventListener('storage', (e) => {
+                    if (e.key && e.key.startsWith(this.prefix) && e.newValue) {
+                        this.handleMessage(e.key, e.newValue);
+                    }
+                });
+            }
+
+            send(targetUserId, type, data) {
+                const key = `${this.prefix}${targetUserId}-${type}`;
+                const message = {
+                    from: this.userId,
+                    type: type,
+                    data: data,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem(key, JSON.stringify(message));
+                
+                // Nettoyer après 30 secondes
+                setTimeout(() => {
+                    if (localStorage.getItem(key) === JSON.stringify(message)) {
+                        localStorage.removeItem(key);
+                    }
+                }, 30000);
+            }
+
+            broadcast(type, data) {
+                const key = `${this.prefix}broadcast-${type}-${Date.now()}`;
+                const message = {
+                    from: this.userId,
+                    type: type,
+                    data: data,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem(key, JSON.stringify(message));
+                
+                setTimeout(() => localStorage.removeItem(key), 30000);
+            }
+
+            on(type, callback) {
+                if (!this.listeners.has(type)) {
+                    this.listeners.set(type, []);
+                }
+                this.listeners.get(type).push(callback);
+            }
+
+            handleMessage(key, value) {
+                try {
+                    const message = JSON.parse(value);
+                    if (message.from === this.userId) return; // Ignorer ses propres messages
+                    
+                    const listeners = this.listeners.get(message.type);
+                    if (listeners) {
+                        listeners.forEach(callback => callback(message));
+                    }
+                } catch (e) {
+                    log(`Erreur lors du traitement du message: ${e.message}`);
+                }
+            }
+        }
+
+        const signaling = new LocalStorageSignaling(roomId, userId);
+
+        // Initialisation
+        function init() {
+            log(`🚀 Initialisation Live Shopping WebRTC`);
+            log(`📍 Room: ${roomId}, User: ${userId}, Role: ${userRole}`);
+            
+            // Afficher la section produits si vendeur
+            if (userRole === 'vendor') {
+                productSection.classList.remove('hidden');
+            }
+
+            // Configuration des écouteurs d'événements
+            setupEventListeners();
+            
+            // Configuration de la signalisation
+            setupSignaling();
+        }
+
+        function setupEventListeners() {
+            document.getElementById('startCamera').onclick = startCamera;
+            document.getElementById('connect').onclick = connect;
+            document.getElementById('call').onclick = call;
+            document.getElementById('answer').onclick = answer;
+            document.getElementById('hangup').onclick = hangup;
+            document.getElementById('disconnect').onclick = disconnect;
+            document.getElementById('audioDiagnostic').onclick = audioDiagnostic;
+            document.getElementById('sendMessage').onclick = sendChatMessage;
+            
+            document.getElementById('chatInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendChatMessage();
+            });
+            
+            // Écouteurs pour les boutons principaux
+            document.getElementById('startCamera').onclick = startCamera;
+            document.getElementById('connect').onclick = connect;
+            document.getElementById('call').onclick = call;
+            document.getElementById('callPrivate').onclick = callPrivate;
+            document.getElementById('answer').onclick = answer;
+            document.getElementById('hangup').onclick = hangup;
+            document.getElementById('disconnect').onclick = disconnect;
+            document.getElementById('audioDiagnostic').onclick = audioDiagnostic;
+            
+            // Écouteurs pour les nouveaux boutons
+            const groupCallBtn = document.getElementById('groupCallBtn');
+            const privateCallBtn = document.getElementById('privateCallBtn');
+            
+            if (groupCallBtn) {
+                groupCallBtn.onclick = () => {
+                    callMode = 'group';
+                    document.getElementById('callModeSelection').classList.add('hidden');
+                    initiateCall();
+                };
+            }
+            
+            if (privateCallBtn) {
+                privateCallBtn.onclick = () => {
+                    document.getElementById('userSelectionDiv').classList.remove('hidden');
+                };
+            }
+        }
+
+        function setupSignaling() {
+            // Écouter les offres WebRTC
+            signaling.on('offer', async (message) => {
+                log(`📞 Offre reçue de ${message.from}`);
+                await handleOffer(message.data, message.from);
+            });
+
+            // Écouter les réponses WebRTC
+            signaling.on('answer', async (message) => {
+                log(`📱 Réponse reçue de ${message.from}`);
+                await handleAnswer(message.data, message.from);
+            });
+
+            // Écouter les candidats ICE
+            signaling.on('ice-candidate', async (message) => {
+                log(`🧊 Candidat ICE reçu de ${message.from}`);
+                await handleIceCandidate(message.data, message.from);
+            });
+
+            // Écouter les messages de chat
+            signaling.on('chat', (message) => {
+                addChatMessage(message.from, message.data);
+            });
+
+            // Écouter les demandes de connexion
+            signaling.on('connect-request', (message) => {
+                log(`🔗 Demande de connexion de ${message.from}`);
+                if (userRole === 'vendor') {
+                    // Le vendeur accepte automatiquement
+                    signaling.send(message.from, 'connect-accept', { roomId: roomId });
+                }
+            });
+
+            // Écouter les acceptations de connexion
+            signaling.on('connect-accept', (message) => {
+                log(`✅ Connexion acceptée par ${message.from}`);
+                updateConnectionStatus('connecting', 'Connexion établie');
+            });
+
+            // Écouter les demandes d'appel privé (simplifié)
+            signaling.on('private-call-request', (message) => {
+                handleSimplePrivateCallRequest(message);
+            });
+        }
+
+        async function startCamera() {
+            try {
+                log('📹 Démarrage de la caméra et du microphone...');
+                
+                const constraints = {
+                    video: {
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        facingMode: 'user'
+                    },
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true,
+                        sampleRate: 48000,
+                        channelCount: 2
+                    }
+                };
+
+                localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                localVideo.srcObject = localStream;
+                
+                log('✅ Caméra et microphone activés');
+                
+                // Configurer l'analyse audio
+                setupAudioAnalysis();
+                
+                // Mettre à jour l'état des boutons
+                updateButtonStates();
+                
+            } catch (error) {
+                log(`❌ Erreur lors de l'activation de la caméra: ${error.message}`);
+                alert(`Erreur: ${error.message}. Vérifiez les permissions.`);
+            }
+        }
+
+        function setupAudioAnalysis() {
+            if (!localStream) return;
+
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Analyse du microphone local
+                const localSource = audioContext.createMediaStreamSource(localStream);
+                localAnalyser = audioContext.createAnalyser();
+                localAnalyser.fftSize = 256;
+                localSource.connect(localAnalyser);
+                localDataArray = new Uint8Array(localAnalyser.frequencyBinCount);
+
+                // Analyse de l'audio distant (quand disponible)
+                if (remoteVideo.srcObject) {
+                    const remoteSource = audioContext.createMediaStreamSource(remoteVideo.srcObject);
+                    remoteAnalyser = audioContext.createAnalyser();
+                    remoteAnalyser.fftSize = 256;
+                    remoteSource.connect(remoteAnalyser);
+                    remoteDataArray = new Uint8Array(remoteAnalyser.frequencyBinCount);
+                }
+
+                // Démarrer la mise à jour des niveaux audio
+                updateAudioLevels();
+                
+            } catch (error) {
+                log(`⚠️ Erreur configuration analyse audio: ${error.message}`);
+            }
+        }
+
+        function updateAudioLevels() {
+            // Audio local
+            if (localAnalyser && localDataArray) {
+                localAnalyser.getByteFrequencyData(localDataArray);
+                const localRMS = Math.sqrt(localDataArray.reduce((sum, value) => sum + value * value, 0) / localDataArray.length);
+                const localPercent = Math.min(100, (localRMS / 128) * 100);
+                document.getElementById('localAudioLevel').style.width = localPercent + '%';
+            }
+
+            // Audio distant - combiner tous les streams
+            let totalRemoteRMS = 0;
+            let remoteCount = 0;
+            
+            for (const [userId, analyser] of remoteAnalysers) {
+                const dataArray = remoteDataArrays.get(userId);
+                if (analyser && dataArray) {
+                    analyser.getByteFrequencyData(dataArray);
+                    const rms = Math.sqrt(dataArray.reduce((sum, value) => sum + value * value, 0) / dataArray.length);
+                    totalRemoteRMS += rms;
+                    remoteCount++;
+                }
+            }
+            
+            if (remoteCount > 0) {
+                const avgRemoteRMS = totalRemoteRMS / remoteCount;
+                const remotePercent = Math.min(100, (avgRemoteRMS / 128) * 100);
+                document.getElementById('remoteAudioLevel').style.width = remotePercent + '%';
+            }
+
+            requestAnimationFrame(updateAudioLevels);
+        }
+
+        async function connect() {
+            if (!localStream) {
+                alert('Veuillez d\'abord activer la caméra et le microphone');
+                return;
+            }
+
+            log('🔗 Connexion à la room...');
+            updateConnectionStatus('connecting', 'Connexion en cours...');
+
+            // Envoyer une demande de connexion
+            signaling.broadcast('connect-request', { roomId: roomId });
+            
+            setTimeout(() => {
+                if (!isConnected) {
+                    updateConnectionStatus('disconnected', 'Aucun vendeur disponible');
+                    log('⏰ Timeout: aucun vendeur trouvé');
+                }
+            }, 10000);
+        }
+
+        // Système multi-connexions WebRTC
+        async function createPeerConnection(targetUserId) {
+            if (peerConnections.has(targetUserId)) {
+                log(`🔗 Connexion existe déjà avec ${targetUserId}`);
+                return peerConnections.get(targetUserId);
+            }
+
+            log(`� Création connexion WebRTC avec ${targetUserId}`);
+            
+            const pc = new RTCPeerConnection(peerConnectionConfig);
+            peerConnections.set(targetUserId, pc);
+
+            // Ajouter le stream local
+            if (localStream) {
+                localStream.getTracks().forEach(track => {
+                    pc.addTrack(track, localStream);
+                });
+            }
+
+            // Gérer l'arrivée du stream distant
+            pc.ontrack = (event) => {
+                log(`📹 Stream distant reçu de ${targetUserId}`);
+                
+                // Stocker le stream distant
+                remoteStreams.set(targetUserId, event.streams[0]);
+                
+                // Si c'est la première connexion, afficher dans la vidéo principale
+                if (remoteStreams.size === 1) {
+                    remoteVideo.srcObject = event.streams[0];
+                }
+                
+                // Configurer l'analyse audio pour ce stream
+                if (audioContext) {
+                    try {
+                        const remoteSource = audioContext.createMediaStreamSource(event.streams[0]);
+                        const analyser = audioContext.createAnalyser();
+                        analyser.fftSize = 256;
+                        remoteSource.connect(analyser);
+                        
+                        remoteAnalysers.set(targetUserId, analyser);
+                        remoteDataArrays.set(targetUserId, new Uint8Array(analyser.frequencyBinCount));
+                        
+                        log(`✅ Analyse audio configurée pour ${targetUserId}`);
+                    } catch (error) {
+                        log(`⚠️ Erreur configuration analyse audio pour ${targetUserId}: ${error.message}`);
+                    }
+                }
+                
+                updateConnectionStatus('connected', `Connecté à ${targetUserId}`);
+            };
+
+            // Gérer les candidats ICE
+            pc.onicecandidate = (event) => {
+                if (event.candidate) {
+                    log(`🧊 Envoi candidat ICE à ${targetUserId}`);
+                    signaling.send(targetUserId, 'ice-candidate', event.candidate);
+                }
+            };
+
+            // Gérer la fermeture de connexion
+            pc.onconnectionstatechange = () => {
+                log(`🔗 État connexion ${targetUserId}: ${pc.connectionState}`);
+                if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+                    closePeerConnection(targetUserId);
+                }
+            };
+
+            return pc;
+        }
+
+        async function closePeerConnection(targetUserId) {
+            const pc = peerConnections.get(targetUserId);
+            if (pc) {
+                log(`🔌 Fermeture connexion avec ${targetUserId}`);
+                pc.close();
+                peerConnections.delete(targetUserId);
+                remoteStreams.delete(targetUserId);
+                remoteAnalysers.delete(targetUserId);
+                remoteDataArrays.delete(targetUserId);
+                
+                // Si c'était la connexion principale, nettoyer la vidéo
+                if (remoteStreams.size === 0) {
+                    remoteVideo.srcObject = null;
+                    updateConnectionStatus('disconnected', 'Déconnecté');
+                }
+            }
+        }
+
+        async function call() {
+            if (!localStream) {
+                alert('Veuillez d\'abord activer la caméra et le microphone');
+                return;
+            }
+
+            log('📞 Appel groupe en cours... Appel de TOUS les utilisateurs');
+            
+            // Obtenir la liste des utilisateurs connectés
+            const connectedUsers = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith(`webrtc-${roomId}-`) && key.includes('user-')) {
+                    try {
+                        const data = JSON.parse(localStorage.getItem(key));
+                        if (data.userId && data.userId !== userId) {
+                            connectedUsers.push(data.userId);
+                        }
+                    } catch (e) {
+                        // Ignorer les erreurs de parsing
+                    }
+                }
+            }
+            
+            if (connectedUsers.length === 0) {
+                log('⚠️ Aucun utilisateur connecté à appeler');
+                return;
+            }
+            
+            log(`📞 Appel de ${connectedUsers.length} utilisateur(s): ${connectedUsers.join(', ')}`);
+            
+            // Appeler chaque utilisateur individuellement
+            for (const targetUserId of connectedUsers) {
+                try {
+                    await callUser(targetUserId);
+                } catch (error) {
+                    log(`❌ Erreur appel vers ${targetUserId}: ${error.message}`);
+                }
+            }
+        }
+
+        async function callUser(targetUserId) {
+            const pc = await createPeerConnection(targetUserId);
+            
+            try {
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                
+                log(`📤 Envoi offre à ${targetUserId}`);
+                signaling.send(targetUserId, 'offer', offer);
+                
+                updateConnectionStatus('connecting', `Appel de ${targetUserId}...`);
+            } catch (error) {
+                log(`❌ Erreur création offre pour ${targetUserId}: ${error.message}`);
+                closePeerConnection(targetUserId);
+            }
+        }
+
+        // Système simplifié d'appel privé
+        async function callPrivate() {
+            if (!localStream) {
+                alert('Veuillez d\'abord activer la caméra et le microphone');
+                return;
+            }
+
+            log('🔒 Sélection du client pour appel privé...');
+            
+            // Afficher la liste des utilisateurs connectés
+            document.getElementById('callModeSelection').classList.remove('hidden');
+            updateConnectedUsersList();
+        }
+
+        function updateConnectedUsersList() {
+            const usersList = document.getElementById('availableUsersList');
+            usersList.innerHTML = '';
+            
+            // Obtenir la liste des utilisateurs connectés via localStorage
+            const connectedUsers = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith(`webrtc-${roomId}-`) && key.includes('user-')) {
+                    try {
+                        const data = JSON.parse(localStorage.getItem(key));
+                        if (data.userId && data.userId !== userId) {
+                            connectedUsers.push({
+                                userId: data.userId,
+                                role: data.role || 'viewer'
+                            });
+                        }
+                    } catch (e) {
+                        // Ignorer les erreurs de parsing
+                    }
+                }
+            }
+            
+            if (connectedUsers.length === 0) {
+                usersList.innerHTML = '<p>Aucun autre utilisateur connecté</p>';
+                return;
+            }
+            
+            connectedUsers.forEach(user => {
+                const userCard = document.createElement('div');
+                userCard.className = 'user-card';
+                userCard.innerHTML = `
+                    <div class="user-name">${user.userId}</div>
+                    <div class="user-role">${user.role}</div>
+                `;
+                userCard.onclick = () => selectUserForCall(user.userId, user.role);
+                usersList.appendChild(userCard);
+            });
+        }
+
+        function selectUserForCall(selectedUserId, selectedUserRole) {
+            // Mettre à jour l'affichage de la sélection
+            document.querySelectorAll('.user-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.target.closest('.user-card').classList.add('selected');
+            
+            document.getElementById('selectedUserInfo').innerHTML = `
+                <p>👤 Sélectionné: <strong>${selectedUserId}</strong> (${selectedUserRole})</p>
+                <button onclick="startPrivateCall('${selectedUserId}')" class="btn-primary">📞 Appeler ${selectedUserId}</button>
+            `;
+        }
+
+        async function startPrivateCall(targetUserId) {
+            log(`🔒 Appel privé vers ${targetUserId}`);
+            callMode = 'private';
+            targetUserId = targetUserId;
+            
+            document.getElementById('callModeSelection').classList.add('hidden');
+            await initiateCall(targetUserId);
+        }
+
+        async function initiateCall(targetUserId = null) {
+            // Créer la connexion WebRTC
+            peerConnection = new RTCPeerConnection(peerConnectionConfig);
+            
+            // Ajouter le stream local
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+
+            // Gérer l'arrivée du stream distant
+            peerConnection.ontrack = (event) => {
+                log('📹 Stream distant reçu');
+                remoteVideo.srcObject = event.streams[0];
+                remoteStream = event.streams[0];
+                
+                // Configurer l'analyse audio pour le stream distant
+                if (audioContext && remoteStream) {
+                    try {
+                        const remoteSource = audioContext.createMediaStreamSource(remoteStream);
+                        remoteAnalyser = audioContext.createAnalyser();
+                        remoteAnalyser.fftSize = 256;
+                        remoteSource.connect(remoteAnalyser);
+                        remoteDataArray = new Uint8Array(remoteAnalyser.frequencyBinCount);
+                    } catch (error) {
+                        log(`⚠️ Erreur configuration analyse audio distant: ${error.message}`);
+                    }
+                }
+            };
+
+            // Gérer les candidats ICE
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    log('🧊 Envoi du candidat ICE');
+                    if (callMode === 'private' && targetUserId) {
+                        signaling.send(targetUserId, 'ice-candidate', event.candidate);
+                    } else {
+                        signaling.broadcast('ice-candidate', event.candidate);
+                    }
+                }
+            };
+
+            // Créer et envoyer l'offre
+            try {
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                
+                log('📤 Envoi de l\'offre');
+                if (callMode === 'private' && targetUserId) {
+                    signaling.send(targetUserId, 'offer', offer);
+                } else {
+                    signaling.broadcast('offer', offer);
+                }
+                
+                updateConnectionStatus('connecting', 'Appel en cours...');
+            } catch (error) {
+                log(`❌ Erreur lors de la création de l'offre: ${error.message}`);
+            }
+        }
+
+        function updateConnectedUsersList() {
+            const usersList = document.getElementById('availableUsersList');
+            usersList.innerHTML = '';
+            
+            // Obtenir la liste des utilisateurs connectés via localStorage
+            const connectedUsers = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith(`webrtc-${roomId}-`) && key.includes('user-')) {
+                    try {
+                        const data = JSON.parse(localStorage.getItem(key));
+                        if (data.userId && data.userId !== userId) {
+                            connectedUsers.push({
+                                userId: data.userId,
+                                role: data.role || 'viewer'
+                            });
+                        }
+                    } catch (e) {
+                        // Ignorer les erreurs de parsing
+                    }
+                }
+            }
+            
+            if (connectedUsers.length === 0) {
+                usersList.innerHTML = '<p>Aucun autre utilisateur connecté</p>';
+                return;
+            }
+            
+            connectedUsers.forEach(user => {
+                const userCard = document.createElement('div');
+                userCard.className = 'user-card';
+                userCard.innerHTML = `
+                    <div class="user-name">${user.userId}</div>
+                    <div class="user-role">${user.role}</div>
+                `;
+                userCard.onclick = () => selectUserForCall(user.userId, user.role);
+                usersList.appendChild(userCard);
+            });
+        }
+
+        function selectUserForCall(selectedUserId, selectedUserRole) {
+            // Mettre à jour l'affichage de la sélection
+            document.querySelectorAll('.user-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.target.closest('.user-card').classList.add('selected');
+            
+            document.getElementById('selectedUserInfo').innerHTML = `
+                <p>👤 Sélectionné: <strong>${selectedUserId}</strong> (${selectedUserRole})</p>
+                <button onclick="startPrivateCall('${selectedUserId}')" class="btn-primary">📞 Appeler ${selectedUserId}</button>
+            `;
+        }
+
+        async function startPrivateCall(targetUserId) {
+            log(`🔒 Appel privé vers ${targetUserId}`);
+            callMode = 'private';
+            targetUserId = targetUserId;
+            
+            document.getElementById('callModeSelection').classList.add('hidden');
+            await initiateCall(targetUserId);
+        }
+
+        async function initiateCall(targetUserId = null) {
+            // Créer la connexion WebRTC
+            peerConnection = new RTCPeerConnection(peerConnectionConfig);
+            
+            // Ajouter le stream local
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+
+            // Gérer l'arrivée du stream distant
+            peerConnection.ontrack = (event) => {
+                log('📹 Stream distant reçu');
+                remoteVideo.srcObject = event.streams[0];
+                remoteStream = event.streams[0];
+                
+                // Configurer l'analyse audio pour le stream distant
+                if (audioContext && remoteStream) {
+                    try {
+                        const remoteSource = audioContext.createMediaStreamSource(remoteStream);
+                        remoteAnalyser = audioContext.createAnalyser();
+                        remoteAnalyser.fftSize = 256;
+                        remoteSource.connect(remoteAnalyser);
+                        remoteDataArray = new Uint8Array(remoteAnalyser.frequencyBinCount);
+                    } catch (error) {
+                        log(`⚠️ Erreur configuration analyse audio distant: ${error.message}`);
+                    }
+                }
+            };
+
+            // Gérer les candidats ICE
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    log('🧊 Envoi du candidat ICE');
+                    if (callMode === 'private' && targetUserId) {
+                        signaling.send(targetUserId, 'ice-candidate', event.candidate);
+                    } else {
+                        signaling.broadcast('ice-candidate', event.candidate);
+                    }
+                }
+            };
+
+            // Créer et envoyer l'offre
+            try {
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                
+                log('📤 Envoi de l\'offre');
+                if (callMode === 'private' && targetUserId) {
+                    signaling.send(targetUserId, 'offer', offer);
+                } else {
+                    signaling.broadcast('offer', offer);
+                }
+                
+                updateConnectionStatus('connecting', 'Appel en cours...');
+            } catch (error) {
+                log(`❌ Erreur lors de la création de l'offre: ${error.message}`);
+            }
+        }
+
+        async function answer() {
+            if (!peerConnection) {
+                log('⚠️ Aucune connexion à accepter');
+                return;
+            }
+
+            log('📱 Acceptation de l\'appel...');
+            
+            try {
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                
+                log('📤 Envoi de la réponse');
+                signaling.broadcast('answer', answer);
+                
+                updateConnectionStatus('connected', 'Appel en cours');
+            } catch (error) {
+                log(`❌ Erreur lors de la création de la réponse: ${error.message}`);
+            }
+        }
+
+        async function handleOffer(offer, fromUserId) {
+            if (!localStream) {
+                log('⚠️ Stream local non disponible pour accepter l\'offre');
+                return;
+            }
+
+            log(`📞 Traitement de l\'offre de ${fromUserId}...`);
+            
+            const pc = await createPeerConnection(fromUserId);
+            
+            try {
+                await pc.setRemoteDescription(offer);
+                log(`✅ Offre de ${fromUserId} définie comme description distante`);
+                
+                // Créer et envoyer la réponse
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+                
+                log(`📤 Envoi de la réponse à ${fromUserId}`);
+                signaling.send(fromUserId, 'answer', answer);
+                
+                updateConnectionStatus('connected', `Appel accepté de ${fromUserId}`);
+            } catch (error) {
+                log(`❌ Erreur lors du traitement de l'offre de ${fromUserId}: ${error.message}`);
+                closePeerConnection(fromUserId);
+            }
+        }
+
+        async function handleAnswer(answer, fromUserId) {
+            const pc = peerConnections.get(fromUserId);
+            if (!pc) {
+                log(`⚠️ Aucune connexion avec ${fromUserId} pour traiter la réponse`);
+                return;
+            }
+
+            log(`📱 Traitement de la réponse de ${fromUserId}...`);
+            
+            try {
+                await pc.setRemoteDescription(answer);
+                log(`✅ Réponse de ${fromUserId} définie comme description distante`);
+                updateConnectionStatus('connected', `Connecté à ${fromUserId}`);
+            } catch (error) {
+                log(`❌ Erreur lors du traitement de la réponse de ${fromUserId}: ${error.message}`);
+            }
+        }
+
+        async function handleIceCandidate(candidate, fromUserId) {
+            const pc = peerConnections.get(fromUserId);
+            if (!pc) {
+                log(`⚠️ Aucune connexion avec ${fromUserId} pour ajouter le candidat ICE`);
+                return;
+            }
+
+            try {
+                await pc.addIceCandidate(candidate);
+                log(`✅ Candidat ICE ajouté pour ${fromUserId}`);
+            } catch (error) {
+                log(`❌ Erreur lors de l'ajout du candidat ICE pour ${fromUserId}: ${error.message}`);
+            }
+        }
+
+        function hangup() {
+            log('📴 Raccrochage de TOUTES les connexions...');
+            
+            // Fermer toutes les connexions
+            for (const [userId, pc] of peerConnections) {
+                log(`🔌 Fermeture connexion avec ${userId}`);
+                pc.close();
+            }
+            
+            // Vider toutes les maps
+            peerConnections.clear();
+            remoteStreams.clear();
+            remoteAnalysers.clear();
+            remoteDataArrays.clear();
+            
+            remoteVideo.srcObject = null;
+            
+            resetPrivateCall();
+            updateConnectionStatus('disconnected', 'Déconnecté');
+            updateButtonStates();
+        }
+
+        function disconnect() {
+            log('🔌 Déconnexion complète...');
+            hangup();
+            
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            
+            localVideo.srcObject = null;
+            updateButtonStates();
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (message) {
+                signaling.broadcast('chat', message);
+                addChatMessage('Vous', message);
+                input.value = '';
+            }
+        }
+
+        function addChatMessage(sender, message) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageElement = document.createElement('div');
+            messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+            messageElement.style.marginBottom = '5px';
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function audioDiagnostic() {
+            log('🔍 Démarrage du diagnostic audio...');
+            
+            // Tester l'audio local
+            if (localStream && localStream.getAudioTracks().length > 0) {
+                const audioTrack = localStream.getAudioTracks()[0];
+                log(`🎤 Piste audio locale: ${audioTrack.label}`);
+                log(`🎤 Activée: ${audioTrack.enabled}`);
+                log(`🎤 Prêt: ${audioTrack.readyState}`);
+            } else {
+                log('⚠️ Aucune piste audio locale');
+            }
+
+            // Tester l'audio distant
+            if (remoteStream && remoteStream.getAudioTracks().length > 0) {
+                const audioTrack = remoteStream.getAudioTracks()[0];
+                log(`🎧 Piste audio distante: ${audioTrack.label}`);
+                log(`🎧 Activée: ${audioTrack.enabled}`);
+                log(`🎧 Prêt: ${audioTrack.readyState}`);
+            } else {
+                log('⚠️ Aucune piste audio distante');
+            }
+
+            // Forcer l'audio vers les écouteurs si disponible
+            if (remoteVideo.srcObject) {
+                forceAudioToHeadphones(remoteVideo);
+            }
+
+            // Jouer un son de test
+            playTestSound();
+        }
+
+        function forceAudioToHeadphones(audioElement) {
+            if ('setSinkId' in audioElement) {
+                navigator.mediaDevices.enumerateDevices().then(devices => {
+                    const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
+                    if (audioOutputs.length > 0) {
+                        // Chercher un casque
+                        let targetDevice = audioOutputs[0];
+                        for (const device of audioOutputs) {
+                            if (device.label.toLowerCase().includes('headphone') || 
+                                device.label.toLowerCase().includes('casque') ||
+                                device.label.toLowerCase().includes('headset')) {
+                                targetDevice = device;
+                                break;
+                            }
+                        }
+                        audioElement.setSinkId(targetDevice.deviceId)
+                            .then(() => {
+                                log(`✅ Audio dirigé vers: ${targetDevice.label}`);
+                                audioElement.volume = 1.0;
+                            })
+                            .catch(err => log('⚠️ Erreur setSinkId:', err.message));
+                    }
+                }).catch(err => log('⚠️ Erreur énumération:', err.message));
+            }
+        }
+
+        function playTestSound() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // La4
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 1);
+            
+            log('🔊 Son de test joué (440Hz, 1s)');
+        }
+
+        function updateConnectionStatus(status, message) {
+            connectionStatus.className = `status ${status}`;
+            connectionStatus.textContent = message;
+            isConnected = (status === 'connected');
+            updateButtonStates();
+        }
+
+        function updateButtonStates() {
+            const hasLocalStream = !!localStream;
+            const hasRemoteStream = !!remoteStream;
+            const hasPeerConnection = !!peerConnection;
+
+            // Vérifier que les éléments existent avant de modifier leurs propriétés
+            const startCameraBtn = document.getElementById('startCamera');
+            const connectBtn = document.getElementById('connect');
+            const callBtn = document.getElementById('call');
+            const callPrivateBtn = document.getElementById('callPrivate');
+            const requestPrivateBtn = document.getElementById('requestPrivate');
+            const answerBtn = document.getElementById('answer');
+            const hangupBtn = document.getElementById('hangup');
+            const disconnectBtn = document.getElementById('disconnect');
+
+            if (startCameraBtn) startCameraBtn.disabled = hasLocalStream;
+            if (connectBtn) connectBtn.disabled = !hasLocalStream || isConnected;
+            if (callBtn) callBtn.disabled = !hasLocalStream || isConnected;
+            if (callPrivateBtn) callPrivateBtn.disabled = !hasLocalStream || isConnected || userRole !== 'vendor';
+            if (requestPrivateBtn) requestPrivateBtn.disabled = !hasLocalStream || isConnected || userRole !== 'viewer';
+            if (answerBtn) answerBtn.disabled = !hasPeerConnection || isConnected;
+            if (hangupBtn) hangupBtn.disabled = !isConnected;
+            if (disconnectBtn) disconnectBtn.disabled = !hasLocalStream;
+        }
+
+        function updateConnectedUsers(users) {
+            connectedUsers.clear();
+            users.forEach(user => {
+                if (user.userId !== userId) {
+                    connectedUsers.set(user.userId, user);
+                }
+            });
+            
+            if (userRole === 'vendor') {
+                displayConnectedUsers();
+            }
+        }
+
+        function displayConnectedUsers() {
+            const availableUsersDiv = document.getElementById('availableUsers');
+            availableUsersDiv.innerHTML = '';
+            
+            if (connectedUsers.size === 0) {
+                availableUsersDiv.innerHTML = '<p>Aucun client connecté</p>';
+                return;
+            }
+            
+            connectedUsers.forEach((user, userId) => {
+                const userDiv = document.createElement('div');
+                userDiv.className = 'user-item';
+                userDiv.innerHTML = `
+                    <div>
+                        <strong>${user.userId}</strong>
+                        <div class="user-status">Rôle: ${user.role} | Statut: ${user.status || 'En ligne'}</div>
+                    </div>
+                    <button onclick="selectUserForPrivateCall('${userId}')" class="btn-secondary">Sélectionner</button>
+                `;
+                
+                if (selectedUserForPrivateCall === userId) {
+                    userDiv.classList.add('selected');
+                }
+                
+                availableUsersDiv.appendChild(userDiv);
+            });
+        }
+
+        function selectUserForPrivateCall(targetUserId) {
+            selectedUserForPrivateCall = targetUserId;
+            displayConnectedUsers();
+            log(`👤 Client sélectionné pour appel privé: ${targetUserId}`);
+        }
+
+        async function requestPrivateCall() {
+            if (!selectedUserForPrivateCall) {
+                alert('Veuillez sélectionner un client pour l\'appel privé');
+                return;
+            }
+            
+            log(`🔒 Demande d'appel privé vers ${selectedUserForPrivateCall}`);
+            
+            // Créer la connexion WebRTC pour appel privé
+            peerConnection = new RTCPeerConnection(peerConnectionConfig);
+            isPrivateCall = true;
+            privateCallTarget = selectedUserForPrivateCall;
+            
+            // Ajouter le stream local
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+
+            // Gérer l'arrivée du stream distant
+            peerConnection.ontrack = (event) => {
+                log('📹 Stream distant privé reçu');
+                remoteVideo.srcObject = event.streams[0];
+                remoteStream = event.streams[0];
+                
+                // Configurer l'analyse audio pour le stream distant
+                if (audioContext && remoteStream) {
+                    try {
+                        const remoteSource = audioContext.createMediaStreamSource(remoteStream);
+                        remoteAnalyser = audioContext.createAnalyser();
+                        remoteAnalyser.fftSize = 256;
+                        remoteSource.connect(remoteAnalyser);
+                        remoteDataArray = new Uint8Array(remoteAnalyser.frequencyBinCount);
+                    } catch (error) {
+                        log(`⚠️ Erreur configuration analyse audio distant: ${error.message}`);
+                    }
+                }
+            };
+
+            // Gérer les candidats ICE
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    log('🧊 Envoi du candidat ICE privé');
+                    signaling.send(selectedUserForPrivateCall, 'private-ice-candidate', event.candidate);
+                }
+            };
+
+            // Créer et envoyer l'offre privée
+            try {
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                
+                log('📤 Envoi de l\'offre privée');
+                signaling.send(selectedUserForPrivateCall, 'private-offer', offer);
+                
+                updateConnectionStatus('connecting', 'Appel privé en cours...');
+                document.getElementById('privateCallSection').classList.add('hidden');
+            } catch (error) {
+                log(`❌ Erreur lors de la création de l'offre privée: ${error.message}`);
+            }
+        }
+
+        function handlePrivateCallRequest(message) {
+            log(`🔒 Demande d'appel privé reçue de ${message.from}`);
+            
+            if (confirm(`${message.from} souhaite un appel privé. Acceptez-vous ?`)) {
+                // Accepter l'appel privé
+                answerPrivateCall(message.data, message.from);
+            } else {
+                // Refuser l'appel privé
+                signaling.send(message.from, 'private-call-response', { accepted: false });
+            }
+        }
+
+        async function answerPrivateCall(offer, fromUserId) {
+            if (!localStream) {
+                log('⚠️ Stream local non disponible pour accepter l\'appel privé');
+                return;
+            }
+
+            log('📞 Traitement de l\'offre privée...');
+            
+            peerConnection = new RTCPeerConnection(peerConnectionConfig);
+            isPrivateCall = true;
+            privateCallTarget = fromUserId;
+            
+            // Ajouter le stream local
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+
+            // Gérer l'arrivée du stream distant
+            peerConnection.ontrack = (event) => {
+                log('📹 Stream distant privé reçu');
+                remoteVideo.srcObject = event.streams[0];
+                remoteStream = event.streams[0];
+                
+                // Configurer l'analyse audio
+                if (audioContext && remoteStream) {
+                    try {
+                        const remoteSource = audioContext.createMediaStreamSource(remoteStream);
+                        remoteAnalyser = audioContext.createAnalyser();
+                        remoteAnalyser.fftSize = 256;
+                        remoteSource.connect(remoteAnalyser);
+                        remoteDataArray = new Uint8Array(remoteAnalyser.frequencyBinCount);
+                    } catch (error) {
+                        log(`⚠️ Erreur configuration analyse audio distant: ${error.message}`);
+                    }
+                }
+            };
+
+            // Gérer les candidats ICE
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    log('🧊 Envoi du candidat ICE privé');
+                    signaling.send(fromUserId, 'private-ice-candidate', event.candidate);
+                }
+            };
+
+            try {
+                await peerConnection.setRemoteDescription(offer);
+                log('✅ Offre privée définie comme description distante');
+                
+                // Créer et envoyer la réponse privée
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                
+                log('📤 Envoi de la réponse privée');
+                signaling.send(fromUserId, 'private-answer', answer);
+                
+                updateConnectionStatus('connected', 'Appel privé accepté');
+            } catch (error) {
+                log(`❌ Erreur lors du traitement de l'offre privée: ${error.message}`);
+            }
+        }
+
+        function handlePrivateCallResponse(message) {
+            if (message.data.accepted) {
+                log('✅ Appel privé accepté');
+                updateConnectionStatus('connected', 'Appel privé en cours');
+            } else {
+                log('❌ Appel privé refusé');
+                resetPrivateCall();
+            }
+        }
+
+        function resetPrivateCall() {
+            isPrivateCall = false;
+            privateCallTarget = null;
+            selectedUserForPrivateCall = null;
+            document.getElementById('privateCallSection').classList.add('hidden');
+        }
+
+        async function handlePrivateOffer(offer, fromUserId) {
+            if (!localStream) {
+                log('⚠️ Stream local non disponible pour accepter l\'offre privée');
+                return;
+            }
+
+            log('📞 Traitement de l\'offre privée...');
+            
+            peerConnection = new RTCPeerConnection(peerConnectionConfig);
+            isPrivateCall = true;
+            privateCallTarget = fromUserId;
+            
+            // Ajouter le stream local
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+
+            // Gérer l'arrivée du stream distant
+            peerConnection.ontrack = (event) => {
+                log('📹 Stream distant privé reçu');
+                remoteVideo.srcObject = event.streams[0];
+                remoteStream = event.streams[0];
+                
+                // Configurer l'analyse audio
+                if (audioContext && remoteStream) {
+                    try {
+                        const remoteSource = audioContext.createMediaStreamSource(remoteStream);
+                        remoteAnalyser = audioContext.createAnalyser();
+                        remoteAnalyser.fftSize = 256;
+                        remoteSource.connect(remoteAnalyser);
+                        remoteDataArray = new Uint8Array(remoteAnalyser.frequencyBinCount);
+                    } catch (error) {
+                        log(`⚠️ Erreur configuration analyse audio distant: ${error.message}`);
+                    }
+                }
+            };
+
+            // Gérer les candidats ICE
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    log('🧊 Envoi du candidat ICE privé');
+                    signaling.send(fromUserId, 'private-ice-candidate', event.candidate);
+                }
+            };
+
+            try {
+                await peerConnection.setRemoteDescription(offer);
+                log('✅ Offre privée définie comme description distante');
+                
+                // Créer et envoyer la réponse privée
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                
+                log('📤 Envoi de la réponse privée');
+                signaling.send(fromUserId, 'private-answer', answer);
+                
+                updateConnectionStatus('connected', 'Appel privé accepté');
+            } catch (error) {
+                log(`❌ Erreur lors du traitement de l'offre privée: ${error.message}`);
+            }
+        }
+
+        async function handlePrivateAnswer(answer) {
+            if (!peerConnection) {
+                log('⚠️ Aucune connexion pour traiter la réponse privée');
+                return;
+            }
+
+            log('📱 Traitement de la réponse privée...');
+            
+            try {
+                await peerConnection.setRemoteDescription(answer);
+                log('✅ Réponse privée définie comme description distante');
+                updateConnectionStatus('connected', 'Appel privé connecté');
+            } catch (error) {
+                log(`❌ Erreur lors du traitement de la réponse privée: ${error.message}`);
+            }
+        }
+
+        async function handlePrivateIceCandidate(candidate) {
+            if (!peerConnection) {
+                log('⚠️ Aucune connexion pour ajouter le candidat ICE privé');
+                return;
+            }
+
+            try {
+                await peerConnection.addIceCandidate(candidate);
+                log('✅ Candidat ICE privé ajouté');
+            } catch (error) {
+                log(`❌ Erreur lors de l'ajout du candidat ICE privé: ${error.message}`);
+            }
+        }
+
+        function togglePrivateCallSection() {
+            const section = document.getElementById('privateCallSection');
+            section.classList.toggle('hidden');
+            
+            if (!section.classList.contains('hidden')) {
+                // Mettre à jour la liste des utilisateurs
+                updateUserList();
+            }
+        }
+
+        function updateUserList() {
+            // Demander la liste des utilisateurs connectés
+            signaling.broadcast('request-user-list', { requesterId: userId });
+        }
+
+        // Ajouter handler pour les demandes de liste d'utilisateurs
+        signaling.on('request-user-list', (message) => {
+            if (userRole === 'vendor') {
+                const userList = Array.from(connectedUsers.values());
+                signaling.send(message.from, 'user-list', userList);
+            }
+        });
+
+        // Initialisation au chargement
+        window.onload = init;
+    </script>
+</body>
+</html>

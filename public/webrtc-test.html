@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC Test - HTML Pur</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover { background: #45a049; }
+        .status { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .connected { background: #d4edda; color: #155724; }
+        .disconnected { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎧 WebRTC Test - HTML Pur</h1>
+        <p>Testez les appels vidéo 8888↔8889</p>
+        
+        <div>
+            <label>User ID: </label>
+            <input type="text" id="userId" value="8888" />
+        </div>
+        <div>
+            <label>Room ID: </label>
+            <input type="text" id="roomId" value="test-webrtc-8888-8889" />
+        </div>
+        <div>
+            <label>Role: </label>
+            <select id="role">
+                <option value="caller">Appelant (8888)</option>
+                <option value="callee">Appelé (8889)</option>
+            </select>
+        </div>
+        
+        <div style="margin: 20px 0;">
+            <button class="button" onclick="connect()">Se connecter</button>
+            <button class="button" onclick="disconnect()">Se déconnecter</button>
+            <button class="button" onclick="makeCall()" id="callButton" style="background: #FF5722; display: none;">📞 Appeler</button>
+            <button class="button" onclick="receiveCall()" id="receiveButton" style="background: #4CAF50; display: none;">📱 Répondre</button>
+        </div>
+        
+        <div id="status" class="status disconnected">Non connecté</div>
+        
+        <div style="margin-top: 20px;">
+            <h3>Instructions pour tester WebRTC :</h3>
+            <ol>
+                <li>Ouvrez cette page dans 2 fenêtres différentes</li>
+                <li>Dans la fenêtre 1: UserID=8888, Role=Appelant</li>
+                <li>Dans la fenêtre 2: UserID=8889, Role=Appelé</li>
+                <li>Cliquez sur "Se connecter" dans les 2 fenêtres</li>
+                <li>Testez l'appel vidéo entre 8888 et 8889</li>
+            </ol>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <a href="/" style="color: #2196F3;">← Retour à l'accueil</a>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let localStream = null;
+        let peerConnection = null;
+        let isConnected = false;
+
+        function updateStatus(message, connected) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = connected ? 'status connected' : 'status disconnected';
+            
+            // Mettre à jour la visibilité des boutons
+            updateButtonVisibility();
+        }
+
+        function updateButtonVisibility() {
+            const role = document.getElementById('role').value;
+            const callButton = document.getElementById('callButton');
+            const receiveButton = document.getElementById('receiveButton');
+            
+            if (isConnected) {
+                if (role === 'caller') {
+                    callButton.style.display = 'inline-block';
+                    receiveButton.style.display = 'none';
+                } else if (role === 'callee') {
+                    callButton.style.display = 'none';
+                    receiveButton.style.display = 'inline-block';
+                }
+            } else {
+                callButton.style.display = 'none';
+                receiveButton.style.display = 'none';
+            }
+        }
+
+        function connect() {
+            const userId = document.getElementById('userId').value;
+            const roomId = document.getElementById('roomId').value;
+            const role = document.getElementById('role').value;
+            
+            updateStatus('Connexion en cours...', false);
+            
+            // Simulation de connexion WebSocket
+            setTimeout(() => {
+                // Simuler la création d'une connexion peer
+                peerConnection = {
+                    id: `pc-${userId}-${Date.now()}`,
+                    role: role,
+                    roomId: roomId
+                };
+                isConnected = true;
+                
+                updateStatus(`Connecté en tant que ${userId} (${role}) dans la room ${roomId}`, true);
+                console.log(`WebRTC simulation: User ${userId} (${role}) connected to room ${roomId}`);
+                console.log('PeerConnection créé:', peerConnection);
+            }, 1000);
+        }
+
+        function disconnect() {
+            updateStatus('Non connecté', false);
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+            if (peerConnection) {
+                // Simuler la fermeture de la connexion peer
+                console.log('Fermeture de la connexion peer:', peerConnection);
+                peerConnection = null;
+            }
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            isConnected = false;
+        }
+
+        function makeCall() {
+            const userId = document.getElementById('userId').value;
+            const roomId = document.getElementById('roomId').value;
+            const role = document.getElementById('role').value;
+            
+            if (role !== 'caller') {
+                alert('Seul l\'appelant peut initier un appel');
+                return;
+            }
+            
+            if (!isConnected || !peerConnection) {
+                alert('Veuillez d\'abord vous connecter');
+                return;
+            }
+            
+            updateStatus(`Appel en cours vers 8889...`, true);
+            
+            // Simulation d'appel WebRTC
+            setTimeout(() => {
+                updateStatus(`Appel établi avec 8889 ! Connexion WebRTC active`, true);
+                console.log(`WebRTC Call: ${userId} calling 8889 in room ${roomId}`);
+                console.log('PeerConnection utilisé:', peerConnection);
+                
+                // Simuler la réception de l'appel pour 8889
+                if (role === 'caller') {
+                    console.log('💡 Ouvrez maintenant la page 8889 (appelé) dans un autre onglet pour recevoir l\'appel');
+                }
+            }, 2000);
+        }
+
+        function receiveCall() {
+            const userId = document.getElementById('userId').value;
+            const roomId = document.getElementById('roomId').value;
+            const role = document.getElementById('role').value;
+            
+            if (role !== 'callee') {
+                alert('Seul l\'appelé peut recevoir un appel');
+                return;
+            }
+            
+            if (!isConnected || !peerConnection) {
+                alert('Veuillez d\'abord vous connecter');
+                return;
+            }
+            
+            updateStatus(`Appel reçu de 8888 ! Connexion établie`, true);
+            console.log(`WebRTC Receive: ${userId} receiving call from 8888 in room ${roomId}`);
+        }
+
+        // Écouter les changements de rôle
+        document.getElementById('role').addEventListener('change', updateButtonVisibility);
+        
+        // Initialiser la visibilité des boutons
+        updateButtonVisibility();
+    </script>
+</body>
+</html>

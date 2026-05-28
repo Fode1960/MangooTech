@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Audio VoIP - MangooTech</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            margin: 0;
+            padding: 20px;
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .status {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .video-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .video-box {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+        .video-element {
+            width: 100%;
+            height: 200px;
+            background: #000;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        .audio-level {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .audio-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+        .audio-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 24px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .btn.active {
+            background: #4CAF50;
+        }
+        .btn.danger {
+            background: #f44336;
+        }
+        .btn.danger:hover {
+            background: #d32f2f;
+        }
+        .call-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .call-timer {
+            font-size: 2em;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .connection-form {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 14px;
+        }
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .log {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .incoming-call {
+            background: rgba(33, 150, 243, 0.2);
+            border: 2px solid #2196F3;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🥭 Test Audio VoIP</h1>
+            <p>MangooTech - Système d'Appels WebRTC</p>
+        </div>
+
+        <!-- Configuration SIP -->
+        <div class="connection-form">
+            <h3>🔧 Configuration SIP</h3>
+            <div class="form-group">
+                <label>Utilisateur SIP:</label>
+                <input type="text" id="sipUser" placeholder="vendor@example.com ou 1001" value="vendor@example.com">
+            </div>
+            <div class="form-group">
+                <label>Mot de passe:</label>
+                <input type="password" id="sipPassword" placeholder="vendor123 ou 1001" value="vendor123">
+            </div>
+            <div class="form-group">
+                <label>Domaine:</label>
+                <input type="text" id="sipDomain" placeholder="mangootech.local" value="mangootech.local">
+            </div>
+            <div class="controls">
+                <button class="btn" onclick="connectSIP()">🔌 Se Connecter</button>
+                <button class="btn danger" onclick="disconnectSIP()">🔌 Se Déconnecter</button>
+            </div>
+        </div>
+
+        <!-- Statut de connexion -->
+        <div class="status" id="connectionStatus">
+            🔴 Déconnecté du système VoIP
+        </div>
+
+        <!-- Zone vidéo -->
+        <div class="video-container">
+            <div class="video-box">
+                <h3>📹 Votre vidéo</h3>
+                <video id="localVideo" class="video-element" autoplay muted playsinline></video>
+                <div class="audio-level">
+                    <div>Votre audio: <span id="localAudioLevel">0</span>%</div>
+                    <div class="audio-bar">
+                        <div id="localAudioBar" class="audio-fill"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="video-box">
+                <h3>📹 Vidéo distante</h3>
+                <video id="remoteVideo" class="video-element" autoplay playsinline></video>
+                <div class="audio-level">
+                    <div>Audio distant: <span id="remoteAudioLevel">0</span>%</div>
+                    <div class="audio-bar">
+                        <div id="remoteAudioBar" class="audio-fill"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contrôles d'appel -->
+        <div class="controls">
+            <button class="btn" onclick="testAudio()">🎤 Tester Audio</button>
+            <button class="btn" onclick="startCall()">📞 Appeler</button>
+            <button class="btn danger" onclick="endCall()">📴 Raccrocher</button>
+            <button class="btn" onclick="toggleMute()">🔇 Muet</button>
+            <button class="btn" onclick="toggleVideo()">📹 Vidéo</button>
+        </div>
+
+        <!-- Appel entrant -->
+        <div id="incomingCall" class="incoming-call hidden">
+            <h3>📞 Appel entrant</h3>
+            <p id="incomingCaller">De: Inconnu</p>
+            <div class="controls">
+                <button class="btn active" onclick="answerCall()">✅ Répondre</button>
+                <button class="btn danger" onclick="rejectCall()">❌ Refuser</button>
+            </div>
+        </div>
+
+        <!-- Informations d'appel -->
+        <div class="call-info">
+            <h3>📊 Informations d'appel</h3>
+            <div class="call-timer" id="callTimer">00:00</div>
+            <div>Statut: <span id="callStatus">Prêt</span></div>
+            <div>Utilisateur cible: <span id="targetUser">1001</span></div>
+        </div>
+
+        <!-- Journal -->
+        <div class="log" id="log">
+            <div>🥭 Système de test audio VoIP prêt</div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let socket = null;
+        let localStream = null;
+        let remoteStream = null;
+        let peerConnection = null;
+        let currentCall = null;
+        let isMuted = false;
+        let isVideoOff = false;
+        let audioContext = null;
+        let localAnalyser = null;
+        let remoteAnalyser = null;
+        let callStartTime = null;
+        let callTimerInterval = null;
+
+        // Configuration WebRTC
+        const rtcConfig = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        };
+
+        // Fonction de journalisation
+        function log(message) {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        // Connexion au serveur WebRTC-SIP
+        function connectSIP() {
+            const userId = document.getElementById('sipUser').value;
+            const password = document.getElementById('sipPassword').value;
+            const domain = document.getElementById('sipDomain').value;
+
+            if (!userId || !password) {
+                alert('Veuillez remplir tous les champs SIP');
+                return;
+            }
+
+            log(`🔌 Connexion au serveur WebRTC-SIP...`);
+            
+            socket = io('http://localhost:8080', {
+                transports: ['websocket', 'polling'],
+                timeout: 5000,
+                forceNew: true
+            });
+
+            socket.on('connect', () => {
+                log('✅ Connecté au serveur WebRTC-SIP');
+                document.getElementById('connectionStatus').innerHTML = '🟢 Connecté au système VoIP';
+                
+                // S'enregistrer dans le système SIP
+                socket.emit('register', {
+                    userId: userId,
+                    sipCredentials: {
+                        username: userId,
+                        password: password,
+                        domain: domain
+                    }
+                });
+            });
+
+            socket.on('disconnect', () => {
+                log('🔴 Déconnecté du serveur');
+                document.getElementById('connectionStatus').innerHTML = '🔴 Déconnecté du système VoIP';
+            });
+
+            socket.on('registered', () => {
+                log('✅ Enregistré dans le système SIP');
+            });
+
+            socket.on('incoming-call', (data) => {
+                log(`📞 Appel entrant de ${data.caller}`);
+                currentCall = data;
+                document.getElementById('incomingCaller').textContent = `De: ${data.caller}`;
+                document.getElementById('incomingCall').classList.remove('hidden');
+            });
+
+            socket.on('call-answered', (data) => {
+                log('✅ Appel accepté');
+                callStartTime = new Date();
+                startCallTimer();
+                document.getElementById('callStatus').textContent = 'En appel';
+                
+                // Si nous avons une réponse SDP, l'appliquer
+                if (data.answer && peerConnection) {
+                    peerConnection.setRemoteDescription(data.answer);
+                }
+            });
+
+            socket.on('call-ended', () => {
+                log('📴 Appel terminé');
+                endCall();
+            });
+
+            socket.on('ice-candidate', (data) => {
+                if (peerConnection) {
+                    peerConnection.addIceCandidate(data.candidate);
+                }
+            });
+
+            socket.on('connect_error', (error) => {
+                log(`❌ Erreur de connexion: ${error.message}`);
+            });
+        }
+
+        function disconnectSIP() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+                log('🔴 Déconnexion du système SIP');
+            }
+        }
+
+        // Test audio
+        async function testAudio() {
+            try {
+                log('🎤 Test audio en cours...');
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: true, 
+                    audio: true 
+                });
+                
+                localStream = stream;
+                document.getElementById('localVideo').srcObject = stream;
+                
+                // Analyser l'audio local
+                await startAudioMonitoring(stream, 'local');
+                
+                log('✅ Test audio réussi - Parlez pour tester le niveau');
+                
+                // Arrêter le test après 5 secondes
+                setTimeout(() => {
+                    if (localStream) {
+                        localStream.getTracks().forEach(track => track.stop());
+                        localStream = null;
+                        document.getElementById('localVideo').srcObject = null;
+                        stopAudioMonitoring('local');
+                        log('✅ Test audio terminé');
+                    }
+                }, 5000);
+                
+            } catch (error) {
+                log(`❌ Erreur test audio: ${error.message}`);
+                alert('Impossible d\'accéder à la caméra/microphone. Vérifiez les permissions.');
+            }
+        }
+
+        // Surveillance audio
+        async function startAudioMonitoring(stream, type) {
+            if (!audioContext) {
+                audioContext = new AudioContext();
+            }
+            
+            const analyser = audioContext.createAnalyser();
+            analyser.fftSize = 256;
+            analyser.smoothingTimeConstant = 0.8;
+            
+            const source = audioContext.createMediaStreamSource(stream);
+            source.connect(analyser);
+            
+            if (type === 'local') {
+                localAnalyser = analyser;
+            } else {
+                remoteAnalyser = analyser;
+            }
+            
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+            
+            const updateAudioLevel = () => {
+                analyser.getByteFrequencyData(dataArray);
+                
+                // Calcul RMS
+                let sum = 0;
+                for (let i = 0; i < dataArray.length; i++) {
+                    sum += dataArray[i] * dataArray[i];
+                }
+                const rms = Math.sqrt(sum / dataArray.length);
+                const level = Math.min(100, (rms / 128) * 100);
+                
+                if (type === 'local') {
+                    document.getElementById('localAudioLevel').textContent = Math.round(level);
+                    document.getElementById('localAudioBar').style.width = `${level}%`;
+                } else {
+                    document.getElementById('remoteAudioLevel').textContent = Math.round(level);
+                    document.getElementById('remoteAudioBar').style.width = `${level}%`;
+                }
+                
+                if (level > 0) {
+                    requestAnimationFrame(updateAudioLevel);
+                }
+            };
+            
+            updateAudioLevel();
+        }
+
+        function stopAudioMonitoring(type) {
+            if (type === 'local') {
+                document.getElementById('localAudioLevel').textContent = '0';
+                document.getElementById('localAudioBar').style.width = '0%';
+            } else {
+                document.getElementById('remoteAudioLevel').textContent = '0';
+                document.getElementById('remoteAudioBar').style.width = '0%';
+            }
+        }
+
+        // Créer connexion WebRTC
+        async function createPeerConnection() {
+            peerConnection = new RTCPeerConnection(rtcConfig);
+            
+            if (localStream) {
+                localStream.getTracks().forEach(track => {
+                    peerConnection.addTrack(track, localStream);
+                });
+            }
+            
+            peerConnection.ontrack = (event) => {
+                log('📺 Flux distant reçu');
+                remoteStream = event.streams[0];
+                document.getElementById('remoteVideo').srcObject = remoteStream;
+                startAudioMonitoring(remoteStream, 'remote');
+            };
+            
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate && socket) {
+                    socket.emit('ice-candidate', {
+                        callId: currentCall.callId,
+                        candidate: event.candidate
+                    });
+                }
+            };
+            
+            peerConnection.onconnectionstatechange = () => {
+                log(`État connexion WebRTC: ${peerConnection.connectionState}`);
+                if (peerConnection.connectionState === 'connected') {
+                    log('✅ Connexion audio établie !');
+                }
+            };
+        }
+
+        // Démarrer un appel
+        async function startCall() {
+            if (!socket) {
+                alert('Veuillez d\'abord vous connecter au système SIP');
+                return;
+            }
+            
+            const targetUser = document.getElementById('targetUser').textContent;
+            const userId = document.getElementById('sipUser').value;
+            
+            try {
+                log(`📞 Démarrage appel vers ${targetUser}...`);
+                
+                // Obtenir le flux média
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: true, 
+                    audio: true 
+                });
+                
+                localStream = stream;
+                document.getElementById('localVideo').srcObject = stream;
+                startAudioMonitoring(stream, 'local');
+                
+                // Créer la connexion WebRTC
+                await createPeerConnection();
+                
+                // Créer l'offre
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                
+                // Envoyer l'offre
+                socket.emit('offer', {
+                    targetUserId: targetUser,
+                    offer: offer,
+                    callId: `call-${Date.now()}`
+                });
+                
+                document.getElementById('callStatus').textContent = 'Appel en cours...';
+                log(`📞 Appel initié vers ${targetUser}`);
+                
+            } catch (error) {
+                log(`❌ Erreur appel: ${error.message}`);
+                alert(`Erreur lors de l'appel: ${error.message}`);
+            }
+        }
+
+        // Répondre à un appel
+        async function answerCall() {
+            if (!currentCall || !socket) return;
+            
+            try {
+                log('✅ Réponse à l\'appel...');
+                
+                // Obtenir le flux média
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: true, 
+                    audio: true 
+                });
+                
+                localStream = stream;
+                document.getElementById('localVideo').srcObject = stream;
+                startAudioMonitoring(stream, 'local');
+                
+                // Créer la connexion WebRTC
+                await createPeerConnection();
+                
+                // Définir la description distante
+                await peerConnection.setRemoteDescription({
+                    type: 'offer',
+                    sdp: currentCall.sdp
+                });
+                
+                // Créer la réponse
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                
+                // Envoyer la réponse
+                socket.emit('answer', {
+                    callId: currentCall.callId,
+                    answer: answer
+                });
+                
+                callStartTime = new Date();
+                startCallTimer();
+                document.getElementById('callStatus').textContent = 'En appel';
+                document.getElementById('incomingCall').classList.add('hidden');
+                
+                log('✅ Appel accepté');
+                
+            } catch (error) {
+                log(`❌ Erreur réponse appel: ${error.message}`);
+            }
+        }
+
+        function rejectCall() {
+            if (currentCall && socket) {
+                socket.emit('end-call', { callId: currentCall.callId });
+            }
+            document.getElementById('incomingCall').classList.add('hidden');
+            currentCall = null;
+            log('❌ Appel refusé');
+        }
+
+        // Terminer l'appel
+        function endCall() {
+            if (socket && currentCall) {
+                socket.emit('end-call', { callId: currentCall.callId });
+            }
+            
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+            
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            
+            if (remoteStream) {
+                remoteStream.getTracks().forEach(track => track.stop());
+                remoteStream = null;
+            }
+            
+            document.getElementById('localVideo').srcObject = null;
+            document.getElementById('remoteVideo').srcObject = null;
+            document.getElementById('callStatus').textContent = 'Prêt';
+            document.getElementById('incomingCall').classList.add('hidden');
+            
+            stopAudioMonitoring('local');
+            stopAudioMonitoring('remote');
+            stopCallTimer();
+            
+            currentCall = null;
+            log('📴 Appel terminé');
+        }
+
+        // Contrôles
+        function toggleMute() {
+            if (localStream) {
+                const audioTracks = localStream.getAudioTracks();
+                audioTracks.forEach(track => {
+                    track.enabled = !track.enabled;
+                });
+                isMuted = !isMuted;
+                log(isMuted ? '🔇 Microphone coupé' : '🎤 Microphone activé');
+            }
+        }
+
+        function toggleVideo() {
+            if (localStream) {
+                const videoTracks = localStream.getVideoTracks();
+                videoTracks.forEach(track => {
+                    track.enabled = !track.enabled;
+                });
+                isVideoOff = !isVideoOff;
+                log(isVideoOff ? '📹 Vidéo coupée' : '📹 Vidéo activée');
+            }
+        }
+
+        // Chronomètre d'appel
+        function startCallTimer() {
+            callTimerInterval = setInterval(() => {
+                if (callStartTime) {
+                    const now = new Date();
+                    const diff = Math.floor((now - callStartTime) / 1000);
+                    const minutes = Math.floor(diff / 60);
+                    const seconds = diff % 60;
+                    document.getElementById('callTimer').textContent = 
+                        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        function stopCallTimer() {
+            if (callTimerInterval) {
+                clearInterval(callTimerInterval);
+                callTimerInterval = null;
+            }
+            callStartTime = null;
+            document.getElementById('callTimer').textContent = '00:00';
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', () => {
+            log('🥭 Test Audio VoIP MangooTech prêt');
+            log('📍 Serveur WebRTC-SIP: ws://localhost:8080');
+            log('🔧 Utilisez les boutons pour configurer et tester');
+        });
+    </script>
+</body>
+</html>

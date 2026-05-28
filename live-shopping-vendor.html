@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Shopping Vendeur - HTML Pur</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .vendor-section {
+            background: #e3f2fd;
+            border: 2px solid #2196F3;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .product-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover { background: #1976D2; }
+        .status { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .connected { background: #d4edda; color: #155724; }
+        .disconnected { background: #f8d7da; color: #721c24; }
+        .product-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛍️ Live Shopping Vendeur - HTML Pur</h1>
+        <p>Interface vendeur avec WebRTC</p>
+        
+        <div class="status" id="status">Connexion en cours...</div>
+        
+        <div class="vendor-section">
+            <h3>Ajouter un produit</h3>
+            <div class="product-form">
+                <input type="text" id="productName" placeholder="Nom du produit" />
+                <input type="number" id="productPrice" placeholder="Prix" />
+                <input type="text" id="productImage" placeholder="URL image" />
+                <textarea id="productDescription" placeholder="Description"></textarea>
+            </div>
+            <button class="button" onclick="addProduct()">Ajouter le produit</button>
+        </div>
+        
+        <div>
+            <h3>Produits en vente</h3>
+            <div id="products-list"></div>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <h3>Chat en direct</h3>
+            <div id="chat-messages" style="height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin: 10px 0;"></div>
+            <input type="text" id="chat-input" placeholder="Votre message..." style="width: 70%; padding: 10px;" />
+            <button class="button" onclick="sendMessage()">Envoyer</button>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <a href="/" style="color: #2196F3;">← Retour à l'accueil</a>
+        </div>
+    </div>
+
+    <script>
+        // Récupérer les paramètres de l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('roomId') || 'test-webrtc-8888-8889';
+        const userId = urlParams.get('userId') || '8888';
+        const role = urlParams.get('role') || 'vendor';
+        
+        document.getElementById('status').textContent = `Connecté en tant que vendeur ${userId} dans la room ${roomId}`;
+        document.getElementById('status').className = 'status connected';
+        
+        let products = [];
+        let messages = [];
+        
+        function addProduct() {
+            const name = document.getElementById('productName').value;
+            const price = document.getElementById('productPrice').value;
+            const image = document.getElementById('productImage').value;
+            const description = document.getElementById('productDescription').value;
+            
+            if (!name || !price) {
+                alert('Veuillez remplir au moins le nom et le prix');
+                return;
+            }
+            
+            const product = {
+                id: Date.now(),
+                name: name,
+                price: parseFloat(price),
+                image: image || 'https://via.placeholder.com/150',
+                description: description
+            };
+            
+            products.push(product);
+            displayProducts();
+            
+            // Vider le formulaire
+            document.getElementById('productName').value = '';
+            document.getElementById('productPrice').value = '';
+            document.getElementById('productImage').value = '';
+            document.getElementById('productDescription').value = '';
+            
+            console.log('Produit ajouté:', product);
+        }
+        
+        function displayProducts() {
+            const productsList = document.getElementById('products-list');
+            productsList.innerHTML = '';
+            
+            products.forEach(product => {
+                const productDiv = document.createElement('div');
+                productDiv.className = 'product-item';
+                productDiv.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}" style="width: 100px; height: 100px; object-fit: cover; float: left; margin-right: 10px;">
+                    <h4>${product.name}</h4>
+                    <p><strong>Prix: $${product.price}</strong></p>
+                    <p>${product.description}</p>
+                    <div style="clear: both;"></div>
+                `;
+                productsList.appendChild(productDiv);
+            });
+        }
+        
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (message) {
+                const messageData = {
+                    user: `Vendeur ${userId}`,
+                    message: message,
+                    timestamp: new Date().toLocaleTimeString()
+                };
+                
+                messages.push(messageData);
+                displayMessages();
+                input.value = '';
+                
+                console.log('Message envoyé:', messageData);
+            }
+        }
+        
+        function displayMessages() {
+            const chatMessages = document.getElementById('chat-messages');
+            chatMessages.innerHTML = '';
+            
+            messages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.style.margin = '5px 0';
+                messageDiv.innerHTML = `<strong>${msg.user}</strong> [${msg.timestamp}]: ${msg.message}`;
+                chatMessages.appendChild(messageDiv);
+            });
+            
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Ajouter des produits de test
+        setTimeout(() => {
+            products = [
+                {
+                    id: 1,
+                    name: 'iPhone 15 Pro',
+                    price: 999,
+                    image: 'https://via.placeholder.com/150/4CAF50/ffffff?text=iPhone',
+                    description: 'Le dernier iPhone avec puce A17 Pro'
+                },
+                {
+                    id: 2,
+                    name: 'MacBook Air M2',
+                    price: 1199,
+                    image: 'https://via.placeholder.com/150/2196F3/ffffff?text=MacBook',
+                    description: 'Ordinateur portable ultra-fin et puissant'
+                }
+            ];
+            displayProducts();
+        }, 1000);
+    </script>
+</body>
+</html>

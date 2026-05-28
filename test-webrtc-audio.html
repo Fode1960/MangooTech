@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test WebRTC Audio Simple</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .button:hover { background: #45a049; }
+        .button:disabled { background: #ccc; cursor: not-allowed; }
+        .audio-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        .audio-visualizer {
+            width: 100%;
+            height: 60px;
+            background: #000;
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+        }
+        .audio-bar {
+            position: absolute;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(to top, #4CAF50, #8BC34A);
+            border-radius: 2px;
+            transition: height 0.1s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Test WebRTC Audio Simple</h1>
+        <p>Test rapide de capture audio et visualisation</p>
+        
+        <div class="test-section">
+            <h3>Test 1: Microphone Audio</h3>
+            <div class="audio-controls">
+                <button class="button" onclick="startAudioTest()">🎤 Démarrer Test Audio</button>
+                <button class="button" onclick="stopAudioTest()">⏹️ Arrêter Test</button>
+                <button class="button" onclick="playTestSound()">🔊 Son de Test</button>
+            </div>
+            <div id="audioStatus" class="status info">Cliquez sur "Démarrer Test Audio" pour commencer</div>
+            <div class="audio-visualizer" id="audioVisualizer"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 2: Haut-parleurs/Casque</h3>
+            <div class="audio-controls">
+                <button class="button" onclick="testSpeakers()">🔈 Tester Haut-parleurs</button>
+                <button class="button" onclick="testStereo()">🎵 Test Stéréo</button>
+            </div>
+            <div id="speakerStatus" class="status info">Prêt pour le test des haut-parleurs</div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 3: WebRTC Complet</h3>
+            <div class="audio-controls">
+                <button class="button" onclick="openWebRTC8888()">📞 Ouvrir 8888 (Appelant)</button>
+                <button class="button" onclick="openWebRTC8889()">📱 Ouvrir 8889 (Appelé)</button>
+            </div>
+            <div id="webrtcStatus" class="status info">Ouvrez les deux fenêtres pour tester l'appel</div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <a href="/" style="color: #2196F3;">← Retour à l'accueil</a>
+        </div>
+    </div>
+
+    <script>
+        let audioContext = null;
+        let analyser = null;
+        let microphone = null;
+        let dataArray = null;
+        let animationId = null;
+        let testOscillator = null;
+
+        function updateStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${type}`;
+            console.log(`[${elementId}] ${message}`);
+        }
+
+        async function startAudioTest() {
+            try {
+                updateStatus('audioStatus', 'Demande d\'accès au microphone...', 'info');
+                
+                // Demander l'accès au microphone
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    } 
+                });
+                
+                updateStatus('audioStatus', '✅ Microphone activé ! Parlez pour voir l\'animation', 'success');
+                
+                // Créer le contexte audio
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                microphone = audioContext.createMediaStreamSource(stream);
+                
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+                
+                microphone.connect(analyser);
+                
+                // Démarrer la visualisation
+                startAudioVisualization();
+                
+            } catch (error) {
+                updateStatus('audioStatus', `❌ Erreur: ${error.message}`, 'error');
+                console.error('Erreur microphone:', error);
+            }
+        }
+
+        function startAudioVisualization() {
+            const visualizer = document.getElementById('audioVisualizer');
+            visualizer.innerHTML = '';
+            
+            // Créer 64 barres audio
+            for (let i = 0; i < 64; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'audio-bar';
+                bar.style.left = `${i * 12.5}px`;
+                visualizer.appendChild(bar);
+            }
+            
+            const bars = visualizer.querySelectorAll('.audio-bar');
+            
+            function animate() {
+                if (!analyser) return;
+                
+                animationId = requestAnimationFrame(animate);
+                analyser.getByteFrequencyData(dataArray);
+                
+                bars.forEach((bar, index) => {
+                    const dataIndex = Math.floor(index * dataArray.length / bars.length);
+                    const value = dataArray[dataIndex];
+                    const height = (value / 255) * 60;
+                    bar.style.height = `${height}px`;
+                });
+            }
+            
+            animate();
+        }
+
+        function stopAudioTest() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
+            if (microphone) {
+                microphone.disconnect();
+                microphone = null;
+            }
+            
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+            
+            document.getElementById('audioVisualizer').innerHTML = '';
+            updateStatus('audioStatus', 'Test audio arrêté', 'info');
+        }
+
+        function playTestSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // La440
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 1);
+                
+                updateStatus('speakerStatus', '🔊 Son de test joué (440Hz)', 'success');
+                
+                setTimeout(() => {
+                    audioContext.close();
+                }, 1500);
+                
+            } catch (error) {
+                updateStatus('speakerStatus', `❌ Erreur son: ${error.message}`, 'error');
+            }
+        }
+
+        function testSpeakers() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const frequencies = [261.63, 329.63, 392.00, 523.25]; // Do, Mi, Sol, Do (octave)
+                let currentFreq = 0;
+                
+                function playNext() {
+                    if (currentFreq >= frequencies.length) {
+                        updateStatus('speakerStatus', '✅ Test haut-parleurs terminé', 'success');
+                        audioContext.close();
+                        return;
+                    }
+                    
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(frequencies[currentFreq], audioContext.currentTime);
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                    
+                    updateStatus('speakerStatus', `🎵 Fréquence: ${frequencies[currentFreq]}Hz`, 'info');
+                    currentFreq++;
+                    
+                    setTimeout(playNext, 600);
+                }
+                
+                playNext();
+                
+            } catch (error) {
+                updateStatus('speakerStatus', `❌ Erreur: ${error.message}`, 'error');
+            }
+        }
+
+        function testStereo() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const merger = audioContext.createChannelMerger(2);
+                const gainNode = audioContext.createGain();
+                
+                merger.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Canal gauche
+                const leftOscillator = audioContext.createOscillator();
+                const leftGain = audioContext.createGain();
+                leftOscillator.connect(leftGain);
+                leftGain.connect(merger, 0, 0);
+                leftOscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+                leftGain.gain.setValueAtTime(0.3, audioContext.currentTime);
+                
+                // Canal droit
+                const rightOscillator = audioContext.createOscillator();
+                const rightGain = audioContext.createGain();
+                rightOscillator.connect(rightGain);
+                rightGain.connect(merger, 0, 1);
+                rightOscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+                rightGain.gain.setValueAtTime(0.3, audioContext.currentTime);
+                
+                // Démarrer les oscillateurs
+                leftOscillator.start();
+                rightOscillator.start();
+                
+                updateStatus('speakerStatus', '🎧 Test stéréo en cours (440Hz gauche, 880Hz droite)', 'info');
+                
+                // Arrêter après 3 secondes
+                setTimeout(() => {
+                    leftOscillator.stop();
+                    rightOscillator.stop();
+                    audioContext.close();
+                    updateStatus('speakerStatus', '✅ Test stéréo terminé', 'success');
+                }, 3000);
+                
+            } catch (error) {
+                updateStatus('speakerStatus', `❌ Erreur stéréo: ${error.message}`, 'error');
+            }
+        }
+
+        function openWebRTC8888() {
+            window.open('/webrtc-complet.html?userId=8888&roomId=test-webrtc-8888-8889&role=caller', '_blank');
+            updateStatus('webrtcStatus', '📞 Fenêtre 8888 (Appelant) ouverte', 'success');
+        }
+
+        function openWebRTC8889() {
+            window.open('/webrtc-complet.html?userId=8889&roomId=test-webrtc-8888-8889&role=callee', '_blank');
+            updateStatus('webrtcStatus', '📱 Fenêtre 8889 (Appelé) ouverte', 'success');
+        }
+
+        // Vérifier la compatibilité WebRTC
+        window.addEventListener('load', () => {
+            const supportsWebRTC = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+            const supportsAudioContext = !!(window.AudioContext || window.webkitAudioContext);
+            
+            if (!supportsWebRTC) {
+                alert('❌ WebRTC non supporté par ce navigateur');
+            } else if (!supportsAudioContext) {
+                alert('⚠️ Web Audio API non supportée - certains tests ne fonctionneront pas');
+            } else {
+                console.log('✅ WebRTC et Web Audio supportés');
+            }
+        });
+    </script>
+</body>
+</html>

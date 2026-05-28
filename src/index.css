@@ -1,0 +1,189 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  h1 {
+    @apply text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-white;
+  }
+
+  h2 {
+    @apply text-xl sm:text-2xl font-black tracking-tight text-gray-900 dark:text-white;
+  }
+}
+
+html,
+body {
+  width: 100%;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+  touch-action: pan-y;
+}
+
+@supports (overflow: clip) {
+  html,
+  body {
+    overflow-x: clip;
+  }
+}
+
+html,
+body,
+#root {
+  max-width: 100%;
+}
+
+#root {
+  width: 100%;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+  touch-action: pan-y;
+  position: relative;
+}
+
+[data-sonner-toaster] {
+  max-width: calc(100% - 16px);
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --app-height: 100vh;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+}
+
+@supports (height: 100dvh) {
+  :root {
+    --app-height: 100dvh;
+  }
+}
+
+html {
+  background-color: #f9fafb;
+  -webkit-text-size-adjust: 100%;
+}
+
+html.dark {
+  background-color: #111827;
+}
+
+@supports (-webkit-touch-callout: none) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+html,
+body,
+#root {
+  min-height: var(--app-height);
+}
+
+/* Variables CSS pour le mode sombre */
+.dark {
+  color-scheme: dark;
+}
+
+/* Animations fluides pour le changement de thème - Optimisé */
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+  position: relative;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.5s ease-out forwards;
+}
+
+/* Scrollbar personnalisée pour le mode sombre */
+.dark::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dark::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+.dark::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+
+.dark::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-sm;
+    @apply bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700;
+    @apply focus:outline-none focus:ring-2 focus:ring-orange-400/60 focus:ring-offset-2 focus:ring-offset-white;
+    @apply disabled:pointer-events-none disabled:opacity-60;
+  }
+
+  .dark .btn-primary {
+    @apply focus:ring-offset-gray-900;
+  }
+
+  .form-input {
+    @apply w-full min-h-[44px] rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm;
+    @apply placeholder:text-gray-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400/30 focus:ring-offset-2 focus:ring-offset-white;
+    @apply dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-400 dark:focus:ring-offset-gray-900;
+  }
+
+  .card {
+    @apply overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm;
+    @apply dark:border-gray-700 dark:bg-gray-900;
+  }
+
+  .card-body {
+    @apply p-4;
+  }
+
+  .hover-scale {
+    @apply transition-transform duration-200 hover:scale-[1.01];
+  }
+}
+
+@layer utilities {
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}

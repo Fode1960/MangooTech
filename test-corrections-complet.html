@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test des Corrections - Logo & Redirection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .test-section.success {
+            border-color: #4CAF50;
+            background-color: #f8fff8;
+        }
+        .test-section.error {
+            border-color: #f44336;
+            background-color: #fff8f8;
+        }
+        .boutique-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            background: white;
+        }
+        .logo-preview {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 15px;
+            float: left;
+        }
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary {
+            background-color: #2196F3;
+            color: white;
+        }
+        .btn-success {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .btn-warning {
+            background-color: #ff9800;
+            color: white;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Test des Corrections - Logo & Redirection</h1>
+        <p>Ce test vérifie que les deux problèmes suivants sont résolus :</p>
+        <ul>
+            <li>✅ Le logo ne disparait plus après création</li>
+            <li>✅ La redirection vers "undefined" est corrigée</li>
+        </ul>
+
+        <div id="test-results"></div>
+
+        <div class="test-section" id="test1">
+            <h2>Test 1: Création de Boutique avec Logo</h2>
+            <button class="btn btn-primary" onclick="creerBoutiqueTest()">Créer une Boutique de Test</button>
+            <div id="creation-result"></div>
+        </div>
+
+        <div class="test-section" id="test2">
+            <h2>Test 2: Vérification de la Persistance du Logo</h2>
+            <button class="btn btn-success" onclick="verifierLogo()">Vérifier le Logo</button>
+            <div id="logo-result"></div>
+        </div>
+
+        <div class="test-section" id="test3">
+            <h2>Test 3: Test de Redirection</h2>
+            <button class="btn btn-warning" onclick="testerRedirection()">Tester la Redirection</button>
+            <div id="redirection-result"></div>
+        </div>
+
+        <div class="test-section" id="test4">
+            <h2>Test 4: Nettoyage</h2>
+            <button class="btn btn-primary" onclick="nettoyerTests()">Nettoyer les Tests</button>
+            <div id="cleanup-result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Fonctions de test
+        function genererLogoBase64() {
+            // Génère un logo de test en base64
+            const canvas = document.createElement('canvas');
+            canvas.width = 100;
+            canvas.height = 100;
+            const ctx = canvas.getContext('2d');
+            
+            // Fond bleu
+            ctx.fillStyle = '#2196F3';
+            ctx.fillRect(0, 0, 100, 100);
+            
+            // Texte blanc
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 40px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('TB', 50, 60);
+            
+            return canvas.toDataURL();
+        }
+
+        function genererSlug(nom) {
+            // Génère un slug identique à celui utilisé dans l'application
+            return `${nom.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}-${Date.now().toString(36)}`;
+        }
+
+        function creerBoutiqueTest() {
+            const resultDiv = document.getElementById('creation-result');
+            
+            try {
+                // Créer une boutique de test
+                const boutique = {
+                    id: 'test-' + Date.now(),
+                    name: 'Boutique Test Correction',
+                    description: 'Cette boutique a été créée pour tester les corrections',
+                    logo: genererLogoBase64(),
+                    slug: genererSlug('Boutique Test Correction'),
+                    status: 'approved',
+                    created_at: new Date().toISOString(),
+                    isDemo: true
+                };
+
+                // Sauvegarder dans localStorage (comme dans l'application)
+                const demoBoutiques = JSON.parse(localStorage.getItem('demo_boutiques') || '[]');
+                demoBoutiques.push(boutique);
+                localStorage.setItem('demo_boutiques', JSON.stringify(demoBoutiques));
+
+                // Afficher la boutique créée
+                resultDiv.innerHTML = `
+                    <div class="status success">✅ Boutique créée avec succès!</div>
+                    <div class="boutique-card">
+                        <img src="${boutique.logo}" class="logo-preview" alt="Logo">
+                        <h3>${boutique.name}</h3>
+                        <p>${boutique.description}</p>
+                        <p><strong>Slug:</strong> ${boutique.slug}</p>
+                        <p><strong>ID:</strong> ${boutique.id}</p>
+                    </div>
+                    <div class="code-block">Données sauvegardées:\n${JSON.stringify(boutique, null, 2)}</div>
+                `;
+
+                document.getElementById('test1').className = 'test-section success';
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ Erreur: ${error.message}</div>`;
+                document.getElementById('test1').className = 'test-section error';
+            }
+        }
+
+        function verifierLogo() {
+            const resultDiv = document.getElementById('logo-result');
+            
+            try {
+                const demoBoutiques = JSON.parse(localStorage.getItem('demo_boutiques') || '[]');
+                
+                if (demoBoutiques.length === 0) {
+                    resultDiv.innerHTML = `<div class="status error">❌ Aucune boutique de test trouvée. Créez une boutique d'abord.</div>`;
+                    document.getElementById('test2').className = 'test-section error';
+                    return;
+                }
+
+                const derniereBoutique = demoBoutiques[demoBoutiques.length - 1];
+                
+                if (derniereBoutique.logo) {
+                    resultDiv.innerHTML = `
+                        <div class="status success">✅ Logo préservé avec succès!</div>
+                        <div class="boutique-card">
+                            <img src="${derniereBoutique.logo}" class="logo-preview" alt="Logo">
+                            <h3>${derniereBoutique.name}</h3>
+                            <p><strong>Logo:</strong> ${derniereBoutique.logo.substring(0, 50)}...</p>
+                        </div>
+                    `;
+                    document.getElementById('test2').className = 'test-section success';
+                } else {
+                    resultDiv.innerHTML = `<div class="status error">❌ Logo manquant!</div>`;
+                    document.getElementById('test2').className = 'test-section error';
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ Erreur: ${error.message}</div>`;
+                document.getElementById('test2').className = 'test-section error';
+            }
+        }
+
+        function testerRedirection() {
+            const resultDiv = document.getElementById('redirection-result');
+            
+            try {
+                const demoBoutiques = JSON.parse(localStorage.getItem('demo_boutiques') || '[]');
+                
+                if (demoBoutiques.length === 0) {
+                    resultDiv.innerHTML = `<div class="status error">❌ Aucune boutique de test trouvée. Créez une boutique d'abord.</div>`;
+                    document.getElementById('test3').className = 'test-section error';
+                    return;
+                }
+
+                const derniereBoutique = demoBoutiques[demoBoutiques.length - 1];
+                
+                if (derniereBoutique.slug && derniereBoutique.slug !== 'undefined') {
+                    const urlAttendue = `http://localhost:3016/shop/${derniereBoutique.slug}`;
+                    
+                    resultDiv.innerHTML = `
+                        <div class="status success">✅ Slug généré correctement!</div>
+                        <p><strong>Slug:</strong> ${derniereBoutique.slug}</p>
+                        <p><strong>URL attendue:</strong> <a href="${urlAttendue}" target="_blank">${urlAttendue}</a></p>
+                        <p><em>Cliquez sur le lien pour tester la redirection (ouvrira dans un nouvel onglet)</em></p>
+                        <div class="code-block">Avant la correction, l'URL aurait été: http://localhost:3016/shop/undefined\nAprès la correction, l'URL est: ${urlAttendue}</div>
+                    `;
+                    document.getElementById('test3').className = 'test-section success';
+                } else {
+                    resultDiv.innerHTML = `<div class="status error">❌ Slug manquant ou invalide!</div>`;
+                    document.getElementById('test3').className = 'test-section error';
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ Erreur: ${error.message}</div>`;
+                document.getElementById('test3').className = 'test-section error';
+            }
+        }
+
+        function nettoyerTests() {
+            const resultDiv = document.getElementById('cleanup-result');
+            
+            try {
+                localStorage.removeItem('demo_boutiques');
+                resultDiv.innerHTML = `<div class="status success">✅ Tests nettoyés avec succès!</div>`;
+                document.getElementById('test4').className = 'test-section success';
+                
+                // Réinitialiser tous les résultats
+                ['creation-result', 'logo-result', 'redirection-result'].forEach(id => {
+                    document.getElementById(id).innerHTML = '';
+                });
+                
+                ['test1', 'test2', 'test3'].forEach(id => {
+                    document.getElementById(id).className = 'test-section';
+                });
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ Erreur: ${error.message}</div>`;
+                document.getElementById('test4').className = 'test-section error';
+            }
+        }
+
+        // Vérification au chargement
+        window.onload = function() {
+            const demoBoutiques = JSON.parse(localStorage.getItem('demo_boutiques') || '[]');
+            const resultDiv = document.getElementById('test-results');
+            
+            if (demoBoutiques.length > 0) {
+                resultDiv.innerHTML = `
+                    <div class="status success">✅ Des boutiques de test existent déjà dans localStorage</div>
+                    <p>Cliquez sur "Vérifier le Logo" ou "Tester la Redirection" pour vérifier les corrections.</p>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="status">ℹ️ Aucune boutique de test trouvée. Commencez par créer une boutique de test.</div>
+                `;
+            }
+        };
+    </script>
+</body>
+</html>

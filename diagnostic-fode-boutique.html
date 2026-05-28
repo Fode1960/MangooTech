@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnostic Fodé Boutique - localStorage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .log {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+        }
+        .success {
+            color: #28a745;
+            background: #d4edda;
+        }
+        .warning {
+            color: #856404;
+            background: #fff3cd;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .danger {
+            background: #dc3545;
+        }
+        .danger:hover {
+            background: #c82333;
+        }
+        .key-item {
+            background: #e9ecef;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .fode-alert {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Diagnostic "Fodé Boutique"</h1>
+        <p>Cet outil analyse le localStorage pour identifier la source du problème "Fodé boutique"</p>
+        
+        <div class="section">
+            <h2>📋 Analyse du localStorage</h2>
+            <button onclick="analyzeStorage()">Analyser le localStorage</button>
+            <button onclick="clearAllShopData()" class="danger">Nettoyer TOUTES les données de boutique</button>
+            <div id="analysis-results" class="log" style="display: none;"></div>
+        </div>
+        
+        <div class="section">
+            <h2>🗝️ Clés de stockage détectées</h2>
+            <div id="keys-list"></div>
+        </div>
+        
+        <div class="section">
+            <h2>🚨 Résultats de la recherche "Fodé"</h2>
+            <div id="fode-results"></div>
+        </div>
+        
+        <div class="section">
+            <h2>🧹 Actions de nettoyage</h2>
+            <button onclick="cleanFodeData()">Nettoyer uniquement "Fodé"</button>
+            <button onclick="clearAllShopData()" class="danger">Tout nettoyer</button>
+            <div id="cleanup-results"></div>
+        </div>
+    </div>
+
+    <script>
+        // Clés de stockage utilisées dans l'application
+        const STORAGE_KEYS = [
+            'mangoo-offline-shop',
+            'mangoo-shop-status',
+            'currentShop',
+            'selectedShop',
+            'shopData',
+            'offlineShop',
+            'mangoo-shop-settings'
+        ];
+
+        // Fonction pour obtenir toutes les clés de localStorage
+        function getAllStorageKeys() {
+            const keys = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                keys.push(localStorage.key(i));
+            }
+            return keys;
+        }
+
+        // Fonction pour obtenir les clés de stockage liées aux boutiques
+        function getShopStorageKeys() {
+            const keys = [];
+            const allKeys = getAllStorageKeys();
+            
+            // Rechercher les clés standards
+            STORAGE_KEYS.forEach(key => {
+                if (localStorage.getItem(key)) {
+                    keys.push(key);
+                }
+            });
+            
+            // Rechercher les clés utilisateur spécifiques (pattern: mangoo-offline-shop-USER_ID)
+            allKeys.forEach(key => {
+                if (key && key.includes('mangoo') && key.includes('shop')) {
+                    if (!keys.includes(key)) {
+                        keys.push(key);
+                    }
+                }
+            });
+            
+            return keys;
+        }
+
+        // Fonction pour analyser les données de localStorage
+        function analyzeStorage() {
+            const resultsDiv = document.getElementById('analysis-results');
+            const keysListDiv = document.getElementById('keys-list');
+            const fodeResultsDiv = document.getElementById('fode-results');
+            
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = '🔍 Analyse en cours...';
+            
+            const keys = getShopStorageKeys();
+            const data = {};
+            
+            resultsDiv.innerHTML = `📦 Clés trouvées: ${keys.length}<br>`;
+            
+            // Afficher la liste des clés
+            keysListDiv.innerHTML = keys.map(key => {
+                const value = localStorage.getItem(key);
+                const size = value ? (value.length / 1024).toFixed(2) : 0;
+                return `
+                    <div class="key-item">
+                        <div>
+                            <strong>${key}</strong>
+                            <small>(${size} KB)</small>
+                        </div>
+                        <button onclick="showKeyDetails('${key}')">Détails</button>
+                    </div>
+                `;
+            }).join('');
+            
+            // Analyser chaque clé
+            keys.forEach(key => {
+                try {
+                    const value = localStorage.getItem(key);
+                    if (value) {
+                        data[key] = JSON.parse(value);
+                        resultsDiv.innerHTML += `<br>📋 ${key}:<br>`;
+                        resultsDiv.innerHTML += `   Type: ${typeof data[key]}<br>`;
+                        
+                        if (data[key] && typeof data[key] === 'object') {
+                            // Afficher les propriétés importantes
+                            if (data[key].name) resultsDiv.innerHTML += `   Nom: ${data[key].name}<br>`;
+                            if (data[key].id) resultsDiv.innerHTML += `   ID: ${data[key].id}<br>`;
+                            if (data[key].user_id) resultsDiv.innerHTML += `   User ID: ${data[key].user_id}<br>`;
+                            if (data[key].status) resultsDiv.innerHTML += `   Status: ${data[key].status}<br>`;
+                        }
+                    }
+                } catch (error) {
+                    resultsDiv.innerHTML += `❌ Erreur lors de la lecture de ${key}: ${error.message}<br>`;
+                }
+            });
+            
+            // Recherche spécifique de "Fodé boutique"
+            const fodeData = findFodeBoutique(data);
+            if (fodeData) {
+                fodeResultsDiv.innerHTML = `
+                    <div class="fode-alert">
+                        <h3>🚨 DONNÉES "FODÉ BOUTIQUE" TROUVÉES!</h3>
+                        <p><strong>Clé:</strong> ${fodeData.key}</p>
+                        <p><strong>Propriété:</strong> ${fodeData.property}</p>
+                        <p><strong>Valeur:</strong> ${fodeData.value}</p>
+                        <p><strong>Données complètes:</strong></p>
+                        <pre>${JSON.stringify(fodeData.fullData, null, 2)}</pre>
+                    </div>
+                `;
+            } else {
+                fodeResultsDiv.innerHTML = '<div class="success">✅ Aucune donnée "Fodé" trouvée dans le localStorage</div>';
+            }
+        }
+
+        // Fonction pour rechercher "Fodé boutique" dans les données
+        function findFodeBoutique(data) {
+            for (const [key, value] of Object.entries(data)) {
+                if (typeof value === 'object' && value !== null) {
+                    // Rechercher dans les propriétés de l'objet
+                    for (const [prop, propValue] of Object.entries(value)) {
+                        if (typeof propValue === 'string' && propValue.toLowerCase().includes('fodé')) {
+                            return { key, property: prop, value: propValue, fullData: value };
+                        }
+                    }
+                } else if (typeof value === 'string' && value.toLowerCase().includes('fodé')) {
+                    return { key, property: 'value', value, fullData: value };
+                }
+            }
+            return null;
+        }
+
+        // Fonction pour afficher les détails d'une clé spécifique
+        function showKeyDetails(keyName) {
+            const resultsDiv = document.getElementById('analysis-results');
+            resultsDiv.style.display = 'block';
+            
+            try {
+                const value = localStorage.getItem(keyName);
+                if (!value) {
+                    resultsDiv.innerHTML = `❌ Clé "${keyName}" non trouvée`;
+                    return;
+                }
+                
+                const data = JSON.parse(value);
+                resultsDiv.innerHTML = `<h3>Détails pour la clé: ${keyName}</h3>`;
+                resultsDiv.innerHTML += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                
+                // Rechercher "Fodé" dans ce contenu
+                const fodeInKey = findFodeBoutique({ [keyName]: data });
+                if (fodeInKey) {
+                    resultsDiv.innerHTML += '<div class="warning">🚨 "Fodé" trouvé dans cette clé!</div>';
+                }
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `❌ Erreur: ${error.message}`;
+            }
+        }
+
+        // Fonction pour nettoyer les données "Fodé"
+        function cleanFodeData() {
+            const cleanupDiv = document.getElementById('cleanup-results');
+            const { data } = analyzeStorage();
+            const fodeData = findFodeBoutique(data);
+            
+            if (fodeData) {
+                localStorage.removeItem(fodeData.key);
+                cleanupDiv.innerHTML = `<div class="success">✅ Données "Fodé" supprimées de la clé: ${fodeData.key}</div>`;
+                // Re-analyser
+                setTimeout(analyzeStorage, 1000);
+            } else {
+                cleanupDiv.innerHTML = '<div class="warning">ℹ️ Aucune donnée "Fodé" trouvée à supprimer</div>';
+            }
+        }
+
+        // Fonction pour nettoyer TOUTES les données de boutique
+        function clearAllShopData() {
+            if (!confirm('⚠️ Êtes-vous sûr de vouloir supprimer TOUTES les données de boutique du localStorage ?\n\nCette action est irréversible!')) {
+                return;
+            }
+            
+            const cleanupDiv = document.getElementById('cleanup-results');
+            const keys = getShopStorageKeys();
+            
+            cleanupDiv.innerHTML = `<div class="warning">🧹 Nettoyage de ${keys.length} clés en cours...</div>`;
+            
+            keys.forEach(key => {
+                localStorage.removeItem(key);
+            });
+            
+            cleanupDiv.innerHTML = `<div class="success">✅ Nettoyage terminé! ${keys.length} clés supprimées.</div>`;
+            
+            // Re-analyser
+            setTimeout(analyzeStorage, 1000);
+        }
+
+        // Analyser automatiquement au chargement
+        window.onload = function() {
+            analyzeStorage();
+        };
+    </script>
+</body>
+</html>

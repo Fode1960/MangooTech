@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Audio VoIP Simple - MangooTech</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .user-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #ff6b35;
+        }
+        
+        .user-id {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #ff6b35;
+            margin: 10px 0;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 150px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #f44336 0%, #da190b 100%);
+            color: white;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .audio-visualizer {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+        
+        .audio-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 15px 0;
+            position: relative;
+        }
+        
+        .audio-level {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A, #CDDC39);
+            border-radius: 15px;
+            transition: width 0.1s ease;
+            width: 0%;
+        }
+        
+        .audio-percentage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .call-status {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .status-idle {
+            background: #e3f2fd;
+            color: #1976d2;
+            border: 2px solid #1976d2;
+        }
+        
+        .status-calling {
+            background: #fff3e0;
+            color: #f57c00;
+            border: 2px solid #f57c00;
+        }
+        
+        .status-connected {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 2px solid #2e7d32;
+        }
+        
+        .call-controls {
+            display: none;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .call-timer {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ff6b35;
+            margin: 10px 0;
+        }
+        
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #c62828;
+        }
+        
+        .success-message {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🥭 Test VoIP MangooTech</h1>
+        
+        <div class="user-info">
+            <h3>Informations Utilisateur</h3>
+            <div class="user-id" id="userId">Chargement...</div>
+            <div>Statut: <span id="connectionStatus">Déconnecté</span></div>
+        </div>
+        
+        <div class="controls">
+            <button id="newIdBtn" class="btn-primary">🔄 Nouvel ID</button>
+            <button id="testAudioBtn" class="btn-success">🎤 Test Audio</button>
+            <button id="callBtn" class="btn-success">📞 Appel Test</button>
+        </div>
+        
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+        <div id="successMessage" class="success-message" style="display: none;"></div>
+        
+        <div class="audio-visualizer">
+            <h3>Visualiseur Audio</h3>
+            <div>
+                <strong>Audio Local:</strong>
+                <div class="audio-bar">
+                    <div class="audio-level" id="localAudioLevel"></div>
+                    <div class="audio-percentage" id="localAudioPercentage">0%</div>
+                </div>
+            </div>
+            <div>
+                <strong>Audio Distant:</strong>
+                <div class="audio-bar">
+                    <div class="audio-level" id="remoteAudioLevel"></div>
+                    <div class="audio-percentage" id="remoteAudioPercentage">0%</div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="callStatus" class="call-status status-idle">
+            Prêt pour les tests
+        </div>
+        
+        <div id="callControls" class="call-controls">
+            <button id="answerBtn" class="btn-success">✅ Répondre</button>
+            <button id="hangupBtn" class="btn-danger">❌ Raccrocher</button>
+        </div>
+        
+        <div id="callTimer" class="call-timer" style="display: none;">
+            00:00
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const WS_URL = 'ws://localhost:8080';
+        const SIP_SERVER = '194.163.190.74:5060';
+        
+        // Variables globales
+        let currentUserId = null;
+        let wsConnection = null;
+        let localStream = null;
+        let remoteStream = null;
+        let peerConnection = null;
+        let audioContext = null;
+            let analyser = null;
+        let dataArray = null;
+        let animationId = null;
+        let callStartTime = null;
+        let callTimerInterval = null;
+        let isInCall = false;
+        
+        // État de l'appel
+        let callState = {
+            status: 'idle', // idle, calling, connected
+            caller: null,
+            callee: null,
+            callId: null
+        };
+        
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            generateNewId();
+            setupEventListeners();
+            updateConnectionStatus(false);
+        });
+        
+        // Générer un nouvel ID utilisateur
+        function generateNewId() {
+            currentUserId = 'user-' + Math.random().toString(36).substr(2, 9);
+            document.getElementById('userId').textContent = currentUserId;
+            showSuccess(`Nouvel ID généré: ${currentUserId}`);
+            
+            // Se reconnecter avec le nouvel ID
+            if (wsConnection) {
+                wsConnection.close();
+            }
+            connectToServer();
+        }
+        
+        // Connecter au serveur WebSocket
+        function connectToServer() {
+            try {
+                wsConnection = new WebSocket(WS_URL);
+                
+                wsConnection.onopen = function() {
+                    console.log('✅ Connecté au serveur WebSocket');
+                    updateConnectionStatus(true);
+                    registerUser();
+                };
+                
+                wsConnection.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        handleMessage(data);
+                    } catch (error) {
+                        console.error('Erreur de parsing JSON:', error);
+                    }
+                };
+                
+                wsConnection.onclose = function() {
+                    console.log('🔌 Déconnecté du serveur WebSocket');
+                    updateConnectionStatus(false);
+                    setTimeout(connectToServer, 3000); // Reconnexion automatique
+                };
+                
+                wsConnection.onerror = function(error) {
+                    console.error('❌ Erreur WebSocket:', error);
+                    showError('Erreur de connexion au serveur. Vérifiez que le serveur WebRTC-SIP Gateway tourne sur le port 8080.');
+                };
+                
+            } catch (error) {
+                console.error('❌ Erreur de connexion:', error);
+                showError('Impossible de se connecter au serveur WebSocket.');
+            }
+        }
+        
+        // Enregistrer l'utilisateur
+        function registerUser() {
+            if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+                wsConnection.send(JSON.stringify({
+                    type: 'register',
+                    userId: currentUserId,
+                    sipUsername: currentUserId,
+                    sipPassword: 'test123',
+                    sipDomain: 'mangootech.local'
+                }));
+                console.log(`👤 Enregistrement de l'utilisateur: ${currentUserId}`);
+            }
+        }
+        
+        // Gérer les messages reçus
+        function handleMessage(data) {
+            console.log('📨 Message reçu:', data);
+            
+            switch (data.type) {
+                case 'registered':
+                    showSuccess('Utilisateur enregistré avec succès');
+                    break;
+                    
+                case 'registration-failed':
+                    showError(`Échec de l'enregistrement: ${data.error}`);
+                    break;
+                    
+                case 'incoming-call':
+                    handleIncomingCall(data);
+                    break;
+                    
+                case 'call-answered':
+                    handleCallAnswered(data);
+                    break;
+                    
+                case 'call-ended':
+                    handleCallEnded();
+                    break;
+                    
+                case 'call-error':
+                    showError(`Erreur d'appel: ${data.error}`);
+                    endCall();
+                    break;
+                    
+                default:
+                    console.log('Type de message non géré:', data.type);
+            }
+        }
+        
+        // Gérer un appel entrant
+        function handleIncomingCall(data) {
+            callState = {
+                status: 'calling',
+                caller: data.caller,
+                callee: currentUserId,
+                callId: data.callId
+            };
+            
+            updateCallStatus(`📞 Appel entrant de ${data.caller}`);
+            document.getElementById('callControls').style.display = 'flex';
+            showSuccess(`Appel entrant de ${data.caller}`);
+        }
+        
+        // Gérer la réponse à un appel
+        function handleCallAnswered(data) {
+            callState.status = 'connected';
+            callStartTime = new Date();
+            startCallTimer();
+            updateCallStatus(`✅ Appel connecté avec ${callState.caller || callState.callee}`);
+            document.getElementById('callControls').style.display = 'none';
+            showSuccess('Appel connecté avec succès');
+            
+            // Démarrer l'analyse audio
+            if (localStream) {
+                startAudioAnalysis();
+            }
+        }
+        
+        // Tester l'audio
+        async function testAudio() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                localStream = stream;
+                
+                // Créer le contexte audio pour l'analyse
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                const source = audioContext.createMediaStreamSource(stream);
+                source.connect(analyser);
+                
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+                
+                showSuccess('✅ Microphone activé avec succès');
+                startAudioAnalysis();
+                
+            } catch (error) {
+                console.error('❌ Erreur d\'accès au microphone:', error);
+                showError('Impossible d\'accéder au microphone. Vérifiez les permissions.');
+            }
+        }
+        
+        // Analyser l'audio
+        function startAudioAnalysis() {
+            function updateAudioLevel() {
+                if (!analyser || !dataArray) return;
+                
+                analyser.getByteFrequencyData(dataArray);
+                
+                // Calculer le niveau RMS
+                let sum = 0;
+                for (let i = 0; i < dataArray.length; i++) {
+                    sum += dataArray[i] * dataArray[i];
+                }
+                const rms = Math.sqrt(sum / dataArray.length);
+                const percentage = Math.min(100, (rms / 128) * 100);
+                
+                // Mettre à jour l'affichage
+                document.getElementById('localAudioLevel').style.width = percentage + '%';
+                document.getElementById('localAudioPercentage').textContent = Math.round(percentage) + '%';
+                
+                // Simuler l'audio distant pour la démo
+                const remotePercentage = Math.random() * 30 + 10; // 10-40%
+                document.getElementById('remoteAudioLevel').style.width = remotePercentage + '%';
+                document.getElementById('remoteAudioPercentage').textContent = Math.round(remotePercentage) + '%';
+                
+                animationId = requestAnimationFrame(updateAudioLevel);
+            }
+            
+            updateAudioLevel();
+        }
+        
+        // Faire un appel test
+        function makeCall() {
+            if (!localStream) {
+                showError('Veuillez d\'abord tester l\'audio pour activer le microphone');
+                return;
+            }
+            
+            if (!wsConnection || wsConnection.readyState !== WebSocket.OPEN) {
+                showError('Non connecté au serveur');
+                return;
+            }
+            
+            // Créer un ID d'appel unique
+            const callId = 'call-' + Date.now();
+            const targetUser = currentUserId.includes('user-') ? 
+                currentUserId.replace('user-', 'user-') + '2' : 
+                currentUserId + '2';
+            
+            callState = {
+                status: 'calling',
+                caller: currentUserId,
+                callee: targetUser,
+                callId: callId
+            };
+            
+            // Envoyer la demande d'appel
+            wsConnection.send(JSON.stringify({
+                type: 'call',
+                caller: currentUserId,
+                callee: targetUser,
+                callId: callId
+            }));
+            
+            updateCallStatus(`📞 Appel en cours vers ${targetUser}...`);
+            showSuccess(`Appel lancé vers ${targetUser}`);
+            
+            // Simuler une réponse après 3 secondes pour la démo
+            setTimeout(() => {
+                if (callState.status === 'calling') {
+                    handleCallAnswered({ callId: callId });
+                }
+            }, 3000);
+        }
+        
+        // Répondre à un appel
+        function answerCall() {
+            if (!wsConnection || wsConnection.readyState !== WebSocket.OPEN) {
+                showError('Non connecté au serveur');
+                return;
+            }
+            
+            wsConnection.send(JSON.stringify({
+                type: 'answer',
+                callId: callState.callId,
+                callee: currentUserId
+            }));
+            
+            handleCallAnswered({ callId: callState.callId });
+        }
+        
+        // Raccrocher
+        function hangUp() {
+            if (!wsConnection || wsConnection.readyState !== WebSocket.OPEN) {
+                showError('Non connecté au serveur');
+                return;
+            }
+            
+            wsConnection.send(JSON.stringify({
+                type: 'hangup',
+                callId: callState.callId
+            }));
+            
+            endCall();
+        }
+        
+        // Terminer l'appel
+        function endCall() {
+            callState = {
+                status: 'idle',
+                caller: null,
+                callee: null,
+                callId: null
+            };
+            
+            callStartTime = null;
+            stopCallTimer();
+            
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
+            updateCallStatus('Prêt pour les tests');
+            document.getElementById('callControls').style.display = 'none';
+            
+            // Réinitialiser les barres audio
+            document.getElementById('localAudioLevel').style.width = '0%';
+            document.getElementById('localAudioPercentage').textContent = '0%';
+            document.getElementById('remoteAudioLevel').style.width = '0%';
+            document.getElementById('remoteAudioPercentage').textContent = '0%';
+        }
+        
+        // Gérer la fin d'appel
+        function handleCallEnded() {
+            showSuccess('Appel terminé');
+            endCall();
+        }
+        
+        // Mettre à jour le statut de l'appel
+        function updateCallStatus(message) {
+            const statusDiv = document.getElementById('callStatus');
+            statusDiv.textContent = message;
+            
+            // Mettre à jour la classe CSS
+            statusDiv.className = 'call-status';
+            if (callState.status === 'calling') {
+                statusDiv.classList.add('status-calling');
+            } else if (callState.status === 'connected') {
+                statusDiv.classList.add('status-connected');
+            } else {
+                statusDiv.classList.add('status-idle');
+            }
+        }
+        
+        // Mettre à jour le statut de connexion
+        function updateConnectionStatus(connected) {
+            const statusElement = document.getElementById('connectionStatus');
+            if (connected) {
+                statusElement.textContent = 'Connecté';
+                statusElement.style.color = '#4CAF50';
+            } else {
+                statusElement.textContent = 'Déconnecté';
+                statusElement.style.color = '#f44336';
+            }
+        }
+        
+        // Démarrer le minuteur d'appel
+        function startCallTimer() {
+            callTimerInterval = setInterval(() => {
+                if (callStartTime) {
+                    const elapsed = Math.floor((new Date() - callStartTime) / 1000);
+                    const minutes = Math.floor(elapsed / 60);
+                    const seconds = elapsed % 60;
+                    const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    document.getElementById('callTimer').textContent = timeString;
+                    document.getElementById('callTimer').style.display = 'block';
+                }
+            }, 1000);
+        }
+        
+        // Arrêter le minuteur d'appel
+        function stopCallTimer() {
+            if (callTimerInterval) {
+                clearInterval(callTimerInterval);
+                callTimerInterval = null;
+            }
+            document.getElementById('callTimer').style.display = 'none';
+        }
+        
+        // Configurer les écouteurs d'événements
+        function setupEventListeners() {
+            document.getElementById('newIdBtn').addEventListener('click', generateNewId);
+            document.getElementById('testAudioBtn').addEventListener('click', testAudio);
+            document.getElementById('callBtn').addEventListener('click', makeCall);
+            document.getElementById('answerBtn').addEventListener('click', answerCall);
+            document.getElementById('hangupBtn').addEventListener('click', hangUp);
+        }
+        
+        // Afficher un message d'erreur
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Afficher un message de succès
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            setTimeout(() => {
+                successDiv.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Se connecter au démarrage
+        connectToServer();
+    </script>
+</body>
+</html>

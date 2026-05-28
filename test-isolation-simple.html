@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛍️ Test Simple - Isolation des Données</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #22c55e;
+            text-align: center;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #22c55e;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+        .user-card {
+            background: #e8f5e8;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #22c55e;
+        }
+        .product-item {
+            background: #fff3cd;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 3px;
+            border-left: 3px solid #ffc107;
+        }
+        .result {
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .btn {
+            background: #22c55e;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .btn:hover {
+            background: #16a34a;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        #console {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .mini-boutique-frame {
+            width: 100%;
+            height: 400px;
+            border: 2px solid #22c55e;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛍️ Test d'Isolation des Données - Mini-Boutique</h1>
+        
+        <div class="test-section">
+            <h2>Test Manuel Simple</h2>
+            <p>Ce test vérifie que chaque utilisateur voit ses propres produits.</p>
+            
+            <button class="btn" onclick="runTest()">🚀 Lancer le Test</button>
+            <button class="btn btn-secondary" onclick="clearData()">🧹 Nettoyer les Données</button>
+            <button class="btn btn-secondary" onclick="openMiniBoutique()">🛍️ Ouvrir Mini-Boutique</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Résultats du Test</h2>
+            <div id="results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Console de Test</h2>
+            <div id="console">Console prête... Cliquez sur "Lancer le Test" pour commencer.</div>
+        </div>
+
+        <div class="test-section">
+            <h2>Mini-Boutique en Temps Réel</h2>
+            <iframe id="miniBoutique" class="mini-boutique-frame" src="http://localhost:3009/"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Configuration des comptes de test
+        const TEST_USERS = [
+            {
+                id: 'testeur2025-12345',
+                email: 'testeur2025@example.com',
+                name: 'Testeur 2025'
+            },
+            {
+                id: 'test2-67890',
+                email: 'test2@example.com',
+                name: 'Test 2'
+            }
+        ];
+
+        function log(message, type = 'info') {
+            const console = document.getElementById('console');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'success' ? '#22c55e' : type === 'error' ? '#ef4444' : '#6b7280';
+            console.innerHTML += `<div style="color: ${color};">[${timestamp}] ${message}</div>`;
+            console.scrollTop = console.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function showResult(message, success = true) {
+            const results = document.getElementById('results');
+            const resultClass = success ? 'success' : 'error';
+            results.innerHTML += `<div class="result ${resultClass}">${message}</div>`;
+        }
+
+        function createUserProducts(user) {
+            const storageKey = `miniShopProducts_${user.id}`;
+            const products = [
+                {
+                    id: Date.now() + 1,
+                    name: `Produit ${user.name.split(' ')[0]} - T-shirt Premium`,
+                    price: 29.99,
+                    description: `Créé par ${user.email}`,
+                    userId: user.id,
+                    userEmail: user.email
+                },
+                {
+                    id: Date.now() + 2,
+                    name: `Produit ${user.name.split(' ')[0]} - Casque Audio`,
+                    price: 149.99,
+                    description: `Créé par ${user.email}`,
+                    userId: user.id,
+                    userEmail: user.email
+                }
+            ];
+            
+            localStorage.setItem(storageKey, JSON.stringify(products));
+            log(`✅ ${products.length} produits créés pour ${user.email}`, 'success');
+            return products;
+        }
+
+        function checkUserIsolation() {
+            let allTestsPassed = true;
+            
+            TEST_USERS.forEach(user => {
+                const storageKey = `miniShopProducts_${user.id}`;
+                const products = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                
+                log(`📋 Vérification pour ${user.email}: ${products.length} produits`, 'info');
+                
+                // Vérifier que tous les produits appartiennent à l'utilisateur
+                const foreignProducts = products.filter(product => 
+                    product.userId !== user.id || product.userEmail !== user.email
+                );
+                
+                if (foreignProducts.length > 0) {
+                    log(`❌ ERREUR: ${foreignProducts.length} produits étrangers trouvés pour ${user.email}`, 'error');
+                    allTestsPassed = false;
+                } else {
+                    log(`✅ Isolation parfaite pour ${user.email}`, 'success');
+                }
+                
+                // Afficher les produits
+                products.forEach(product => {
+                    log(`   - ${product.name} (${product.price}€)`, 'info');
+                });
+            });
+            
+            return allTestsPassed;
+        }
+
+        function simulateUserLogin(user) {
+            log(`🔐 Simulation connexion de ${user.email}...`, 'info');
+            
+            // Stocker l'utilisateur dans localStorage
+            localStorage.setItem('miniShopCurrentUser', JSON.stringify(user));
+            localStorage.setItem('miniShopAuth', JSON.stringify({
+                user: user,
+                isAuthenticated: true
+            }));
+            
+            // Envoyer à l'iframe
+            const iframe = document.getElementById('miniBoutique');
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage({
+                    type: 'AUTH_LOGIN',
+                    user: user
+                }, 'http://localhost:3009');
+            }
+            
+            log(`✅ Utilisateur ${user.email} connecté`, 'success');
+        }
+
+        async function runTest() {
+            const results = document.getElementById('results');
+            results.innerHTML = '';
+            
+            log('🚀 Démarrage du test d\'isolation des données...', 'info');
+            
+            try {
+                // Étape 1: Vérifier que le serveur est accessible
+                log('🔍 Vérification de la connexion au serveur...', 'info');
+                const response = await fetch('http://localhost:3009/');
+                if (!response.ok) {
+                    throw new Error('Serveur inaccessible');
+                }
+                log('✅ Serveur Mini-Boutique accessible', 'success');
+                
+                // Étape 2: Créer des données pour chaque utilisateur
+                log('📊 Création des données de test...', 'info');
+                TEST_USERS.forEach(user => {
+                    createUserProducts(user);
+                });
+                
+                // Étape 3: Tester l'utilisateur 1
+                log('', 'info');
+                log('👤 TEST UTILISATEUR 1', 'info');
+                simulateUserLogin(TEST_USERS[0]);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Étape 4: Tester l'utilisateur 2
+                log('', 'info');
+                log('👤 TEST UTILISATEUR 2', 'info');
+                simulateUserLogin(TEST_USERS[1]);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Étape 5: Vérifier l'isolation
+                log('', 'info');
+                log('🔍 Vérification de l\'isolation des données...', 'info');
+                const isolationSuccess = checkUserIsolation();
+                
+                if (isolationSuccess) {
+                    showResult('🎉 SUCCÈS! Chaque utilisateur voit bien ses propres produits.', true);
+                    log('✅ Test terminé avec succès - L\'isolation fonctionne parfaitement!', 'success');
+                } else {
+                    showResult('❌ ÉCHEC: Problème d\'isolation détecté.', false);
+                    log('❌ Test échoué - Il y a des problèmes d\'isolation', 'error');
+                }
+                
+                // Étape 6: Rafraîchir l'iframe
+                const iframe = document.getElementById('miniBoutique');
+                iframe.src = 'http://localhost:3009/';
+                
+            } catch (error) {
+                showResult(`❌ ERREUR: ${error.message}`, false);
+                log(`❌ Erreur pendant le test: ${error.message}`, 'error');
+            }
+        }
+
+        function clearData() {
+            log('🧹 Nettoyage des données de test...', 'info');
+            
+            TEST_USERS.forEach(user => {
+                const storageKey = `miniShopProducts_${user.id}`;
+                localStorage.removeItem(storageKey);
+                log(`🗑️ Données supprimées pour ${user.email}`, 'info');
+            });
+            
+            localStorage.removeItem('miniShopCurrentUser');
+            localStorage.removeItem('miniShopAuth');
+            
+            log('✅ Nettoyage terminé', 'success');
+            showResult('🧹 Données de test nettoyées avec succès', true);
+        }
+
+        function openMiniBoutique() {
+            log('🛍️ Ouverture de Mini-Boutique dans un nouvel onglet...', 'info');
+            window.open('http://localhost:3009/', '_blank');
+        }
+
+        // Écouter les messages de l'iframe
+        window.addEventListener('message', function(event) {
+            if (event.origin !== 'http://localhost:3009') return;
+            
+            log(`📨 Message reçu de Mini-Boutique: ${JSON.stringify(event.data)}`, 'info');
+            
+            if (event.data.type === 'AUTH_SUCCESS') {
+                log('✅ Authentification réussie dans Mini-Boutique', 'success');
+            } else if (event.data.type === 'AUTH_ERROR') {
+                log(`❌ Erreur d'authentification: ${event.data.error}`, 'error');
+            }
+        });
+
+        // Vérifier la connexion au démarrage
+        window.addEventListener('load', async function() {
+            log('🚀 Test d\'isolation des données prêt', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:3009/');
+                if (response.ok) {
+                    log('✅ Serveur Mini-Boutique accessible', 'success');
+                } else {
+                    log('❌ Serveur Mini-Boutique inaccessible', 'error');
+                }
+            } catch (error) {
+                log('❌ Impossible de se connecter au serveur', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

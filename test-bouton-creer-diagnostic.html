@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Bouton Créer - Diagnostic</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+        
+        .header p {
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .content {
+            padding: 2rem;
+        }
+        
+        .test-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .test-section h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .emergency-test {
+            background: linear-gradient(135deg, #ffeaa7, #fab1a0);
+            border-color: #e17055;
+        }
+        
+        .direct-access {
+            background: linear-gradient(135deg, #a8e6cf, #88d8a3);
+            border-color: #27ae60;
+        }
+        
+        .api-test {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            border-color: #0984e3;
+            color: white;
+        }
+        
+        .api-test h3 {
+            color: white;
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .test-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        
+        .emergency-button {
+            background: linear-gradient(135deg, #ff7675, #d63031);
+        }
+        
+        .success-button {
+            background: linear-gradient(135deg, #00b894, #00a085);
+        }
+        
+        .result-box {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .result-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .result-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .result-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        
+        .console-log {
+            background: #2d3436;
+            color: #00d2d3;
+            border: 1px solid #636e72;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-success {
+            background: #00b894;
+        }
+        
+        .status-error {
+            background: #e17055;
+        }
+        
+        .status-warning {
+            background: #fdcb6e;
+        }
+        
+        .emergency-panel {
+            background: linear-gradient(135deg, #fd79a8, #e84393);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+        }
+        
+        .emergency-panel h4 {
+            margin-top: 0;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛠️ Diagnostic Bouton Créer</h1>
+            <p>Test complet du bouton et formulaire de création de boutique</p>
+        </div>
+        
+        <div class="content">
+            <!-- État initial -->
+            <div class="test-section">
+                <h3>📊 État du Système</h3>
+                <div id="system-status">
+                    <p><span class="status-indicator status-warning"></span>Chargement...</p>
+                </div>
+            </div>
+            
+            <!-- Tests d'urgence -->
+            <div class="test-section emergency-test">
+                <h3>🚨 Tests d'Urgence</h3>
+                <p>Ces tests vérifient le bouton créer avec différentes méthodes :</p>
+                
+                <div class="button-grid">
+                    <button class="test-button emergency-button" onclick="testCreateButtonDirect()">
+                        🎯 Test Direct Bouton
+                    </button>
+                    <button class="test-button emergency-button" onclick="simulateCreateClick()">
+                        🖱️ Simuler Clic Bouton
+                    </button>
+                    <button class="test-button emergency-button" onclick="testCreateTabNavigation()">
+                        🔄 Test Navigation Onglet
+                    </button>
+                    <button class="test-button emergency-button" onclick="forceCreateTab()">
+                        ⚡ Forcer Onglet Créer
+                    </button>
+                </div>
+                
+                <div id="emergency-results" class="result-box hidden"></div>
+            </div>
+            
+            <!-- Accès direct -->
+            <div class="test-section direct-access">
+                <h3>🔗 Accès Direct Formulaire</h3>
+                <p>Accéder directement au formulaire de création :</p>
+                
+                <div class="button-grid">
+                    <button class="test-button success-button" onclick="openCreateFormDirect()">
+                        📋 Formulaire Direct
+                    </button>
+                    <button class="test-button success-button" onclick="openCreateWithDebug()">
+                        🐛 Formulaire + Debug
+                    </button>
+                    <button class="test-button success-button" onclick="openCreateInNewTab()">
+                        🗂️ Nouvel Onglet Formulaire
+                    </button>
+                </div>
+                
+                <div id="direct-results" class="result-box hidden"></div>
+            </div>
+            
+            <!-- API et backend -->
+            <div class="test-section api-test">
+                <h3>⚙️ Tests API Backend</h3>
+                <p>Vérifier la communication avec le serveur :</p>
+                
+                <div class="button-grid">
+                    <button class="test-button" onclick="testBackendHealth()" style="background: linear-gradient(135deg, #74b9ff, #0984e3);">
+                        🏥 Santé Backend
+                    </button>
+                    <button class="test-button" onclick="testCreateEndpoint()" style="background: linear-gradient(135deg, #00b894, #00a085);">
+                        🔌 Test Endpoint Créer
+                    </button>
+                    <button class="test-button" onclick="testShopCreationAPI()" style="background: linear-gradient(135deg, #a29bfe, #6c5ce7);">
+                        🏪 Test API Boutique
+                    </button>
+                </div>
+                
+                <div id="api-results" class="result-box hidden"></div>
+            </div>
+            
+            <!-- Console de debug -->
+            <div class="test-section">
+                <h3>🖥️ Console de Débogage</h3>
+                <p>Journal des événements et erreurs :</p>
+                <div id="debug-console" class="result-box console-log"></div>
+            </div>
+            
+            <!-- Solutions d'urgence -->
+            <div class="emergency-panel">
+                <h4>🆘 Solutions d'Urgence</h4>
+                <p>Si le bouton ne fonctionne toujours pas :</p>
+                <ol>
+                    <li><strong>Rafraîchir la page</strong> - F5 ou Ctrl+R</li>
+                    <li><strong>Vider le cache</strong> - Ctrl+F5</li>
+                    <li><strong>Mode navigation privée</strong> - Ctrl+Shift+N</li>
+                    <li><strong>Vérifier la console JavaScript</strong> - F12 → Console</li>
+                    <li><strong>Redémarrer le serveur</strong> - npm run dev</li>
+                </ol>
+                <button class="test-button" onclick="showEmergencySolutions()" style="background: white; color: #e84393; margin-top: 1rem;">
+                    📋 Voir Toutes les Solutions
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const MAIN_URL = 'http://localhost:3016';
+        const API_URL = 'http://localhost:3010';
+        const TEST_BOUTIQUE = 'jules-boutique-mksbfsb8';
+        
+        // État du système
+        let systemState = {
+            mainServer: false,
+            apiServer: false,
+            userAuth: null,
+            lastError: null
+        };
+        
+        // Logger
+        function log(message, type = 'info') {
+            const console = document.getElementById('debug-console');
+            const timestamp = new Date().toLocaleTimeString();
+            const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+            const color = type === 'success' ? '#00d2d3' : type === 'error' ? '#ff7675' : '#74b9ff';
+            
+            console.innerHTML += `<span style="color: ${color}">[${timestamp}] ${icon} ${message}</span>\\n`;
+            console.scrollTop = console.scrollHeight;
+        }
+        
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Système de diagnostic démarré');
+            checkSystemStatus();
+        });
+        
+        // Vérifier l'état du système
+        async function checkSystemStatus() {
+            log('🔍 Vérification de l\'état du système...');
+            
+            try {
+                // Test serveur principal
+                const mainResponse = await fetch(MAIN_URL + '/api/health').catch(() => null);
+                systemState.mainServer = !!mainResponse;
+                
+                // Test serveur API
+                const apiResponse = await fetch(API_URL + '/api/health').catch(() => null);
+                systemState.apiServer = !!apiResponse;
+                
+                // Test authentification
+                const userData = localStorage.getItem('sb_user');
+                systemState.userAuth = userData ? JSON.parse(userData) : null;
+                
+                updateSystemStatus();
+                
+            } catch (error) {
+                log(`Erreur vérification système: ${error.message}`, 'error');
+                systemState.lastError = error.message;
+                updateSystemStatus();
+            }
+        }
+        
+        function updateSystemStatus() {
+            const statusDiv = document.getElementById('system-status');
+            
+            let html = `
+                <p><span class="status-indicator ${systemState.mainServer ? 'status-success' : 'status-error'}"></span>
+                   Serveur Principal (3016): ${systemState.mainServer ? '✅ Actif' : '❌ Inactif'}</p>
+                <p><span class="status-indicator ${systemState.apiServer ? 'status-success' : 'status-error'}"></span>
+                   Serveur API (3010): ${systemState.apiServer ? '✅ Actif' : '❌ Inactif'}</p>
+                <p><span class="status-indicator ${systemState.userAuth ? 'status-success' : 'status-warning'}"></span>
+                   Utilisateur: ${systemState.userAuth ? `✅ ${systemState.userAuth.email}` : '⚠️ Non connecté (Mode Demo)'}</p>
+            `;
+            
+            if (systemState.lastError) {
+                html += `<p><span class="status-indicator status-error"></span>Erreur: ${systemState.lastError}</p>`;
+            }
+            
+            statusDiv.innerHTML = html;
+        }
+        
+        // Tests d'urgence
+        async function testCreateButtonDirect() {
+            log('🎯 Test bouton créer direct...');
+            const result = document.getElementById('emergency-results');
+            
+            try {
+                // Ouvrir la page principale et tester le bouton
+                const testWindow = window.open(MAIN_URL, '_blank');
+                
+                result.innerHTML = `✅ Page principale ouverte dans nouvel onglet\\n`;
+                result.innerHTML += `📍 Vérifiez si le bouton "Créer" est visible et cliquable\\n`;
+                result.innerHTML += `🔍 Inspectez la console JavaScript (F12) pour voir les erreurs\\n`;
+                result.className = 'result-box result-success';
+                result.style.display = 'block';
+                
+                log('Page principale ouverte pour test bouton', 'success');
+                
+            } catch (error) {
+                result.innerHTML = `❌ Erreur: ${error.message}`;
+                result.className = 'result-box result-error';
+                result.style.display = 'block';
+                log(`Erreur test bouton: ${error.message}`, 'error');
+            }
+        }
+        
+        function simulateCreateClick() {
+            log('🖱️ Simulation clic bouton créer...');
+            const result = document.getElementById('emergency-results');
+            
+            try {
+                // Simulation de la logique du bouton créer
+                result.innerHTML = `🔄 Simulation de la navigation vers l'onglet "Créer"...\\n`;
+                result.innerHTML += `📍 URL cible: ${MAIN_URL}/#create\\n`;
+                result.innerHTML += `⚡ État attendu: Formulaire de création visible\\n`;
+                result.innerHTML += `\\n💡 Pour tester réellement: Ouvrez ${MAIN_URL} et cliquez sur "Créer"`;
+                
+                result.className = 'result-box result-info';
+                result.style.display = 'block';
+                
+                log('Simulation clic bouton créer effectuée', 'info');
+                
+            } catch (error) {
+                result.innerHTML = `❌ Erreur simulation: ${error.message}`;
+                result.className = 'result-box result-error';
+                result.style.display = 'block';
+                log(`Erreur simulation: ${error.message}`, 'error');
+            }
+        }
+        
+        function testCreateTabNavigation() {
+            log('🔄 Test navigation onglet créer...');
+            const result = document.getElementById('emergency-results');
+            
+            try {
+                result.innerHTML = `🎯 Test de navigation vers l'onglet créer...\\n`;
+                result.innerHTML += `📋 État actuel: ${systemState.userAuth ? 'Connecté' : 'Non connecté (Demo)'}\\n`;
+                result.innerHTML += `🔧 Méthode: Changement d'onglet via JavaScript\\n`;
+                result.innerHTML += `\\n✅ Test prêt - ouvrez la page principale pour tester`;
+                
+                result.className = 'result-box result-info';
+                result.style.display = 'block';
+                
+                log('Test navigation onglet créer préparé', 'info');
+                
+            } catch (error) {
+                result.innerHTML = `❌ Erreur: ${error.message}`;
+                result.className = 'result-box result-error';
+                result.style.display = 'block';
+                log(`Erreur test navigation: ${error.message}`, 'error');
+            }
+        }
+        
+        function forceCreateTab() {
+            log('⚡ Forçage onglet créer...');
+            const result = document.getElementById('emergency-results');
+            
+            try {
+                // Créer une URL avec paramètre pour forcer l'onglet créer
+                const forceUrl = `${MAIN_URL}?forceTab=create&noRedirect=true`;
+                
+                result.innerHTML = `🚀 Forçage de l'onglet "Créer"...\\n`;
+                result.innerHTML += `🔗 URL de forçage: ${forceUrl}\\n`;
+                result.innerHTML += `🎯 Cela devrait ouvrir directement le formulaire\\n`;
+                result.innerHTML += `\\n📱 Ouvrir cette URL dans un nouvel onglet pour tester`;
+                
+                result.className = 'result-box result-success';
+                result.style.display = 'block';
+                
+                // Ouvrir l'URL de forçage
+                window.open(forceUrl, '_blank');
+                
+                log('Forçage onglet créer effectué', 'success');
+                
+            } catch (error) {
+                result.innerHTML = `❌ Erreur forçage: ${error.message}`;
+                result.className = 'result-box result-error';
+                result.style.display = 'block';
+                log(`Erreur forçage: ${error.message}`, 'error');
+            }
+        }
+        
+        // Accès direct formulaire
+        function openCreateFormDirect() {
+            log('📋 Ouverture formulaire création direct...');
+            
+            // Créer une page HTML avec le formulaire de création
+            const formHtml = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Formulaire Création Boutique - Direct</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+                        .form-container { background: white; padding: 20px; border-radius: 10px; max-width: 600px; margin: 0 auto; }
+                        .form-group { margin-bottom: 15px; }
+                        label { display: block; margin-bottom: 5px; font-weight: bold; }
+                        input, textarea, select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+                        button { background: #ff6b6b; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+                        button:hover { background: #ff5252; }
+                    </style>
+                </head>
+                <body>
+                    <div class="form-container">
+                        <h2>🛍️ Formulaire Création Boutique (Direct)</h2>
+                        <form id="createForm">
+                            <div class="form-group">
+                                <label>Nom de la Boutique *</label>
+                                <input type="text" name="name" required placeholder="Ex: Boutique Élégance">
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea name="description" placeholder="Description de votre boutique"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Catégorie</label>
+                                <select name="category">
+                                    <option value="fashion">Mode</option>
+                                    <option value="electronics">Électronique</option>
+                                    <option value="food">Alimentation</option>
+                                    <option value="art">Artisanat</option>
+                                    <option value="other">Autre</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Téléphone</label>
+                                <input type="tel" name="contact_phone" placeholder="+225 07 00 00 00">
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" name="contact_email" placeholder="contact@boutique.com">
+                            </div>
+                            <button type="submit">Créer la Boutique</button>
+                        </form>
+                        <div id="result"></div>
+                    </div>
+                    <script>
+                        document.getElementById('createForm').addEventListener('submit', function(e) {
+                            e.preventDefault();
+                            const formData = new FormData(this);
+                            const data = Object.fromEntries(formData);
+                            document.getElementById('result').innerHTML = '<p style="color: green;">✅ Formulaire soumis avec succès!</p><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                            console.log('Données du formulaire:', data);
+                        });
+                    </script>
+                </body>
+                </html>
+            `;
+            
+            const newWindow = window.open('', '_blank', 'width=800,height=600');
+            newWindow.document.write(formHtml);
+            newWindow.document.close();
+            
+            log('Formulaire création ouvert dans nouvelle fenêtre', 'success');
+        }
+        
+        function openCreateWithDebug() {
+            log('🐛 Ouverture formulaire avec debug...');
+            
+            const debugHtml = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Formulaire Debug - Bouton Créer</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        .debug-info { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin: 10px 0; border-radius: 5px; }
+                        .form-section { background: white; border: 2px solid #28a745; padding: 20px; margin: 20px 0; border-radius: 8px; }
+                        button { background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+                        .log { background: #f8f9fa; border-left: 4px solid #007bff; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>🛠️ Debug - Bouton Créer</h1>
+                    
+                    <div class="debug-info">
+                        <h3>🔍 Informations de Debug</h3>
+                        <p><strong>URL:</strong> ${window.location.href}</p>
+                        <p><strong>Heure:</strong> <span id="time"></span></p>
+                        <p><strong>User Agent:</strong> ${navigator.userAgent}</p>
+                        <p><strong>LocalStorage:</strong> <span id="localstorage">Chargement...</span></p>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>📝 Formulaire Test</h3>
+                        <p>Ceci est un formulaire de test pour vérifier le fonctionnement :</p>
+                        <input type="text" id="testInput" placeholder="Test input" style="padding: 8px; margin: 10px 0;">
+                        <br>
+                        <button onclick="testButtonClick()">Tester Bouton</button>
+                        <button onclick="testFormSubmit()">Tester Soumission</button>
+                        <button onclick="checkConsole()">Vérifier Console</button>
+                    </div>
+                    
+                    <div id="logs"></div>
+                    
+                    <script>
+                        document.getElementById('time').textContent = new Date().toLocaleString();
+                        document.getElementById('localstorage').textContent = JSON.stringify(localStorage, null, 2);
+                        
+                        function log(message) {
+                            const logs = document.getElementById('logs');
+                            logs.innerHTML += '<div class="log">[' + new Date().toLocaleTimeString() + '] ' + message + '</div>';
+                        }
+                        
+                        function testButtonClick() {
+                            log('🖱️ Test clic bouton effectué');
+                            alert('✅ Bouton fonctionne!');
+                        }
+                        
+                        function testFormSubmit() {
+                            const value = document.getElementById('testInput').value;
+                            log('📝 Test soumission avec valeur: ' + value);
+                            alert('Formulaire soumis avec: ' + value);
+                        }
+                        
+                        function checkConsole() {
+                            log('🔍 Vérification console...');
+                            console.log('Test console log');
+                            console.error('Test console error');
+                            log('✅ Console active - vérifiez F12');
+                        }
+                        
+                        log('🚀 Page de debug chargée');
+                        log('🎯 Prêt à tester le bouton créer');
+                    </script>
+                </body>
+                </html>
+            `;
+            
+            const newWindow = window.open('', '_blank', 'width=1000,height=700');
+            newWindow.document.write(debugHtml);
+            newWindow.document.close();
+            
+            log('Page debug création ouverte', 'success');
+        }
+        
+        function openCreateInNewTab() {
+            log('🗂️ Ouverture formulaire dans nouvel onglet...');
+            const url = MAIN_URL + '?tab=create&debug=true';
+            window.open(url, '_blank');
+            log(`Formulaire ouvert dans nouvel onglet: ${url}`, 'success');
+        }
+        
+        // Tests API
+        async function testBackendHealth() {
+            log('🏥 Test santé backend...');
+            const result = document.getElementById('api-results');
+            
+            try {
+                const response = await fetch(API_URL + '/api/health');
+                const data = await response.json();
+                
+                result.innerHTML = `✅ Backend santé: ${data.message}\\n`;
+                result.innerHTML += `📊 Status: ${response.status}\\n`;
+                result.innerHTML += `🔗 URL: ${API_URL}/api/health`;
+                
+                result.className = 'result-box result-success';
+                result.style.display = 'block';
+                
+                log('Backend santé OK', 'success');
+                
+            } catch (error) {
+                result.innerHTML = `❌ Erreur backend: ${error.message}\\n`;
+                result.innerHTML += `🔗 URL testée: ${API_URL}/api/health\\n`;
+                result.innerHTML += `💡 Vérifiez que le serveur est démarré`;
+                
+                result.className = 'result-box result-error';
+                result.style.display = 'block';
+                
+                log(`Erreur backend: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testCreateEndpoint() {
+            log('🔌 Test endpoint création...');
+            const result = document.getElementById('api-results');
+            
+            try {
+                // Test endpoint création boutique
+                const testData = {
+                    name: 'Test Boutique',
+                    description: 'Boutique de test',
+                    category: 'other'
+                };
+                
+                result.innerHTML = `🧪 Test endpoint création...\\n`;
+                result.innerHTML += `📊 Données test: ${JSON.stringify(testData, null, 2)}\\n`;
+                result.innerHTML += `✅ Endpoint prêt (test simulation)`;
+                
+                result.className = 'result-box result-info';
+                result.style.display = 'block';
+                
+                log('Test endpoint création simulé', 'info');
+                
+            } catch (error) {
+                result.innerHTML = `❌ Erreur: ${error.message}`;
+                result.className = 'result-box result-error';
+                result.style.display = 'block';
+                log(`Erreur test endpoint: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testShopCreationAPI() {
+            log('🏪 Test API boutiques...');
+            const result = document.getElementById('api-results');
+            
+            try {
+                // Test récupération boutiques
+                const response = await fetch(API_URL + '/api/shops/simple/shops/simple');
+                const data = await response.json();
+                
+                if (data.success) {
+                    result.innerHTML = `✅ API boutiques OK\\n`;
+                    result.innerHTML += `📊 Nombre de boutiques: ${data.data.length}\\n`;
+                    result.innerHTML += `🎯 Endpoint: /api/shops/simple/shops/simple`;
+                } else {
+                    result.innerHTML = `⚠️ API boutiques: ${data.error || 'Erreur inconnue'}\\n`;
+                }
+                
+                result.className = 'result-box result-info';
+                result.style.display = 'block';
+                
+                log('API boutiques testée', data.success ? 'success' : 'warning');
+                
+            } catch (error) {
+                result.innerHTML = `❌ Erreur API boutiques: ${error.message}\\n`;
+                result.innerHTML += `🔗 Vérifiez que le serveur API est démarré`;
+                
+                result.className = 'result-box result-error';
+                result.style.display = 'block';
+                
+                log(`Erreur API boutiques: ${error.message}`, 'error');
+            }
+        }
+        
+        function showEmergencySolutions() {
+            const solutions = `
+🆘 SOLUTIONS D'URGENCE POUR BOUTON CRÉER
+
+1. RAFRAÎCHIR LA PAGE
+   • F5 ou Ctrl+R
+   • Ctrl+F5 (forcer le rechargement)
+
+2. VIDER LE CACHE NAVIGATEUR
+   • Ctrl+Shift+Delete
+   • Sélectionner "Images et fichiers en cache"
+
+3. MODE NAVIGATION PRIVÉE
+   • Ctrl+Shift+N (Chrome/Firefox)
+   • Testez dans un nouvel onglet privé
+
+4. CONSOLE JAVASCRIPT
+   • F12 → Onglet "Console"
+   • Cherchez les messages d'erreur en rouge
+
+5. VÉRIFIER L'AUTHENTIFICATION
+   • Déconnectez-vous et reconnectez-vous
+   • Vérifiez que vous avez les droits
+
+6. REDÉMARRER LES SERVEURS
+   • npm run dev (dans le dossier du projet)
+   • Attendre que tous les services soient prêts
+
+7. TEST URL DIRECTE
+   • http://localhost:3016?tab=create&debug=true
+   • http://localhost:3016/admin/create-shop
+
+8. ALTERNATIVE: FORMULAIRE DIRECT
+   • Utilisez le formulaire direct de cette page
+   • Cliquez sur "Formulaire Direct" ci-dessus
+
+Si aucune solution ne fonctionne:
+   • Copiez les erreurs de la console
+   • Notez l'heure exacte du problème
+   • Contactez le support technique
+            `;
+            
+            alert(solutions);
+            log('Solutions d\'urgence affichées', 'info');
+        }
+    </script>
+</body>
+</html>

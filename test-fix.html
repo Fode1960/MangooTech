@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Correction Pack - MangooTech</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #5a6fd8;
+        }
+        .console {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            text-align: left;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Test de Correction Automatique du Pack</h1>
+        
+        <div id="status" class="status loading">
+            <div class="spinner"></div>
+            Initialisation du test...
+        </div>
+        
+        <div class="console" id="console">
+            <div>🚀 Démarrage du test de correction automatique...</div>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <button class="btn" onclick="runDiagnosis()">🔍 Diagnostic</button>
+            <button class="btn" onclick="runFix()">🔧 Correction</button>
+            <button class="btn" onclick="clearConsole()">🧹 Effacer</button>
+            <button class="btn" onclick="window.open('http://localhost:3001/dashboard', '_blank')">🌐 Dashboard</button>
+        </div>
+    </div>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // Configuration Supabase (utilise les mêmes variables que votre app)
+        const supabaseUrl = 'https://ztpkgqmkqjqvqjqvqjqv.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0cGtncW1rcWpxdnFqcXZxanF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU4MjU2MDAsImV4cCI6MjA1MTQwMTYwMH0.example';
+        
+        // Initialiser Supabase (vous devrez ajuster avec vos vraies clés)
+        let supabase;
+        
+        try {
+            // Essayer de récupérer la config depuis le localStorage ou variables globales
+            if (typeof window.supabase !== 'undefined') {
+                supabase = window.supabase;
+            } else {
+                // Fallback - vous devrez mettre vos vraies clés ici
+                console.log('⚠️ Utilisation des clés de fallback - ajustez avec vos vraies clés');
+                supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+            }
+        } catch (error) {
+            logToConsole('❌ Erreur initialisation Supabase: ' + error.message, 'error');
+        }
+        
+        function logToConsole(message, type = 'info') {
+            const console_el = document.getElementById('console');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ff6b6b' : type === 'success' ? '#51cf66' : '#00ff00';
+            console_el.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            console_el.scrollTop = console_el.scrollHeight;
+            console.log(message);
+        }
+        
+        function updateStatus(message, type = 'loading') {
+            const status = document.getElementById('status');
+            status.className = `status ${type}`;
+            status.innerHTML = type === 'loading' ? `<div class="spinner"></div>${message}` : message;
+        }
+        
+        async function runDiagnosis() {
+            updateStatus('Diagnostic en cours...', 'loading');
+            logToConsole('🔍 Démarrage du diagnostic...');
+            
+            try {
+                const { data: { user }, error: authError } = await supabase.auth.getUser();
+                
+                if (authError || !user) {
+                    logToConsole('❌ Utilisateur non connecté', 'error');
+                    updateStatus('❌ Utilisateur non connecté', 'error');
+                    return;
+                }
+                
+                logToConsole(`✅ Utilisateur connecté: ${user.email}`, 'success');
+                
+                // Récupérer les données
+                const [userData, activePacks, lastTransaction] = await Promise.all([
+                    supabase.from('users').select('*').eq('id', user.id).single(),
+                    supabase.from('user_packs').select('*').eq('user_id', user.id).eq('is_active', true),
+                    supabase.from('transactions').select('*').eq('user_id', user.id).eq('status', 'succeeded').order('created_at', { ascending: false }).limit(1).single()
+                ]);
+                
+                logToConsole(`👤 Selected pack: ${userData.data?.selected_pack || 'Aucun'}`);
+                logToConsole(`📦 Packs actifs: ${activePacks.data?.length || 0}`);
+                
+                if (activePacks.data?.length > 0) {
+                    activePacks.data.forEach(pack => {
+                        logToConsole(`  - ${pack.pack_slug} (actif depuis ${new Date(pack.activated_at).toLocaleString()})`);
+                    });
+                }
+                
+                if (lastTransaction.data) {
+                    logToConsole(`💳 Dernière transaction: ${lastTransaction.data.pack_slug} (${new Date(lastTransaction.data.created_at).toLocaleString()})`);
+                    
+                    const isSync = activePacks.data?.some(pack => pack.pack_slug === lastTransaction.data.pack_slug);
+                    logToConsole(isSync ? '✅ SYNCHRONISATION OK' : '❌ DÉSYNCHRONISATION DÉTECTÉE', isSync ? 'success' : 'error');
+                    updateStatus(isSync ? '✅ Synchronisation correcte' : '❌ Désynchronisation détectée', isSync ? 'success' : 'error');
+                } else {
+                    logToConsole('ℹ️ Aucune transaction trouvée');
+                    updateStatus('ℹ️ Aucune transaction trouvée', 'error');
+                }
+                
+            } catch (error) {
+                logToConsole(`❌ Erreur diagnostic: ${error.message}`, 'error');
+                updateStatus('❌ Erreur lors du diagnostic', 'error');
+            }
+        }
+        
+        async function runFix() {
+            updateStatus('Correction en cours...', 'loading');
+            logToConsole('🔧 Démarrage de la correction...');
+            
+            try {
+                const { data: { user }, error: authError } = await supabase.auth.getUser();
+                
+                if (authError || !user) {
+                    logToConsole('❌ Utilisateur non connecté', 'error');
+                    updateStatus('❌ Utilisateur non connecté', 'error');
+                    return;
+                }
+                
+                // Récupérer la dernière transaction
+                const { data: lastTransaction, error: transactionError } = await supabase
+                    .from('transactions')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .eq('status', 'succeeded')
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .single();
+                
+                if (transactionError || !lastTransaction) {
+                    logToConsole('❌ Aucune transaction trouvée', 'error');
+                    updateStatus('❌ Aucune transaction trouvée', 'error');
+                    return;
+                }
+                
+                logToConsole(`💳 Transaction à synchroniser: ${lastTransaction.pack_slug}`);
+                
+                // Désactiver tous les packs existants
+                const { error: deactivateError } = await supabase
+                    .from('user_packs')
+                    .update({ is_active: false })
+                    .eq('user_id', user.id)
+                    .eq('is_active', true);
+                
+                if (deactivateError) {
+                    logToConsole(`❌ Erreur désactivation: ${deactivateError.message}`, 'error');
+                    return;
+                }
+                
+                logToConsole('🔄 Packs existants désactivés');
+                
+                // Créer le nouveau pack actif
+                const newPack = {
+                    user_id: user.id,
+                    pack_slug: lastTransaction.pack_slug,
+                    is_active: true,
+                    activated_at: new Date().toISOString(),
+                    billing_cycle_start: lastTransaction.created_at,
+                    billing_cycle_end: new Date(new Date(lastTransaction.created_at).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString()
+                };
+                
+                const { data: createdPack, error: createError } = await supabase
+                    .from('user_packs')
+                    .insert([newPack])
+                    .select()
+                    .single();
+                
+                if (createError) {
+                    logToConsole(`❌ Erreur création pack: ${createError.message}`, 'error');
+                    return;
+                }
+                
+                logToConsole(`✅ Nouveau pack créé: ${createdPack.pack_slug}`, 'success');
+                
+                // Mettre à jour selected_pack
+                const { error: updateUserError } = await supabase
+                    .from('users')
+                    .update({ selected_pack: lastTransaction.pack_slug })
+                    .eq('id', user.id);
+                
+                if (updateUserError) {
+                    logToConsole(`❌ Erreur mise à jour selected_pack: ${updateUserError.message}`, 'error');
+                    return;
+                }
+                
+                logToConsole('✅ selected_pack mis à jour', 'success');
+                logToConsole('🎉 CORRECTION TERMINÉE AVEC SUCCÈS!', 'success');
+                updateStatus('✅ Correction terminée avec succès!', 'success');
+                
+                // Proposer de recharger le dashboard
+                setTimeout(() => {
+                    if (confirm('Correction terminée! Voulez-vous ouvrir le dashboard pour vérifier?')) {
+                        window.open('http://localhost:3001/dashboard', '_blank');
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                logToConsole(`❌ Erreur correction: ${error.message}`, 'error');
+                updateStatus('❌ Erreur lors de la correction', 'error');
+            }
+        }
+        
+        function clearConsole() {
+            document.getElementById('console').innerHTML = '<div>🧹 Console effacée</div>';
+        }
+        
+        // Auto-démarrage du diagnostic
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                logToConsole('🚀 Page chargée - Prêt pour les tests!');
+                updateStatus('✅ Prêt pour les tests', 'success');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

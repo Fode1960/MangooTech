@@ -1,0 +1,108 @@
+name: mangootech-osrm
+
+services:
+  osrm-build-cm:
+    image: osrm/osrm-backend:latest
+    profiles: ["build"]
+    working_dir: /data
+    volumes:
+      - ./data/cm:/data
+    command: >
+      bash -lc "
+        set -e;
+        if [ ! -f /data/region.osm.pbf ]; then
+          echo 'Placez le PBF Cameroun dans docker/osrm/data/cm/region.osm.pbf';
+          exit 1;
+        fi;
+        osrm-extract -p /opt/car.lua /data/region.osm.pbf;
+        osrm-partition /data/region.osrm;
+        osrm-customize /data/region.osrm;
+      "
+
+  osrm-build-ci:
+    image: osrm/osrm-backend:latest
+    profiles: ["build"]
+    working_dir: /data
+    volumes:
+      - ./data/ci:/data
+    command: >
+      bash -lc "
+        set -e;
+        if [ ! -f /data/region.osm.pbf ]; then
+          echo 'Placez le PBF Côte d\''Ivoire dans docker/osrm/data/ci/region.osm.pbf';
+          exit 1;
+        fi;
+        osrm-extract -p /opt/car.lua /data/region.osm.pbf;
+        osrm-partition /data/region.osrm;
+        osrm-customize /data/region.osrm;
+      "
+
+  osrm-build-sn:
+    image: osrm/osrm-backend:latest
+    profiles: ["build"]
+    working_dir: /data
+    volumes:
+      - ./data/sn:/data
+    command: >
+      bash -lc "
+        set -e;
+        if [ ! -f /data/region.osm.pbf ]; then
+          echo 'Placez le PBF Sénégal dans docker/osrm/data/sn/region.osm.pbf';
+          exit 1;
+        fi;
+        osrm-extract -p /opt/car.lua /data/region.osm.pbf;
+        osrm-partition /data/region.osrm;
+        osrm-customize /data/region.osrm;
+      "
+
+  osrm-cm:
+    image: osrm/osrm-backend:latest
+    working_dir: /data
+    volumes:
+      - ./data/cm:/data
+    ports:
+      - "5001:5000"
+    command: >
+      bash -lc "
+        set -e;
+        if [ ! -f /data/region.osrm ]; then
+          echo 'Cameroun: region.osrm manquant. Lancez le profil build.';
+          exit 1;
+        fi;
+        osrm-routed --algorithm mld -p 5000 /data/region.osrm;
+      "
+
+  osrm-ci:
+    image: osrm/osrm-backend:latest
+    working_dir: /data
+    volumes:
+      - ./data/ci:/data
+    ports:
+      - "5002:5000"
+    command: >
+      bash -lc "
+        set -e;
+        if [ ! -f /data/region.osrm ]; then
+          echo 'Côte d\''Ivoire: region.osrm manquant. Lancez le profil build.';
+          exit 1;
+        fi;
+        osrm-routed --algorithm mld -p 5000 /data/region.osrm;
+      "
+
+  osrm-sn:
+    image: osrm/osrm-backend:latest
+    working_dir: /data
+    volumes:
+      - ./data/sn:/data
+    ports:
+      - "5003:5000"
+    command: >
+      bash -lc "
+        set -e;
+        if [ ! -f /data/region.osrm ]; then
+          echo 'Sénégal: region.osrm manquant. Lancez le profil build.';
+          exit 1;
+        fi;
+        osrm-routed --algorithm mld -p 5000 /data/region.osrm;
+      "
+

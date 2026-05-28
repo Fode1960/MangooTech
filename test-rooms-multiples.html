@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Rooms Multiples - Live Shopping WebRTC</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .test-section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            background: #fafafa;
+        }
+        .test-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .test-button {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .vendor-button {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+        .vendor-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+        .client-button {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            color: white;
+        }
+        .client-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
+        }
+        .room-info {
+            background: #f0f8ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196F3;
+        }
+        .instructions {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .instructions h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+        .instructions ol {
+            color: #856404;
+            line-height: 1.6;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            margin: 5px;
+        }
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .rooms-monitor {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .room-item {
+            background: white;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 3px solid #4caf50;
+        }
+        .quick-config {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .config-button {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .config-button:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛍️ Test Rooms Multiples - Live Shopping WebRTC</h1>
+        
+        <div class="test-section">
+            <h2>🎯 Configuration Rapide</h2>
+            <div class="quick-config">
+                <button class="config-button" onclick="configureTest('8888', 'vendor')">Config 8888 (Vendeur)</button>
+                <button class="config-button" onclick="configureTest('8889', 'client')">Config 8889 (Client)</button>
+                <button class="config-button" onclick="configureTest('8890', 'client')">Config 8890 (Client)</button>
+                <button class="config-button" onclick="configureTest('8891', 'client')">Config 8891 (Client)</button>
+            </div>
+            
+            <div class="room-info">
+                <strong>Room ID:</strong> <span id="roomId">test-8888-8889</span> 
+                <span class="status connected">Prête</span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📞 Tests WebRTC par Rôle</h2>
+            <div class="instructions">
+                <h3>Instructions pour tester le comportement des boutons:</h3>
+                <ol>
+                    <li><strong>Ouvrez plusieurs fenêtres/navigateurs</strong> (Ctrl+N ou Ctrl+T)</li>
+                    <li><strong>Configurez chaque fenêtre avec un rôle différent</strong> (utilisez les boutons ci-dessous)</li>
+                    <li><strong>Testez les boutons d'appel</strong> selon le comportement attendu</li>
+                    <li><strong>Vérifiez la synchronisation des produits</strong> (bouton "Présenter" pour le vendeur)</li>
+                    <li><strong>Testez le chat multi-utilisateurs</strong></li>
+                </ol>
+            </div>
+            
+            <div class="button-grid">
+                <button class="vendor-button" onclick="openTestWindow('vendor', '8888')">
+                    🎤 Ouvrir Vendeur (8888)
+                </button>
+                <button class="client-button" onclick="openTestWindow('client', '8889')">
+                    👥 Ouvrir Client (8889)
+                </button>
+                <button class="client-button" onclick="openTestWindow('client', '8890')">
+                    👥 Ouvrir Client (8890)
+                </button>
+                <button class="client-button" onclick="openTestWindow('client', '8891')">
+                    👥 Ouvrir Client (8891)
+                </button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔗 Accès Direct aux Interfaces</h2>
+            <div class="button-grid">
+                <a href="http://localhost:3016/webrtc-test" target="_blank" class="test-button vendor-button">
+                    🎯 Test WebRTC Simple
+                </a>
+                <a href="http://localhost:3016/simple-live-test" target="_blank" class="test-button client-button">
+                    🛍️ Test Live Shopping Simple
+                </a>
+                <a href="http://localhost:3016/simple-live-test?roomId=test&userId=8888&role=vendor" target="_blank" class="test-button vendor-button">
+                    🚀 Enhanced Live Shopping
+                </a>
+                <a href="http://localhost:3016/" target="_blank" class="test-button client-button">
+                    📊 Gestion des Rooms
+                </a>
+            </div>
+        </div>
+
+        <div class="rooms-monitor">
+            <h2>📊 Monitoring des Rooms</h2>
+            <div id="roomsList">
+                <p>Chargement des rooms actives...</p>
+            </div>
+            <button onclick="refreshRooms()" class="config-button">🔄 Rafraîchir</button>
+            <button onclick="cleanupRooms()" class="config-button">🧹 Nettoyer</button>
+        </div>
+    </div>
+
+    <script>
+        let currentRoomId = 'test-8888-8889';
+
+        function configureTest(userId, role) {
+            document.getElementById('roomId').textContent = `test-${userId}-${role}`;
+            currentRoomId = `test-${userId}-${role}`;
+            alert(`Configuration appliquée: ${userId} (${role}) - Room: ${currentRoomId}`);
+        }
+
+        function openTestWindow(role, userId) {
+            const roomId = currentRoomId;
+            const url = `http://localhost:3016/simple-live-test?roomId=${roomId}&userId=${userId}&role=${role}`;
+            const windowName = `Test_${userId}_${role}`;
+            const windowFeatures = 'width=1200,height=800,left=100,top=100,resizable=yes,scrollbars=yes';
+            
+            window.open(url, windowName, windowFeatures);
+        }
+
+        async function refreshRooms() {
+            try {
+                const response = await fetch('http://localhost:3015/api/rooms');
+                const data = await response.json();
+                
+                const roomsList = document.getElementById('roomsList');
+                if (data.rooms && data.rooms.length > 0) {
+                    roomsList.innerHTML = data.rooms.map(room => `
+                        <div class="room-item">
+                            <strong>Room:</strong> ${room.roomId}<br>
+                            <strong>Participants:</strong> ${room.participantCount}<br>
+                            <strong>Viewers:</strong> ${room.viewers.length}<br>
+                            <strong>Vendor:</strong> ${room.vendor ? room.vendor.name : 'Aucun'}<br>
+                            <strong>Créée:</strong> ${new Date(room.createdAt).toLocaleString()}
+                        </div>
+                    `).join('');
+                } else {
+                    roomsList.innerHTML = '<p>Aucune room active pour le moment.</p>';
+                }
+            } catch (error) {
+                document.getElementById('roomsList').innerHTML = '<p class="status disconnected">Erreur de connexion au serveur</p>';
+            }
+        }
+
+        async function cleanupRooms() {
+            try {
+                const response = await fetch('http://localhost:3008/api/live-shopping/test/cleanup', {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                alert(result.message || 'Rooms nettoyées');
+                refreshRooms();
+            } catch (error) {
+                alert('Erreur lors du nettoyage');
+            }
+        }
+
+        // Rafraîchir automatiquement toutes les 10 secondes
+        setInterval(refreshRooms, 10000);
+        
+        // Charger au démarrage
+        window.addEventListener('load', refreshRooms);
+    </script>
+</body>
+</html>

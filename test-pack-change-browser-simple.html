@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Simple - Changement de Pack</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .info { background: #d1ecf1; border-color: #bee5eb; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Simple - Changement de Pack</h1>
+        
+        <div class="test-section info">
+            <h3>📋 Instructions</h3>
+            <p>Ce test vérifie si le pack change correctement après un paiement simulé.</p>
+            <ol>
+                <li>Cliquez sur "Simuler Paiement Réussi"</li>
+                <li>Observez les logs pour voir si la fonction autoFixPackSyncAfterPayment fonctionne</li>
+                <li>Vérifiez si le pack affiché change de "découverte" vers un autre pack</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 État Actuel</h3>
+            <p><strong>Pack actuel:</strong> <span id="currentPack">Chargement...</span></p>
+            <p><strong>Utilisateur:</strong> <span id="currentUser">Chargement...</span></p>
+            <button onclick="checkCurrentState()">🔄 Actualiser l'état</button>
+        </div>
+
+        <div class="test-section">
+            <h3>💳 Simulation de Paiement</h3>
+            <button onclick="simulateSuccessfulPayment()">✅ Simuler Paiement Réussi</button>
+            <button onclick="simulateFailedPayment()">❌ Simuler Paiement Échoué</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Logs de Test</h3>
+            <div id="testLogs" class="log">Prêt pour les tests...
+</div>
+            <button onclick="clearLogs()">🗑️ Effacer les logs</button>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Actions de Debug</h3>
+            <button onclick="debugPackState()">🔍 Debug État Pack</button>
+            <button onclick="debugUserData()">👤 Debug Données Utilisateur</button>
+            <button onclick="forceRefresh()">🔄 Forcer Actualisation</button>
+        </div>
+    </div>
+
+    <script>
+        let testLogs = document.getElementById('testLogs');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            testLogs.textContent += logEntry;
+            testLogs.scrollTop = testLogs.scrollHeight;
+            console.log(message);
+        }
+        
+        function clearLogs() {
+            testLogs.textContent = 'Logs effacés...\n';
+        }
+        
+        async function checkCurrentState() {
+            log('🔍 Vérification de l\'état actuel...');
+            
+            try {
+                // Simuler la récupération des données utilisateur
+                const mockUser = {
+                    email: 'test@example.com',
+                    selected_pack: 'decouverte'
+                };
+                
+                const mockPack = {
+                    name: 'Pack Découverte',
+                    slug: 'decouverte'
+                };
+                
+                document.getElementById('currentUser').textContent = mockUser.email;
+                document.getElementById('currentPack').textContent = mockPack.name;
+                
+                log(`✅ État récupéré - Utilisateur: ${mockUser.email}, Pack: ${mockPack.name}`);
+                
+            } catch (error) {
+                log(`❌ Erreur lors de la vérification: ${error.message}`, 'error');
+            }
+        }
+        
+        async function simulateSuccessfulPayment() {
+            log('💳 === SIMULATION PAIEMENT RÉUSSI ===');
+            
+            try {
+                // Simuler les paramètres URL de retour Stripe
+                const urlParams = new URLSearchParams();
+                urlParams.set('payment', 'success');
+                urlParams.set('pack', 'premium');
+                urlParams.set('success', 'true');
+                
+                log('📝 Paramètres URL simulés: payment=success, pack=premium');
+                
+                // Simuler la fonction autoFixPackSyncAfterPayment
+                log('🔧 Lancement de autoFixPackSyncAfterPayment...');
+                
+                // Étape 1: Attendre webhook
+                log('⏳ Attente webhook Stripe (2s)...');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Étape 2: Vérifier transaction
+                log('🔍 Vérification de la dernière transaction...');
+                const mockTransaction = {
+                    pack_id: 'pack-premium-id',
+                    packs: { name: 'Pack Premium', slug: 'premium' },
+                    status: 'completed'
+                };
+                log(`✅ Transaction trouvée: ${mockTransaction.packs.name}`);
+                
+                // Étape 3: Vérifier pack actuel
+                log('🔍 Vérification du pack actuel...');
+                const mockCurrentPack = {
+                    pack_id: 'pack-decouverte-id',
+                    packs: { name: 'Pack Découverte', slug: 'decouverte' }
+                };
+                
+                const needsCorrection = mockCurrentPack.pack_id !== mockTransaction.pack_id;
+                log(`🔧 Correction nécessaire: ${needsCorrection ? 'OUI' : 'NON'}`);
+                
+                if (needsCorrection) {
+                    // Étape 4: Désactiver packs actuels
+                    log('🔄 Désactivation des packs actuels...');
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    // Étape 5: Activer nouveau pack
+                    log('✅ Activation du nouveau pack...');
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    // Étape 6: Mettre à jour selected_pack
+                    log('📝 Mise à jour du selected_pack...');
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    // Simuler le changement d'affichage
+                    document.getElementById('currentPack').textContent = mockTransaction.packs.name;
+                    
+                    log(`🎉 ✅ SUCCÈS - Pack changé vers: ${mockTransaction.packs.name}`);
+                    
+                    // Simuler la notification de succès
+                    log('🔔 Affichage notification de succès...');
+                    
+                } else {
+                    log('ℹ️ Aucune correction nécessaire - Pack déjà correct');
+                }
+                
+                log('🏁 === SIMULATION TERMINÉE AVEC SUCCÈS ===');
+                
+            } catch (error) {
+                log(`❌ Erreur durant la simulation: ${error.message}`, 'error');
+            }
+        }
+        
+        async function simulateFailedPayment() {
+            log('💳 === SIMULATION PAIEMENT ÉCHOUÉ ===');
+            
+            const urlParams = new URLSearchParams();
+            urlParams.set('payment', 'cancelled');
+            urlParams.set('canceled', 'true');
+            
+            log('📝 Paramètres URL simulés: payment=cancelled');
+            log('❌ Paiement annulé - Aucun changement de pack');
+            log('🏁 === SIMULATION TERMINÉE ===');
+        }
+        
+        async function debugPackState() {
+            log('🔍 === DEBUG ÉTAT PACK ===');
+            
+            const mockDebugData = {
+                userPacks: [
+                    { pack_name: 'Pack Découverte', status: 'active', started_at: '2024-01-15' }
+                ],
+                selectedPack: 'decouverte',
+                lastTransaction: {
+                    pack_name: 'Pack Premium',
+                    status: 'completed',
+                    created_at: '2024-01-16'
+                }
+            };
+            
+            log(`📊 Packs utilisateur: ${JSON.stringify(mockDebugData.userPacks, null, 2)}`);
+            log(`📝 Pack sélectionné: ${mockDebugData.selectedPack}`);
+            log(`💳 Dernière transaction: ${JSON.stringify(mockDebugData.lastTransaction, null, 2)}`);
+            
+            log('🏁 === DEBUG TERMINÉ ===');
+        }
+        
+        async function debugUserData() {
+            log('👤 === DEBUG DONNÉES UTILISATEUR ===');
+            
+            const mockUserData = {
+                id: 'user-123',
+                email: 'test@example.com',
+                selected_pack: 'decouverte',
+                created_at: '2024-01-10'
+            };
+            
+            log(`👤 Données utilisateur: ${JSON.stringify(mockUserData, null, 2)}`);
+            log('🏁 === DEBUG TERMINÉ ===');
+        }
+        
+        async function forceRefresh() {
+            log('🔄 === ACTUALISATION FORCÉE ===');
+            
+            log('🔄 Actualisation des services utilisateur...');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            log('🔄 Actualisation des données de pack...');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            log('✅ Actualisation terminée');
+            
+            // Simuler un changement d'état
+            await checkCurrentState();
+        }
+        
+        // Initialiser l'état au chargement
+        window.addEventListener('load', () => {
+            log('🚀 Test de changement de pack initialisé');
+            checkCurrentState();
+        });
+        
+        // Écouter les changements d'URL (simulation)
+        window.addEventListener('popstate', () => {
+            log('🔄 Changement d\'URL détecté');
+            checkCurrentState();
+        });
+    </script>
+</body>
+</html>

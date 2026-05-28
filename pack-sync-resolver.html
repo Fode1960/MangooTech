@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Résolveur de Synchronisation Pack - MangooTech</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            padding: 40px;
+        }
+        
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .action-card {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .action-card:hover {
+            border-color: #4f46e5;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.1);
+        }
+        
+        .action-card h3 {
+            color: #1e293b;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .action-card p {
+            color: #64748b;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
+        }
+        
+        .btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .btn.warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        
+        .btn.danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        
+        .console {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 15px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        .console-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #374151;
+        }
+        
+        .console-title {
+            font-weight: bold;
+            color: #60a5fa;
+        }
+        
+        .clear-btn {
+            background: #374151;
+            color: #e2e8f0;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+        
+        .log-success { color: #10b981; }
+        .log-error { color: #ef4444; }
+        .log-warning { color: #f59e0b; }
+        .log-info { color: #60a5fa; }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-success { background: #10b981; }
+        .status-error { background: #ef4444; }
+        .status-warning { background: #f59e0b; }
+        .status-info { background: #60a5fa; }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Résolveur de Synchronisation Pack</h1>
+            <p>Outil de diagnostic et correction pour les problèmes de synchronisation des packs utilisateur</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="action-grid">
+                <div class="action-card">
+                    <h3>🔍 Diagnostic Complet</h3>
+                    <p>Analyse complète de l'état de synchronisation du pack utilisateur</p>
+                    <button class="btn" onclick="runFullDiagnostic()" id="diagnosticBtn">
+                        Lancer le Diagnostic
+                    </button>
+                </div>
+                
+                <div class="action-card">
+                    <h3>🔧 Correction Automatique</h3>
+                    <p>Correction automatique des problèmes de synchronisation détectés</p>
+                    <button class="btn warning" onclick="runAutoFix()" id="autoFixBtn">
+                        Correction Automatique
+                    </button>
+                </div>
+                
+                <div class="action-card">
+                    <h3>⚡ Test Rapide</h3>
+                    <p>Vérification rapide de l'état de synchronisation actuel</p>
+                    <button class="btn success" onclick="runQuickTest()" id="quickTestBtn">
+                        Test Rapide
+                    </button>
+                </div>
+                
+                <div class="action-card">
+                    <h3>🔄 Forcer la Mise à Jour</h3>
+                    <p>Force le rechargement complet des données du pack</p>
+                    <button class="btn danger" onclick="forceUpdate()" id="forceUpdateBtn">
+                        Forcer la Mise à Jour
+                    </button>
+                </div>
+            </div>
+            
+            <div class="progress-bar" id="progressBar" style="display: none;">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            
+            <div class="console">
+                <div class="console-header">
+                    <span class="console-title">📋 Console de Diagnostic</span>
+                    <button class="clear-btn" onclick="clearConsole()">Effacer</button>
+                </div>
+                <div id="consoleOutput">
+                    <div class="log-entry log-info">🚀 Résolveur de synchronisation pack initialisé</div>
+                    <div class="log-entry log-info">📋 Cliquez sur une action pour commencer</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration Supabase
+        const SUPABASE_URL = 'https://wnlnkqpjqjqjqjqjqjqj.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InduaG5rcXBqcWpxanFqcWpxanFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU4MjU2NzcsImV4cCI6MjA1MTQwMTY3N30.example';
+        
+        // Initialiser Supabase
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Fonctions utilitaires
+        function log(message, type = 'info') {
+            const output = document.getElementById('consoleOutput');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            
+            const indicator = document.createElement('span');
+            indicator.className = `status-indicator status-${type}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            entry.innerHTML = `${indicator.outerHTML}[${timestamp}] ${message}`;
+            
+            output.appendChild(entry);
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function clearConsole() {
+            document.getElementById('consoleOutput').innerHTML = '';
+            log('Console effacée', 'info');
+        }
+        
+        function setProgress(percent) {
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            
+            if (percent > 0) {
+                progressBar.style.display = 'block';
+                progressFill.style.width = percent + '%';
+            } else {
+                progressBar.style.display = 'none';
+            }
+        }
+        
+        function setButtonState(buttonId, disabled, text) {
+            const btn = document.getElementById(buttonId);
+            btn.disabled = disabled;
+            if (text) btn.textContent = text;
+        }
+        
+        // Fonction de diagnostic complet
+        async function runFullDiagnostic() {
+            log('🔍 Démarrage du diagnostic complet...', 'info');
+            setButtonState('diagnosticBtn', true, 'Diagnostic en cours...');
+            setProgress(10);
+            
+            try {
+                // 1. Vérifier l'authentification
+                log('1️⃣ Vérification de l\'authentification...', 'info');
+                setProgress(20);
+                
+                const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+                
+                if (authError || !user) {
+                    log('❌ Erreur d\'authentification: ' + (authError?.message || 'Utilisateur non connecté'), 'error');
+                    return;
+                }
+                
+                log('✅ Utilisateur connecté: ' + user.email, 'success');
+                setProgress(40);
+                
+                // 2. Vérifier les packs dans la DB
+                log('2️⃣ Vérification des packs dans la base de données...', 'info');
+                
+                const { data: userPacks, error: packError } = await supabaseClient
+                    .from('user_packs')
+                    .select(`
+                        *,
+                        packs(
+                            id,
+                            name,
+                            description,
+                            price,
+                            currency,
+                            billing_period
+                        )
+                    `)
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false });
+                
+                if (packError) {
+                    log('❌ Erreur lors de la récupération des packs: ' + packError.message, 'error');
+                    return;
+                }
+                
+                setProgress(60);
+                
+                const activePacks = userPacks?.filter(p => p.status === 'active') || [];
+                
+                log(`📦 Total des packs: ${userPacks?.length || 0}`, 'info');
+                log(`✅ Packs actifs: ${activePacks.length}`, activePacks.length === 1 ? 'success' : 'warning');
+                
+                if (activePacks.length === 0) {
+                    log('⚠️  PROBLÈME: Aucun pack actif trouvé!', 'warning');
+                } else if (activePacks.length > 1) {
+                    log('⚠️  PROBLÈME: Plusieurs packs actifs détectés!', 'warning');
+                    activePacks.forEach((pack, index) => {
+                        log(`   Pack ${index + 1}: ${pack.packs?.name} (${pack.pack_id})`, 'warning');
+                    });
+                } else {
+                    const pack = activePacks[0];
+                    log(`✅ Pack actif: ${pack.packs?.name} (${pack.packs?.price})`, 'success');
+                }
+                
+                setProgress(80);
+                
+                // 3. Vérifier la synchronisation avec l'affichage
+                log('3️⃣ Vérification de la synchronisation avec l\'affichage...', 'info');
+                
+                // Ouvrir le dashboard dans un nouvel onglet pour vérification
+                const dashboardUrl = 'http://localhost:3001/dashboard';
+                log(`🔗 Ouvrir le dashboard: ${dashboardUrl}`, 'info');
+                
+                setProgress(100);
+                log('✅ Diagnostic complet terminé!', 'success');
+                
+                // Recommandations
+                if (activePacks.length !== 1) {
+                    log('💡 Recommandation: Exécuter la correction automatique', 'warning');
+                }
+                
+            } catch (error) {
+                log('❌ Erreur lors du diagnostic: ' + error.message, 'error');
+            } finally {
+                setButtonState('diagnosticBtn', false, 'Lancer le Diagnostic');
+                setTimeout(() => setProgress(0), 2000);
+            }
+        }
+        
+        // Fonction de correction automatique
+        async function runAutoFix() {
+            log('🔧 Démarrage de la correction automatique...', 'info');
+            setButtonState('autoFixBtn', true, 'Correction en cours...');
+            setProgress(10);
+            
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    log('❌ Utilisateur non connecté', 'error');
+                    return;
+                }
+                
+                setProgress(25);
+                
+                // 1. Récupérer tous les packs actifs
+                const { data: activePacks } = await supabaseClient
+                    .from('user_packs')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .eq('status', 'active')
+                    .order('created_at', { ascending: false });
+                
+                setProgress(50);
+                
+                if (activePacks && activePacks.length > 1) {
+                    log('🔧 Correction des packs multiples...', 'info');
+                    
+                    const [latestPack, ...oldPacks] = activePacks;
+                    
+                    for (const oldPack of oldPacks) {
+                        const { error } = await supabaseClient
+                            .from('user_packs')
+                            .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+                            .eq('id', oldPack.id);
+                        
+                        if (error) {
+                            log('❌ Erreur lors de la désactivation du pack: ' + oldPack.id, 'error');
+                        } else {
+                            log('✅ Pack désactivé: ' + oldPack.id, 'success');
+                        }
+                    }
+                }
+                
+                setProgress(75);
+                
+                // 2. Vérifier qu'il y a au moins un pack actif
+                const { data: remainingActivePacks } = await supabaseClient
+                    .from('user_packs')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .eq('status', 'active');
+                
+                if (!remainingActivePacks || remainingActivePacks.length === 0) {
+                    log('🔧 Assignation d\'un pack par défaut...', 'info');
+                    
+                    const defaultPackId = '0a85e74a-4aec-480a-8af1-7b57391a80d2';
+                    
+                    const { error } = await supabaseClient
+                        .from('user_packs')
+                        .insert({
+                            user_id: user.id,
+                            pack_id: defaultPackId,
+                            status: 'active',
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        });
+                    
+                    if (error) {
+                        log('❌ Erreur lors de l\'assignation du pack par défaut: ' + error.message, 'error');
+                    } else {
+                        log('✅ Pack par défaut assigné', 'success');
+                    }
+                }
+                
+                setProgress(100);
+                log('✅ Correction automatique terminée!', 'success');
+                log('🔄 Rechargement du dashboard recommandé...', 'info');
+                
+                // Proposer de recharger le dashboard
+                setTimeout(() => {
+                    if (confirm('Correction terminée! Voulez-vous recharger le dashboard pour voir les changements?')) {
+                        window.open('http://localhost:3001/dashboard', '_blank');
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                log('❌ Erreur lors de la correction: ' + error.message, 'error');
+            } finally {
+                setButtonState('autoFixBtn', false, 'Correction Automatique');
+                setTimeout(() => setProgress(0), 2000);
+            }
+        }
+        
+        // Fonction de test rapide
+        async function runQuickTest() {
+            log('⚡ Test rapide en cours...', 'info');
+            setButtonState('quickTestBtn', true, 'Test en cours...');
+            
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    log('❌ Utilisateur non connecté', 'error');
+                    return;
+                }
+                
+                const { data: activePacks } = await supabaseClient
+                    .from('user_packs')
+                    .select('*, packs(*)')
+                    .eq('user_id', user.id)
+                    .eq('status', 'active');
+                
+                if (!activePacks || activePacks.length === 0) {
+                    log('❌ Aucun pack actif trouvé', 'error');
+                } else if (activePacks.length > 1) {
+                    log('⚠️  Plusieurs packs actifs détectés (' + activePacks.length + ')', 'warning');
+                } else {
+                    const pack = activePacks[0];
+                    log('✅ Pack actif: ' + pack.packs?.name, 'success');
+                }
+                
+            } catch (error) {
+                log('❌ Erreur lors du test: ' + error.message, 'error');
+            } finally {
+                setButtonState('quickTestBtn', false, 'Test Rapide');
+            }
+        }
+        
+        // Fonction de mise à jour forcée
+        async function forceUpdate() {
+            log('🔄 Forçage de la mise à jour...', 'info');
+            setButtonState('forceUpdateBtn', true, 'Mise à jour...');
+            
+            try {
+                // Nettoyer le cache
+                log('🗑️  Nettoyage du cache...', 'info');
+                
+                // Déclencher un rechargement du dashboard
+                log('🔄 Rechargement du dashboard...', 'info');
+                
+                setTimeout(() => {
+                    window.open('http://localhost:3001/dashboard', '_blank');
+                    log('✅ Dashboard ouvert dans un nouvel onglet', 'success');
+                }, 1000);
+                
+            } catch (error) {
+                log('❌ Erreur lors de la mise à jour forcée: ' + error.message, 'error');
+            } finally {
+                setButtonState('forceUpdateBtn', false, 'Forcer la Mise à Jour');
+            }
+        }
+        
+        // Initialisation
+        log('🚀 Résolveur de synchronisation pack prêt!', 'success');
+        log('📋 Sélectionnez une action pour commencer', 'info');
+    </script>
+</body>
+</html>

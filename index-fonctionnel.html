@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test des Boutons - VERSION ULTRA-FONCTIONNELLE</title>
+    <style>
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            margin: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .title {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .button-link {
+            display: block;
+            padding: 15px 20px;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            text-align: center;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .button-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .webrtc { background: linear-gradient(135deg, #4CAF50, #45a049); }
+        .vendor { background: linear-gradient(135deg, #2196F3, #1976D2); }
+        .client { background: linear-gradient(135deg, #9C27B0, #7B1FA2); }
+        .client2 { background: linear-gradient(135deg, #FF9800, #F57C00); }
+        .emoji {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .button-title {
+            margin: 5px 0;
+            font-size: 1.1em;
+        }
+        .button-desc {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin: 0;
+        }
+        .instructions {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .status {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .status-item {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            margin: 5px;
+        }
+        .connected { background: #d4edda; color: #155724; }
+        .disconnected { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🎧 WebRTC + Live Shopping Test</h1>
+        <p class="subtitle">Testez le système de vidéo en direct avec WebRTC</p>
+        
+        <div class="status">
+            <span class="status-item disconnected" id="ws-status">WebSocket: Vérification...</span>
+            <span class="status-item disconnected" id="live-status">Live Shopping: Vérification...</span>
+        </div>
+        
+        <div class="button-grid">
+            <!-- BOUTON 1 : Test WebRTC Complet avec Audio/Vidéo -->
+            <a href="webrtc-simple-audio-fix.html?userId=8888&role=caller" class="button-link webrtc">
+                <span class="emoji">📞</span>
+                <h3 class="button-title">Test WebRTC Complet</h3>
+                <p class="button-desc">Appels vidéo/audio 8888↔8889 avec niveaux audio</p>
+            </a>
+            
+            <!-- BOUTON 2 : Test Audio Simple -->
+            <a href="http://localhost:3016/test-webrtc-audio.html" class="button-link vendor" target="_blank">
+                <span class="emoji">🎤</span>
+                <h3 class="button-title">Test Audio Simple</h3>
+                <p class="button-desc">Test microphone et haut-parleurs</p>
+            </a>
+            
+            <!-- BOUTON 3 : Test Live Shopping Vendeur -->
+            <a href="http://localhost:3016/live-shopping-test.html?roomId=test-live-shopping&userId=vendor1&role=vendor" class="button-link client" target="_blank">
+                <span class="emoji">🛍️</span>
+                <h3 class="button-title">Test Vendeur</h3>
+                <p class="button-desc">Interface vendeur avec WebRTC</p>
+            </a>
+            
+            <!-- BOUTON 4 : Test Live Shopping Client -->
+            <a href="http://localhost:3016/live-shopping-test.html?roomId=test-live-shopping&userId=client1&role=viewer" class="button-link client2" target="_blank">
+                <span class="emoji">👥</span>
+                <h3 class="button-title">Test Client</h3>
+                <p class="button-desc">Interface client avec WebRTC</p>
+            </a>
+        </div>
+        
+        <div class="instructions">
+            <h4 style="margin: 0 0 10px 0; color: #333;">🎯 Instructions:</h4>
+            <p style="margin: 0; font-size: 0.9em; color: #666;">
+                1. <strong>Guide WebRTC:</strong> Suivez le guide pas à pas<br/>
+                2. <strong>Test Audio Simple:</strong> Vérifiez micro et haut-parleurs<br/>
+                3. <strong>WebRTC Simple:</strong> Ouvrez 2 fenêtres (8888 et 8889) pour tester les appels<br/>
+                4. <strong>Live Shopping:</strong> Vendeur et clients en temps réel<br/>
+                💡 <strong>Conseil:</strong> Commencez par le guide WebRTC pour un test réussi
+            </p>
+            <p style="margin: 10px 0 0 0; font-size: 0.8em; color: #007bff;">
+                <strong>Liens rapides:</strong> 
+                <a href="http://localhost:3016/webrtc-simple-audio-fix.html?userId=8888&role=caller" target="_blank" style="color: #007bff;">8888 (Appelant)</a> | 
+                <a href="http://localhost:3016/webrtc-simple-audio-fix.html?userId=8889&role=callee" target="_blank" style="color: #007bff;">8889 (Appelé)</a>
+            </p>
+        </div>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <a href="guide-webrtc.html" class="button" style="background: linear-gradient(135deg, #FF5722, #E64A19); color: white; padding: 15px 30px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 1.1em; display: inline-block; margin-right: 10px;">📖 Voir le Guide WebRTC</a>
+            
+            <a href="http://localhost:3016/index.html" class="button" style="background: linear-gradient(135deg, #2d3436, #000000); color: white; padding: 15px 30px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 1.1em; display: inline-block;">🛡️ Accès Dashboard Admin</a>
+        </div>
+        
+        <div style="margin-top: 20px; text-align: center;">
+            <p style="color: #666; font-size: 0.8em;">
+                💡 Les liens s'ouvrent dans un nouvel onglet pour faciliter les tests
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Vérification simple des connexions
+        fetch('http://localhost:3008/api/live-shopping/test')
+            .then(response => {
+                document.getElementById('live-status').textContent = 'Live Shopping: Connecté';
+                document.getElementById('live-status').className = 'status-item connected';
+            })
+            .catch(error => {
+                document.getElementById('live-status').textContent = 'Live Shopping: Déconnecté';
+                document.getElementById('live-status').className = 'status-item disconnected';
+            });
+
+        fetch('http://localhost:3015/api/rooms')
+            .then(response => {
+                document.getElementById('ws-status').textContent = 'WebSocket: Connecté';
+                document.getElementById('ws-status').className = 'status-item connected';
+            })
+            .catch(error => {
+                document.getElementById('ws-status').textContent = 'WebSocket: Déconnecté';
+                document.getElementById('ws-status').className = 'status-item disconnected';
+            });
+    </script>
+</body>
+</html>

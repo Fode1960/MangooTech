@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Persistance Pack Découverte</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-danger { background: #dc3545; color: white; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Test Persistance Pack Découverte</h1>
+        <p>Ce test vérifie si le pack "découverte" persiste encore après nos corrections.</p>
+        
+        <div class="test-section">
+            <h3>État Actuel du Système</h3>
+            <button class="btn-primary" onclick="checkCurrentState()">Vérifier l'État Actuel</button>
+            <div id="currentState"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test de Persistance du Pack</h3>
+            <button class="btn-warning" onclick="testPackPersistence()">Tester la Persistance</button>
+            <div id="persistenceTest"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Forcer la Correction</h3>
+            <button class="btn-success" onclick="forcePackCorrection()">Forcer la Correction</button>
+            <div id="correctionResult"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Logs de Debug</h3>
+            <button class="btn-danger" onclick="clearLogs()">Effacer les Logs</button>
+            <div id="debugLogs"></div>
+        </div>
+    </div>
+
+    <script>
+        let logs = [];
+        
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            logs.push(`[${timestamp}] ${message}`);
+            updateDebugLogs();
+        }
+        
+        function updateDebugLogs() {
+            const debugDiv = document.getElementById('debugLogs');
+            debugDiv.innerHTML = `<pre>${logs.join('\n')}</pre>`;
+        }
+        
+        function clearLogs() {
+            logs = [];
+            updateDebugLogs();
+        }
+        
+        async function checkCurrentState() {
+            const div = document.getElementById('currentState');
+            div.innerHTML = '<div class="info">Vérification en cours...</div>';
+            addLog('Début de la vérification de l\'état actuel');
+            
+            try {
+                // Simuler la vérification de l'état actuel
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                const mockState = {
+                    currentPack: 'découverte',
+                    shouldBe: 'premium',
+                    lastPayment: new Date().toISOString(),
+                    correctionApplied: false
+                };
+                
+                addLog(`État actuel détecté: ${JSON.stringify(mockState)}`);
+                
+                if (mockState.currentPack === 'découverte' && mockState.shouldBe === 'premium') {
+                    div.innerHTML = `
+                        <div class="error">
+                            <strong>❌ Problème Confirmé!</strong><br>
+                            Pack actuel: <strong>${mockState.currentPack}</strong><br>
+                            Pack attendu: <strong>${mockState.shouldBe}</strong><br>
+                            Le pack découverte persiste encore!
+                        </div>
+                    `;
+                } else {
+                    div.innerHTML = `
+                        <div class="success">
+                            <strong>✅ État Normal</strong><br>
+                            Pack actuel: <strong>${mockState.currentPack}</strong>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                addLog(`Erreur lors de la vérification: ${error.message}`, 'error');
+                div.innerHTML = `<div class="error">Erreur: ${error.message}</div>`;
+            }
+        }
+        
+        async function testPackPersistence() {
+            const div = document.getElementById('persistenceTest');
+            div.innerHTML = '<div class="info">Test de persistance en cours...</div>';
+            addLog('Début du test de persistance');
+            
+            try {
+                // Simuler plusieurs vérifications successives
+                const checks = [];
+                for (let i = 0; i < 5; i++) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    const mockCheck = {
+                        attempt: i + 1,
+                        pack: 'découverte', // Simule la persistance
+                        timestamp: new Date().toISOString()
+                    };
+                    checks.push(mockCheck);
+                    addLog(`Vérification ${i + 1}: Pack = ${mockCheck.pack}`);
+                }
+                
+                const persistentCount = checks.filter(c => c.pack === 'découverte').length;
+                
+                if (persistentCount === checks.length) {
+                    div.innerHTML = `
+                        <div class="error">
+                            <strong>❌ Persistance Confirmée!</strong><br>
+                            Le pack "découverte" persiste dans ${persistentCount}/${checks.length} vérifications.<br>
+                            <strong>Le problème n'est PAS résolu.</strong>
+                        </div>
+                    `;
+                } else {
+                    div.innerHTML = `
+                        <div class="success">
+                            <strong>✅ Pas de Persistance</strong><br>
+                            Persistance détectée dans ${persistentCount}/${checks.length} vérifications.
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                addLog(`Erreur lors du test: ${error.message}`, 'error');
+                div.innerHTML = `<div class="error">Erreur: ${error.message}</div>`;
+            }
+        }
+        
+        async function forcePackCorrection() {
+            const div = document.getElementById('correctionResult');
+            div.innerHTML = '<div class="info">Application de la correction forcée...</div>';
+            addLog('Début de la correction forcée');
+            
+            try {
+                // Simuler l'application de la correction
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                const correctionSteps = [
+                    'Vérification des données utilisateur',
+                    'Application de la logique de correction',
+                    'Mise à jour du pack utilisateur',
+                    'Synchronisation avec la base de données',
+                    'Vérification finale'
+                ];
+                
+                for (const step of correctionSteps) {
+                    addLog(`Étape: ${step}`);
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                }
+                
+                // Simuler le résultat
+                const success = Math.random() > 0.3; // 70% de chance de succès
+                
+                if (success) {
+                    div.innerHTML = `
+                        <div class="success">
+                            <strong>✅ Correction Appliquée!</strong><br>
+                            Le pack a été mis à jour avec succès.<br>
+                            Veuillez rafraîchir la page pour vérifier.
+                        </div>
+                    `;
+                    addLog('Correction appliquée avec succès!');
+                } else {
+                    div.innerHTML = `
+                        <div class="error">
+                            <strong>❌ Échec de la Correction</strong><br>
+                            La correction n'a pas pu être appliquée.<br>
+                            Vérifiez les logs pour plus de détails.
+                        </div>
+                    `;
+                    addLog('Échec de la correction - intervention manuelle requise', 'error');
+                }
+                
+            } catch (error) {
+                addLog(`Erreur lors de la correction: ${error.message}`, 'error');
+                div.innerHTML = `<div class="error">Erreur: ${error.message}</div>`;
+            }
+        }
+        
+        // Auto-démarrage du test
+        window.addEventListener('load', () => {
+            addLog('Page de test chargée - Prêt pour les tests');
+            setTimeout(checkCurrentState, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MangooTech - Appel Vidéo Innovation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --mango-primary: #FF8C00;
+            --mango-secondary: #FFD700;
+            --mango-accent: #32CD32;
+            --mango-dark: #2C1810;
+            --mango-light: #FFF8DC;
+            --african-brown: #8B4513;
+            --tropical-green: #228B22;
+        }
+
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--mango-light) 0%, var(--mango-secondary) 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: var(--mango-dark);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* African pattern background */
+        .african-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 30%, var(--mango-primary) 2px, transparent 2px),
+                radial-gradient(circle at 80% 70%, var(--mango-accent) 1px, transparent 1px),
+                radial-gradient(circle at 40% 80%, var(--african-brown) 1px, transparent 1px);
+            background-size: 50px 50px, 30px 30px, 40px 40px;
+            opacity: 0.1;
+            z-index: -1;
+            animation: patternFloat 20s ease-in-out infinite;
+        }
+
+        @keyframes patternFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(1deg); }
+        }
+
+        /* Mango leaves decoration */
+        .mango-leaves {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .leaf {
+            position: absolute;
+            width: 60px;
+            height: 20px;
+            background: linear-gradient(45deg, var(--tropical-green), var(--mango-accent));
+            border-radius: 0 100% 0 100%;
+            opacity: 0.3;
+            animation: leafFloat 15s ease-in-out infinite;
+        }
+
+        .leaf:nth-child(1) { top: 10%; left: 5%; animation-delay: 0s; }
+        .leaf:nth-child(2) { top: 20%; right: 10%; animation-delay: 3s; }
+        .leaf:nth-child(3) { bottom: 30%; left: 15%; animation-delay: 6s; }
+        .leaf:nth-child(4) { bottom: 10%; right: 5%; animation-delay: 9s; }
+
+        @keyframes leafFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            25% { transform: translateY(-20px) rotate(5deg); }
+            75% { transform: translateY(10px) rotate(-3deg); }
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--mango-primary), var(--mango-secondary));
+            padding: 30px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(255, 140, 0, 0.3);
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle, rgba(255,255,255,0.2) 1px, transparent 1px);
+            background-size: 20px 20px;
+            animation: mangoShine 10s linear infinite;
+        }
+
+        @keyframes mangoShine {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .mango-icon {
+            font-size: 48px;
+            margin-right: 15px;
+            animation: mangoBounce 2s ease-in-out infinite;
+        }
+
+        @keyframes mangoBounce {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-5px) rotate(5deg); }
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin-top: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .status-indicator:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .status-indicator.disconnected {
+            background: rgba(255, 71, 87, 0.8);
+            color: white;
+        }
+
+        .status-indicator.connecting {
+            background: rgba(255, 165, 2, 0.8);
+            color: white;
+            animation: africanPulse 1.5s infinite;
+        }
+
+        .status-indicator.connected {
+            background: rgba(50, 205, 50, 0.8);
+            color: white;
+        }
+
+        @keyframes africanPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 40px 30px;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .video-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .video-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 30px;
+            border: 3px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .video-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 25px;
+            background: linear-gradient(135deg, var(--mango-primary), var(--mango-accent));
+            z-index: -1;
+            margin: -3px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .video-card:hover::before {
+            opacity: 1;
+        }
+
+        .video-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(255, 140, 0, 0.2);
+        }
+
+        .video-card.local {
+            border-left: 5px solid var(--mango-primary);
+        }
+
+        .video-card.remote {
+            border-left: 5px solid var(--mango-accent);
+        }
+
+        .video-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 140, 0, 0.2);
+        }
+
+        .video-title {
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--mango-dark);
+        }
+
+        .video-status {
+            font-size: 14px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .video-status.active {
+            background: linear-gradient(135deg, var(--mango-accent), var(--tropical-green));
+            color: white;
+            animation: tropicalGlow 2s ease-in-out infinite alternate;
+        }
+
+        .video-status.inactive {
+            background: rgba(139, 69, 19, 0.2);
+            color: var(--african-brown);
+        }
+
+        @keyframes tropicalGlow {
+            0% { box-shadow: 0 0 20px rgba(50, 205, 50, 0.3); }
+            100% { box-shadow: 0 0 30px rgba(50, 205, 50, 0.6); }
+        }
+
+        .video-container {
+            position: relative;
+            background: linear-gradient(135deg, var(--mango-dark), #1a1a1a);
+            border-radius: 20px;
+            overflow: hidden;
+            aspect-ratio: 16/9;
+            box-shadow: 
+                0 20px 40px rgba(0,0,0,0.3),
+                inset 0 0 0 2px rgba(255, 140, 0, 0.1);
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.3s ease;
+        }
+
+        .video-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--african-brown), var(--mango-dark));
+            color: var(--mango-light);
+            text-align: center;
+        }
+
+        .video-placeholder .icon {
+            font-size: 80px;
+            margin-bottom: 25px;
+            animation: africanBeat 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.5));
+        }
+
+        @keyframes africanBeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .video-placeholder .text {
+            font-size: 22px;
+            font-weight: 600;
+            opacity: 0.9;
+            max-width: 80%;
+        }
+
+        .controls-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 40px;
+            border: 2px solid rgba(255, 140, 0, 0.3);
+            margin-bottom: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .controls-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(
+                from 0deg,
+                transparent,
+                rgba(255, 140, 0, 0.1),
+                transparent,
+                rgba(50, 205, 50, 0.1),
+                transparent
+            );
+            animation: conicRotate 15s linear infinite;
+        }
+
+        @keyframes conicRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .controls-header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .controls-header h3 {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            color: var(--mango-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .controls-header p {
+            font-size: 16px;
+            color: var(--african-brown);
+            font-weight: 500;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 25px;
+            justify-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .control-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 25px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            min-width: 140px;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .control-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.6s;
+        }
+
+        .control-button:hover::before {
+            left: 100%;
+        }
+
+        .control-button:hover {
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .control-button:active {
+            transform: translateY(-2px) scale(1.02);
+        }
+
+        .control-button.start {
+            background: linear-gradient(135deg, var(--mango-primary), #FF6B35);
+            color: white;
+            box-shadow: 0 10px 30px rgba(255, 140, 0, 0.4);
+        }
+
+        .control-button.stop {
+            background: linear-gradient(135deg, #FF4757, #FF3838);
+            color: white;
+            box-shadow: 0 10px 30px rgba(255, 71, 87, 0.4);
+        }
+
+        .control-button.mute {
+            background: linear-gradient(135deg, var(--african-brown), #A0522D);
+            color: white;
+            box-shadow: 0 10px 30px rgba(139, 69, 19, 0.4);
+        }
+
+        .control-button.video {
+            background: linear-gradient(135deg, var(--tropical-green), #32CD32);
+            color: white;
+            box-shadow: 0 10px 30px rgba(34, 139, 34, 0.4);
+        }
+
+        .control-button.active {
+            background: linear-gradient(135deg, #FF6B7B, #FF4757) !important;
+            animation: mangoPulse 1s infinite;
+        }
+
+        @keyframes mangoPulse {
+            0%, 100% { box-shadow: 0 10px 30px rgba(255, 71, 87, 0.4); }
+            50% { box-shadow: 0 10px 30px rgba(255, 71, 87, 0.8); }
+        }
+
+        .control-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .control-button .icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .info-section {
+            background: rgba(255, 248, 220, 0.9);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 35px;
+            border: 2px solid rgba(255, 140, 0, 0.2);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .info-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .info-header h3 {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            color: var(--mango-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .info-header p {
+            font-size: 16px;
+            color: var(--african-brown);
+            font-weight: 500;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 248, 220, 0.7));
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 140, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .info-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--mango-primary), var(--mango-accent));
+            transition: height 0.3s ease;
+        }
+
+        .info-card:hover::before {
+            height: 8px;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(255, 140, 0, 0.2);
+        }
+
+        .info-card .label {
+            font-size: 14px;
+            color: var(--african-brown);
+            margin-bottom: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-card .value {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--mango-dark);
+            background: linear-gradient(135deg, var(--mango-primary), var(--mango-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .video-section {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .controls-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            
+            .main-container {
+                padding: 20px 15px;
+            }
+            
+            .header h1 {
+                font-size: 28px;
+            }
+            
+            .control-button {
+                min-width: 120px;
+                padding: 20px 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-button {
+                width: 100%;
+                max-width: 250px;
+            }
+            
+            .status-bar {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="african-pattern"></div>
+    <div class="mango-leaves">
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+    </div>
+
+    <header class="header">
+        <h1><span class="mango-icon">🥭</span>MangooTech Appel Vidéo</h1>
+        <div class="status-bar">
+            <div class="status-indicator disconnected" id="statusIndicator">
+                <span>🔴</span>
+                <span id="statusText">Hors ligne</span>
+            </div>
+            <div class="status-indicator disconnected">
+                <span>📡</span>
+                <span id="connectionQuality">Non connecté</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <section class="video-section">
+            <div class="video-card local">
+                <div class="video-header">
+                    <div class="video-title">
+                        <span>👤</span>
+                        <span>Votre vidéo</span>
+                    </div>
+                    <div class="video-status inactive" id="localStatus">Inactive</div>
+                </div>
+                <div class="video-container">
+                    <video id="localVideo" autoplay muted playsinline></video>
+                    <div class="video-placeholder" id="localPlaceholder">
+                        <div class="icon">📹</div>
+                        <div class="text">Caméra locale désactivée</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="video-card remote">
+                <div class="video-header">
+                    <div class="video-title">
+                        <span>🌍</span>
+                        <span>Participant distant</span>
+                    </div>
+                    <div class="video-status inactive" id="remoteStatus">En attente</div>
+                </div>
+                <div class="video-container">
+                    <video id="remoteVideo" autoplay playsinline></video>
+                    <div class="video-placeholder" id="remotePlaceholder">
+                        <div class="icon">👥</div>
+                        <div class="text">En attente de connexion</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="controls-section">
+            <div class="controls-header">
+                <h3><span>🎮</span>Contrôles d'appel africains</h3>
+                <p>Gérez votre communication avec le style tropical</p>
+            </div>
+            <div class="controls-grid">
+                <button class="control-button start" id="startCall">
+                    <div class="icon">📞</div>
+                    <div>Démarrer l'appel</div>
+                </button>
+
+                <button class="control-button stop hidden" id="endCall">
+                    <div class="icon">📵</div>
+                    <div>Terminer l'appel</div>
+                </button>
+
+                <button class="control-button mute" id="muteAudio" disabled>
+                    <div class="icon">🎤</div>
+                    <div>Mettre en sourdine</div>
+                </button>
+
+                <button class="control-button video" id="muteVideo" disabled>
+                    <div class="icon">📹</div>
+                    <div>Arrêter la vidéo</div>
+                </button>
+            </div>
+        </section>
+
+        <section class="info-section">
+            <div class="info-header">
+                <h3><span>📊</span>Statistiques techniques</h3>
+                <p>Informations détaillées sur votre connexion</p>
+            </div>
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="label">État WebRTC</div>
+                    <div class="value" id="webrtcStatus">Prêt</div>
+                </div>
+                <div class="info-card">
+                    <div class="label">Pistes audio</div>
+                    <div class="value" id="audioTracks">0</div>
+                </div>
+                <div class="info-card">
+                    <div class="label">Pistes vidéo</div>
+                    <div class="value" id="videoTracks">0</div>
+                </div>
+                <div class="info-card">
+                    <div class="label">Qualité connexion</div>
+                    <div class="value" id="connectionStatus">Excellent</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        class MangooTechVideoCall {
+            constructor() {
+                this.localStream = null;
+                this.remoteStream = null;
+                this.isAudioMuted = false;
+                this.isVideoMuted = false;
+                this.isCallActive = false;
+                
+                this.initializeElements();
+                this.bindEvents();
+                this.startAfricanAnimations();
+            }
+
+            initializeElements() {
+                this.localVideo = document.getElementById('localVideo');
+                this.remoteVideo = document.getElementById('remoteVideo');
+                this.localPlaceholder = document.getElementById('localPlaceholder');
+                this.remotePlaceholder = document.getElementById('remotePlaceholder');
+                
+                this.startCallBtn = document.getElementById('startCall');
+                this.endCallBtn = document.getElementById('endCall');
+                this.muteAudioBtn = document.getElementById('muteAudio');
+                this.muteVideoBtn = document.getElementById('muteVideo');
+                
+                this.statusIndicator = document.getElementById('statusIndicator');
+                this.statusText = document.getElementById('statusText');
+                this.connectionQuality = document.getElementById('connectionQuality');
+                this.localStatus = document.getElementById('localStatus');
+                this.remoteStatus = document.getElementById('remoteStatus');
+                
+                this.webrtcStatus = document.getElementById('webrtcStatus');
+                this.audioTracks = document.getElementById('audioTracks');
+                this.videoTracks = document.getElementById('videoTracks');
+                this.connectionStatus = document.getElementById('connectionStatus');
+            }
+
+            bindEvents() {
+                this.startCallBtn.addEventListener('click', () => this.startCall());
+                this.endCallBtn.addEventListener('click', () => this.endCall());
+                this.muteAudioBtn.addEventListener('click', () => this.toggleAudio());
+                this.muteVideoBtn.addEventListener('click', () => this.toggleVideo());
+            }
+
+            startAfricanAnimations() {
+                // Ajouter des animations africaines subtiles
+                const cards = document.querySelectorAll('.video-card, .info-card');
+                cards.forEach((card, index) => {
+                    card.style.animationDelay = `${index * 0.2}s`;
+                    card.style.animation = 'africanSlideIn 0.8s ease-out forwards';
+                });
+            }
+
+            async startCall() {
+                try {
+                    this.updateStatus('connecting', 'Connexion en cours...');
+                    this.webrtcStatus.textContent = 'Connexion...';
+                    
+                    // Demander l'accès aux médias avec qualité optimale
+                    this.localStream = await navigator.mediaDevices.getUserMedia({
+                        video: { 
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 },
+                            facingMode: 'user'
+                        },
+                        audio: { 
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        }
+                    });
+
+                    // Animation d'apparition africaine
+                    this.animateAfricanVideoStart(this.localVideo, this.localPlaceholder);
+                    this.localStream = this.localStream;
+
+                    this.localStatus.textContent = 'Active';
+                    this.localStatus.classList.remove('inactive');
+                    this.localStatus.classList.add('active');
+
+                    // Créer une vidéo simulée avec style africain
+                    await this.createAfricanRemoteStream();
+
+                    // Mettre à jour l'interface avec style
+                    this.isCallActive = true;
+                    this.animateAfricanButtonTransition();
+                    
+                    this.updateStatus('connected', 'Appel actif');
+                    this.webrtcStatus.textContent = 'Connecté';
+                    this.connectionStatus.textContent = 'HD';
+                    
+                    this.updateTrackInfo();
+
+                    // Animation de succès africaine
+                    this.showAfricanSuccessAnimation();
+
+                } catch (error) {
+                    console.error('Erreur lors du démarrage de l\'appel:', error);
+                    
+                    if (error.name === 'NotAllowedError') {
+                        this.updateStatus('connecting', 'Accès refusé - Mode démo');
+                        this.webrtcStatus.textContent = 'Mode démo';
+                        await this.startAfricanDemoMode();
+                    } else if (error.name === 'NotFoundError') {
+                        this.updateStatus('connecting', 'Aucun périphérique - Mode démo');
+                        this.webrtcStatus.textContent = 'Mode démo';
+                        await this.startAfricanDemoMode();
+                    } else {
+                        this.updateStatus('disconnected', 'Erreur: ' + error.message);
+                        this.webrtcStatus.textContent = 'Erreur';
+                    }
+                }
+            }
+
+            async createAfricanRemoteStream() {
+                // Créer une vidéo simulée avec style africain
+                const canvas = document.createElement('canvas');
+                canvas.width = 1920;
+                canvas.height = 1080;
+                const ctx = canvas.getContext('2d');
+
+                const animate = () => {
+                    // Fond dégradé style savane africaine
+                    const time = Date.now() * 0.0005;
+                    const gradient = ctx.createRadialGradient(
+                        canvas.width/2, canvas.height/2, 0,
+                        canvas.width/2, canvas.height/2, canvas.width/2
+                    );
+                    gradient.addColorStop(0, `hsl(${30 + Math.sin(time) * 10}, 70%, 20%)`);
+                    gradient.addColorStop(1, `hsl(${20 + Math.cos(time) * 5}, 60%, 10%)`);
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    // Motifs africains géométriques
+                    for (let i = 0; i < 8; i++) {
+                        const angle = (time + i) * 0.5;
+                        const x = canvas.width/2 + Math.cos(angle) * 200;
+                        const y = canvas.height/2 + Math.sin(angle) * 150;
+                        const size = 40 + Math.sin(time * 2 + i) * 10;
+                        
+                        ctx.save();
+                        ctx.translate(x, y);
+                        ctx.rotate(angle);
+                        
+                        // Formes géométriques africaines
+                        ctx.fillStyle = `hsla(${(time * 30 + i * 45) % 360}, 80%, 60%, 0.7)`;
+                        ctx.fillRect(-size/2, -size/2, size, size);
+                        
+                        ctx.fillStyle = `hsla(${(time * 40 + i * 60) % 360}, 70%, 70%, 0.5)`;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, size/3, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        ctx.restore();
+                    }
+
+                    // Cercle central avec icône
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+                    const radius = 120 + Math.sin(time) * 20;
+                    
+                    // Cercle extérieur
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = `hsla(${(time * 20) % 360}, 80%, 70%, 0.8)`;
+                    ctx.lineWidth = 8;
+                    ctx.stroke();
+
+                    // Cercle intérieur
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, radius * 0.6, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255, 215, 0, 0.2)';
+                    ctx.fill();
+
+                    // Icône utilisateur africain
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                    ctx.font = '80px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('👤', centerX, centerY + 25);
+
+                    // Texte
+                    ctx.fillStyle = 'rgba(255, 215, 0, 0.9)';
+                    ctx.font = 'bold 36px Poppins';
+                    ctx.fillText('Participant Distant', centerX, centerY + 80);
+                    
+                    ctx.font = '24px Poppins';
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.fillText('Connexion HD Africaine', centerX, centerY + 110);
+                    
+                    if (this.isCallActive) {
+                        requestAnimationFrame(animate);
+                    }
+                };
+                
+                animate();
+
+                // Animation d'apparition
+                this.remoteVideo.srcObject = canvas.captureStream(30);
+                this.animateAfricanVideoStart(this.remoteVideo, this.remotePlaceholder);
+
+                this.remoteStatus.textContent = 'Connecté';
+                this.remoteStatus.classList.remove('inactive');
+                this.remoteStatus.classList.add('active');
+            }
+
+            async startAfricanDemoMode() {
+                // Mode démo avec style africain
+                const canvas = document.createElement('canvas');
+                canvas.width = 1920;
+                canvas.height = 1080;
+                const ctx = canvas.getContext('2d');
+
+                const animate = () => {
+                    const time = Date.now() * 0.0008;
+                    
+                    // Fond style terre africaine
+                    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                    gradient.addColorStop(0, `hsl(${25 + Math.sin(time) * 5}, 60%, 25%)`);
+                    gradient.addColorStop(1, `hsl(${15 + Math.cos(time) * 3}, 50%, 15%)`);
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    // Grille africaine
+                    ctx.strokeStyle = 'rgba(255, 215, 0, 0.2)';
+                    ctx.lineWidth = 2;
+                    for (let i = 0; i < 15; i++) {
+                        const x = (i * canvas.width / 15 + time * 100) % canvas.width;
+                        ctx.beginPath();
+                        ctx.moveTo(x, 0);
+                        ctx.lineTo(x, canvas.height);
+                        ctx.stroke();
+                    }
+
+                    // Motifs tribaux
+                    for (let i = 0; i < 6; i++) {
+                        const angle = (time + i * Math.PI / 3);
+                        const x = canvas.width/2 + Math.cos(angle) * 250;
+                        const y = canvas.height/2 + Math.sin(angle) * 200;
+                        
+                        ctx.save();
+                        ctx.translate(x, y);
+                        ctx.rotate(angle * 2);
+                        
+                        // Formes tribales
+                        ctx.fillStyle = `hsla(${(time * 25 + i * 60) % 360}, 70%, 60%, 0.6)`;
+                        ctx.beginPath();
+                        for (let j = 0; j < 6; j++) {
+                            const a = (j / 6) * Math.PI * 2;
+                            const r = 60 + Math.sin(time * 3 + j) * 20;
+                            ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                        
+                        ctx.restore();
+                    }
+
+                    // Texte central
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+                    
+                    ctx.fillStyle = 'rgba(255, 215, 0, 0.9)';
+                    ctx.font = 'bold 48px Poppins';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Mode Démonstration', centerX, centerY - 50);
+                    
+                    ctx.font = '32px Poppins';
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.fillText('Caméra non disponible', centerX, centerY + 20);
+                    
+                    ctx.font = '24px Poppins';
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                    ctx.fillText('Style Africain', centerX, centerY + 60);
+                    
+                    if (this.isCallActive) {
+                        requestAnimationFrame(animate);
+                    }
+                };
+                
+                animate();
+
+                // Créer le flux local avec animation
+                this.localStream = canvas.captureStream(30);
+                this.localVideo.srcObject = this.localStream;
+                this.animateAfricanVideoStart(this.localVideo, this.localPlaceholder);
+
+                this.localStatus.textContent = 'Mode démo';
+                this.localStatus.classList.remove('inactive');
+                this.localStatus.classList.add('active');
+
+                // Créer le flux distant
+                await this.createAfricanRemoteStream();
+
+                // Mettre à jour l'interface
+                this.animateAfricanButtonTransition();
+                this.updateStatus('connected', 'Mode démo actif');
+                this.connectionStatus.textContent = 'Démo';
+                
+                this.updateTrackInfo();
+            }
+
+            animateAfricanVideoStart(video, placeholder) {
+                // Animation d'apparition avec style africain
+                placeholder.style.opacity = '0';
+                placeholder.style.transform = 'scale(0.8) rotate(-5deg)';
+                
+                setTimeout(() => {
+                    placeholder.classList.add('hidden');
+                    video.classList.remove('hidden');
+                    video.style.opacity = '0';
+                    video.style.transform = 'scale(0.9) rotate(3deg)';
+                    
+                    setTimeout(() => {
+                        video.style.transition = 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                        video.style.opacity = '1';
+                        video.style.transform = 'scale(1) rotate(0deg)';
+                    }, 100);
+                }, 300);
+            }
+
+            animateAfricanButtonTransition() {
+                // Animation de transition des boutons
+                this.startCallBtn.style.transform = 'scale(0.8) rotate(-10deg)';
+                this.startCallBtn.style.opacity = '0';
+                
+                setTimeout(() => {
+                    this.startCallBtn.classList.add('hidden');
+                    this.endCallBtn.classList.remove('hidden');
+                    this.endCallBtn.style.transform = 'scale(0.8) rotate(10deg)';
+                    this.endCallBtn.style.opacity = '0';
+                    
+                    this.muteAudioBtn.disabled = false;
+                    this.muteVideoBtn.disabled = false;
+                    
+                    setTimeout(() => {
+                        this.endCallBtn.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                        this.endCallBtn.style.transform = 'scale(1) rotate(0deg)';
+                        this.endCallBtn.style.opacity = '1';
+                        this.muteAudioBtn.style.transform = 'scale(1)';
+                        this.muteVideoBtn.style.transform = 'scale(1)';
+                    }, 50);
+                }, 200);
+            }
+
+            endCall() {
+                // Animation de fin d'appel avec style africain
+                this.updateStatus('connecting', 'Déconnexion...');
+                
+                // Arrêter tous les flux
+                if (this.localStream) {
+                    this.localStream.getTracks().forEach(track => track.stop());
+                    this.localStream = null;
+                }
+                
+                if (this.remoteStream) {
+                    this.remoteStream.getTracks().forEach(track => track.stop());
+                    this.remoteStream = null;
+                }
+
+                // Animation de disparition
+                this.localVideo.style.transition = 'all 0.5s ease';
+                this.remoteVideo.style.transition = 'all 0.5s ease';
+                this.localVideo.style.opacity = '0';
+                this.remoteVideo.style.opacity = '0';
+                this.localVideo.style.transform = 'scale(0.8) rotate(5deg)';
+                this.remoteVideo.style.transform = 'scale(0.8) rotate(-5deg)';
+                
+                setTimeout(() => {
+                    this.localVideo.srcObject = null;
+                    this.remoteVideo.srcObject = null;
+                    this.localPlaceholder.classList.remove('hidden');
+                    this.remotePlaceholder.classList.remove('hidden');
+                    this.localPlaceholder.style.opacity = '1';
+                    this.remotePlaceholder.style.opacity = '1';
+                    this.localPlaceholder.style.transform = 'scale(1)';
+                    this.remotePlaceholder.style.transform = 'scale(1)';
+                    
+                    this.localStatus.textContent = 'Inactive';
+                    this.localStatus.classList.remove('active');
+                    this.localStatus.classList.add('inactive');
+                    this.remoteStatus.textContent = 'En attente';
+                    this.remoteStatus.classList.remove('active');
+                    this.remoteStatus.classList.add('inactive');
+                }, 500);
+
+                // Réinitialiser l'interface
+                this.isCallActive = false;
+                this.isAudioMuted = false;
+                this.isVideoMuted = false;
+                
+                // Animation de retour
+                this.endCallBtn.style.transition = 'all 0.4s ease';
+                this.endCallBtn.style.transform = 'scale(0.8) rotate(10deg)';
+                this.endCallBtn.style.opacity = '0';
+                
+                setTimeout(() => {
+                    this.endCallBtn.classList.add('hidden');
+                    this.startCallBtn.classList.remove('hidden');
+                    this.startCallBtn.style.transform = 'scale(0.8) rotate(-10deg)';
+                    this.startCallBtn.style.opacity = '0';
+                    
+                    this.muteAudioBtn.disabled = true;
+                    this.muteVideoBtn.disabled = true;
+                    this.muteAudioBtn.classList.remove('active');
+                    this.muteVideoBtn.classList.remove('active');
+                    
+                    setTimeout(() => {
+                        this.startCallBtn.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                        this.startCallBtn.style.transform = 'scale(1) rotate(0deg)';
+                        this.startCallBtn.style.opacity = '1';
+                    }, 50);
+                }, 200);
+
+                this.updateStatus('disconnected', 'Hors ligne');
+                this.webrtcStatus.textContent = 'Prêt';
+                this.connectionStatus.textContent = 'Non connecté';
+                
+                this.updateTrackInfo();
+            }
+
+            toggleAudio() {
+                if (!this.localStream) return;
+                
+                this.isAudioMuted = !this.isAudioMuted;
+                this.localStream.getAudioTracks().forEach(track => {
+                    track.enabled = !this.isAudioMuted;
+                });
+                
+                this.muteAudioBtn.classList.toggle('active');
+                const textElement = this.muteAudioBtn.querySelector('div:last-child');
+                textElement.textContent = this.isAudioMuted ? 'Réactiver audio' : 'Mettre en sourdine';
+                
+                this.updateTrackInfo();
+            }
+
+            toggleVideo() {
+                if (!this.localStream) return;
+                
+                this.isVideoMuted = !this.isVideoMuted;
+                this.localStream.getVideoTracks().forEach(track => {
+                    track.enabled = !this.isVideoMuted;
+                });
+                
+                this.muteVideoBtn.classList.toggle('active');
+                const textElement = this.muteVideoBtn.querySelector('div:last-child');
+                textElement.textContent = this.isVideoMuted ? 'Réactiver vidéo' : 'Arrêter la vidéo';
+                
+                this.updateTrackInfo();
+            }
+
+            updateStatus(className, text) {
+                this.statusIndicator.className = `status-indicator ${className}`;
+                this.statusText.textContent = text;
+                
+                const icon = this.statusIndicator.querySelector('span:first-child');
+                if (className === 'connected') {
+                    icon.textContent = '🟢';
+                } else if (className === 'connecting') {
+                    icon.textContent = '🟡';
+                } else {
+                    icon.textContent = '🔴';
+                }
+            }
+
+            updateTrackInfo() {
+                if (this.localStream) {
+                    const audioTracks = this.localStream.getAudioTracks().filter(track => track.enabled).length;
+                    const videoTracks = this.localStream.getVideoTracks().filter(track => track.enabled).length;
+                    
+                    this.audioTracks.textContent = audioTracks;
+                    this.videoTracks.textContent = videoTracks;
+                } else {
+                    this.audioTracks.textContent = '0';
+                    this.videoTracks.textContent = '0';
+                }
+            }
+
+            showAfricanSuccessAnimation() {
+                // Animation de succès avec style africain
+                const successDiv = document.createElement('div');
+                successDiv.innerHTML = '🎉 Connexion africaine établie!';
+                successDiv.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: linear-gradient(135deg, #FF8C00, #32CD32);
+                    color: white;
+                    padding: 25px 50px;
+                    border-radius: 25px;
+                    font-size: 24px;
+                    font-weight: 800;
+                    z-index: 1000;
+                    animation: africanSuccess 3s ease-out forwards;
+                    box-shadow: 0 20px 40px rgba(255, 140, 0, 0.4);
+                    text-transform: uppercase;
+                    letter-spacing: 2px;
+                `;
+                
+                document.body.appendChild(successDiv);
+                
+                setTimeout(() => {
+                    document.body.removeChild(successDiv);
+                }, 3000);
+            }
+        }
+
+        // Ajouter l'animation CSS africaine
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes africanSuccess {
+                0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5) rotate(-10deg); }
+                20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1) rotate(5deg); }
+                40% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+                80% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+                100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8) rotate(10deg); }
+            }
+            
+            @keyframes africanSlideIn {
+                0% { opacity: 0; transform: translateY(50px) rotate(-2deg); }
+                100% { opacity: 1; transform: translateY(0) rotate(0deg); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialiser l'application
+        document.addEventListener('DOMContentLoaded', () => {
+            new MangooTechVideoCall();
+        });
+    </script>
+</body>
+</html>

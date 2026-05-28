@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Authentification Mini-Boutique</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { color: #22c55e; }
+        .error { color: #ef4444; }
+        .warning { color: #f97316; }
+        .console-output {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        button {
+            background: #f97316;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #ea580c;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.ok { background: #dcfce7; color: #166534; }
+        .status.ko { background: #fef2f2; color: #dc2626; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Authentification Mini-Boutique</h1>
+        
+        <div class="test-section">
+            <h2>🔍 État Actuel</h2>
+            <div id="current-status">
+                <p><span class="status ko">Non testé</span> Authentification Supabase</p>
+                <p><span class="status ko">Non testé</span> Pont d'authentification</p>
+                <p><span class="status ko">Non testé</span> Isolation des données</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Actions de Test</h2>
+            <button onclick="runTests()">🚀 Lancer tous les tests</button>
+            <button onclick="testUser1()">👤 Tester Utilisateur 1 (testeur2025)</button>
+            <button onclick="testUser2()">👤 Tester Utilisateur 2 (test2)</button>
+            <button onclick="clearLocalStorage()">🗑️ Nettoyer localStorage</button>
+            <button onclick="simulateUserLogin()">🔐 Simuler connexion</button>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 Console de Test</h2>
+            <div id="console" class="console-output">Cliquez sur "Lancer tous les tests" pour commencer...</div>
+        </div>
+
+        <div class="test-section">
+            <h2>💡 Instructions</h2>
+            <ol>
+                <li>Connectez-vous avec un compte sur l'application principale</li>
+                <li>Cliquez sur "Lancer tous les tests"</li>
+                <li>Vérifiez que chaque utilisateur voit ses propres produits</li>
+                <li>Testez avec différents comptes</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function log(message) {
+            const console = document.getElementById('console');
+            const timestamp = new Date().toLocaleTimeString();
+            console.textContent += `[${timestamp}] ${message}\n`;
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function updateStatus(elementId, status, message) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = `<p><span class="status ${status}">${status === 'ok' ? 'OK' : 'KO'}</span> ${message}</p>`;
+            }
+        }
+
+        function runTests() {
+            document.getElementById('console').textContent = '';
+            log('🧪 Début des tests d\'authentification...');
+            
+            testSupabaseAuth();
+            testAuthBridge();
+            testDataIsolation();
+            testDOMElements();
+        }
+
+        function testSupabaseAuth() {
+            log('\n🔍 Test: Authentification Supabase');
+            
+            const supabaseAuth = localStorage.getItem('supabase-auth-token');
+            if (supabaseAuth) {
+                try {
+                    const authData = JSON.parse(supabaseAuth);
+                    const email = authData.user?.email || 'email non trouvé';
+                    log(`✅ Token Supabase trouvé - Utilisateur: ${email}`);
+                    updateStatus('current-status', 'ok', `Authentification Supabase: ${email}`);
+                } catch (e) {
+                    log(`❌ Erreur lors de la lecture du token: ${e.message}`);
+                    updateStatus('current-status', 'ko', 'Erreur token Supabase');
+                }
+            } else {
+                log('❌ Aucun token Supabase trouvé');
+                updateStatus('current-status', 'ko', 'Aucun token Supabase');
+            }
+        }
+
+        function testAuthBridge() {
+            log('\n🔍 Test: Pont d\'authentification');
+            
+            if (window.miniShopBridge) {
+                log('✅ Pont d\'authentification détecté dans window');
+                log(`📍 Méthodes disponibles: ${Object.keys(window.miniShopBridge).join(', ')}`);
+                updateStatus('current-status', 'ok', 'Pont d\'authentification actif');
+            } else {
+                log('❌ Pont d\'authentification non trouvé dans window');
+                
+                // Vérifier sessionStorage
+                const bridgeUser = sessionStorage.getItem('miniShopUser');
+                if (bridgeUser) {
+                    try {
+                        const userData = JSON.parse(bridgeUser);
+                        log(`✅ Données utilisateur dans sessionStorage: ${userData.email}`);
+                        updateStatus('current-status', 'ok', `Pont: ${userData.email}`);
+                    } catch (e) {
+                        log(`❌ Erreur lecture sessionStorage: ${e.message}`);
+                        updateStatus('current-status', 'ko', 'Erreur pont auth');
+                    }
+                } else {
+                    log('❌ Aucune donnée utilisateur dans sessionStorage');
+                    updateStatus('current-status', 'ko', 'Pont non actif');
+                }
+            }
+        }
+
+        function testDataIsolation() {
+            log('\n🔍 Test: Isolation des données');
+            
+            // Simuler deux utilisateurs
+            const user1 = { id: 'user1-testeur2025', email: 'testeur2025@example.com' };
+            const user2 = { id: 'user2-test2', email: 'test2@example.com' };
+            
+            log(`👤 Test Utilisateur 1: ${user1.email}`);
+            const storageKey1 = `miniShopProducts_${user1.id}`;
+            const products1 = JSON.parse(localStorage.getItem(storageKey1) || '[]');
+            log(`📦 Produits: ${products1.length}`);
+            
+            log(`👤 Test Utilisateur 2: ${user2.email}`);
+            const storageKey2 = `miniShopProducts_${user2.id}`;
+            const products2 = JSON.parse(localStorage.getItem(storageKey2) || '[]');
+            log(`📦 Produits: ${products2.length}`);
+            
+            if (storageKey1 !== storageKey2) {
+                log('✅ Clés de stockage différentes - isolation OK');
+                updateStatus('current-status', 'ok', 'Isolation des données active');
+            } else {
+                log('❌ Clés de stockage identiques - problème détecté');
+                updateStatus('current-status', 'ko', 'Problème isolation');
+            }
+        }
+
+        function testDOMElements() {
+            log('\n🔍 Test: Éléments DOM');
+            
+            const miniShopButton = document.querySelector('[data-user-id]');
+            if (miniShopButton) {
+                log('✅ Bouton Mini-Boutique trouvé avec attributs data-*');
+                log(`📍 data-user-id: ${miniShopButton.getAttribute('data-user-id')}`);
+                log(`📍 data-user-email: ${miniShopButton.getAttribute('data-user-email')}`);
+                log(`📍 data-user-name: ${miniShopButton.getAttribute('data-user-name')}`);
+            } else {
+                log('❌ Bouton Mini-Boutique sans attributs data-*');
+                
+                // Chercher d'autres boutons
+                const buttons = document.querySelectorAll('button, a[role="menuitem"]');
+                log(`🔍 ${buttons.length} boutons trouvés`);
+                buttons.forEach((btn, i) => {
+                    if (btn.textContent.includes('Mini-Boutique')) {
+                        log(`📍 Bouton Mini-Boutique #${i + 1}: "${btn.textContent.trim()}"`);
+                    }
+                });
+            }
+        }
+
+        function testUser1() {
+            log('\n👤 Test spécifique: testeur2025@example.com');
+            simulateUserLogin('testeur2025@example.com', 'user1-testeur2025', 'Testeur 2025');
+        }
+
+        function testUser2() {
+            log('\n👤 Test spécifique: test2@example.com');
+            simulateUserLogin('test2@example.com', 'user2-test2', 'Test 2');
+        }
+
+        function simulateUserLogin(email = 'demo@example.com', userId = 'demo-user', name = 'Demo User') {
+            log(`🔐 Simulation connexion: ${email}`);
+            
+            // Créer des données de test
+            const testProduct = {
+                id: Date.now(),
+                name: `Produit test ${email}`,
+                price: 29.99,
+                description: `Produit créé par ${email}`,
+                createdAt: new Date().toISOString()
+            };
+            
+            const storageKey = `miniShopProducts_${userId}`;
+            localStorage.setItem(storageKey, JSON.stringify([testProduct]));
+            
+            // Stocker dans sessionStorage
+            const userData = { id: userId, email, name };
+            sessionStorage.setItem('miniShopUser', JSON.stringify(userData));
+            
+            log(`✅ Données de test créées pour ${email}`);
+            log(`📦 Produit test: ${testProduct.name}`);
+            
+            // Rafraîchir l'affichage
+            testDataIsolation();
+        }
+
+        function clearLocalStorage() {
+            log('\n🗑️ Nettoyage du localStorage...');
+            
+            // Supprimer uniquement les clés Mini-Boutique
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('miniShopProducts_')) {
+                    keysToRemove.push(key);
+                }
+            }
+            
+            keysToRemove.forEach(key => {
+                localStorage.removeItem(key);
+                log(`🗑️ Supprimé: ${key}`);
+            });
+            
+            sessionStorage.removeItem('miniShopUser');
+            log('✅ Nettoyage terminé');
+            
+            // Rafraîchir l'affichage
+            testDataIsolation();
+        }
+
+        // Test automatique au chargement
+        window.addEventListener('load', () => {
+            setTimeout(runTests, 1000);
+        });
+    </script>
+</body>
+</html>

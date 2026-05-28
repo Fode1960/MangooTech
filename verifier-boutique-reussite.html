@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Vérifier Boutique Réussite - Logo Manquant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .test-section {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .logo-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+            margin: 5px;
+        }
+        .boutique-card {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .warning { color: #fbbf24; }
+        button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        .data-box {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        .problem-box {
+            background: rgba(255,0,0,0.2);
+            border: 2px solid #f87171;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .solution-box {
+            background: rgba(0,255,0,0.2);
+            border: 2px solid #4ade80;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Vérifier Boutique Réussite - Logo Manquant</h1>
+        
+        <div class="test-section">
+            <h2>🎯 Objectif</h2>
+            <p>Vérifier pourquoi la boutique "Boutique Réussite" que vous avez créée n'a pas de logo visible</p>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Étape 1: Trouver Boutique Réussite</h2>
+            <button onclick="findBoutiqueReussite()">🔎 Trouver "Boutique Réussite"</button>
+            <div id="search-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Étape 2: Vérifier les détails du logo</h2>
+            <button onclick="checkLogoDetails()">📋 Vérifier détails logo</button>
+            <div id="logo-details"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 Étape 3: Corriger le logo</h2>
+            <button onclick="fixBoutiqueReussite()">✅ Corriger Boutique Réussite</button>
+            <div id="fix-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Étape 4: Tester création avec logo</h2>
+            <button onclick="testCreateWithLogo()">➕ Créer test avec logo</button>
+            <div id="test-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🚀 Final</h2>
+            <button onclick="openMainSite()">🚀 Ouvrir site principal</button>
+        </div>
+    </div>
+
+    <script>
+        // 🔎 Trouver Boutique Réussite
+        function findBoutiqueReussite() {
+            const resultsDiv = document.getElementById('search-results');
+            
+            const demo_boutiques = JSON.parse(localStorage.getItem('demo_boutiques') || '[]');
+            
+            // Chercher Boutique Réussite
+            const boutiqueReussite = demo_boutiques.find(b => 
+                b.name === 'Boutique Réussite' || 
+                b.name.includes('Réussite') ||
+                b.description === 'Vente de produits divers'
+            );
+            
+            // Sinon prendre la dernière boutique créée
+            const lastBoutique = demo_boutiques[demo_boutiques.length - 1];
+            const targetBoutique = boutiqueReussite || lastBoutique;
+            
+            if (!targetBoutique) {
+                resultsDiv.innerHTML = '<div class="problem-box">⚠️ Aucune boutique trouvée</div>';
+                return;
+            }
+            
+            const hasLogo = !!(targetBoutique.logo || targetBoutique.logo_url);
+            
+            let html = '<h3>🎯 Boutique trouvée :</h3>';
+            html += `
+                <div class="boutique-card">
+                    <div style="width:60px;height:60px;background:#ccc;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                        ${hasLogo ? '✅' : '❓'}
+                    </div>
+                    <div>
+                        <strong>${targetBoutique.name}</strong><br>
+                        <small>${targetBoutique.description}</small><br>
+                        <small>Logo: ${hasLogo ? '<span class="success">✅ Présent</span>' : '<span class="error">❌ Manquant</span>'}</small><br>
+                        <small>ID: ${targetBoutique.id}</small>
+                    </div>
+                </div>
+            `;
+            
+            if (!hasLogo) {
+                html += '<div class="problem-box">🚨 Le logo est manquant ! C\'est le problème.</div>';
+            }
+            
+            resultsDiv.innerHTML = html;
+            
+            // Stocker pour utilisation ultérieure
+            window.currentBoutique = targetBoutique;
+        }
+
+        // 📋 Vérifier détails logo
+        function checkLogoDetails() {
+            const detailsDiv = document.getElementById('logo-details');
+            
+            if (!window.currentBoutique) {
+                detailsDiv.innerHTML = '<div class="problem-box">⚠️ Trouvez d\'abord la boutique</div>';
+                return;
+            }
+            
+            const boutique = window.currentBoutique;
+            
+            let html = '<h3>📋 Détails du logo :</h3>';
+            html += '<div class="data-box">';
+            html += `<strong>Nom:</strong> ${boutique.name}<br>`;
+            html += `<strong>Description:</strong> ${boutique.description}<br>`;
+            html += `<strong>Logo:</strong> "${boutique.logo || 'VIDE'}"<br>`;
+            html += `<strong>Logo_URL:</strong> "${boutique.logo_url || 'VIDE'}"<br>`;
+            html += `<strong>Slug:</strong> ${boutique.slug || 'VIDE'}<br>`;
+            html += `<strong>ID:</strong> ${boutique.id}<br>`;
+            html += `<strong>Créé:</strong> ${boutique.createdAt || 'Inconnu'}<br>`;
+            html += '</div>';
+            
+            if (!boutique.logo && !boutique.logo_url) {
+                html += '<div class="problem-box">❌ Aucune URL de logo trouvée</div>';
+                html += '<p><strong>Problème identifié :</strong> La boutique a été créée sans logo.</p>';
+            } else if (boutique.logo && boutique.logo.startsWith('data:')) {
+                html += '<div class="solution-box">✅ Logo trouvé (data URL)</div>';
+                html += '<p>Le logo est une data URL (base64). C\'est correct.</p>';
+                html += `<img src="${boutique.logo}" class="logo-preview" alt="Logo">`;
+            } else {
+                html += '<div class="solution-box">✅ Logo trouvé (URL)</div>';
+                html += `<img src="${boutique.logo || boutique.logo_url}" class="logo-preview" alt="Logo">`;
+            }
+            
+            detailsDiv.innerHTML = html;
+        }
+
+        // ✅ Corriger Boutique Réussite
+        function fixBoutiqueReussite() {
+            const fixDiv = document.getElementById('fix-results');
+            
+            if (!window.currentBoutique) {
+                fixDiv.innerHTML = '<div class="problem-box">⚠️ Trouvez d\'abord la boutique</div>';
+                return;
+            }
+            
+            const demo_boutiques = JSON.parse(localStorage.getItem('demo_boutiques') || '[]');
+            
+            // Trouver l'index de la boutique
+            const index = demo_boutiques.findIndex(b => b.id === window.currentBoutique.id);
+            
+            if (index === -1) {
+                fixDiv.innerHTML = '<div class="problem-box">⚠️ Boutique non trouvée dans le stockage</div>';
+                return;
+            }
+            
+            // Créer un logo si manquant
+            const logoUrl = `https://via.placeholder.com/100x100/${Math.floor(Math.random()*16777215).toString(16)}/white?text=R`;
+            
+            // Corriger la boutique
+            demo_boutiques[index] = {
+                ...demo_boutiques[index],
+                logo: window.currentBoutique.logo || logoUrl,
+                logo_url: window.currentBoutique.logo_url || logoUrl,
+                name: window.currentBoutique.name || 'Boutique Réussite',
+                description: window.currentBoutique.description || 'Vente de produits divers'
+            };
+            
+            // Sauvegarder
+            localStorage.setItem('demo_boutiques', JSON.stringify(demo_boutiques));
+            
+            fixDiv.innerHTML = `
+                <div class="solution-box">✅ Boutique Réussite corrigée !</div>
+                <div class="boutique-card">
+                    <img src="${demo_boutiques[index].logo}" class="logo-preview" alt="Logo">
+                    <div>
+                        <strong>${demo_boutiques[index].name}</strong><br>
+                        <small class="success">✅ Logo maintenant présent</small>
+                    </div>
+                </div>
+            `;
+            
+            // Mettre à jour la référence
+            window.currentBoutique = demo_boutiques[index];
+        }
+
+        // ➕ Créer test avec logo
+        function testCreateWithLogo() {
+            const testDiv = document.getElementById('test-results');
+            
+            const testBoutique = {
+                id: 'test-' + Date.now(),
+                name: 'Boutique Test Logo ' + new Date().toLocaleTimeString(),
+                description: 'Test création avec logo',
+                logo: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzRDRjUwIi8+PHRleHQgeD0iNTAiIHk9IjU1IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+VEVTVDwvdGV4dD48L3N2Zz4=',
+                logo_url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzRDRjUwIi8+PHRleHQgeD0iNTAiIHk9IjU1IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+VEVTVDwvdGV4dD48L3N2Zz4=',
+                slug: 'boutique-test-' + Date.now(),
+                is_demo: true,
+                isActive: true,
+                categories: ['fashion'],
+                primaryColor: '#4CAF50',
+                secondaryColor: '#FF6B35',
+                socialLinks: { instagram: '', facebook: '' },
+                createdAt: new Date().toISOString(),
+                status: 'approved'
+            };
+            
+            const demo_boutiques = JSON.parse(localStorage.getItem('demo_boutiques') || '[]');
+            demo_boutiques.push(testBoutique);
+            localStorage.setItem('demo_boutiques', JSON.stringify(demo_boutiques));
+            
+            testDiv.innerHTML = `
+                <div class="solution-box">✅ Boutique de test créée avec logo !</div>
+                <div class="boutique-card">
+                    <img src="${testBoutique.logo}" class="logo-preview" alt="Logo">
+                    <div>
+                        <strong>${testBoutique.name}</strong><br>
+                        <small class="success">✅ Logo base64 inclus</small>
+                    </div>
+                </div>
+                <p><strong>Résultat :</strong> Cette boutique devrait avoir un logo visible dans le site principal.</p>
+            `;
+        }
+
+        // 🚀 Ouvrir site principal
+        function openMainSite() {
+            window.open('http://localhost:3015', '_blank');
+            setTimeout(() => {
+                alert('🎯 Site principal ouvert !\\n\\nVérifiez que Boutique Réussite a maintenant un logo visible.');
+            }, 1000);
+        }
+
+        // Initialisation
+        window.onload = function() {
+            findBoutiqueReussite();
+        };
+    </script>
+</body>
+</html>

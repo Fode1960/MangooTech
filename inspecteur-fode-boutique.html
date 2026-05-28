@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspecteur Fodé Boutique - Debug en temps réel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .debug-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        .log-container {
+            background: #1e1e1e;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 0;
+        }
+        .log-error { color: #ff6b6b; }
+        .log-warn { color: #ffd93d; }
+        .log-info { color: #6bcf7f; }
+        .log-debug { color: #74b9ff; }
+        .shop-card {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .shop-card.fode-detected {
+            border-color: #ff6b6b;
+            background: #fff5f5;
+        }
+        .shop-card.user-match {
+            border-color: #6bcf7f;
+            background: #f5fff5;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .danger {
+            background: #dc3545;
+        }
+        .danger:hover {
+            background: #c82333;
+        }
+        .warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        .warning:hover {
+            background: #e0a800;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .status-bad { background: #dc3545; }
+        .status-good { background: #28a745; }
+        .status-warning { background: #ffc107; }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Inspecteur "Fodé Boutique" - Debug en temps réel</h1>
+        <p>Cet outil inspecte en temps réel les données de boutique et détecte le problème "Fodé"</p>
+        
+        <div class="grid">
+            <div class="debug-section">
+                <h3>🔄 Contrôle du monitoring</h3>
+                <button onclick="startMonitoring()">Démarrer le monitoring</button>
+                <button onclick="stopMonitoring()" class="danger">Arrêter</button>
+                <button onclick="clearLogs()" class="warning">Vider les logs</button>
+                <div id="status">
+                    <span class="status-indicator status-warning"></span>
+                    Monitoring arrêté
+                </div>
+            </div>
+            
+            <div class="debug-section">
+                <h3>🧹 Nettoyage rapide</h3>
+                <button onclick="clearFodeData()">Nettoyer "Fodé"</button>
+                <button onclick="clearAllShopData()" class="danger">Tout nettoyer</button>
+                <button onclick="forceRefresh()">Forcer rafraîchissement</button>
+            </div>
+        </div>
+
+        <div class="debug-section">
+            <h3>📊 Analyse actuelle</h3>
+            <div id="current-analysis">
+                <p>Cliquez sur "Démarrer le monitoring" pour voir l'analyse en temps réel</p>
+            </div>
+        </div>
+
+        <div class="debug-section">
+            <h3>📝 Logs en temps réel</h3>
+            <div id="log-container" class="log-container">
+                <div class="log-entry">En attente de logs...</div>
+            </div>
+        </div>
+
+        <div class="debug-section">
+            <h3>🏪 Boutiques détectées</h3>
+            <div id="shops-list">
+                <p>Aucune boutique détectée</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let monitoringInterval = null;
+        let logContainer = document.getElementById('log-container');
+        let currentAnalysis = document.getElementById('current-analysis');
+        let shopsList = document.getElementById('shops-list');
+        let statusIndicator = document.querySelector('#status .status-indicator');
+        let statusText = document.querySelector('#status');
+
+        // Fonction de log
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // Fonction pour obtenir toutes les clés de localStorage liées aux shops
+        function getShopKeys() {
+            const keys = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.includes('shop') || key.includes('boutique') || key.includes('mangoo'))) {
+                    keys.push(key);
+                }
+            }
+            return keys;
+        }
+
+        // Fonction pour analyser une clé
+        function analyzeKey(key) {
+            try {
+                const value = localStorage.getItem(key);
+                if (!value) return null;
+                
+                const data = JSON.parse(value);
+                
+                // Détecter "Fodé" dans n'importe quelle propriété
+                let hasFode = false;
+                let fodeProperties = [];
+                
+                function checkForFode(obj, path = '') {
+                    for (const [prop, val] of Object.entries(obj)) {
+                        const currentPath = path ? `${path}.${prop}` : prop;
+                        if (typeof val === 'string' && val.toLowerCase().includes('fodé')) {
+                            hasFode = true;
+                            fodeProperties.push({ path: currentPath, value: val });
+                        } else if (typeof val === 'object' && val !== null) {
+                            checkForFode(val, currentPath);
+                        }
+                    }
+                }
+                
+                if (typeof data === 'object' && data !== null) {
+                    checkForFode(data);
+                } else if (typeof data === 'string' && data.toLowerCase().includes('fodé')) {
+                    hasFode = true;
+                    fodeProperties.push({ path: 'value', value: data });
+                }
+                
+                return {
+                    key,
+                    data,
+                    hasFode,
+                    fodeProperties,
+                    userId: data.user_id || data.userId || data.owner_id || null,
+                    shopName: data.name || data.shopName || data.shop_name || data.nom || null,
+                    shopId: data.id || data.shopId || data.shop_id || null
+                };
+            } catch (error) {
+                log(`Erreur lors de l'analyse de ${key}: ${error.message}`, 'error');
+                return null;
+            }
+        }
+
+        // Fonction principale de monitoring
+        function performAnalysis() {
+            log('🔍 Début de l\'analyse...', 'debug');
+            
+            const shopKeys = getShopKeys();
+            log(`📊 ${shopKeys.length} clés de boutique trouvées`, 'info');
+            
+            let fodeDetected = false;
+            let shopsData = [];
+            
+            shopKeys.forEach(key => {
+                const analysis = analyzeKey(key);
+                if (analysis) {
+                    shopsData.push(analysis);
+                    
+                    if (analysis.hasFode) {
+                        fodeDetected = true;
+                        log(`🚨 "Fodé" détecté dans ${key}!`, 'error');
+                        analysis.fodeProperties.forEach(prop => {
+                            log(`   📍 ${prop.path}: "${prop.value}"`, 'error');
+                        });
+                    }
+                    
+                    log(`📋 ${key}: ${analysis.shopName || 'Sans nom'} (User: ${analysis.userId || 'N/A'})`, 'info');
+                }
+            });
+            
+            // Mettre à jour l'analyse actuelle
+            updateCurrentAnalysis(shopsData, fodeDetected);
+            
+            // Mettre à jour la liste des boutiques
+            updateShopsList(shopsData);
+            
+            if (!fodeDetected) {
+                log('✅ Aucun "Fodé" détecté dans cette analyse', 'info');
+            }
+            
+            log('🔍 Analyse terminée', 'debug');
+        }
+
+        // Mettre à jour l'analyse actuelle
+        function updateCurrentAnalysis(shopsData, fodeDetected) {
+            let html = '';
+            
+            if (fodeDetected) {
+                html = '<div style="background: #ffebee; border: 2px solid #f44336; padding: 15px; border-radius: 5px;">';
+                html += '<h4 style="color: #d32f2f; margin: 0 0 10px 0;">🚨 ALERTE: "Fodé" détecté!</h4>';
+                html += '<p style="color: #d32f2f; margin: 0;">Le problème est présent dans le localStorage</p>';
+                html += '</div>';
+            } else {
+                html = '<div style="background: #e8f5e8; border: 2px solid #4caf50; padding: 15px; border-radius: 5px;">';
+                html += '<h4 style="color: #2e7d32; margin: 0 0 10px 0;">✅ Aucun "Fodé" détecté</h4>';
+                html += '<p style="color: #2e7d32; margin: 0;">Le localStorage semble propre</p>';
+                html += '</div>';
+            }
+            
+            html += `<p style="margin-top: 15px;"><strong>Total clés analysées:</strong> ${shopsData.length}</p>`;
+            
+            currentAnalysis.innerHTML = html;
+        }
+
+        // Mettre à jour la liste des boutiques
+        function updateShopsList(shopsData) {
+            if (shopsData.length === 0) {
+                shopsList.innerHTML = '<p>Aucune boutique détectée</p>';
+                return;
+            }
+            
+            let html = '';
+            shopsData.forEach(shop => {
+                const isFode = shop.hasFode;
+                const isUserMatch = shop.userId && window.currentUserId && shop.userId === window.currentUserId;
+                
+                html += `<div class="shop-card ${isFode ? 'fode-detected' : ''} ${isUserMatch ? 'user-match' : ''}">`;
+                html += `<h4>${shop.shopName || 'Boutique sans nom'}</h4>`;
+                html += `<p><strong>Clé:</strong> ${shop.key}</p>`;
+                html += `<p><strong>ID:</strong> ${shop.shopId || 'N/A'}</p>`;
+                html += `<p><strong>User ID:</strong> ${shop.userId || 'N/A'}</p>`;
+                
+                if (isFode) {
+                    html += '<div style="background: #ffebee; padding: 10px; border-radius: 3px; margin: 10px 0;">';
+                    html += '<p style="color: #d32f2f; margin: 0; font-weight: bold;">🚨 "Fodé" détecté!</p>';
+                    shop.fodeProperties.forEach(prop => {
+                        html += `<p style="margin: 2px 0; font-size: 12px;">${prop.path}: "${prop.value}"</p>`;
+                    });
+                    html += '</div>';
+                }
+                
+                if (isUserMatch) {
+                    html += '<div style="background: #e8f5e8; padding: 10px; border-radius: 3px; margin: 10px 0;">';
+                    html += '<p style="color: #2e7d32; margin: 0; font-weight: bold;">✅ Correspond à l\'utilisateur actuel</p>';
+                    html += '</div>';
+                }
+                
+                html += '</div>';
+            });
+            
+            shopsList.innerHTML = html;
+        }
+
+        // Fonctions de nettoyage
+        function clearFodeData() {
+            const shopKeys = getShopKeys();
+            let cleared = 0;
+            
+            shopKeys.forEach(key => {
+                const analysis = analyzeKey(key);
+                if (analysis && analysis.hasFode) {
+                    localStorage.removeItem(key);
+                    cleared++;
+                    log(`🗑️ Clé supprimée: ${key}`, 'warn');
+                }
+            });
+            
+            log(`✅ Nettoyage terminé: ${cleared} clés supprimées`, 'info');
+            performAnalysis(); // Re-analyser
+        }
+
+        function clearAllShopData() {
+            if (!confirm('⚠️ Êtes-vous sûr de vouloir supprimer TOUTES les données de boutique du localStorage?')) {
+                return;
+            }
+            
+            const shopKeys = getShopKeys();
+            shopKeys.forEach(key => {
+                localStorage.removeItem(key);
+                log(`🗑️ Clé supprimée: ${key}`, 'warn');
+            });
+            
+            log(`✅ Nettoyage complet: ${shopKeys.length} clés supprimées`, 'info');
+            performAnalysis(); // Re-analyser
+        }
+
+        function forceRefresh() {
+            log('🔄 Forçage du rafraîchissement...', 'info');
+            location.reload();
+        }
+
+        // Contrôle du monitoring
+        function startMonitoring() {
+            if (monitoringInterval) {
+                log('⚠️ Monitoring déjà actif', 'warn');
+                return;
+            }
+            
+            log('🚀 Démarrage du monitoring...', 'info');
+            statusIndicator.className = 'status-indicator status-good';
+            statusText.innerHTML = '<span class="status-indicator status-good"></span>Monitoring actif';
+            
+            // Première analyse immédiate
+            performAnalysis();
+            
+            // Puis analyse toutes les 5 secondes
+            monitoringInterval = setInterval(performAnalysis, 5000);
+        }
+
+        function stopMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+                log('⏹️ Monitoring arrêté', 'info');
+                statusIndicator.className = 'status-indicator status-warning';
+                statusText.innerHTML = '<span class="status-indicator status-warning"></span>Monitoring arrêté';
+            }
+        }
+
+        function clearLogs() {
+            logContainer.innerHTML = '<div class="log-entry">Logs vidés - En attente de nouveaux logs...</div>';
+        }
+
+        // Démarrer automatiquement
+        window.onload = function() {
+            log('🔍 Inspecteur "Fodé Boutique" chargé', 'info');
+            log('💡 Cliquez sur "Démarrer le monitoring" pour commencer l\'analyse', 'info');
+        };
+    </script>
+</body>
+</html>

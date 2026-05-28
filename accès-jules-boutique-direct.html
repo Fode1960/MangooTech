@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accès Direct - Jules Boutique</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            margin: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .btn-primary {
+            background-color: #2196F3;
+        }
+        .btn-success {
+            background-color: #4CAF50;
+        }
+        .btn-warning {
+            background-color: #ff9800;
+        }
+        .info-box {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .warning-box {
+            background-color: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .code {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛍️ Accès Direct - Jules Boutique</h1>
+        
+        <div class="info-box">
+            <h3>📍 Informations Jules Boutique</h3>
+            <p><strong>Slug trouvé :</strong> <span class="code">jules-boutique-mksbfsb8</span></p>
+            <p><strong>Statut :</strong> ✅ Approuvée</p>
+            <p><strong>Port correct :</strong> 3015 (pas 3016)</p>
+        </div>
+
+        <div class="warning-box">
+            <h3>⚠️ Important - Authentification Requise</h3>
+            <p>Pour voir Jules Boutique dans le site principal, vous devez :</p>
+            <ol>
+                <li>Être connecté (admin ou client)</li>
+                <li>Utiliser le port 3015</li>
+            </ol>
+        </div>
+
+        <h2>🔗 Accès Direct</h2>
+        
+        <a href="http://localhost:3015/shop/jules-boutique-mksbfsb8" class="btn btn-primary" target="_blank">
+            🚀 Voir Jules Boutique (Port 3015)
+        </a>
+
+        <a href="http://localhost:3015" class="btn btn-success" target="_blank">
+            🔐 Se Connecter d'abord (Port 3015)
+        </a>
+
+        <h2>🆕 Alternative - Créer une Nouvelle Boutique</h2>
+        <p>Si Jules Boutique ne s'affiche toujours pas, créez-en une nouvelle :</p>
+        
+        <a href="http://localhost:3015" class="btn btn-warning" target="_blank">
+            ➕ Créer une Boutique (Mode Demo)
+        </a>
+
+        <h2>📋 Résumé des Corrections</h2>
+        <div class="info-box">
+            <h3>✅ Ce qui est corrigé :</h3>
+            <ul>
+                <li>Slug généré pour les boutiques demo (pas d'"undefined")</li>
+                <li>Logo persistant via localStorage pour le mode demo</li>
+                <li>Redirection vers la page boutique individuelle</li>
+            </ul>
+            
+            <h3>❌ Ce qui reste à corriger :</h3>
+            <ul>
+                <li>Persistance du logo dans la base de données (pour les vraies boutiques)</li>
+                <li>Upload du logo vers Supabase Storage</li>
+            </ul>
+        </div>
+
+        <h2>🧪 Test de Vos Corrections</h2>
+        <p>Les corrections pour le mode demo fonctionnent :</p>
+        <a href="http://localhost:3018/test-corrections" class="btn btn-primary" target="_blank">
+            🧪 Ouvrir le Test des Corrections
+        </a>
+    </div>
+
+    <script>
+        // Vérifier si Jules Boutique est accessible
+        function checkJulesBoutique() {
+            fetch('http://localhost:3015/shop/jules-boutique-mksbfsb8')
+                .then(response => {
+                    if (response.ok) {
+                        console.log('✅ Jules Boutique est accessible');
+                    } else {
+                        console.log('❌ Jules Boutique nécessite une authentification');
+                    }
+                })
+                .catch(error => {
+                    console.log('❌ Erreur de connexion à Jules Boutique:', error);
+                });
+        }
+
+        // Vérifier au chargement
+        window.onload = function() {
+            console.log('🛍️ Page d\'accès à Jules Boutique chargée');
+            console.log('📍 Slug: jules-boutique-mksbfsb8');
+            console.log('🌐 URL: http://localhost:3015/shop/jules-boutique-mksbfsb8');
+        };
+    </script>
+</body>
+</html>

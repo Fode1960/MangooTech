@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test DataChannel Audio - Vérification RMS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .audio-level {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .audio-level-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A, #CDDC39, #FFC107, #FF5722);
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary { background: #2196F3; color: white; }
+        .btn-success { background: #4CAF50; color: white; }
+        .btn-danger { background: #f44336; color: white; }
+        .log {
+            background: #f8f8f8;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.success { background: #e8f5e8; color: #2e7d2e; }
+        .status.error { background: #ffeaea; color: #d32f2f; }
+        .status.info { background: #e3f2fd; color: #1565c0; }
+        .test-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .data-display {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 11px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎧 Test DataChannel Audio - Vérification RMS</h1>
+        <p>Ce test vérifie spécifiquement l'analyse RMS des données audio du DataChannel</p>
+        
+        <div class="status info" id="status">Prêt pour le test DataChannel</div>
+        
+        <div class="test-section">
+            <h3>🎤 Test 1: Simulation Capture Audio (Int16Array)</h3>
+            <p>Simule la capture audio du microphone en Int16Array (comme le DataChannel)</p>
+            
+            <div class="audio-level">
+                <div class="audio-level-bar" id="captureBar"></div>
+            </div>
+            <button class="btn-primary" onclick="simulateAudioCapture()">Simuler Capture Audio</button>
+            <button class="btn-danger" onclick="stopAudioCapture()">Arrêter Capture</button>
+            
+            <div class="data-display" id="captureData">Données de capture: en attente...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Test 2: Analyse RMS et Conversion</h3>
+            <p>Teste la conversion Int16Array → Float32Array et le calcul RMS</p>
+            
+            <div class="audio-level">
+                <div class="audio-level-bar" id="analysisBar"></div>
+            </div>
+            <button class="btn-success" onclick="testRMSAnalysis()">Tester Analyse RMS</button>
+            
+            <div class="data-display" id="analysisData">Résultats d'analyse: en attente...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎧 Test 3: Simulation Réception DataChannel</h3>
+            <p>Simule la réception d'audio via DataChannel et l'analyse</p>
+            
+            <div class="audio-level">
+                <div class="audio-level-bar" id="receptionBar"></div>
+            </div>
+            <button class="btn-primary" onclick="simulateDataChannelReception()">Simuler Réception</button>
+            <button class="btn-danger" onclick="stopReception()">Arrêter Réception</button>
+            
+            <div class="data-display" id="receptionData">Données de réception: en attente...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔄 Test 4: Chaîne Complète (Capture → Transmission → Réception → Analyse)</h3>
+            <p>Teste la chaîne complète comme dans le WebRTC</p>
+            
+            <div class="audio-level">
+                <div class="audio-level-bar" id="chainBar"></div>
+            </div>
+            <button class="btn-success" onclick="testCompleteChain()">Tester Chaîne Complète</button>
+            <button class="btn-danger" onclick="stopChain()">Arrêter Chaîne</button>
+            
+            <div class="data-display" id="chainData">État de la chaîne: en attente...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 Test 5: Fonction analyzeRemoteAudioForLevel (Isolée)</h3>
+            <p>Teste directement la fonction que j'ai créée</p>
+            
+            <div class="audio-level">
+                <div class="audio-level-bar" id="functionBar"></div>
+            </div>
+            <button class="btn-primary" onclick="testAnalyzeFunction()">Tester Fonction</button>
+            
+            <div class="data-display" id="functionData">Test fonction: en attente...</div>
+        </div>
+
+        <h3>📝 Journal Détaillé</h3>
+        <div class="log" id="log">Cliquez sur les boutons pour commencer les tests DataChannel...</div>
+    </div>
+
+    <script>
+        let captureInterval = null;
+        let analysisInterval = null;
+        let receptionInterval = null;
+        let chainInterval = null;
+        let functionInterval = null;
+
+        function log(message) {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(message);
+        }
+
+        function updateStatus(message, type = 'info') {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+        }
+
+        function updateBar(barId, level) {
+            const bar = document.getElementById(barId);
+            bar.style.width = level + '%';
+        }
+
+        function updateData(dataId, data) {
+            document.getElementById(dataId).textContent = data;
+        }
+
+        // Test 1: Simulation Capture Audio (Int16Array)
+        function simulateAudioCapture() {
+            log('🎤 Début simulation capture audio...');
+            
+            captureInterval = setInterval(() => {
+                // Simuler des données audio en Int16Array (comme un DataChannel)
+                const sampleCount = 1024;
+                const int16Data = new Int16Array(sampleCount);
+                
+                // Générer une onde sinusoïdale avec du bruit
+                for (let i = 0; i < sampleCount; i++) {
+                    const t = i / sampleCount;
+                    const sine = Math.sin(2 * Math.PI * 440 * t) * 0.8; // 440Hz
+                    const noise = (Math.random() - 0.5) * 0.2;
+                    int16Data[i] = Math.max(-32768, Math.min(32767, (sine + noise) * 32767));
+                }
+                
+                // Calculer le niveau RMS
+                let sum = 0;
+                for (let i = 0; i < int16Data.length; i++) {
+                    sum += int16Data[i] * int16Data[i];
+                }
+                const rms = Math.sqrt(sum / int16Data.length);
+                const level = Math.min(100, (rms / 32768) * 200);
+                
+                updateBar('captureBar', level);
+                updateData('captureData', `Int16Array[${int16Data.length}] - RMS: ${rms.toFixed(0)} - Niveau: ${level.toFixed(1)}%`);
+                
+            }, 100); // Mise à jour toutes les 100ms
+            
+            updateStatus('✅ Capture audio simulée', 'success');
+        }
+
+        function stopAudioCapture() {
+            if (captureInterval) {
+                clearInterval(captureInterval);
+                captureInterval = null;
+            }
+            updateBar('captureBar', 0);
+            updateData('captureData', 'Capture arrêtée');
+            log('🛑 Capture audio arrêtée');
+        }
+
+        // Test 2: Analyse RMS et Conversion
+        function testRMSAnalysis() {
+            log('📊 Début test analyse RMS...');
+            
+            // Créer des données de test
+            const int16Data = new Int16Array(1024);
+            for (let i = 0; i < int16Data.length; i++) {
+                const t = i / int16Data.length;
+                int16Data[i] = Math.sin(2 * Math.PI * 440 * t) * 20000; // Signal fort
+            }
+            
+            // Convertir en Float32Array (comme dans playReceivedAudio)
+            const float32Data = new Float32Array(int16Data.length);
+            for (let i = 0; i < int16Data.length; i++) {
+                float32Data[i] = int16Data[i] / 32768;
+            }
+            
+            // Calculer RMS (comme dans analyzeRemoteAudioForLevel)
+            let sum = 0;
+            for (let i = 0; i < float32Data.length; i++) {
+                sum += float32Data[i] * float32Data[i];
+            }
+            const rms = Math.sqrt(sum / float32Data.length);
+            const level = Math.min(100, rms * 500); // Amplification ×500
+            
+            updateBar('analysisBar', level);
+            updateData('analysisData', `Int16→Float32 - RMS: ${rms.toFixed(6)} - Niveau: ${level.toFixed(1)}% - Max: ${Math.max(...float32Data).toFixed(3)}`);
+            
+            log(`✅ Analyse RMS: RMS=${rms.toFixed(6)}, Niveau=${level.toFixed(1)}%`);
+            updateStatus('✅ Analyse RMS terminée', 'success');
+        }
+
+        // Test 3: Simulation Réception DataChannel
+        function simulateDataChannelReception() {
+            log('📡 Début simulation réception DataChannel...');
+            
+            receptionInterval = setInterval(() => {
+                // Simuler des données reçues du DataChannel (Int16Array)
+                const bufferSize = 1024;
+                const int16Buffer = new Int16Array(bufferSize);
+                
+                // Générer un signal audio variable
+                const frequency = 440 + Math.sin(Date.now() / 1000) * 100; // Fréquence variable
+                for (let i = 0; i < bufferSize; i++) {
+                    const t = i / bufferSize;
+                    const amplitude = 0.5 + Math.sin(Date.now() / 500) * 0.3; // Amplitude variable
+                    int16Buffer[i] = Math.sin(2 * Math.PI * frequency * t) * amplitude * 32767;
+                }
+                
+                // Appeler la fonction analyzeRemoteAudioForLevel directement
+                analyzeRemoteAudioForLevelTest(int16Buffer);
+                
+            }, 200); // Mise à jour toutes les 200ms
+            
+            updateStatus('📡 Réception DataChannel simulée', 'info');
+        }
+
+        function stopReception() {
+            if (receptionInterval) {
+                clearInterval(receptionInterval);
+                receptionInterval = null;
+            }
+            updateBar('receptionBar', 0);
+            updateData('receptionData', 'Réception arrêtée');
+            log('🛑 Réception DataChannel arrêtée');
+        }
+
+        // Test 4: Chaîne Complète
+        function testCompleteChain() {
+            log('🔄 Début test chaîne complète...');
+            
+            chainInterval = setInterval(() => {
+                // 1. Capture (simulation)
+                const captureData = new Int16Array(1024);
+                for (let i = 0; i < captureData.length; i++) {
+                    const t = i / captureData.length;
+                    captureData[i] = Math.sin(2 * Math.PI * 440 * t) * 25000; // Signal fort
+                }
+                
+                // 2. Transmission (simulation)
+                const transmittedData = captureData; // En vrai, cela passerait par le DataChannel
+                
+                // 3. Réception et analyse (comme playReceivedAudio)
+                analyzeRemoteAudioForLevelTest(transmittedData);
+                
+                updateData('chainData', `Chaîne active - ${new Date().toLocaleTimeString()}`);
+                
+            }, 300); // Mise à jour toutes les 300ms
+            
+            updateStatus('🔄 Chaîne complète active', 'success');
+        }
+
+        function stopChain() {
+            if (chainInterval) {
+                clearInterval(chainInterval);
+                chainInterval = null;
+            }
+            updateBar('chainBar', 0);
+            updateData('chainData', 'Chaîne arrêtée');
+            log('🛑 Chaîne complète arrêtée');
+        }
+
+        // Test 5: Fonction analyzeRemoteAudioForLevel (Isolée)
+        function testAnalyzeFunction() {
+            log('🔍 Test de la fonction analyzeRemoteAudioForLevel...');
+            
+            // Tester avec différents niveaux d'audio
+            const testLevels = [
+                { name: 'Silence', data: new Int16Array(1024).fill(0) },
+                { name: 'Signal faible', data: generateAudioSignal(0.1) },
+                { name: 'Signal moyen', data: generateAudioSignal(0.3) },
+                { name: 'Signal fort', data: generateAudioSignal(0.8) },
+                { name: 'Signal très fort', data: generateAudioSignal(1.0) }
+            ];
+            
+            let testIndex = 0;
+            
+            functionInterval = setInterval(() => {
+                if (testIndex >= testLevels.length) {
+                    testIndex = 0; // Boucle
+                }
+                
+                const test = testLevels[testIndex];
+                analyzeRemoteAudioForLevelTest(test.data);
+                
+                updateData('functionData', `Test: ${test.name} (${testIndex + 1}/${testLevels.length})`);
+                log(`🔍 Test ${test.name}: niveau appliqué`);
+                
+                testIndex++;
+            }, 1000); // Changement toutes les secondes
+            
+            updateStatus('🔍 Fonction de test active', 'info');
+        }
+
+        // Fonction helper pour générer des signaux audio
+        function generateAudioSignal(amplitude) {
+            const data = new Int16Array(1024);
+            for (let i = 0; i < data.length; i++) {
+                const t = i / data.length;
+                data[i] = Math.sin(2 * Math.PI * 440 * t) * amplitude * 32767;
+            }
+            return data;
+        }
+
+        // Version test de la fonction analyzeRemoteAudioForLevel
+        function analyzeRemoteAudioForLevelTest(audioData) {
+            try {
+                // Convertir en Float32Array (comme dans playReceivedAudio)
+                const float32Data = new Float32Array(audioData.length);
+                for (let i = 0; i < audioData.length; i++) {
+                    float32Data[i] = audioData[i] / 32768;
+                }
+                
+                // Calculer le niveau RMS (Root Mean Square)
+                let sum = 0;
+                for (let i = 0; i < float32Data.length; i++) {
+                    sum += float32Data[i] * float32Data[i];
+                }
+                const rms = Math.sqrt(sum / float32Data.length);
+                
+                // Convertir en pourcentage avec amplification
+                const level = Math.min(100, rms * 500); // Multiplier par 500
+                
+                // Mettre à jour la barre appropriée
+                if (receptionInterval) updateBar('receptionBar', level);
+                if (chainInterval) updateBar('chainBar', level);
+                if (functionInterval) updateBar('functionBar', level);
+                
+                log(`📊 RMS: ${rms.toFixed(6)} → Niveau: ${level.toFixed(1)}%`);
+                
+            } catch (error) {
+                log(`❌ Erreur analyse: ${error.message}`);
+            }
+        }
+
+        // Nettoyage
+        window.addEventListener('beforeunload', () => {
+            stopAudioCapture();
+            stopReception();
+            stopChain();
+            if (functionInterval) clearInterval(functionInterval);
+        });
+    </script>
+</body>
+</html>

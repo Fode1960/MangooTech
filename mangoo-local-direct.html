@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mangoo Local+ 🌍</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <style>
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            overflow: hidden; /* App-like feel */
+        }
+        
+        /* === HEADER === */
+        .header {
+            background: linear-gradient(135deg, #1a5f3f 0%, #2e7d32 100%);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 1000;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .header .subtitle {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            margin-top: 0.2rem;
+        }
+
+        /* === MAP CONTAINER === */
+        #map {
+            height: calc(100vh - 140px); /* Laisse place au header et footer */
+            width: 100%;
+            z-index: 1;
+        }
+
+        /* === BOTTOM SHEET (Fiche Vendeur) === */
+        .bottom-sheet {
+            position: fixed;
+            bottom: -100%; /* Caché par défaut */
+            left: 0;
+            width: 100%;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+            transition: bottom 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            z-index: 2000;
+            padding-bottom: 20px;
+        }
+        .bottom-sheet.active {
+            bottom: 0;
+        }
+        .sheet-handle {
+            width: 40px;
+            height: 5px;
+            background: #dfe6e9;
+            border-radius: 3px;
+            margin: 10px auto;
+        }
+        .sheet-content {
+            padding: 0 20px 20px 20px;
+        }
+
+        /* === VENDEUR CARD === */
+        .vendor-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .vendor-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #1a5f3f;
+        }
+        .vendor-info h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #2d3436;
+        }
+        .vendor-meta {
+            font-size: 0.9rem;
+            color: #636e72;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .status-open { background: #d4edda; color: #155724; }
+        .status-closed { background: #f8d7da; color: #721c24; }
+        .status-live { 
+            background: #ff7675; 
+            color: white; 
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 118, 117, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 118, 117, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 118, 117, 0); }
+        }
+
+        /* === VOICE PITCH PLAYER === */
+        .voice-player {
+            background: #f1f2f6;
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            border: 1px solid #dfe6e9;
+        }
+        .play-btn {
+            width: 35px;
+            height: 35px;
+            background: #1a5f3f;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+        .wave-visual {
+            flex: 1;
+            height: 20px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20" fill="%231a5f3f"><rect x="0" y="5" width="3" height="10"/><rect x="5" y="2" width="3" height="16"/><rect x="10" y="6" width="3" height="8"/><rect x="15" y="3" width="3" height="14"/><rect x="20" y="7" width="3" height="6"/><rect x="25" y="4" width="3" height="12"/><rect x="30" y="6" width="3" height="8"/><rect x="35" y="2" width="3" height="16"/><rect x="40" y="5" width="3" height="10"/><rect x="45" y="3" width="3" height="14"/><rect x="50" y="7" width="3" height="6"/><rect x="55" y="4" width="3" height="12"/><rect x="60" y="6" width="3" height="8"/><rect x="65" y="2" width="3" height="16"/><rect x="70" y="5" width="3" height="10"/><rect x="75" y="3" width="3" height="14"/><rect x="80" y="7" width="3" height="6"/><rect x="85" y="4" width="3" height="12"/><rect x="90" y="6" width="3" height="8"/><rect x="95" y="2" width="3" height="16"/></svg>');
+            opacity: 0.5;
+        }
+        .voice-text {
+            font-size: 0.8rem;
+            color: #636e72;
+        }
+
+        /* === ACTIONS === */
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .btn {
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            text-decoration: none;
+        }
+        .btn-primary { background: #e17055; color: white; } /* Orange Mangoo */
+        .btn-secondary { background: #dfe6e9; color: #2d3436; }
+
+        /* === NAVIGATION BAR === */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            z-index: 1500;
+        }
+        .nav-item {
+            text-align: center;
+            color: #b2bec3;
+            font-size: 0.7rem;
+            text-decoration: none;
+        }
+        .nav-item.active { color: #1a5f3f; }
+        .nav-icon { font-size: 1.5rem; display: block; margin-bottom: 2px; }
+
+        /* === LOADING OVERLAY === */
+        #loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            transition: opacity 0.5s;
+        }
+        .spinner {
+            width: 50px; height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #1a5f3f;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+
+    <!-- LOADER -->
+    <div id="loader">
+        <div class="spinner"></div>
+        <p style="margin-top: 15px; color: #636e72;">Chargement de Mangoo Local+...</p>
+    </div>
+
+    <!-- HEADER -->
+    <div class="header">
+        <h1>🥭 Mangoo Local+</h1>
+        <div class="subtitle">Trouvez les meilleures affaires autour de vous</div>
+    </div>
+
+    <!-- MAP -->
+    <div id="map"></div>
+
+    <!-- BOTTOM SHEET (Détails Vendeur) -->
+    <div class="bottom-sheet" id="vendorSheet">
+        <div class="sheet-handle" onclick="closeSheet()"></div>
+        <div class="sheet-content">
+            <!-- Header Vendeur -->
+            <div class="vendor-header">
+                <img src="https://ui-avatars.com/api/?name=Maman+Sarah&background=random" class="vendor-avatar" id="vAvatar">
+                <div class="vendor-info">
+                    <h2 id="vName">Maman Sarah</h2>
+                    <div class="vendor-meta">
+                        <span id="vCategory">🥬 Maraîchère</span> • <span id="vDistance">0.5 km</span>
+                        <span class="status-badge status-open" id="vStatus">Ouvert</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Voice Pitch Player -->
+            <div class="voice-player" onclick="playVoicePitch()">
+                <div class="play-btn">▶</div>
+                <div class="wave-visual"></div>
+                <div class="voice-text">Écouter le message du vendeur (12s)</div>
+            </div>
+
+            <!-- Actions -->
+            <div class="action-grid">
+                <a href="#" class="btn btn-primary" id="btnLive" onclick="openLive()">
+                    📹 Voir le Live
+                </a>
+                <a href="#" class="btn btn-secondary" onclick="alert('Ouverture de votre application téléphone…')">
+                    📞 Appeler
+                </a>
+                <a href="#" class="btn btn-secondary" onclick="alert('Itinéraire lancé !')">
+                    📍 Itinéraire
+                </a>
+                <a href="mini-shop-direct.html" class="btn btn-secondary">
+                    🛒 Boutique
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVIGATION -->
+    <div class="nav-bar">
+        <a href="#" class="nav-item active">
+            <span class="nav-icon">🗺️</span>
+            Carte
+        </a>
+        <a href="#" class="nav-item">
+            <span class="nav-icon">📋</span>
+            Liste
+        </a>
+        <a href="#" class="nav-item">
+            <span class="nav-icon">❤️</span>
+            Favoris
+        </a>
+        <a href="#" class="nav-item">
+            <span class="nav-icon">👤</span>
+            Compte
+        </a>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <script>
+        // === DONNÉES FICTIVES (Douala, Cameroun) ===
+        // On simule une position utilisateur au carrefour Ndokoti (point névralgique)
+        const USER_POS = [4.051056, 9.767869]; 
+
+        const VENDORS = [
+            {
+                id: 1,
+                name: "Chez Maman Sarah",
+                category: "🥬 Vivres Frais",
+                lat: 4.052000,
+                lng: 9.768000,
+                status: "open",
+                live: true, // EN LIVE !
+                voicePitch: "Bonjour mes enfants ! Aujourd'hui j'ai reçu du Ndolé frais et des miondo de Deido. Venez vite avant que ça finisse !",
+                avatar: "https://ui-avatars.com/api/?name=Maman+Sarah&background=1a5f3f&color=fff"
+            },
+            {
+                id: 2,
+                name: "Tech Mobile Pro",
+                category: "📱 Électronique",
+                lat: 4.050500,
+                lng: 9.767000,
+                status: "open",
+                live: false,
+                voicePitch: "Promo iPhone 12 reconditionné, garantie 3 mois. Chargeur offert si vous venez de la part de Mangoo.",
+                avatar: "https://ui-avatars.com/api/?name=Tech+Pro&background=0984e3&color=fff"
+            },
+            {
+                id: 3,
+                name: "Tailleur Élégance",
+                category: "🧵 Mode",
+                lat: 4.051500,
+                lng: 9.769000,
+                status: "closed",
+                live: false,
+                voicePitch: "Atelier fermé ce matin, je suis au marché des tissus. Ouverture à 14h pour les essayages.",
+                avatar: "https://ui-avatars.com/api/?name=Tailleur+E&background=e17055&color=fff"
+            }
+        ];
+
+        let map;
+        let activeVendor = null;
+
+        // === INITIALISATION ===
+        window.onload = function() {
+            setTimeout(() => {
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
+                initMap();
+            }, 1500); // Fake loading time
+        };
+
+        function initMap() {
+            // Création de la carte
+            map = L.map('map', { zoomControl: false }).setView(USER_POS, 16);
+
+            // Tuiles OpenStreetMap (Léger)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Marqueur Utilisateur (Moi)
+            const userIcon = L.divIcon({
+                className: 'user-marker',
+                html: '<div style="background:#0984e3; width:15px; height:15px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(0,0,0,0.3);"></div>',
+                iconSize: [20, 20]
+            });
+            L.marker(USER_POS, {icon: userIcon}).addTo(map).bindPopup("Vous êtes ici");
+
+            // Ajout des Vendeurs
+            VENDORS.forEach(vendor => {
+                addVendorMarker(vendor);
+            });
+        }
+
+        function addVendorMarker(vendor) {
+            // Création de l'icône personnalisée
+            let markerHtml = `
+                <div style="
+                    background: ${vendor.live ? '#ff7675' : '#fff'};
+                    border: 2px solid ${vendor.live ? '#d63031' : '#1a5f3f'};
+                    border-radius: 50%;
+                    width: 40px; 
+                    height: 40px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+                    ${vendor.live ? 'animation: pulse-marker 1.5s infinite;' : ''}
+                ">
+                    <img src="${vendor.avatar}" style="width:32px; height:32px; border-radius:50%;">
+                    ${vendor.live ? '<span style="position:absolute; top:-5px; right:-5px; background:red; color:white; font-size:9px; padding:2px 4px; border-radius:4px; font-weight:bold;">LIVE</span>' : ''}
+                </div>
+            `;
+
+            const icon = L.divIcon({
+                className: 'custom-pin',
+                html: markerHtml,
+                iconSize: [40, 40],
+                iconAnchor: [20, 40]
+            });
+
+            const marker = L.marker([vendor.lat, vendor.lng], {icon: icon}).addTo(map);
+            
+            marker.on('click', () => {
+                openVendorSheet(vendor);
+                map.flyTo([vendor.lat, vendor.lng], 17, {
+                    animate: true,
+                    duration: 0.5
+                });
+            });
+        }
+
+        // === GESTION DE LA FICHE VENDEUR ===
+        function openVendorSheet(vendor) {
+            activeVendor = vendor;
+            
+            // Remplissage des données
+            document.getElementById('vName').innerText = vendor.name;
+            document.getElementById('vCategory').innerText = vendor.category;
+            document.getElementById('vAvatar').src = vendor.avatar;
+            
+            // Statut et Live
+            const statusBadge = document.getElementById('vStatus');
+            const btnLive = document.getElementById('btnLive');
+            
+            if (vendor.live) {
+                statusBadge.className = 'status-badge status-live';
+                statusBadge.innerText = 'EN LIVE 🔴';
+                btnLive.style.display = 'flex'; // Afficher bouton Live
+                btnLive.style.background = '#e17055';
+                btnLive.innerText = '📹 Rejoindre le Live';
+            } else if (vendor.status === 'open') {
+                statusBadge.className = 'status-badge status-open';
+                statusBadge.innerText = 'Ouvert';
+                btnLive.style.display = 'none'; // Cacher bouton Live
+            } else {
+                statusBadge.className = 'status-badge status-closed';
+                statusBadge.innerText = 'Fermé';
+                btnLive.style.display = 'none';
+            }
+
+            // Affichage Sheet
+            document.getElementById('vendorSheet').classList.add('active');
+        }
+
+        function closeSheet() {
+            document.getElementById('vendorSheet').classList.remove('active');
+        }
+
+        // === GESTION DU VOICE PITCH ===
+        function playVoicePitch() {
+            if (!activeVendor) return;
+            
+            // Simulation lecture audio (Synthèse vocale pour le POC)
+            const btn = document.querySelector('.play-btn');
+            const text = document.querySelector('.voice-text');
+            
+            if ('speechSynthesis' in window) {
+                btn.innerText = '🔊';
+                text.innerText = "Lecture en cours...";
+                
+                const utterance = new SpeechSynthesisUtterance(activeVendor.voicePitch);
+                utterance.lang = 'fr-FR';
+                utterance.onend = () => {
+                    btn.innerText = '▶';
+                    text.innerText = "Écouter le message du vendeur (12s)";
+                };
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert(activeVendor.voicePitch);
+            }
+        }
+
+        // === OUVERTURE LIVE ===
+        function openLive() {
+            if (activeVendor && activeVendor.live) {
+                // Redirection vers notre module WebRTC stable
+                window.location.href = 'webrtc-parfait.html?role=viewer&userId=clientMap';
+            }
+        }
+
+        // CSS Animation Injection for Marker Pulse
+        const styleSheet = document.createElement("style");
+        styleSheet.innerText = `
+            @keyframes pulse-marker {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+                100% { transform: scale(1); }
+            }
+        `;
+        document.head.appendChild(styleSheet);
+
+    </script>
+</body>
+</html>

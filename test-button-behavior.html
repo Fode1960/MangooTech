@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test WebRTC Button Behavior</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .test-section { background: white; margin: 20px 0; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        .button-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .test-frame { width: 100%; height: 500px; border: 2px solid #007bff; border-radius: 8px; }
+        .test-controls { margin: 20px 0; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #ffc107; color: #212529; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test WebRTC Button Behavior - Live Shopping</h1>
+        
+        <div class="test-section">
+            <h2>📋 Test Plan - Comportement des Boutons</h2>
+            <div class="button-grid">
+                <div>
+                    <h3>🎯 Appelant (8888) - Comportement Attendu</h3>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                        <tr style="background: #f8f9fa;">
+                            <th style="padding: 8px; border: 1px solid #dee2e6;">État</th>
+                            <th style="padding: 8px; border: 1px solid #dee2e6;">Appeler</th>
+                            <th style="padding: 8px; border: 1px solid #dee2e6;">Répondre</th>
+                            <th style="padding: 8px; border: 1px solid #dee2e6;">Raccrocher</th>
+                            <th style="padding: 8px; border: 1px solid #dee2e6;">Rejeter</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #dee2e6;">Initial</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #d4edda;">✅ Actif</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #f8d7da;">❌ Inactif</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #f8d7da;">❌ Inactif</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #f8d7da;">❌ Inactif</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #dee2e6;">Appel en cours</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #f8d7da;">❌ Inactif</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #f8d7da;">❌ Inactif</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #d4edda;">✅ Actif</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #f8d7da;">❌ Inactif</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #dee2e6;">En appel</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #f8d7da;">❌ Inactif</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #f8d7da;">❌ Inactif</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #d4edda;">✅ Actif</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #f8d7da;">❌ Inactif</td>
+                        </tr>
+                    </table>
+                </div>
+                <div>
+                    <h3>🎯 Appelé (8889) - Comportement Attendu</h3>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                        <tr style="background: #f8f9fa;">
+                            <th style="padding: 8px; border: 1px solid #dee2e6;">État</th>
+                            <th style="padding: 8px; border: 1px solid #dee2e6;">Appeler</th>
+                            <th style="padding: 8px; border: 1px solid #dee2e6;">Répondre</th>
+                            <th style="padding: 8px; border: 1px solid #dee2e6;">Raccrocher</th>
+                            <th style="padding: 8px; border: 1px solid #dee2e6;">Rejeter</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #dee2e6;">Initial</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #d4edda;">✅ Actif</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #f8d7da;">❌ Inactif</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #f8d7da;">❌ Inactif</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #f8d7da;">❌ Inactif</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #dee2e6;">Appel entrant</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #f8d7da;">❌ Inactif</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #d4edda;">✅ Actif</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #f8d7da;">❌ Inactif</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #d4edda;">✅ Actif</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #dee2e6;">En appel</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #f8d7da;">❌ Inactif</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #f8d7da;">❌ Inactif</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #d4edda;">✅ Actif</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6; background: #f8d7da;">❌ Inactif</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🚀 Test Manuel - Live Shopping WebRTC</h2>
+            <div class="test-controls">
+                <button class="btn-primary" onclick="startTest()">🎯 Démarrer le Test</button>
+                <button class="btn-success" onclick="testCaller()">📞 Tester Appelant (8888)</button>
+                <button class="btn-warning" onclick="testCallee()">📱 Tester Appelé (8889)</button>
+                <button class="btn-danger" onclick="stopTest()">⏹️ Arrêter le Test</button>
+            </div>
+            
+            <div id="test-status" class="status warning">En attente du test...</div>
+            
+            <div class="button-grid">
+                <div>
+                    <h3>📞 Appelant (8888)</h3>
+                    <iframe id="caller-frame" class="test-frame" src="about:blank"></iframe>
+                </div>
+                <div>
+                    <h3>📱 Appelé (8889)</h3>
+                    <iframe id="callee-frame" class="test-frame" src="about:blank"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Résultats du Test</h2>
+            <div id="test-results">
+                <p>Les résultats apparaîtront ici après le test...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let callerFrame, calleeFrame;
+        let testResults = [];
+
+        function startTest() {
+            callerFrame = document.getElementById('caller-frame');
+            calleeFrame = document.getElementById('callee-frame');
+            
+            // Load the Live Shopping pages
+            callerFrame.src = 'http://localhost:3015/live-shopping?vendorId=8888&clientId=8889&mode=vendor';
+            calleeFrame.src = 'http://localhost:3015/live-shopping?vendorId=8888&clientId=8889&mode=client';
+            
+            updateStatus('Test démarré - Chargement des pages...', 'warning');
+            
+            // Wait for pages to load
+            setTimeout(() => {
+                updateStatus('Pages chargées - Prêt pour le test', 'success');
+                addResult('✅ Pages Live Shopping chargées avec succès');
+                
+                // Test initial state
+                testInitialState();
+            }, 3000);
+        }
+
+        function testInitialState() {
+            updateStatus('Test de l\'état initial...', 'warning');
+            
+            // Check if WebRTC components are loaded
+            try {
+                const callerDoc = callerFrame.contentDocument || callerFrame.contentWindow.document;
+                const calleeDoc = calleeFrame.contentDocument || calleeFrame.contentWindow.document;
+                
+                // Look for WebRTC call buttons
+                const callerButtons = callerDoc.querySelectorAll('button');
+                const calleeButtons = calleeDoc.querySelectorAll('button');
+                
+                addResult(`📞 Appelant - Boutons trouvés: ${callerButtons.length}`);
+                addResult(`📱 Appelé - Boutons trouvés: ${calleeButtons.length}`);
+                
+                // Check button states
+                callerButtons.forEach((btn, index) => {
+                    addResult(`📞 Appelant Bouton ${index + 1}: "${btn.title || btn.textContent}" - ${btn.disabled ? '❌ Désactivé' : '✅ Activé'}`);
+                });
+                
+                calleeButtons.forEach((btn, index) => {
+                    addResult(`📱 Appelé Bouton ${index + 1}: "${btn.title || btn.textContent}" - ${btn.disabled ? '❌ Désactivé' : '✅ Activé'}`);
+                });
+                
+                updateStatus('Test de l\'état initial terminé', 'success');
+            } catch (error) {
+                addResult(`❌ Erreur lors du test de l\'état initial: ${error.message}`);
+                updateStatus('Erreur lors du test - Vérifiez la console', 'error');
+            }
+        }
+
+        function testCaller() {
+            updateStatus('Test de l\'appelant...', 'warning');
+            addResult('🎯 Début du test de l\'appelant (8888)');
+            
+            // Simulate clicking the call button
+            try {
+                const callerDoc = callerFrame.contentDocument || callerFrame.contentWindow.document;
+                const callButton = Array.from(callerDoc.querySelectorAll('button')).find(btn => 
+                    btn.title === 'Appeler' || btn.textContent.includes('Appeler')
+                );
+                
+                if (callButton && !callButton.disabled) {
+                    callButton.click();
+                    addResult('✅ Bouton "Appeler" cliqué chez l\'appelant');
+                    
+                    setTimeout(() => {
+                        testCallingState();
+                    }, 2000);
+                } else {
+                    addResult('❌ Bouton "Appeler" non trouvé ou désactivé chez l\'appelant');
+                }
+            } catch (error) {
+                addResult(`❌ Erreur lors du test de l\'appelant: ${error.message}`);
+            }
+        }
+
+        function testCallee() {
+            updateStatus('Test de l\'appelé...', 'warning');
+            addResult('🎯 Début du test de l\'appelé (8889)');
+            
+            // Check incoming call state
+            try {
+                const calleeDoc = calleeFrame.contentDocument || calleeFrame.contentWindow.document;
+                const answerButton = Array.from(calleeDoc.querySelectorAll('button')).find(btn => 
+                    btn.title === 'Répondre' || btn.textContent.includes('Répondre')
+                );
+                const rejectButton = Array.from(calleeDoc.querySelectorAll('button')).find(btn => 
+                    btn.title === 'Rejeter' || btn.textContent.includes('Rejeter')
+                );
+                
+                if (answerButton && !answerButton.disabled) {
+                    addResult('✅ Bouton "Répondre" actif chez l\'appelé');
+                } else {
+                    addResult('❌ Bouton "Répondre" non trouvé ou désactivé chez l\'appelé');
+                }
+                
+                if (rejectButton && !rejectButton.disabled) {
+                    addResult('✅ Bouton "Rejeter" actif chez l\'appelé');
+                } else {
+                    addResult('❌ Bouton "Rejeter" non trouvé ou désactivé chez l\'appelé');
+                }
+                
+                updateStatus('Test de l\'appelé terminé', 'success');
+            } catch (error) {
+                addResult(`❌ Erreur lors du test de l\'appelé: ${error.message}`);
+            }
+        }
+
+        function testCallingState() {
+            updateStatus('Vérification de l\'état d\'appel en cours...', 'warning');
+            
+            try {
+                const callerDoc = callerFrame.contentDocument || callerFrame.contentWindow.document;
+                const hangupButton = Array.from(callerDoc.querySelectorAll('button')).find(btn => 
+                    btn.title === 'Raccrocher' || btn.textContent.includes('Raccrocher')
+                );
+                
+                if (hangupButton && !hangupButton.disabled) {
+                    addResult('✅ Bouton "Raccrocher" actif pendant l\'appel');
+                } else {
+                    addResult('❌ Bouton "Raccrocher" non trouvé ou désactivé pendant l\'appel');
+                }
+                
+                updateStatus('Test de l\'état d\'appel en cours terminé', 'success');
+            } catch (error) {
+                addResult(`❌ Erreur lors du test de l\'état d\'appel: ${error.message}`);
+            }
+        }
+
+        function stopTest() {
+            callerFrame.src = 'about:blank';
+            calleeFrame.src = 'about:blank';
+            updateStatus('Test arrêté', 'warning');
+            addResult('⏹️ Test arrêté par l\'utilisateur');
+        }
+
+        function updateStatus(message, type) {
+            const statusEl = document.getElementById('test-status');
+            statusEl.className = `status ${type}`;
+            statusEl.textContent = message;
+        }
+
+        function addResult(message) {
+            const resultsEl = document.getElementById('test-results');
+            const timestamp = new Date().toLocaleTimeString();
+            testResults.push(`[${timestamp}] ${message}`);
+            resultsEl.innerHTML = testResults.map(result => `<div>${result}</div>`).join('');
+        }
+
+        // Auto-start basic connectivity test
+        window.onload = () => {
+            setTimeout(() => {
+                fetch('http://localhost:3015/live-shopping?vendorId=8888&clientId=8889&mode=vendor')
+                    .then(response => {
+                        if (response.ok) {
+                            addResult('✅ Serveur Live Shopping accessible');
+                        } else {
+                            addResult('❌ Serveur Live Shopping inaccessible');
+                        }
+                    })
+                    .catch(error => {
+                        addResult(`❌ Erreur de connexion au serveur: ${error.message}`);
+                    });
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

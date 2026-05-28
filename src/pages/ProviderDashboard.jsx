@@ -1,0 +1,714 @@
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { useThemeStore } from '../stores/themeStore';
+import { supabase } from '../config/supabase';
+
+function safeParseJson(raw, fallback) {
+  try {
+    const parsed = raw ? JSON.parse(raw) : fallback;
+    return parsed;
+  } catch {
+    return fallback;
+  }
+}
+
+function formatMoneyXof(amount) {
+  const n = Number(amount || 0);
+  if (!Number.isFinite(n)) return '0 FCFA';
+  return `${Math.round(n).toLocaleString('fr-FR')} FCFA`;
+}
+
+function formatDateTime(raw) {
+  const d = raw ? new Date(raw) : null;
+  if (!d || Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleString('fr-FR');
+}
+
+function invoiceNumberFromPayment(p) {
+  const paidAt = p?.paidAt ? new Date(p.paidAt) : null;
+  const y = paidAt && !Number.isNaN(paidAt.getTime()) ? paidAt.getFullYear() : new Date().getFullYear();
+  const m = paidAt && !Number.isNaN(paidAt.getTime()) ? String(paidAt.getMonth() + 1).padStart(2, '0') : '01';
+  const d = paidAt && !Number.isNaN(paidAt.getTime()) ? String(paidAt.getDate()).padStart(2, '0') : '01';
+  const suffix = String(p?.id || p?.provider || Date.now()).slice(-6).replace(/[^a-zA-Z0-9]/g, '').padStart(6, '0');
+  return `INV-${y}${m}${d}-${suffix}`;
+}
+
+function normalizeEmail(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function downloadTextFile(filename, content, mime) {
+  const blob = new Blob([content], { type: mime || 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function csvEscape(value) {
+  const s = String(value ?? '');
+  if (/[",\n\r;]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+export default function ProviderDashboard() {
+  const { isDark } = useThemeStore();
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState('overview');
+  const [providerProfile, setProviderProfile] = useState(null);
+
+  const returnTo = String(searchParams.get('return') || '').trim();
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        const userId = auth?.user?.id;
+        if (!userId) return;
+        const { data } = await supabase
+          .from('providers')
+          .select('id, status, is_visible, slug, name, created_at, approved_at')
+          .eq('user_id', userId)
+          .maybeSingle();
+        if (!cancelled) setProviderProfile(data || null);
+      } catch {
+        if (!cancelled) setProviderProfile(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const currentUser = useMemo(() => {
+    return safeParseJson(localStorage.getItem('mangoo-current-user') || localStorage.getItem('user'), null);
+  }, []);
+
+  const email = normalizeEmail(currentUser?.email);
+  const vendorIdFromQuery = String(searchParams.get('vendorId') || '').trim();
+
+  const allProviders = useMemo(() => {
+    const legacy = safeParseJson(localStorage.getItem('mangoo_vendors'), []);
+    const custom = safeParseJson(localStorage.getItem('mangoo_custom_vendors'), []);
+    const list = [...(Array.isArray(legacy) ? legacy : []), ...(Array.isArray(custom) ? custom : [])];
+
+    const allowedIds = (() => {
+      if (email) {
+        const raw = localStorage.getItem(`mangoo_my_provider_ids:${email}`);
+        const parsed = safeParseJson(raw, []);
+        if (Array.isArray(parsed) && parsed.length) return new Set(parsed.map((x) => String(x)));
+      }
+      const single = localStorage.getItem('mangoo_my_provider_id');
+      return single ? new Set([String(single)]) : new Set();
+    })();
+
+    const providers = list
+      .filter((v) => String(v?.kind || '').toLowerCase() === 'service')
+      .filter((v) => {
+        if (vendorIdFromQuery && String(v?.id) === String(vendorIdFromQuery)) return true;
+        if (email && normalizeEmail(v?.ownerEmail) === email) return true;
+        if (allowedIds.size && allowedIds.has(String(v?.id))) return true;
+        return false;
+      })
+      .map((v) => ({
+        id: String(v?.id),
+        name: String(v?.name || '').trim() || 'Prestataire',
+        trade: String(v?.trade || '').trim(),
+        isMobile: !!v?.isMobile,
+        coverage: Array.isArray(v?.coverage) ? v.coverage.filter(Boolean) : [],
+      }));
+
+    const byId = new Map();
+    providers.forEach((p) => {
+      if (!byId.has(p.id)) byId.set(p.id, p);
+    });
+    return Array.from(byId.values());
+  }, [email, vendorIdFromQuery]);
+
+  const [selectedProviderId, setSelectedProviderId] = useState(() => {
+    if (vendorIdFromQuery) return vendorIdFromQuery;
+    const first = allProviders[0]?.id;
+    return first || '';
+  });
+
+  const selectedProvider = useMemo(() => {
+    return allProviders.find((p) => p.id === selectedProviderId) || null;
+  }, [allProviders, selectedProviderId]);
+
+  const payments = useMemo(() => {
+    const raw = safeParseJson(localStorage.getItem('mangoo_service_payments'), []);
+    const list = Array.isArray(raw) ? raw : [];
+    const filtered = selectedProviderId
+      ? list.filter((p) => String(p?.vendorId) === String(selectedProviderId))
+      : list;
+    return filtered.map((p) => ({
+      id: String(p?.id || ''),
+      requestId: String(p?.requestId || ''),
+      vendorId: String(p?.vendorId || ''),
+      vendorName: String(p?.vendorName || ''),
+      userId: String(p?.userId || ''),
+      amount: Number(p?.amount || 0),
+      currency: String(p?.currency || 'XOF'),
+      provider: String(p?.provider || ''),
+      paidAt: String(p?.paidAt || ''),
+    }));
+  }, [selectedProviderId]);
+
+  const [requestMetaVersion, setRequestMetaVersion] = useState(0);
+  const requestMeta = useMemo(() => {
+    const raw = safeParseJson(localStorage.getItem('mangoo_service_request_meta'), {});
+    return raw && typeof raw === 'object' ? raw : {};
+  }, [requestMetaVersion]);
+
+  const setRequestMeta = useCallback((requestId, patch) => {
+    try {
+      const key = 'mangoo_service_request_meta';
+      const raw = localStorage.getItem(key);
+      const obj = safeParseJson(raw, {});
+      const meta = obj && typeof obj === 'object' ? obj : {};
+      const prev = meta[requestId] && typeof meta[requestId] === 'object' ? meta[requestId] : {};
+      meta[requestId] = { ...prev, ...patch, updatedAt: new Date().toISOString() };
+      localStorage.setItem(key, JSON.stringify(meta));
+      setRequestMetaVersion((v) => v + 1);
+    } catch {
+    }
+  }, []);
+
+  const requests = useMemo(() => {
+    const raw = safeParseJson(localStorage.getItem('mangoo_connect_requests'), []);
+    const list = Array.isArray(raw) ? raw : [];
+    const filtered = selectedProviderId
+      ? list.filter((r) => String(r?.vendorId) === String(selectedProviderId))
+      : list;
+    return filtered.map((r) => ({
+      requestId: `req:${String(r?.vendorId || '')}:${String(r?.ts || '')}`,
+      ts: Number(r?.ts || 0),
+      vendorId: String(r?.vendorId || ''),
+      vendorName: String(r?.vendorName || ''),
+      trade: String(r?.trade || ''),
+      quartier: String(r?.quartier || ''),
+      urgent: !!r?.urgent,
+      devis: !!r?.devis,
+      text: String(r?.text || ''),
+    }));
+  }, [selectedProviderId]);
+
+  const goToServiceCheckout = useCallback((opts) => {
+    const amountRaw = prompt('Montant de la prestation (FCFA) :', '5000');
+    const cleaned = String(amountRaw || '').replace(/[^\d]/g, '');
+    const amount = Number(cleaned);
+    if (!Number.isFinite(amount) || amount <= 0) return;
+    const params = new URLSearchParams({
+      vendorId: String(selectedProviderId || ''),
+      vendorName: String(selectedProvider?.name || ''),
+      amount: String(amount),
+      return: window.location.href,
+      requestId: String(opts?.requestId || ''),
+    });
+    window.location.href = `/service-checkout?${params.toString()}`;
+  }, [selectedProvider?.name, selectedProviderId]);
+
+  const exportPaymentsCsv = useCallback(() => {
+    const rows = payments.map((p) => [
+      p.paidAt,
+      p.userId,
+      p.provider,
+      p.amount,
+      p.currency,
+      p.vendorId,
+      p.requestId,
+    ]);
+    const header = ['date', 'client', 'mode', 'montant', 'devise', 'prestataire_id', 'request_id'];
+    const csv = [header, ...rows].map((r) => r.map(csvEscape).join(';')).join('\n');
+    downloadTextFile(`paiements_${selectedProviderId || 'prestataire'}.csv`, csv, 'text/csv;charset=utf-8');
+  }, [payments, selectedProviderId]);
+
+  const exportRequestsCsv = useCallback(() => {
+    const rows = requests.map((r) => {
+      const meta = requestMeta[r.requestId] || {};
+      const status = String(meta?.status || 'new');
+      const paid = meta?.paid ? 'yes' : 'no';
+      return [
+        r.ts ? new Date(r.ts).toISOString() : '',
+        r.devis ? 'devis' : 'message',
+        r.urgent ? 'urgent' : 'normal',
+        r.quartier,
+        r.text,
+        status,
+        paid,
+        r.requestId,
+      ];
+    });
+    const header = ['date', 'type', 'priorite', 'quartier', 'message', 'status', 'paid', 'request_id'];
+    const csv = [header, ...rows].map((r) => r.map(csvEscape).join(';')).join('\n');
+    downloadTextFile(`prestations_${selectedProviderId || 'prestataire'}.csv`, csv, 'text/csv;charset=utf-8');
+  }, [requestMeta, requests, selectedProviderId]);
+
+  const exportPaymentsPdf = useCallback(() => {
+    const providerLabel = selectedProvider?.name || selectedProviderId || 'Prestataire';
+    const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Paiements ${providerLabel}</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;margin:0;padding:24px;color:#111827;}
+.wrap{max-width:920px;margin:0 auto;}
+.title{font-size:20px;font-weight:900;margin:0;}
+.muted{color:#6b7280;margin-top:6px;}
+table{width:100%;border-collapse:collapse;margin-top:14px;}
+th,td{border-bottom:1px solid #e5e7eb;padding:10px 8px;text-align:left;font-size:13px;}
+th{color:#374151;font-weight:900;}
+.right{text-align:right;}
+@media print { .no-print{display:none;} body{padding:0;} }
+</style></head><body><div class="wrap">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+  <div><div class="title">Rapport paiements</div><div class="muted">${providerLabel} • ${new Date().toLocaleString('fr-FR')}</div></div>
+  <div class="no-print" style="display:flex;gap:10px;">
+    <button onclick="window.print()" style="padding:10px 14px;border-radius:10px;border:1px solid #111827;background:#111827;color:white;font-weight:900;cursor:pointer;">Imprimer / PDF</button>
+    <button onclick="window.close()" style="padding:10px 14px;border-radius:10px;border:1px solid #e5e7eb;background:white;font-weight:900;cursor:pointer;">Fermer</button>
+  </div>
+</div>
+<table><thead><tr><th>Date</th><th>Client</th><th>Mode</th><th class="right">Montant</th></tr></thead><tbody>
+${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p.userId)}</td><td>${csvEscape(String(p.provider || '').toUpperCase())}</td><td class="right">${formatMoneyXof(p.amount)}</td></tr>`).join('') || `<tr><td colspan="4">Aucun paiement</td></tr>`}
+</tbody></table>
+</div></body></html>`;
+    const w = window.open('', '_blank');
+    if (!w) return;
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+  }, [payments, selectedProvider?.name, selectedProviderId]);
+
+  const stats = useMemo(() => {
+    const total = payments.reduce((sum, p) => sum + (Number.isFinite(p.amount) ? p.amount : 0), 0);
+    const count = payments.length;
+    const last = payments[0]?.paidAt || null;
+    return { total, count, last };
+  }, [payments]);
+
+  const printInvoice = useCallback((payment) => {
+    const invoiceNo = invoiceNumberFromPayment(payment);
+    const providerName = selectedProvider?.name || payment?.vendorName || payment?.vendorId || 'Prestataire';
+    const city = selectedProvider?.coverage?.[0] || '';
+    const trade = selectedProvider?.trade || '';
+    const paidAt = formatDateTime(payment?.paidAt);
+
+    const html = `<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${invoiceNo}</title>
+    <style>
+      body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;margin:0;padding:24px;color:#111827;}
+      .wrap{max-width:820px;margin:0 auto;}
+      .row{display:flex;justify-content:space-between;gap:16px;}
+      .box{border:1px solid #e5e7eb;border-radius:12px;padding:16px;}
+      .muted{color:#6b7280;}
+      .title{font-size:22px;font-weight:800;margin:0;}
+      .h2{font-size:16px;font-weight:800;margin:0 0 8px 0;}
+      table{width:100%;border-collapse:collapse;margin-top:12px;}
+      th,td{border-bottom:1px solid #e5e7eb;padding:10px 8px;text-align:left;font-size:14px;}
+      th{color:#374151;font-weight:800;}
+      .right{text-align:right;}
+      .total{font-size:18px;font-weight:900;}
+      @media print { .no-print{display:none;} body{padding:0;} .box{border-color:#d1d5db;} }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="row" style="align-items:flex-start;">
+        <div>
+          <p class="title">Facture</p>
+          <p class="muted" style="margin:6px 0 0 0;">${invoiceNo}</p>
+        </div>
+        <div class="no-print" style="display:flex;gap:10px;">
+          <button onclick="window.print()" style="padding:10px 14px;border-radius:10px;border:1px solid #111827;background:#111827;color:white;font-weight:800;cursor:pointer;">Imprimer</button>
+          <button onclick="window.close()" style="padding:10px 14px;border-radius:10px;border:1px solid #e5e7eb;background:white;font-weight:800;cursor:pointer;">Fermer</button>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:16px;">
+        <div class="box" style="flex:1;">
+          <div class="h2">Prestataire</div>
+          <div style="font-weight:900;">${providerName}</div>
+          <div class="muted" style="margin-top:6px;">${[trade, city].filter(Boolean).join(' • ') || '—'}</div>
+        </div>
+        <div class="box" style="flex:1;">
+          <div class="h2">Détails</div>
+          <div class="muted">Date de paiement</div>
+          <div style="font-weight:900;margin-bottom:8px;">${paidAt}</div>
+          <div class="muted">Mode</div>
+          <div style="font-weight:900;">${String(payment?.provider || '').toUpperCase() || '—'}</div>
+        </div>
+      </div>
+
+      <div class="box" style="margin-top:16px;">
+        <div class="h2">Prestation</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th class="right">Montant</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Paiement d'une prestation</td>
+              <td class="right">${formatMoneyXof(payment?.amount)}</td>
+            </tr>
+            <tr>
+              <td class="right total" colspan="2">Total: ${formatMoneyXof(payment?.amount)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="muted" style="margin-top:14px;font-size:12px;">
+        Cette facture est générée automatiquement par MangooTech (mode démo).
+      </div>
+    </div>
+  </body>
+</html>`;
+
+    const w = window.open('', '_blank');
+    if (!w) return;
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+  }, [selectedProvider]);
+
+  const title = 'Espace Prestataire';
+
+  const goBackToProvider = useCallback(() => {
+    try {
+      if (selectedProviderId) {
+        localStorage.setItem('mangoo-open-vendor-id', String(selectedProviderId));
+      }
+    } catch {
+    }
+    const target = returnTo || '/mangoo-local.html';
+    window.location.href = target;
+  }, [returnTo, selectedProviderId]);
+
+  return (
+    <div className={`min-h-screen ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'} py-10`}>
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-6">
+          <div>
+            <div className="text-2xl font-black">{title}</div>
+            <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm mt-1`}>
+              Factures, paiements et historique des prestations
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+            <button
+              type="button"
+              onClick={goBackToProvider}
+              className={`px-3 py-2 rounded-xl text-sm font-black border ${
+                isDark ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              ← Retour au prestataire
+            </button>
+            <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm font-semibold`}>Prestataire</div>
+            <select
+              value={selectedProviderId}
+              onChange={(e) => setSelectedProviderId(e.target.value)}
+              className={`px-3 py-2 rounded-xl border text-sm font-semibold outline-none ${
+                isDark ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'
+              }`}
+            >
+              {allProviders.length === 0 ? (
+                <option value="">Aucun prestataire</option>
+              ) : (
+                allProviders.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}{p.trade ? ` • ${p.trade}` : ''}
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
+        </div>
+
+        <div className={`mb-6 rounded-2xl border p-4 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          {providerProfile ? (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="text-sm font-black">Profil prestataire (validation)</div>
+                <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm`}>
+                  Statut: <span className="font-bold">{String(providerProfile?.status || 'pending')}</span> · Visible: <span className="font-bold">{providerProfile?.is_visible ? 'Oui' : 'Non'}</span>
+                </div>
+              </div>
+              <a
+                href="/provider/apply"
+                className={`px-3 py-2 rounded-xl text-sm font-black border ${
+                  isDark ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                Modifier mon profil
+              </a>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="text-sm font-black">Profil prestataire (validation)</div>
+                <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm`}>
+                  Soumettez votre profil pour approbation admin avant visibilité publique.
+                </div>
+              </div>
+              <a
+                href="/provider/apply"
+                className="px-3 py-2 rounded-xl text-sm font-black bg-gradient-to-r from-orange-500 to-green-600 text-white"
+              >
+                Soumettre mon profil
+              </a>
+            </div>
+          )}
+        </div>
+
+        {allProviders.length === 0 ? (
+          <div className={`rounded-2xl border p-6 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+            <div className="text-xl font-black">Aucun prestataire rattaché</div>
+            <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} mt-2`}>
+              Créez un profil prestataire dans Mangoo Local+ puis revenez ici.
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-wrap gap-2 mb-6">
+              {[
+                { key: 'overview', label: 'Vue d’ensemble' },
+                { key: 'payments', label: 'Paiements' },
+                { key: 'invoices', label: 'Factures' },
+                { key: 'requests', label: 'Prestations' },
+              ].map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => setTab(t.key)}
+                  className={`px-3 py-2 rounded-full text-sm font-black border transition-colors ${
+                    tab === t.key
+                      ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white border-transparent'
+                      : (isDark ? 'bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-700' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50')
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {tab === 'overview' && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className={`rounded-2xl border p-5 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                  <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm font-semibold`}>Total encaissé</div>
+                  <div className="text-3xl font-black mt-2">{formatMoneyXof(stats.total)}</div>
+                </div>
+                <div className={`rounded-2xl border p-5 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                  <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm font-semibold`}>Paiements</div>
+                  <div className="text-3xl font-black mt-2">{stats.count}</div>
+                  <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm mt-1`}>Dernier: {formatDateTime(stats.last)}</div>
+                </div>
+                <div className={`rounded-2xl border p-5 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                  <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm font-semibold`}>Demandes (devis/messages)</div>
+                  <div className="text-3xl font-black mt-2">{requests.length}</div>
+                </div>
+              </div>
+            )}
+
+            {(tab === 'payments' || tab === 'invoices') && (
+              <div className={`rounded-2xl border overflow-hidden ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                <div className="p-4 flex items-center justify-between">
+                  <div className="font-black">{tab === 'payments' ? 'Historique des paiements' : 'Factures'}</div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={exportPaymentsPdf}
+                      className={`px-3 py-2 rounded-xl text-xs font-black border ${
+                        isDark ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50'
+                      }`}
+                    >
+                      Export PDF
+                    </button>
+                    <button
+                      type="button"
+                      onClick={exportPaymentsCsv}
+                      className={`px-3 py-2 rounded-xl text-xs font-black border ${
+                        isDark ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50'
+                      }`}
+                    >
+                      Export CSV
+                    </button>
+                    <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm`}>{payments.length} élément(s)</div>
+                  </div>
+                </div>
+                <div className="overflow-auto">
+                  <table className="min-w-full text-sm">
+                    <thead className={`${isDark ? 'bg-gray-900/60' : 'bg-gray-50'}`}>
+                      <tr>
+                        <th className="text-left px-4 py-3 font-black">Date</th>
+                        <th className="text-left px-4 py-3 font-black">Client</th>
+                        <th className="text-left px-4 py-3 font-black">Mode</th>
+                        <th className="text-right px-4 py-3 font-black">Montant</th>
+                        <th className="text-right px-4 py-3 font-black">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {payments.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className={`px-4 py-10 text-center ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                            Aucun paiement.
+                          </td>
+                        </tr>
+                      ) : (
+                        payments.map((p) => (
+                          <tr key={p.id} className={`${isDark ? 'border-t border-gray-700' : 'border-t border-gray-200'}`}>
+                            <td className="px-4 py-3">{formatDateTime(p.paidAt)}</td>
+                            <td className="px-4 py-3">{p.userId || '—'}</td>
+                            <td className="px-4 py-3">{String(p.provider || '').toUpperCase() || '—'}</td>
+                            <td className="px-4 py-3 text-right font-black">{formatMoneyXof(p.amount)}</td>
+                            <td className="px-4 py-3 text-right">
+                              <button
+                                type="button"
+                                onClick={() => printInvoice(p)}
+                                className={`px-3 py-2 rounded-xl text-xs font-black border ${
+                                  isDark ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50'
+                                }`}
+                              >
+                                Imprimer facture
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {tab === 'requests' && (
+              <div className={`rounded-2xl border overflow-hidden ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                <div className="p-4 flex items-center justify-between">
+                  <div className="font-black">Historique des prestations (demandes)</div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={exportRequestsCsv}
+                      className={`px-3 py-2 rounded-xl text-xs font-black border ${
+                        isDark ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50'
+                      }`}
+                    >
+                      Export CSV
+                    </button>
+                    <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm`}>{requests.length} élément(s)</div>
+                  </div>
+                </div>
+                <div className="overflow-auto">
+                  <table className="min-w-full text-sm">
+                    <thead className={`${isDark ? 'bg-gray-900/60' : 'bg-gray-50'}`}>
+                      <tr>
+                        <th className="text-left px-4 py-3 font-black">Date</th>
+                        <th className="text-left px-4 py-3 font-black">Type</th>
+                        <th className="text-left px-4 py-3 font-black">Quartier</th>
+                        <th className="text-left px-4 py-3 font-black">Message</th>
+                        <th className="text-left px-4 py-3 font-black">Statut</th>
+                        <th className="text-right px-4 py-3 font-black">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {requests.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className={`px-4 py-10 text-center ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                            Aucune demande.
+                          </td>
+                        </tr>
+                      ) : (
+                        requests
+                          .slice()
+                          .sort((a, b) => (b.ts || 0) - (a.ts || 0))
+                          .map((r) => (
+                            <tr key={`${r.ts}-${r.text}`} className={`${isDark ? 'border-t border-gray-700' : 'border-t border-gray-200'}`}>
+                              <td className="px-4 py-3">{r.ts ? new Date(r.ts).toLocaleString('fr-FR') : '—'}</td>
+                              <td className="px-4 py-3">
+                                {r.devis ? 'Devis' : 'Message'}{r.urgent ? ' • Urgent' : ''}
+                              </td>
+                              <td className="px-4 py-3">{r.quartier || '—'}</td>
+                              <td className="px-4 py-3">{r.text || '—'}</td>
+                              <td className="px-4 py-3">
+                                {(() => {
+                                  const meta = requestMeta[r.requestId] || {};
+                                  const status = String(meta?.status || 'new');
+                                  const paid = meta?.paid || payments.some((p) => String(p.requestId || '') === r.requestId);
+                                  const label = status === 'in_progress'
+                                    ? 'En cours'
+                                    : status === 'done'
+                                      ? 'Terminé'
+                                      : status === 'cancelled'
+                                        ? 'Annulé'
+                                        : status === 'paid'
+                                          ? 'Payé'
+                                          : 'Nouveau';
+                                  return (
+                                    <div className="flex items-center gap-2">
+                                      <select
+                                        value={status}
+                                        onChange={(e) => setRequestMeta(r.requestId, { status: e.target.value })}
+                                        className={`px-2 py-1 rounded-lg border text-xs font-black ${
+                                          isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'
+                                        }`}
+                                      >
+                                        <option value="new">Nouveau</option>
+                                        <option value="in_progress">En cours</option>
+                                        <option value="done">Terminé</option>
+                                        <option value="cancelled">Annulé</option>
+                                        <option value="paid">Payé</option>
+                                      </select>
+                                      <span className={`text-xs font-black ${paid ? 'text-emerald-500' : (isDark ? 'text-gray-300' : 'text-gray-600')}`}>{paid ? '• payé' : ''}</span>
+                                      <span className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-xs`}>{label}</span>
+                                    </div>
+                                  );
+                                })()}
+                              </td>
+                              <td className="px-4 py-3 text-right">
+                                <div className="flex justify-end gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => goToServiceCheckout({ requestId: r.requestId })}
+                                    className={`px-3 py-2 rounded-xl text-xs font-black border ${
+                                      isDark ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50'
+                                    }`}
+                                  >
+                                    Encaisser
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setRequestMeta(r.requestId, { status: 'done' })}
+                                    className={`px-3 py-2 rounded-xl text-xs font-black border ${
+                                      isDark ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50'
+                                    }`}
+                                  >
+                                    Terminer
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

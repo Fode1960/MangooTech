@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test WebRTC Live Shopping - Button Behavior</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        iframe { width: 100%; height: 600px; border: 1px solid #ccc; }
+        .button-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test WebRTC Live Shopping - Comportement des Boutons</h1>
+        
+        <div class="test-section">
+            <h2>Instructions de Test</h2>
+            <p>Ouvrez deux fenêtres avec les URLs suivantes pour tester le comportement des boutons :</p>
+            <ul>
+                <li><strong>Fenêtre 1 (Appelant - 8888):</strong> <a href="http://localhost:3015/live-shopping?vendorId=8888&clientId=8889&mode=vendor" target="_blank">http://localhost:3015/live-shopping?vendorId=8888&clientId=8889&mode=vendor</a></li>
+                <li><strong>Fenêtre 2 (Appelé - 8889):</strong> <a href="http://localhost:3015/live-shopping?vendorId=8888&clientId=8889&mode=client" target="_blank">http://localhost:3015/live-shopping?vendorId=8888&clientId=8889&mode=client</a></li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>Comportement Attendu des Boutons</h2>
+            <div class="button-grid">
+                <div>
+                    <h3>Appelant (8888)</h3>
+                    <ul>
+                        <li><strong>État initial:</strong> "Appeler" actif, autres inactifs</li>
+                        <li><strong>Pendant l'appel:</strong> "Raccrocher" actif, autres inactifs</li>
+                        <li><strong>En appel:</strong> "Raccrocher" actif, autres inactifs</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>Appelé (8889)</h3>
+                    <ul>
+                        <li><strong>État initial:</strong> "Appeler" actif, autres inactifs</li>
+                        <li><strong>Appel entrant:</strong> "Répondre" et "Rejeter" actifs, autres inactifs</li>
+                        <li><strong>En appel:</strong> "Raccrocher" actif, autres inactifs</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Test Automatisé</h2>
+            <button onclick="runAutomatedTest()">Lancer le Test Automatisé</button>
+            <div id="test-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Test Manuel</h2>
+            <div class="button-grid">
+                <div>
+                    <h3>Appelant (8888)</h3>
+                    <iframe id="caller-frame" src="http://localhost:3015/live-shopping?vendorId=8888&clientId=8889&mode=vendor"></iframe>
+                </div>
+                <div>
+                    <h3>Appelé (8889)</h3>
+                    <iframe id="callee-frame" src="http://localhost:3015/live-shopping?vendorId=8888&clientId=8889&mode=client"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function runAutomatedTest() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<div class="status warning">Test en cours...</div>';
+            
+            // Test basic connectivity
+            setTimeout(() => {
+                fetch('http://localhost:3015/live-shopping?vendorId=8888&clientId=8889&mode=vendor')
+                    .then(response => {
+                        if (response.ok) {
+                            results.innerHTML = '<div class="status success">✅ Serveur accessible</div>';
+                            
+                            // Test WebSocket connection
+                            testWebSocketConnection();
+                        } else {
+                            results.innerHTML = '<div class="status error">❌ Serveur inaccessible</div>';
+                        }
+                    })
+                    .catch(error => {
+                        results.innerHTML = '<div class="status error">❌ Erreur de connexion: ' + error.message + '</div>';
+                    });
+            }, 1000);
+        }
+
+        function testWebSocketConnection() {
+            const results = document.getElementById('test-results');
+            
+            try {
+                const ws = new WebSocket('ws://localhost:8080');
+                
+                ws.onopen = () => {
+                    results.innerHTML += '<div class="status success">✅ WebSocket connecté</div>';
+                    ws.close();
+                };
+                
+                ws.onerror = () => {
+                    results.innerHTML += '<div class="status error">❌ WebSocket erreur</div>';
+                };
+                
+                ws.onclose = () => {
+                    results.innerHTML += '<div class="status warning">ℹ️ WebSocket déconnecté</div>';
+                };
+            } catch (error) {
+                results.innerHTML += '<div class="status error">❌ WebSocket exception: ' + error.message + '</div>';
+            }
+        }
+
+        // Auto-run basic test on page load
+        window.onload = () => {
+            setTimeout(runAutomatedTest, 1000);
+        };
+    </script>
+</body>
+</html>

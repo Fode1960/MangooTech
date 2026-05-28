@@ -1,0 +1,234 @@
+/* Custom styles for MangooTech */
+
+:root {
+  --mango-orange: #FF8C42;
+  --mango-gold: #FFD700;
+  --mango-terracotta: #D2691E;
+  --mango-light: #FFF5E6;
+  --mango-dark: #8B4513;
+}
+
+/* African-inspired animations */
+@keyframes float {
+  0% {
+    transform: translateY(0px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px) scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-mango {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes tribal-pattern {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Utility classes */
+.mango-gradient {
+  background: linear-gradient(135deg, var(--mango-orange), var(--mango-gold), var(--mango-terracotta));
+}
+
+.mango-gradient-light {
+  background: linear-gradient(135deg, var(--mango-light), #FFF8DC, #FFE4B5);
+}
+
+.african-pattern {
+  background-image: 
+    radial-gradient(circle at 25% 25%, var(--mango-orange) 2px, transparent 2px),
+    radial-gradient(circle at 75% 75%, var(--mango-gold) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: 0 0, 10px 10px;
+}
+
+.floating-reaction {
+  animation: float 3s ease-out forwards;
+}
+
+.pulse-live {
+  animation: pulse-mango 2s infinite;
+}
+
+.tribal-rotate {
+  animation: tribal-pattern 20s linear infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(var(--mango-orange), var(--mango-gold));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(var(--mango-terracotta), var(--mango-orange));
+}
+
+/* Button hover effects */
+.mango-button {
+  background: linear-gradient(135deg, var(--mango-orange), var(--mango-gold));
+  transition: all 0.3s ease;
+}
+
+.mango-button:hover {
+  background: linear-gradient(135deg, var(--mango-terracotta), var(--mango-orange));
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 140, 66, 0.3);
+}
+
+/* Card styles */
+.mango-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(255, 140, 66, 0.1);
+  transition: all 0.3s ease;
+}
+
+.mango-card:hover {
+  box-shadow: 0 8px 30px rgba(255, 140, 66, 0.2);
+  transform: translateY(-4px);
+}
+
+/* Text gradients */
+.text-mango-gradient {
+  background: linear-gradient(135deg, var(--mango-orange), var(--mango-gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Border gradients */
+.border-mango-gradient {
+  border: 2px solid;
+  border-image: linear-gradient(135deg, var(--mango-orange), var(--mango-gold)) 1;
+}
+
+/* Loading animations */
+.mango-loader {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--mango-orange);
+  border-right: 4px solid var(--mango-gold);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive design helpers */
+@media (max-width: 768px) {
+  .mango-card {
+    margin: 0 8px;
+  }
+  
+  .mango-gradient {
+    background: linear-gradient(135deg, var(--mango-orange), var(--mango-gold));
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --mango-light: #2D1810;
+    --mango-dark: #FFE4B5;
+  }
+}
+
+/* Focus styles for accessibility */
+.mango-focus:focus {
+  outline: 2px solid var(--mango-orange);
+  outline-offset: 2px;
+}
+
+/* Transition utilities */
+.mango-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom checkbox */
+.mango-checkbox {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--mango-orange);
+  border-radius: 4px;
+  position: relative;
+  cursor: pointer;
+}
+
+.mango-checkbox:checked {
+  background: linear-gradient(135deg, var(--mango-orange), var(--mango-gold));
+}
+
+.mango-checkbox:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: bold;
+}
+
+/* Video call styles */
+.video-call-container {
+  background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.video-call-local {
+  border: 3px solid var(--mango-orange);
+  border-radius: 12px;
+}
+
+.video-call-remote {
+  border: 3px solid var(--mango-gold);
+  border-radius: 12px;
+}
+
+/* Live shopping styles */
+.live-indicator {
+  background: linear-gradient(45deg, #ff0000, #ff6b6b);
+  animation: pulse-live 1.5s infinite;
+}
+
+.shopping-cart-bounce {
+  animation: bounce 0.5s ease-in-out;
+}
+
+@keyframes bounce {
+  0%, 20%, 60%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  80% {
+    transform: translateY(-5px);
+  }
+}

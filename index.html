@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>MangooTech - La Plateforme E-commerce Africaine</title>
+    <script>
+      // Initialize theme immediately to prevent flash
+      const initTheme = () => {
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      };
+      initTheme();
+
+      try {
+        const host = String(location.hostname || '')
+        const isDevHost = host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')
+        if (isDevHost && 'serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations()
+            .then((regs) => Promise.all((regs || []).map((r) => r.unregister().catch(() => false))))
+            .catch(() => {})
+          if (window.caches && typeof window.caches.keys === 'function') {
+            window.caches.keys()
+              .then((keys) => Promise.all((keys || []).map((k) => window.caches.delete(k).catch(() => false))))
+              .catch(() => {})
+          }
+        }
+      } catch {
+      }
+
+      const showBootError = (title, detail) => {
+        try {
+          const existing = document.getElementById('boot-error-overlay');
+          if (existing) return;
+
+          const overlay = document.createElement('div');
+          overlay.id = 'boot-error-overlay';
+          overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);color:#fff;z-index:99999;display:flex;align-items:flex-start;justify-content:center;padding:24px;box-sizing:border-box;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;';
+
+          const box = document.createElement('div');
+          box.style.cssText = 'max-width:980px;width:100%;border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:16px;background:rgba(255,255,255,0.06);';
+
+          const header = document.createElement('div');
+          header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;';
+
+          const h = document.createElement('div');
+          h.textContent = title;
+          h.style.cssText = 'font-weight:800;font-size:14px;';
+
+          const close = document.createElement('button');
+          close.type = 'button';
+          close.textContent = 'Fermer';
+          close.style.cssText = 'background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.25);border-radius:10px;padding:8px 12px;font-weight:800;cursor:pointer;';
+          close.onclick = () => {
+            try { overlay.remove(); } catch {}
+          };
+
+          header.appendChild(h);
+          header.appendChild(close);
+
+          const pre = document.createElement('pre');
+          pre.textContent = String(detail || '');
+          pre.style.cssText = 'white-space:pre-wrap;line-height:1.35;font-size:12px;margin:0;';
+
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.textContent = 'Recharger';
+          btn.style.cssText = 'margin-top:12px;background:#f97316;color:#111;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;';
+          btn.onclick = () => window.location.reload();
+
+          box.appendChild(header);
+          box.appendChild(pre);
+          box.appendChild(btn);
+          overlay.appendChild(box);
+          document.body.appendChild(overlay);
+        } catch {
+        }
+      };
+
+      try {
+        window.showBootError = showBootError;
+      } catch {
+      }
+
+      window.addEventListener('error', (e) => {
+        try {
+          const err = e?.error;
+          const name = String(err?.name || '');
+          const msg0 = String(err?.message || e?.message || '');
+          if (name === 'AbortError' || msg0.includes('signal is aborted') || msg0.includes('aborted')) {
+            e.preventDefault();
+            return;
+          }
+        } catch {
+        }
+
+        const msg = e?.error?.stack || e?.message || 'Erreur JavaScript au démarrage.';
+        showBootError('Erreur au démarrage (JavaScript)', msg);
+      });
+
+      window.addEventListener('unhandledrejection', (e) => {
+        try {
+          const reason = e?.reason;
+          const name = String(reason?.name || '');
+          const msg0 = String(reason?.message || '');
+          if (name === 'AbortError' || msg0.includes('signal is aborted') || msg0.includes('aborted')) {
+            e.preventDefault();
+            return;
+          }
+        } catch {
+        }
+
+        const reason = e?.reason;
+        const msg = reason?.stack || reason?.message || String(reason || 'Promesse rejetée au démarrage.');
+        showBootError('Erreur au démarrage (Promise)', msg);
+      });
+
+    </script>
+  </head>
+  <body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <div id="root" style="min-height: 100vh; box-sizing:border-box;">
+      <div id="boot-fallback" style="max-width: 560px; width:100%; text-align:center; color:#374151; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 120px auto; padding: 0 24px; box-sizing:border-box;">
+        <div style="font-weight: 800; font-size: 18px; margin-bottom: 8px;">Chargement de MangooTech…</div>
+        <div style="font-size: 13px; opacity: 0.85;">Si cet écran reste affiché, l’application n’a pas démarré.</div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

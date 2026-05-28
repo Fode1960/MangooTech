@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test QR Code Localhost</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .qr-section {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .qr-code {
+            margin: 20px auto;
+        }
+        .url-display {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        .test-instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .scan-test {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test QR Code Localhost</h1>
+        <p>Ce test vérifie que les QR codes générés pointent vers localhost:3015</p>
+
+        <div class="test-instructions">
+            <h3>📋 Instructions de test</h3>
+            <ol>
+                <li>Scannez le QR code avec votre téléphone</li>
+                <li>Le QR code doit pointer vers http://localhost:3015</li>
+                <li>Testez avec plusieurs boutiques</li>
+            </ol>
+        </div>
+
+        <div class="qr-section">
+            <h3>Boutique 1</h3>
+            <div class="url-display" id="url1">http://localhost:3015/shop/boutique-1</div>
+            <div class="qr-code" id="qr1"></div>
+            <button onclick="testQR(1)">🔄 Générer QR Code</button>
+            <button onclick="testScan(1)">📱 Tester le scan</button>
+        </div>
+
+        <div class="qr-section">
+            <h3>Boutique 2</h3>
+            <div class="url-display" id="url2">http://localhost:3015/shop/boutique-2</div>
+            <div class="qr-code" id="qr2"></div>
+            <button onclick="testQR(2)">🔄 Générer QR Code</button>
+            <button onclick="testScan(2)">📱 Tester le scan</button>
+        </div>
+
+        <div class="scan-test">
+            <h3>🔍 Résultat du test de scan</h3>
+            <div id="scanResult" class="status" style="display: none;"></div>
+        </div>
+
+        <div class="qr-section">
+            <h3>🎯 Test de navigation directe</h3>
+            <p>Cliquez sur les liens pour tester la navigation directe :</p>
+            <div style="margin: 20px 0;">
+                <a href="http://localhost:3015/shop/boutique-1" target="_blank" style="display: inline-block; background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 5px;">🔗 Boutique 1</a>
+                <a href="http://localhost:3015/shop/boutique-2" target="_blank" style="display: inline-block; background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 5px;">🔗 Boutique 2</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Générer les QR codes au chargement
+        window.onload = function() {
+            testQR(1);
+            testQR(2);
+        };
+
+        function testQR(boutiqueNum) {
+            const url = document.getElementById(`url${boutiqueNum}`).textContent;
+            const qrDiv = document.getElementById(`qr${boutiqueNum}`);
+            
+            // Effacer le QR code précédent
+            qrDiv.innerHTML = '';
+            
+            // Générer le nouveau QR code
+            QRCode.toCanvas(url, {
+                width: 200,
+                height: 200,
+                margin: 2,
+                color: {
+                    dark: '#000000',
+                    light: '#FFFFFF'
+                }
+            }, function (error, canvas) {
+                if (error) {
+                    console.error('Erreur lors de la génération du QR code:', error);
+                    qrDiv.innerHTML = '<div class="status error">Erreur: ' + error.message + '</div>';
+                } else {
+                    qrDiv.appendChild(canvas);
+                    console.log(`✅ QR code généré pour boutique ${boutiqueNum}: ${url}`);
+                }
+            });
+        }
+
+        function testScan(boutiqueNum) {
+            const url = document.getElementById(`url${boutiqueNum}`).textContent;
+            const resultDiv = document.getElementById('scanResult');
+            
+            // Simuler un test de scan
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'status success';
+            resultDiv.innerHTML = `
+                <strong>✅ Test de scan réussi !</strong><br>
+                Boutique ${boutiqueNum} - URL: ${url}<br>
+                <small>Cette URL pointe vers localhost:3015</small>
+            `;
+            
+            // Vérifier que c'est bien localhost
+            if (url.includes('localhost:3015')) {
+                resultDiv.innerHTML += '<br><span style="color: green;">✅ URL correcte (localhost)</span>';
+            } else {
+                resultDiv.innerHTML += '<br><span style="color: red;">❌ URL incorrecte (doit être localhost)</span>';
+                resultDiv.className = 'status error';
+            }
+            
+            console.log(`📱 Test de scan pour boutique ${boutiqueNum}: ${url}`);
+        }
+
+        // Fonction pour tester la connexion
+        function testConnection() {
+            fetch('http://localhost:3015/api/health')
+                .then(response => {
+                    const resultDiv = document.getElementById('scanResult');
+                    resultDiv.style.display = 'block';
+                    resultDiv.className = 'status success';
+                    resultDiv.innerHTML = '<strong>✅ Serveur accessible</strong><br>Le serveur localhost:3015 répond correctement.';
+                })
+                .catch(error => {
+                    const resultDiv = document.getElementById('scanResult');
+                    resultDiv.style.display = 'block';
+                    resultDiv.className = 'status error';
+                    resultDiv.innerHTML = '<strong>❌ Serveur inaccessible</strong><br>Assurez-vous que le serveur est démarré sur localhost:3015';
+                });
+        }
+
+        // Ajouter un bouton de test de connexion
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.querySelector('.container');
+            const testButton = document.createElement('button');
+            testButton.textContent = '🌐 Tester la connexion au serveur';
+            testButton.onclick = testConnection;
+            testButton.style.marginTop = '20px';
+            container.appendChild(testButton);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Correction Ultime - Port 3001</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+        .title {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        .status {
+            font-size: 1.2em;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        .btn-danger {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+        }
+        .btn-warning {
+            background: linear-gradient(45deg, #ff9800, #f57c00);
+        }
+        .progress {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .log {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .success { color: #4CAF50; }
+        .error { color: #f44336; }
+        .warning { color: #ff9800; }
+        .info { color: #2196F3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🔧 Correction Ultime du Port</h1>
+        
+        <div class="status" id="status">
+            Initialisation de la correction automatique...
+        </div>
+        
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <div class="log" id="log"></div>
+        
+        <div id="actions">
+            <button onclick="forceRedirectNow()" class="btn">🎯 Redirection Immédiate</button>
+            <button onclick="clearAllCache()" class="btn btn-warning">🧹 Vider Tout le Cache</button>
+            <button onclick="killAllPorts()" class="btn btn-danger">⚡ Arrêter Tous les Ports</button>
+        </div>
+        
+        <div style="margin-top: 30px; font-size: 0.9em; opacity: 0.8;">
+            <p><strong>URL Cible:</strong> http://localhost:3001/dashboard?payment=success&pack=209a0b6e-7888-41a3-9cd1-45907705261a</p>
+        </div>
+    </div>
+
+    <script>
+        const TARGET_URL = 'http://localhost:3001/dashboard?payment=success&pack=209a0b6e-7888-41a3-9cd1-45907705261a';
+        const WRONG_PORTS = ['3001', '3003'];
+        let logElement = document.getElementById('log');
+        let statusElement = document.getElementById('status');
+        let progressBar = document.getElementById('progressBar');
+        let progress = 0;
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = type;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logElement.appendChild(logEntry);
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+        
+        function updateProgress(value) {
+            progress = Math.min(100, Math.max(0, value));
+            progressBar.style.width = progress + '%';
+        }
+        
+        function updateStatus(message) {
+            statusElement.textContent = message;
+            log(message);
+        }
+        
+        // Fonction de redirection immédiate
+        function forceRedirectNow() {
+            log('🎯 Redirection forcée démarrée', 'info');
+            updateStatus('Redirection en cours...');
+            
+            // Méthode 1: window.location.replace (ne garde pas l'historique)
+            try {
+                log('Tentative avec window.location.replace', 'info');
+                window.location.replace(TARGET_URL);
+                return;
+            } catch (e) {
+                log('Échec window.location.replace: ' + e.message, 'error');
+            }
+            
+            // Méthode 2: window.location.href
+            try {
+                log('Tentative avec window.location.href', 'info');
+                window.location.href = TARGET_URL;
+                return;
+            } catch (e) {
+                log('Échec window.location.href: ' + e.message, 'error');
+            }
+            
+            // Méthode 3: window.open avec fermeture de l'onglet actuel
+            try {
+                log('Tentative avec window.open', 'info');
+                const newWindow = window.open(TARGET_URL, '_blank');
+                if (newWindow) {
+                    setTimeout(() => window.close(), 1000);
+                }
+            } catch (e) {
+                log('Échec window.open: ' + e.message, 'error');
+            }
+        }
+        
+        // Fonction de nettoyage complet du cache
+        function clearAllCache() {
+            log('🧹 Nettoyage complet du cache démarré', 'info');
+            updateStatus('Nettoyage du cache en cours...');
+            
+            try {
+                // Vider localStorage
+                localStorage.clear();
+                log('✅ localStorage vidé', 'success');
+                updateProgress(25);
+                
+                // Vider sessionStorage
+                sessionStorage.clear();
+                log('✅ sessionStorage vidé', 'success');
+                updateProgress(50);
+                
+                // Vider les cookies (si possible)
+                document.cookie.split(";").forEach(function(c) {
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+                });
+                log('✅ Cookies vidés', 'success');
+                updateProgress(75);
+                
+                // Forcer le rechargement sans cache
+                setTimeout(() => {
+                    log('🔄 Rechargement forcé sans cache', 'info');
+                    updateProgress(100);
+                    window.location.reload(true);
+                }, 1000);
+                
+            } catch (e) {
+                log('❌ Erreur lors du nettoyage: ' + e.message, 'error');
+            }
+        }
+        
+        // Fonction pour "tuer" les ports problématiques (simulation)
+        function killAllPorts() {
+            log('⚡ Simulation d\'arrêt des ports problématiques', 'warning');
+            updateStatus('Arrêt des processus conflictuels...');
+            
+            // Simulation d'arrêt des ports
+            WRONG_PORTS.forEach((port, index) => {
+                setTimeout(() => {
+                    log(`🔌 Port ${port} : processus arrêté (simulation)`, 'warning');
+                    updateProgress((index + 1) * 50);
+                }, (index + 1) * 500);
+            });
+            
+            setTimeout(() => {
+                log('✅ Tous les ports problématiques ont été traités', 'success');
+                updateStatus('Redirection vers le port correct...');
+                setTimeout(forceRedirectNow, 1000);
+            }, 2000);
+        }
+        
+        // Surveillance continue des redirections
+        function monitorAndFix() {
+            const currentUrl = window.location.href;
+            log('🔍 URL actuelle: ' + currentUrl, 'info');
+            
+            // Vérifier si on est sur un mauvais port
+            for (const wrongPort of WRONG_PORTS) {
+                if (currentUrl.includes(':' + wrongPort)) {
+                    log('🚫 Mauvais port détecté: ' + wrongPort, 'error');
+                    updateStatus(`Mauvais port détecté (${wrongPort}). Correction automatique...`);
+                    setTimeout(forceRedirectNow, 2000);
+                    return;
+                }
+            }
+            
+            // Si on est sur le bon port
+            if (currentUrl.includes(':3001')) {
+                log('✅ Bon port détecté (3002)', 'success');
+                updateStatus('Port correct ! Redirection réussie.');
+                updateProgress(100);
+                return;
+            }
+            
+            // Si on n'est sur aucun port localhost
+            if (!currentUrl.includes('localhost')) {
+                log('⚠️ Pas sur localhost, redirection nécessaire', 'warning');
+                updateStatus('Redirection vers localhost:3001...');
+                setTimeout(forceRedirectNow, 1000);
+            }
+        }
+        
+        // Intercepter TOUS les changements d'URL
+        function interceptAllUrlChanges() {
+            log('👁️ Activation de l\'interception des URLs', 'info');
+            
+            // Intercepter pushState
+            const originalPushState = history.pushState;
+            history.pushState = function(state, title, url) {
+                if (url) {
+                    const originalUrl = url;
+                    for (const wrongPort of WRONG_PORTS) {
+                        if (url.includes(':' + wrongPort)) {
+                            url = url.replace(':' + wrongPort, ':3001');
+                            log(`🔧 URL corrigée: ${originalUrl} → ${url}`, 'success');
+                        }
+                    }
+                }
+                return originalPushState.call(this, state, title, url);
+            };
+            
+            // Intercepter replaceState
+            const originalReplaceState = history.replaceState;
+            history.replaceState = function(state, title, url) {
+                if (url) {
+                    const originalUrl = url;
+                    for (const wrongPort of WRONG_PORTS) {
+                        if (url.includes(':' + wrongPort)) {
+                            url = url.replace(':' + wrongPort, ':3001');
+                            log(`🔧 URL corrigée: ${originalUrl} → ${url}`, 'success');
+                        }
+                    }
+                }
+                return originalReplaceState.call(this, state, title, url);
+            };
+            
+            // Surveiller les changements d'URL en continu
+            let lastUrl = window.location.href;
+            setInterval(() => {
+                const currentUrl = window.location.href;
+                if (currentUrl !== lastUrl) {
+                    log('🔄 Changement d\'URL détecté: ' + currentUrl, 'info');
+                    
+                    for (const wrongPort of WRONG_PORTS) {
+                        if (currentUrl.includes(':' + wrongPort)) {
+                            log('🚫 Mauvais port dans la nouvelle URL', 'error');
+                            forceRedirectNow();
+                            break;
+                        }
+                    }
+                    lastUrl = currentUrl;
+                }
+            }, 500);
+        }
+        
+        // Initialisation automatique
+        function init() {
+            log('🚀 Initialisation de la correction ultime', 'info');
+            updateStatus('Analyse de la situation...');
+            updateProgress(10);
+            
+            setTimeout(() => {
+                interceptAllUrlChanges();
+                updateProgress(30);
+            }, 500);
+            
+            setTimeout(() => {
+                monitorAndFix();
+                updateProgress(50);
+            }, 1000);
+            
+            setTimeout(() => {
+                log('⚡ Système de correction activé', 'success');
+                updateStatus('Système de correction actif - Surveillance en cours');
+                updateProgress(70);
+            }, 1500);
+        }
+        
+        // Démarrage immédiat
+        document.addEventListener('DOMContentLoaded', init);
+        
+        // Redirection immédiate si on détecte un mauvais port
+        const currentUrl = window.location.href;
+        if (currentUrl.includes(':3001') || currentUrl.includes(':3003')) {
+            log('🔥 REDIRECTION IMMÉDIATE NÉCESSAIRE', 'error');
+            setTimeout(forceRedirectNow, 500);
+        }
+        
+        log('📋 Page de correction ultime chargée', 'info');
+    </script>
+</body>
+</html>

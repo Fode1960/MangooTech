@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appel Audio - Mangoo Connect+</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        mangoo: { 500: '#1a5f3f', 600: '#144a31' }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'ping-slow': 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .hidden { display: none !important; }
+        .visualizer-bar {
+            width: 6px;
+            background: #4ade80;
+            border-radius: 99px;
+            animation: sound 0s -0.4s linear infinite alternate;
+        }
+        @keyframes sound {
+            0% { height: 10px; opacity: 0.35; }
+            100% { height: 60px; opacity: 1; }
+        }
+        .visualizer-bar:nth-child(1)  { animation-duration: 474ms; }
+        .visualizer-bar:nth-child(2)  { animation-duration: 433ms; }
+        .visualizer-bar:nth-child(3)  { animation-duration: 407ms; }
+        .visualizer-bar:nth-child(4)  { animation-duration: 458ms; }
+        .visualizer-bar:nth-child(5)  { animation-duration: 400ms; }
+        .visualizer-bar:nth-child(6)  { animation-duration: 427ms; }
+        .visualizer-bar:nth-child(7)  { animation-duration: 441ms; }
+        .visualizer-bar:nth-child(8)  { animation-duration: 419ms; }
+        .visualizer-bar:nth-child(9)  { animation-duration: 487ms; }
+        .visualizer-bar:nth-child(10) { animation-duration: 442ms; }
+        
+        /* Simulated Live Camera Movement */
+        @keyframes subtle-move {
+            0% { transform: scale(1.05) translate(0, 0); }
+            25% { transform: scale(1.08) translate(1%, 1%); }
+            50% { transform: scale(1.05) translate(0, 2%); }
+            75% { transform: scale(1.08) translate(-1%, 1%); }
+            100% { transform: scale(1.05) translate(0, 0); }
+        }
+        .simulated-live {
+            animation: subtle-move 20s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white h-screen flex flex-col items-center justify-between transition-colors duration-300">
+
+    <!-- Header info -->
+    <div class="mt-12 text-center">
+        <div class="text-sm uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-2" id="callTypeLabel">Appel Audio Mangoo</div>
+        <h1 class="text-3xl font-bold" id="calleeName">Correspondant</h1>
+        <div class="mt-2 text-xl font-mono text-mangoo-500 dark:text-green-400" id="timer">Connexion...</div>
+    </div>
+
+    <!-- Avatar & Visualizer -->
+    <div class="relative flex flex-col items-center justify-center w-full flex-1">
+        <!-- Pulse Rings -->
+        <div class="absolute w-64 h-64 bg-mangoo-500/20 rounded-full animate-ping-slow"></div>
+        <div class="absolute w-48 h-48 bg-mangoo-500/30 rounded-full animate-pulse-slow"></div>
+        
+        <!-- Avatar -->
+        <div class="relative z-10 w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 shadow-2xl overflow-hidden bg-gray-300">
+            <img id="avatarImg" src="https://ui-avatars.com/api/?name=Mangoo&background=1a5f3f&color=fff" class="w-full h-full object-cover">
+        </div>
+
+        <!-- Visualizer -->
+        <div class="flex items-center justify-center gap-1 h-16 mt-8" id="visualizer">
+            <div class="visualizer-bar"></div><div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div><div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div><div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div><div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div><div class="visualizer-bar"></div>
+        </div>
+        <div class="text-sm text-gray-500 mt-4" id="statusText">Sonnerie en cours...</div>
+    </div>
+
+    <!-- Controls -->
+    <div class="w-full max-w-sm px-8 pb-12">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-6 flex justify-between items-center">
+            
+            <!-- Mute -->
+            <button class="p-4 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition" onclick="toggleMute(this)">
+                <i class="fas fa-microphone text-xl"></i>
+            </button>
+            
+            <!-- Video Switch (Upgrading to Video allowed) -->
+            <button class="p-4 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition" id="audioPageVideoBtn" onclick="toggleVideo(this)" title="Basculer en vidéo (Voir produit)">
+                <div class="flex flex-col items-center">
+                    <i class="fas fa-video text-xl mb-1"></i>
+                    <span class="text-[10px] font-bold">Voir produit</span>
+                </div>
+            </button>
+
+            <!-- Hangup -->
+            <button class="w-16 h-16 rounded-full bg-red-500 text-white shadow-lg shadow-red-500/40 flex items-center justify-center transform hover:scale-105 transition" onclick="endCall()">
+                <i class="fas fa-phone-slash text-2xl"></i>
+            </button>
+
+            <!-- Speaker -->
+            <button class="p-4 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition" onclick="toggleSpeaker(this)">
+                <i class="fas fa-volume-up text-xl"></i>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Video Modal (Hidden by default) -->
+    <div id="videoModal" class="fixed inset-0 bg-black z-50 hidden flex flex-col">
+        <div class="relative flex-1 bg-black flex items-center justify-center overflow-hidden">
+            <!-- Simulated Remote Video (Product) -->
+            <img id="productVideoFeed" src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80" class="w-full h-full object-cover opacity-80 simulated-live" alt="Flux vidéo produit">
+            
+            <!-- Remote Label -->
+            <div class="absolute top-4 left-4 flex items-center gap-2">
+                <div class="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold animate-pulse">🔴 EN DIRECT</div>
+                <div class="bg-black/50 text-white px-2 py-1 rounded text-xs backdrop-blur-sm">📹 Caméra Vendeur (Produit)</div>
+            </div>
+            
+            <!-- Local Video (User) -->
+            <div class="absolute bottom-24 right-4 w-32 h-48 bg-gray-800 rounded-xl border-2 border-white overflow-hidden shadow-lg">
+                <video id="localVideo" autoplay muted playsinline class="w-full h-full object-cover"></video>
+                <div class="absolute top-2 left-2 bg-black/50 text-white px-1.5 py-0.5 rounded text-[10px] backdrop-blur-sm">👤 Vous</div>
+                <div class="absolute inset-0 flex items-center justify-center text-white text-xs pointer-events-none" id="noCamIcon">
+                    <!-- Icon shown only if no video stream -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Video Controls -->
+        <div class="bg-gray-900 p-6 flex justify-center gap-6">
+             <button class="p-4 rounded-full bg-gray-700 text-white hover:bg-gray-600 transition" onclick="toggleMute(this)">
+                <i class="fas fa-microphone text-xl"></i>
+            </button>
+            <button class="w-16 h-16 rounded-full bg-red-500 text-white shadow-lg flex items-center justify-center hover:bg-red-600 transition" onclick="endCall()">
+                <i class="fas fa-phone-slash text-2xl"></i>
+            </button>
+            <!-- Changed icon to camera to indicate 'Camera Control' -->
+            <button class="p-4 rounded-full bg-white text-gray-900 hover:bg-gray-200 transition" onclick="toggleVideo()">
+                <i class="fas fa-video text-xl"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Init Params
+        const params = new URLSearchParams(window.location.search);
+        const name = params.get('callee') || 'Service Client';
+        const theme = params.get('theme');
+        const mode = params.get('mode');
+
+        // Apply Theme
+        if (theme === 'dark') document.documentElement.classList.add('dark');
+
+        // Set UI
+        document.getElementById('calleeName').innerText = name;
+        document.getElementById('avatarImg').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff`;
+
+        // Check for Video Mode
+        if (mode === 'video') {
+            // Trigger video immediately
+            setTimeout(() => {
+                const videoModal = document.getElementById('videoModal');
+                const label = document.getElementById('callTypeLabel');
+                const btn = document.getElementById('audioPageVideoBtn');
+                
+                if(videoModal) videoModal.classList.remove('hidden');
+                if(label) label.innerText = "Appel Vidéo Mangoo";
+                
+                // Try to get user camera
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(stream => {
+                        const localVideo = document.getElementById('localVideo');
+                        if (localVideo) {
+                            localVideo.srcObject = stream;
+                        }
+                    })
+                    .catch(err => console.log("Camera access denied or error", err));
+                }
+            }, 100);
+        } 
+        // Note: We keep the button visible in Audio mode to allow upgrading to Video call mid-stream
+        // as per logical request. No 'else' block needed to hide it.
+
+        // Timer Logic
+        let seconds = 0;
+        let callActive = false;
+        let isProcessing = false;
+        const timerEl = document.getElementById('timer');
+        const statusEl = document.getElementById('statusText');
+        const visualizer = document.getElementById('visualizer');
+
+        // Simulate Connection
+        setTimeout(() => {
+            statusEl.innerText = "Appel en cours";
+            timerEl.innerText = "00:00";
+            callActive = true;
+            startTimer();
+        }, 2500);
+
+        function startTimer() {
+            setInterval(() => {
+                if(!callActive) return;
+                seconds++;
+                const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const s = (seconds % 60).toString().padStart(2, '0');
+                timerEl.innerText = `${m}:${s}`;
+            }, 1000);
+        }
+
+        function toggleMute(btn) {
+            const icon = btn.querySelector('i');
+            if (icon.classList.contains('fa-microphone')) {
+                icon.className = 'fas fa-microphone-slash text-xl';
+                // Check if we are in video modal (different bg)
+                if(btn.classList.contains('bg-gray-700')) {
+                    btn.classList.remove('bg-gray-700', 'text-white');
+                    btn.classList.add('bg-red-500', 'text-white');
+                } else {
+                    btn.classList.add('text-red-500');
+                }
+            } else {
+                icon.className = 'fas fa-microphone text-xl';
+                if(btn.classList.contains('bg-red-500')) {
+                    btn.classList.remove('bg-red-500', 'text-white');
+                    btn.classList.add('bg-gray-700', 'text-white');
+                } else {
+                    btn.classList.remove('text-red-500');
+                }
+            }
+        }
+
+        function toggleSpeaker(btn) {
+            btn.classList.toggle('bg-blue-100');
+            btn.classList.toggle('dark:bg-blue-900');
+            btn.classList.toggle('text-blue-600');
+        }
+
+        function toggleVideo(btn) {
+            try {
+                if (isProcessing) return; // Prevent double clicks
+
+                const videoModal = document.getElementById('videoModal');
+                const statusEl = document.getElementById('statusText');
+                
+                if (!videoModal) {
+                    console.error("Video modal not found");
+                    return;
+                }
+
+                // If already showing, just hide it immediately
+                if (!videoModal.classList.contains('hidden')) {
+                    videoModal.classList.add('hidden');
+                    
+                    // Reset Label
+                    const label = document.getElementById('callTypeLabel');
+                    if(label) label.innerText = "Appel Audio Mangoo";
+
+                    // Stop camera when hiding video
+                    const localVideo = document.getElementById('localVideo');
+                    if (localVideo && localVideo.srcObject) {
+                        const tracks = localVideo.srcObject.getTracks();
+                        tracks.forEach(track => track.stop());
+                        localVideo.srcObject = null;
+                    }
+                    return;
+                }
+
+                // === SHOW VIDEO LOGIC ===
+                isProcessing = true;
+                
+                // 1. Visual Feedback on Button (Direct Style)
+                if (btn) {
+                    // Force blue background and white text
+                    btn.style.backgroundColor = '#2563eb'; // blue-600
+                    btn.style.color = 'white';
+                    
+                    // Change icon to spinner
+                    const icon = btn.querySelector('i');
+                    if (icon) {
+                        icon.className = 'fas fa-spinner fa-spin text-xl mb-1';
+                    }
+                }
+
+                // 2. Status Text Update
+                // Only save original if it's not "Demande..."
+                const currentText = statusEl ? statusEl.innerText : "Appel en cours";
+                const originalText = currentText.includes("Demande") ? "Appel en cours" : currentText;
+                
+                if (statusEl) {
+                    statusEl.innerText = "Demande de vidéo en cours...";
+                    statusEl.classList.add('animate-pulse', 'text-mangoo-500');
+                }
+                
+                // 3. Simulated Network Delay
+                setTimeout(() => {
+                    isProcessing = false;
+                    
+                    // Restore Status Text
+                    if (statusEl) {
+                        statusEl.innerText = originalText;
+                        statusEl.classList.remove('animate-pulse', 'text-mangoo-500');
+                    }
+                    
+                    // Show Modal
+                    videoModal.classList.remove('hidden');
+
+                    // Update Call Type Label
+                    const label = document.getElementById('callTypeLabel');
+                    if (label) label.innerText = "Appel Vidéo Mangoo";
+                    
+                    // Try to get user camera
+                    const localVideo = document.getElementById('localVideo');
+                    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                        navigator.mediaDevices.getUserMedia({ video: true })
+                        .then(stream => {
+                            if (localVideo) {
+                                localVideo.srcObject = stream;
+                                localVideo.play();
+                            }
+                        })
+                        .catch(err => console.log("Camera access denied or error", err));
+                    }
+
+                    // Reset Button Style
+                    if (btn) {
+                        btn.style.backgroundColor = ''; // Remove inline style to revert to CSS classes
+                        btn.style.color = '';
+                        
+                        const icon = btn.querySelector('i');
+                        if (icon) {
+                            icon.className = 'fas fa-video text-xl mb-1';
+                        }
+                    }
+                }, 800);
+
+            } catch (error) {
+                console.error("Error in toggleVideo:", error);
+                alert("Une erreur est survenue : " + error.message);
+                isProcessing = false; // Reset on error
+            }
+        }
+
+        function endCall() {
+            callActive = false;
+            statusEl.innerText = "Appel terminé";
+            timerEl.innerText = "Fin";
+            visualizer.style.opacity = '0';
+            
+            // Visual feedback for all hangup buttons
+            const hangupBtns = document.querySelectorAll('button[onclick="endCall()"]');
+            hangupBtns.forEach(btn => {
+                btn.classList.add('animate-ping');
+                btn.style.backgroundColor = '#991b1b'; // darker red
+            });
+            
+            // Stop camera if active
+            const localVideo = document.getElementById('localVideo');
+            if (localVideo && localVideo.srcObject) {
+                const tracks = localVideo.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                localVideo.srcObject = null;
+            }
+
+            setTimeout(() => {
+                // Try to communicate with parent if in iframe
+                try {
+                    window.parent.postMessage('end_call', '*');
+                } catch {
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

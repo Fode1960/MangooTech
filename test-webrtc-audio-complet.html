@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎧 TEST WebRTC Audio Complet - 8888 & 8889</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            height: 100vh;
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2a5298;
+            font-size: 2em;
+        }
+        
+        .status {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+        
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #dc3545;
+        }
+        
+        .status.calling {
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffc107;
+        }
+        
+        .status.in-call {
+            background: #cce5ff;
+            color: #004085;
+            border: 2px solid #007bff;
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .button {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .button.connect {
+            background: #28a745;
+            color: white;
+        }
+        
+        .button.call {
+            background: #007bff;
+            color: white;
+        }
+        
+        .button.answer {
+            background: #28a745;
+            color: white;
+        }
+        
+        .button.hangup {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .button.reject {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .audio-level {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .audio-meter {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .audio-level-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #ffc107, #dc3545);
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+        
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 15px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin-top: auto;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+        
+        .log-entry.error {
+            color: #dc3545;
+        }
+        
+        .log-entry.success {
+            color: #28a745;
+        }
+        
+        .log-entry.info {
+            color: #17a2b8;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Panel 8888 -->
+        <div class="panel">
+            <h2>🎧 Vendeur 8888</h2>
+            <div id="status-8888" class="status disconnected">Déconnecté</div>
+            
+            <div class="controls">
+                <button id="connect-8888" class="button connect">Se Connecter</button>
+                <button id="call-8888" class="button call" disabled>Appeler 8889</button>
+                <button id="answer-8888" class="button answer" disabled>Répondre</button>
+                <button id="hangup-8888" class="button hangup" disabled>Raccrocher</button>
+                <button id="reject-8888" class="button reject" disabled>Refuser</button>
+            </div>
+            
+            <div class="audio-level">
+                <div>Niveau Audio Micro:</div>
+                <div class="audio-meter">
+                    <div id="audio-level-8888" class="audio-level-bar"></div>
+                </div>
+                <div id="audio-level-text-8888">0%</div>
+            </div>
+            
+            <div id="log-8888" class="log"></div>
+            
+            <!-- Élément audio pour le flux distant -->
+            <audio id="remote-audio-8888" autoplay style="display: none;"></audio>
+        </div>
+        
+        <!-- Panel 8889 -->
+        <div class="panel">
+            <h2>👤 Client 8889</h2>
+            <div id="status-8889" class="status disconnected">Déconnecté</div>
+            
+            <div class="controls">
+                <button id="connect-8889" class="button connect">Se Connecter</button>
+                <button id="call-8889" class="button call" disabled>Appeler 8888</button>
+                <button id="answer-8889" class="button answer" disabled>Répondre</button>
+                <button id="hangup-8889" class="button hangup" disabled>Raccrocher</button>
+                <button id="reject-8889" class="button reject" disabled>Refuser</button>
+            </div>
+            
+            <div class="audio-level">
+                <div>Niveau Audio Micro:</div>
+                <div class="audio-meter">
+                    <div id="audio-level-8889" class="audio-level-bar"></div>
+                </div>
+                <div id="audio-level-text-8889">0%</div>
+            </div>
+            
+            <div id="log-8889" class="log"></div>
+            
+            <!-- Élément audio pour le flux distant -->
+            <audio id="remote-audio-8889" autoplay style="display: none;"></audio>
+        </div>
+    </div>
+
+    <script>
+        class WebRTCCallManager {
+            constructor(userId, roomId = 'test-room') {
+                this.userId = userId;
+                this.roomId = roomId;
+                this.ws = null;
+                this.pc = null;
+                this.localStream = null;
+                this.remoteStream = null;
+                this.isConnected = false;
+                this.isInCall = false;
+                this.hasIncomingCall = false;
+                this.analyser = null;
+                this.dataArray = null;
+                this.remoteAudio = null; // Keep reference to audio element
+                
+                this.initializeElements();
+                this.setupEventListeners();
+            }
+            
+            initializeElements() {
+                this.statusEl = document.getElementById(`status-${this.userId}`);
+                this.connectBtn = document.getElementById(`connect-${this.userId}`);
+                this.callBtn = document.getElementById(`call-${this.userId}`);
+                this.answerBtn = document.getElementById(`answer-${this.userId}`);
+                this.hangupBtn = document.getElementById(`hangup-${this.userId}`);
+                this.rejectBtn = document.getElementById(`reject-${this.userId}`);
+                this.logEl = document.getElementById(`log-${this.userId}`);
+                this.audioLevelBar = document.getElementById(`audio-level-${this.userId}`);
+                this.audioLevelText = document.getElementById(`audio-level-text-${this.userId}`);
+                this.remoteAudioEl = document.getElementById(`remote-audio-${this.userId}`);
+            }
+            
+            setupEventListeners() {
+                this.connectBtn.addEventListener('click', () => this.connect());
+                this.callBtn.addEventListener('click', () => this.makeCall());
+                this.answerBtn.addEventListener('click', () => this.answerCall());
+                this.hangupBtn.addEventListener('click', () => this.hangupCall());
+                this.rejectBtn.addEventListener('click', () => this.rejectCall());
+            }
+            
+            log(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${type}`;
+                entry.textContent = `[${timestamp}] ${message}`;
+                this.logEl.appendChild(entry);
+                this.logEl.scrollTop = this.logEl.scrollHeight;
+                console.log(`[${this.userId}] ${message}`);
+            }
+            
+            updateStatus(status) {
+                this.log(`Changement de statut: ${status}`);
+                this.statusEl.className = `status ${status}`;
+                switch(status) {
+                    case 'connected':
+                        this.statusEl.textContent = 'Connecté';
+                        this.connectBtn.disabled = true;
+                        this.callBtn.disabled = false;
+                        this.answerBtn.disabled = true;
+                        this.hangupBtn.disabled = true;
+                        this.rejectBtn.disabled = true;
+                        break;
+                    case 'disconnected':
+                        this.statusEl.textContent = 'Déconnecté';
+                        this.connectBtn.disabled = false;
+                        this.callBtn.disabled = true;
+                        this.answerBtn.disabled = true;
+                        this.hangupBtn.disabled = true;
+                        this.rejectBtn.disabled = true;
+                        break;
+                    case 'calling':
+                        this.statusEl.textContent = 'Appel en cours...';
+                        this.callBtn.disabled = true;
+                        this.answerBtn.disabled = true;
+                        this.hangupBtn.disabled = false; // Permettre de raccrocher pendant l'appel
+                        this.rejectBtn.disabled = true;
+                        break;
+                    case 'in-call':
+                        this.statusEl.textContent = 'En appel';
+                        this.answerBtn.disabled = true;
+                        this.rejectBtn.disabled = true;
+                        this.hangupBtn.disabled = false;
+                        this.callBtn.disabled = true;
+                        break;
+                    case 'incoming-call':
+                        this.statusEl.textContent = 'Appel entrant';
+                        this.answerBtn.disabled = false;
+                        this.rejectBtn.disabled = false;
+                        this.callBtn.disabled = true;
+                        this.hangupBtn.disabled = true;
+                        break;
+                }
+            }
+            
+            async connect() {
+                try {
+                    this.log('Connexion au serveur WebRTC...');
+                    
+                    // Configurer l'élément audio DOM pour éviter les problèmes d'autoplay
+                    if (this.remoteAudioEl) {
+                        this.remoteAudioEl.autoplay = true;
+                        this.remoteAudioEl.muted = false;
+                        this.remoteAudioEl.volume = 1.0;
+                        this.remoteAudio = this.remoteAudioEl; // Référence pour utilisation ultérieure
+                    }
+                    
+                    // Connexion WebSocket
+                    this.ws = new WebSocket('ws://localhost:3010');
+                    
+                    this.ws.onopen = async () => {
+                        this.log('WebSocket connecté', 'success');
+                        this.isConnected = true;
+                        this.updateStatus('connected');
+                        
+                        // Rejoindre la room
+                        this.ws.send(JSON.stringify({
+                            type: 'join-room',
+                            roomId: this.roomId,
+                            userId: this.userId,
+                            role: this.userId === '8888' ? 'vendor' : 'client'
+                        }));
+                        
+                        // Obtenir l'accès au microphone
+                        await this.setupAudio();
+                    };
+                    
+                    this.ws.onmessage = (event) => {
+                        const data = JSON.parse(event.data);
+                        this.handleMessage(data);
+                    };
+                    
+                    this.ws.onclose = () => {
+                        this.log('WebSocket déconnecté', 'error');
+                        this.isConnected = false;
+                        this.updateStatus('disconnected');
+                        this.cleanup();
+                    };
+                    
+                    this.ws.onerror = (error) => {
+                        this.log(`Erreur WebSocket: ${error}`, 'error');
+                    };
+                    
+                } catch (error) {
+                    this.log(`Erreur connexion: ${error.message}`, 'error');
+                }
+            }
+            
+            async setupAudio() {
+                try {
+                    this.log('Configuration audio...');
+                    
+                    // Jouer un son silencieux pour débloquer l'audio du navigateur
+                    await this.unlockBrowserAudio();
+                    
+                    // Obtenir l'accès au microphone
+                    this.localStream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true,
+                            sampleRate: 44100
+                        },
+                        video: false
+                    });
+                    
+                    this.log('Microphone activé', 'success');
+                    
+                    // Configurer l'analyseur audio pour le niveau
+                    const audioContext = new AudioContext();
+                    const source = audioContext.createMediaStreamSource(this.localStream);
+                    this.analyser = audioContext.createAnalyser();
+                    this.analyser.fftSize = 256;
+                    this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+                    source.connect(this.analyser);
+                    
+                    // Démarrer la surveillance du niveau audio
+                    this.monitorAudioLevel();
+                    
+                } catch (error) {
+                    this.log(`Erreur configuration audio: ${error.message}`, 'error');
+                }
+            }
+            
+            async unlockBrowserAudio() {
+                try {
+                    // Créer un son silencieux pour débloquer l'audio
+                    const audioContext = new AudioContext();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    // Volume très faible (silencieux)
+                    gainNode.gain.setValueAtTime(0.001, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+                    
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                    
+                    this.log('Audio du navigateur débloqué', 'success');
+                } catch (error) {
+                    this.log(`Erreur déblocage audio: ${error.message}`, 'error');
+                }
+            }
+            
+            monitorAudioLevel() {
+                const updateLevel = () => {
+                    if (this.analyser && this.dataArray) {
+                        this.analyser.getByteFrequencyData(this.dataArray);
+                        const average = this.dataArray.reduce((a, b) => a + b) / this.dataArray.length;
+                        const percentage = Math.min(100, (average / 255) * 100);
+                        
+                        this.audioLevelBar.style.width = `${percentage}%`;
+                        this.audioLevelText.textContent = `${Math.round(percentage)}%`;
+                    }
+                    
+                    if (this.isConnected) {
+                        requestAnimationFrame(updateLevel);
+                    }
+                };
+                updateLevel();
+            }
+            
+            handleMessage(data) {
+                this.log(`Message reçu: ${data.type}`);
+                
+                switch(data.type) {
+                    case 'joined-room':
+                        this.log('Room rejoint avec succès', 'success');
+                        break;
+                        
+                    case 'incoming-call':
+                        this.hasIncomingCall = true;
+                        this.log(`Appel entrant de ${data.from}`, 'info');
+                        this.updateStatus('incoming-call');
+                        // Activer les boutons répondre/refuser
+                        this.answerBtn.disabled = false;
+                        this.rejectBtn.disabled = false;
+                        this.callBtn.disabled = true;
+                        break;
+                        
+                    case 'offer':
+                        this.handleOffer(data);
+                        break;
+                        
+                    case 'answer':
+                        this.handleAnswer(data);
+                        break;
+                        
+                    case 'ice-candidate':
+                        this.handleIceCandidate(data);
+                        break;
+                        
+                    case 'call-ended':
+                        this.log('Appel terminé', 'info');
+                        this.endCall();
+                        break;
+                }
+            }
+            
+            async createPeerConnection() {
+                this.pc = new RTCPeerConnection({
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' }
+                    ]
+                });
+                
+                // Ajouter le flux audio local
+                if (this.localStream) {
+                    this.localStream.getTracks().forEach(track => {
+                        this.pc.addTrack(track, this.localStream);
+                    });
+                }
+                
+                // Gérer le flux audio distant
+                this.pc.ontrack = (event) => {
+                    this.log('Flux audio distant reçu', 'success');
+                    this.remoteStream = event.streams[0];
+                    
+                    if (this.remoteAudio) {
+                        // Utiliser l'élément audio pré-créé
+                        this.remoteAudio.srcObject = this.remoteStream;
+                        
+                        // Configuration détaillée de l'audio
+                        this.log('Configuration audio distant...');
+                        this.log(`Audio element: ${this.remoteAudio.tagName}`);
+                        this.log(`Audio srcObject: ${this.remoteAudio.srcObject ? 'OK' : 'NULL'}`);
+                        this.log(`Audio muted: ${this.remoteAudio.muted}`);
+                        this.log(`Audio volume: ${this.remoteAudio.volume}`);
+                        this.log(`Audio autoplay: ${this.remoteAudio.autoplay}`);
+                        
+                        // Forcer la lecture après un court délai
+                        setTimeout(() => {
+                            this.remoteAudio.play().then(() => {
+                                this.log('✅ Audio distant en lecture', 'success');
+                                this.log('🔊 Vérifiez votre casque/audio système');
+                            }).catch(e => {
+                                this.log(`❌ Erreur lecture audio: ${e.message}`, 'error');
+                                this.log(`Type d'erreur: ${e.name}`, 'error');
+                                
+                                // Si c'est une erreur d'autoplay, créer un bouton temporaire
+                                if (e.name === 'NotAllowedError') {
+                                    this.log('🔒 Erreur autoplay - interaction utilisateur requise', 'error');
+                                    this.createAudioUnlockButton();
+                                } else if (e.name === 'NotSupportedError') {
+                                    this.log('❌ Format audio non supporté', 'error');
+                                }
+                            });
+                        }, 500); // Délai de 500ms pour s'assurer que le flux est prêt
+                        
+                        // Écouter les événements de l'audio
+                        this.remoteAudio.onloadedmetadata = () => {
+                            this.log('✅ Métadonnées audio chargées', 'success');
+                        };
+                        
+                        this.remoteAudio.onplay = () => {
+                            this.log('✅ Audio distant démarré', 'success');
+                        };
+                        
+                        this.remoteAudio.onerror = (e) => {
+                            this.log(`❌ Erreur audio: ${e.message || 'Inconnue'}`, 'error');
+                        };
+                        
+                        // Test supplémentaire : créer un élément audio temporaire
+                        this.testAudioPlayback();
+                        
+                    } else {
+                        this.log('❌ Erreur: Élément audio non créé', 'error');
+                    }
+                };
+                
+                // Gérer les candidats ICE
+                this.pc.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        this.ws.send(JSON.stringify({
+                            type: 'ice-candidate',
+                            candidate: event.candidate,
+                            roomId: this.roomId
+                        }));
+                    }
+                };
+                
+                // Gérer les changements d'état
+                this.pc.onconnectionstatechange = () => {
+                    this.log(`État connexion: ${this.pc.connectionState}`);
+                    if (this.pc.connectionState === 'connected') {
+                        this.updateStatus('in-call');
+                        this.log('Appel établi avec succès!', 'success');
+                    }
+                };
+            }
+            
+            async makeCall() {
+                try {
+                    this.log('Création appel...');
+                    this.updateStatus('calling');
+                    
+                    // Premièrement, notifier l'appel
+                    this.ws.send(JSON.stringify({
+                        type: 'call-notification',
+                        message: `Appel de ${this.userId}`,
+                        roomId: this.roomId
+                    }));
+                    
+                    this.log('Notification d\'appel envoyée', 'success');
+                    
+                    // Créer la connexion peer après la notification
+                    await this.createPeerConnection();
+                    
+                    // Créer l'offre SDP
+                    const offer = await this.pc.createOffer();
+                    await this.pc.setLocalDescription(offer);
+                    
+                    // Envoyer l'offre
+                    this.ws.send(JSON.stringify({
+                        type: 'offer',
+                        offer: offer,
+                        roomId: this.roomId
+                    }));
+                    
+                    this.log('Offre envoyée', 'success');
+                    
+                } catch (error) {
+                    this.log(`Erreur création appel: ${error.message}`, 'error');
+                    this.updateStatus('connected');
+                }
+            }
+            
+            async handleOffer(data) {
+                try {
+                    this.log('Traitement offre...');
+                    this.log(`Offre reçue de: ${data.from || 'inconnu'}`);
+                    
+                    await this.createPeerConnection();
+                    await this.pc.setRemoteDescription(data.offer);
+                    
+                    // Créer la réponse
+                    const answer = await this.pc.createAnswer();
+                    await this.pc.setLocalDescription(answer);
+                    
+                    // Envoyer la réponse
+                    this.ws.send(JSON.stringify({
+                        type: 'answer',
+                        answer: answer,
+                        roomId: this.roomId
+                    }));
+                    
+                    this.log('Réponse envoyée', 'success');
+                    
+                } catch (error) {
+                    this.log(`Erreur traitement offre: ${error.message}`, 'error');
+                }
+            }
+            
+            async handleAnswer(data) {
+                try {
+                    this.log('Réponse reçue');
+                    await this.pc.setRemoteDescription(data.answer);
+                } catch (error) {
+                    this.log(`Erreur traitement réponse: ${error.message}`, 'error');
+                }
+            }
+            
+            async handleIceCandidate(data) {
+                try {
+                    await this.pc.addIceCandidate(data.candidate);
+                    this.log('Candidat ICE ajouté');
+                } catch (error) {
+                    this.log(`Erreur ajout candidat ICE: ${error.message}`, 'error');
+                }
+            }
+            
+            answerCall() {
+                this.log('Réponse à l\'appel');
+                this.hasIncomingCall = false;
+                this.updateStatus('calling'); // Montrer que nous répondons
+                this.makeCall(); // Créer la connexion en réponse
+            }
+            
+            rejectCall() {
+                this.log('Appel rejeté');
+                this.hasIncomingCall = false;
+                this.updateStatus('connected');
+                
+                // Notifier l'appelant
+                this.ws.send(JSON.stringify({
+                    type: 'call-ended',
+                    reason: 'rejected',
+                    roomId: this.roomId
+                }));
+            }
+            
+            hangupCall() {
+                this.log('Raccrochage');
+                this.endCall();
+                
+                // Notifier l'autre utilisateur
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    this.ws.send(JSON.stringify({
+                        type: 'call-ended',
+                        reason: 'user-hangup',
+                        roomId: this.roomId
+                    }));
+                }
+            }
+            
+            endCall() {
+                this.log('Fin d\'appel');
+                this.isInCall = false;
+                this.hasIncomingCall = false;
+                
+                // Fermer la connexion peer
+                if (this.pc) {
+                    this.pc.close();
+                    this.pc = null;
+                }
+                
+                this.updateStatus('connected');
+            }
+            
+            testAudioPlayback() {
+                // Test de lecture audio avec un bip simple
+                try {
+                    const audioContext = new AudioContext();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                    
+                    this.log('🔊 Test audio: bip de test joué', 'success');
+                } catch (error) {
+                    this.log(`❌ Erreur test audio: ${error.message}`, 'error');
+                }
+            }
+            
+            createAudioUnlockButton() {
+                const unlockBtn = document.createElement('button');
+                unlockBtn.textContent = '🔊 Activer l\'audio';
+                unlockBtn.className = 'button';
+                unlockBtn.style.background = '#ff6b35';
+                unlockBtn.style.marginTop = '10px';
+                
+                unlockBtn.addEventListener('click', async () => {
+                    if (this.remoteAudio) {
+                        try {
+                            await this.remoteAudio.play();
+                            this.log('Audio débloqué par l\'utilisateur', 'success');
+                            unlockBtn.remove();
+                        } catch (e) {
+                            this.log(`Erreur déblocage audio: ${e.message}`, 'error');
+                        }
+                    }
+                });
+                
+                this.statusEl.parentNode.insertBefore(unlockBtn, this.statusEl.nextSibling);
+                this.log('Bouton de déblocage audio créé', 'info');
+            }
+            
+            cleanup() {
+                this.endCall();
+                
+                // Arrêter le flux audio
+                if (this.localStream) {
+                    this.localStream.getTracks().forEach(track => track.stop());
+                    this.localStream = null;
+                }
+                
+                if (this.remoteStream) {
+                    this.remoteStream.getTracks().forEach(track => track.stop());
+                    this.remoteStream = null;
+                }
+                
+                // Nettoyer l'audio distant
+                if (this.remoteAudio) {
+                    this.remoteAudio.pause();
+                    this.remoteAudio.srcObject = null;
+                    this.remoteAudio = null;
+                }
+            }
+        }
+        
+        // Initialiser les gestionnaires d'appel
+        const callManager8888 = new WebRTCCallManager('8888');
+        const callManager8889 = new WebRTCCallManager('8889');
+        
+        console.log('🎧 Test WebRTC Audio Complet initialisé');
+        console.log('📞 Utilisez les boutons pour tester les appels entre 8888 et 8889');
+    </script>
+</body>
+</html>

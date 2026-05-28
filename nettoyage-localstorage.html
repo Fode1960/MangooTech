@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nettoyage LocalStorage - MangooTech</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { background: #FF6F00; color: white; padding: 15px; border-radius: 8px 8px 0 0; margin: -20px -20px 20px -20px; }
+        .btn { background: #FF6F00; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 16px; margin: 10px 5px; }
+        .btn:hover { background: #E65100; }
+        .btn-danger { background: #f44336; }
+        .btn-danger:hover { background: #d32f2f; }
+        .log { background: #f8f8f8; border: 1px solid #ddd; padding: 10px; border-radius: 4px; margin: 10px 0; font-family: monospace; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 10px; border-radius: 4px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧹 Nettoyage LocalStorage - MangooTech</h1>
+            <p>Outil de nettoyage pour éliminer la contamination "Fodé boutique"</p>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Important :</strong> Cet outil supprimera définitivement les données contaminées du localStorage. 
+            Assurez-vous d'avoir sauvegardé les données importantes avant de procéder.
+        </div>
+
+        <h2>Étape 1 : Analyse</h2>
+        <button class="btn" onclick="analyzeStorage()">🔍 Analyser le localStorage</button>
+        <div id="analysisLog" class="log" style="display: none;"></div>
+
+        <h2>Étape 2 : Nettoyage</h2>
+        <button class="btn btn-danger" onclick="cleanStorage()">🧹 Nettoyer les données contaminées</button>
+        <div id="cleanupLog" class="log" style="display: none;"></div>
+
+        <h2>Étape 3 : Vérification</h2>
+        <button class="btn" onclick="verifyCleanup()">✅ Vérifier le nettoyage</button>
+        <div id="verificationLog" class="log" style="display: none;"></div>
+
+        <div id="results" style="display: none;">
+            <h3>Résultats du nettoyage</h3>
+            <div id="resultsContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const contaminationTerms = ["Fodé Boutique","Fode Boutique","Boutique DAN","Boutique Demo","boutique-dan","contact@boutique-dan.com","https://boutique-dan.com"];
+        const contaminatedKeys = ["mangoo-offline-shop","mangoo-shop-status","mangoo-shop-settings","currentShop","selectedShop","shopData","offlineShop"];
+
+        function isContaminated(value) {
+            if (!value) return false;
+            const str = typeof value === 'string' ? value : JSON.stringify(value);
+            return contaminationTerms.some(term => str.includes(term));
+        }
+
+        function analyzeStorage() {
+            const log = document.getElementById('analysisLog');
+            log.style.display = 'block';
+            log.textContent = '🔍 Analyse du localStorage en cours...\n';
+            
+            let contaminatedCount = 0;
+            let contaminatedKeys = [];
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                try {
+                    const value = localStorage.getItem(key);
+                    if (value && isContaminated(value)) {
+                        contaminatedCount++;
+                        contaminatedKeys.push(key);
+                        log.textContent += `🚨 Contamination trouvée dans : ${key}\n`;
+                    }
+                } catch (e) {
+                    log.textContent += `❌ Erreur lors de l'analyse de ${key}\n`;
+                }
+            }
+            
+            log.textContent += `\n📊 Total : ${contaminatedCount} clés contaminées trouvées sur ${localStorage.length} clés totales.`;
+            
+            if (contaminatedCount === 0) {
+                log.textContent += '\n✅ Aucune contamination détectée !';
+            }
+        }
+
+        function cleanStorage() {
+            if (!confirm('⚠️ Êtes-vous sûr de vouloir supprimer les données contaminées ? Cette action est irréversible.')) {
+                return;
+            }
+
+            const log = document.getElementById('cleanupLog');
+            log.style.display = 'block';
+            log.textContent = '🧹 Nettoyage du localStorage en cours...\n';
+            
+            let cleanedCount = 0;
+            
+            // Nettoyer les clés spécifiques
+            contaminatedKeys.forEach(key => {
+                try {
+                    const value = localStorage.getItem(key);
+                    if (value && isContaminated(value)) {
+                        log.textContent += `🗑️ Suppression : ${key}\n`;
+                        localStorage.removeItem(key);
+                        cleanedCount++;
+                    }
+                } catch (e) {
+                    log.textContent += `❌ Erreur lors du nettoyage de ${key}\n`;
+                }
+            });
+            
+            // Nettoyer toutes les autres clés contaminées
+            const keysToDelete = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                try {
+                    const value = localStorage.getItem(key);
+                    if (value && isContaminated(value)) {
+                        keysToDelete.push(key);
+                    }
+                } catch (e) {
+                    // Ignorer
+                }
+            }
+            
+            keysToDelete.forEach(key => {
+                log.textContent += `🗑️ Suppression : ${key}\n`;
+                localStorage.removeItem(key);
+                cleanedCount++;
+            });
+            
+            log.textContent += `\n✅ Nettoyage terminé ! ${cleanedCount} éléments supprimés.`;
+            
+            // Afficher les résultats
+            showResults(cleanedCount);
+        }
+
+        function verifyCleanup() {
+            const log = document.getElementById('verificationLog');
+            log.style.display = 'block';
+            log.textContent = '✅ Vérification du nettoyage...\n';
+            
+            let remainingContamination = 0;
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                try {
+                    const value = localStorage.getItem(key);
+                    if (value && isContaminated(value)) {
+                        remainingContamination++;
+                        log.textContent += `⚠️ Contamination restante dans : ${key}\n`;
+                    }
+                } catch (e) {
+                    // Ignorer
+                }
+            }
+            
+            if (remainingContamination === 0) {
+                log.textContent += '\n🎉 localStorage complètement nettoyé !';
+            } else {
+                log.textContent += `\n⚠️ ${remainingContamination} éléments contaminés restants.`;
+            }
+        }
+
+        function showResults(cleanedCount) {
+            const results = document.getElementById('results');
+            const resultsContent = document.getElementById('resultsContent');
+            
+            results.style.display = 'block';
+            resultsContent.innerHTML = `
+                <div class="success">
+                    <strong>✅ Nettoyage terminé avec succès !</strong><br>
+                    <strong>${cleanedCount}</strong> éléments contaminés ont été supprimés du localStorage.<br>
+                    <br>
+                    <strong>Prochaines étapes :</strong><br>
+                    1. Rafraîchir la page de l'application MangooTech<br>
+                    2. Vérifier que chaque utilisateur voit maintenant sa propre boutique<br>
+                    3. Tester avec différents comptes utilisateur
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
