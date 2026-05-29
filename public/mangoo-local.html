@@ -511,6 +511,32 @@
             background: rgba(0, 0, 0, 0.35);
             box-shadow: 0 4px 12px rgba(0,0,0,0.35);
         }
+        .lp-ui-mode-header-btn {
+            position: absolute;
+            top: 62px;
+            right: 15px;
+            z-index: 1002;
+            height: 34px;
+            padding: 0 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.22);
+            background: rgba(0, 0, 0, 0.22);
+            color: white;
+            font-weight: 950;
+            font-size: 0.82rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(6px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+        }
+        html.dark .lp-ui-mode-header-btn {
+            background: rgba(0, 0, 0, 0.35);
+            border-color: rgba(255,255,255,0.18);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.28);
+        }
+        html.lp-simple .lp-ui-mode-header-btn { display: none; }
         .header h1 {
             margin: 0;
             font-size: 1.3rem; /* Smaller title for more map space */
@@ -680,6 +706,163 @@
             background: #1a5f3f;
             border-color: rgba(52, 211, 153, 0.55);
             color: white;
+        }
+
+        .lp-simple-panel {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: calc(98px + env(safe-area-inset-bottom));
+            width: min(560px, calc(100% - 20px));
+            background: rgba(255,255,255,0.96);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0,0,0,0.06);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+            border-radius: 22px;
+            padding: 12px;
+            z-index: 1050;
+            display: none;
+            pointer-events: auto;
+        }
+        html.dark .lp-simple-panel {
+            background: rgba(17, 24, 39, 0.86);
+            border-color: rgba(255,255,255,0.12);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.40);
+        }
+        .lp-simple-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .lp-simple-action {
+            border: none;
+            border-radius: 18px;
+            padding: 14px 12px;
+            font-weight: 950;
+            font-size: 1.02rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.10);
+            transition: transform 0.1s;
+        }
+        .lp-simple-action:active { transform: scale(0.98); }
+        .lp-simple-primary {
+            background: linear-gradient(135deg, #f97316 0%, #22c55e 100%);
+            color: white;
+        }
+        .lp-simple-secondary {
+            background: rgba(26, 95, 63, 0.10);
+            color: #1a5f3f;
+            border: 1px solid rgba(26, 95, 63, 0.18);
+        }
+        html.dark .lp-simple-secondary {
+            background: rgba(16, 185, 129, 0.14);
+            color: #6ee7b7;
+            border-color: rgba(110, 231, 183, 0.18);
+        }
+        .lp-cats-grid {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .lp-cat-btn {
+            border: 1px solid rgba(0,0,0,0.08);
+            background: rgba(0,0,0,0.03);
+            color: #111827;
+            border-radius: 16px;
+            padding: 10px 8px;
+            font-weight: 950;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        html.dark .lp-cat-btn {
+            border-color: rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.06);
+            color: #f3f4f6;
+        }
+        .lp-simple-footer {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .lp-simple-small {
+            flex: 1;
+            border: 1px solid rgba(0,0,0,0.10);
+            background: rgba(255,255,255,0.92);
+            color: #111827;
+            border-radius: 16px;
+            padding: 10px 10px;
+            font-weight: 950;
+            cursor: pointer;
+        }
+        html.dark .lp-simple-small {
+            border-color: rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.06);
+            color: #f3f4f6;
+        }
+
+        html.lp-simple .quick-filter-fab,
+        html.lp-simple #providerDashFab,
+        html.lp-simple #calendarFab {
+            display: none !important;
+        }
+
+        .lp-simple-toprow {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+        .lp-simple-close {
+            width: 42px;
+            height: 42px;
+            border-radius: 16px;
+            border: 1px solid rgba(0,0,0,0.10);
+            background: rgba(255,255,255,0.92);
+            color: #111827;
+            font-weight: 950;
+            cursor: pointer;
+        }
+        html.dark .lp-simple-close {
+            border-color: rgba(255,255,255,0.14);
+            background: rgba(255,255,255,0.06);
+            color: #f3f4f6;
+        }
+        .lp-simple-reopen-btn {
+            position: fixed;
+            left: 16px;
+            bottom: calc(98px + env(safe-area-inset-bottom));
+            height: 52px;
+            padding: 0 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(0,0,0,0.10);
+            background: rgba(255,255,255,0.96);
+            color: #1a5f3f;
+            font-weight: 950;
+            font-size: 0.95rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+            z-index: 1050;
+            display: none;
+            cursor: pointer;
+            pointer-events: auto;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        html.dark .lp-simple-reopen-btn {
+            border-color: rgba(255,255,255,0.14);
+            background: rgba(17, 24, 39, 0.88);
+            color: #6ee7b7;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.40);
         }
 
         .filter-advanced-btn {
@@ -2208,6 +2391,7 @@
     <div class="header">
         <button onclick="exitMangooLocal()" style="position:absolute; top:15px; left:15px; background:rgba(255,255,255,0.2); border:none; color:white; border-radius:50%; width:30px; height:30px; cursor:pointer; font-weight:bold; font-size:1rem; z-index:1002;">✕</button>
         <button id="themeToggle" class="theme-toggle-btn" onclick="toggleTheme()" title="Jour/Nuit">🌙</button>
+        <button id="lpUiModeHeaderBtn" class="lp-ui-mode-header-btn" onclick="lpToggleUiMode()">✅ Simple</button>
         <h1>🥭 Mangoo Local+</h1>
         <div class="subtitle">Trouvez les meilleures affaires autour de vous</div>
         <div id="lpBuild" style="font-size:0.72rem; opacity:0.6; margin-top:2px;"></div>
@@ -2305,6 +2489,29 @@
             </div>
         </div>
     </div>
+
+    <div id="lpSimplePanel" class="lp-simple-panel">
+        <div class="lp-simple-toprow">
+            <button class="lp-simple-close" onclick="lpDismissSimplePanel()" title="Masquer" aria-label="Masquer le panneau">⬇️</button>
+        </div>
+        <div class="lp-simple-actions">
+            <button id="lpSimpleAroundBtn" class="lp-simple-action lp-simple-primary" onclick="lpSimpleAroundMe()">📍 Autour de moi</button>
+            <button id="lpSimpleVoiceBtn" class="lp-simple-action lp-simple-secondary" onclick="lpSimpleVoice()">🎙️ Parler</button>
+        </div>
+        <div class="lp-cats-grid" aria-label="Catégories">
+            <button class="lp-cat-btn" onclick="lpQuickCategory('all')">🌍 Tout</button>
+            <button class="lp-cat-btn" onclick="lpQuickCategory('vivres')">🥬 Vivres</button>
+            <button class="lp-cat-btn" onclick="lpQuickCategory('tech')">📱 Tech</button>
+            <button class="lp-cat-btn" onclick="lpQuickCategory('mode')">🧵 Mode</button>
+            <button class="lp-cat-btn" onclick="lpQuickCategory('beaute')">💇‍♀️ Beauté</button>
+            <button class="lp-cat-btn" onclick="lpQuickCategory('metiers')">🛠️ Métiers</button>
+        </div>
+        <div class="lp-simple-footer">
+            <button class="lp-simple-small" onclick="lpSpeakHelp()">🔊 Écouter l’aide</button>
+            <button id="lpUiModeBtn" class="lp-simple-small" onclick="lpToggleUiMode()">⚙️ Avancé</button>
+        </div>
+    </div>
+    <button id="lpSimpleReopenBtn" class="lp-simple-reopen-btn" onclick="lpShowSimplePanel()" title="Afficher" aria-label="Afficher le panneau">☰ Simple</button>
 
     <button id="metiersToggleFab" class="metiers-toggle-fab" onclick="showMetiersBar()" title="Métiers">＋</button>
 
@@ -3997,6 +4204,13 @@
 
         // === VOICE SEARCH ===
         function startVoiceSearch() {
+            try {
+                if (document.documentElement.classList.contains('lp-simple')) {
+                    lpVoiceSearchWithConfirm();
+                    return;
+                }
+            } catch {
+            }
             if (!('webkitSpeechRecognition' in window)) {
                 alert("Votre navigateur ne supporte pas la recherche vocale.");
                 return;
@@ -5854,7 +6068,7 @@
 
             try {
                 const el = document.getElementById('lpBuild');
-                if (el) el.textContent = 'build v113';
+                if (el) el.textContent = 'build v115';
             } catch {
             }
 
@@ -6350,6 +6564,18 @@
                         if (!id) return;
                         e.preventDefault();
                         e.stopPropagation();
+                        if (action === 'call') {
+                            try {
+                                const v = VENDORS.find((x) => String(x?.id) === id) || activeVendor;
+                                if (v) activeVendor = v;
+                                const vendorName = String(activeVendor?.name || '').trim() || 'le vendeur';
+                                const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+                                const url = `test-webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}`;
+                                window.location.href = url;
+                            } catch {
+                            }
+                            return;
+                        }
                         if (action === 'connect') {
                             try { openConnectByVendorId(id); } catch {}
                             return;
@@ -7571,17 +7797,39 @@
         function renderListView(vendors) {
             const listContainer = document.getElementById('listView');
             listContainer.innerHTML = '';
+            const simple = document.documentElement.classList.contains('lp-simple');
 
             if (!listContainer.dataset.lpClickBound) {
                 listContainer.dataset.lpClickBound = '1';
                 listContainer.addEventListener('click', (e) => {
-                    const actionEl = e.target && e.target.closest ? e.target.closest('[data-lp-action]') : null;
+                    let targetEl = null;
+                    try {
+                        const t = e && e.target;
+                        if (t && t.nodeType === 3) targetEl = t.parentElement;
+                        else targetEl = t;
+                    } catch {
+                        targetEl = null;
+                    }
+
+                    const actionEl = targetEl && targetEl.closest ? targetEl.closest('[data-lp-action]') : null;
                     if (actionEl) {
                         const action = String(actionEl.getAttribute('data-lp-action') || '');
                         const id = String(actionEl.getAttribute('data-vendor-id') || '');
                         if (!id) return;
                         e.preventDefault();
                         e.stopPropagation();
+                        if (action === 'call') {
+                            try {
+                                const v = VENDORS.find((x) => String(x?.id) === id) || activeVendor;
+                                if (v) activeVendor = v;
+                                const vendorName = String(activeVendor?.name || '').trim() || 'le vendeur';
+                                const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+                                const url = `test-webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}`;
+                                window.location.href = url;
+                            } catch {
+                            }
+                            return;
+                        }
                         if (action === 'connect') {
                             try { openConnectByVendorId(id); } catch {}
                             return;
@@ -7597,7 +7845,7 @@
                         return;
                     }
 
-                    const card = e.target && e.target.closest ? e.target.closest('.vendor-card') : null;
+                    const card = targetEl && targetEl.closest ? targetEl.closest('.vendor-card') : null;
                     if (!card) return;
                     const id = String(card.getAttribute('data-vendor-id') || '');
                     if (!id) return;
@@ -7714,11 +7962,18 @@
                                 <div class="vc-dist" style="justify-content:flex-end;">📍 ${dist}</div>
                             </div>
                         </div>
-                        <div style="display:flex; gap:10px; width:100%; margin-top:12px;">
-                            <button type="button" data-lp-action="connect" data-vendor-id="${vendorIdAttr}" onclick="try{event&&event.stopPropagation&&event.stopPropagation()}catch{}; openConnectByVendorId('${safeVendorId}')" style="flex:1; background:#a16207; color:white; border:none; padding:10px 12px; border-radius:12px; font-size:0.9rem; font-weight:950; cursor:pointer;">Mangoo Connect+</button>
-                            <button type="button" data-lp-action="sheet" data-vendor-id="${vendorIdAttr}" onclick="try{event&&event.stopPropagation&&event.stopPropagation()}catch{}; openVendorSheetById('${safeVendorId}')" style="flex:1; background:#2d3436; color:white; border:none; padding:10px 12px; border-radius:12px; font-size:0.9rem; font-weight:950; cursor:pointer;">Voir fiche</button>
-                            <button type="button" data-lp-action="itinerary" data-vendor-id="${vendorIdAttr}" onclick="try{event&&event.stopPropagation&&event.stopPropagation()}catch{}; openItineraryByVendorId('${safeVendorId}')" style="flex:1; background:#374151; color:white; border:none; padding:10px 12px; border-radius:12px; font-size:0.9rem; font-weight:950; cursor:pointer;">Itinéraire</button>
-                        </div>
+                        ${
+                            simple
+                                ? `<div style="display:flex; gap:10px; width:100%; margin-top:12px;">
+                                        <button type="button" data-lp-action="call" data-vendor-id="${vendorIdAttr}" onclick="try{event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpQuickCallVendorById('${safeVendorId}')" style="flex:1; background:#1a5f3f; color:white; border:none; padding:12px 12px; border-radius:14px; font-size:1rem; font-weight:950; cursor:pointer;">📞 Appeler</button>
+                                        <button type="button" data-lp-action="itinerary" data-vendor-id="${vendorIdAttr}" onclick="try{event&&event.stopPropagation&&event.stopPropagation()}catch{}; openItineraryByVendorId('${safeVendorId}')" style="flex:1; background:#111827; color:white; border:none; padding:12px 12px; border-radius:14px; font-size:1rem; font-weight:950; cursor:pointer;">🧭 Y aller</button>
+                                    </div>`
+                                : `<div style="display:flex; gap:10px; width:100%; margin-top:12px;">
+                                        <button type="button" data-lp-action="connect" data-vendor-id="${vendorIdAttr}" onclick="try{event&&event.stopPropagation&&event.stopPropagation()}catch{}; openConnectByVendorId('${safeVendorId}')" style="flex:1; background:#a16207; color:white; border:none; padding:10px 12px; border-radius:12px; font-size:0.9rem; font-weight:950; cursor:pointer;">Mangoo Connect+</button>
+                                        <button type="button" data-lp-action="sheet" data-vendor-id="${vendorIdAttr}" onclick="try{event&&event.stopPropagation&&event.stopPropagation()}catch{}; openVendorSheetById('${safeVendorId}')" style="flex:1; background:#2d3436; color:white; border:none; padding:10px 12px; border-radius:12px; font-size:0.9rem; font-weight:950; cursor:pointer;">Voir fiche</button>
+                                        <button type="button" data-lp-action="itinerary" data-vendor-id="${vendorIdAttr}" onclick="try{event&&event.stopPropagation&&event.stopPropagation()}catch{}; openItineraryByVendorId('${safeVendorId}')" style="flex:1; background:#374151; color:white; border:none; padding:10px 12px; border-radius:12px; font-size:0.9rem; font-weight:950; cursor:pointer;">Itinéraire</button>
+                                    </div>`
+                        }
                     `;
                     gridContainer.appendChild(div);
                     return;
@@ -7762,10 +8017,17 @@
                     <div style="font-size:0.85rem; color:#636e72; line-height:1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom:10px;">
                         ${vendor.isMobile ? '<span style="color:#0984e3; font-weight:bold;">🚗 Se déplace</span> • ' : ''}${vendor.voiceAudio ? '<span style="color:#d63031; font-weight:bold;">🎙️ Vocal Authentique</span> • ' : ''}${displayPitch}
                     </div>
-                    <div style="display:flex; gap:10px; margin-top:5px;">
-                        <button onclick="event.stopPropagation(); startTontine('${vendor.name}')" style="flex:1; background:#8B5CF6; color:white; border:none; padding:8px; border-radius:8px; font-size:0.8rem; font-weight:bold; cursor:pointer;">👥 Tontine</button>
-                        <button onclick="event.stopPropagation(); startBargain('${vendor.name}')" style="flex:1; background:#f1c40f; color:#2d3436; border:none; padding:8px; border-radius:8px; font-size:0.8rem; font-weight:bold; cursor:pointer;">🤝 Marchander</button>
-                    </div>
+                    ${
+                        simple
+                            ? `<div style="display:flex; gap:10px; width:100%; margin-top:12px;">
+                                    <button type="button" data-lp-action="call" data-vendor-id="${String(vendor.id)}" onclick="try{event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpQuickCallVendorById('${lpEscapeInlineArg(vendor.id)}')" style="flex:1; background:#1a5f3f; color:white; border:none; padding:12px 12px; border-radius:14px; font-size:1rem; font-weight:950; cursor:pointer;">📞 Appeler</button>
+                                    <button type="button" data-lp-action="itinerary" data-vendor-id="${String(vendor.id)}" onclick="try{event&&event.stopPropagation&&event.stopPropagation()}catch{}; openItineraryByVendorId('${lpEscapeInlineArg(vendor.id)}')" style="flex:1; background:#111827; color:white; border:none; padding:12px 12px; border-radius:14px; font-size:1rem; font-weight:950; cursor:pointer;">🧭 Y aller</button>
+                                </div>`
+                            : `<div style="display:flex; gap:10px; margin-top:5px;">
+                                    <button onclick="event.stopPropagation(); startTontine('${vendor.name}')" style="flex:1; background:#8B5CF6; color:white; border:none; padding:8px; border-radius:8px; font-size:0.8rem; font-weight:bold; cursor:pointer;">👥 Tontine</button>
+                                    <button onclick="event.stopPropagation(); startBargain('${vendor.name}')" style="flex:1; background:#f1c40f; color:#2d3436; border:none; padding:8px; border-radius:8px; font-size:0.8rem; font-weight:bold; cursor:pointer;">🤝 Marchander</button>
+                                </div>`
+                    }
                 `;
                 gridContainer.appendChild(div);
             });
@@ -7909,6 +8171,7 @@
                 renderFamiliesBar();
             } catch {
             }
+            try { lpApplySimplePanelVisibility(); } catch {}
         }
 
         function exitMangooLocal() {
@@ -8315,8 +8578,8 @@
                 if(label) label.innerText = text;
             }
 
-            // Close menu
-            toggleFilterMenu();
+            const menu = document.getElementById('filterMenu');
+            if (menu && menu.style.display === 'flex') toggleFilterMenu();
 
             // Switch back to list or map if we were in Favs or Account
             if (currentView === 'fav' || currentView === 'account') {
@@ -9385,6 +9648,7 @@
         // === GESTION DE LA FICHE VENDEUR ===
         function openVendorSheet(vendor) {
             activeVendor = vendor;
+            try { lpHideSimplePanel(); } catch {}
 
             try {
                 const sheet = document.getElementById('vendorSheet');
@@ -9777,6 +10041,290 @@
                 window.history.replaceState({}, '', url.toString());
             } catch {
             }
+            try { lpApplySimplePanelVisibility(); } catch {}
+        }
+
+        function lpGetUiMode() {
+            try {
+                const v = String(localStorage.getItem('mangoo_local_ui_mode') || '').trim().toLowerCase();
+                if (v === 'advanced') return 'advanced';
+            } catch {
+            }
+            return 'simple';
+        }
+
+        function lpSetUiMode(mode) {
+            const next = mode === 'advanced' ? 'advanced' : 'simple';
+            try { localStorage.setItem('mangoo_local_ui_mode', next); } catch {}
+            lpApplyUiMode();
+        }
+
+        function lpToggleUiMode() {
+            const next = lpGetUiMode() === 'simple' ? 'advanced' : 'simple';
+            lpSetUiMode(next);
+        }
+
+        function lpApplyUiMode() {
+            const simple = lpGetUiMode() === 'simple';
+            try { document.documentElement.classList.toggle('lp-simple', simple); } catch {}
+            try {
+                const btn = document.getElementById('lpUiModeBtn');
+                if (btn) btn.textContent = simple ? '⚙️ Avancé' : '✅ Simple';
+            } catch {
+            }
+            try {
+                const btn = document.getElementById('lpUiModeHeaderBtn');
+                if (btn) btn.textContent = simple ? '⚙️ Avancé' : '✅ Simple';
+            } catch {
+            }
+            try { lpApplySimplePanelVisibility(); } catch {}
+            try { filterVendors(); } catch {}
+        }
+
+        function lpApplySimplePanelVisibility() {
+            const panel = document.getElementById('lpSimplePanel');
+            const reopen = document.getElementById('lpSimpleReopenBtn');
+            if (!panel) return;
+            const simple = document.documentElement.classList.contains('lp-simple');
+            const sheet = document.getElementById('vendorSheet');
+            const sheetOpen = !!(sheet && sheet.classList.contains('active'));
+            let hidden = false;
+            try { hidden = localStorage.getItem('mangoo_local_simple_panel_hidden') === '1'; } catch {}
+            const canShow = simple && currentView === 'map' && !sheetOpen;
+            const showPanel = canShow && !hidden;
+            panel.style.display = showPanel ? 'block' : 'none';
+            if (reopen) reopen.style.display = canShow && hidden ? 'block' : 'none';
+        }
+
+        function lpHideSimplePanel() {
+            const panel = document.getElementById('lpSimplePanel');
+            if (panel) panel.style.display = 'none';
+        }
+
+        function lpDismissSimplePanel() {
+            try { localStorage.setItem('mangoo_local_simple_panel_hidden', '1'); } catch {}
+            try { lpApplySimplePanelVisibility(); } catch {}
+        }
+
+        function lpShowSimplePanel() {
+            try { localStorage.removeItem('mangoo_local_simple_panel_hidden'); } catch {}
+            try { lpApplySimplePanelVisibility(); } catch {}
+        }
+
+        function lpSpeak(text) {
+            const msg = String(text || '').trim();
+            if (!msg) return;
+            try {
+                if (!('speechSynthesis' in window)) return;
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(msg);
+                u.lang = 'fr-FR';
+                u.rate = 1.02;
+                u.pitch = 1.0;
+                window.speechSynthesis.speak(u);
+            } catch {
+            }
+        }
+
+        function lpSpeakHelp() {
+            lpSpeak("Bienvenue sur Mangoo Local plus. Appuyez sur Autour de moi pour voir ce qui est proche. Ou appuyez sur Parler et dites un besoin. Exemple: vivres, plombier, électricien.");
+        }
+
+        function lpSimpleAroundMe() {
+            try { locateUser(); } catch {}
+            try {
+                setTimeout(() => {
+                    try { switchView('list'); } catch {}
+                }, 650);
+            } catch {
+            }
+            try { lpSpeak("D'accord. Je cherche autour de vous."); } catch {}
+        }
+
+        function lpSimpleVoice() {
+            lpVoiceSearchWithConfirm();
+        }
+
+        function lpQuickCategory(key) {
+            const k = String(key || '').trim().toLowerCase();
+            const input = document.getElementById('searchInput');
+            try {
+                if (k === 'metiers') {
+                    setKindMode('service');
+                    currentCategory = 'all';
+                    if (input) input.value = '';
+                    filterVendors();
+                    try { switchView('list'); } catch {}
+                    lpSpeak("Métiers.");
+                    return;
+                }
+                setKindMode('shop');
+                let cat = 'all';
+                if (k === 'vivres') cat = '🥬 Vivres Frais';
+                if (k === 'tech') cat = '📱 Électronique';
+                if (k === 'mode') cat = '🧵 Mode';
+                if (k === 'beaute') cat = '💇‍♀️ Beauté';
+                filterCategory(cat, null);
+                if (input) input.value = '';
+                filterVendors();
+                try { switchView('list'); } catch {}
+                if (k === 'all') lpSpeak("Tout.");
+                else if (k === 'vivres') lpSpeak("Vivres.");
+                else if (k === 'tech') lpSpeak("Tech.");
+                else if (k === 'mode') lpSpeak("Mode.");
+                else if (k === 'beaute') lpSpeak("Beauté.");
+            } catch {
+            }
+        }
+
+        function lpQuickCallVendorById(vendorId) {
+            const id = String(vendorId || '');
+            const v = VENDORS.find((x) => String(x?.id) === id);
+            if (!v) {
+                showLocalToast("Impossible d'appeler ce vendeur.", 'error');
+                return;
+            }
+            activeVendor = v;
+            try {
+                startAudioCall();
+                setTimeout(() => {
+                    try {
+                        const sel = document.getElementById('callSelectionOverlay');
+                        const callOverlay = document.getElementById('callOverlay');
+                        const callOpen = !!(callOverlay && callOverlay.style && callOverlay.style.display && callOverlay.style.display !== 'none');
+                        if (sel || callOpen) return;
+
+                        const vendorName = String(activeVendor?.name || '').trim() || 'le vendeur';
+                        const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+                        const url = `test-webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}`;
+
+                        try {
+                            const w = window.open(url, '_blank');
+                            if (w) return;
+                        } catch {
+                        }
+                        try { window.location.assign(url); } catch {}
+                    } catch {
+                    }
+                }, 120);
+            } catch (e) {
+                try { console.error(e); } catch {}
+                try {
+                    const vendorName = String(activeVendor?.name || '').trim() || 'le vendeur';
+                    const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+                    const url = `test-webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}`;
+                    const w = window.open(url, '_blank');
+                    if (w) return;
+                } catch {
+                }
+                showLocalToast("Appel indisponible sur cet appareil.", 'error');
+            }
+        }
+
+        function lpSpeakTopResults(maxCount = 3) {
+            try {
+                const list = getFilteredVendors();
+                if (!Array.isArray(list) || list.length === 0) {
+                    lpSpeak("Aucun résultat.");
+                    return;
+                }
+                const top = list.slice(0, Math.max(1, Math.min(5, Number(maxCount) || 3)));
+                const names = top.map((v) => String(v?.name || '').trim()).filter(Boolean);
+                if (!names.length) return;
+                lpSpeak(`Voici ${names.length} résultats: ${names.join(', ')}.`);
+            } catch {
+            }
+        }
+
+        function lpVoiceSearchWithConfirm() {
+            if (!('webkitSpeechRecognition' in window)) {
+                try {
+                    const input = document.getElementById('searchInput');
+                    if (input) input.focus();
+                } catch {
+                }
+                showLocalToast("Recherche vocale indisponible. Tapez votre besoin.", 'error');
+                return;
+            }
+
+            const micBtn = document.getElementById('lpSimpleVoiceBtn') || document.querySelector('.mic-btn');
+            const searchInput = document.getElementById('searchInput');
+            if (!searchInput) return;
+
+            const listenQuery = () => {
+                const rec = new webkitSpeechRecognition();
+                rec.lang = 'fr-FR';
+                rec.interimResults = false;
+                rec.maxAlternatives = 1;
+                try { if (micBtn) micBtn.classList.add('mic-active'); } catch {}
+                try { lpSpeak("Dites ce que vous cherchez."); } catch {}
+
+                rec.onresult = (event) => {
+                    const transcript = String(event?.results?.[0]?.[0]?.transcript || '').trim();
+                    if (!transcript) {
+                        try { if (micBtn) micBtn.classList.remove('mic-active'); } catch {}
+                        return;
+                    }
+                    try { lpSpeak(`Vous avez dit: ${transcript}. Dites Oui ou Non.`); } catch {}
+                    const confirmRec = new webkitSpeechRecognition();
+                    confirmRec.lang = 'fr-FR';
+                    confirmRec.interimResults = false;
+                    confirmRec.maxAlternatives = 1;
+                    confirmRec.onresult = (ev) => {
+                        const answer = String(ev?.results?.[0]?.[0]?.transcript || '').trim().toLowerCase();
+                        const yes = ['oui', 'ouais', 'ok', 'okay', "d'accord", "daccord"].some((w) => answer.includes(w));
+                        const no = ['non', 'pas', 'annule', 'annuler'].some((w) => answer.includes(w));
+                        try { if (micBtn) micBtn.classList.remove('mic-active'); } catch {}
+                        if (yes) {
+                            searchInput.value = transcript;
+                            try {
+                                if (currentKindMode === 'all') {
+                                    const t = transcript.toLowerCase();
+                                    const serviceHints = ['plombier', 'électricien', 'electricien', 'menuisier', 'ébéniste', 'ebeniste', 'tailleur', 'couturier', 'réparateur', 'reparateur'];
+                                    const shopHints = ['boutique', 'vivres', 'tech', 'électronique', 'electronique', 'mode', 'beauté', 'beaute'];
+                                    if (serviceHints.some(w => t.includes(w))) setKindMode('service');
+                                    else if (shopHints.some(w => t.includes(w))) setKindMode('shop');
+                                }
+                            } catch {
+                            }
+                            try { filterVendors(); } catch {}
+                            try { switchView('list'); } catch {}
+                            try { setTimeout(() => lpSpeakTopResults(3), 350); } catch {}
+                            return;
+                        }
+                        if (no) {
+                            try { lpSpeak("D'accord. Recommencez."); } catch {}
+                            try { listenQuery(); } catch {}
+                            return;
+                        }
+                        try { lpSpeak("Dites Oui ou Non."); } catch {}
+                        try { listenQuery(); } catch {}
+                    };
+                    confirmRec.onerror = () => {
+                        try { if (micBtn) micBtn.classList.remove('mic-active'); } catch {}
+                    };
+                    try { confirmRec.start(); } catch {}
+                };
+
+                rec.onerror = () => {
+                    try { if (micBtn) micBtn.classList.remove('mic-active'); } catch {}
+                };
+
+                rec.onend = () => {
+                    try { if (micBtn) micBtn.classList.remove('mic-active'); } catch {}
+                };
+
+                try { rec.start(); } catch {}
+            };
+
+            listenQuery();
+        }
+
+        try {
+            window.addEventListener('load', () => {
+                try { lpApplyUiMode(); } catch {}
+            });
+        } catch {
         }
 
         function launchItinerary() {
