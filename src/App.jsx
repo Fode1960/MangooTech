@@ -68,6 +68,7 @@ import ConnectPlusVendorPage from './pages/connect-plus/ConnectPlusVendorPage'
 import LiveShoppingJoinPage from './pages/LiveShoppingJoinPage'
 import InternalMeetPage from './pages/internal/InternalMeetPage'
 import MarketplaceAIAssistant from './components/MarketplaceAIAssistant'
+import mangooLogo from './assets/mangoo-logo.svg'
 
 // Store optimisé avec Zustand
 const useStore = create((set, get) => ({
@@ -280,6 +281,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
   const [submitting, setSubmitting] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const { isDark, setTheme } = useThemeStore();
+  const hasSupabaseAuth = Boolean(supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey)
   const navigate = useNavigate();
 
   const handleBack = useCallback(() => {
@@ -298,7 +300,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
   }, [navigate, onBack])
 
   const speakHelp = useCallback(() => {
-    speakFR("Pour vous connecter, tapez votre email et votre mot de passe, puis appuyez sur Se connecter. Exemple vendeur : vendor arrobase example point com, mot de passe vendor 1 2 3. Exemple client : client arrobase example point com, mot de passe client 1 2 3.");
+    speakFR("Pour vous connecter, tapez votre email et votre mot de passe, puis appuyez sur Se connecter. Si vous n’avez pas de compte, appuyez sur Créer un compte client, ou Créer ma boutique.");
   }, []);
 
   const fastLogin = useCallback((kind) => {
@@ -358,6 +360,15 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
       setSelectedPlan(null);
     }
   }, []);
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem('mangoo-voice:login') === '1') return;
+      sessionStorage.setItem('mangoo-voice:login', '1');
+    } catch {
+    }
+    speakHelp();
+  }, [speakHelp]);
 
   const activateVendorAccount = useCallback(() => {
     const normalizedEmail = String(email || '').trim().toLowerCase();
@@ -512,6 +523,131 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
       }
     })();
 
+    const isTestEmail = (value) => {
+      const e = String(value || '').trim().toLowerCase()
+      return Boolean(e.match(/^(?:pc|ios|android)\d+@(?:exemple\.com|example\.com)$/))
+    }
+
+    const hasOnlyTestEmails = isDevHost && emailCandidates.length > 0 && emailCandidates.every(isTestEmail)
+
+    if (hasSupabaseAuth && !hasOnlyTestEmails && emailCandidates.length && passwordNormalized) {
+      try {
+        let authData = null
+        let lastAuthErrorMessage = ''
+        for (const e of emailCandidates) {
+          const { data, error: authError } = await supabase.auth.signInWithPassword({ email: e, password: passwordNormalized })
+          if (!authError && data?.user) {
+            authData = data
+            break
+          }
+          if (authError?.message) lastAuthErrorMessage = String(authError.message)
+        }
+
+        if (authData?.user) {
+          const data = authData
+          const normalizedEmail = String(data.user.email || '').trim().toLowerCase()
+          let roles = ['client']
+          let role = 'client'
+          const displayName = String(data.user.user_metadata?.full_name || data.user.user_metadata?.name || '').trim() || (normalizedEmail.split('@')[0] || 'Utilisateur')
+          const avatar = '👤'
+
+          try {
+            const accessToken = data?.session?.access_token || null
+            if (accessToken) {
+              const resp = await fetch('/api/auth/resolve-roles', {
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                },
+              })
+              const raw = await resp.text()
+              const parsed = raw ? JSON.parse(raw) : null
+              if (resp.ok && parsed?.success && Array.isArray(parsed?.roles) && parsed?.role) {
+                roles = parsed.roles
+                role = parsed.role
+              }
+            }
+          } catch {
+          }
+
+          try {
+            const { data: adminRow } = await supabase
+              .from('admin_users')
+              .select('id, is_active')
+              .eq('user_id', data.user.id)
+              .eq('is_active', true)
+              .maybeSingle()
+            if (adminRow) {
+              roles = Array.from(new Set([...roles, 'admin']))
+              role = 'admin'
+            }
+          } catch {
+          }
+
+          try {
+            const { data: shopAuth } = await supabase
+              .from('shop_auth')
+              .select('shop_id')
+              .eq('user_id', data.user.id)
+              .maybeSingle()
+            if (shopAuth?.shop_id) {
+              roles = Array.from(new Set([...roles, 'vendor']))
+              if (role === 'client') role = 'vendor'
+            }
+          } catch {
+          }
+
+          if (role === 'client') {
+            try {
+              let hasOwnedShop = false
+              const byOwnerEmail = await supabase.from('shops').select('id').eq('owner_email', normalizedEmail).limit(1)
+              if (byOwnerEmail?.error) {
+                const msg = String(byOwnerEmail.error.message || '').toLowerCase()
+                const mentionsOwnerEmail = msg.includes('owner_email')
+                const isMissingColumn = msg.includes('does not exist') || msg.includes('column') || msg.includes('schema cache')
+                if (!mentionsOwnerEmail || !isMissingColumn) throw byOwnerEmail.error
+              } else {
+                hasOwnedShop = Array.isArray(byOwnerEmail?.data) && byOwnerEmail.data.length > 0
+              }
+
+              if (hasOwnedShop) {
+                roles = Array.from(new Set([...roles, 'vendor']))
+                role = 'vendor'
+              }
+            } catch {
+            }
+          }
+
+          const nextUser = {
+            id: data.user.id,
+            name: displayName,
+            email: normalizedEmail,
+            role,
+            roles,
+            avatar,
+          }
+          onLogin(nextUser)
+          setSubmitting(false)
+          return
+        }
+        const raw = String(lastAuthErrorMessage || '').toLowerCase()
+        const msg = raw.includes('email not confirmed')
+          ? 'Email non confirmé. Ouvrez votre boîte mail pour confirmer, puis réessayez.'
+          : (raw.includes('rate limit') || raw.includes('too many'))
+            ? 'Trop de tentatives. Réessayez plus tard.'
+            : (raw.includes('invalid login credentials') || raw.includes('invalid') || raw.includes('credentials'))
+              ? 'Identifiants incorrects. Vérifiez email et mot de passe.'
+              : (lastAuthErrorMessage ? 'Connexion impossible. Réessayez.' : 'Connexion impossible. Vérifiez votre connexion.')
+        setError(msg)
+        try { speakFR(msg) } catch {}
+      } catch {
+        const msg = 'Connexion impossible. Vérifiez votre connexion.'
+        setError(msg)
+        try { speakFR(msg) } catch {}
+      }
+      setSubmitting(false)
+      return
+    }
+
     const storedUsers = (() => {
       if (!isDevHost) return {};
       try {
@@ -605,6 +741,22 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
       }
     };
 
+    if (isDevHost) {
+      for (const e of emailCandidates) {
+        if (!isTestEmail(e)) continue
+        if (demoUsers[e]) continue
+        const localPart = String(e.split('@')[0] || '').trim()
+        demoUsers[e] = {
+          id: `demo_${localPart || 'user'}`,
+          name: localPart || 'Utilisateur',
+          role: 'client',
+          roles: ['client'],
+          email: e,
+          avatar: '🧑‍💻'
+        }
+      }
+    }
+
     const pickKey = (obj) => {
       for (const e of emailCandidates) {
         if (obj && obj[e]) return e;
@@ -628,6 +780,13 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
       'pc3@exemple.com': 'pc3@exemple.com',
       'pc4@exemple.com': 'pc4@exemple.com'
     };
+    if (isDevHost) {
+      for (const e of emailCandidates) {
+        if (!isTestEmail(e)) continue
+        if (demoPasswords[e]) continue
+        demoPasswords[e] = e
+      }
+    }
     const storedPasswordRaw = fromStored ? String(user?.password ?? '') : ''
     const storedPasswordNormalized = normalizePasswordInput(storedPasswordRaw)
     const isStoredPassword = fromStored && Boolean(storedPasswordRaw) && (storedPasswordRaw === passwordRaw || storedPasswordNormalized === passwordNormalized);
@@ -651,8 +810,13 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
       try {
         const sp = localStorage.getItem('mangoo-selected-plan');
         if (sp) {
-          const plan = String(sp);
-          const pack = plan === 'pro' ? 'pack_professionnel' : 'pack_decouverte';
+          const plan = String(sp).trim();
+          const normalized = plan.toLowerCase();
+          const pack = normalized.startsWith('pack_')
+            ? normalized
+            : normalized === 'pro'
+              ? 'pack_professionnel'
+              : 'pack_decouverte';
           navigate(`/plan-checkout?pack=${encodeURIComponent(pack)}`);
           localStorage.removeItem('mangoo-selected-plan');
           return;
@@ -767,109 +931,8 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
       }
     }
 
-    try {
-      const hasSupabase = Boolean(String(import.meta.env.VITE_SUPABASE_URL || '').trim()) && Boolean(String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim())
-      if (hasSupabase && emailCandidates.length && password) {
-        let authData = null
-        for (const e of emailCandidates) {
-          const { data, error: authError } = await supabase.auth.signInWithPassword({ email: e, password })
-          if (!authError && data?.user) {
-            authData = data
-            break
-          }
-        }
-        if (authData?.user) {
-          const data = authData
-          const normalizedEmail = String(data.user.email || '').trim().toLowerCase()
-          let roles = ['client']
-          let role = 'client'
-          const displayName = String(data.user.user_metadata?.full_name || data.user.user_metadata?.name || '').trim() || (normalizedEmail.split('@')[0] || 'Utilisateur')
-          const avatar = '👤'
-
-          try {
-            const accessToken = data?.session?.access_token || null
-            if (accessToken) {
-              const resp = await fetch('/api/auth/resolve-roles', {
-                headers: {
-                  Authorization: `Bearer ${accessToken}`,
-                },
-              })
-              const raw = await resp.text()
-              const parsed = raw ? JSON.parse(raw) : null
-              if (resp.ok && parsed?.success && Array.isArray(parsed?.roles) && parsed?.role) {
-                roles = parsed.roles
-                role = parsed.role
-              }
-            }
-          } catch {
-          }
-
-          try {
-            const { data: adminRow } = await supabase
-              .from('admin_users')
-              .select('id, is_active')
-              .eq('user_id', data.user.id)
-              .eq('is_active', true)
-              .maybeSingle()
-            if (adminRow) {
-              roles = Array.from(new Set([...roles, 'admin']))
-              role = 'admin'
-            }
-          } catch {
-          }
-
-          try {
-            const { data: shopAuth } = await supabase
-              .from('shop_auth')
-              .select('shop_id')
-              .eq('user_id', data.user.id)
-              .maybeSingle()
-            if (shopAuth?.shop_id) {
-              roles = Array.from(new Set([...roles, 'vendor']))
-              if (role === 'client') role = 'vendor'
-            }
-          } catch {
-          }
-
-          if (role === 'client') {
-            try {
-              let hasOwnedShop = false
-              const byOwnerEmail = await supabase.from('shops').select('id').eq('owner_email', normalizedEmail).limit(1)
-              if (byOwnerEmail?.error) {
-                const msg = String(byOwnerEmail.error.message || '').toLowerCase()
-                const mentionsOwnerEmail = msg.includes('owner_email')
-                const isMissingColumn = msg.includes('does not exist') || msg.includes('column') || msg.includes('schema cache')
-                if (!mentionsOwnerEmail || !isMissingColumn) throw byOwnerEmail.error
-              } else {
-                hasOwnedShop = Array.isArray(byOwnerEmail?.data) && byOwnerEmail.data.length > 0
-              }
-
-              if (hasOwnedShop) {
-                roles = Array.from(new Set([...roles, 'vendor']))
-                role = 'vendor'
-              }
-            } catch {
-            }
-          }
-
-          const nextUser = {
-            id: data.user.id,
-            name: displayName,
-            email: normalizedEmail,
-            role,
-            roles,
-            avatar,
-          }
-          onLogin(nextUser)
-          setSubmitting(false)
-          return
-        }
-      }
-    } catch {
-    }
-
     const allowFallbackLocal = Boolean(import.meta.env.DEV) || !Boolean(String(import.meta.env.VITE_SUPABASE_URL || '').trim())
-    if (allowFallbackLocal && !fromStored && !demoUsers[normalizedEmail] && normalizedEmail && password) {
+    if (!hasSupabaseAuth && allowFallbackLocal && !fromStored && !demoUsers[normalizedEmail] && normalizedEmail && passwordNormalized) {
       const newUser = {
         id: `local_${Date.now()}`,
         name: normalizedEmail.split('@')[0] || 'Utilisateur',
@@ -887,8 +950,13 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
       try {
         const sp = localStorage.getItem('mangoo-selected-plan');
         if (sp) {
-          const plan = String(sp);
-          const pack = plan === 'pro' ? 'pack_professionnel' : 'pack_decouverte';
+          const plan = String(sp).trim();
+          const normalized = plan.toLowerCase();
+          const pack = normalized.startsWith('pack_')
+            ? normalized
+            : normalized === 'pro'
+              ? 'pack_professionnel'
+              : 'pack_decouverte';
           navigate(`/plan-checkout?pack=${encodeURIComponent(pack)}`);
           localStorage.removeItem('mangoo-selected-plan');
         }
@@ -908,33 +976,39 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
         : 'bg-gradient-to-br from-orange-50 to-green-50'
     }`}>
-      <div className={`max-w-md w-full rounded-2xl shadow-2xl p-6 transition-colors duration-300 max-h-[calc(100vh-2rem)] overflow-y-auto ${
-        isDark 
-          ? 'bg-gray-800 border border-gray-700' 
-          : 'bg-white'
-      }`}>
-        {onBack !== false && (
-          <button
-            type="button"
-            onClick={handleBack}
-            className={`mb-6 flex items-center gap-2 text-sm font-medium transition-colors duration-300 hover:text-orange-500 ${
-              isDark ? 'text-gray-400' : 'text-gray-600'
-            }`}
-          >
-            ← Retour
-          </button>
-        )}
-        <div className="text-center mb-8">
-          <div className="text-6xl mb-4 animate-bounce">🛍️</div>
-          <h1 className={`text-3xl font-bold bg-gradient-to-r from-orange-500 to-green-600 bg-clip-text text-transparent`}>
-            MangooTech
-          </h1>
-          <p className={`text-sm mt-2 transition-colors duration-300 ${
-            isDark ? 'text-gray-400' : 'text-gray-600'
-          }`}>
-            Connectez-vous pour accéder à la plateforme
-          </p>
-        </div>
+      <div className="card w-full max-w-md shadow-2xl max-h-[calc(100vh-2rem)] overflow-y-auto">
+        <div className="h-2 w-full bg-gradient-to-r from-orange-500 to-green-600" />
+        <div className="card-body">
+          <div className="flex items-center justify-between gap-3">
+            {onBack !== false ? (
+              <button
+                type="button"
+                onClick={handleBack}
+                className={`inline-flex items-center gap-2 text-sm font-semibold transition-colors hover:text-orange-600 ${
+                  isDark ? 'text-gray-300' : 'text-gray-700'
+                }`}
+              >
+                ← Retour
+              </button>
+            ) : (
+              <div />
+            )}
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+            </div>
+          </div>
+
+          <div className="mt-5 flex items-center gap-3">
+            <img src={mangooLogo} alt="Mangoo Tech" className="w-12 h-12 rounded-2xl" />
+            <div className="min-w-0">
+              <h1 className="text-2xl font-extrabold tracking-tight">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-green-600">MangooTech</span>
+              </h1>
+              <p className={`text-sm mt-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                Connectez-vous pour accéder à la plateforme
+              </p>
+            </div>
+          </div>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
@@ -956,7 +1030,17 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
           <div className={`mb-4 px-4 py-3 rounded-lg border text-sm ${
             isDark ? 'bg-gray-900/40 border-gray-700 text-gray-200' : 'bg-gray-50 border-gray-200 text-gray-700'
           }`}>
-            <div className="font-semibold">Plan sélectionné : {selectedPlan === 'pro' ? 'Pro' : 'Gratuit'}</div>
+            <div className="font-semibold">Plan sélectionné : {(() => {
+              const v = String(selectedPlan || '').trim().toLowerCase();
+              if (!v) return '';
+              if (v === 'pro') return 'Pro';
+              if (v === 'free') return 'Gratuit';
+              if (v === 'pack_decouverte') return 'Pack Découverte';
+              if (v === 'pack_visibilite') return 'Pack Visibilité';
+              if (v === 'pack_professionnel') return 'Pack Professionnel';
+              if (v === 'pack_premium') return 'Pack Premium';
+              return v;
+            })()}</div>
             <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Connectez-vous pour continuer, ou créez votre boutique.</div>
           </div>
         )}
@@ -972,12 +1056,8 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className={`w-full px-4 py-3 rounded-lg border transition-colors duration-300 ${
-                isDark 
-                  ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500' 
-                  : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
-              }`}
-              placeholder="admin@mangoo.tech"
+              className="form-input"
+              placeholder="email@exemple.com"
               required
             />
           </div>
@@ -993,12 +1073,8 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`w-full px-4 py-3 pr-12 rounded-lg border transition-colors duration-300 ${
-                  isDark 
-                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500' 
-                    : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
-                }`}
-                placeholder="admin123"
+                className="form-input pr-12"
+                placeholder="Votre mot de passe"
                 required
               />
               <button
@@ -1017,56 +1093,50 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-gradient-to-r from-orange-500 to-green-600 text-white py-3 px-4 rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105"
+            className="w-full btn-primary"
           >
             {submitting ? 'Connexion…' : 'Se connecter'}
           </button>
         </form>
 
         <div className="mt-4">
-          <button
-            type="button"
-            onClick={speakHelp}
-            className={`w-full px-4 py-3 rounded-xl text-sm font-black transition-colors ${
-              isDark ? 'bg-gray-900 text-white hover:bg-gray-700 border border-gray-700' : 'bg-white text-gray-900 hover:bg-gray-50 border border-gray-200'
-            }`}
-          >
-            🔊 Écouter l’aide
-          </button>
-
-          <div className={`mt-3 text-xs font-bold ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Connexion rapide (démo)</div>
-          <div className="mt-2 grid grid-cols-1 gap-2">
-            <button
-              type="button"
-              onClick={() => fastLogin('vendor')}
-              className="w-full bg-blue-600 text-white px-4 py-3 rounded-xl font-black hover:bg-blue-700 transition-colors"
-            >
-              🏪 Entrer : Vendre / Services
-            </button>
-            <button
-              type="button"
-              onClick={() => fastLogin('livreur')}
-              className="w-full bg-slate-900 text-white px-4 py-3 rounded-xl font-black hover:bg-slate-800 transition-colors"
-            >
-              🛵 Entrer : Livrer
-            </button>
-            <button
-              type="button"
-              onClick={() => fastLogin('client')}
-              className="w-full bg-emerald-600 text-white px-4 py-3 rounded-xl font-black hover:bg-emerald-700 transition-colors"
-            >
-              🛒 Entrer : Acheter
-            </button>
-            <button
-              type="button"
-              onClick={() => fastLogin('admin')}
-              className={`w-full px-4 py-3 rounded-xl font-black transition-colors ${
-                isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-              }`}
-            >
-              👨‍💼 Admin
-            </button>
-          </div>
+          {!hasSupabaseAuth && (
+            <details className="mt-3">
+              <summary className={`cursor-pointer select-none text-xs font-bold ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Connexion rapide (démo)</summary>
+              <div className="mt-2 grid grid-cols-1 gap-2">
+                <button
+                  type="button"
+                  onClick={() => fastLogin('vendor')}
+                  className="w-full bg-blue-600 text-white px-4 py-3 rounded-xl font-black hover:bg-blue-700 transition-colors"
+                >
+                  🏪 Entrer : Vendre / Services
+                </button>
+                <button
+                  type="button"
+                  onClick={() => fastLogin('livreur')}
+                  className="w-full bg-slate-900 text-white px-4 py-3 rounded-xl font-black hover:bg-slate-800 transition-colors"
+                >
+                  🛵 Entrer : Livrer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => fastLogin('client')}
+                  className="w-full bg-emerald-600 text-white px-4 py-3 rounded-xl font-black hover:bg-emerald-700 transition-colors"
+                >
+                  🛒 Entrer : Acheter
+                </button>
+                <button
+                  type="button"
+                  onClick={() => fastLogin('admin')}
+                  className={`w-full px-4 py-3 rounded-xl font-black transition-colors ${
+                    isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                  }`}
+                >
+                  👨‍💼 Admin
+                </button>
+              </div>
+            </details>
+          )}
         </div>
 
         <div className="mt-4 space-y-2">
@@ -1112,15 +1182,18 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
           </button>
         </div>
 
-        <details className={`mt-4 text-xs transition-colors duration-300 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-          <summary className="cursor-pointer select-none font-semibold">Comptes de démonstration</summary>
-          <div className="mt-2 space-y-1">
-            <p><span className="font-mono">admin@mangoo.tech</span> / admin123</p>
-            <p><span className="font-mono">vendor@example.com</span> / vendor123</p>
-            <p><span className="font-mono">client@example.com</span> / client123</p>
-            <p><span className="font-mono">livreur@exemple.com</span> / livreur123</p>
-          </div>
-        </details>
+        {!hasSupabaseAuth && (
+          <details className={`mt-4 text-xs transition-colors duration-300 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+            <summary className="cursor-pointer select-none font-semibold">Comptes de démonstration</summary>
+            <div className="mt-2 space-y-1">
+              <p><span className="font-mono">admin@mangoo.tech</span> / admin123</p>
+              <p><span className="font-mono">vendor@example.com</span> / vendor123</p>
+              <p><span className="font-mono">client@example.com</span> / client123</p>
+              <p><span className="font-mono">livreur@exemple.com</span> / livreur123</p>
+            </div>
+          </details>
+        )}
+        </div>
       </div>
     </div>
   );
@@ -2076,7 +2149,7 @@ const ClientRegister = ({ onRegister, onBack }) => {
     }
 
     const consentTimestamp = new Date().toISOString();
-    const hasSupabase = Boolean(String(import.meta.env.VITE_SUPABASE_URL || '').trim()) && Boolean(String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim())
+    const hasSupabase = Boolean(supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey)
     let authUserId = null
 
     if (hasSupabase) {
@@ -5299,6 +5372,21 @@ const ClientMarketplace = ({ user }) => {
   const boostFlags = useMemo(() => getBoostDiscoveryFlags(), []);
   const [boostSummary, setBoostSummary] = useState({ sponsored: 0, promo: 0, new: 0 });
 
+  useEffect(() => {
+    let shouldOpen = false
+    try {
+      shouldOpen = Boolean(sessionStorage.getItem('mangoo-open-cart'))
+    } catch {
+    }
+    if (!shouldOpen) return
+    if (!Array.isArray(cart) || cart.length <= 0) return
+    try {
+      sessionStorage.removeItem('mangoo-open-cart')
+    } catch {
+    }
+    setShowPayment(true)
+  }, [cart])
+
 
   const buildBoostLink = useCallback((basePath) => {
     try {
@@ -5558,7 +5646,10 @@ const ClientMarketplace = ({ user }) => {
     <div className="p-6">
       <MarketplaceAIAssistant
         isDark={isDark}
-        onAddToCart={addToCart}
+        onAddToCart={(item) => {
+          addToCart(item)
+          setShowPayment(true)
+        }}
         onViewShop={(shopSlug) => {
           const s = String(shopSlug || '').trim()
           if (!s) return
@@ -7321,9 +7412,16 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
       const raw = localStorage.getItem('mangoo-active-pack');
       const data = raw ? JSON.parse(raw) : null;
       if (!data || typeof data !== 'object') return null;
-      const userId = user?.id || user?.email || null;
-      if (!userId) return null;
-      if (String(data.userId || '') !== String(userId)) return null;
+      const candidates = new Set();
+      if (user?.id) candidates.add(String(user.id));
+      if (user?.email) {
+        candidates.add(String(user.email));
+        candidates.add(String(user.email).trim().toLowerCase());
+      }
+      if (!candidates.size) return null;
+      const storedUserId = String(data.userId || '').trim();
+      const storedUserIdLc = storedUserId.toLowerCase();
+      if (!candidates.has(storedUserId) && !candidates.has(storedUserIdLc)) return null;
 
       const pendingId = data.pendingPackId || null;
       const pendingAtRaw = data.pendingPackEffectiveAt || null;
@@ -9693,8 +9791,27 @@ function AppShell() {
     try {
       const selectedPlan = localStorage.getItem('mangoo-selected-plan');
       if (selectedPlan) {
-        toast.success(`Plan ${selectedPlan === 'pro' ? 'Pro' : 'Gratuit'} sélectionné`);
-        const pack = selectedPlan === 'pro' ? 'pack_professionnel' : 'pack_decouverte';
+        const plan = String(selectedPlan).trim();
+        const normalized = plan.toLowerCase();
+        const label = normalized === 'pro'
+          ? 'Pro'
+          : normalized === 'free'
+            ? 'Gratuit'
+            : normalized === 'pack_decouverte'
+              ? 'Pack Découverte'
+              : normalized === 'pack_visibilite'
+                ? 'Pack Visibilité'
+                : normalized === 'pack_professionnel'
+                  ? 'Pack Professionnel'
+                  : normalized === 'pack_premium'
+                    ? 'Pack Premium'
+                    : plan;
+        toast.success(`Plan ${label} sélectionné`);
+        const pack = normalized.startsWith('pack_')
+          ? normalized
+          : normalized === 'pro'
+            ? 'pack_professionnel'
+            : 'pack_decouverte';
         navigate(`/plan-checkout?pack=${encodeURIComponent(pack)}`);
         localStorage.removeItem('mangoo-selected-plan');
         return;
@@ -9927,6 +10044,28 @@ function AppShell() {
     return <MangooLocalFrame user={user} onBack={handleBackFromLocal} />;
   }
 
+  const landingAiViewShop = (shopSlug) => {
+    const s = String(shopSlug || '').trim()
+    if (!s) return
+    navigate(`/shop/${encodeURIComponent(s)}`)
+  }
+  const landingAiAddToCart = (item) => {
+    if (!item) return
+    if (user?.role === 'admin') return
+    try {
+      useStore.getState().addToCart(item)
+    } catch {
+    }
+    if (!user) {
+      void handleLogin({ role: 'client', name: 'Invité', avatar: '👤', email: 'guest@mangoo.tech' })
+    }
+    try {
+      sessionStorage.setItem('mangoo-open-cart', '1')
+    } catch {
+    }
+    setCurrentView('marketplace')
+  }
+
   if (!user) {
     return (
       <LandingPage 
@@ -9943,6 +10082,8 @@ function AppShell() {
           setCurrentView(view);
         }} 
         onLogin={setUser} 
+        onAiViewShop={landingAiViewShop}
+        onAiAddToCart={landingAiAddToCart}
       />
     );
   }
@@ -9997,6 +10138,8 @@ function AppShell() {
             }
             setUser(u);
           }}
+          onAiViewShop={landingAiViewShop}
+          onAiAddToCart={landingAiAddToCart}
           showAdminDashboard
           onAdminDashboard={() => navigate('/admin/dashboard')}
         />

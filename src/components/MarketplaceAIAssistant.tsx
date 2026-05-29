@@ -5,6 +5,9 @@ type ApiItem = {
   id: string
   name: string
   description?: string
+  fullDescription?: string
+  shortDescription?: string
+  imageUrl?: string
   price?: number | null
   currency?: string
   shop?: { slug: string; name: string; logoUrl?: string }
@@ -14,9 +17,18 @@ export default function MarketplaceAIAssistant(props: {
   isDark?: boolean
   onAddToCart?: (item: any) => void
   onViewShop?: (shopSlug: string) => void
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  hideLauncher?: boolean
+  defaultOpen?: boolean
 }) {
   const isDark = !!props.isDark
-  const [open, setOpen] = useState(false)
+  const [internalOpen, setInternalOpen] = useState(!!props.defaultOpen)
+  const open = props.open !== undefined ? !!props.open : internalOpen
+  const setOpen = (v: boolean) => {
+    if (props.onOpenChange) props.onOpenChange(v)
+    else setInternalOpen(v)
+  }
   const [q, setQ] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -60,9 +72,9 @@ export default function MarketplaceAIAssistant(props: {
     return {
       id: p.id,
       name: p.name,
-      description: p.description || '',
+      description: p.description || p.shortDescription || p.fullDescription || '',
       price: priceLabel || '0 FCFA',
-      image: p.shop?.logoUrl || '',
+      image: p.imageUrl || p.shop?.logoUrl || '',
       rating: 5,
       vendor: p.shop?.name || '',
       shopSlug: p.shop?.slug || '',
@@ -72,18 +84,20 @@ export default function MarketplaceAIAssistant(props: {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className={`fixed bottom-6 right-6 z-40 rounded-2xl px-4 py-3 shadow-lg border ${
-          isDark ? 'bg-gray-900/90 border-white/10 text-white' : 'bg-white border-gray-200 text-gray-900'
-        }`}
-      >
-        <span className="inline-flex items-center gap-2 font-black">
-          <Brain className="w-5 h-5" />
-          Assistant
-        </span>
-      </button>
+      {!props.hideLauncher && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className={`fixed bottom-6 right-6 z-40 rounded-2xl px-4 py-3 shadow-lg border ${
+            isDark ? 'bg-gray-900/90 border-white/10 text-white' : 'bg-white border-gray-200 text-gray-900'
+          }`}
+        >
+          <span className="inline-flex items-center gap-2 font-black">
+            <Brain className="w-5 h-5" />
+            Assistant
+          </span>
+        </button>
+      )}
 
       {open && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
@@ -150,9 +164,27 @@ export default function MarketplaceAIAssistant(props: {
                     key={p.id}
                     className={`rounded-2xl border p-4 ${isDark ? 'border-white/10 bg-black/20' : 'border-gray-200 bg-white'}`}
                   >
-                    <div className="font-black truncate">{p.name}</div>
-                    <div className={`text-sm mt-1 line-clamp-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                      {p.description || '—'}
+                    <div className="flex items-start gap-3">
+                      <div className={`w-14 h-14 rounded-2xl overflow-hidden border ${isDark ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-gray-50'}`}>
+                        {(p.imageUrl || p.shop?.logoUrl) ? (
+                          <img
+                            src={String(p.imageUrl || p.shop?.logoUrl || '')}
+                            alt={p.name}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className={`w-full h-full flex items-center justify-center text-xs font-black ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                            Mangoo
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-black truncate">{p.name}</div>
+                        <div className={`text-sm mt-1 line-clamp-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                          {p.shortDescription || p.description || p.fullDescription || '—'}
+                        </div>
+                      </div>
                     </div>
                     <div className="mt-3 flex items-center justify-between gap-3">
                       <div className="font-black text-orange-400">{formatPrice(p.price) || '—'}</div>
@@ -162,7 +194,9 @@ export default function MarketplaceAIAssistant(props: {
                       {p.shop?.slug && (
                         <button
                           type="button"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
                             if (props.onViewShop) props.onViewShop(String(p.shop?.slug || '').trim())
                             setOpen(false)
                           }}
@@ -178,14 +212,17 @@ export default function MarketplaceAIAssistant(props: {
                       )}
                       <button
                         type="button"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
                           if (props.onAddToCart) props.onAddToCart(toCartItem(p))
+                          setOpen(false)
                         }}
                         className="flex-1 rounded-xl px-3 py-2 font-black text-sm bg-gradient-to-r from-orange-500 to-green-600 text-white hover:from-orange-600 hover:to-green-700"
                       >
                         <span className="inline-flex items-center justify-center gap-2">
                           <ShoppingCart className="w-4 h-4" />
-                          Panier
+                          Payer
                         </span>
                       </button>
                     </div>
@@ -199,4 +236,3 @@ export default function MarketplaceAIAssistant(props: {
     </>
   )
 }
-

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useThemeStore } from '../stores/themeStore';
+import MarketplaceAIAssistant from './MarketplaceAIAssistant';
 import { 
   Store, 
   Moon, 
@@ -16,8 +17,10 @@ import {
   Instagram 
 } from 'lucide-react';
 
-const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminDashboard }) => {
+const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminDashboard, onAiAddToCart, onAiViewShop }) => {
   const { isDark, toggleTheme } = useThemeStore();
+  const [activePricingCard, setActivePricingCard] = React.useState('');
+  const [aiOpen, setAiOpen] = React.useState(false);
 
   const openChatWidget = () => {
     // Prevent multiple widgets
@@ -288,8 +291,8 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
 
   const selectPlan = (plan) => {
     try {
-      localStorage.setItem('mangoo-selected-plan', String(plan || 'free'));
-      localStorage.setItem('mangoo-last-selected-plan', String(plan || 'free'));
+      localStorage.setItem('mangoo-selected-plan', String(plan || 'pack_decouverte'));
+      localStorage.setItem('mangoo-last-selected-plan', String(plan || 'pack_decouverte'));
     } catch {
     }
     if (onLogin) onLogin({ role: 'login_request' });
@@ -733,46 +736,121 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
 
         </div>
 
-        {/* PRICING SECTION (Added for Pagination/Navigation) */}
         <div id="pricing" className="mt-24 w-full max-w-6xl scroll-mt-24">
-            <h2 className={`text-3xl font-bold text-center mb-12 ${isDark ? 'text-white' : 'text-gray-900'}`}>Nos Tarifs</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {/* Free */}
-                <div className={`p-8 rounded-3xl border flex flex-col ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
-                    <h3 className="text-xl font-bold text-orange-500 mb-2">Gratuit</h3>
-                    <div className={`text-4xl font-extrabold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>0 FCFA</div>
-                    <ul className={`space-y-3 mb-8 flex-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                        <li>✅ Boutique en ligne</li>
-                        <li>✅ 10 Produits max</li>
-                        <li>✅ Chat basique</li>
-                    </ul>
-                    <button type="button" onClick={() => selectPlan('free')} className={`w-full py-3 rounded-xl border font-bold transition-colors ${isDark ? 'border-orange-500 text-orange-500 hover:bg-gray-700' : 'border-orange-500 text-orange-500 hover:bg-orange-50'}`}>Commencer</button>
-                </div>
-                {/* Pro */}
-                <div className={`p-8 rounded-3xl border-2 border-orange-500 relative flex flex-col transform md:scale-105 shadow-2xl ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-                    <div className="absolute top-0 right-0 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl">POPULAIRE</div>
-                    <h3 className="text-xl font-bold text-orange-600 mb-2">Pro</h3>
-                    <div className={`text-4xl font-extrabold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>5 000 FCFA<span className="text-sm font-normal text-gray-500">/mois</span></div>
-                    <ul className={`space-y-3 mb-8 flex-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                        <li>✅ Produits illimités</li>
-                        <li>✅ <b>Live Shopping</b></li>
-                        <li>✅ Badge "Vérifié"</li>
-                        <li>✅ 0% Commission</li>
-                    </ul>
-                    <button type="button" onClick={() => selectPlan('pro')} className="w-full py-3 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold hover:shadow-lg transition-all">Choisir Pro</button>
-                </div>
-                {/* Enterprise */}
-                <div className={`p-8 rounded-3xl border flex flex-col ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
-                    <h3 className="text-xl font-bold text-blue-500 mb-2">Entreprise</h3>
-                    <div className={`text-4xl font-extrabold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>Sur Devis</div>
-                    <ul className={`space-y-3 mb-8 flex-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                        <li>✅ API & Intégrations</li>
-                        <li>✅ Support dédié 24/7</li>
-                        <li>✅ Formation équipes</li>
-                    </ul>
-                    <button type="button" onClick={goToContact} className={`w-full py-3 rounded-xl border font-bold transition-colors ${isDark ? 'border-blue-500 text-blue-500 hover:bg-gray-700' : 'border-blue-500 text-blue-500 hover:bg-blue-50'}`}>Contacter</button>
-                </div>
+          <h2 className={`text-3xl font-bold text-center mb-12 ${isDark ? 'text-white' : 'text-gray-900'}`}>Nos Tarifs</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div
+              onPointerDown={() => setActivePricingCard('pack_decouverte')}
+              onPointerUp={() => setActivePricingCard('')}
+              onPointerCancel={() => setActivePricingCard('')}
+              onPointerLeave={() => setActivePricingCard('')}
+              onFocus={() => setActivePricingCard('pack_decouverte')}
+              onBlur={() => setActivePricingCard('')}
+              tabIndex={0}
+              className={`p-7 rounded-3xl border flex flex-col outline-none transition-all duration-150 transform-gpu hover:scale-[1.02] hover:shadow-lg active:scale-[1.02] ${
+                activePricingCard === 'pack_decouverte'
+                  ? 'scale-[1.03] shadow-xl'
+                  : activePricingCard
+                    ? 'scale-[0.98] opacity-90'
+                    : ''
+              } ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}
+            >
+              <h3 className="text-xl font-bold text-orange-500 mb-2">Découverte</h3>
+              <div className={`text-4xl font-extrabold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>0 FCFA</div>
+              <ul className={`space-y-3 mb-8 flex-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                <li>✅ Boutique en ligne</li>
+                <li>✅ 10 Produits max</li>
+                <li>✅ Chat basique</li>
+              </ul>
+              <button type="button" onClick={() => selectPlan('pack_decouverte')} className={`w-full py-3 rounded-xl border font-bold transition-colors ${isDark ? 'border-orange-500 text-orange-500 hover:bg-gray-700' : 'border-orange-500 text-orange-500 hover:bg-orange-50'}`}>Activer</button>
             </div>
+
+            <div
+              onPointerDown={() => setActivePricingCard('pack_visibilite')}
+              onPointerUp={() => setActivePricingCard('')}
+              onPointerCancel={() => setActivePricingCard('')}
+              onPointerLeave={() => setActivePricingCard('')}
+              onFocus={() => setActivePricingCard('pack_visibilite')}
+              onBlur={() => setActivePricingCard('')}
+              tabIndex={0}
+              className={`p-7 rounded-3xl border-2 border-orange-500 relative flex flex-col outline-none transition-all duration-150 transform-gpu hover:scale-[1.02] hover:shadow-lg active:scale-[1.02] ${
+                activePricingCard === 'pack_visibilite'
+                  ? 'scale-[1.03] shadow-2xl'
+                  : activePricingCard
+                    ? 'scale-[0.98] opacity-90'
+                    : ''
+              } ${isDark ? 'bg-gray-800' : 'bg-white'}`}
+            >
+              <div className="absolute top-0 right-0 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl">POPULAIRE</div>
+              <h3 className="text-xl font-bold text-orange-600 mb-2">Visibilité</h3>
+              <div className={`text-4xl font-extrabold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>5 000 FCFA<span className={`text-sm font-normal ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>/mois</span></div>
+              <ul className={`space-y-3 mb-8 flex-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                <li>✅ Produits illimités</li>
+                <li>✅ Mise en avant</li>
+                <li>✅ Badge “Vérifié”</li>
+                <li>✅ Support prioritaire</li>
+              </ul>
+              <button type="button" onClick={() => selectPlan('pack_visibilite')} className="w-full py-3 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold hover:shadow-lg transition-all">Choisir</button>
+            </div>
+
+            <div
+              onPointerDown={() => setActivePricingCard('pack_professionnel')}
+              onPointerUp={() => setActivePricingCard('')}
+              onPointerCancel={() => setActivePricingCard('')}
+              onPointerLeave={() => setActivePricingCard('')}
+              onFocus={() => setActivePricingCard('pack_professionnel')}
+              onBlur={() => setActivePricingCard('')}
+              tabIndex={0}
+              className={`p-7 rounded-3xl border flex flex-col outline-none transition-all duration-150 transform-gpu hover:scale-[1.02] hover:shadow-lg active:scale-[1.02] ${
+                activePricingCard === 'pack_professionnel'
+                  ? 'scale-[1.03] shadow-xl'
+                  : activePricingCard
+                    ? 'scale-[0.98] opacity-90'
+                    : ''
+              } ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}
+            >
+              <h3 className="text-xl font-bold text-green-600 mb-2">Professionnel</h3>
+              <div className={`text-4xl font-extrabold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>10 000 FCFA<span className={`text-sm font-normal ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>/mois</span></div>
+              <ul className={`space-y-3 mb-8 flex-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                <li>✅ Live Shopping</li>
+                <li>✅ Appels + Chat temps réel</li>
+                <li>✅ Zéro commission Mangoo</li>
+                <li>✅ Gestion avancée</li>
+              </ul>
+              <button type="button" onClick={() => selectPlan('pack_professionnel')} className={`w-full py-3 rounded-xl border font-bold transition-colors ${isDark ? 'border-green-500 text-green-400 hover:bg-gray-700' : 'border-green-600 text-green-700 hover:bg-green-50'}`}>Choisir</button>
+            </div>
+
+            <div
+              onPointerDown={() => setActivePricingCard('pack_premium')}
+              onPointerUp={() => setActivePricingCard('')}
+              onPointerCancel={() => setActivePricingCard('')}
+              onPointerLeave={() => setActivePricingCard('')}
+              onFocus={() => setActivePricingCard('pack_premium')}
+              onBlur={() => setActivePricingCard('')}
+              tabIndex={0}
+              className={`p-7 rounded-3xl border flex flex-col outline-none transition-all duration-150 transform-gpu hover:scale-[1.02] hover:shadow-lg active:scale-[1.02] ${
+                activePricingCard === 'pack_premium'
+                  ? 'scale-[1.03] shadow-xl'
+                  : activePricingCard
+                    ? 'scale-[0.98] opacity-90'
+                    : ''
+              } ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}
+            >
+              <h3 className="text-xl font-bold text-purple-600 mb-2">Premium</h3>
+              <div className={`text-4xl font-extrabold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>15 000 FCFA<span className={`text-sm font-normal ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>/mois</span></div>
+              <ul className={`space-y-3 mb-8 flex-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                <li>✅ Priorité marketplace</li>
+                <li>✅ Assistance dédiée</li>
+                <li>✅ Automations</li>
+                <li>✅ Insights avancés</li>
+              </ul>
+              <button type="button" onClick={() => selectPlan('pack_premium')} className={`w-full py-3 rounded-xl border font-bold transition-colors ${isDark ? 'border-purple-500 text-purple-300 hover:bg-gray-700' : 'border-purple-600 text-purple-700 hover:bg-purple-50'}`}>Choisir</button>
+            </div>
+          </div>
+
+          <div className="mt-8 text-center">
+            <button type="button" onClick={goToContact} className={`px-6 py-3 rounded-full font-bold transition-colors border ${isDark ? 'border-blue-400 text-blue-300 hover:bg-gray-800' : 'border-blue-600 text-blue-700 hover:bg-blue-50'}`}>Offre Entreprise : contacter</button>
+          </div>
         </div>
 
         {/* INNOVATIONS SECTION */}
@@ -783,86 +861,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                     <h3 className="text-2xl font-bold mb-4">Mangoo AI Assistant 🤖</h3>
                     <p className="mb-6 max-w-2xl mx-auto opacity-90">Notre intelligence artificielle aide vos clients à trouver le produit parfait et négocie les prix pour vous (en option).</p>
                     <button 
-                        onClick={() => {
-                            // Launch AI Demo Modal
-                            const modal = document.createElement('div');
-                            modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px); animation: fadeIn 0.3s;";
-                            modal.innerHTML = `
-                                <div style="background:white; width:90%; max-width:600px; border-radius:20px; padding:30px; position:relative; text-align:left; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);">
-                                    <button id="close-ai-modal" style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:1.5rem; cursor:pointer; color:#7f8c8d;">✕</button>
-                                    <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px;">
-                                        <div style="width:60px; height:60px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius:15px; display:flex; align-items:center; justify-content:center; font-size:2rem;">🤖</div>
-                                        <div>
-                                            <h2 style="margin:0; color:#2c3e50; font-size:1.5rem;">Mangoo AI Demo</h2>
-                                            <p style="margin:0; color:#7f8c8d; font-size:0.9rem;">Assistant de Négociation & Recommandation</p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div style="background:#f8f9fa; border-radius:15px; padding:20px; height:300px; overflow-y:auto; margin-bottom:20px; border:1px solid #e9ecef;" id="ai-chat-box">
-                                        <div style="background:#fff; padding:12px 18px; border-radius:18px 18px 18px 0; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05); max-width:85%;">
-                                            👋 Bonjour ! Je suis l'IA de cette boutique. Je peux vous aider à trouver un produit ou négocier un prix. Que cherchez-vous aujourd'hui ?
-                                        </div>
-                                    </div>
-
-                                    <div style="display:flex; gap:10px;">
-                                        <input type="text" id="ai-input" placeholder="Ex: Je cherche des chaussures à moins de 10.000 FCFA..." style="flex:1; padding:12px 15px; border:1px solid #ddd; border-radius:12px; outline:none; font-size:1rem;">
-                                        <button id="ai-send" style="background:#764ba2; color:white; border:none; padding:0 25px; border-radius:12px; font-weight:bold; cursor:pointer; transition:background 0.2s;">Envoyer</button>
-                                    </div>
-                                </div>
-                            `;
-                            document.body.appendChild(modal);
-
-                            const closeBtn = document.getElementById('close-ai-modal');
-                            const sendBtn = document.getElementById('ai-send');
-                            const input = document.getElementById('ai-input');
-                            const chatBox = document.getElementById('ai-chat-box');
-
-                            closeBtn.onclick = () => modal.remove();
-
-                            const aiReply = (userText) => {
-                                let reply = "Je comprends. Laissez-moi vérifier notre stock...";
-                                const lowerText = userText.toLowerCase();
-
-                                if (lowerText.includes('chaussure') || lowerText.includes('basket')) {
-                                    reply = "👟 J'ai trouvé des **Air Max 2024** en promo ! Le prix affiché est de 25.000 FCFA. Quel est votre budget ?";
-                                } else if (lowerText.includes('prix') || lowerText.includes('cher') || lowerText.includes('budget') || lowerText.includes('combien')) {
-                                    reply = "💰 Je peux faire un petit geste. Si vous prenez 2 paires, je vous les laisse à **40.000 FCFA** le tout. Ça vous va ?";
-                                } else if (lowerText.includes('oui') || lowerText.includes('ok') || lowerText.includes('accord')) {
-                                    reply = "🎉 Marché conclu ! J'ajoute la commande à votre panier. Merci de votre confiance.";
-                                } else {
-                                    // Default fallback for unrecognized queries
-                                    reply = "🤖 Je suis spécialisé dans la négociation. Dites-moi quel produit vous cherchez (ex: chaussures, sac...) ou proposez-moi un prix !";
-                                }
-
-                                setTimeout(() => {
-                                    const botMsg = document.createElement('div');
-                                    // Make sure text color is dark for readability
-                                    botMsg.style.cssText = "background:#fff; color:#333; padding:12px 18px; border-radius:18px 18px 18px 0; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05); max-width:85%; animation: popIn 0.3s; word-wrap: break-word;";
-                                    botMsg.innerHTML = reply;
-                                    chatBox.appendChild(botMsg);
-                                    chatBox.scrollTop = chatBox.scrollHeight;
-                                }, 1000);
-                            };
-
-                            const sendAiMessage = () => {
-                                const text = input.value.trim();
-                                if(!text) return;
-
-                                const userMsg = document.createElement('div');
-                                userMsg.innerText = text;
-                                // Force text color to white
-                                userMsg.style.cssText = "background:#764ba2; color:white; padding:12px 18px; border-radius:18px 18px 0 18px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.1); max-width:85%; align-self:flex-end; margin-left:auto; animation: popIn 0.3s; word-wrap: break-word;";
-                                chatBox.appendChild(userMsg);
-                                chatBox.scrollTop = chatBox.scrollHeight;
-                                input.value = '';
-
-                                aiReply(text);
-                            };
-
-                            sendBtn.onclick = sendAiMessage;
-                            input.onkeypress = (e) => { if(e.key === 'Enter') sendAiMessage(); };
-                            input.focus();
-                        }}
+                        onClick={() => setAiOpen(true)}
                         className="bg-white text-indigo-600 px-6 py-3 rounded-full font-bold hover:bg-opacity-90 transition-opacity"
                     >
                         Découvrir l'IA
@@ -871,6 +870,14 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                 <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white opacity-10 rounded-full blur-3xl"></div>
                 <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-purple-400 opacity-20 rounded-full blur-3xl"></div>
             </div>
+            <MarketplaceAIAssistant
+              isDark={isDark}
+              open={aiOpen}
+              onOpenChange={setAiOpen}
+              hideLauncher
+              onViewShop={onAiViewShop}
+              onAddToCart={onAiAddToCart}
+            />
         </div>
 
         {/* CONTACT SECTION */}

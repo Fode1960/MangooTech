@@ -193,6 +193,11 @@ export const usePaymentStore = create((set, get) => ({
             expiresAt: resp?.userPack?.expires_at || null,
             prorata: prorata || null
           }));
+          try {
+            localStorage.setItem('mangoo-selected-plan', String(activatedPackId))
+            localStorage.setItem('mangoo-last-selected-plan', String(activatedPackId))
+          } catch {
+          }
 
           try {
             const historyRaw = localStorage.getItem('mangoo-pack-history');

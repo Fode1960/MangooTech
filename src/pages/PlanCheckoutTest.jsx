@@ -3,6 +3,7 @@ import { useThemeStore } from '../stores/themeStore';
 import { PaymentMethods } from '../components/PaymentMethodsStable';
 import { buildApiUrl } from '../config/api.js';
 import { useSearchParams } from 'react-router-dom';
+import mangooLogo from '../assets/mangoo-logo.svg';
 
 export default function PlanCheckoutTest() {
   const { isDark } = useThemeStore();
@@ -14,6 +15,8 @@ export default function PlanCheckoutTest() {
   const [paid, setPaid] = useState(null);
   const [currentPack, setCurrentPack] = useState({ mode: 'unknown', pack: null, userPack: null });
   const [prorata, setProrata] = useState({ loading: false, error: '', mode: null, quote: null, currentPack: null });
+  const [localActivePack, setLocalActivePack] = useState(null);
+  const [lastSelectedPlan, setLastSelectedPlan] = useState(null);
 
   const currentUser = useMemo(() => {
     try {
@@ -25,6 +28,7 @@ export default function PlanCheckoutTest() {
   }, []);
 
   const userId = currentUser?.id || currentUser?.email || '';
+  const displayIdentity = String(currentUser?.email || currentUser?.id || '').trim();
   const displayedUserId = userId || 'anonymous';
 
   useEffect(() => {
@@ -34,30 +38,42 @@ export default function PlanCheckoutTest() {
         const res = await fetch(buildApiUrl(`/api/user-pack/current?userId=${encodeURIComponent(displayedUserId)}`));
         const data = await res.json();
         if (!res.ok || !data?.success) throw new Error(data?.details || data?.error || `HTTP ${res.status}`);
-
-        if (!cancelled) {
-          setCurrentPack({ mode: data.mode || 'unknown', pack: data.pack || null, userPack: data.userPack || null });
-        }
+        if (!cancelled) setCurrentPack({ mode: data.mode || 'unknown', pack: data.pack || null, userPack: data.userPack || null });
       } catch {
         if (!cancelled) setCurrentPack({ mode: 'unknown', pack: null, userPack: null });
       }
     };
+    const readLocal = () => {
+      try {
+        const raw = localStorage.getItem('mangoo-active-pack');
+        const data = raw ? JSON.parse(raw) : null;
+        if (!data || typeof data !== 'object') return null;
+        if (String(data.userId || '') !== String(displayedUserId)) return null;
+        return data;
+      } catch {
+        return null;
+      }
+    };
+    const readSelected = () => {
+      try {
+        return localStorage.getItem('mangoo-last-selected-plan');
+      } catch {
+        return null;
+      }
+    };
+    setLocalActivePack(readLocal());
+    setLastSelectedPlan(readSelected());
     load();
+    const onPack = () => {
+      setLocalActivePack(readLocal());
+      setLastSelectedPlan(readSelected());
+      load();
+    };
+    window.addEventListener('mangoo-pack-updated', onPack);
     return () => {
       cancelled = true;
+      window.removeEventListener('mangoo-pack-updated', onPack);
     };
-  }, [displayedUserId]);
-
-  const localActivePack = useMemo(() => {
-    try {
-      const raw = localStorage.getItem('mangoo-active-pack');
-      const data = raw ? JSON.parse(raw) : null;
-      if (!data || typeof data !== 'object') return null;
-      if (String(data.userId || '') !== String(displayedUserId)) return null;
-      return data;
-    } catch {
-      return null;
-    }
   }, [displayedUserId]);
 
   const effectiveActivePackId = useMemo(() => {
@@ -69,13 +85,17 @@ export default function PlanCheckoutTest() {
     return packs.find((p) => p.id === effectiveActivePackId) || currentPack?.pack || null;
   }, [currentPack, effectiveActivePackId, packs]);
 
-  const lastSelectedPlan = useMemo(() => {
-    try {
-      return localStorage.getItem('mangoo-last-selected-plan');
-    } catch {
-      return null;
-    }
-  }, []);
+  const formatPlanLabel = (value) => {
+    const v = String(value || '').trim().toLowerCase()
+    if (!v) return '—'
+    if (v === 'pro') return 'Pro'
+    if (v === 'free') return 'Gratuit'
+    if (v === 'pack_decouverte') return 'Pack Découverte'
+    if (v === 'pack_visibilite') return 'Pack Visibilité'
+    if (v === 'pack_professionnel') return 'Pack Professionnel'
+    if (v === 'pack_premium') return 'Pack Premium'
+    return v
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -290,51 +310,60 @@ export default function PlanCheckoutTest() {
   }, [effectiveQuote?.chargeAmount, selectedPack]);
 
   return (
-    <div className={`min-h-screen py-10 ${isDark ? 'bg-gray-950 text-white' : 'bg-gray-50 text-gray-900'}`}>
+    <div className={`min-h-screen py-10 ${isDark ? 'bg-gray-950 text-white' : 'bg-gradient-to-br from-orange-50 via-white to-green-50 text-gray-900'}`}>
       <div className="max-w-5xl mx-auto px-4">
         <div className="flex items-center justify-between gap-3 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold">Test achat de plan</h1>
-            <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm`}>
-              Cette page sert à tester : sélection pack → paiement → activation pack.
+          <div className="flex items-center gap-3 min-w-0">
+            <img src={mangooLogo} alt="Mangoo Tech" className="w-10 h-10 rounded-2xl" />
+            <div className="min-w-0">
+              <h1 className="text-2xl font-extrabold tracking-tight truncate">Activer votre pack</h1>
+              <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm truncate`}>
+                Choisissez un pack, payez, et activez votre abonnement.
+              </div>
             </div>
           </div>
           <a
             href="/"
-            className={`text-sm font-semibold px-3 py-2 rounded-lg border transition-colors ${
-              isDark ? 'bg-gray-900 border-gray-700 hover:bg-gray-800' : 'bg-white border-gray-200 hover:bg-gray-50'
+            className={`text-sm font-semibold px-3 py-2 rounded-xl border transition-colors ${
+              isDark ? 'bg-gray-900 border-gray-700 hover:bg-gray-800' : 'bg-white/80 border-black/10 hover:bg-white'
             }`}
           >
             Retour
           </a>
         </div>
 
-        <div className={`rounded-xl border p-4 mb-6 ${isDark ? 'border-gray-800 bg-gray-900/40' : 'border-gray-200 bg-white'}`}>
-          <div className="text-sm font-semibold mb-1">Utilisateur</div>
-          <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm`}>
+        <div className="card mb-6">
+          <div className="card-body">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-sm font-extrabold">Utilisateur</div>
+                <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm mt-1`}>
             {userId ? (
-              <span>Connecté en tant que: {userId}</span>
+              <span>Connecté en tant que: {displayIdentity || userId}</span>
             ) : (
               <span>Non connecté. Faites d’abord Connexion pour tester l’activation sur votre compte.</span>
             )}
           </div>
-          <div className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-xs mt-2`}>
-            ID utilisé pour le test: {displayedUserId}
-          </div>
-          <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm mt-3`}>
-            <span className="font-semibold">Plan choisi:</span>{' '}
-            {lastSelectedPlan === 'pro' ? 'Pro' : lastSelectedPlan ? 'Gratuit' : '—'}
-          </div>
-          <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm mt-1`}>
-            <span className="font-semibold">Pack actif:</span>{' '}
-            {effectiveActivePack ? (
-              <span>{effectiveActivePack.name}</span>
-            ) : (
-              <span>Aucun (paiement requis)</span>
-            )}
-            {currentPack?.mode === 'offline' ? (
-              <span className={`ml-2 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>(hors ligne)</span>
-            ) : null}
+                <div className={`${isDark ? 'text-gray-300' : 'text-gray-800'} text-sm mt-3`}>
+                  <span className="font-extrabold">Plan choisi:</span>{' '}
+                  {formatPlanLabel(lastSelectedPlan)}
+                </div>
+                <div className={`${isDark ? 'text-gray-300' : 'text-gray-800'} text-sm mt-1`}>
+                  <span className="font-extrabold">Pack actif:</span>{' '}
+                  {effectiveActivePack ? <span>{effectiveActivePack.name}</span> : <span>Aucun</span>}
+                  {currentPack?.mode === 'offline' ? (
+                    <span className={`ml-2 text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>(hors ligne)</span>
+                  ) : null}
+                </div>
+              </div>
+              <div className="shrink-0">
+                <div className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-extrabold ${
+                  effectiveActivePack ? (isDark ? 'bg-emerald-950/40 text-emerald-200 border border-emerald-900/60' : 'bg-emerald-50 text-emerald-700 border border-emerald-200') : (isDark ? 'bg-gray-800 text-gray-200 border border-gray-700' : 'bg-white text-gray-800 border border-black/10')
+                }`}>
+                  {effectiveActivePack ? 'Actif' : 'À activer'}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -346,17 +375,25 @@ export default function PlanCheckoutTest() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className={`rounded-xl border p-4 ${isDark ? 'border-gray-800 bg-gray-900/40' : 'border-gray-200 bg-white'}`}>
-              <div className="text-sm font-semibold mb-3">Choisir un pack</div>
+            <div className="card">
+              <div className="card-body">
+              <div className="text-sm font-extrabold mb-3">Choisir un pack</div>
               <select
                 value={selectedPackId}
                 onChange={(e) => {
                   setPaid(null);
-                  setSelectedPackId(e.target.value);
+                  const next = e.target.value;
+                  setSelectedPackId(next);
+                  try {
+                    if (next) {
+                      localStorage.setItem('mangoo-selected-plan', String(next));
+                      localStorage.setItem('mangoo-last-selected-plan', String(next));
+                      setLastSelectedPlan(String(next));
+                    }
+                  } catch {
+                  }
                 }}
-                className={`w-full px-3 py-2 rounded-lg border ${
-                  isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'
-                }`}
+                className="form-input"
               >
                 <option value="">-- Sélectionnez un pack --</option>
                 {packs.map((p) => (
@@ -368,12 +405,13 @@ export default function PlanCheckoutTest() {
 
               {selectedPack && (
                 <div className="mt-4 text-sm">
-                  <div className="font-semibold">Détails</div>
-                  <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  <div className="font-extrabold">Détails</div>
+                  <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} mt-1`}>
                     {selectedPack.description || '—'}
                   </div>
                 </div>
               )}
+              </div>
             </div>
 
             <div>
@@ -473,13 +511,18 @@ export default function PlanCheckoutTest() {
                 }`}>
                   {paid.ok ? (
                     <div>
-                      <div>{paid.kind === 'schedule' ? 'Changement programmé (test).' : 'Paiement OK (test).'}</div>
-                      <div className="mt-2 text-sm">
-                        Vérification activation (mode démo):{' '}
-                        <a className="underline" href={`/api/demo-billing/user-pack/${encodeURIComponent(displayedUserId)}`}>
-                          /api/demo-billing/user-pack/{displayedUserId}
-                        </a>
-                      </div>
+                      <div className="font-extrabold">{paid.kind === 'schedule' ? 'Changement programmé.' : 'Paiement effectué.'}</div>
+                      {import.meta.env.DEV ? (
+                        <details className="mt-2 text-sm">
+                          <summary className="cursor-pointer select-none font-bold">Détails (dev)</summary>
+                          <div className="mt-2">
+                            Vérification activation (mode démo):{' '}
+                            <a className="underline" href={`/api/demo-billing/user-pack/${encodeURIComponent(displayedUserId)}`}>
+                              /api/demo-billing/user-pack/{displayedUserId}
+                            </a>
+                          </div>
+                        </details>
+                      ) : null}
                     </div>
                   ) : (
                     `Paiement KO: ${paid.error}`

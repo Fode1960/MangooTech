@@ -227,7 +227,7 @@ export const PaymentMethods = ({
     e.preventDefault();
     
     if (!selectedPaymentMethod) return;
-    const resolvedUserId = walletKey || 'anonymous';
+    const resolvedUserId = String(userId || '').trim() || 'anonymous';
     
     try {
       await processPayment({

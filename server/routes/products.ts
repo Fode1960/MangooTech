@@ -19,7 +19,7 @@ router.get('/search', async (req: Request, res: Response): Promise<void> => {
 
     let query = supabaseAdmin
       .from('products')
-      .select('id,name,slug,description,short_description,price,compare_at_price,shop_id,shops!inner(id,slug,name,logo_url,status)', {
+      .select('id,name,slug,description,short_description,image_url,price,compare_at_price,shop_id,product_images(url,alt_text,position,is_primary),shops!inner(id,slug,name,logo_url,status)', {
         count: 'exact',
       })
       .eq('status', 'active')
@@ -41,11 +41,29 @@ router.get('/search', async (req: Request, res: Response): Promise<void> => {
 
     const items = (Array.isArray(data) ? data : []).map((p: any) => {
       const shop = p?.shops || null
+      const imagesRaw = p?.product_images
+      const images = Array.isArray(imagesRaw) ? imagesRaw : []
+      const pickImageUrl = () => {
+        const direct = safeString(p?.image_url)
+        if (direct) return direct
+        const primary = images.find((x: any) => Boolean(x?.is_primary)) || null
+        if (primary) {
+          const u = safeString(primary?.url)
+          if (u) return u
+        }
+        const byPos = [...images].sort((a: any, b: any) => Number(a?.position ?? 0) - Number(b?.position ?? 0))
+        const first = byPos[0] || null
+        const u = safeString(first?.url)
+        return u
+      }
       return {
         id: safeString(p?.id),
         name: safeString(p?.name),
         slug: safeString(p?.slug),
         description: safeString(p?.short_description || p?.description),
+        fullDescription: safeString(p?.description),
+        shortDescription: safeString(p?.short_description),
+        imageUrl: pickImageUrl(),
         price: typeof p?.price === 'number' ? p.price : safeNumber(p?.price),
         compareAtPrice: typeof p?.compare_at_price === 'number' ? p.compare_at_price : safeNumber(p?.compare_at_price),
         currency: 'XOF',
@@ -67,4 +85,3 @@ router.get('/search', async (req: Request, res: Response): Promise<void> => {
 })
 
 export default router
-
