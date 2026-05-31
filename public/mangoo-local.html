@@ -9899,6 +9899,16 @@
 
         function lpGoToVendorDashboard(tab) {
             const nextTab = String(tab || 'overview')
+            try {
+                const isLocalPlus = /mangoo-local\.html$/i.test(String(location?.pathname || '')) || String(location?.pathname || '').includes('/mangoo-local.html')
+                if (isLocalPlus) {
+                    try { switchView('account') } catch {}
+                    try { switchAccountTab('sell') } catch {}
+                    try { switchVendorTab(nextTab) } catch {}
+                    return
+                }
+            } catch {
+            }
             try { lpEnsureFormalRole('vendor') } catch {}
             try { localStorage.setItem('mangoo-vendor-active-tab', nextTab) } catch {}
             try {
@@ -9916,6 +9926,24 @@
             const allowed = ['orders', 'profile', 'wishlist', 'wallet', 'communication']
             const safeSection = allowed.includes(nextSection) ? nextSection : 'orders'
             const options = opts && typeof opts === 'object' ? opts : {}
+
+            try {
+                const isLocalPlus = /mangoo-local\.html$/i.test(String(location?.pathname || '')) || String(location?.pathname || '').includes('/mangoo-local.html')
+                if (isLocalPlus) {
+                    const map = {
+                        orders: 'orders',
+                        profile: 'profile',
+                        wishlist: 'favorites',
+                        wallet: 'pay',
+                        communication: 'communication'
+                    }
+                    const localTab = map[safeSection] || 'orders'
+                    try { switchView('account') } catch {}
+                    try { switchAccountTab(localTab) } catch {}
+                    return
+                }
+            } catch {
+            }
 
             try { lpEnsureFormalRole('client') } catch {}
 
@@ -10753,62 +10781,58 @@
             
             const overlay = document.createElement('div');
             overlay.id = 'receiptOverlay';
-            overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9900; display:flex; align-items:center; justify-content:center; flex-direction:column;";
+            overlay.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.60); z-index:9900; display:flex; align-items:center; justify-content:center; padding:18px; box-sizing:border-box;";
             
             const date = new Date().toLocaleDateString('fr-FR');
             const time = new Date().toLocaleTimeString('fr-FR');
             const ref = 'MNG-' + Math.floor(Math.random() * 1000000);
             
             overlay.innerHTML = `
-                <div style="background: white; padding: 0; border-radius: 0; width: 90%; max-width: 350px; font-family: 'Courier New', monospace; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: slideUp 0.3s; position:relative; overflow:hidden;">
-                    <!-- Zigzag top -->
-                    <div style="background:linear-gradient(-45deg, transparent 10px, white 10px), linear-gradient(45deg, transparent 10px, white 10px); background-size: 20px 20px; background-repeat: repeat-x; height: 10px; width: 100%; position: absolute; top: -10px;"></div>
-                    
-                    <div style="padding: 30px 20px; text-align:center; border-bottom:1px dashed #ccc;">
-                        <div style="font-weight:bold; font-size:1.2rem; margin-bottom:5px;">MANGOO PAY</div>
-                        <div style="font-size:0.8rem; color:#666;">REÇU DE PAIEMENT</div>
-                        <div style="font-size:0.7rem; color:#2d3436; margin-top:3px; font-weight:bold;">FACTURE ACQUITTÉE</div>
-                    </div>
-                    
-                    <div style="padding: 20px;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:0.9rem;">
-                            <span style="color:#666;">Date</span>
-                            <span>${date} ${time}</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:0.9rem;">
-                            <span style="color:#666;">Référence</span>
-                            <span>${ref}</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:0.9rem;">
-                            <span style="color:#666;">Vendeur</span>
-                            <span>Tech Mobile Pro</span>
-                        </div>
-                        
-                        <div style="margin:20px 0; border-top:2px solid #000; border-bottom:2px solid #000; padding:10px 0;">
-                            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:1.1rem;">
-                                <span>TOTAL PAYÉ</span>
-                                <span>${price.toLocaleString()} FCFA</span>
-                            </div>
-                            <div style="font-size:0.8rem; margin-top:5px;">${productName} (Prix Négocié)</div>
-                        </div>
-                        
-                        <div style="text-align:center; margin-top:20px;">
-                            <div style="font-size:3rem; line-height:1;">✅</div>
-                            <div style="font-weight:bold; color:#27ae60; margin-top:5px;">SUCCÈS</div>
-                        </div>
-                    </div>
-                    
-                    <div style="background:#f8f9fa; padding:15px; text-align:center; font-size:0.75rem; color:#666; border-top:1px dashed #ccc;">
-                        Ce document tient lieu de facture simplifiée.<br>
-                        Conservez ce reçu numérique.
+                <div style="width:min(460px, 100%); max-height:calc(100vh - 36px); background:var(--ml-panel); border:1px solid var(--ml-border); border-radius:var(--ml-radius-2xl); box-shadow:var(--ml-shadow-md); overflow:hidden; display:flex; flex-direction:column; animation: slideUp 0.3s;">
+                    <div style="background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#ffffff; padding:16px 18px; text-align:center;">
+                        <div style="font-weight:950; font-size:1.1rem; letter-spacing:0.02em;">MANGOO PAY</div>
+                        <div style="margin-top:2px; font-weight:900; font-size:0.85rem; opacity:0.95;">Reçu de paiement</div>
+                        <div style="margin-top:2px; font-weight:800; font-size:0.78rem; opacity:0.92;">Facture acquittée</div>
                     </div>
 
-                    <!-- Zigzag bottom -->
-                    <div style="background:linear-gradient(135deg, transparent 10px, white 10px), linear-gradient(225deg, transparent 10px, white 10px); background-size: 20px 20px; background-repeat: repeat-x; height: 10px; width: 100%; position: absolute; bottom: -10px;"></div>
-                    
-                    <button onclick="document.getElementById('receiptOverlay').remove(); switchView('account');" style="width:100%; padding:15px; background:#2d3436; color:white; border:none; font-weight:bold; cursor:pointer; margin-top:0;">
-                        FERMER
-                    </button>
+                    <div style="flex:1; min-height:0; overflow:auto; padding:16px 18px; box-sizing:border-box;">
+                        <div style="display:flex; justify-content:space-between; gap:10px; margin-bottom:10px; font-size:0.92rem; font-weight:900; color:var(--ml-muted);">
+                            <span>Date</span>
+                            <span style="color:var(--ml-text); font-weight:950;">${date} ${time}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; gap:10px; margin-bottom:10px; font-size:0.92rem; font-weight:900; color:var(--ml-muted);">
+                            <span>Référence</span>
+                            <span style="color:var(--ml-text); font-weight:950;">${ref}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; gap:10px; margin-bottom:10px; font-size:0.92rem; font-weight:900; color:var(--ml-muted);">
+                            <span>Vendeur</span>
+                            <span style="color:var(--ml-text); font-weight:950;">Tech Mobile Pro</span>
+                        </div>
+
+                        <div style="margin-top:14px; padding:14px; border-radius:var(--ml-radius-2xl); border:1px solid rgba(0,0,0,0.06); background:rgba(17,24,39,0.03);">
+                            <div style="display:flex; justify-content:space-between; gap:10px; font-weight:950; font-size:1.1rem; color:var(--ml-text);">
+                                <span>Total payé</span>
+                                <span style="color:var(--ml-brand-from);">${price.toLocaleString()} FCFA</span>
+                            </div>
+                            <div style="margin-top:6px; font-size:0.88rem; font-weight:850; color:var(--ml-muted); line-height:1.35;">
+                                ${String(productName || '').trim() ? `${productName} (prix négocié)` : 'Paiement'}
+                            </div>
+                        </div>
+
+                        <div style="text-align:center; margin-top:14px;">
+                            <div style="width:56px; height:56px; border-radius:16px; margin:0 auto; background:rgba(34,197,94,0.12); display:flex; align-items:center; justify-content:center; font-size:1.8rem;">✅</div>
+                            <div style="margin-top:8px; font-weight:950; color:#16a34a;">Succès</div>
+                            <div style="margin-top:6px; font-size:0.82rem; font-weight:850; color:var(--ml-muted); line-height:1.35;">
+                                Ce document tient lieu de facture simplifiée. Conservez ce reçu numérique.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="flex:0 0 auto; padding: 12px 18px calc(14px + env(safe-area-inset-bottom)) 18px; border-top:1px solid rgba(0,0,0,0.06); background:var(--ml-panel);">
+                        <button class="btn btn-primary" onclick="document.getElementById('receiptOverlay').remove(); switchView('account');" style="width:100%; padding:14px; font-size:1.05rem; font-weight:950;">
+                            Fermer
+                        </button>
+                    </div>
                 </div>
             `;
             document.body.appendChild(overlay);
