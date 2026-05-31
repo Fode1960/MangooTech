@@ -3724,9 +3724,9 @@
                         <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Communication</div>
                         <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Contactez un vendeur/livreur via Mangoo Connect+.</div>
                         <div style="margin-top: 14px; display:flex; gap: 10px; flex-wrap: wrap;">
-                            <button type="button" class="lp-btn lp-btn-primary" onclick="try{lpGoToClientAccount('communication',{mode:'chat'})}catch{}">💬 Ouvrir le chat</button>
-                            <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpGoToClientAccount('communication',{mode:'call'})}catch{}">📞 Audio</button>
-                            <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpGoToClientAccount('communication',{mode:'call'})}catch{}">📹 Vidéo</button>
+                            <button type="button" class="lp-btn lp-btn-primary" onclick="try{lpOpenClientChat()}catch{}">💬 Ouvrir le chat</button>
+                            <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpOpenClientAudioCall()}catch{}">📞 Audio</button>
+                            <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpOpenClientVideoCall()}catch{}">📹 Vidéo</button>
                         </div>
                     </div>
                 </div>
@@ -9803,6 +9803,15 @@
         // === VIEW SWITCHER ===
         function switchView(view, btn) {
             currentView = view;
+            try { window.currentView = view; } catch {}
+            try {
+                const reminder = document.getElementById('tontineReminderCard');
+                if (reminder) {
+                    if (view === 'account' || view === 'intro' || view === 'espace') reminder.style.display = 'none';
+                    else reminder.style.display = '';
+                }
+            } catch {
+            }
             
             // Auto-find btn if not provided
             if (!btn) {
@@ -11202,6 +11211,57 @@
         // === RECHARGE BALANCE LOGIC (NEW) ===
         function rechargeBalance() {
             try { lpWalletOpenRechargeModal() } catch {}
+        }
+
+        function lpEnsureClientCommunicationTarget() {
+            try {
+                if (activeVendor && typeof activeVendor === 'object' && String(activeVendor?.name || '').trim()) return
+                activeVendor = {
+                    id: 'support',
+                    name: 'Support Mangoo',
+                    avatar: 'https://ui-avatars.com/api/?name=Support+Mangoo&background=1a5f3f&color=fff',
+                    coverage: [],
+                    trade: ''
+                }
+            } catch {
+            }
+        }
+
+        function lpOpenClientChat() {
+            try { lpEnsureClientCommunicationTarget() } catch {}
+            try { openChat() } catch {}
+        }
+
+        function lpOpenClientAudioCall() {
+            try { lpEnsureClientCommunicationTarget() } catch {}
+            try {
+                const vendorName = String(activeVendor?.name || 'Support Mangoo').trim() || 'Support Mangoo'
+                const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light'
+                const url = `test-webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}&mode=audio`
+                try {
+                    const w = window.open(url, '_blank')
+                    if (w) return
+                } catch {
+                }
+                window.location.assign(url)
+            } catch {
+            }
+        }
+
+        function lpOpenClientVideoCall() {
+            try { lpEnsureClientCommunicationTarget() } catch {}
+            try {
+                const vendorName = String(activeVendor?.name || 'Support Mangoo').trim() || 'Support Mangoo'
+                const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light'
+                const url = `test-webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}&mode=video`
+                try {
+                    const w = window.open(url, '_blank')
+                    if (w) return
+                } catch {
+                }
+                window.location.assign(url)
+            } catch {
+            }
         }
 
         function lpWalletSyncBalanceToUi() {
@@ -14344,6 +14404,14 @@
             const modal = document.getElementById('paymentModal');
             const reminderId = 'tontineReminderCard';
             const existing = document.getElementById(reminderId);
+
+            try {
+                if (String(window.currentView || '') === 'account' || String(window.currentView || '') === 'intro' || String(window.currentView || '') === 'espace') {
+                    if (existing) existing.style.display = 'none';
+                    return;
+                }
+            } catch {
+            }
             
             if(modal && modal.style.display === 'flex') {
                 if(existing) existing.style.display = 'none'; 
@@ -14387,7 +14455,7 @@
                 const card = document.createElement('div');
                 card.id = reminderId;
                 card.style.cssText = `
-                    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+                    position: fixed; bottom: calc(86px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
                     width: 90%; max-width: 400px; background: white; border-radius: 16px;
                     box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 9000;
                     padding: 15px; display: flex; align-items: center; gap: 15px;
