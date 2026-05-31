@@ -2199,6 +2199,7 @@
             width: 150px; height: 150px;
             background: rgba(255,255,255,0.12);
             border-radius: 50%;
+            pointer-events: none;
         }
         .wallet-label { font-size: 0.85rem; color: var(--ml-muted); font-weight: 850; margin-bottom: 6px; }
         .wallet-balance { font-size: 2rem; font-weight: 950; margin-bottom: 14px; cursor: pointer; color: var(--ml-text); text-decoration: underline; text-decoration-style: dotted; text-decoration-color: rgba(249,115,22,0.55); }
@@ -9979,6 +9980,15 @@
                         communication: 'communication'
                     }
                     const localTab = map[safeSection] || 'orders'
+                    if (safeSection === 'wallet') {
+                        const action = String(options.action || '').trim().toLowerCase()
+                        try {
+                            if (action === 'recharge') lpWalletOpenRechargeModal()
+                            if (action === 'transfer') openP2PModal()
+                            if (action === 'withdraw') lpWalletOpenWithdrawModal()
+                        } catch {
+                        }
+                    }
                     try { switchView('account') } catch {}
                     try { switchAccountTab(localTab) } catch {}
                     return
@@ -10242,7 +10252,12 @@
             try {
                 const id = localStorage.getItem('mangoo_my_shop_id')
                 if (!id) {
-                    alert('Aucune boutique active.')
+                    try { showLocalToast('Aucune boutique active.', 'info') } catch {}
+                    try {
+                        const okCreate = confirm('Aucune boutique active. Créer une boutique maintenant ?')
+                        if (okCreate) lpStartOnboarding('shop')
+                    } catch {
+                    }
                     return
                 }
                 const ok = confirm('Quitter la boutique active ?')
@@ -10253,13 +10268,19 @@
             try { checkUserShop() } catch {}
             try { renderVendorsOnMap(VENDORS) } catch {}
             try { renderListView(VENDORS) } catch {}
+            try { showLocalToast('Boutique déconnectée.', 'success') } catch {}
         }
 
         function lpDisconnectProvider() {
             try {
                 const id = localStorage.getItem('mangoo_my_provider_id')
                 if (!id) {
-                    alert('Aucun profil prestataire actif.')
+                    try { showLocalToast('Aucun profil prestataire actif.', 'info') } catch {}
+                    try {
+                        const okCreate = confirm('Aucun profil prestataire actif. Créer un profil maintenant ?')
+                        if (okCreate) lpStartOnboarding('service')
+                    } catch {
+                    }
                     return
                 }
                 const ok = confirm('Quitter le profil prestataire actif ?')
@@ -10270,6 +10291,7 @@
             try { refreshProviderDashboardFab() } catch {}
             try { renderVendorsOnMap(VENDORS) } catch {}
             try { renderListView(VENDORS) } catch {}
+            try { showLocalToast('Profil prestataire déconnecté.', 'success') } catch {}
         }
 
         function toggleTheme() {
@@ -11179,9 +11201,154 @@
         
         // === RECHARGE BALANCE LOGIC (NEW) ===
         function rechargeBalance() {
+            try { lpWalletOpenRechargeModal() } catch {}
+        }
+
+        function lpWalletSyncBalanceToUi() {
             try {
-                lpGoToClientAccount('wallet', { action: 'recharge' })
+                const el = document.querySelector('.wallet-balance')
+                if (!el) return
+                const raw = localStorage.getItem('mangoo_user_balance')
+                const n = Number(String(raw || '').replace(/[^\d.]/g, ''))
+                if (Number.isFinite(n) && n >= 0) userBalance = n
+                el.innerText = `${Number(userBalance || 0).toLocaleString()} FCFA`
             } catch {
+            }
+        }
+
+        function lpWalletOpenRechargeModal() {
+            try { lpWalletSyncBalanceToUi() } catch {}
+
+            const existing = document.getElementById('lpWalletOverlay')
+            if (existing) try { existing.remove() } catch {}
+
+            const overlay = document.createElement('div')
+            overlay.id = 'lpWalletOverlay'
+            overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.60); z-index:21000; display:flex; align-items:center; justify-content:center; padding:16px; box-sizing:border-box;'
+
+            const current = Number(userBalance || 0)
+            overlay.innerHTML = `
+                <div style="width:min(520px,100%); max-height:calc(100vh - 32px); background:var(--ml-panel); border:1px solid var(--ml-border); border-radius:18px; box-shadow:0 20px 60px rgba(0,0,0,0.35); overflow:hidden; display:flex; flex-direction:column;">
+                    <div style="padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:10px; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#fff;">
+                        <div style="font-weight:950;">📥 Recharger</div>
+                        <button type="button" class="lp-btn lp-btn-secondary" onclick="document.getElementById('lpWalletOverlay')?.remove()" style="background: rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.22); color:#fff;">Fermer</button>
+                    </div>
+                    <div style="padding:16px; display:grid; gap:12px; overflow:auto; flex:1; min-height:0;">
+                        <div style="padding:12px 14px; border-radius:14px; background:rgba(17,24,39,0.03); border:1px solid rgba(0,0,0,0.06); display:flex; justify-content:space-between; gap:12px;">
+                            <div style="color:var(--ml-muted); font-weight:900;">Solde actuel</div>
+                            <div style="color:var(--ml-text); font-weight:950;">${current.toLocaleString()} FCFA</div>
+                        </div>
+
+                        <div>
+                            <div style="font-weight:950; color:var(--ml-text); margin-bottom:8px;">Montant</div>
+                            <input id="lpRechargeAmount" inputmode="numeric" placeholder="Ex : 5 000" style="width:100%; padding:12px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:950; box-sizing:border-box;" />
+                            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+                                <button type="button" class="lp-btn lp-btn-secondary" onclick="document.getElementById('lpRechargeAmount').value='5000'">5 000</button>
+                                <button type="button" class="lp-btn lp-btn-secondary" onclick="document.getElementById('lpRechargeAmount').value='10000'">10 000</button>
+                                <button type="button" class="lp-btn lp-btn-secondary" onclick="document.getElementById('lpRechargeAmount').value='25000'">25 000</button>
+                            </div>
+                        </div>
+
+                        <div style="padding:12px; border-radius:14px; background:rgba(249,115,22,0.06); border:1px solid rgba(249,115,22,0.18);">
+                            <div style="font-weight:950; color:var(--ml-text);">Paiement (démo)</div>
+                            <div style="margin-top:6px; color:var(--ml-muted); font-weight:850; line-height:1.35;">Recharge immédiate pour tests.</div>
+                        </div>
+                    </div>
+                    <div style="flex:0 0 auto; padding:12px 16px calc(14px + env(safe-area-inset-bottom)) 16px; border-top:1px solid rgba(0,0,0,0.06); background:var(--ml-panel);">
+                        <button type="button" class="btn btn-primary" style="width:100%; padding:14px; font-size:1.05rem; font-weight:950;" onclick="lpWalletConfirmRecharge()">✅ Valider</button>
+                    </div>
+                </div>
+            `
+
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) try { overlay.remove() } catch {}
+            })
+            document.body.appendChild(overlay)
+            try { document.getElementById('lpRechargeAmount')?.focus() } catch {}
+        }
+
+        function lpWalletConfirmRecharge() {
+            try {
+                const raw = String(document.getElementById('lpRechargeAmount')?.value || '')
+                const amount = Number(raw.replace(/[^\d.]/g, ''))
+                if (!Number.isFinite(amount) || amount <= 0) {
+                    showLocalToast('Montant invalide.', 'error')
+                    return
+                }
+                userBalance = Number(userBalance || 0) + amount
+                try { localStorage.setItem('mangoo_user_balance', String(userBalance)) } catch {}
+                try { lpWalletSyncBalanceToUi() } catch {}
+                try { document.getElementById('lpWalletOverlay')?.remove() } catch {}
+                showLocalToast(`✅ Recharge +${amount.toLocaleString()} FCFA`, 'success')
+            } catch {
+                showLocalToast('Recharge impossible.', 'error')
+            }
+        }
+
+        function lpWalletOpenWithdrawModal() {
+            try { lpWalletSyncBalanceToUi() } catch {}
+
+            const existing = document.getElementById('lpWalletOverlay')
+            if (existing) try { existing.remove() } catch {}
+
+            const overlay = document.createElement('div')
+            overlay.id = 'lpWalletOverlay'
+            overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.60); z-index:21000; display:flex; align-items:center; justify-content:center; padding:16px; box-sizing:border-box;'
+
+            const current = Number(userBalance || 0)
+            overlay.innerHTML = `
+                <div style="width:min(520px,100%); max-height:calc(100vh - 32px); background:var(--ml-panel); border:1px solid var(--ml-border); border-radius:18px; box-shadow:0 20px 60px rgba(0,0,0,0.35); overflow:hidden; display:flex; flex-direction:column;">
+                    <div style="padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:10px; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#fff;">
+                        <div style="font-weight:950;">📤 Retirer</div>
+                        <button type="button" class="lp-btn lp-btn-secondary" onclick="document.getElementById('lpWalletOverlay')?.remove()" style="background: rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.22); color:#fff;">Fermer</button>
+                    </div>
+                    <div style="padding:16px; display:grid; gap:12px; overflow:auto; flex:1; min-height:0;">
+                        <div style="padding:12px 14px; border-radius:14px; background:rgba(17,24,39,0.03); border:1px solid rgba(0,0,0,0.06); display:flex; justify-content:space-between; gap:12px;">
+                            <div style="color:var(--ml-muted); font-weight:900;">Solde actuel</div>
+                            <div style="color:var(--ml-text); font-weight:950;">${current.toLocaleString()} FCFA</div>
+                        </div>
+                        <div>
+                            <div style="font-weight:950; color:var(--ml-text); margin-bottom:8px;">Montant à retirer</div>
+                            <input id="lpWithdrawAmount" inputmode="numeric" placeholder="Ex : 2 000" style="width:100%; padding:12px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:950; box-sizing:border-box;" />
+                        </div>
+                        <div style="padding:12px; border-radius:14px; background:rgba(37,99,235,0.06); border:1px solid rgba(37,99,235,0.18);">
+                            <div style="font-weight:950; color:var(--ml-text);">Mobile Money (démo)</div>
+                            <div style="margin-top:6px; color:var(--ml-muted); font-weight:850; line-height:1.35;">Retrait immédiat pour tests.</div>
+                        </div>
+                    </div>
+                    <div style="flex:0 0 auto; padding:12px 16px calc(14px + env(safe-area-inset-bottom)) 16px; border-top:1px solid rgba(0,0,0,0.06); background:var(--ml-panel);">
+                        <button type="button" class="btn btn-primary" style="width:100%; padding:14px; font-size:1.05rem; font-weight:950;" onclick="lpWalletConfirmWithdraw()">✅ Valider</button>
+                    </div>
+                </div>
+            `
+
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) try { overlay.remove() } catch {}
+            })
+            document.body.appendChild(overlay)
+            try { document.getElementById('lpWithdrawAmount')?.focus() } catch {}
+        }
+
+        function lpWalletConfirmWithdraw() {
+            try {
+                const raw = String(document.getElementById('lpWithdrawAmount')?.value || '')
+                const amount = Number(raw.replace(/[^\d.]/g, ''))
+                if (!Number.isFinite(amount) || amount <= 0) {
+                    showLocalToast('Montant invalide.', 'error')
+                    return
+                }
+                const current = Number(userBalance || 0)
+                if (amount > current) {
+                    showLocalToast('Solde insuffisant.', 'error')
+                    return
+                }
+                userBalance = current - amount
+                try { localStorage.setItem('mangoo_user_balance', String(userBalance)) } catch {}
+                try { lpWalletSyncBalanceToUi() } catch {}
+                try { document.getElementById('lpWalletOverlay')?.remove() } catch {}
+                showLocalToast(`✅ Retrait ${amount.toLocaleString()} FCFA`, 'success')
+            } catch {
+                showLocalToast('Retrait impossible.', 'error')
             }
         }
 
@@ -15229,11 +15396,6 @@
 
         // === P2P TRANSFER FEATURE ===
         function openP2PModal() {
-            try {
-                lpGoToClientAccount('wallet', { action: 'transfer' })
-                return
-            } catch {
-            }
             // Close other modals if open
             const checkout = document.getElementById('mangoo-checkout-overlay');
             if(checkout) checkout.remove();
