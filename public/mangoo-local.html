@@ -2165,29 +2165,43 @@
 
         /* === WALLET CARD === */
         .wallet-card {
-            background: linear-gradient(135deg, #2d3436 0%, #000000 100%);
-            color: white;
-            border-radius: 20px;
-            padding: 15px; /* Reduced from 20px */
-            margin-bottom: 15px; /* Reduced from 25px */
-            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            background: linear-gradient(
+                    135deg,
+                    rgba(249,115,22,0.14) 0%,
+                    rgba(34,197,94,0.10) 55%,
+                    rgba(59,130,246,0.06) 100%
+                ),
+                var(--ml-panel);
+            color: var(--ml-text);
+            border-radius: var(--ml-radius-2xl);
+            padding: 16px;
+            margin-bottom: 14px;
+            border: 1px solid var(--ml-border);
+            box-shadow: var(--ml-shadow-md);
             position: relative;
             overflow: hidden;
         }
         html.dark .wallet-card {
-            background: linear-gradient(135deg, #111827 0%, #000000 100%);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            background: linear-gradient(
+                    135deg,
+                    rgba(249,115,22,0.12) 0%,
+                    rgba(34,197,94,0.08) 55%,
+                    rgba(59,130,246,0.06) 100%
+                ),
+                rgba(17,24,39,0.92);
+            border-color: rgba(255,255,255,0.08);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.35);
         }
         .wallet-card::after {
             content: '';
             position: absolute;
             top: -50px; right: -50px;
             width: 150px; height: 150px;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.12);
             border-radius: 50%;
         }
-        .wallet-label { font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px; }
-        .wallet-balance { font-size: 2rem; font-weight: bold; margin-bottom: 20px; cursor: pointer; text-decoration: underline; text-decoration-style: dotted; }
+        .wallet-label { font-size: 0.85rem; color: var(--ml-muted); font-weight: 850; margin-bottom: 6px; }
+        .wallet-balance { font-size: 2rem; font-weight: 950; margin-bottom: 14px; cursor: pointer; color: var(--ml-text); text-decoration: underline; text-decoration-style: dotted; text-decoration-color: rgba(249,115,22,0.55); }
         /* === SELLER MODE CARD === */
         .seller-mode-card {
             background: white;
@@ -2230,23 +2244,39 @@
         }
 
         /* === WALLET ACTIONS === */
-        .wallet-actions { display: flex; gap: 15px; }
+        .wallet-actions { display: flex; gap: 10px; }
         .wallet-btn {
             flex: 1;
-            background: rgba(255,255,255,0.2);
-            border: none;
-            padding: 10px;
-            border-radius: 10px;
-            color: white;
+            background: rgba(249,115,22,0.06);
+            border: 1px solid rgba(249,115,22,0.18);
+            padding: 11px 10px;
+            border-radius: 14px;
+            color: var(--ml-text);
             font-size: 0.9rem;
+            font-weight: 900;
             cursor: pointer;
-            backdrop-filter: blur(5px);
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 5px;
         }
-        .wallet-btn:active { background: rgba(255,255,255,0.3); }
+        html.dark .wallet-btn {
+            background: rgba(249,115,22,0.08);
+            border-color: rgba(255,255,255,0.10);
+            color: #f3f4f6;
+        }
+        .wallet-btn:active { transform: scale(0.99); }
+        .wallet-btn.wide {
+            width: 100%;
+            flex: 0 0 auto;
+            justify-content: center;
+            background: rgba(34,197,94,0.08);
+            border: 1px dashed rgba(34,197,94,0.28);
+        }
+        html.dark .wallet-btn.wide {
+            background: rgba(34,197,94,0.10);
+            border-color: rgba(34,197,94,0.22);
+        }
 
         /* === SELLER MODE CARD === */
         .seller-mode-card {
@@ -2318,16 +2348,14 @@
         html.dark .menu-label { color: #f3f4f6; }
 
         .action-list {
-            background: white;
-            border-radius: 15px;
+            background: var(--ml-panel);
+            border: 1px solid var(--ml-border);
+            border-radius: var(--ml-radius-2xl);
             overflow: hidden;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            margin-bottom: 18px;
+            box-shadow: var(--ml-shadow-sm);
         }
-        html.dark .action-list {
-            background: #1f2937;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
+        html.dark .action-list { border-color: rgba(255,255,255,0.08); }
         .action-item {
             padding: 15px 20px;
             display: flex;
@@ -2368,22 +2396,23 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
         .action-row {
-            padding: 15px 20px;
-            border-bottom: 1px solid #f1f2f6;
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            color: #2d3436;
+            color: var(--ml-text);
             cursor: pointer;
+            font-weight: 900;
         }
         html.dark .action-row {
-            border-bottom-color: #374151;
+            border-bottom-color: rgba(255,255,255,0.08);
             color: #f3f4f6;
         }
         .action-row:last-child { border-bottom: none; }
-        .action-row:active { background: #f8f9fa; }
-        html.dark .action-row:active { background: #374151; }
-        .arrow { color: #b2bec3; }
+        .action-row:active { background: rgba(17,24,39,0.03); }
+        html.dark .action-row:active { background: rgba(255,255,255,0.06); }
+        .arrow { color: var(--ml-muted); font-weight: 950; }
         html.dark .arrow { color: #6b7280; }
 
         .btn-seller {
@@ -3432,27 +3461,39 @@
 
         <!-- INTRO VIEW (Simple) -->
         <div id="introView" class="scrollable-view" style="display:none;">
-            <div class="hub-header" style="padding:20px; text-align:center;">
-                <button class="btn-back-account" onclick="switchView('map')" style="position:absolute; top:20px; left:20px;">←</button>
-                <h2 class="hub-title" style="margin:10px 0 5px;">Intro Local+</h2>
-                <div class="hub-subtitle" style="font-size:0.95rem;">Comment utiliser Local+ en 30 secondes</div>
+            <div class="hub-header lp-hub-header">
+                <button class="btn-back-account" onclick="switchView('map')">←</button>
+                <h2 class="hub-title">Intro Local+</h2>
+                <div class="hub-subtitle">Comment utiliser Local+ en 30 secondes</div>
             </div>
-            <div style="padding:20px; padding-bottom:90px;">
-                <div class="hub-card" style="border-radius:16px; padding:16px; margin-bottom:12px;">
-                    <div class="hub-card-title" style="font-weight:bold; margin-bottom:6px;">1) Rechercher un besoin</div>
-                    <div class="hub-card-subtitle" style="line-height:1.45;">Tapez un métier (ex: Plombier, Tailleur) ou utilisez les filtres.</div>
+            <div class="hub-grid">
+                <div class="hub-card lp-hub-card" style="cursor:default;">
+                    <div class="hub-card-icon" style="background: rgba(249,115,22,0.10);">①</div>
+                    <div style="flex:1; min-width:0;">
+                        <div class="hub-card-title" style="font-weight:950;">Rechercher un besoin</div>
+                        <div class="hub-card-subtitle" style="font-size:0.9rem; line-height:1.45;">Tapez un métier (ex: Plombier, Tailleur) ou utilisez les filtres.</div>
+                    </div>
                 </div>
-                <div class="hub-card" style="border-radius:16px; padding:16px; margin-bottom:12px;">
-                    <div class="hub-card-title" style="font-weight:bold; margin-bottom:6px;">2) Choisir un prestataire</div>
-                    <div class="hub-card-subtitle" style="line-height:1.45;">Cliquez sur un pin pour ouvrir la fiche: services, horaires, zone couverte.</div>
+                <div class="hub-card lp-hub-card" style="cursor:default;">
+                    <div class="hub-card-icon" style="background: rgba(34,197,94,0.10);">②</div>
+                    <div style="flex:1; min-width:0;">
+                        <div class="hub-card-title" style="font-weight:950;">Choisir un prestataire</div>
+                        <div class="hub-card-subtitle" style="font-size:0.9rem; line-height:1.45;">Cliquez sur un pin pour ouvrir la fiche: services, horaires, zone couverte.</div>
+                    </div>
                 </div>
-                <div class="hub-card" style="border-radius:16px; padding:16px; margin-bottom:12px;">
-                    <div class="hub-card-title" style="font-weight:bold; margin-bottom:6px;">3) Contacter via Mangoo Connect+</div>
-                    <div class="hub-card-subtitle" style="line-height:1.45;">Envoyez votre besoin, votre quartier, et une photo si nécessaire.</div>
+                <div class="hub-card lp-hub-card" style="cursor:default;">
+                    <div class="hub-card-icon" style="background: rgba(37,99,235,0.10);">③</div>
+                    <div style="flex:1; min-width:0;">
+                        <div class="hub-card-title" style="font-weight:950;">Contacter via Mangoo Connect+</div>
+                        <div class="hub-card-subtitle" style="font-size:0.9rem; line-height:1.45;">Envoyez votre besoin, votre quartier, et une photo si nécessaire.</div>
+                    </div>
                 </div>
-                <div class="hub-card" style="border-radius:16px; padding:16px;">
-                    <div class="hub-card-title" style="font-weight:bold; margin-bottom:6px;">Astuce</div>
-                    <div class="hub-card-subtitle" style="line-height:1.45;">Badge 🚗 “Se déplace” = le prestataire peut venir chez vous. Les quartiers couverts sont dans la fiche.</div>
+                <div class="hub-card lp-hub-card" style="cursor:default;">
+                    <div class="hub-card-icon" style="background: rgba(17,24,39,0.06);">💡</div>
+                    <div style="flex:1; min-width:0;">
+                        <div class="hub-card-title" style="font-weight:950;">Astuce</div>
+                        <div class="hub-card-subtitle" style="font-size:0.9rem; line-height:1.45;">Badge 🚗 “Se déplace” = le prestataire peut venir chez vous. Les quartiers couverts sont dans la fiche.</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -3494,12 +3535,12 @@
                         <div class="wallet-label">Solde Mangoo Pay</div>
                         <div class="wallet-balance" onclick="rechargeBalance()" title="Cliquez pour recharger">150 000 FCFA</div>
                         
-                        <div style="margin-bottom: 20px; font-size: 0.9rem; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; display: flex; justify-content: space-between;">
+                        <div style="margin-bottom: 14px; font-size: 0.9rem; background: rgba(17,24,39,0.03); padding: 10px 12px; border-radius: 14px; display: flex; justify-content: space-between; border: 1px solid rgba(0,0,0,0.06); font-weight: 900; color: var(--ml-text);">
                             <span>⚡ Crédit Instantané</span>
-                            <span style="color: #00b894; font-weight: bold;">25 000 FCFA</span>
+                            <span style="color: var(--ml-brand-from); font-weight: 950;">25 000 FCFA</span>
                         </div>
                         
-                        <button class="wallet-btn" style="width:100%; margin-bottom:15px; background:rgba(255,255,255,0.15); border:1px dashed rgba(255,255,255,0.3);" onclick="requestCredit()">
+                        <button class="wallet-btn wide" style="margin-bottom:12px;" onclick="requestCredit()">
                             💸 Demander une avance (BNPL)
                         </button>
 
@@ -3733,7 +3774,7 @@
             </div>
 
             <!-- SETTINGS FOOTER -->
-            <div style="padding:20px; background:#f8f9fa;">
+            <div style="padding:16px; background:var(--ml-bg);">
                 <div class="action-list">
                     <div class="action-row" onclick="alert('Aucune nouvelle notification.')">
                         <span>🔔 Notifications</span>
@@ -15846,7 +15887,7 @@
 
             const overlay = document.createElement('div')
             overlay.id = 'lpIdentityOverlay'
-            overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:20000; display:flex; align-items:flex-start; justify-content:center; padding:16px; box-sizing:border-box; overflow-y:auto; -webkit-overflow-scrolling:touch;'
+            overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.60); z-index:20000; display:flex; align-items:center; justify-content:center; padding:16px; box-sizing:border-box; overflow-y:auto; -webkit-overflow-scrolling:touch;'
 
             const status = u ? '✅ Utilisateur détecté' : '⚠️ Aucun utilisateur détecté'
             const explain = u
@@ -15875,12 +15916,12 @@
             `
 
             overlay.innerHTML = `
-                <div style="background:var(--ml-panel); color:var(--ml-text); width:100%; max-width:520px; border-radius:18px; border:1px solid var(--ml-border); box-shadow:0 20px 60px rgba(0,0,0,0.35); overflow:hidden; max-height: calc(100vh - 32px); display:flex; flex-direction:column;">
-                    <div style="padding:16px; display:flex; align-items:center; justify-content:space-between; gap:10px; border-bottom:1px solid var(--ml-border);">
+                <div style="background:var(--ml-panel); color:var(--ml-text); width:100%; max-width:560px; border-radius:18px; border:1px solid var(--ml-border); box-shadow:0 20px 60px rgba(0,0,0,0.35); overflow:hidden; max-height: calc(100vh - 32px); display:flex; flex-direction:column;">
+                    <div style="padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:10px; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#fff;">
                         <div style="font-weight:950;">🪪 Identité Local+</div>
-                        <button type="button" class="lp-btn lp-btn-secondary" onclick="closeLpIdentityModal()">Fermer</button>
+                        <button type="button" class="lp-btn lp-btn-secondary" onclick="closeLpIdentityModal()" style="background: rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.22); color:#fff;">Fermer</button>
                     </div>
-                    <div style="padding:16px; display:grid; gap:12px; overflow:auto;">
+                    <div style="padding:16px; display:grid; gap:12px; overflow:auto; flex:1; min-height:0;">
                         <div style="padding:12px; border-radius:14px; background:rgba(17,24,39,0.06); border:1px solid var(--ml-border);">
                             <div style="font-weight:900;">${status}</div>
                             <div style="color:var(--ml-muted); font-size:0.9rem; margin-top:4px; line-height:1.45;">${explain}</div>
@@ -15920,11 +15961,12 @@
                             <div style="font-weight:900;">Raw localStorage</div>
                             <div style="color:var(--ml-muted); font-size:0.85rem; margin-top:6px; white-space:pre-wrap; word-break:break-word;">${rawUser ? rawUser : '—'}</div>
                         </div>
-
+                    </div>
+                    <div style="flex:0 0 auto; padding: 12px 16px calc(14px + env(safe-area-inset-bottom)) 16px; border-top: 1px solid rgba(0,0,0,0.06); background: var(--ml-panel);">
                         <div style="display:flex; gap:10px; flex-wrap:wrap;">
                             <button type="button" class="lp-btn lp-btn-primary" onclick="try{applyLpHeaderUser()}catch{}">Rafraîchir l’entête</button>
                             <button type="button" class="lp-btn lp-btn-secondary" onclick="try{document.getElementById('lpIdentityFormCard')?.scrollIntoView({behavior:'smooth', block:'start'})}catch{}; try{document.getElementById('lpIdentityName')?.focus()}catch{};">Modifier l’identité</button>
-                            <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpGoToClientAccount('profile')}catch{}">Profil livraison</button>
+                            <button type="button" class="lp-btn lp-btn-secondary" onclick="lpIdentityGoToDeliveryProfile()">Profil livraison</button>
                             ${u ? '<button type="button" class="lp-btn lp-btn-secondary" onclick="lpClearIdentityFromModal()">Effacer identité</button>' : ''}
                         </div>
                     </div>
@@ -15962,10 +16004,35 @@
         }
 
         function lpClearIdentityFromModal() {
+            try {
+                const u = getLpCurrentUser()
+                const email = String(u?.email || '').trim().toLowerCase()
+                if (email) localStorage.removeItem(`mangoo_local_profile:${email}`)
+            } catch {
+            }
+            try { localStorage.removeItem('mangoo_local_profile') } catch {}
             try { localStorage.removeItem('mangoo-current-user') } catch {}
             try { localStorage.removeItem('user') } catch {}
             try { applyLpHeaderUser() } catch {}
-            try { openLpIdentityModal() } catch {}
+            try { loadLpProfile() } catch {}
+            try { closeLpIdentityModal() } catch {}
+            try { alert('Identité effacée ✅') } catch {}
+        }
+
+        function lpIdentityGoToDeliveryProfile() {
+            try { closeLpIdentityModal() } catch {}
+            try { switchView('account') } catch {}
+            try { switchAccountTab('profile') } catch {}
+            try {
+                setTimeout(() => {
+                    try {
+                        const el = document.getElementById('lpProfileAddress') || document.getElementById('lpAddress') || document.getElementById('addressInput')
+                        if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    } catch {
+                    }
+                }, 60)
+            } catch {
+            }
         }
 
         function updateDashboard() {
