@@ -200,6 +200,7 @@
         let seconds = 0;
         let callActive = false;
         let isProcessing = false;
+        let timerInterval = null;
         const timerEl = document.getElementById('timer');
         const statusEl = document.getElementById('statusText');
         const visualizer = document.getElementById('visualizer');
@@ -210,10 +211,11 @@
             timerEl.innerText = "00:00";
             callActive = true;
             startTimer();
-        }, 2500);
+        }, 500);
 
         function startTimer() {
-            setInterval(() => {
+            if (timerInterval) return;
+            timerInterval = setInterval(() => {
                 if(!callActive) return;
                 seconds++;
                 const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -360,13 +362,28 @@
             statusEl.innerText = "Appel terminé";
             timerEl.innerText = "Fin";
             visualizer.style.opacity = '0';
+
+            try {
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = null;
+            } catch {
+            }
             
-            // Visual feedback for all hangup buttons
-            const hangupBtns = document.querySelectorAll('button[onclick="endCall()"]');
-            hangupBtns.forEach(btn => {
-                btn.classList.add('animate-ping');
-                btn.style.backgroundColor = '#991b1b'; // darker red
-            });
+            try {
+                const hangupBtns = document.querySelectorAll('button[onclick="endCall()"]');
+                hangupBtns.forEach(btn => {
+                    btn.disabled = true;
+                    btn.style.backgroundColor = '#991b1b';
+                    btn.style.cursor = 'not-allowed';
+                });
+                const otherBtns = document.querySelectorAll('button:not([onclick="endCall()"])');
+                otherBtns.forEach(btn => {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.55';
+                    btn.style.cursor = 'not-allowed';
+                });
+            } catch {
+            }
             
             // Stop camera if active
             const localVideo = document.getElementById('localVideo');
@@ -376,13 +393,39 @@
                 localVideo.srcObject = null;
             }
 
+            try {
+                const videoModal = document.getElementById('videoModal');
+                if (videoModal) videoModal.classList.add('hidden');
+            } catch {
+            }
+
+            try { if (navigator && navigator.vibrate) navigator.vibrate(0); } catch {}
+
             setTimeout(() => {
                 // Try to communicate with parent if in iframe
                 try {
                     window.parent.postMessage('end_call', '*');
                 } catch {
                 }
-            }, 1000);
+                try {
+                    window.close();
+                } catch {
+                }
+
+                try {
+                    if (history.length > 1) {
+                        history.back();
+                        return;
+                    }
+                } catch {
+                }
+
+                try {
+                    const fallback = params.get('return') || '/mangoo-local.html';
+                    window.location.assign(fallback);
+                } catch {
+                }
+            }, 350);
         }
     </script>
 </body>

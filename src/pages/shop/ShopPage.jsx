@@ -1961,14 +1961,66 @@ const ProductCard = ({ product, shop }) => {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
+  const productName = String(product?.name || 'Produit').trim() || 'Produit'
+  const productSlug = (() => {
+    const raw = String(product?.slug || product?.handle || '').trim()
+    if (raw) return raw
+    const id = String(product?.id || '').trim()
+    return id || 'produit'
+  })()
+
+  const categoryLabel = String(
+    product?.category?.name
+    || product?.category_name
+    || product?.category
+    || product?.type
+    || ''
+  ).trim() || 'Produit'
+
+  const shortDescription = String(product?.short_description || product?.shortDescription || product?.description || '').trim()
+
+  const averageRating = (() => {
+    const v = Number(product?.average_rating ?? product?.averageRating ?? product?.rating ?? 0)
+    return Number.isFinite(v) ? Math.max(0, Math.min(5, v)) : 0
+  })()
+
+  const reviewCount = (() => {
+    const v = Number(product?.review_count ?? product?.reviewCount ?? 0)
+    return Number.isFinite(v) ? Math.max(0, v) : 0
+  })()
+
+  const priceText = (() => {
+    const amount = Number(product?.price ?? product?.price_amount ?? product?.amount)
+    const currency = String(product?.currency || product?.currency_code || '').trim().toUpperCase()
+    if (!Number.isFinite(amount)) return '—'
+    if (currency === 'EUR' || currency === '€' || currency === 'EURO') {
+      return `${amount.toFixed(2)} €`
+    }
+    if (currency) return `${Math.round(amount).toLocaleString('fr-FR')} ${currency}`
+    return `${Math.round(amount).toLocaleString('fr-FR')}`
+  })()
+
+  const legacyImageUrl = String(
+    product?.image
+    || product?.image_url
+    || product?.imageUrl
+    || product?.thumbnail
+    || product?.thumbnail_url
+    || ''
+  ).trim()
+
   const images = (() => {
     const list = Array.isArray(product?.images) ? product.images : [];
-    return list
+    const normalized = list
       .map((img) => ({
         url: String(img?.url || '').trim(),
         alt_text: String(img?.alt_text || '').trim(),
       }))
       .filter((img) => Boolean(img.url));
+    if (legacyImageUrl && !normalized.some((x) => x.url === legacyImageUrl)) {
+      normalized.unshift({ url: legacyImageUrl, alt_text: productName })
+    }
+    return normalized
   })();
 
   useEffect(() => {
@@ -1986,11 +2038,11 @@ const ProductCard = ({ product, shop }) => {
   return (
     <div className="card hover-scale overflow-hidden">
       <div className="relative bg-gray-50 dark:bg-gray-800">
-        <Link to={`/shop/${shop.slug}/product/${product.slug}`}>
+        <Link to={`/shop/${shop.slug}/product/${productSlug}`}>
           <div className="w-full aspect-[4/3] overflow-hidden">
             <img
-              src={images[activeImageIndex]?.url || product.images[0]?.url || 'https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=800'}
-              alt={images[activeImageIndex]?.alt_text || product.images[0]?.alt_text || product.name}
+              src={images[activeImageIndex]?.url || 'https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=800'}
+              alt={images[activeImageIndex]?.alt_text || productName}
               className="w-full h-full object-contain"
               loading="lazy"
             />
@@ -2030,18 +2082,18 @@ const ProductCard = ({ product, shop }) => {
       <div className="card-body">
         <div className="mb-2">
           <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            {product.category.name}
+            {categoryLabel}
           </span>
         </div>
         
-        <Link to={`/shop/${shop.slug}/product/${product.slug}`}>
+        <Link to={`/shop/${shop.slug}/product/${productSlug}`}>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-primary-600 dark:hover:text-primary-400 line-clamp-2">
-            {product.name}
+            {productName}
           </h3>
         </Link>
         
         <p className="text-gray-600 dark:text-gray-300 text-sm mb-3 line-clamp-2">
-          {product.short_description}
+          {shortDescription || 'Disponible en boutique.'}
         </p>
         
         <div className="flex items-center gap-2 mb-3">
@@ -2050,7 +2102,7 @@ const ProductCard = ({ product, shop }) => {
               <Star
                 key={i}
                 className={`w-4 h-4 ${
-                  i < Math.floor(product.average_rating)
+                  i < Math.floor(averageRating)
                     ? 'fill-yellow-400 text-yellow-400'
                     : 'text-gray-300'
                 }`}
@@ -2058,13 +2110,13 @@ const ProductCard = ({ product, shop }) => {
             ))}
           </div>
           <span className="text-sm text-gray-600 dark:text-gray-400">
-            {product.average_rating} ({product.review_count})
+            {averageRating.toFixed(1)} ({reviewCount})
           </span>
         </div>
         
         <div className="flex justify-between items-center">
           <span className="text-xl font-bold text-gray-900 dark:text-white">
-            {product.price.toFixed(2)} €
+            {priceText}
           </span>
           <button
             onClick={addToCart}
@@ -2074,11 +2126,17 @@ const ProductCard = ({ product, shop }) => {
           </button>
         </div>
         
-        {product.variants[0]?.inventory_quantity <= 5 && (
+        {(() => {
+          const list = Array.isArray(product?.variants) ? product.variants : []
+          const qty = Number(list?.[0]?.inventory_quantity)
+          if (!Number.isFinite(qty)) return null
+          if (qty > 5) return null
+          return (
           <div className="mt-2 text-xs text-orange-600 font-medium">
-            {product.variants[0].inventory_quantity} restants
+            {qty} restants
           </div>
-        )}
+          )
+        })()}
       </div>
     </div>
   );
