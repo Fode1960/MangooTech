@@ -79,19 +79,24 @@
 
         async function syncLocalPlusFromServer() {
             try {
-                const res = await fetch('/api/local-sync/localplus/vendors');
+                const res = await fetch('/api/local-sync/localplus/vendors?approved=1');
                 const data = await res.json().catch(() => ({}));
                 const list = Array.isArray(data?.vendors) ? data.vendors : [];
                 if (!list.length) return;
 
-                list.forEach((v) => {
-                    try { upsertCustomVendor(v); } catch {}
-                });
+                try {
+                    if (typeof upsertCustomVendorsBulk === 'function') upsertCustomVendorsBulk(list)
+                    else list.forEach((v) => { try { upsertCustomVendor(v); } catch {} });
+                } catch {
+                    list.forEach((v) => {
+                        try { upsertCustomVendor(v); } catch {}
+                    });
+                }
                 try { hydrateVendorsFromStorage(); } catch {}
+                try { applyBoostConfigToVendors(); } catch {}
                 try {
                     if (typeof relocateVendorsNearUser === 'function') relocateVendorsNearUser();
-                    if (typeof renderVendorsOnMap === 'function') renderVendorsOnMap(VENDORS);
-                    if (typeof renderListView === 'function') renderListView(VENDORS);
+                    if (typeof filterVendors === 'function') filterVendors();
                 } catch {
                 }
             } catch {
@@ -644,21 +649,26 @@
             grid-template-columns: 1fr 1fr;
             gap: 10px;
             margin: 14px 0 10px;
+            padding: 6px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.14);
+            border: 1px solid rgba(255,255,255,0.18);
         }
         .lp-pay-tab {
             padding: 10px 12px;
             border-radius: 999px;
             font-weight: 950;
-            border: 1px solid rgba(17,24,39,0.12);
-            background: transparent;
-            color: var(--ml-muted);
+            border: 1px solid rgba(255,255,255,0.24);
+            background: rgba(0,0,0,0.10);
+            color: rgba(255,255,255,0.95);
             cursor: pointer;
         }
-        html.dark .lp-pay-tab { border-color: rgba(255,255,255,0.14); }
+        html.dark .lp-pay-tabs { background: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.14); }
+        html.dark .lp-pay-tab { border-color: rgba(255,255,255,0.18); background: rgba(0,0,0,0.12); color: rgba(255,255,255,0.95); }
         .lp-pay-tab.active {
-            border-color: rgba(255,255,255,0.08);
-            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
-            color: #ffffff;
+            border-color: rgba(0,0,0,0.08);
+            background: rgba(255,255,255,0.95);
+            color: #111827;
             box-shadow: var(--ml-shadow-sm);
         }
         .payment-method-card {
@@ -985,7 +995,7 @@
             flex: 0 0 auto;
             background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
             color: white;
-            padding: 10px 10px 35px 10px; /* Further reduced padding */
+            padding: 8px 10px 26px 10px;
             text-align: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
             position: relative;
@@ -1051,15 +1061,15 @@
             letter-spacing: -0.02em;
         }
         .subtitle {
-            font-size: 0.8rem;
-            margin-bottom: 10px;
+            font-size: 0.78rem;
+            margin-bottom: 6px;
             opacity: 0.9;
         }
 
         /* === SEARCH BAR === */
         .search-container {
             position: absolute;
-            bottom: -25px; /* Halfway out */
+            bottom: -20px;
             left: 50%;
             transform: translateX(-50%);
             width: 95%; /* Wider as requested */
@@ -1113,6 +1123,29 @@
             border-color: rgba(255,255,255,0.12);
             color: #f3f4f6;
         }
+        .scope-btn {
+            background: rgba(17, 24, 39, 0.06);
+            border: 1px solid rgba(17, 24, 39, 0.10);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.15rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        html.dark .scope-btn {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(255,255,255,0.12);
+            color: #f3f4f6;
+        }
+        .scope-btn.active {
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
+            border-color: rgba(255,255,255,0.16);
+            color: white;
+        }
         .mic-active {
             background: #e17055 !important;
             color: white;
@@ -1139,7 +1172,7 @@
         /* === TOP SECTION (Stories + Filters) === */
         .top-section {
             position: absolute;
-            top: 140px; 
+            top: var(--lp-top-ui, 140px);
             left: 0;
             width: auto;
             height: calc(100% - 240px);
@@ -1155,7 +1188,7 @@
         /* === CATEGORY FILTERS (Vertical Dropdown) === */
         .filter-container {
             position: fixed; /* Fixed position */
-            top: 140px;
+            top: var(--lp-top-ui, 140px);
             left: 15px;
             z-index: 1200;
             pointer-events: auto;
@@ -1172,7 +1205,7 @@
 
         .kind-toggle {
             position: fixed;
-            top: 140px;
+            top: var(--lp-top-ui, 140px);
             left: 15px;
             z-index: 1200;
             pointer-events: auto;
@@ -1327,7 +1360,6 @@
         }
 
         html.lp-simple .quick-filter-fab,
-        html.lp-simple #providerDashFab,
         html.lp-simple #calendarFab {
             display: none !important;
         }
@@ -1854,6 +1886,7 @@
             display: none; /* Managed by JS */
             z-index: 50;
         }
+        #listView.scrollable-view { padding-top: 185px; }
         html.dark .scrollable-view {
             background: #111827;
         }
@@ -2958,17 +2991,12 @@
         }
 
         .lp-list-header {
-            position: fixed;
-            top: 120px;
-            left: 0;
+            position: relative;
             width: 100%;
-            z-index: 500;
-            background: var(--ml-bg);
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(0,0,0,0.04);
-        }
-        html.dark .lp-list-header {
-            border-bottom-color: rgba(255,255,255,0.06);
+            z-index: 1;
+            background: transparent;
+            padding: 8px 0 14px;
+            border-bottom: none;
         }
         .lp-list-header-inner {
             padding: 0 20px;
@@ -2999,6 +3027,28 @@
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 15px;
             padding: 0 15px;
+        }
+        .lp-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px 15px 2px;
+        }
+        .lp-page-label {
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(0,0,0,0.10);
+            background: rgba(17,24,39,0.04);
+            color: var(--ml-text);
+            font-weight: 950;
+            font-size: 0.85rem;
+            letter-spacing: -0.01em;
+        }
+        html.dark .lp-page-label {
+            border-color: rgba(255,255,255,0.10);
+            background: rgba(255,255,255,0.06);
+            color: var(--ml-text);
         }
         .lp-card-actions {
             width: 100%;
@@ -3121,6 +3171,27 @@
             gap: 5px;
         }
         html.dark .msg-meta { color: #bdc3c7; }
+
+        .msg-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        .msg-tag {
+            font-size: 0.7rem;
+            font-weight: 950;
+            padding: 4px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(0,0,0,0.08);
+            background: rgba(255,255,255,0.55);
+            color: #1f2937;
+        }
+        html.dark .msg-tag {
+            border-color: rgba(255,255,255,0.14);
+            background: rgba(255,255,255,0.08);
+            color: #f3f4f6;
+        }
         
         .msg-options {
             position: absolute;
@@ -3203,14 +3274,15 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
+        .ml-spin { display: inline-block; animation: spin 1s linear infinite; }
         html.dark .spinner { border-color: rgba(255,255,255,0.12); border-top-color: var(--ml-brand-from); }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* === MODAL SELLER === */
+        /* === MODALS (Seller + Provider) === */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(17,24,39,0.52);
             z-index: 4000;
             display: none;
             align-items: center;
@@ -3219,36 +3291,95 @@
             animation: fadeIn 0.2s;
         }
         .modal-card {
-            background: white;
+            background: var(--ml-panel);
             width: 85%;
-            max-width: 400px;
-            border-radius: 20px;
+            max-width: 520px;
+            border-radius: var(--ml-radius-2xl);
             padding: 25px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: var(--ml-shadow-lg);
             transform: scale(0.9);
             animation: popIn 0.3s forwards;
             max-height: 85vh;
             overflow-y: auto;
+            border: 1px solid var(--ml-border);
             /* Scrollbar styling */
             scrollbar-width: thin;
             scrollbar-color: #dfe6e9 transparent;
         }
-        html.dark .modal-card { background: #1f2937; }
+        html.dark .modal-card { border-color: rgba(255,255,255,0.12); }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes popIn { to { transform: scale(1); } }
         
-        .modal-icon { font-size: 3rem; margin-bottom: 10px; display: block; }
-        .modal-title { font-size: 1.4rem; color: #2d3436; margin-bottom: 10px; }
-        html.dark .modal-title { color: #f3f4f6; }
-        .modal-text { color: #636e72; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px; }
-        html.dark .modal-text { color: #9ca3af; }
-        .input-group { margin-bottom: 15px; text-align: left; }
-        .input-group label { display: block; font-size: 0.8rem; color: #636e72; margin-bottom: 5px; font-weight: bold; }
-        html.dark .input-group label { color: #d1d5db; }
-        .input-field { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #dfe6e9; box-sizing: border-box; font-size: 1rem; }
-        html.dark .input-field { background: #374151; border-color: #4b5563; color: white; }
+        #sellerModal .modal-card {
+            background: linear-gradient(180deg, rgba(249,115,22,0.08), rgba(22,163,74,0.06)) , var(--ml-panel);
+        }
+        html.dark #sellerModal .modal-card {
+            background: linear-gradient(180deg, rgba(249,115,22,0.10), rgba(22,163,74,0.08)) , var(--ml-panel);
+        }
+        #sellerModal .modal-icon {
+            width: 58px;
+            height: 58px;
+            border-radius: 999px;
+            display: grid;
+            place-items: center;
+            margin: 0 auto 10px;
+            font-size: 2rem;
+            color: white;
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
+            box-shadow: var(--ml-shadow-md);
+        }
+        #sellerModal .modal-title {
+            font-size: 1.45rem;
+            color: var(--ml-text);
+            margin-bottom: 8px;
+            font-weight: 950;
+            letter-spacing: -0.02em;
+        }
+        #sellerModal .modal-text {
+            color: var(--ml-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 18px;
+        }
+        #sellerModal .input-group { margin-bottom: 14px; text-align: left; }
+        #sellerModal .input-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--ml-muted);
+            margin-bottom: 6px;
+            font-weight: 900;
+        }
+        #sellerModal .input-field {
+            width: 100%;
+            padding: 12px;
+            border-radius: var(--ml-radius-xl);
+            border: 1px solid var(--ml-border);
+            box-sizing: border-box;
+            font-size: 1rem;
+            outline: none;
+            background: rgba(255,255,255,0.92);
+            color: var(--ml-text);
+        }
+        html.dark #sellerModal .input-field { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); color: var(--ml-text); }
+        #sellerModal .input-field:focus { box-shadow: 0 0 0 4px rgba(249,115,22,0.16); border-color: rgba(249,115,22,0.65); }
         .btn-submit { background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color: white; width: 100%; min-height: 44px; padding: 12px 14px; border: none; border-radius: var(--ml-radius-xl); font-weight: 600; font-size: 0.95rem; cursor: pointer; box-shadow: var(--ml-shadow-sm); }
+        #sellerModal label[for="shopLogoFile"] {
+            background: rgba(17,24,39,0.06);
+            color: var(--ml-text);
+            padding: 10px 14px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-weight: 900;
+            font-size: 0.9rem;
+            border: 1px solid var(--ml-border);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+        }
+        html.dark #sellerModal label[for="shopLogoFile"] { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); color: var(--ml-text); }
+        #sellerModal #shopLogoFallback { opacity: 0.92; }
         
         /* === CALL OVERLAY === */
         #callOverlay {
@@ -3280,11 +3411,13 @@
         <h1>🥭 Mangoo Local+</h1>
         <div class="subtitle">Trouvez les meilleures affaires autour de vous</div>
         <div id="lpBuild" style="font-size:0.72rem; opacity:0.6; margin-top:2px;"></div>
+        <div id="lpVersionHud" style="margin-top:4px; display:inline-flex; align-items:center; gap:8px; padding:3px 10px; border-radius:999px; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.25); font-size:0.78rem; font-weight:900; color:#fff;"></div>
         
         <!-- SEARCH BAR -->
         <div class="search-container">
             <input type="text" class="search-input" id="searchInput" placeholder="Dites 'Vivres' ou 'Tech'..." oninput="filterVendors()">
             <button class="mic-btn" onclick="startVoiceSearch()" title="Recherche vocale">🎙️</button>
+            <button id="lpScopeBtn" class="scope-btn" onclick="toggleLpScope()" title="Tout le pays">🌍</button>
         </div>
     </div>
 
@@ -3313,10 +3446,10 @@
     </button>
 
     <button id="providerDashFab" onclick="openMyProviderDashboard()" style="
-        position: absolute;
-        top: 200px;
-        right: 15px;
-        z-index: 1100;
+        position: fixed;
+        top: calc(var(--lp-top-ui, 140px) + 54px);
+        right: calc(15px + env(safe-area-inset-right));
+        z-index: 1200;
         background: #00b894;
         color: white;
         border: none;
@@ -3326,14 +3459,14 @@
         font-size: 0.9rem;
         font-weight: 950;
         box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        display: none;
+        display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
         transition: transform 0.2s;
         gap: 8px;
-    " onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform='scale(1)'" title="Mon dashboard">
-        📄 Mon dashboard
+    " onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform='scale(1)'" title="Mon espace">
+        🧰 Mon espace
     </button>
 
     
@@ -3393,6 +3526,7 @@
         </div>
         <div class="lp-simple-footer">
             <button class="lp-simple-small" onclick="lpSpeakHelp()">🔊 Écouter l’aide</button>
+            <button class="lp-simple-small" onclick="lpSimpleCountry()">🌍 Tout le pays</button>
             <button id="lpUiModeBtn" class="lp-simple-small" onclick="lpToggleUiMode()">⚙️ Avancé</button>
         </div>
     </div>
@@ -3561,6 +3695,17 @@
                         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px;">
                             <button type="button" class="lp-btn lp-btn-secondary" onclick="switchAccountTab('orders')">🛒 Retour Acheter</button>
                             <button type="button" class="lp-btn lp-btn-primary" onclick="openAddProductModal()">📸 Vendre un article</button>
+                            <button id="lpOpenMyShopBtn" type="button" class="lp-btn lp-btn-secondary" style="display:none;" onclick="try{const id=localStorage.getItem('mangoo_my_shop_id'); if(id) openVendorSheetById(id);}catch{}">🏪 Ma boutique</button>
+                        </div>
+                    </div>
+
+                    <div id="providerSection" style="margin-top:14px; display:none;">
+                        <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
+                            <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">🛠️ Espace Prestataire</div>
+                            <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Ouvrir votre espace prestataire en une seule action.</div>
+                            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px;">
+                                <button type="button" class="lp-btn lp-btn-primary" onclick="openMyProviderDashboard()">🧰 Mon espace</button>
+                            </div>
                         </div>
                     </div>
 
@@ -3587,7 +3732,7 @@
                                 <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;">
                                     <div>
                                         <div style="font-weight:900; color:#2d3436;">📍 Boost Carte (Admin)</div>
-                                        <div style="font-size:0.85rem; color:#636e72;">Sponsorisé / Promo / Nouveau • Max 2 sponsorisés visibles</div>
+                                        <div style="font-size:0.85rem; color:#636e72;">Sponsorisé / Promo / Nouveau • Mise en avant: jusqu’à 6 par type</div>
                                     </div>
                                     <button onclick="refreshBoostPanel()" style="border:none; background:#f1f2f6; color:#2d3436; padding:10px 12px; border-radius:12px; font-weight:900; cursor:pointer;">↻</button>
                                 </div>
@@ -3702,7 +3847,7 @@
                             <input id="lpProfilePhone" placeholder="Téléphone" style="width: 100%; padding: 12px; border: 1px solid var(--ml-border); border-radius: 12px; background: var(--ml-panel); color: var(--ml-text); font-weight: 700;" />
                             <input id="lpProfileAddress" placeholder="Adresse (quartier, rue…)" style="width: 100%; padding: 12px; border: 1px solid var(--ml-border); border-radius: 12px; background: var(--ml-panel); color: var(--ml-text); font-weight: 700;" />
                             <div style="display:flex; gap: 10px; flex-wrap: wrap;">
-                                <button type="button" class="lp-btn lp-btn-secondary" onclick="loadLpProfile()">↻ Charger</button>
+                                <button type="button" class="lp-btn lp-btn-secondary" onclick="loadLpProfile(true)">↻ Charger</button>
                                 <button type="button" class="lp-btn lp-btn-primary" onclick="saveLpProfile()">Enregistrer</button>
                             </div>
                         </div>
@@ -3714,7 +3859,7 @@
                         <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Mes favoris</div>
                         <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Accédez à vos prestataires favoris.</div>
                         <div style="margin-top: 14px; display:flex; gap: 10px; flex-wrap: wrap;">
-                            <button type="button" class="lp-btn lp-btn-primary" onclick="try{lpGoToClientAccount('wishlist')}catch{}">Voir mes favoris</button>
+                            <button type="button" class="lp-btn lp-btn-primary" onclick="try{lpOpenFavorites()}catch{}">Voir mes favoris</button>
                         </div>
                     </div>
                 </div>
@@ -3921,7 +4066,7 @@
             </button>
 
             <p style="text-align:center; color:#b2bec3; font-size:0.8rem; margin-top:30px;">
-                Version 2.0.2 (PWA)
+                Version 2.0.23 (PWA)
             </p>
         </div>
     </div>
@@ -4798,8 +4943,7 @@
                             relocateVendorsNearUser();
                             if (map && typeof map.flyTo === 'function') map.flyTo(USER_POS, 16);
                             if (typeof updateUserMarker === 'function') updateUserMarker();
-                            if (typeof renderVendorsOnMap === 'function') renderVendorsOnMap(VENDORS);
-                            if (typeof renderListView === 'function') renderListView(VENDORS);
+                            if (typeof filterVendors === 'function') filterVendors();
                         } catch {
                         }
                     },
@@ -5265,7 +5409,14 @@
         let currentCategory = 'all';
         let currentFamily = 'all';
         let currentTrade = 'all';
-        let maxDistanceKm = 5;
+        const LP_DISTANCE_DEFAULT_KM = 10;
+        const LP_DISTANCE_EXPAND_KM = 25;
+        const LP_DISTANCE_MIN_RESULTS = 6;
+        const LP_BOOST_CAP_SPONSORED = 6;
+        const LP_BOOST_CAP_PROMO = 6;
+        const LP_BOOST_CAP_NEW = 6;
+        let lpScopeMode = 'nearby';
+        let maxDistanceKm = LP_DISTANCE_DEFAULT_KM;
         let onlyMobile = false;
         let onlyVerified = false;
         let onlyAvailable = false;
@@ -5380,48 +5531,122 @@
             }
         }
 
-        async function syncBoostConfigFromServer() {
+        function lpUpdateBoostHudCounts(source) {
             try {
-                const last = Number(localStorage.getItem('mangoo_boost_sync_at') || 0)
-                if (Number.isFinite(last) && Date.now() - last < 60 * 1000) return
+                const base = String(window.__lpVersionLabel || '').trim()
+                const hud = document.getElementById('lpVersionHud')
+                if (!hud) return
+                const now = Date.now()
+                let s = 0, p = 0, n = 0
+                try {
+                    VENDORS.forEach((v) => {
+                        if (typeof v?.sponsoredUntil === 'number' && v.sponsoredUntil > now) s++
+                        if (typeof v?.promoUntil === 'number' && v.promoUntil > now) p++
+                        if (typeof v?.newUntil === 'number' && v.newUntil > now) n++
+                    })
+                } catch {
+                }
+                const src = String(source || '').trim()
+                const extra = `Boosts S:${s} P:${p} N:${n}${src ? ` (${src})` : ''}`
+                hud.textContent = base ? `${base} • ${extra}` : extra
             } catch {
+            }
+        }
+
+        async function syncBoostConfigFromServer() {
+            let force = false
+            try {
+                const qs = new URLSearchParams(String(window.location.search || ''))
+                const p = String(qs.get('boostSync') || '').trim().toLowerCase()
+                if (p === '1' || p === 'true') force = true
+            } catch {
+                force = false
+            }
+            if (!force) {
+                try {
+                    const last = Number(localStorage.getItem('mangoo_boost_sync_at') || 0)
+                    if (Number.isFinite(last) && Date.now() - last < 60 * 1000) return
+                } catch {
+                }
+            }
+
+            const hasOwn = (obj, key) => Object.prototype.hasOwnProperty.call(obj || {}, key)
+            const tierToNumber = (tier) => {
+                const t = String(tier || '').trim().toLowerCase()
+                if (t === 'bronze') return 1
+                if (t === 'argent') return 2
+                if (t === 'or') return 3
+                return null
+            }
+            const applySnapshotConfig = (rows) => {
+                const input = Array.isArray(rows) ? rows : []
+                const next = {}
+                input.forEach((row) => {
+                    const vendorId = String(row?.vendor_id || '').trim()
+                    if (!vendorId) return
+                    const aliasesRaw = row?.vendor_id_aliases
+                    const aliases = Array.isArray(aliasesRaw) ? aliasesRaw.map((x) => String(x || '').trim()).filter(Boolean) : []
+                    const ids = Array.from(new Set([vendorId, ...aliases])).filter(Boolean)
+                    const patch = {}
+                    if (hasOwn(row, 'sponsored_until')) {
+                        try { patch.sponsoredUntil = row?.sponsored_until ? Date.parse(String(row.sponsored_until)) : null } catch { patch.sponsoredUntil = null }
+                    }
+                    if (hasOwn(row, 'sponsored_tier')) {
+                        try {
+                            const n = tierToNumber(row?.sponsored_tier)
+                            patch.sponsoredTier = n !== null ? n : null
+                        } catch { patch.sponsoredTier = null }
+                    }
+                    if (hasOwn(row, 'promo_until')) {
+                        try { patch.promoUntil = row?.promo_until ? Date.parse(String(row.promo_until)) : null } catch { patch.promoUntil = null }
+                    }
+                    if (hasOwn(row, 'new_until')) {
+                        try { patch.newUntil = row?.new_until ? Date.parse(String(row.new_until)) : null } catch { patch.newUntil = null }
+                    }
+                    ids.forEach((id) => {
+                        next[id] = patch
+                    })
+                })
+                const prev = getBoostConfig()
+                setBoostConfig({ ...(prev || {}), ...(next || {}) })
+                try { applyBoostConfigToVendors() } catch {}
+                try { lpUpdateBoostHudCounts('serveur') } catch {}
+                try { window.__lpNeedsMapRefreshAfterBoost = true; } catch {}
+                try {
+                    if (map && typeof lpRefreshMapMarkersNow === 'function') lpRefreshMapMarkersNow()
+                } catch {
+                }
+            }
+            const tryApplySnapshotFromApi = async () => {
+                try {
+                    const r = await fetch('/api/boosts/vendor-boosts-active', { method: 'GET' })
+                    if (!r.ok) return false
+                    const payload = await r.json().catch(() => null)
+                    const list = Array.isArray(payload?.rows) ? payload.rows : []
+                    if (!list.length) return false
+                    applySnapshotConfig(list)
+                    return true
+                } catch {
+                    return false
+                }
+            }
+
+            const snapOk = await tryApplySnapshotFromApi()
+            if (snapOk) {
+                try { localStorage.setItem('mangoo_boost_sync_at', String(Date.now())) } catch {}
+                if (force) {
+                    try {
+                        const u = new URL(window.location.href)
+                        u.searchParams.delete('boostSync')
+                        window.history.replaceState({}, '', u.toString())
+                    } catch {
+                    }
+                }
+                return
             }
 
             const cfg = getLpSupabaseConfig ? getLpSupabaseConfig() : null
             if (!cfg) {
-                try {
-                    const r = await fetch('/api/boosts/vendor-boosts-active', { method: 'GET' })
-                    if (!r.ok) return
-                    const rows = await r.json().catch(() => null)
-                    const list = Array.isArray(rows?.rows) ? rows.rows : []
-                    if (!list.length) {
-                        try { localStorage.setItem('mangoo_boost_sync_at', String(Date.now())) } catch {}
-                        return
-                    }
-                    const tierToNumber = (tier) => {
-                        const t = String(tier || '').trim().toLowerCase()
-                        if (t === 'bronze') return 1
-                        if (t === 'argent') return 2
-                        if (t === 'or') return 3
-                        return null
-                    }
-                    list.forEach((row) => {
-                        const vendorId = String(row?.vendor_id || '').trim()
-                        if (!vendorId) return
-                        const patch = {}
-                        try { if (row?.sponsored_until) patch.sponsoredUntil = Date.parse(String(row.sponsored_until)) } catch {}
-                        try {
-                            const n = tierToNumber(row?.sponsored_tier)
-                            if (n !== null) patch.sponsoredTier = n
-                        } catch {}
-                        try { if (row?.promo_until) patch.promoUntil = Date.parse(String(row.promo_until)) } catch {}
-                        try { if (row?.new_until) patch.newUntil = Date.parse(String(row.new_until)) } catch {}
-                        if (!Object.keys(patch).length) return
-                        try { setVendorBoost(vendorId, patch) } catch {}
-                    })
-                    try { localStorage.setItem('mangoo_boost_sync_at', String(Date.now())) } catch {}
-                } catch {
-                }
                 return
             }
 
@@ -5441,12 +5666,8 @@
                         'Content-Type': 'application/json'
                     }
                 })
-                if (!r.ok) return
+                if (!r.ok) throw new Error('supabase_vendor_boosts_failed')
                 const rows = await r.json()
-                if (!Array.isArray(rows) || !rows.length) {
-                    try { localStorage.setItem('mangoo_boost_sync_at', String(Date.now())) } catch {}
-                    return
-                }
 
                 const tierToNumber = (tier) => {
                     const t = String(tier || '').trim().toLowerCase()
@@ -5456,29 +5677,85 @@
                     return null
                 }
 
-                rows.forEach((row) => {
-                    const vendorId = String(row?.vendor_id || '').trim()
-                    if (!vendorId) return
-                    const patch = {}
-                    try {
-                        if (row?.sponsored_until) patch.sponsoredUntil = Date.parse(String(row.sponsored_until))
-                    } catch {}
-                    try {
-                        const n = tierToNumber(row?.sponsored_tier)
-                        if (n !== null) patch.sponsoredTier = n
-                    } catch {}
-                    try {
-                        if (row?.promo_until) patch.promoUntil = Date.parse(String(row.promo_until))
-                    } catch {}
-                    try {
-                        if (row?.new_until) patch.newUntil = Date.parse(String(row.new_until))
-                    } catch {}
-                    if (!Object.keys(patch).length) return
-                    try { setVendorBoost(vendorId, patch) } catch {}
-                })
+                const applyList = (list) => {
+                    let applied = 0
+                    const input = Array.isArray(list) ? list : []
+                    input.forEach((row) => {
+                        const vendorId = String(row?.vendor_id || '').trim()
+                        if (!vendorId) return
+                        const aliasesRaw = row?.vendor_id_aliases
+                        const aliases = Array.isArray(aliasesRaw) ? aliasesRaw.map((x) => String(x || '').trim()).filter(Boolean) : []
+                        const ids = Array.from(new Set([vendorId, ...aliases])).filter(Boolean)
+                        const patch = {}
+                        try {
+                            if (row?.sponsored_until) patch.sponsoredUntil = Date.parse(String(row.sponsored_until))
+                        } catch {}
+                        try {
+                            const n = tierToNumber(row?.sponsored_tier)
+                            if (n !== null) patch.sponsoredTier = n
+                        } catch {}
+                        try {
+                            if (row?.promo_until) patch.promoUntil = Date.parse(String(row.promo_until))
+                        } catch {}
+                        try {
+                            if (row?.new_until) patch.newUntil = Date.parse(String(row.new_until))
+                        } catch {}
+                        if (!Object.keys(patch).length) return
+                        ids.forEach((id) => {
+                            try { setVendorBoost(id, patch) } catch {}
+                        })
+                        applied++
+                    })
+                    return applied
+                }
+
+                let applied = applyList(rows)
+                try {
+                    const r2 = await fetch('/api/boosts/vendor-boosts-active', { method: 'GET' })
+                    if (r2.ok) {
+                        const j = await r2.json().catch(() => null)
+                        const list = Array.isArray(j?.rows) ? j.rows : []
+                        applied += applyList(list)
+                    }
+                } catch {
+                }
+                if (!applied) {
+                    try { localStorage.setItem('mangoo_boost_sync_at', String(Date.now())) } catch {}
+                    if (force) {
+                        try {
+                            const u = new URL(window.location.href)
+                            u.searchParams.delete('boostSync')
+                            window.history.replaceState({}, '', u.toString())
+                        } catch {
+                        }
+                    }
+                    return
+                }
 
                 try { localStorage.setItem('mangoo_boost_sync_at', String(Date.now())) } catch {}
-            } catch {
+                if (force) {
+                    try {
+                        const u = new URL(window.location.href)
+                        u.searchParams.delete('boostSync')
+                        window.history.replaceState({}, '', u.toString())
+                    } catch {
+                    }
+                }
+            } catch (e) {
+                try {
+                    const ok = await tryApplySnapshotFromApi()
+                    if (!ok) return
+                    try { localStorage.setItem('mangoo_boost_sync_at', String(Date.now())) } catch {}
+                    if (force) {
+                        try {
+                            const u = new URL(window.location.href)
+                            u.searchParams.delete('boostSync')
+                            window.history.replaceState({}, '', u.toString())
+                        } catch {
+                        }
+                    }
+                } catch {
+                }
             }
         }
 
@@ -5488,10 +5765,40 @@
                 const id = String(v.id);
                 const c = cfg[id];
                 if (!c || typeof c !== 'object') return;
-                if (typeof c.sponsoredUntil === 'number' || c.sponsoredUntil === null) v.sponsoredUntil = c.sponsoredUntil;
-                if (typeof c.sponsoredTier === 'number' || c.sponsoredTier === null) v.sponsoredTier = c.sponsoredTier;
-                if (typeof c.promoUntil === 'number' || c.promoUntil === null) v.promoUntil = c.promoUntil;
-                if (typeof c.newUntil === 'number' || c.newUntil === null) v.newUntil = c.newUntil;
+                const toMs = (value) => {
+                    if (value === null) return null;
+                    if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+                    if (typeof value === 'string') {
+                        const s = String(value).trim();
+                        if (!s) return null;
+                        const n = Number(s);
+                        if (Number.isFinite(n)) return n;
+                        const t = Date.parse(s);
+                        if (Number.isFinite(t)) return t;
+                    }
+                    return null;
+                };
+                const toTier = (value) => {
+                    if (value === null) return null;
+                    if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+                    if (typeof value === 'string') {
+                        const n = Number(value);
+                        if (Number.isFinite(n)) return n;
+                    }
+                    return null;
+                };
+                const sUntil = toMs(c.sponsoredUntil);
+                const sTier = toTier(c.sponsoredTier);
+                const pUntil = toMs(c.promoUntil);
+                const nUntil = toMs(c.newUntil);
+                if (sUntil !== null) v.sponsoredUntil = sUntil;
+                if (c.sponsoredUntil === null) v.sponsoredUntil = null;
+                if (sTier !== null) v.sponsoredTier = sTier;
+                if (c.sponsoredTier === null) v.sponsoredTier = null;
+                if (pUntil !== null) v.promoUntil = pUntil;
+                if (c.promoUntil === null) v.promoUntil = null;
+                if (nUntil !== null) v.newUntil = nUntil;
+                if (c.newUntil === null) v.newUntil = null;
             });
         }
 
@@ -5855,6 +6162,62 @@
         let lpOnboardAudioChunks = [];
         let lpOnboardAudioTimerInterval = null;
         let lpOnboardAudioStartedAt = 0;
+        let lpOnboardAudioObjectUrl = null;
+        let lpOnboardWavRecorder = null;
+
+        function lpStopOnboardWavRecorder() {
+            const r = lpOnboardWavRecorder;
+            lpOnboardWavRecorder = null;
+            if (!r) return null;
+            try { r.processor.onaudioprocess = null; } catch {}
+            try { r.source.disconnect(); } catch {}
+            try { r.processor.disconnect(); } catch {}
+            try { r.gain.disconnect(); } catch {}
+            try { r.ctx.close(); } catch {}
+            try {
+                const parts = Array.isArray(r.buffers) ? r.buffers : [];
+                if (!parts.length) return null;
+                let total = 0;
+                for (const p of parts) total += p.length;
+                if (total < 2000) return null;
+                const data = new Float32Array(total);
+                let offset = 0;
+                for (const p of parts) {
+                    data.set(p, offset);
+                    offset += p.length;
+                }
+                const sampleRate = Number(r.sampleRate) || 44100;
+                const buf = new ArrayBuffer(44 + data.length * 2);
+                const view = new DataView(buf);
+                const writeStr = (o, s) => {
+                    for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i));
+                };
+                writeStr(0, 'RIFF');
+                view.setUint32(4, 36 + data.length * 2, true);
+                writeStr(8, 'WAVE');
+                writeStr(12, 'fmt ');
+                view.setUint32(16, 16, true);
+                view.setUint16(20, 1, true);
+                view.setUint16(22, 1, true);
+                view.setUint32(24, sampleRate, true);
+                view.setUint32(28, sampleRate * 2, true);
+                view.setUint16(32, 2, true);
+                view.setUint16(34, 16, true);
+                writeStr(36, 'data');
+                view.setUint32(40, data.length * 2, true);
+                let p = 44;
+                for (let i = 0; i < data.length; i++) {
+                    let s = data[i];
+                    if (s > 1) s = 1;
+                    if (s < -1) s = -1;
+                    view.setInt16(p, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+                    p += 2;
+                }
+                return new Blob([buf], { type: 'audio/wav' });
+            } catch {
+                return null;
+            }
+        }
 
         function lpGetVoicePrefs() {
             const rawLang = String(localStorage.getItem('mangoo_lp_voice_lang') || '').trim();
@@ -5921,6 +6284,11 @@
 
         function lpCloseOnboarding() {
             try { lpStopOnboardAudio(true); } catch {}
+            try {
+                if (lpOnboardAudioObjectUrl) URL.revokeObjectURL(lpOnboardAudioObjectUrl);
+            } catch {
+            }
+            lpOnboardAudioObjectUrl = null;
             lpOnboardState = null;
             const el = document.getElementById('lpOnboardOverlay');
             if (el) el.style.display = 'none';
@@ -6033,6 +6401,7 @@
             lpOnboardAudioRecorder = null;
             lpOnboardAudioChunks = [];
             lpOnboardAudioStartedAt = 0;
+            try { lpStopOnboardWavRecorder(); } catch {}
             if (!silent) lpRenderOnboarding();
         }
 
@@ -6044,12 +6413,65 @@
                 return;
             }
             try {
+                try {
+                    if (lpOnboardAudioObjectUrl) URL.revokeObjectURL(lpOnboardAudioObjectUrl);
+                } catch {
+                }
+                lpOnboardAudioObjectUrl = null;
+                try { s.voiceAudioObjectUrl = ''; } catch {}
+                try { s.voiceAudioBase64 = ''; } catch {}
+
                 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                     alert("Micro non disponible sur cet appareil.");
                     return;
                 }
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const rec = new MediaRecorder(stream);
+                try {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) {
+                        const ctx = new AudioCtx();
+                        try { await ctx.resume(); } catch {}
+                        const source = ctx.createMediaStreamSource(stream);
+                        const processor = ctx.createScriptProcessor(4096, 1, 1);
+                        const gain = ctx.createGain();
+                        gain.gain.value = 0;
+                        const buffers = [];
+                        processor.onaudioprocess = (e) => {
+                            try {
+                                const ch = e.inputBuffer.getChannelData(0);
+                                buffers.push(new Float32Array(ch));
+                            } catch {
+                            }
+                        };
+                        source.connect(processor);
+                        processor.connect(gain);
+                        gain.connect(ctx.destination);
+                        lpOnboardWavRecorder = { ctx, source, processor, gain, buffers, sampleRate: ctx.sampleRate };
+                    } else {
+                        lpOnboardWavRecorder = null;
+                    }
+                } catch {
+                    lpOnboardWavRecorder = null;
+                }
+                const pickAudioMimeType = () => {
+                    try {
+                        if (typeof MediaRecorder === 'undefined' || typeof MediaRecorder.isTypeSupported !== 'function') return '';
+                        const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
+                        for (const t of candidates) {
+                            try { if (MediaRecorder.isTypeSupported(t)) return t; } catch {}
+                        }
+                    } catch {
+                    }
+                    return '';
+                };
+
+                const mimeType = pickAudioMimeType();
+                let rec;
+                try {
+                    rec = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+                } catch {
+                    rec = new MediaRecorder(stream);
+                }
                 lpOnboardAudioChunks = [];
                 rec.ondataavailable = (e) => {
                     if (e.data && e.data.size > 0) lpOnboardAudioChunks.push(e.data);
@@ -6060,7 +6482,21 @@
                     } catch {
                     }
                     try {
-                        const blob = new Blob(lpOnboardAudioChunks, { type: 'audio/webm' });
+                        const wavBlob = lpStopOnboardWavRecorder();
+                        const finalType = String(mimeType || rec?.mimeType || 'audio/webm');
+                        const normalizedType = finalType.split(';')[0] || 'audio/webm';
+                        const blob = wavBlob || new Blob(lpOnboardAudioChunks, { type: normalizedType });
+                        try {
+                            if (lpOnboardAudioObjectUrl) URL.revokeObjectURL(lpOnboardAudioObjectUrl);
+                        } catch {
+                        }
+                        try {
+                            lpOnboardAudioObjectUrl = URL.createObjectURL(blob);
+                            s.voiceAudioObjectUrl = lpOnboardAudioObjectUrl;
+                        } catch {
+                            lpOnboardAudioObjectUrl = null;
+                            s.voiceAudioObjectUrl = '';
+                        }
                         const reader = new FileReader();
                         reader.onloadend = () => {
                             s.voiceAudioBase64 = String(reader.result || '');
@@ -6069,6 +6505,7 @@
                         };
                         reader.readAsDataURL(blob);
                     } catch {
+                        try { lpStopOnboardWavRecorder(); } catch {}
                         lpStopOnboardAudio(true);
                         lpRenderOnboarding();
                     }
@@ -6120,12 +6557,13 @@
             const s = lpOnboardState;
             if (!s) return;
             try {
-                if (!window.map || !window.map.once) {
+                const m = (typeof map !== 'undefined' ? map : null) || window.map;
+                if (!m || !m.once) {
                     alert("Carte non disponible.");
                     return;
                 }
                 lpSpeak("Touchez la carte pour choisir votre position.", { lang: s.voiceLang });
-                window.map.once('click', (e) => {
+                m.once('click', (e) => {
                     try {
                         const lat = Number(e?.latlng?.lat);
                         const lng = Number(e?.latlng?.lng);
@@ -6176,6 +6614,22 @@
 
         let lpOnboardRerenderTimer = null;
         function lpOnboardScheduleRender() {
+            let restoreId = '';
+            let restoreStart = null;
+            let restoreEnd = null;
+            try {
+                const a = document.activeElement;
+                const id = String(a?.id || '');
+                if (id === 'lpObName' || id === 'lpObPhone') {
+                    restoreId = id;
+                    restoreStart = typeof a.selectionStart === 'number' ? a.selectionStart : null;
+                    restoreEnd = typeof a.selectionEnd === 'number' ? a.selectionEnd : null;
+                }
+            } catch {
+                restoreId = '';
+                restoreStart = null;
+                restoreEnd = null;
+            }
             try {
                 if (lpOnboardRerenderTimer) clearTimeout(lpOnboardRerenderTimer);
             } catch {
@@ -6183,6 +6637,17 @@
             lpOnboardRerenderTimer = setTimeout(() => {
                 lpOnboardRerenderTimer = null;
                 lpRenderOnboarding();
+                if (!restoreId) return;
+                try {
+                    const el = document.getElementById(restoreId);
+                    if (!el) return;
+                    el.focus({ preventScroll: true });
+                    const len = String(el.value || '').length;
+                    const s = typeof restoreStart === 'number' ? Math.max(0, Math.min(len, restoreStart)) : len;
+                    const e = typeof restoreEnd === 'number' ? Math.max(0, Math.min(len, restoreEnd)) : s;
+                    if (typeof el.setSelectionRange === 'function') el.setSelectionRange(s, e);
+                } catch {
+                }
             }, 120);
         }
 
@@ -6249,7 +6714,11 @@
                 const v = VENDORS.find(x => String(x?.id) === String(vendorId)) || null;
                 if (!v) return false;
                 try { switchView('map'); } catch {}
-                try { map.flyTo([Number(v.lat), Number(v.lng)], 18); } catch {}
+                try {
+                    const lat = Number(v?.lat);
+                    const lng = Number(v?.lng);
+                    if (Number.isFinite(lat) && Number.isFinite(lng)) map.flyTo([lat, lng], 18);
+                } catch {}
                 try { openVendorSheet(v); } catch {}
                 return true;
             } catch {
@@ -6268,6 +6737,91 @@
             } catch {
             }
             return false;
+        }
+
+        function lpGetPinForVendorId(vendorId) {
+            try {
+                const id = String(vendorId || '').trim();
+                if (!id) return '';
+                const m = lpGetLocalPinMap();
+                for (const k in (m || {})) {
+                    if (String(m[k]) === id) return String(k || '');
+                }
+            } catch {
+            }
+            return '';
+        }
+
+        function lpRecoverPinByPhone() {
+            const raw = prompt('Téléphone (ex: +237...) :', '');
+            if (!raw) return;
+            const digits = String(raw).replace(/[^\d]/g, '');
+            if (!digits) return alert('Téléphone invalide.');
+            try { hydrateVendorsFromStorage(); } catch {}
+            const matches = (VENDORS || [])
+                .filter((v) => lpGetVendorKind(v) === 'service')
+                .filter((v) => String(v?.phone || '').replace(/[^\d]/g, '').includes(digits))
+                .slice(0, 8);
+            if (!matches.length) return alert('Aucun prestataire trouvé avec ce numéro.');
+            const lines = matches.map((v) => {
+                const pin = String(v?.localPin || '').trim() || lpGetPinForVendorId(v?.id);
+                return `${String(v?.name || 'Prestataire')} : ${pin || '—'}`;
+            });
+            alert(`Code(s) PIN :\n\n${lines.join('\n')}\n\nAstuce: utilisez “🔑 Code PIN” pour ouvrir votre interface.`);
+        }
+
+        function lpBackfillPinMapFromVendors() {
+            try {
+                const m = lpGetLocalPinMap();
+                let changed = false;
+                ;(VENDORS || []).forEach((v) => {
+                    const pin = String(v?.localPin || '').trim();
+                    const id = String(v?.id ?? '').trim();
+                    if (!pin || !id) return;
+                    if (m[pin] && String(m[pin]) !== id) return;
+                    if (!m[pin]) {
+                        m[pin] = id;
+                        changed = true;
+                    }
+                });
+                if (changed) lpSetLocalPinMap(m);
+            } catch {
+            }
+        }
+
+        function lpClaimVendorByPin(pin) {
+            try {
+                const p = String(pin || '').trim();
+                if (!p) return false;
+                lpBackfillPinMapFromVendors();
+                const m = lpGetLocalPinMap();
+                const id = m[p];
+                if (!id) return false;
+                const v = VENDORS.find((x) => String(x?.id) === String(id)) || null;
+                if (!v) return false;
+                const kind = lpGetVendorKind(v);
+                try {
+                    if (kind === 'service') localStorage.setItem('mangoo_my_provider_id', String(id));
+                    else localStorage.setItem('mangoo_my_shop_id', String(id));
+                } catch {
+                }
+                try { refreshProviderDashboardFab(); } catch {}
+                try {
+                    if (kind === 'service') openProviderDashboard(String(id));
+                    else lpOpenVendorById(String(id));
+                } catch {
+                }
+                return true;
+            } catch {
+            }
+            return false;
+        }
+
+        function lpPromptConnectByPin() {
+            const pin = prompt('Code PIN (4 chiffres) :', '');
+            if (!pin) return;
+            const ok = lpClaimVendorByPin(pin);
+            if (!ok) alert('PIN invalide.');
         }
 
         async function lpOnboardSubmit() {
@@ -6292,9 +6846,42 @@
             const id = Date.now();
             const approvalStatus = lpIsAutoApproveHost() ? 'approved' : 'pending';
             const currentUser = getLpCurrentUser ? getLpCurrentUser() : null;
-            const ownerEmail = String(currentUser?.email || '').trim().toLowerCase();
+            let ownerEmail = String(currentUser?.email || '').trim().toLowerCase();
             const ownerName = String(currentUser?.name || '').trim();
+            let ownerPassword = '';
+            let createdVendorAccess = false;
+            try {
+                const isGuest = !ownerEmail || ownerEmail === 'guest@mangoo.tech';
+                if (String(s?.kind || '') === 'shop' && isGuest) {
+                    ownerEmail = `shop${String(id)}@exemple.com`;
+                    ownerPassword = String(Math.floor(1000 + Math.random() * 9000));
+                    createdVendorAccess = true;
+                    const nextUser = {
+                        id: `lp_vendor_${String(id)}`,
+                        name: String(ownerName || name || 'Vendeur'),
+                        email: ownerEmail,
+                        role: 'vendor',
+                        roles: ['vendor', 'client'],
+                        avatar: '🏪',
+                        shopName: String(name || 'Boutique'),
+                        password: ownerPassword
+                    };
+                    try { localStorage.setItem('mangoo-current-user', JSON.stringify(nextUser)); } catch {}
+                    try { localStorage.setItem('user', JSON.stringify(nextUser)); } catch {}
+                    try { localStorage.setItem(`mangoo-active-role:${ownerEmail}`, 'vendor'); } catch {}
+                    try {
+                        const rawUsers = localStorage.getItem('demo_users');
+                        const data = rawUsers ? JSON.parse(rawUsers) : {};
+                        const map = data && typeof data === 'object' ? data : {};
+                        map[ownerEmail] = { ...(map[ownerEmail] || {}), ...nextUser };
+                        localStorage.setItem('demo_users', JSON.stringify(map));
+                    } catch {}
+                }
+            } catch {
+            }
             let newVendor;
+            let localPin = '';
+            try { localPin = String(lpReserveLocalPin(id, 4) || ''); } catch { localPin = ''; }
             if (s.kind === 'service') {
                 const trade = lpGetOnboardTrade(s.activity);
                 newVendor = {
@@ -6317,6 +6904,7 @@
                     voicePitch: `Bonjour, je suis ${name}. Je suis ${String(trade || '').toLowerCase()}.`,
                     voiceAudio: s.voiceAudioBase64 || null,
                     avatar: s.photoDataUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff`,
+                    localPin,
                     ownerEmail,
                     ownerName,
                     isUserOwned: true,
@@ -6337,6 +6925,7 @@
                     voicePitch: `Bienvenue dans ma boutique ${name}.`,
                     voiceAudio: s.voiceAudioBase64 || null,
                     avatar: s.photoDataUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff`,
+                    localPin,
                     approvalStatus,
                     updatedAt: new Date().toISOString(),
                     phone: phone || '',
@@ -6371,6 +6960,22 @@
                 else localStorage.setItem('mangoo_my_shop_id', String(id));
             } catch {
             }
+            if (String(s?.kind || '') === 'shop' && ownerEmail) {
+                try {
+                    const key = `mangoo_my_shop_ids:${ownerEmail}`;
+                    let list = [];
+                    try {
+                        const raw = localStorage.getItem(key);
+                        const parsed = raw ? JSON.parse(raw) : [];
+                        list = Array.isArray(parsed) ? parsed : [];
+                    } catch { list = []; }
+                    if (!list.some((x) => String(x) === String(id))) {
+                        list.push(id);
+                        localStorage.setItem(key, JSON.stringify(list));
+                    }
+                } catch {
+                }
+            }
 
             try {
                 const token = String(localStorage.getItem('mangoo_local_sync_token') || '').trim();
@@ -6390,13 +6995,23 @@
             s.approvalStatus = approvalStatus;
             s.createdVendorId = String(id);
             try {
-                const localPin = lpReserveLocalPin(id, 4);
                 s.connectPin = String(localPin || '');
                 s.localUrl = `${window.location.origin}/mangoo-local.html?pin=${encodeURIComponent(String(localPin || ''))}`;
             } catch {
                 s.localUrl = `${window.location.origin}/mangoo-local.html?vendor=${encodeURIComponent(String(id))}`;
             }
             lpGoOnboard(4);
+            if (createdVendorAccess && ownerEmail && ownerPassword) {
+                try {
+                    s.vendorLogin = ownerEmail;
+                    s.vendorPassword = ownerPassword;
+                } catch {
+                }
+                try {
+                    alert(`🔑 Accès vendeur (à garder)\n\nEmail: ${ownerEmail}\nMot de passe: ${ownerPassword}\n\nConnectez-vous sur /connexion puis choisissez "Vendre" pour ajouter des produits.`);
+                } catch {
+                }
+            }
             try {
                 setTimeout(() => {
                     try { renderVendorsOnMap(VENDORS); } catch {}
@@ -6601,8 +7216,9 @@
                 const photo = s.photoDataUrl
                     ? `<img class="lp-onboard-preview" src="${s.photoDataUrl}">`
                     : `<div class="lp-onboard-preview" style="display:flex; align-items:center; justify-content:center; font-weight:950; color:var(--ml-muted);">📸</div>`;
-                const audioPreview = s.voiceAudioBase64
-                    ? `<audio controls style="width:100%; margin-top:8px;" src="${s.voiceAudioBase64}"></audio>`
+                const audioSrc = String(s.voiceAudioObjectUrl || s.voiceAudioBase64 || '');
+                const audioPreview = audioSrc
+                    ? `<audio controls playsinline preload="metadata" style="width:100%; margin-top:8px;" src="${audioSrc}"></audio>`
                     : '';
                 body = `
                     <div class="lp-onboard-field">
@@ -7464,25 +8080,23 @@
 
         function getFilteredVendors() {
             const query = (document.getElementById('searchInput')?.value || '').toLowerCase();
-            return VENDORS.filter(v => {
+            const base = VENDORS.filter(v => {
                 const kind = lpGetVendorKind(v);
                 const matchesKind = currentKindMode === 'all' || kind === currentKindMode;
                 if (!matchesKind) return false;
 
-                if (kind === 'service') {
-                    const rawStatus = String(v.approvalStatus || '').trim().toLowerCase();
-                    const status = rawStatus || 'approved';
-                    if (status !== 'approved') {
-                        if (isAdminUser()) {
-                        } else {
-                            try {
-                                const currentUser = getLpCurrentUser ? getLpCurrentUser() : null;
-                                const email = String(currentUser?.email || '').trim().toLowerCase();
-                                const ownerEmail = String(v?.ownerEmail || '').trim().toLowerCase();
-                                if (!email || email !== ownerEmail) return false;
-                            } catch {
-                                return false;
-                            }
+                const rawStatus = String(v.approvalStatus || '').trim().toLowerCase();
+                const status = rawStatus || 'approved';
+                if (status !== 'approved') {
+                    if (isAdminUser()) {
+                    } else {
+                        try {
+                            const currentUser = getLpCurrentUser ? getLpCurrentUser() : null;
+                            const email = String(currentUser?.email || '').trim().toLowerCase();
+                            const ownerEmail = String(v?.ownerEmail || '').trim().toLowerCase();
+                            if (!email || email !== ownerEmail) return false;
+                        } catch {
+                            return false;
                         }
                     }
                 }
@@ -7500,11 +8114,8 @@
                 const matchesSearch = v.name.toLowerCase().includes(query) || v.category.toLowerCase().includes(query) || trade.includes(query);
                 const matchesCategory = currentCategory === 'all' || v.category === currentCategory;
 
-                const dist = (typeof v.lat === 'number' && typeof v.lng === 'number') ? distanceKm(USER_POS[0], USER_POS[1], v.lat, v.lng) : 0;
-                const matchesDistance = (currentKindMode !== 'service') ? true : (!maxDistanceKm || dist <= maxDistanceKm);
-
                 if (currentKindMode !== 'service') {
-                    return matchesSearch && matchesCategory && matchesDistance;
+                    return matchesSearch && matchesCategory;
                 }
 
                 const fam = getVendorFamily(v);
@@ -7516,8 +8127,27 @@
                 const matchesAvailable = !onlyAvailable || String(v.status || '').toLowerCase() === 'open';
                 const matchesVerified = !onlyVerified || !!v.verified;
 
-                return matchesSearch && matchesCategory && matchesFamily && matchesTrade && matchesDistance && matchesMobile && matchesAvailable && matchesVerified;
+                return matchesSearch && matchesCategory && matchesFamily && matchesTrade && matchesMobile && matchesAvailable && matchesVerified;
             });
+
+            if (lpScopeMode === 'country') return base;
+            if (!(Array.isArray(USER_POS) && Number.isFinite(USER_POS[0]) && Number.isFinite(USER_POS[1]))) return base;
+
+            const applyDistance = (list, km) => {
+                const maxKm = Number(km);
+                if (!Number.isFinite(maxKm) || maxKm <= 0) return list;
+                return list.filter(v => {
+                    if (!(typeof v.lat === 'number' && typeof v.lng === 'number')) return false;
+                    const d = distanceKm(USER_POS[0], USER_POS[1], v.lat, v.lng);
+                    return Number.isFinite(d) && d <= maxKm;
+                });
+            };
+
+            const withinDefault = applyDistance(base, maxDistanceKm);
+            if (Number(maxDistanceKm) === LP_DISTANCE_DEFAULT_KM && withinDefault.length < LP_DISTANCE_MIN_RESULTS) {
+                return applyDistance(base, LP_DISTANCE_EXPAND_KM);
+            }
+            return withinDefault;
         }
 
         function setMetiersFamily(familyId) {
@@ -7556,8 +8186,30 @@
         }
 
         function setMetiersDistance(km) {
+            lpScopeMode = 'nearby';
             maxDistanceKm = km;
+            try { lpApplyScopeUi(); } catch {}
             renderMetiersFilterBody();
+        }
+
+        function setLpScope(mode) {
+            const next = String(mode || '').trim().toLowerCase();
+            lpScopeMode = (next === 'country') ? 'country' : 'nearby';
+            try { lpApplyScopeUi(); } catch {}
+            try { filterVendors(); } catch {}
+        }
+
+        function toggleLpScope() {
+            setLpScope(lpScopeMode === 'country' ? 'nearby' : 'country');
+        }
+
+        function lpApplyScopeUi() {
+            const btn = document.getElementById('lpScopeBtn');
+            if (!btn) return;
+            const country = lpScopeMode === 'country';
+            btn.classList.toggle('active', country);
+            btn.title = country ? 'Autour de moi' : 'Tout le pays';
+            btn.innerText = country ? '📍' : '🌍';
         }
 
         function toggleMetiersFlag(flag) {
@@ -7570,10 +8222,12 @@
         function resetMetiersFilters() {
             currentFamily = 'all';
             currentTrade = 'all';
-            maxDistanceKm = 5;
+            maxDistanceKm = LP_DISTANCE_DEFAULT_KM;
+            lpScopeMode = 'nearby';
             onlyMobile = false;
             onlyVerified = false;
             onlyAvailable = false;
+            try { lpApplyScopeUi(); } catch {}
             renderFamiliesBar();
             renderMetiersFilterBody();
             filterVendors();
@@ -7611,7 +8265,8 @@
                 <div class="mf-section">
                     <div class="mf-label">Distance</div>
                     <div class="mf-chips">
-                        ${[2,5,10].map(km => `<button class="mf-chip ${km === maxDistanceKm ? 'active' : ''}" onclick="setMetiersDistance(${km})">${km} km</button>`).join('')}
+                        ${[10,25].map(km => `<button class="mf-chip ${km === maxDistanceKm ? 'active' : ''}" onclick="setMetiersDistance(${km})">${km} km</button>`).join('')}
+                        <button class="mf-chip ${lpScopeMode === 'country' ? 'active' : ''}" onclick="setLpScope('country')">🌍 Tout le pays</button>
                     </div>
                 </div>
 
@@ -7694,6 +8349,32 @@
             }
         }
 
+        function upsertCustomVendorsBulk(rows) {
+            try {
+                const input = Array.isArray(rows) ? rows : []
+                if (!input.length) return
+                const existing = getStoredCustomVendors()
+                const byId = new Map()
+                ;(existing || []).forEach((v) => {
+                    const id = v?.id
+                    if (id === undefined || id === null) return
+                    byId.set(String(id), v)
+                })
+                const nowIso = new Date().toISOString()
+                input.forEach((v) => {
+                    const id = v?.id
+                    if (id === undefined || id === null) return
+                    const key = String(id)
+                    const prev = byId.get(key)
+                    const record = normalizeVendorForStorage(v)
+                    if (prev) byId.set(key, { ...prev, ...record })
+                    else byId.set(key, { ...record, createdAt: nowIso })
+                })
+                setStoredCustomVendors(Array.from(byId.values()))
+            } catch {
+            }
+        }
+
         function removeCustomVendor(id) {
             try {
                 const list = getStoredCustomVendors();
@@ -7729,6 +8410,8 @@
                     VENDORS.length = 0;
                     merged.forEach((v) => VENDORS.push(v));
                 }
+                try { lpBackfillPinMapFromVendors(); } catch {}
+                try { applyBoostConfigToVendors(); } catch {}
             } catch {
             }
         }
@@ -7799,41 +8482,66 @@
         function showCompletedOrderModal(productName, totalAmount) {
              const overlay = document.createElement('div');
              overlay.id = 'completedOrderOverlay';
-             overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:21000; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.3s;";
+             overlay.className = 'modal-overlay';
+             overlay.style.cssText = "position:fixed; inset:0; width:100%; height:100%; background:rgba(0,0,0,0.60); z-index:21000; display:flex; align-items:center; justify-content:center; padding:18px; box-sizing:border-box; backdrop-filter: blur(5px); animation:fadeIn 0.2s;";
+             overlay.onclick = (e) => { if(e.target && e.target.id === 'completedOrderOverlay') overlay.remove(); };
              
              overlay.innerHTML = `
-                <div style="background:white; width:90%; max-width:400px; border-radius:20px; overflow:hidden; display:flex; flex-direction:column;">
-                    <div style="background:#27ae60; color:white; padding:20px; text-align:center;">
-                        <div style="font-size:3rem;">📦</div>
-                        <h2 style="margin:10px 0 0 0;">Commande Validée</h2>
-                        <div style="font-size:0.9rem; opacity:0.9;">Paiement Comptant Reçu</div>
+                <div class="modal-card lp-modal-card" style="width:min(560px, 100%);" onclick="event.stopPropagation()">
+                    <div class="lp-modal-head">
+                        <div class="lp-modal-hero">
+                            <div style="width:46px; height:46px; border-radius:16px; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.18); font-size:1.4rem;">📦</div>
+                            <div>
+                                <div class="lp-modal-title">Commande validée</div>
+                                <div class="lp-modal-sub">Paiement reçu • Livraison en cours</div>
+                            </div>
+                        </div>
+                        <button type="button" class="lp-modal-close" onclick="document.getElementById('completedOrderOverlay') && document.getElementById('completedOrderOverlay').remove()" aria-label="Fermer">✕</button>
                     </div>
-                    
-                    <div style="padding:25px;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:15px;">
-                            <span style="color:#636e72;">Produit</span>
-                            <span style="font-weight:bold;">${productName}</span>
+
+                    <div class="lp-modal-body">
+                        <div style="background: rgba(17,24,39,0.03); padding:14px; border-radius:var(--ml-radius-2xl); border:1px solid rgba(0,0,0,0.06);">
+                            <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid rgba(0,0,0,0.06);">
+                                <span style="color:var(--ml-muted); font-weight:900;">Produit</span>
+                                <span style="color:var(--ml-text); font-weight:950; text-align:right;">${productName}</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid rgba(0,0,0,0.06);">
+                                <span style="color:var(--ml-muted); font-weight:900;">Montant payé</span>
+                                <span style="color:var(--ml-brand-to); font-weight:950; text-align:right;">${totalAmount.toLocaleString()} FCFA</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; padding:10px 0;">
+                                <span style="color:var(--ml-muted); font-weight:900;">Statut</span>
+                                <span style="background: rgba(22,163,74,0.14); color: rgb(22,163,74); padding:6px 10px; border-radius:999px; font-size:0.85rem; font-weight:950; border:1px solid rgba(0,0,0,0.06);">Payé • En préparation</span>
+                            </div>
                         </div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                            <span style="color:#636e72;">Montant Payé</span>
-                            <span style="font-weight:bold; color:#27ae60;">${totalAmount.toLocaleString()} FCFA</span>
+
+                        <div style="margin-top:12px; background: rgba(249,115,22,0.06); border:1px solid rgba(249,115,22,0.18); padding:14px; border-radius:var(--ml-radius-2xl); color:var(--ml-text); font-weight:800; line-height:1.4;">
+                            Le vendeur prépare la commande. Vous recevrez une notification dès l’expédition.
                         </div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:25px;">
-                            <span style="color:#636e72;">Statut</span>
-                            <span style="background:#e8f5e9; color:#27ae60; padding:4px 8px; border-radius:10px; font-size:0.8rem; font-weight:bold;">Payé • En Préparation</span>
-                        </div>
-                        
-                        <div style="background:#f1f2f6; padding:15px; border-radius:10px; font-size:0.85rem; color:#636e72; margin-bottom:25px; line-height:1.4;">
-                            Votre commande est en cours de traitement par le vendeur. Vous recevrez une notification dès qu'elle sera expédiée.
-                        </div>
-                        
-                        <button onclick="document.getElementById('completedOrderOverlay').remove()" style="width:100%; padding:15px; background:#2d3436; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">
-                            Fermer
-                        </button>
+                    </div>
+
+                    <div class="lp-modal-foot">
+                        <button type="button" class="btn btn-primary" onclick="document.getElementById('completedOrderOverlay') && document.getElementById('completedOrderOverlay').remove()" style="width:100%;">Fermer</button>
                     </div>
                 </div>
              `;
              document.body.appendChild(overlay);
+        }
+
+        function lpUpdateTopUiOffset() {
+            try {
+                const header = document.querySelector('.header')
+                const search = document.querySelector('.search-container')
+                const r = search && typeof search.getBoundingClientRect === 'function'
+                    ? search.getBoundingClientRect()
+                    : header && typeof header.getBoundingClientRect === 'function'
+                        ? header.getBoundingClientRect()
+                        : null
+                const bottom = r ? Number(r.bottom || 0) : 0
+                const next = Math.max(84, Math.round(bottom + 12))
+                document.documentElement.style.setProperty('--lp-top-ui', `${next}px`)
+            } catch {
+            }
         }
 
         function initApp() {
@@ -7846,7 +8554,18 @@
 
             try {
                 const el = document.getElementById('lpBuild');
-                if (el) el.textContent = 'build v115';
+                if (el) el.textContent = 'build v146';
+            } catch {
+            }
+            try {
+                const hud = document.getElementById('lpVersionHud');
+                window.__lpVersionLabel = 'Local+ 2.0.34 • build v146';
+                if (hud) hud.textContent = String(window.__lpVersionLabel || 'Local+ 2.0.34 • build v146');
+            } catch {
+            }
+            try {
+                lpUpdateTopUiOffset()
+                window.addEventListener('resize', lpUpdateTopUiOffset)
             } catch {
             }
 
@@ -7855,6 +8574,27 @@
             try {
                 hydrateVendorsFromStorage();
             } catch {
+            }
+
+            try { lpBackfillPinMapFromVendors(); } catch {}
+
+            try {
+                let fast = false;
+                try {
+                    const qs = new URLSearchParams(String(window.location.search || ''));
+                    const pin = String(qs.get('pin') || '').trim();
+                    const vendorId = String(qs.get('vendor') || '').trim();
+                    if (pin || vendorId) fast = true;
+                } catch {
+                }
+                try {
+                    const openId = localStorage.getItem('mangoo-open-vendor-id');
+                    if (openId) fast = true;
+                } catch {
+                }
+                window.__lpFastReturn = !!fast;
+            } catch {
+                window.__lpFastReturn = false;
             }
 
             try {
@@ -7880,11 +8620,37 @@
             relocateVendorsNearUser();
             addMyProfileVendor();
             initMap();
-            renderListView(VENDORS);
-            renderStories();
-            initMetiersUI();
+            const fastReturn = !!window.__lpFastReturn;
+            if (!fastReturn) {
+                renderListView(VENDORS);
+                renderStories();
+                initMetiersUI();
+            } else {
+                setTimeout(() => {
+                    try { renderListView(VENDORS); } catch {}
+                    try { renderStories(); } catch {}
+                    try { initMetiersUI(); } catch {}
+                    try { window.__lpFastReturn = false; } catch {}
+                }, 750);
+            }
 
             try { refreshProviderDashboardFab(); } catch {}
+
+            try {
+                const qs = new URLSearchParams(String(window.location.search || ''));
+                const pin = String(qs.get('pin') || '').trim();
+                const vendorId = String(qs.get('vendor') || '').trim();
+                if (pin) {
+                    setTimeout(() => {
+                        try { lpClaimVendorByPin(pin); } catch {}
+                    }, 250);
+                } else if (vendorId) {
+                    setTimeout(() => {
+                        try { lpOpenVendorById(vendorId); } catch {}
+                    }, 250);
+                }
+            } catch {
+            }
 
             try {
                 refreshBoostPanel();
@@ -7948,6 +8714,7 @@
 
         function initMap() {
             map = L.map('map', { zoomControl: false }).setView(USER_POS, 16);
+            try { window.map = map; } catch {}
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
@@ -7957,7 +8724,21 @@
             updateUserMarker();
 
             // Render Vendors
-            renderVendorsOnMap(VENDORS);
+            const fastReturn = !!window.__lpFastReturn;
+            if (!fastReturn) {
+                try { lpRefreshMapMarkersNow(); } catch {}
+            } else {
+                setTimeout(() => {
+                    try { lpRefreshMapMarkersNow(); } catch {}
+                }, 850);
+            }
+            try {
+                if (window.__lpNeedsMapRefreshAfterBoost) {
+                    window.__lpNeedsMapRefreshAfterBoost = false
+                    lpRefreshMapMarkersNow()
+                }
+            } catch {
+            }
 
             try { void syncLocalPlusFromServer(); } catch {}
 
@@ -8068,14 +8849,91 @@
             }
 
             const now = Date.now();
-            const sponsoredIds = vendors
-                .filter(v => typeof v.sponsoredUntil === 'number' && v.sponsoredUntil > now)
+            const idKey = (v) => String(v?.id ?? '').trim();
+            const toMs = (value) => {
+                if (value === null) return null;
+                if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+                if (typeof value === 'string') {
+                    const s = String(value).trim();
+                    if (!s) return null;
+                    const n = Number(s);
+                    if (Number.isFinite(n)) return n;
+                    const t = Date.parse(s);
+                    if (Number.isFinite(t)) return t;
+                }
+                return null;
+            };
+            const isSponsoredNow = (v) => {
+                const t = toMs(v?.sponsoredUntil);
+                return typeof t === 'number' && t > now;
+            };
+
+            const sponsoredFeaturedIds = vendors
+                .filter(v => isSponsoredNow(v))
                 .sort((a, b) => (Number(b.sponsoredTier || 0) - Number(a.sponsoredTier || 0)))
-                .slice(0, 2)
-                .map(v => v.id);
-            const sponsoredSet = new Set(sponsoredIds);
+                .slice(0, LP_BOOST_CAP_SPONSORED)
+                .map(v => idKey(v))
+                .filter(Boolean);
+            const sponsoredFeaturedSet = new Set(sponsoredFeaturedIds);
+
+            const distForBoost = (v) => {
+                try {
+                    if (!(Array.isArray(USER_POS) && Number.isFinite(USER_POS[0]) && Number.isFinite(USER_POS[1]))) return Number.POSITIVE_INFINITY;
+                    if (!(typeof v?.lat === 'number' && typeof v?.lng === 'number')) return Number.POSITIVE_INFINITY;
+                    const d = distanceKm(USER_POS[0], USER_POS[1], v.lat, v.lng);
+                    return Number.isFinite(d) ? d : Number.POSITIVE_INFINITY;
+                } catch {
+                    return Number.POSITIVE_INFINITY;
+                }
+            };
+
+            const isPromoNow = (v) => {
+                if (v?.promo === true) return true;
+                const t = toMs(v?.promoUntil);
+                return typeof t === 'number' && t > now;
+            };
+
+            const promoAllIds = vendors
+                .filter(v => !v.live)
+                .filter(v => isPromoNow(v))
+                .map(v => idKey(v))
+                .filter(Boolean);
+            const promoAllSet = new Set(promoAllIds);
+
+            const promoFeaturedIds = vendors
+                .filter(v => !v.live)
+                .filter(v => isPromoNow(v))
+                .sort((a, b) => {
+                    const aUntil = toMs(a?.promoUntil) || 0;
+                    const bUntil = toMs(b?.promoUntil) || 0;
+                    const byUntil = bUntil - aUntil;
+                    if (byUntil) return byUntil;
+                    return distForBoost(a) - distForBoost(b);
+                })
+                .slice(0, LP_BOOST_CAP_PROMO)
+                .map(v => idKey(v))
+                .filter(Boolean);
+            const promoFeaturedSet = new Set(promoFeaturedIds);
+
+            const newCandidates = vendors
+                .filter(v => !v.live)
+                .filter(v => v.new === true || (toMs(v?.newUntil) !== null && toMs(v?.newUntil) > now))
+                .sort((a, b) => {
+                    const aUntil = toMs(a?.newUntil) || 0;
+                    const bUntil = toMs(b?.newUntil) || 0;
+                    const byUntil = bUntil - aUntil;
+                    if (byUntil) return byUntil;
+                    return distForBoost(a) - distForBoost(b);
+                })
+                .slice(0, LP_BOOST_CAP_NEW)
+                .map(v => idKey(v))
+                .filter(Boolean);
+            const newSet = new Set(newCandidates);
 
             vendors.forEach(vendor => {
+                const lat = Number(vendor?.lat);
+                const lng = Number(vendor?.lng);
+                if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
                 // Determine style based on status
                 let borderColor = '#f97316';
                 let bgColor = '#fff';
@@ -8083,9 +8941,21 @@
                 let badge = '';
                 let badge2 = '';
 
-                const promoActive = vendor.promo === true || (typeof vendor.promoUntil === 'number' && vendor.promoUntil > now);
-                const newActive = vendor.new === true || (typeof vendor.newUntil === 'number' && vendor.newUntil > now);
-                const sponsoredActive = sponsoredSet.has(vendor.id);
+                let isOwner = false;
+                try {
+                    const currentUser = getLpCurrentUser ? getLpCurrentUser() : null;
+                    const email = String(currentUser?.email || '').trim().toLowerCase();
+                    const ownerEmail = String(vendor?.ownerEmail || '').trim().toLowerCase();
+                    isOwner = !!email && !!ownerEmail && email === ownerEmail;
+                } catch {
+                    isOwner = false;
+                }
+                const key = idKey(vendor);
+                const sponsoredActive = isSponsoredNow(vendor);
+                const sponsoredFeatured = sponsoredFeaturedSet.has(key);
+                const promoActive = promoAllSet.has(key);
+                const promoFeatured = promoFeaturedSet.has(key);
+                const newShown = newSet.has(key);
 
                 // Check for Stories (Randomly active for demo if not set)
                 // In a real app, vendor.hasStory would be true/false
@@ -8116,21 +8986,27 @@
                     bgColor = '#ffeaa7';
                     animation = 'animation: pulse-live 1.5s infinite;';
                     badge = '<span style="position:absolute; top:-8px; right:-8px; background:#d63031; color:white; font-size:9px; padding:2px 4px; border-radius:4px; font-weight:bold; z-index:10;">LIVE</span>';
-                } else if (promoActive) {
-                    borderColor = '#f1c40f'; // Gold
-                    bgColor = '#fffbe6';
-                    animation = 'animation: pulse-promo 2s infinite;';
-                    badge = '<span style="position:absolute; top:-8px; right:-8px; background:#f1c40f; color:#2d3436; font-size:10px; padding:2px 4px; border-radius:4px; font-weight:bold; z-index:10; border:1px solid #fff; animation: blink-badge 1s infinite;">PROMO</span>';
-                    if (newActive) badge2 = '<span style="position:absolute; top:-8px; left:-8px; background:#6366f1; color:white; font-size:10px; padding:2px 4px; border-radius:4px; font-weight:bold; z-index:10; border:1px solid rgba(255,255,255,0.9); animation: blink-badge 1s infinite;">NOUVEAU</span>';
-                } else if (newActive) {
-                    borderColor = '#6366f1';
-                    bgColor = '#eef2ff';
-                    animation = 'animation: pulse-new 2s infinite;';
-                    badge = '<span style="position:absolute; top:-8px; left:-8px; background:#6366f1; color:white; font-size:10px; padding:2px 4px; border-radius:4px; font-weight:bold; z-index:10; border:1px solid rgba(255,255,255,0.9); animation: blink-badge 1s infinite;">NOUVEAU</span>';
+                } else {
+                    if (promoActive) {
+                        borderColor = '#f1c40f'; // Gold
+                        bgColor = '#fffbe6';
+                        animation = promoFeatured ? 'animation: pulse-promo 2s infinite;' : '';
+                        const promoPos = (promoActive && newShown) ? 'top:-22px; right:-8px;' : 'top:-8px; right:-8px;'
+                        badge = `<span style="position:absolute; ${promoPos} background:#f1c40f; color:#2d3436; font-size:10px; padding:2px 4px; border-radius:4px; font-weight:bold; z-index:13; border:1px solid #fff; animation: blink-badge 1s infinite;">PROMO</span>`;
+                    }
+                    if (newShown) {
+                        if (!promoActive) {
+                            borderColor = '#6366f1';
+                            bgColor = '#eef2ff';
+                            animation = 'animation: pulse-new 2s infinite;';
+                        }
+                        const newPos = (promoActive && newShown) ? 'top:-8px; right:-8px;' : 'top:-8px; left:-8px;'
+                        badge2 = `<span style="position:absolute; ${newPos} background:#6366f1; color:white; font-size:10px; padding:2px 4px; border-radius:4px; font-weight:bold; z-index:12; border:1px solid rgba(255,255,255,0.9); animation: blink-badge 1s infinite;">NOUVEAU</span>`;
+                    }
                 }
 
                 const sponsoredBadge = sponsoredActive
-                    ? '<span style="position:absolute; bottom:-8px; left:-8px; background:rgba(17, 24, 39, 0.85); color:white; font-size:9px; padding:2px 5px; border-radius:999px; font-weight:bold; z-index:10; border:1px solid rgba(255,255,255,0.65);">🏷️</span>'
+                    ? '<span style="position:absolute; bottom:-8px; left:-8px; background:rgba(17, 24, 39, 0.92); color:white; font-size:10px; padding:3px 7px; border-radius:999px; font-weight:950; z-index:12; border:1px solid rgba(255,255,255,0.75); box-shadow:0 6px 14px rgba(0,0,0,0.25);">🏷️ SP</span>'
                     : '';
 
                 const kind = lpGetVendorKind(vendor);
@@ -8217,19 +9093,19 @@
                     iconAnchor: [70, 78]
                 });
 
-                const marker = L.marker([vendor.lat, vendor.lng], {
+                const marker = L.marker([lat, lng], {
                     icon: icon,
-                    zIndexOffset: vendor.live || promoActive || newActive || sponsoredActive ? 1000 : 100
+                    zIndexOffset: vendor.live || promoFeatured || newShown || sponsoredFeatured ? 1000 : 100
                 }).addTo(map);
 
-                if (sponsoredActive) recordAdImpression(vendor.id);
+                if (sponsoredFeatured) recordAdImpression(vendor.id);
 
                 // Use the most standard Leaflet way first
                 marker.on('click', function(e) {
                     L.DomEvent.stopPropagation(e);
-                    if (sponsoredActive) recordAdClick(vendor.id);
+                    if (sponsoredFeatured) recordAdClick(vendor.id);
                     openVendorSheetById(vendor.id);
-                    map.flyTo([vendor.lat, vendor.lng], 17, {animate: true, duration: 0.5});
+                    map.flyTo([lat, lng], 17, {animate: true, duration: 0.5});
                 });
                 
                 // Fallback: Add click handler to the marker's DOM element
@@ -8243,9 +9119,9 @@
                         el.addEventListener('click', function(e) {
                             e.stopPropagation();
                             e.preventDefault();
-                            if (sponsoredActive) recordAdClick(vendor.id);
+                            if (sponsoredFeatured) recordAdClick(vendor.id);
                             openVendorSheetById(vendor.id);
-                            map.flyTo([vendor.lat, vendor.lng], 17, {animate: true, duration: 0.5});
+                            map.flyTo([lat, lng], 17, {animate: true, duration: 0.5});
                         }, true); 
                     }
                 });
@@ -8382,6 +9258,12 @@
 
         function getMyProviderId() {
             try {
+                const scoped = lpGetStoredProviderIdsForCurrentUser()
+                if (scoped.length === 1) return String(scoped[0] || '').trim()
+                if (scoped.length > 1) return ''
+                const owned = lpGetOwnedProviderIds()
+                if (owned.length === 1) return String(owned[0] || '').trim()
+                if (owned.length > 1) return ''
                 const raw = localStorage.getItem('mangoo_my_provider_id');
                 return raw ? String(raw) : '';
             } catch {
@@ -8389,21 +9271,121 @@
             }
         }
 
+        function lpNormalizeEmail(value) {
+            return String(value || '').trim().toLowerCase()
+        }
+
+        function lpGetStoredProviderIdsForCurrentUser() {
+            try {
+                const u = getLpCurrentUser ? getLpCurrentUser() : null
+                const email = lpNormalizeEmail(u?.email)
+                if (!email) return []
+                const raw = localStorage.getItem(`mangoo_my_provider_ids:${email}`)
+                const parsed = raw ? JSON.parse(raw) : []
+                const list = Array.isArray(parsed) ? parsed : []
+                return Array.from(new Set(list.map((x) => String(x || '').trim()).filter(Boolean)))
+            } catch {
+                return []
+            }
+        }
+
+        function lpGetOwnedProviderIds() {
+            try {
+                const u = getLpCurrentUser ? getLpCurrentUser() : null
+                const email = lpNormalizeEmail(u?.email)
+                if (!email) return []
+                const list = Array.isArray(VENDORS) ? VENDORS : []
+                const ids = list
+                    .filter((v) => String(v?.kind || '').trim().toLowerCase() === 'service')
+                    .filter((v) => !v?.isUserOwned && String(v?.id || '') !== 'user_me')
+                    .filter((v) => lpNormalizeEmail(v?.ownerEmail) === email)
+                    .map((v) => String(v?.id || '').trim())
+                    .filter(Boolean)
+                return Array.from(new Set(ids))
+            } catch {
+                return []
+            }
+        }
+
+        function lpPersistMyProviderIds(ids) {
+            try {
+                const u = getLpCurrentUser ? getLpCurrentUser() : null
+                const email = lpNormalizeEmail(u?.email)
+                if (!email) return false
+                const list = Array.isArray(ids) ? ids.map((x) => String(x || '').trim()).filter(Boolean) : []
+                if (!list.length) return false
+                localStorage.setItem(`mangoo_my_provider_ids:${email}`, JSON.stringify(list))
+                return true
+            } catch {
+                return false
+            }
+        }
+
+        function lpHasSupabaseSessionSignal() {
+            try {
+                for (let i = 0; i < localStorage.length; i += 1) {
+                    const key = String(localStorage.key(i) || '')
+                    if (!key) continue
+                    if (key === 'supabase.auth.token') {
+                        if (localStorage.getItem(key)) return true
+                        continue
+                    }
+                    if (/^sb-.*-auth-token$/i.test(key)) {
+                        if (localStorage.getItem(key)) return true
+                    }
+                }
+            } catch {
+            }
+            return false
+        }
+
         function refreshProviderDashboardFab() {
             const btn = document.getElementById('providerDashFab');
             if (!btn) return;
-            const id = getMyProviderId();
-            btn.style.display = id ? 'flex' : 'none';
+            let id = getMyProviderId();
+            let hasAny = !!id
+            let hasSignedInUser = false
+            try {
+                const u = getLpCurrentUser ? getLpCurrentUser() : null
+                const email = lpNormalizeEmail(u?.email)
+                hasSignedInUser = !!email && email !== 'guest@mangoo.tech'
+            } catch {
+                hasSignedInUser = false
+            }
+            if (!hasSignedInUser) {
+                try { hasSignedInUser = lpHasSupabaseSessionSignal() } catch {}
+            }
+            if (!hasAny) {
+                const scoped = lpGetStoredProviderIdsForCurrentUser()
+                const owned = scoped.length ? scoped : lpGetOwnedProviderIds()
+                if (owned.length === 1) {
+                    id = String(owned[0] || '').trim()
+                    if (id) {
+                        try { localStorage.setItem('mangoo_my_provider_id', id) } catch {}
+                        try { lpPersistMyProviderIds([id]) } catch {}
+                        hasAny = true
+                    }
+                } else if (owned.length > 1) {
+                    hasAny = true
+                    try { lpPersistMyProviderIds(owned) } catch {}
+                }
+            }
+            btn.style.display = (hasAny || hasSignedInUser) ? 'flex' : 'none';
+            try {
+                const section = document.getElementById('providerSection');
+                if (section) section.style.display = (hasAny || hasSignedInUser) ? 'block' : 'none';
+            } catch {
+            }
+            try {
+                const shopId = localStorage.getItem('mangoo_my_shop_id');
+                const shopBtn = document.getElementById('lpOpenMyShopBtn');
+                if (shopBtn) shopBtn.style.display = shopId ? '' : 'none';
+            } catch {
+            }
         }
 
         function openMyProviderDashboard() {
-            const id = getMyProviderId();
-            if (!id) {
-                alert("Aucun profil prestataire lié à ce compte.");
-                return;
-            }
-            try { openProviderDashboard(id); } catch {
-            }
+            try { openProviderDashboard(''); } catch {}
         }
 
         function openConnectByVendorId(id) {
@@ -9639,8 +10621,6 @@
                 }, true);
             }
             
-            listContainer.style.paddingTop = "200px"; 
-            
             const listHeader = document.createElement('div');
             listHeader.className = 'lp-list-header';
             
@@ -9648,14 +10628,58 @@
 
             const isService = currentKindMode === 'service';
             const title = isService ? 'Prestataires' : 'Toutes les boutiques';
+            const pageSize = 10;
+            const listKey = `${String(currentKindMode || '')}:${vendors.map((v) => String(v?.id || '')).join('|')}`;
+            try {
+                if (!window.__lpListPage) window.__lpListPage = 1;
+                if (window.__lpListKey !== listKey) {
+                    window.__lpListKey = listKey;
+                    window.__lpListPage = 1;
+                }
+            } catch {
+            }
+            let page = 1;
+            try { page = Math.max(1, Math.floor(Number(window.__lpListPage || 1))); } catch { page = 1; }
+            const total = vendors.length;
+            const totalPages = Math.max(1, Math.ceil(total / pageSize));
+            if (page > totalPages) page = totalPages;
+            try { window.__lpListPage = page; } catch {}
+            const startIndex = (page - 1) * pageSize;
+            const endIndex = Math.min(total, startIndex + pageSize);
+            const pageVendors = vendors.slice(startIndex, endIndex);
 
             listHeader.innerHTML = `
                 <div class="lp-list-header-inner">
                     <h2 class="lp-list-title">${title}</h2>
                     <div class="lp-list-bar"></div>
-                    <p class="lp-list-subtitle">${vendors.length} résultats trouvés</p>
+                    <p class="lp-list-subtitle">${total} résultats • Page ${page}/${totalPages}</p>
+                    ${
+                        totalPages > 1
+                            ? `<div class="lp-pagination">
+                                    <button type="button" class="btn btn-secondary sm" ${page <= 1 ? 'disabled' : ''} data-lp-page="prev">← Précédent</button>
+                                    <div class="lp-page-label">${startIndex + 1}–${endIndex} / ${total}</div>
+                                    <button type="button" class="btn btn-secondary sm" ${page >= totalPages ? 'disabled' : ''} data-lp-page="next">Suivant →</button>
+                               </div>`
+                            : ''
+                    }
                 </div>
             `;
+            listHeader.addEventListener('click', (e) => {
+                try {
+                    const t = e && e.target && e.target.closest ? e.target.closest('[data-lp-page]') : null;
+                    if (!t) return;
+                    const dir = String(t.getAttribute('data-lp-page') || '');
+                    if (dir === 'prev') {
+                        window.__lpListPage = Math.max(1, page - 1);
+                        renderListView(vendors);
+                    }
+                    if (dir === 'next') {
+                        window.__lpListPage = Math.min(totalPages, page + 1);
+                        renderListView(vendors);
+                    }
+                } catch {
+                }
+            }, { passive: true });
             listContainer.appendChild(listHeader);
 
             if (vendors.length === 0) {
@@ -9671,7 +10695,7 @@
                 return `${km.toFixed(1).replace('.', ',')} km`;
             };
 
-            vendors.forEach(vendor => {
+            pageVendors.forEach(vendor => {
                 const distKm = (typeof vendor.lat === 'number' && typeof vendor.lng === 'number')
                     ? distanceKm(USER_POS[0], USER_POS[1], vendor.lat, vendor.lng)
                     : NaN;
@@ -9884,7 +10908,7 @@
                 if(topSection) topSection.style.display = 'flex'; // Show Filters & Stories
                 if (calendarFab) calendarFab.style.display = 'flex';
                 setTimeout(() => map.invalidateSize(), 100);
-                filterVendors(); 
+                try { lpRefreshMapMarkersNow(); } catch {}
             } else if (view === 'espace') {
                 if (espaceDiv) espaceDiv.style.display = 'block';
                 if(topSection) topSection.style.display = 'none';
@@ -10343,6 +11367,14 @@
         });
 
         let __filterVendorsScheduled = false;
+        function lpRefreshMapMarkersNow() {
+            try {
+                if (!map) return;
+                const list = typeof getFilteredVendors === 'function' ? getFilteredVendors() : VENDORS;
+                renderVendorsOnMap(Array.isArray(list) ? list : VENDORS);
+            } catch {
+            }
+        }
         function filterVendors() {
             if (__filterVendorsScheduled) return;
             __filterVendorsScheduled = true;
@@ -10357,6 +11389,10 @@
                 updateMetiersResultsBadge(filtered.length);
 
                 if (currentView === 'map') {
+                    if (!map) {
+                        try { window.__lpNeedsMapRefreshAfterBoost = true; } catch {}
+                        return;
+                    }
                     renderVendorsOnMap(filtered);
                 } else {
                     renderListView(filtered);
@@ -10493,32 +11529,97 @@
             bar.innerHTML = `
                 <button class="mf-chip ${connectDraft.urgent ? 'active' : ''}" onclick="toggleChatUrgent()">⚡ Urgence</button>
                 <button class="mf-chip ${connectDraft.devis ? 'active' : ''}" onclick="toggleChatDevis()">📄 Devis</button>
-                <button class="mf-chip" onclick="cycleChatQuartier()">📍 ${quartier}</button>
+                <button class="mf-chip ${connectDraft.quartier ? 'active' : ''}" onclick="cycleChatQuartier()">📍 ${quartier}</button>
             `;
         }
 
         function toggleChatUrgent() {
             connectDraft.urgent = !connectDraft.urgent;
             renderChatQuickBar();
+            try { showLocalToast(connectDraft.urgent ? 'Urgence activée ⚡' : 'Urgence désactivée', 'info'); } catch {}
         }
 
         function toggleChatDevis() {
             connectDraft.devis = !connectDraft.devis;
             renderChatQuickBar();
+            try { showLocalToast(connectDraft.devis ? 'Demande de devis 📄' : 'Devis désactivé', 'info'); } catch {}
+        }
+
+        function openChatQuartierModal() {
+            const existing = document.getElementById('chatQuartierOverlay');
+            if (existing) existing.remove();
+
+            const overlay = document.createElement('div');
+            overlay.id = 'chatQuartierOverlay';
+            overlay.className = 'modal-overlay';
+            overlay.style.cssText = "position:fixed; inset:0; width:100%; height:100%; background:rgba(0,0,0,0.60); z-index:21000; display:flex; align-items:center; justify-content:center; padding:18px; box-sizing:border-box; backdrop-filter: blur(5px); animation:fadeIn 0.2s;";
+            overlay.onclick = (e) => { if (e.target && e.target.id === 'chatQuartierOverlay') overlay.remove(); };
+
+            overlay.innerHTML = `
+                <div class="modal-card lp-modal-card" style="width:min(520px, 100%);" onclick="event.stopPropagation()">
+                    <div class="lp-modal-head">
+                        <div class="lp-modal-hero">
+                            <div style="width:46px; height:46px; border-radius:16px; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.18); font-size:1.4rem;">📍</div>
+                            <div>
+                                <div class="lp-modal-title">Quartier</div>
+                                <div class="lp-modal-sub">Où se trouve votre demande ?</div>
+                            </div>
+                        </div>
+                        <button type="button" class="lp-modal-close" onclick="document.getElementById('chatQuartierOverlay') && document.getElementById('chatQuartierOverlay').remove()" aria-label="Fermer">✕</button>
+                    </div>
+                    <div class="lp-modal-body">
+                        <div style="font-weight:950; color:var(--ml-text); margin-bottom:8px;">Votre quartier</div>
+                        <input id="chatQuartierInput" placeholder="Ex : Akwa, Bonamoussadi, Médina..." value="${lpEscapeHtml(String(connectDraft.quartier || ''))}" style="width:100%; padding:12px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:900; box-sizing:border-box; outline:none;" />
+                        <div class="lp-foot-note">Astuce : vous pouvez écrire seulement le nom du quartier.</div>
+                    </div>
+                    <div class="lp-modal-foot" style="display:flex; gap:10px;">
+                        <button type="button" class="btn btn-secondary" style="flex:1;" onclick="document.getElementById('chatQuartierOverlay') && document.getElementById('chatQuartierOverlay').remove()">Annuler</button>
+                        <button type="button" class="btn btn-primary" style="flex:1;" onclick="try{confirmChatQuartier()}catch{}">Valider</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            try {
+                const inp = document.getElementById('chatQuartierInput');
+                if (inp) {
+                    inp.focus();
+                    inp.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            try { confirmChatQuartier() } catch {}
+                        }
+                    });
+                }
+            } catch {
+            }
+        }
+
+        function confirmChatQuartier() {
+            const inp = document.getElementById('chatQuartierInput');
+            const val = inp ? String(inp.value || '').trim() : '';
+            if (!val) {
+                try { showLocalToast('Entrez un quartier.', 'error'); } catch {}
+                return;
+            }
+            connectDraft.quartier = val;
+            renderChatQuickBar();
+            try { showLocalToast(`Quartier: ${val}`, 'success'); } catch {}
+            const ov = document.getElementById('chatQuartierOverlay');
+            if (ov) ov.remove();
         }
 
         function cycleChatQuartier() {
             const options = Array.isArray(activeVendor?.coverage) ? activeVendor.coverage.filter(Boolean) : [];
             if (!options.length) {
-                const val = prompt('Votre quartier ?', connectDraft.quartier || '');
-                if (val !== null) connectDraft.quartier = String(val).trim() || connectDraft.quartier;
-                renderChatQuickBar();
+                openChatQuartierModal();
                 return;
             }
             const idx = Math.max(0, options.indexOf(connectDraft.quartier));
             const next = options[(idx + 1) % options.length];
             connectDraft.quartier = String(next);
             renderChatQuickBar();
+            try { showLocalToast(`Quartier: ${String(next)}`, 'info'); } catch {}
         }
 
         function toggleRequestsView() {
@@ -10957,7 +12058,10 @@
                 // Force resize to fix display issues
                 setTimeout(() => {
                     miniMap.invalidateSize();
-                    miniMap.setView([activeVendor.lat, activeVendor.lng], 16);
+                    const lat = Number(activeVendor?.lat);
+                    const lng = Number(activeVendor?.lng);
+                    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+                    miniMap.setView([lat, lng], 16);
                     
                     // Clear existing layers on mini map
                     miniMap.eachLayer((layer) => {
@@ -10975,7 +12079,7 @@
                         iconAnchor: [20, 20]
                     });
                     
-                    L.marker([activeVendor.lat, activeVendor.lng], {icon: icon}).addTo(miniMap);
+                    L.marker([lat, lng], {icon: icon}).addTo(miniMap);
                 }, 200);
             }
         }
@@ -11062,6 +12166,17 @@
             const text = input.value.trim();
             if(!text) return;
 
+            const tags = [];
+            try {
+                if (connectDraft?.urgent) tags.push({ label: '⚡ Urgence', tone: 'danger' });
+                if (connectDraft?.devis) tags.push({ label: '📄 Devis', tone: 'info' });
+                if (connectDraft?.quartier) tags.push({ label: `📍 ${String(connectDraft.quartier)}`, tone: 'neutral' });
+            } catch {
+            }
+            const tagsHtml = tags.length
+                ? `<div class="msg-tags">${tags.map(t => `<span class="msg-tag">${lpEscapeHtml(String(t.label || ''))}</span>`).join('')}</div>`
+                : '';
+
             if (!connectSessionHasUserMessage) {
                 connectSessionHasUserMessage = true;
                 saveConnectRequest({
@@ -11084,6 +12199,7 @@
             
             history.innerHTML += `
                 <div class="msg-bubble msg-sent" onclick="toggleMsgOptions(this)" id="msg-${msgId}">
+                    ${tagsHtml}
                     <div class="msg-content">${text}</div>
                     <div class="msg-meta">
                         <span>${timeStr}</span> • <span>✓</span>
@@ -11636,6 +12752,7 @@
                         updateUserMarker();
                         if(map) map.flyTo(USER_POS, 16);
                         if(btn) btn.innerHTML = '📍';
+                        try { filterVendors(); } catch {}
                     },
                     (error) => {
                         console.warn("Locate error:", error);
@@ -11834,7 +12951,7 @@
                     ownerLink.style.display = 'block';
                     ownerLink.innerHTML = `
                         <div style="display:flex; gap:10px; justify-content:flex-start; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:0 12px; scroll-snap-type:x proximity;">
-                                <a href="#" onclick="openBoostFromLocal('${safeVendorId}', 'provider')" style="flex:0 0 auto; white-space:nowrap; background:#f59e0b; color:white; font-size:0.95rem; text-decoration:none; border:1px solid #f59e0b; padding:10px 16px; border-radius:999px; font-weight:950; scroll-snap-align:start;">🚀 Booster</a>
+                                <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpTryOpenBoostFromLocal('${safeVendorId}', 'provider');" style="flex:0 0 auto; white-space:nowrap; background:#f59e0b; color:white; font-size:0.95rem; border:1px solid #f59e0b; padding:10px 16px; border-radius:999px; font-weight:950; scroll-snap-align:start; cursor:pointer; pointer-events:auto;">🚀 Booster</button>
                             <a href="#" onclick="openProviderModalForVendor('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px; scroll-snap-align:start;">⚙️ Réglages</a>
                             <a href="#" onclick="startServicePayment('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#00b894; font-size:0.85rem; text-decoration:none; border:1px solid #00b894; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">💳 Paiement</a>
                             <a href="#" onclick="openProviderDashboard('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#f59e0b; font-size:0.85rem; text-decoration:none; border:1px solid #f59e0b; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">📄 Dashboard</a>
@@ -11845,7 +12962,7 @@
                     ownerLink.style.display = 'block';
                     ownerLink.innerHTML = `
                         <div style="display:flex; gap:10px; justify-content:flex-start; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:0 12px; scroll-snap-type:x proximity;">
-                                <a href="#" onclick="openBoostFromLocal('${safeVendorId}', 'shop')" style="flex:0 0 auto; white-space:nowrap; background:#f59e0b; color:white; font-size:0.95rem; text-decoration:none; border:1px solid #f59e0b; padding:10px 16px; border-radius:999px; font-weight:950; scroll-snap-align:start;">🚀 Booster</a>
+                                <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpTryOpenBoostFromLocal('${safeVendorId}', 'shop');" style="flex:0 0 auto; white-space:nowrap; background:#f59e0b; color:white; font-size:0.95rem; border:1px solid #f59e0b; padding:10px 16px; border-radius:999px; font-weight:950; scroll-snap-align:start; cursor:pointer; pointer-events:auto;">🚀 Booster</button>
                             <a href="#" onclick="openSellerModal()" style="flex:0 0 auto; white-space:nowrap; color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px; scroll-snap-align:start;">⚙️ Réglages</a>
                             <a href="#" onclick="openProductModal()" style="flex:0 0 auto; white-space:nowrap; color:#e17055; font-size:0.85rem; text-decoration:none; border:1px solid #e17055; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">📦 Nouveau</a>
                             <a href="#" onclick="openSupplyModal()" style="flex:0 0 auto; white-space:nowrap; color:#0984e3; font-size:0.85rem; text-decoration:none; border:1px solid #0984e3; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">🏭 S'approvisionner</a>
@@ -12163,10 +13280,11 @@
         }
 
         function lpSpeakHelp() {
-            lpSpeak("Bienvenue sur Mangoo Local plus. Appuyez sur Autour de moi pour voir ce qui est proche. Ou appuyez sur Parler et dites un besoin. Exemple: vivres, plombier, électricien.");
+            lpSpeak("Bienvenue sur Mangoo Local plus. Appuyez sur Autour de moi pour voir ce qui est proche. Appuyez sur Tout le pays pour élargir. Ou appuyez sur Parler et dites un besoin. Exemple: vivres, plombier, électricien.");
         }
 
         function lpSimpleAroundMe() {
+            try { setLpScope('nearby'); } catch {}
             try { locateUser(); } catch {}
             try {
                 setTimeout(() => {
@@ -12175,6 +13293,12 @@
             } catch {
             }
             try { lpSpeak("D'accord. Je cherche autour de vous."); } catch {}
+        }
+
+        function lpSimpleCountry() {
+            try { setLpScope('country'); } catch {}
+            try { switchView('list'); } catch {}
+            try { lpSpeak("D'accord. Je cherche dans tout le pays."); } catch {}
         }
 
         function lpSimpleVoice() {
@@ -12359,6 +13483,7 @@
         try {
             window.addEventListener('load', () => {
                 try { lpApplyUiMode(); } catch {}
+                try { lpApplyScopeUi(); } catch {}
             });
         } catch {
         }
@@ -12396,10 +13521,11 @@
         }
 
         function openProviderDashboard(vendorId) {
-            const v = VENDORS.find((x) => String(x?.id) === String(vendorId)) || activeVendor;
-            if (!v) return;
+            const rawId = String(vendorId || '').trim()
+            const v = rawId ? (VENDORS.find((x) => String(x?.id) === rawId) || null) : null
             const returnTo = `${window.location.origin}${window.location.pathname}${window.location.search}${window.location.hash}`;
-            const params = new URLSearchParams({ vendorId: String(v.id), return: returnTo });
+            const params = new URLSearchParams({ return: returnTo });
+            if (v) params.set('vendorId', String(v.id))
             const target = `/provider/dashboard?${params.toString()}`;
             try {
                 const topWin = window.top && window.top.location ? window.top : window;
@@ -12411,7 +13537,17 @@
 
         function openBoostFromLocal(vendorId, vendorKind) {
             const v = VENDORS.find((x) => String(x?.id) === String(vendorId)) || activeVendor;
-            if (!v) return;
+            if (!v) {
+                try { lpToast("Booster indisponible: boutique introuvable.", 'error'); } catch {}
+                return;
+            }
+
+            const resolvedKind = (() => {
+                const raw = String(vendorKind || '').trim().toLowerCase()
+                if (raw === 'shop' || raw === 'provider') return raw
+                const k = lpGetVendorKind(v) === 'service' ? 'provider' : 'shop'
+                return k
+            })();
 
             let email = '';
             try {
@@ -12420,30 +13556,184 @@
             } catch {
                 email = '';
             }
+            if (!email) {
+                try {
+                    const ownerEmail = String(v?.ownerEmail || '').trim().toLowerCase();
+                    if (ownerEmail && ownerEmail.includes('@')) {
+                        email = ownerEmail;
+                    } else {
+                        const pin = String(v?.pin || '').trim();
+                        if (pin && /^[0-9]{4,8}$/.test(pin)) {
+                            email = `pin-${pin}@mangoo.local`;
+                        } else {
+                            email = `local-${resolvedKind}-${String(v?.id || '').trim()}@mangoo.local`;
+                        }
+                    }
+                } catch {
+                }
+            }
 
             try {
                 localStorage.setItem('mangoo-vendor-active-tab', 'boosts');
                 localStorage.setItem(
                     'mangoo_boost_target',
-                    JSON.stringify({ vendorId: String(v.id), vendorKind: String(vendorKind || '') })
+                    JSON.stringify({ vendorId: String(v.id), vendorKind: String(resolvedKind || '') })
                 );
             } catch {
             }
-            const returnTo = `${window.location.origin}${window.location.pathname}${window.location.search}${window.location.hash}`;
+            let returnTo = `${window.location.origin}${window.location.pathname}${window.location.search}${window.location.hash}`;
+            try {
+                const u = new URL(returnTo);
+                u.searchParams.set('boostSync', '1');
+                returnTo = u.toString();
+            } catch {
+            }
             const params = new URLSearchParams({
                 return: returnTo,
                 vendorId: String(v.id),
-                vendorKind: String(vendorKind || ''),
+                vendorKind: String(resolvedKind || ''),
                 email: email
             });
             const target = `/boosts?${params.toString()}`;
             try {
+                const opened = !!lpOpenBoostOverlay(target);
+                if (opened) {
+                    try { lpToast("Boost ouvert.", 'ok'); } catch {}
+                    setTimeout(() => {
+                        try {
+                            const overlay = document.getElementById('lpBoostOverlay');
+                            if (!overlay) throw new Error('overlay_missing');
+                            const style = window.getComputedStyle ? window.getComputedStyle(overlay) : null;
+                            const rect = overlay.getBoundingClientRect ? overlay.getBoundingClientRect() : null;
+                            const visible = !!overlay && (!style || (style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0')) && (!!rect && rect.width > 10 && rect.height > 10);
+                            if (!visible) {
+                                const topWin = window.top && window.top.location ? window.top : window;
+                                topWin.location.href = target;
+                            }
+                        } catch {
+                            try {
+                                const topWin = window.top && window.top.location ? window.top : window;
+                                topWin.location.href = target;
+                            } catch {
+                                try { window.location.href = target; } catch {}
+                            }
+                        }
+                    }, 220);
+                    return;
+                }
                 const topWin = window.top && window.top.location ? window.top : window;
                 topWin.location.href = target;
             } catch {
                 window.location.href = target;
             }
         }
+
+        function lpTryOpenBoostFromLocal(vendorId, vendorKind) {
+            try {
+                try { lpToast("Ouverture du Boost…", ''); } catch {}
+                openBoostFromLocal(vendorId, vendorKind);
+            } catch (e) {
+                try { console.error('[Local+] Booster open failed', e); } catch {}
+                try { lpToast("Booster indisponible: erreur interne.", 'error'); } catch {}
+            }
+        }
+
+        function lpOpenBoostOverlay(url) {
+            const next = String(url || '/boosts');
+            let overlay = document.getElementById('lpBoostOverlay');
+            let frame = document.getElementById('lpBoostFrame');
+
+            if (!overlay || !frame) {
+                try {
+                    overlay = overlay || document.createElement('div');
+                    overlay.id = 'lpBoostOverlay';
+                    overlay.style.display = 'none';
+                    overlay.innerHTML = `
+                        <div style="position:absolute; inset:0; display:flex; flex-direction:column; background: rgba(255,255,255,0.98);">
+                            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-bottom: 1px solid rgba(0,0,0,0.08); background: linear-gradient(90deg, rgba(249,115,22,0.12), rgba(16,185,129,0.12));">
+                                <button type="button" onclick="lpCloseBoostOverlay()" style="border:0; background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.08); border-radius: 999px; padding: 10px 14px; font-weight: 900; cursor:pointer;">← Retour</button>
+                                <div style="font-weight: 950; color: #0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Boost (Informel)</div>
+                                <button type="button" onclick="lpCloseBoostOverlay()" style="border:0; background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.08); border-radius: 999px; padding: 10px 14px; font-weight: 950; cursor:pointer;">✕</button>
+                            </div>
+                            <iframe id="lpBoostFrame" title="Boost" style="flex:1; width:100%; border:0; background:white;"></iframe>
+                        </div>
+                    `;
+                    try { document.body.appendChild(overlay); } catch {}
+                    frame = document.getElementById('lpBoostFrame');
+                } catch {
+                    return false;
+                }
+            }
+
+            try { document.body.appendChild(overlay); } catch {}
+            try {
+                overlay.style.cssText = 'position:fixed; inset:0; width:100vw; height:100vh; z-index:2147483647; background: rgba(0,0,0,0.55); display:block; visibility:visible; opacity:1; pointer-events:auto;';
+            } catch {}
+            try { frame.style.cssText = 'width:100%; height:100%; border:0; background:white; flex:1;'; } catch {}
+            try { frame.src = next; } catch {}
+            setTimeout(() => {
+                try {
+                    overlay.style.display = 'block';
+                    overlay.style.visibility = 'visible';
+                    overlay.style.opacity = '1';
+                    if (frame.src !== next) frame.src = next;
+                } catch {
+                }
+            }, 30);
+            try { document.body.style.overflow = 'hidden'; } catch {}
+            return true;
+        }
+
+        function lpCloseBoostOverlay() {
+            const overlay = document.getElementById('lpBoostOverlay');
+            const frame = document.getElementById('lpBoostFrame');
+            if (overlay) {
+                overlay.style.display = 'none';
+                try { overlay.style.visibility = 'hidden'; } catch {}
+                try { overlay.style.opacity = '0'; } catch {}
+            }
+            try { document.body.style.overflow = ''; } catch {}
+            if (frame) {
+                const prev = frame.src;
+                try {
+                    frame.src = 'about:blank';
+                    setTimeout(() => {
+                        try {
+                            if (frame.src !== 'about:blank') return;
+                            frame.src = prev ? 'about:blank' : 'about:blank';
+                        } catch {
+                        }
+                    }, 50);
+                } catch {
+                }
+            }
+            try {
+                Promise.resolve(syncBoostConfigFromServer()).then(() => {
+                    try { applyBoostConfigToVendors(); } catch {}
+                    try { filterVendors(); } catch {}
+                    try { refreshBoostPanel(); } catch {}
+                })
+            } catch {
+            }
+        }
+
+        window.addEventListener('message', function (event) {
+            try {
+                if (!event || event.origin !== window.location.origin) return;
+                const data = event.data;
+                if (!data || typeof data !== 'object') return;
+                if (String(data.type || '') !== 'lp_boost_close') return;
+                const returnTo = String(data.returnTo || '').trim();
+                lpCloseBoostOverlay();
+                if (returnTo) {
+                    try {
+                        window.location.href = returnTo;
+                    } catch {
+                    }
+                }
+            } catch {
+            }
+        });
 
         // === FAVORIS LOGIC ===
         function updateFavBtn() {
@@ -12521,6 +13811,15 @@
                 .replace(/\n/g, '\\n');
         }
 
+        function lpEscapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         function openStoryOpenSheet(vendorId, tab) {
             const id = vendorId;
             const desiredTab = tab || 'boutique';
@@ -12563,6 +13862,11 @@
             const vid = String(vendor?.id || '').trim();
             const name = String(vendor?.name || '').trim() || `Boutique ${vid || ''}`.trim();
             const slug = String(vendor?.shopSlug || vendor?.shop_slug || vendor?.slug || '').trim() || lpSlugifyName(name, vid || 'boutique');
+            const isOwned = Boolean(vendor?.isUserOwned) || Boolean(String(vendor?.ownerEmail || vendor?.owner_email || '').trim());
+            const rawOwnerEmail = String(vendor?.ownerEmail || vendor?.owner_email || '').trim().toLowerCase();
+            const ownerEmail = isOwned ? (rawOwnerEmail && rawOwnerEmail !== 'guest@mangoo.tech' ? rawOwnerEmail : `shop${String(vid || slug)}@exemple.com`) : '';
+            const ownerName = isOwned ? (String(vendor?.ownerName || vendor?.owner_name || '').trim() || String(vendor?.name || '').trim() || 'Vendeur') : '';
+            const ownerPassword = isOwned ? String(vendor?.ownerPassword || vendor?.owner_password || '').trim() : '';
 
             try {
                 let shops = [];
@@ -12589,8 +13893,9 @@
                         name,
                         slug,
                         category: shopCategory,
-                        ownerName: String(vendor?.name || 'Vendeur'),
-                        ownerEmail: '',
+                        ownerName: ownerName || String(vendor?.name || 'Vendeur'),
+                        ownerEmail: ownerEmail,
+                        ownerPassword: ownerPassword || undefined,
                         logoDataUrl: '',
                         primaryColor: '#0EA5E9',
                         secondaryColor: '#38BDF8',
@@ -13405,7 +14710,27 @@
 
         function openLive() {
             if (activeVendor && activeVendor.live) {
-                window.location.href = 'webrtc-parfait.html?role=viewer&userId=clientMap&roomId=' + encodeURIComponent(activeVendor.name);
+                try {
+                    const vendor = activeVendor;
+                    const roomId = String(vendor?.liveRoomId || vendor?.roomId || vendor?.name || '').trim() || 'live-demo-123';
+                    const shopSlug = (typeof lpGetShopSlugForVendor === 'function' ? lpGetShopSlugForVendor(vendor) : '') || '';
+
+                    let userName = '';
+                    try { userName = String(getLpCurrentUser()?.name || '').trim(); } catch {}
+
+                    const qs = new URLSearchParams();
+                    qs.set('role', 'client');
+                    qs.set('ui', 'simple');
+                    qs.set('roomId', roomId);
+                    if (shopSlug) qs.set('shopSlug', shopSlug);
+                    if (userName) qs.set('name', userName);
+
+                    const url = `${window.location.origin}/live-shopping?${qs.toString()}`;
+                    if (typeof lpNavigate === 'function') lpNavigate(url);
+                    else window.location.href = url;
+                } catch {
+                    window.location.href = `${window.location.origin}/live-shopping?role=client&ui=simple&roomId=${encodeURIComponent(String(activeVendor?.name || 'live-demo-123'))}`;
+                }
             }
         }
         
@@ -13756,6 +15081,12 @@
                 const approvalStatus = autoApprove ? 'approved' : 'pending';
                 const capturedLat = parseFloat(latInput.value);
                 const capturedLng = parseFloat(lngInput.value);
+                const lpUser = (() => {
+                    try { return getLpCurrentUser ? getLpCurrentUser() : null } catch { return null }
+                })();
+                const ownerEmail = String(lpUser?.email || '').trim().toLowerCase();
+                const ownerName = String(lpUser?.name || '').trim();
+                const ownerPhone = String(lpUser?.phone || '').trim();
 
                 // Création du nouveau vendeur
                 const newVendor = {
@@ -13772,7 +15103,11 @@
                     voiceAudio: currentAudioBase64, // Enregistrement vocal
                     avatar: currentShopLogo || `https://ui-avatars.com/api/?name=${encodeURIComponent(shopName)}&background=random&color=fff`,
                     approvalStatus: approvalStatus,
-                    updatedAt: new Date().toISOString()
+                    updatedAt: new Date().toISOString(),
+                    phone: ownerPhone || undefined,
+                    ownerEmail: ownerEmail || undefined,
+                    ownerName: ownerName || undefined,
+                    isUserOwned: Boolean(ownerEmail)
                 };
 
                 // Ajout à la liste et sauvegarde
@@ -13797,11 +15132,45 @@
                 
                 // SAVE USER SHOP ID
                 localStorage.setItem('mangoo_my_shop_id', newVendor.id);
+                let lpEnsuredOwnerEmail = '';
+                let lpEnsuredOwnerName = '';
+                let lpEnsuredOwnerPassword = '';
+                let lpCreatedVendorAccess = false;
                 try {
                     const u = getLpCurrentUser ? getLpCurrentUser() : null;
-                    const email = String(u?.email || '').trim().toLowerCase();
-                    if (email) {
-                        const key = `mangoo_my_shop_ids:${email}`;
+                    const currentEmail = String(u?.email || '').trim().toLowerCase();
+                    const currentName = String(u?.name || '').trim();
+                    const isGuest = !currentEmail || currentEmail === 'guest@mangoo.tech';
+                    lpEnsuredOwnerEmail = isGuest ? `shop${String(newVendor.id)}@exemple.com` : currentEmail;
+                    lpEnsuredOwnerName = currentName || String(newVendor?.name || '').trim() || 'Vendeur';
+
+                    if (isGuest) {
+                        lpEnsuredOwnerPassword = String(Math.floor(1000 + Math.random() * 9000));
+                        lpCreatedVendorAccess = true;
+                        const nextUser = {
+                            id: `lp_vendor_${String(newVendor.id)}`,
+                            name: lpEnsuredOwnerName,
+                            email: lpEnsuredOwnerEmail,
+                            role: 'vendor',
+                            roles: ['vendor', 'client'],
+                            avatar: '🏪',
+                            shopName: String(newVendor?.name || 'Boutique'),
+                            password: lpEnsuredOwnerPassword
+                        };
+                        try { localStorage.setItem('mangoo-current-user', JSON.stringify(nextUser)); } catch {}
+                        try { localStorage.setItem('user', JSON.stringify(nextUser)); } catch {}
+                        try { localStorage.setItem(`mangoo-active-role:${lpEnsuredOwnerEmail}`, 'vendor'); } catch {}
+                        try {
+                            const rawUsers = localStorage.getItem('demo_users');
+                            const data = rawUsers ? JSON.parse(rawUsers) : {};
+                            const map = data && typeof data === 'object' ? data : {};
+                            map[lpEnsuredOwnerEmail] = { ...(map[lpEnsuredOwnerEmail] || {}), ...nextUser };
+                            localStorage.setItem('demo_users', JSON.stringify(map));
+                        } catch {}
+                    }
+
+                    if (lpEnsuredOwnerEmail) {
+                        const key = `mangoo_my_shop_ids:${lpEnsuredOwnerEmail}`;
                         let list = [];
                         try {
                             const raw = localStorage.getItem(key);
@@ -13818,7 +15187,6 @@
 
                 try {
                     const u = getLpCurrentUser ? getLpCurrentUser() : null;
-                    const email = String(u?.email || '').trim().toLowerCase();
                     const name = String(newVendor?.name || '').trim() || 'Boutique';
                     const baseSlug = name
                         .toLowerCase()
@@ -13849,13 +15217,16 @@
 
                     const idx = shops.findIndex((s) => String(s?.sourceVendorId) === String(newVendor.id));
                     const shopUrl = `${window.location.origin}/shop/${slug}`;
+                    const existingPassword = idx >= 0 ? String(shops[idx]?.ownerPassword || shops[idx]?.owner_password || '').trim() : '';
+                    const finalPassword = String(lpEnsuredOwnerPassword || existingPassword || '').trim();
                     const record = {
                         id: `shop-${String(newVendor.id)}`,
                         name,
                         slug,
                         category: shopCategory,
-                        ownerName: String(u?.name || 'Vendeur'),
-                        ownerEmail: email,
+                        ownerName: String(lpEnsuredOwnerName || u?.name || 'Vendeur'),
+                        ownerEmail: String(lpEnsuredOwnerEmail || ''),
+                        ownerPassword: finalPassword || undefined,
                         logoDataUrl: currentShopLogo || '',
                         primaryColor: '#0EA5E9',
                         secondaryColor: '#38BDF8',
@@ -13879,8 +15250,8 @@
                         vendorId: String(newVendor.id),
                         name: newVendor.name,
                         category: newVendor.category,
-                        ownerEmail: String(email || ''),
-                        ownerName: String(u?.name || ''),
+                        ownerEmail: String(lpEnsuredOwnerEmail || ''),
+                        ownerName: String(lpEnsuredOwnerName || ''),
                         lat: newVendor.lat,
                         lng: newVendor.lng
                     })
@@ -13892,6 +15263,21 @@
                 // Reset UI
                 document.getElementById('sellerModal').style.display = 'none';
                 alert('🎉 Félicitations ! Votre boutique "' + shopName + '" est en ligne !');
+                if (lpCreatedVendorAccess && lpEnsuredOwnerEmail && lpEnsuredOwnerPassword) {
+                    try {
+                        alert(`🔑 Accès vendeur (à garder)\n\nEmail: ${lpEnsuredOwnerEmail}\nMot de passe: ${lpEnsuredOwnerPassword}\n\nConnectez-vous sur /connexion puis choisissez "Vendre" pour ajouter des produits.`);
+                    } catch {
+                    }
+                    try {
+                        const ok = confirm("Ouvrir maintenant l'interface vendeur pour ajouter des produits ?");
+                        if (ok) {
+                            try { localStorage.setItem('mangoo-vendor-active-tab', 'products'); } catch {}
+                            try { lpRedirectToApp({ lp_role: 'vendor', lp_vendor_tab: 'products' }) } catch { window.location.assign('/?lp_role=vendor&lp_vendor_tab=products') }
+                            return;
+                        }
+                    } catch {
+                    }
+                }
                 
                 // Reset Form
                 btn.innerHTML = 'Créer ma boutique';
@@ -13947,6 +15333,17 @@
             vendor.voicePitch = pitchInput.value;
             vendor.voiceAudio = currentAudioBase64; // UPDATE AUDIO
             if (currentShopLogo) vendor.avatar = currentShopLogo;
+            try {
+                const u = getLpCurrentUser ? getLpCurrentUser() : null;
+                const email = String(u?.email || '').trim().toLowerCase();
+                const name = String(u?.name || '').trim();
+                const phone = String(u?.phone || '').trim();
+                if (!vendor.ownerEmail && email) vendor.ownerEmail = email;
+                if (!vendor.ownerName && name) vendor.ownerName = name;
+                if (!vendor.phone && phone) vendor.phone = phone;
+                if (email) vendor.isUserOwned = true;
+            } catch {
+            }
             vendor.updatedAt = new Date().toISOString();
 
             try { upsertCustomVendor(vendor); } catch {}
@@ -15141,13 +16538,17 @@
             };
             
             window.triggerMomoPush = (el, provider) => {
-                // Visual selection for operators
-                el.parentElement.querySelectorAll('div').forEach(d => {
-                    d.style.borderColor = (d === el) ? '#27ae60' : 'transparent';
-                    d.style.background = (d === el) ? '#e8f5e9' : 'white';
-                    if(d !== el) d.style.border = '2px solid #dfe6e9';
+                const parent = el && el.parentElement ? el.parentElement : null;
+                const items = parent ? parent.querySelectorAll('.momo-provider') : [];
+                items.forEach(d => {
+                    const active = (d === el);
+                    d.style.borderColor = active ? 'rgba(34,197,94,0.65)' : 'var(--ml-border)';
+                    d.style.background = active ? 'rgba(34,197,94,0.08)' : 'var(--ml-panel)';
+                    d.style.boxShadow = active ? '0 10px 24px rgba(0,0,0,0.10)' : 'none';
                 });
-                el.style.border = '2px solid #27ae60';
+                if (el && el.style) {
+                    el.style.borderColor = 'rgba(34,197,94,0.65)';
+                }
                 
                 const validationArea = document.getElementById('momoValidationArea');
                 if(validationArea) {
@@ -15375,35 +16776,50 @@
                                 </div>`;
                         } else if(window.selectedMethod === 'mobile_money') {
                             gatewayContent = `
-                                <div style="width:100%; max-width:500px; margin:auto; background:#f8f9fa; display:flex; flex-direction:column; padding:20px; font-family:sans-serif; animation: fadeIn 0.5s;">
-                                    <h2 style="text-align:center; color:#2d3436; margin-bottom:30px;">📱 Paiement Mobile</h2>
-                                    <div style="background:white; padding:20px; border-radius:15px; box-shadow:0 5px 15px rgba(0,0,0,0.05); margin-bottom:20px; text-align:center;">
-                                        <div style="font-size:0.9rem; color:#636e72; margin-bottom:5px;">Montant à payer</div>
-                                        <div style="font-size:2rem; font-weight:bold; color:#2d3436;">${contributionAmount.toLocaleString()} FCFA</div>
+                                <div style="height:100%; min-height:0; display:flex; flex-direction:column;">
+                                    <div style="text-align:center; padding:18px 18px 14px 18px; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#fff;">
+                                        <div style="font-size:1.85rem; line-height:1;">📱</div>
+                                        <div style="font-size:1.15rem; font-weight:950; margin-top:6px;">Paiement Mobile Money</div>
+                                        <div style="font-size:0.9rem; opacity:0.92; font-weight:800; margin-top:2px;">Validez le push sur votre téléphone</div>
                                     </div>
-                                    <div style="font-weight:bold; color:#2d3436; margin-bottom:15px;">Choisissez votre opérateur :</div>
-                                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-                                        <div onclick="triggerMomoPush(this, 'orange')" style="background:white; border:2px solid #dfe6e9; border-radius:12px; padding:15px; text-align:center; cursor:pointer;">
-                                            <div style="font-size:2rem; margin-bottom:5px;">🟠</div>
-                                            <div style="font-weight:bold; color:#ff7900;">Orange Money</div>
+
+                                    <div style="flex:1 1 auto; min-height:0; overflow:auto; padding:16px 18px; background:var(--ml-bg);">
+                                        <div style="background:var(--ml-panel); padding:14px; border-radius:var(--ml-radius-2xl); border:1px solid var(--ml-border); box-shadow: var(--ml-shadow-sm); text-align:center;">
+                                            <div style="font-size:0.85rem; color:var(--ml-muted); font-weight:900; margin-bottom:6px;">Montant à payer</div>
+                                            <div style="font-size:2rem; font-weight:950; color:var(--ml-text);">${contributionAmount.toLocaleString()} FCFA</div>
                                         </div>
-                                        <div onclick="triggerMomoPush(this, 'mtn')" style="background:white; border:2px solid #dfe6e9; border-radius:12px; padding:15px; text-align:center; cursor:pointer;">
-                                            <div style="font-size:2rem; margin-bottom:5px;">🟡</div>
-                                            <div style="font-weight:bold; color:#f1c40f;">MTN MoMo</div>
+
+                                        <div style="margin-top:14px; font-weight:950; color:var(--ml-text);">Choisissez votre opérateur</div>
+                                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:10px;">
+                                            <button type="button" class="momo-provider" onclick="triggerMomoPush(this, 'orange')" style="background:var(--ml-panel); border:1px solid var(--ml-border); border-radius:var(--ml-radius-2xl); padding:14px; text-align:center; cursor:pointer; font-weight:900;">
+                                                <div style="width:44px; height:44px; margin:0 auto 8px auto; border-radius:999px; background: rgba(255,138,0,0.16); display:flex; align-items:center; justify-content:center; font-size:1.4rem;">🟠</div>
+                                                <div style="font-weight:950; color:var(--ml-text);">Orange Money</div>
+                                            </button>
+                                            <button type="button" class="momo-provider" onclick="triggerMomoPush(this, 'mtn')" style="background:var(--ml-panel); border:1px solid var(--ml-border); border-radius:var(--ml-radius-2xl); padding:14px; text-align:center; cursor:pointer; font-weight:900;">
+                                                <div style="width:44px; height:44px; margin:0 auto 8px auto; border-radius:999px; background: rgba(250,204,21,0.16); display:flex; align-items:center; justify-content:center; font-size:1.4rem;">🟡</div>
+                                                <div style="font-weight:950; color:var(--ml-text);">MTN MoMo</div>
+                                            </button>
+                                            <button type="button" class="momo-provider" onclick="triggerMomoPush(this, 'wave')" style="background:var(--ml-panel); border:1px solid var(--ml-border); border-radius:var(--ml-radius-2xl); padding:14px; text-align:center; cursor:pointer; font-weight:900;">
+                                                <div style="width:44px; height:44px; margin:0 auto 8px auto; border-radius:999px; background: rgba(59,130,246,0.16); display:flex; align-items:center; justify-content:center; font-size:1.4rem;">🔵</div>
+                                                <div style="font-weight:950; color:var(--ml-text);">Wave</div>
+                                            </button>
+                                            <button type="button" class="momo-provider" onclick="triggerMomoPush(this, 'moov')" style="background:var(--ml-panel); border:1px solid var(--ml-border); border-radius:var(--ml-radius-2xl); padding:14px; text-align:center; cursor:pointer; font-weight:900;">
+                                                <div style="width:44px; height:44px; margin:0 auto 8px auto; border-radius:999px; background: rgba(168,85,247,0.16); display:flex; align-items:center; justify-content:center; font-size:1.4rem;">🟣</div>
+                                                <div style="font-weight:950; color:var(--ml-text);">Moov Money</div>
+                                            </button>
                                         </div>
-                                        <div onclick="triggerMomoPush(this, 'wave')" style="background:white; border:2px solid #dfe6e9; border-radius:12px; padding:15px; text-align:center; cursor:pointer;">
-                                            <div style="font-size:2rem; margin-bottom:5px;">🔵</div>
-                                            <div style="font-weight:bold; color:#1da1f2;">Wave</div>
+
+                                        <div id="momoValidationArea" style="display:none; margin-top:14px; text-align:center; background:var(--ml-panel); padding:14px; border-radius:var(--ml-radius-2xl); border:1px solid var(--ml-border); box-shadow: var(--ml-shadow-sm);">
+                                            <div class="spin" style="font-size:1.6rem; margin-bottom:8px;">⏳</div>
+                                            <div style="margin-bottom:12px; font-weight:900; color:var(--ml-text);">Veuillez valider le push sur votre téléphone</div>
+                                            <button id="btnConfirmMomo" class="btn btn-primary" onclick="finishGatewaySimulation(this)" style="width:100%; padding:16px; font-weight:950; font-size:1rem;">J'ai confirmé le paiement</button>
                                         </div>
-                                        <div onclick="triggerMomoPush(this, 'moov')" style="background:white; border:2px solid #dfe6e9; border-radius:12px; padding:15px; text-align:center; cursor:pointer;">
-                                            <div style="font-size:2rem; margin-bottom:5px;">🟣</div>
-                                            <div style="font-weight:bold; color:#004e92;">Moov Money</div>
-                                        </div>
+
+                                        <div style="text-align:center; margin-top:12px; font-size:0.8rem; color:var(--ml-muted); font-weight:800;">🔒 Paiement sécurisé</div>
                                     </div>
-                                    <div id="momoValidationArea" style="display:none; margin-top:30px; text-align:center; background:white; padding:20px; border-radius:15px;">
-                                        <div class="spin" style="font-size:2rem; margin-bottom:15px;">⏳</div>
-                                        <div style="margin-bottom:15px; font-weight:bold; color:#2d3436;">Veuillez valider le push sur votre téléphone</div>
-                                        <button id="btnConfirmMomo" onclick="finishGatewaySimulation(this)" style="padding:15px 40px; background:#0984e3; color:white; border:none; border-radius:25px; font-weight:bold; cursor:pointer; width:100%;">J'ai confirmé le paiement</button>
+
+                                    <div class="lp-modal-foot">
+                                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('mangoo-checkout-overlay') && document.getElementById('mangoo-checkout-overlay').remove()" style="width:100%;">Fermer</button>
                                     </div>
                                 </div>`;
                         } else if(window.selectedMethod === 'mangoo_balance') {
@@ -15420,7 +16836,7 @@
                                 <div style="background:#ffebee; color:#c62828; padding:15px; border-radius:10px; margin-bottom:20px; font-weight:bold;">
                                     ⚠️ Solde insuffisant pour ce paiement.
                                 </div>
-                                <button onclick="openP2PModal()" style="padding:15px 30px; background:#0984e3; color:white; border:none; border-radius:25px; font-weight:bold; cursor:pointer; width:100%; max-width:350px; margin-bottom:10px;">
+                                <button onclick="openP2PModal()" class="btn btn-primary" style="width:100%; max-width:350px; margin-bottom:10px; font-weight:950;">
                                     💸 Demander un transfert (Recharger)
                                 </button>
                                 <button onclick="document.getElementById('mangoo-checkout-overlay').remove()" style="padding:15px 30px; background:transparent; color:#636e72; border:none; cursor:pointer;">Annuler</button>
@@ -15468,94 +16884,110 @@
             const checkout = document.getElementById('mangoo-checkout-overlay');
             if(checkout) checkout.remove();
 
+            const existing = document.getElementById('p2pOverlay');
+            if(existing) existing.remove();
+
             const p2pOverlay = document.createElement('div');
             p2pOverlay.id = 'p2pOverlay';
-            p2pOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:12000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px); animation:fadeIn 0.3s;";
+            p2pOverlay.className = 'modal-overlay';
+            p2pOverlay.style.cssText = "position:fixed; inset:0; width:100%; height:100%; background:rgba(0,0,0,0.60); z-index:21000; display:flex; align-items:center; justify-content:center; padding:18px; box-sizing:border-box; backdrop-filter: blur(5px); animation:fadeIn 0.2s;";
+            p2pOverlay.onclick = (e) => { if(e.target && e.target.id === 'p2pOverlay') p2pOverlay.remove(); };
             
             p2pOverlay.innerHTML = `
-                <div style="background:white; width:90%; max-width:400px; max-height: 90vh; overflow-y: auto; border-radius:20px; padding:25px; box-shadow:0 15px 50px rgba(0,0,0,0.2); position:relative; display: flex; flex-direction: column;">
-                    <button onclick="document.getElementById('p2pOverlay').remove()" style="position:absolute; top:15px; right:15px; background:#f1f2f6; border:none; width:30px; height:30px; border-radius:50%; cursor:pointer; font-weight:bold; color:#636e72;">✕</button>
-                    
-                    <div style="text-align:center; margin-bottom:20px; flex-shrink: 0;">
-                        <div style="width:60px; height:60px; background:#e0f2f1; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; font-size:2rem;">💸</div>
-                        <h2 style="margin:0; color:#2d3436;">Transfert de crédit</h2>
-                        <p style="color:#636e72; font-size:0.9rem; margin-top:5px;">Envoyez du crédit Mangoo à un proche</p>
+                <div class="modal-card lp-modal-card" style="width:min(560px, 100%);" onclick="event.stopPropagation()">
+                    <div class="lp-modal-head">
+                        <div class="lp-modal-hero">
+                            <div style="width:46px; height:46px; border-radius:16px; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.18); font-size:1.4rem;">💸</div>
+                            <div>
+                                <div class="lp-modal-title">Transfert</div>
+                                <div class="lp-modal-sub">Envoyez du crédit Mangoo à un proche</div>
+                            </div>
+                        </div>
+                        <button type="button" class="lp-modal-close" onclick="document.getElementById('p2pOverlay') && document.getElementById('p2pOverlay').remove()" aria-label="Fermer">✕</button>
                     </div>
 
-                    <div style="flex: 1; overflow-y: auto; padding-right: 5px;">
-                        <div style="background:#f8f9fa; padding:15px; border-radius:12px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between;">
-                            <span style="color:#636e72; font-size:0.9rem;">Votre solde actuel</span>
-                            <span style="font-weight:bold; color:#00b894; font-size:1.1rem;">${userBalance.toLocaleString()} FCFA</span>
+                    <div class="lp-modal-body">
+                        <div style="padding:12px 14px; border-radius:14px; background:rgba(17,24,39,0.03); border:1px solid rgba(0,0,0,0.06); display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;">
+                            <span style="color:var(--ml-muted); font-weight:900;">Votre solde actuel</span>
+                            <span style="font-weight:950; color:var(--ml-brand-from); font-size:1.05rem;">${Number(userBalance || 0).toLocaleString()} FCFA</span>
                         </div>
 
-                        <div style="margin-bottom:15px;">
-                            <label style="display:block; font-size:0.8rem; font-weight:bold; color:#2d3436; margin-bottom:8px;">Numéro du destinataire (Mangoo)</label>
-                            <div style="position:relative;">
-                                <input type="tel" placeholder="Ex: 07 07 00 00 00" id="p2pReceiver" style="width:100%; padding:15px; padding-left:45px; border:2px solid #dfe6e9; border-radius:10px; font-size:1rem; outline:none; transition:border 0.2s;">
-                                <span style="position:absolute; left:15px; top:50%; transform:translateY(-50%);">👤</span>
+                        <div style="display:grid; gap:12px;">
+                            <div>
+                                <div style="font-weight:950; color:var(--ml-text); margin-bottom:8px;">Numéro du destinataire (Mangoo)</div>
+                                <div style="position:relative;">
+                                    <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%);">👤</span>
+                                    <input type="tel" inputmode="tel" placeholder="Ex : 07 07 00 00 00" id="p2pReceiver" style="width:100%; padding:12px 12px 12px 42px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:900; box-sizing:border-box; outline:none;">
+                                </div>
                             </div>
-                        </div>
 
-                        <div style="margin-bottom:15px;">
-                            <label style="display:block; font-size:0.8rem; font-weight:bold; color:#2d3436; margin-bottom:8px;">Montant à envoyer</label>
-                            <div style="position:relative;">
-                                <input type="number" placeholder="0" id="p2pAmount" style="width:100%; padding:15px; padding-right:60px; border:2px solid #dfe6e9; border-radius:10px; font-size:1.5rem; font-weight:bold; outline:none; color:#2d3436;">
-                                <span style="position:absolute; right:15px; top:50%; transform:translateY(-50%); font-weight:bold; color:#b2bec3;">FCFA</span>
+                            <div>
+                                <div style="font-weight:950; color:var(--ml-text); margin-bottom:8px;">Montant</div>
+                                <div style="position:relative;">
+                                    <input type="number" inputmode="numeric" placeholder="0" id="p2pAmount" style="width:100%; padding:12px 66px 12px 12px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:950; font-size:1.25rem; box-sizing:border-box; outline:none;">
+                                    <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-weight:950; color:var(--ml-muted);">FCFA</span>
+                                </div>
                             </div>
-                        </div>
 
-                        <div style="margin-bottom:25px;">
-                            <label style="display:block; font-size:0.8rem; font-weight:bold; color:#2d3436; margin-bottom:8px;">Code Secret (4 chiffres)</label>
-                            <div style="position:relative;">
-                                <input type="password" placeholder="****" id="p2pPin" maxlength="4" style="width:100%; padding:15px; padding-left:45px; border:2px solid #dfe6e9; border-radius:10px; font-size:1.5rem; font-weight:bold; outline:none; color:#2d3436; letter-spacing: 5px;">
-                                <span style="position:absolute; left:15px; top:50%; transform:translateY(-50%);">🔒</span>
-                            </div>
-                            <div style="font-size:0.8rem; color:#00b894; margin-top:5px; display:flex; align-items:center; gap:5px;">
-                                <span>✨</span> Frais de transaction : <b>0 FCFA</b>
+                            <div>
+                                <div style="font-weight:950; color:var(--ml-text); margin-bottom:8px;">Code secret (4 chiffres)</div>
+                                <div style="position:relative;">
+                                    <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%);">🔒</span>
+                                    <input type="password" inputmode="numeric" placeholder="••••" id="p2pPin" maxlength="4" style="width:100%; padding:12px 12px 12px 42px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:950; font-size:1.2rem; letter-spacing:0.25em; box-sizing:border-box; outline:none;">
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <button onclick="processP2PTransfer()" style="width:100%; padding:18px; background:#00b894; color:white; border:none; border-radius:12px; font-weight:bold; font-size:1.1rem; cursor:pointer; box-shadow:0 5px 15px rgba(0,184,148,0.3); transition:transform 0.1s; flex-shrink: 0; margin-top: 10px;">
-                        Envoyer maintenant
-                    </button>
+                    <div class="lp-modal-foot">
+                        <button id="p2pSubmitBtn" type="button" class="btn btn-primary" onclick="processP2PTransfer()" style="width:100%; font-size:1.05rem; font-weight:950;">
+                            Envoyer maintenant
+                        </button>
+                        <div class="lp-foot-note">Frais : 0 FCFA</div>
+                    </div>
                 </div>
             `;
             document.body.appendChild(p2pOverlay);
         }
 
         function processP2PTransfer() {
-            const receiver = document.getElementById('p2pReceiver').value;
-            const amount = parseInt(document.getElementById('p2pAmount').value);
-            const pin = document.getElementById('p2pPin').value;
+            const overlayContainer = document.getElementById('p2pOverlay');
+            if(!overlayContainer) return;
+            if(overlayContainer.dataset && overlayContainer.dataset.busy === '1') return;
+
+            const receiverEl = document.getElementById('p2pReceiver');
+            const amountEl = document.getElementById('p2pAmount');
+            const pinEl = document.getElementById('p2pPin');
+            const receiver = receiverEl ? String(receiverEl.value || '').trim() : '';
+            const amountRaw = amountEl ? String(amountEl.value || '').trim() : '';
+            const amount = Math.floor(Number(amountRaw));
+            const pin = pinEl ? String(pinEl.value || '').trim() : '';
             
             if(!receiver || receiver.length < 4) {
-                alert("Veuillez entrer un numéro valide.");
+                try { showLocalToast("Veuillez entrer un numéro valide.", "error"); } catch {}
                 return;
             }
             if(!amount || amount <= 0) {
-                alert("Montant invalide.");
+                try { showLocalToast("Montant invalide.", "error"); } catch {}
                 return;
             }
             if(amount > userBalance) {
-                alert("Solde insuffisant !");
+                try { showLocalToast("Solde insuffisant !", "error"); } catch {}
                 return;
             }
             // Basic PIN Validation (Simulated)
             if(!pin || pin.length !== 4) {
-                alert("Veuillez entrer votre code secret à 4 chiffres.");
+                try { showLocalToast("Veuillez entrer votre code secret à 4 chiffres.", "error"); } catch {}
                 return;
             }
 
             if(!confirm(`Confirmer l'envoi de ${amount.toLocaleString()} FCFA à ${receiver} ?\n(Frais : 0 FCFA)`)) return;
 
-            // Simulate Process
-            const overlayContainer = document.getElementById('p2pOverlay');
-            
-            // Visual feedback on button
-            const btn = overlayContainer ? overlayContainer.querySelector('button:last-child') : null;
+            if(overlayContainer.dataset) overlayContainer.dataset.busy = '1';
+
+            const btn = document.getElementById('p2pSubmitBtn');
             if(btn) {
-                btn.innerHTML = '<span class="spin">↻</span> Envoi en cours...';
+                btn.innerHTML = '<span class="ml-spin">↻</span> Envoi en cours...';
                 btn.disabled = true;
             }
 
@@ -15565,35 +16997,43 @@
                     userBalance = userBalance - amount;
                     
                     // Manually update balance display if it exists
-                    const balDisplay = document.getElementById('userBalanceDisplay');
-                    if(balDisplay) {
-                        balDisplay.innerText = userBalance.toLocaleString() + ' FCFA';
-                    }
+                    try { lpWalletSyncBalanceToUi() } catch {}
                     localStorage.setItem('mangoo_user_balance', userBalance);
                     
-                    // Re-fetch container
                     const currentOverlay = document.getElementById('p2pOverlay');
-                    
                     if(currentOverlay) {
                         currentOverlay.innerHTML = `
-                            <div style="background:white; width:90%; max-width:350px; border-radius:20px; padding:30px; text-align:center; box-shadow:0 15px 50px rgba(0,0,0,0.2); animation:popIn 0.4s;">
-                                <div style="width:80px; height:80px; background:#27ae60; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; color:white; font-size:3rem; box-shadow:0 10px 20px rgba(39,174,96,0.3);">✓</div>
-                                <h2 style="color:#2d3436; margin-bottom:10px;">Transfert Réussi !</h2>
-                                <p style="color:#636e72; margin-bottom:20px;">Vous avez envoyé <b>${amount.toLocaleString()} FCFA</b> à ${receiver}.</p>
-                                <div style="background:#f1f2f6; padding:15px; border-radius:10px; margin-bottom:20px;">
-                                    <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:0.9rem;">
-                                        <span>Nouveau solde :</span>
-                                        <span style="font-weight:bold; color:#2d3436;">${userBalance.toLocaleString()} F</span>
+                            <div class="modal-card lp-modal-card" style="width:min(520px, 100%);" onclick="event.stopPropagation()">
+                                <div class="lp-modal-head" style="text-align:center;">
+                                    <div style="width:58px; height:58px; border-radius:18px; margin:0 auto 10px; background: rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.18); display:flex; align-items:center; justify-content:center; font-size:1.7rem;">✅</div>
+                                    <div class="lp-modal-title">Transfert réussi</div>
+                                    <div class="lp-modal-sub">Envoi confirmé</div>
+                                    <button type="button" class="lp-modal-close" onclick="document.getElementById('p2pOverlay') && document.getElementById('p2pOverlay').remove()" aria-label="Fermer">✕</button>
+                                </div>
+                                <div class="lp-modal-body">
+                                    <div style="padding:12px 14px; border-radius:14px; background:rgba(17,24,39,0.03); border:1px solid rgba(0,0,0,0.06); color:var(--ml-text); font-weight:900; line-height:1.4;">
+                                        Vous avez envoyé <b>${amount.toLocaleString()} FCFA</b> à <b>${receiver}</b>.
+                                    </div>
+                                    <div style="margin-top:12px; padding:12px 14px; border-radius:14px; background:rgba(249,115,22,0.06); border:1px solid rgba(249,115,22,0.18); display:flex; justify-content:space-between; gap:12px;">
+                                        <span style="color:var(--ml-muted); font-weight:900;">Nouveau solde</span>
+                                        <span style="color:var(--ml-text); font-weight:950;">${Number(userBalance || 0).toLocaleString()} FCFA</span>
                                     </div>
                                 </div>
-                                <button onclick="document.getElementById('p2pOverlay').remove()" style="padding:15px 30px; background:#2d3436; color:white; border:none; border-radius:25px; font-weight:bold; cursor:pointer; width:100%;">Fermer</button>
+                                <div class="lp-modal-foot">
+                                    <button type="button" class="btn btn-primary" onclick="document.getElementById('p2pOverlay') && document.getElementById('p2pOverlay').remove()" style="width:100%; font-size:1.05rem; font-weight:950;">
+                                        Fermer
+                                    </button>
+                                </div>
                             </div>
                         `;
                     }
                 } catch(e) {
                     console.error("P2P Error:", e);
-                    alert("Une erreur est survenue lors du transfert. Veuillez réessayer.");
+                    try { showLocalToast("Une erreur est survenue lors du transfert.", "error"); } catch {}
                     if(document.getElementById('p2pOverlay')) document.getElementById('p2pOverlay').remove();
+                } finally {
+                    const ov = document.getElementById('p2pOverlay');
+                    if(ov && ov.dataset) ov.dataset.busy = '0';
                 }
             }, 1500);
         }
@@ -15776,7 +17216,6 @@
 
         // === ORDERS MODAL (NEW) ===
         window.openOrdersModal = function() {
-            console.log("Opening Orders Modal...");
             // Close other modals if open
             const paymentModal = document.getElementById('paymentModal');
             if(paymentModal) paymentModal.style.display = 'none';
@@ -15791,8 +17230,8 @@
             const ordersOverlay = document.createElement('div');
             ordersOverlay.id = 'ordersModal';
             ordersOverlay.className = 'modal-overlay';
-            ordersOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:25000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px); animation:fadeIn 0.3s;";
-            ordersOverlay.onclick = (e) => { if(e.target.id === 'ordersModal') ordersOverlay.remove(); };
+            ordersOverlay.style.cssText = "position:fixed; inset:0; width:100%; height:100%; background:rgba(0,0,0,0.60); z-index:25000; display:flex; align-items:center; justify-content:center; padding:18px; box-sizing:border-box; backdrop-filter: blur(5px); animation:fadeIn 0.2s;";
+            ordersOverlay.onclick = (e) => { if(e.target && e.target.id === 'ordersModal') ordersOverlay.remove(); };
             
             // Real Data from State
             const currentRaised = window.crowdfundingState ? window.crowdfundingState.currentRaised : 15000;
@@ -15815,43 +17254,50 @@
 
             let ordersHtml = '';
             orders.forEach(order => {
+                const statusIsDone = order.status === 'Tontine Terminée';
+                const pillBg = statusIsDone ? 'rgba(22,163,74,0.14)' : 'rgba(250,204,21,0.18)';
+                const pillColor = statusIsDone ? 'rgb(22,163,74)' : 'rgb(161,98,7)';
                 ordersHtml += `
-                    <div onclick="${order.action}" style="background:white; border:1px solid #dfe6e9; border-radius:12px; padding:15px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; transition:transform 0.2s;">
-                        <div style="flex:1;">
-                            <div style="font-weight:bold; color:#2d3436;">${order.product}</div>
-                            <div style="font-size:0.8rem; color:#636e72;">#${order.id} • ${order.date}</div>
-                            <div style="font-size:0.75rem; color:#0984e3; margin-top:5px; font-weight:bold;">${order.type}</div>
-                            ${order.status === 'Tontine Terminée' ? 
-                                `<div style="font-size:0.75rem; color:#27ae60; margin-top:3px; display:flex; align-items:center; gap:5px;">
-                                    <span>📦 Livraison Programmée</span>
-                                </div>` : ''
+                    <button type="button" onclick="${order.action}" style="width:100%; text-align:left; background:var(--ml-panel); border:1px solid var(--ml-border); border-radius:var(--ml-radius-2xl); padding:14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; cursor:pointer; box-shadow: var(--ml-shadow-sm);">
+                        <div style="flex:1; min-width:0;">
+                            <div style="font-weight:950; color:var(--ml-text);">${order.product}</div>
+                            <div style="font-size:0.82rem; color:var(--ml-muted); font-weight:800; margin-top:2px;">#${order.id} • ${order.date}</div>
+                            <div style="font-size:0.78rem; color:var(--ml-brand-from); margin-top:6px; font-weight:900;">${order.type}</div>
+                            ${statusIsDone
+                                ? `<div style="font-size:0.78rem; color:var(--ml-brand-to); margin-top:6px; font-weight:900;">📦 Livraison programmée</div>`
+                                : ''
                             }
                         </div>
-                        <div style="text-align:right;">
-                            <div style="font-weight:bold; color:#2d3436;">${order.amount.toLocaleString()} F</div>
-                            <div style="font-size:0.8rem; font-weight:bold; color:white; background:${order.statusColor}; padding:2px 8px; border-radius:10px; display:inline-block; margin-top:5px;">
+                        <div style="text-align:right; flex:0 0 auto;">
+                            <div style="font-weight:950; color:var(--ml-text);">${order.amount.toLocaleString()} F</div>
+                            <div style="font-size:0.82rem; font-weight:950; color:${pillColor}; background:${pillBg}; padding:4px 10px; border-radius:999px; display:inline-block; margin-top:6px; border:1px solid rgba(0,0,0,0.06);">
                                 ${order.status}
                             </div>
                         </div>
-                    </div>
+                    </button>
                 `;
             });
 
             ordersOverlay.innerHTML = `
-                <div style="background:white; width:90%; max-width:450px; border-radius:20px; padding:25px; box-shadow:0 15px 50px rgba(0,0,0,0.2); position:relative; max-height:85vh; display:flex; flex-direction:column;">
-                    <div style="text-align:center; margin-bottom:20px;">
-                        <div style="font-size:3rem; margin-bottom:10px;">📦</div>
-                        <h2 style="margin:0; color:#2d3436;">Mes Commandes</h2>
-                        <p style="color:#636e72; margin-top:5px;">Suivez vos achats et paiements en cours.</p>
+                <div class="modal-card lp-modal-card" style="width:min(560px, 100%);" onclick="event.stopPropagation()">
+                    <div class="lp-modal-head">
+                        <div class="lp-modal-hero">
+                            <div style="width:46px; height:46px; border-radius:16px; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.18); font-size:1.4rem;">📦</div>
+                            <div>
+                                <div class="lp-modal-title">Mes commandes</div>
+                                <div class="lp-modal-sub">Suivez vos achats et paiements</div>
+                            </div>
+                        </div>
+                        <button type="button" class="lp-modal-close" onclick="document.getElementById('ordersModal') && document.getElementById('ordersModal').remove()" aria-label="Fermer">✕</button>
                     </div>
-                    
-                    <div style="flex:1; overflow-y:auto; padding:5px;">
-                        ${ordersHtml}
+
+                    <div class="lp-modal-body">
+                        ${ordersHtml || `<div style="text-align:center; color:var(--ml-muted); font-weight:900; padding:18px 0;">Aucune commande pour le moment.</div>`}
                     </div>
-                    
-                    <button onclick="document.getElementById('ordersModal').remove();" style="margin-top:15px; background:#dfe6e9; color:#2d3436; border:none; padding:12px; border-radius:10px; font-weight:bold; width:100%; cursor:pointer;">
-                        Fermer
-                    </button>
+
+                    <div class="lp-modal-foot">
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('ordersModal') && document.getElementById('ordersModal').remove()" style="width:100%;">Fermer</button>
+                    </div>
                 </div>
             `;
             
@@ -16003,20 +17449,52 @@
             })
         }
 
-        function loadLpProfile() {
+        function loadLpProfile(withFeedback) {
+            const feedback = !!withFeedback;
             try {
                 const raw = localStorage.getItem(lpProfileStorageKey()) || localStorage.getItem('mangoo_local_profile')
                 const data = raw ? JSON.parse(raw) : {}
-                const name = String(data?.name || '')
-                const phone = String(data?.phone || '')
-                const address = String(data?.address || '')
+                let name = String(data?.name || '')
+                let phone = String(data?.phone || '')
+                let address = String(data?.address || '')
+
+                if (!name && !phone && !address) {
+                    const u = getLpCurrentUser()
+                    name = String(u?.name || '')
+                    phone = String(u?.phone || '')
+                }
+
                 const elName = document.getElementById('lpProfileName')
                 const elPhone = document.getElementById('lpProfilePhone')
                 const elAddr = document.getElementById('lpProfileAddress')
                 if (elName) elName.value = name
                 if (elPhone) elPhone.value = phone
                 if (elAddr) elAddr.value = address
+                if (feedback) {
+                    if (!name && !phone && !address) {
+                        try { showLocalToast('Aucun profil sauvegardé.', 'info') } catch {}
+                    } else {
+                        try { showLocalToast('Profil chargé ✅', 'success') } catch {}
+                    }
+                }
             } catch {
+                if (feedback) {
+                    try { showLocalToast('Impossible de charger le profil.', 'error') } catch {}
+                }
+            }
+        }
+
+        function lpOpenFavorites() {
+            let empty = false
+            try {
+                if (!Array.isArray(favorites) || favorites.length === 0) {
+                    empty = true
+                }
+            } catch {
+            }
+            try { switchView('fav') } catch {}
+            if (empty) {
+                try { showLocalToast('Aucun favori pour le moment.', 'info') } catch {}
             }
         }
 
@@ -16372,5 +17850,15 @@
             }
         }
     </script>
+    <div id="lpBoostOverlay" style="display:none; position:fixed; inset:0; z-index: 999999; background: rgba(0,0,0,0.55);">
+        <div style="position:absolute; inset:0; display:flex; flex-direction:column; background: rgba(255,255,255,0.98);">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-bottom: 1px solid rgba(0,0,0,0.08); background: linear-gradient(90deg, rgba(249,115,22,0.12), rgba(16,185,129,0.12));">
+                <button type="button" onclick="lpCloseBoostOverlay()" style="border:0; background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.08); border-radius: 999px; padding: 10px 14px; font-weight: 900; cursor:pointer;">← Retour</button>
+                <div style="font-weight: 950; color: #0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Boost (Informel)</div>
+                <button type="button" onclick="lpCloseBoostOverlay()" style="border:0; background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.08); border-radius: 999px; padding: 10px 14px; font-weight: 950; cursor:pointer;">✕</button>
+            </div>
+            <iframe id="lpBoostFrame" title="Boost" style="flex:1; width:100%; border:0; background:white;"></iframe>
+        </div>
+    </div>
 </body>
 </html>

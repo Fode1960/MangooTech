@@ -55,13 +55,71 @@ function csvEscape(value) {
   return s;
 }
 
+function getLocalPinForVendorId(vendorId) {
+  try {
+    const m = safeParseJson(localStorage.getItem('mangoo_local_pin_map'), {});
+    const id = String(vendorId || '').trim();
+    if (!id) return '';
+    if (!m || typeof m !== 'object') return '';
+    for (const [pin, mapped] of Object.entries(m)) {
+      if (String(mapped) === id) return String(pin || '');
+    }
+  } catch {
+  }
+  return '';
+}
+
+function reserveUniqueLocalPin(vendorId) {
+  const key = 'mangoo_local_pin_map';
+  const id = String(vendorId || '').trim();
+  if (!id) return '';
+  const m = safeParseJson(localStorage.getItem(key), {});
+  const exists = (pin) => Object.prototype.hasOwnProperty.call(m, String(pin));
+  let tries = 0;
+  while (tries < 80) {
+    tries += 1;
+    let pin = '';
+    for (let i = 0; i < 4; i += 1) pin += String(Math.floor(Math.random() * 10));
+    if (pin.replace(/0/g, '').length < 1) continue;
+    if (exists(pin)) continue;
+    m[String(pin)] = id;
+    localStorage.setItem(key, JSON.stringify(m));
+    return pin;
+  }
+  const fallback = String(Date.now()).slice(-4);
+  m[fallback] = id;
+  localStorage.setItem(key, JSON.stringify(m));
+  return fallback;
+}
+
+function setLocalPinForVendorId(vendorId, nextPin) {
+  const key = 'mangoo_local_pin_map';
+  const id = String(vendorId || '').trim();
+  const pin = String(nextPin || '').trim();
+  if (!id || !pin) return false;
+  try {
+    const m = safeParseJson(localStorage.getItem(key), {});
+    for (const [p, mapped] of Object.entries(m || {})) {
+      if (String(mapped) === id) delete m[p];
+    }
+    m[pin] = id;
+    localStorage.setItem(key, JSON.stringify(m));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export default function ProviderDashboard() {
   const { isDark } = useThemeStore();
   const [searchParams] = useSearchParams();
   const [tab, setTab] = useState('overview');
   const [providerProfile, setProviderProfile] = useState(null);
+  const [localVersion, setLocalVersion] = useState(0);
+  const [showSettings, setShowSettings] = useState(false);
 
   const returnTo = String(searchParams.get('return') || '').trim();
+  const vendorIdFromQuery = String(searchParams.get('vendorId') || '').trim();
 
   useEffect(() => {
     let cancelled = false;
@@ -72,7 +130,7 @@ export default function ProviderDashboard() {
         if (!userId) return;
         const { data } = await supabase
           .from('providers')
-          .select('id, status, is_visible, slug, name, created_at, approved_at')
+          .select('*')
           .eq('user_id', userId)
           .maybeSingle();
         if (!cancelled) setProviderProfile(data || null);
@@ -85,14 +143,60 @@ export default function ProviderDashboard() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!providerProfile?.id) return
+    if (vendorIdFromQuery) return
+    setSelectedProviderId((prev) => prev || String(providerProfile.id))
+  }, [providerProfile?.id, vendorIdFromQuery]);
+
+  useEffect(() => {
+    if (!showSettings) return;
+    const onKey = (e) => {
+      if (e?.key === 'Escape') setShowSettings(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showSettings]);
+
   const currentUser = useMemo(() => {
     return safeParseJson(localStorage.getItem('mangoo-current-user') || localStorage.getItem('user'), null);
   }, []);
 
   const email = normalizeEmail(currentUser?.email);
-  const vendorIdFromQuery = String(searchParams.get('vendorId') || '').trim();
+  const isAdmin = useMemo(() => {
+    const role = String(currentUser?.role || '').trim().toLowerCase()
+    if (role === 'admin') return true
+    const roles = Array.isArray(currentUser?.roles) ? currentUser.roles.map((x) => String(x || '').trim().toLowerCase()).filter(Boolean) : []
+    return roles.includes('admin')
+  }, [currentUser?.role, currentUser?.roles]);
 
   const allProviders = useMemo(() => {
+    if (providerProfile?.id && !isAdmin && !vendorIdFromQuery) {
+      const id = String(providerProfile.id)
+      const name = String(providerProfile?.name || '').trim() || 'Prestataire'
+      const trade = String(providerProfile?.trade || '').trim()
+      const isMobile = Boolean(providerProfile?.is_mobile || providerProfile?.isMobile)
+      const coverage = Array.isArray(providerProfile?.coverage) ? providerProfile.coverage.filter(Boolean) : []
+      const phone = String(providerProfile?.phone || '').trim()
+      const city = String(providerProfile?.city || '').trim()
+      const country = String(providerProfile?.country || '').trim()
+      const services = Array.isArray(providerProfile?.services) ? providerProfile.services.filter(Boolean) : []
+      const portfolio = Array.isArray(providerProfile?.portfolio) ? providerProfile.portfolio.filter(Boolean) : []
+      return [{
+        id,
+        name,
+        trade,
+        isMobile,
+        coverage,
+        phone,
+        city,
+        country,
+        services,
+        portfolio,
+        localPin: '',
+        raw: providerProfile
+      }]
+    }
     const legacy = safeParseJson(localStorage.getItem('mangoo_vendors'), []);
     const custom = safeParseJson(localStorage.getItem('mangoo_custom_vendors'), []);
     const list = [...(Array.isArray(legacy) ? legacy : []), ...(Array.isArray(custom) ? custom : [])];
@@ -110,6 +214,7 @@ export default function ProviderDashboard() {
     const providers = list
       .filter((v) => String(v?.kind || '').toLowerCase() === 'service')
       .filter((v) => {
+        if (isAdmin) return true;
         if (vendorIdFromQuery && String(v?.id) === String(vendorIdFromQuery)) return true;
         if (email && normalizeEmail(v?.ownerEmail) === email) return true;
         if (allowedIds.size && allowedIds.has(String(v?.id))) return true;
@@ -121,6 +226,13 @@ export default function ProviderDashboard() {
         trade: String(v?.trade || '').trim(),
         isMobile: !!v?.isMobile,
         coverage: Array.isArray(v?.coverage) ? v.coverage.filter(Boolean) : [],
+        phone: String(v?.phone || '').trim(),
+        city: String(v?.city || '').trim(),
+        country: String(v?.country || '').trim(),
+        services: Array.isArray(v?.services) ? v.services.filter(Boolean) : [],
+        portfolio: Array.isArray(v?.portfolio) ? v.portfolio.filter(Boolean) : [],
+        localPin: String(v?.localPin || '').trim(),
+        raw: v
       }));
 
     const byId = new Map();
@@ -128,7 +240,7 @@ export default function ProviderDashboard() {
       if (!byId.has(p.id)) byId.set(p.id, p);
     });
     return Array.from(byId.values());
-  }, [email, vendorIdFromQuery]);
+  }, [email, isAdmin, localVersion, vendorIdFromQuery, providerProfile?.id]);
 
   const [selectedProviderId, setSelectedProviderId] = useState(() => {
     if (vendorIdFromQuery) return vendorIdFromQuery;
@@ -139,6 +251,12 @@ export default function ProviderDashboard() {
   const selectedProvider = useMemo(() => {
     return allProviders.find((p) => p.id === selectedProviderId) || null;
   }, [allProviders, selectedProviderId]);
+
+  const selectedProviderPin = useMemo(() => {
+    const direct = String(selectedProvider?.localPin || '').trim();
+    if (direct) return direct;
+    return getLocalPinForVendorId(selectedProviderId);
+  }, [selectedProvider?.localPin, selectedProviderId]);
 
   const payments = useMemo(() => {
     const raw = safeParseJson(localStorage.getItem('mangoo_service_payments'), []);
@@ -383,6 +501,15 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
   }, [selectedProvider]);
 
   const title = 'Espace Prestataire';
+  const pageClass = 'min-h-dvh bg-gray-50 text-gray-900 py-10';
+  const surfaceClass = 'rounded-2xl border border-gray-200 bg-white';
+  const surfaceClassStrong = 'rounded-2xl border border-gray-200 bg-white';
+  const mutedText = 'text-gray-600';
+  const ghostBtn =
+    'px-3 py-2 rounded-xl text-sm font-black border border-gray-200 bg-white hover:bg-gray-50 text-gray-900';
+  const ghostBtnXs =
+    'px-3 py-2 rounded-xl text-xs font-black border border-gray-200 bg-white hover:bg-gray-50 text-gray-900';
+  const selectClass = 'px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-900 outline-none';
 
   const goBackToProvider = useCallback(() => {
     try {
@@ -391,17 +518,89 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
       }
     } catch {
     }
-    const target = returnTo || '/mangoo-local.html';
+    const target = returnTo || `/mangoo-local.html?vendor=${encodeURIComponent(String(selectedProviderId || ''))}`;
     window.location.href = target;
   }, [returnTo, selectedProviderId]);
 
+  const updateLocalProvider = useCallback((providerId, patch) => {
+    const id = String(providerId || '').trim();
+    if (!id) return false;
+    try {
+      const keys = ['mangoo_custom_vendors', 'mangoo_vendors'];
+      keys.forEach((k) => {
+        const list = safeParseJson(localStorage.getItem(k), []);
+        const arr = Array.isArray(list) ? list : [];
+        const next = arr.map((v) => (String(v?.id) === id ? { ...v, ...patch } : v));
+        localStorage.setItem(k, JSON.stringify(next));
+      });
+      setLocalVersion((v) => v + 1);
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const copyText = useCallback(async (text) => {
+    const t = String(text || '');
+    if (!t) return;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(t);
+        return;
+      }
+    } catch {
+    }
+    try {
+      window.prompt('Copier:', t);
+    } catch {
+    }
+  }, []);
+
+  const changePin = useCallback(() => {
+    if (!selectedProviderId) return;
+    const nextPin = reserveUniqueLocalPin(selectedProviderId);
+    if (!nextPin) return;
+    try {
+      setLocalPinForVendorId(selectedProviderId, nextPin);
+    } catch {
+    }
+    updateLocalProvider(selectedProviderId, { localPin: nextPin });
+  }, [selectedProviderId, updateLocalProvider]);
+
+  const onAddPhotos = useCallback(async (files) => {
+    try {
+      const list = Array.from(files || []).slice(0, 6);
+      if (!selectedProviderId || !list.length) return;
+      const readFile = (file) =>
+        new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : null);
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(file);
+        });
+      const urls = (await Promise.all(list.map(readFile))).filter(Boolean);
+      if (!urls.length) return;
+      const current = Array.isArray(selectedProvider?.portfolio) ? selectedProvider.portfolio : [];
+      const next = [...current, ...urls].slice(0, 12);
+      updateLocalProvider(selectedProviderId, { portfolio: next });
+    } catch {
+    }
+  }, [selectedProvider?.portfolio, selectedProviderId, updateLocalProvider]);
+
+  const removePhoto = useCallback((url) => {
+    if (!selectedProviderId) return;
+    const current = Array.isArray(selectedProvider?.portfolio) ? selectedProvider.portfolio : [];
+    const next = current.filter((x) => String(x) !== String(url));
+    updateLocalProvider(selectedProviderId, { portfolio: next });
+  }, [selectedProvider?.portfolio, selectedProviderId, updateLocalProvider]);
+
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'} py-10`}>
+    <div className={pageClass}>
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-6">
           <div>
             <div className="text-2xl font-black">{title}</div>
-            <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm mt-1`}>
+            <div className={`${mutedText} text-sm mt-1`}>
               Factures, paiements et historique des prestations
             </div>
           </div>
@@ -410,19 +609,15 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
             <button
               type="button"
               onClick={goBackToProvider}
-              className={`px-3 py-2 rounded-xl text-sm font-black border ${
-                isDark ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50'
-              }`}
+              className={ghostBtn}
             >
               ← Retour au prestataire
             </button>
-            <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm font-semibold`}>Prestataire</div>
+            <div className={`${mutedText} text-sm font-semibold`}>Prestataire</div>
             <select
               value={selectedProviderId}
               onChange={(e) => setSelectedProviderId(e.target.value)}
-              className={`px-3 py-2 rounded-xl border text-sm font-semibold outline-none ${
-                isDark ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'
-              }`}
+              className={selectClass}
             >
               {allProviders.length === 0 ? (
                 <option value="">Aucun prestataire</option>
@@ -434,23 +629,28 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
                 ))
               )}
             </select>
+            <button
+              type="button"
+              onClick={() => setShowSettings(true)}
+              className={ghostBtn}
+            >
+              ⚙️ Réglages
+            </button>
           </div>
         </div>
 
-        <div className={`mb-6 rounded-2xl border p-4 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+        <div className={`mb-6 p-4 ${surfaceClass}`}>
           {providerProfile ? (
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="text-sm font-black">Profil prestataire (validation)</div>
-                <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm`}>
+                <div className={`${mutedText} text-sm`}>
                   Statut: <span className="font-bold">{String(providerProfile?.status || 'pending')}</span> · Visible: <span className="font-bold">{providerProfile?.is_visible ? 'Oui' : 'Non'}</span>
                 </div>
               </div>
               <a
                 href="/provider/apply"
-                className={`px-3 py-2 rounded-xl text-sm font-black border ${
-                  isDark ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50'
-                }`}
+                className={ghostBtn}
               >
                 Modifier mon profil
               </a>
@@ -459,7 +659,7 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="text-sm font-black">Profil prestataire (validation)</div>
-                <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm`}>
+                <div className={`${mutedText} text-sm`}>
                   Soumettez votre profil pour approbation admin avant visibilité publique.
                 </div>
               </div>
@@ -474,9 +674,9 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
         </div>
 
         {allProviders.length === 0 ? (
-          <div className={`rounded-2xl border p-6 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          <div className={`p-6 ${surfaceClassStrong}`}>
             <div className="text-xl font-black">Aucun prestataire rattaché</div>
-            <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} mt-2`}>
+            <div className={`${mutedText} mt-2`}>
               Créez un profil prestataire dans Mangoo Local+ puis revenez ici.
             </div>
           </div>
@@ -496,7 +696,7 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
                   className={`px-3 py-2 rounded-full text-sm font-black border transition-colors ${
                     tab === t.key
                       ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white border-transparent'
-                      : (isDark ? 'bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-700' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50')
+                      : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
                   }`}
                 >
                   {t.label}
@@ -505,52 +705,60 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
             </div>
 
             {tab === 'overview' && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className={`rounded-2xl border p-5 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-                  <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm font-semibold`}>Total encaissé</div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="rounded-2xl border p-5 bg-white border-gray-200">
+                  <div className="text-gray-600 text-sm font-semibold">Total encaissé</div>
                   <div className="text-3xl font-black mt-2">{formatMoneyXof(stats.total)}</div>
                 </div>
-                <div className={`rounded-2xl border p-5 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-                  <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm font-semibold`}>Paiements</div>
+                <div className="rounded-2xl border p-5 bg-white border-gray-200">
+                  <div className="text-gray-600 text-sm font-semibold">Paiements</div>
                   <div className="text-3xl font-black mt-2">{stats.count}</div>
-                  <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm mt-1`}>Dernier: {formatDateTime(stats.last)}</div>
+                  <div className="text-gray-600 text-sm mt-1">Dernier: {formatDateTime(stats.last)}</div>
                 </div>
-                <div className={`rounded-2xl border p-5 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-                  <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm font-semibold`}>Demandes (devis/messages)</div>
+                <div className="rounded-2xl border p-5 bg-white border-gray-200">
+                  <div className="text-gray-600 text-sm font-semibold">Demandes (devis/messages)</div>
                   <div className="text-3xl font-black mt-2">{requests.length}</div>
+                </div>
+                <div className="rounded-2xl border p-5 bg-white border-gray-200">
+                  <div className="text-gray-600 text-sm font-semibold">Code PIN (connexion)</div>
+                  <div className="text-3xl font-black mt-2 tracking-widest">{selectedProviderPin || '—'}</div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button type="button" onClick={() => copyText(selectedProviderPin)} className={ghostBtnXs}>
+                      Copier
+                    </button>
+                    <button type="button" onClick={changePin} className={ghostBtnXs}>
+                      Changer
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
 
             {(tab === 'payments' || tab === 'invoices') && (
-              <div className={`rounded-2xl border overflow-hidden ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+              <div className="rounded-2xl border overflow-hidden bg-white border-gray-200">
                 <div className="p-4 flex items-center justify-between">
                   <div className="font-black">{tab === 'payments' ? 'Historique des paiements' : 'Factures'}</div>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={exportPaymentsPdf}
-                      className={`px-3 py-2 rounded-xl text-xs font-black border ${
-                        isDark ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50'
-                      }`}
+                      className={ghostBtnXs}
                     >
                       Export PDF
                     </button>
                     <button
                       type="button"
                       onClick={exportPaymentsCsv}
-                      className={`px-3 py-2 rounded-xl text-xs font-black border ${
-                        isDark ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50'
-                      }`}
+                      className={ghostBtnXs}
                     >
                       Export CSV
                     </button>
-                    <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm`}>{payments.length} élément(s)</div>
+                    <div className="text-gray-600 text-sm">{payments.length} élément(s)</div>
                   </div>
                 </div>
                 <div className="overflow-auto">
                   <table className="min-w-full text-sm">
-                    <thead className={`${isDark ? 'bg-gray-900/60' : 'bg-gray-50'}`}>
+                    <thead className="bg-gray-50">
                       <tr>
                         <th className="text-left px-4 py-3 font-black">Date</th>
                         <th className="text-left px-4 py-3 font-black">Client</th>
@@ -562,13 +770,13 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
                     <tbody>
                       {payments.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className={`px-4 py-10 text-center ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                          <td colSpan={5} className="px-4 py-10 text-center text-gray-600">
                             Aucun paiement.
                           </td>
                         </tr>
                       ) : (
                         payments.map((p) => (
-                          <tr key={p.id} className={`${isDark ? 'border-t border-gray-700' : 'border-t border-gray-200'}`}>
+                          <tr key={p.id} className="border-t border-gray-200">
                             <td className="px-4 py-3">{formatDateTime(p.paidAt)}</td>
                             <td className="px-4 py-3">{p.userId || '—'}</td>
                             <td className="px-4 py-3">{String(p.provider || '').toUpperCase() || '—'}</td>
@@ -577,9 +785,7 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
                               <button
                                 type="button"
                                 onClick={() => printInvoice(p)}
-                                className={`px-3 py-2 rounded-xl text-xs font-black border ${
-                                  isDark ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50'
-                                }`}
+                                className={ghostBtnXs}
                               >
                                 Imprimer facture
                               </button>
@@ -594,25 +800,23 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
             )}
 
             {tab === 'requests' && (
-              <div className={`rounded-2xl border overflow-hidden ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+              <div className="rounded-2xl border overflow-hidden bg-white border-gray-200">
                 <div className="p-4 flex items-center justify-between">
                   <div className="font-black">Historique des prestations (demandes)</div>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={exportRequestsCsv}
-                      className={`px-3 py-2 rounded-xl text-xs font-black border ${
-                        isDark ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50'
-                      }`}
+                      className={ghostBtnXs}
                     >
                       Export CSV
                     </button>
-                    <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm`}>{requests.length} élément(s)</div>
+                    <div className="text-gray-600 text-sm">{requests.length} élément(s)</div>
                   </div>
                 </div>
                 <div className="overflow-auto">
                   <table className="min-w-full text-sm">
-                    <thead className={`${isDark ? 'bg-gray-900/60' : 'bg-gray-50'}`}>
+                    <thead className="bg-gray-50">
                       <tr>
                         <th className="text-left px-4 py-3 font-black">Date</th>
                         <th className="text-left px-4 py-3 font-black">Type</th>
@@ -625,7 +829,7 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
                     <tbody>
                       {requests.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className={`px-4 py-10 text-center ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                          <td colSpan={6} className="px-4 py-10 text-center text-gray-600">
                             Aucune demande.
                           </td>
                         </tr>
@@ -634,7 +838,7 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
                           .slice()
                           .sort((a, b) => (b.ts || 0) - (a.ts || 0))
                           .map((r) => (
-                            <tr key={`${r.ts}-${r.text}`} className={`${isDark ? 'border-t border-gray-700' : 'border-t border-gray-200'}`}>
+                            <tr key={`${r.ts}-${r.text}`} className="border-t border-gray-200">
                               <td className="px-4 py-3">{r.ts ? new Date(r.ts).toLocaleString('fr-FR') : '—'}</td>
                               <td className="px-4 py-3">
                                 {r.devis ? 'Devis' : 'Message'}{r.urgent ? ' • Urgent' : ''}
@@ -660,9 +864,7 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
                                       <select
                                         value={status}
                                         onChange={(e) => setRequestMeta(r.requestId, { status: e.target.value })}
-                                        className={`px-2 py-1 rounded-lg border text-xs font-black ${
-                                          isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'
-                                        }`}
+                                        className="px-2 py-1 rounded-lg border text-xs font-black bg-white border-gray-200 text-gray-900"
                                       >
                                         <option value="new">Nouveau</option>
                                         <option value="in_progress">En cours</option>
@@ -670,8 +872,8 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
                                         <option value="cancelled">Annulé</option>
                                         <option value="paid">Payé</option>
                                       </select>
-                                      <span className={`text-xs font-black ${paid ? 'text-emerald-500' : (isDark ? 'text-gray-300' : 'text-gray-600')}`}>{paid ? '• payé' : ''}</span>
-                                      <span className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-xs`}>{label}</span>
+                                      <span className={`text-xs font-black ${paid ? 'text-emerald-600' : 'text-gray-600'}`}>{paid ? '• payé' : ''}</span>
+                                      <span className="text-gray-600 text-xs">{label}</span>
                                     </div>
                                   );
                                 })()}
@@ -681,18 +883,14 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
                                   <button
                                     type="button"
                                     onClick={() => goToServiceCheckout({ requestId: r.requestId })}
-                                    className={`px-3 py-2 rounded-xl text-xs font-black border ${
-                                      isDark ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50'
-                                    }`}
+                                    className={ghostBtnXs}
                                   >
                                     Encaisser
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => setRequestMeta(r.requestId, { status: 'done' })}
-                                    className={`px-3 py-2 rounded-xl text-xs font-black border ${
-                                      isDark ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50'
-                                    }`}
+                                    className={ghostBtnXs}
                                   >
                                     Terminer
                                   </button>
@@ -709,6 +907,145 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
           </>
         )}
       </div>
+
+      {showSettings && selectedProvider ? (
+        <div
+          className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4"
+          onClick={() => setShowSettings(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="w-full max-w-2xl max-h-[90vh] rounded-2xl bg-white border border-gray-200 overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 flex items-center justify-between border-b border-gray-200 bg-white sticky top-0 z-10">
+              <div className="font-black">Réglages prestataire</div>
+              <div className="flex items-center gap-2">
+                <button type="button" className={ghostBtnXs} onClick={() => setShowSettings(false)}>
+                  Fermer
+                </button>
+              </div>
+            </div>
+            <div className="p-4 space-y-3 overflow-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <div className="text-sm font-black text-gray-700">Nom</div>
+                  <input
+                    defaultValue={String(selectedProvider?.name || '')}
+                    onBlur={(e) => updateLocalProvider(selectedProviderId, { name: String(e.target.value || '').trim() })}
+                    className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 outline-none focus:ring-2 focus:ring-orange-400/40"
+                  />
+                </div>
+                <div>
+                  <div className="text-sm font-black text-gray-700">Métier</div>
+                  <input
+                    defaultValue={String(selectedProvider?.trade || '')}
+                    onBlur={(e) => updateLocalProvider(selectedProviderId, { trade: String(e.target.value || '').trim() })}
+                    className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 outline-none focus:ring-2 focus:ring-orange-400/40"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <div className="text-sm font-black text-gray-700">Téléphone</div>
+                  <input
+                    defaultValue={String(selectedProvider?.phone || '')}
+                    onBlur={(e) => updateLocalProvider(selectedProviderId, { phone: String(e.target.value || '').trim() })}
+                    className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 outline-none focus:ring-2 focus:ring-orange-400/40"
+                  />
+                </div>
+                <div>
+                  <div className="text-sm font-black text-gray-700">Ville</div>
+                  <input
+                    defaultValue={String(selectedProvider?.city || '')}
+                    onBlur={(e) => updateLocalProvider(selectedProviderId, { city: String(e.target.value || '').trim() })}
+                    className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 outline-none focus:ring-2 focus:ring-orange-400/40"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="text-sm font-black text-gray-700">Zones couvertes (séparées par des virgules)</div>
+                <input
+                  defaultValue={Array.isArray(selectedProvider?.coverage) ? selectedProvider.coverage.join(', ') : ''}
+                  onBlur={(e) =>
+                    updateLocalProvider(selectedProviderId, {
+                      coverage: String(e.target.value || '')
+                        .split(',')
+                        .map((s) => s.trim())
+                        .filter(Boolean),
+                    })
+                  }
+                  className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 outline-none focus:ring-2 focus:ring-orange-400/40"
+                />
+              </div>
+
+              <div>
+                <div className="text-sm font-black text-gray-700">Services (séparés par des virgules)</div>
+                <input
+                  defaultValue={Array.isArray(selectedProvider?.services) ? selectedProvider.services.join(', ') : ''}
+                  onBlur={(e) =>
+                    updateLocalProvider(selectedProviderId, {
+                      services: String(e.target.value || '')
+                        .split(',')
+                        .map((s) => s.trim())
+                        .filter(Boolean),
+                    })
+                  }
+                  className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 outline-none focus:ring-2 focus:ring-orange-400/40"
+                />
+              </div>
+
+              <div>
+                <div className="text-sm font-black text-gray-700">Photos</div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => onAddPhotos(e.target.files)}
+                  className="mt-2 block w-full text-sm text-gray-700 file:mr-3 file:px-3 file:py-2 file:rounded-xl file:border file:border-gray-200 file:bg-gray-100 file:text-gray-900 file:font-black"
+                />
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {(Array.isArray(selectedProvider?.portfolio) ? selectedProvider.portfolio : []).slice(0, 12).map((url) => (
+                    <button
+                      key={String(url)}
+                      type="button"
+                      className="h-16 w-16 rounded-xl overflow-hidden border border-gray-200 bg-gray-50"
+                      onClick={() => removePhoto(url)}
+                      title="Supprimer"
+                    >
+                      <img src={url} alt="" className="h-full w-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-2 text-xs text-gray-600">Cliquez une photo pour la supprimer.</div>
+              </div>
+
+              <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                <div className="text-sm font-black text-gray-700">Code PIN (connexion)</div>
+                <div className="mt-1 text-2xl font-black tracking-widest">{selectedProviderPin || '—'}</div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button type="button" onClick={() => copyText(selectedProviderPin)} className={ghostBtnXs}>
+                    Copier
+                  </button>
+                  <button type="button" onClick={changePin} className={ghostBtnXs}>
+                    Changer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => copyText(`${window.location.origin}/mangoo-local.html?pin=${encodeURIComponent(String(selectedProviderPin || ''))}`)}
+                    className={ghostBtnXs}
+                  >
+                    Copier lien
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

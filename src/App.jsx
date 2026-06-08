@@ -6,69 +6,75 @@ import { PaymentMethods } from './components/PaymentMethodsStable';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PaymentAnalyticsDashboard } from './components/PaymentAnalyticsDashboardSimple';
 import { Routes, Route, Navigate, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
-import AdminDashboard from './pages/AdminDashboard';
-import AdminShops from './pages/AdminShops';
-import AdminProviders from './pages/AdminProviders';
-import AdminCommissions from './pages/AdminCommissions';
-import AdminUsers from './pages/AdminUsers';
-import AdminCreateShop from './pages/AdminCreateShop';
-import AdminPayments from './pages/AdminPayments';
-import AdminWallet from './pages/AdminWallet';
-import AdminAnalytics from './pages/AdminAnalytics';
-import AdminSettings from './pages/AdminSettings';
-import AdminBoosts from './pages/AdminBoosts';
-import AdminInvoices from './pages/AdminInvoices';
-import AdminNavigation from './components/AdminNavigation';
-import SimpleTest from './pages/SimpleTest';
-import ProductCard from './components/OptimizedProductCard';
-import MarketplaceFilters from './components/MarketplaceFilters';
-import PerformanceMonitor from './components/PerformanceMonitor';
-import AfricanInnovationHub from './components/AfricanInnovationHub';
-import LandingPage from './components/LandingPage';
-import ShopPage from './pages/shop/ShopPage.jsx';
 import VendorAccessQRPage from './pages/VendorAccessQRPage';
 import Footer from './components/layout/Footer';
+import LoadingFallback from './components/ui/LoadingFallback';
 import { QRCodeCanvas } from 'qrcode.react';
 import { isLocalSyncEnabled, localSync, setLocalSyncToken } from './utils/localSyncClient';
 import { fetchActiveBoostRows, getBoostDiscoveryFlags, indexActiveBoosts, readBoostActiveCacheRows, readBoostConfigCacheRows } from './utils/boostDiscovery';
 import { Toaster, toast } from 'sonner';
 import { ensureWalletBalance, getWalletBalance, getWalletKeyFromUser, creditWalletBalance } from './utils/demoWallet';
 import { usePaymentStore } from './stores/paymentStore';
-import CustomerChat from './components/CustomerChat';
 import { ChatProvider } from './contexts/ChatContext';
-import WebRTCManagerFinal from './components/WebRTCManagerFinal';
 import { LiveShoppingProvider } from './contexts/LiveShoppingContext';
-import WebRTCJoinPage from './pages/WebRTCJoinPage';
-import PlanCheckoutTest from './pages/PlanCheckoutTest';
-import ServiceCheckout from './pages/ServiceCheckout';
-import ProviderDashboard from './pages/ProviderDashboard';
-import ProviderApply from './pages/ProviderApply';
-import BoostReturn from './pages/BoostReturn'
-import ResetPassword from './pages/ResetPassword'
-import VendorMessagingCenter from './components/VendorMessagingCenter';
-import LiveShoppingManager from './components/LiveShoppingManager';
 import { NotificationProvider } from './contexts/NotificationContext';
-import CourierScreen from './pages/CourierScreen';
-import CourierRegister from './pages/CourierRegister';
-import DeliveryCheckout from './pages/DeliveryCheckout';
-import OrderStatus from './pages/OrderStatus';
-import ClientInvoiceModal from './components/invoice/ClientInvoiceModal';
 import { supabase, supabaseConfig } from './config/supabase';
 import { getWsUrl } from './utils/realtimeUrls';
 import { VendorBoosts } from './components/vendor/VendorBoosts'
-import VendorStats from './components/VendorStats'
-import VendorStockManager from './components/VendorStockManager'
-import VendorOrderHistory from './components/VendorOrderHistory'
-import VendorNotifications from './components/VendorNotifications'
-import VendorProductManager from './components/VendorProductManager'
-import ConnectPlusEntryPage from './pages/connect-plus/ConnectPlusEntryPage'
-import ConnectPlusRedirect from './pages/connect-plus/ConnectPlusRedirect'
-import ConnectPlusClientPage from './pages/connect-plus/ConnectPlusClientPage'
-import ConnectPlusVendorPage from './pages/connect-plus/ConnectPlusVendorPage'
-import LiveShoppingJoinPage from './pages/LiveShoppingJoinPage'
-import InternalMeetPage from './pages/internal/InternalMeetPage'
-import MarketplaceAIAssistant from './components/MarketplaceAIAssistant'
 import mangooLogo from './assets/mangoo-logo.svg'
+
+const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
+const AdminShops = React.lazy(() => import('./pages/AdminShops'));
+const AdminProviders = React.lazy(() => import('./pages/AdminProviders'));
+const AdminCommissions = React.lazy(() => import('./pages/AdminCommissions'));
+const AdminUsers = React.lazy(() => import('./pages/AdminUsers'));
+const AdminCreateShop = React.lazy(() => import('./pages/AdminCreateShop'));
+const AdminPayments = React.lazy(() => import('./pages/AdminPayments'));
+const AdminWallet = React.lazy(() => import('./pages/AdminWallet'));
+const AdminAnalytics = React.lazy(() => import('./pages/AdminAnalytics'));
+const AdminSettings = React.lazy(() => import('./pages/AdminSettings'));
+const AdminBoosts = React.lazy(() => import('./pages/AdminBoosts'));
+const AdminInvoices = React.lazy(() => import('./pages/AdminInvoices'));
+const AdminNavigation = React.lazy(() => import('./components/AdminNavigation'));
+const SimpleTest = React.lazy(() => import('./pages/SimpleTest'));
+
+const ProductCard = React.lazy(() => import('./components/OptimizedProductCard'));
+const MarketplaceFilters = React.lazy(() => import('./components/MarketplaceFilters'));
+const PerformanceMonitor = React.lazy(() => import('./components/PerformanceMonitor'));
+const AfricanInnovationHub = React.lazy(() => import('./components/AfricanInnovationHub'));
+const LandingPage = React.lazy(() => import('./components/LandingPage'));
+const CustomerChat = React.lazy(() => import('./components/CustomerChat'));
+const VendorMessagingCenter = React.lazy(() => import('./components/VendorMessagingCenter'));
+const LiveShoppingManager = React.lazy(() => import('./components/LiveShoppingManager'));
+const ClientInvoiceModal = React.lazy(() => import('./components/invoice/ClientInvoiceModal'));
+const MarketplaceAIAssistant = React.lazy(() => import('./components/MarketplaceAIAssistant'));
+const VendorStats = React.lazy(() => import('./components/VendorStats'));
+const VendorStockManager = React.lazy(() => import('./components/VendorStockManager'));
+const VendorOrderHistory = React.lazy(() => import('./components/VendorOrderHistory'));
+const VendorNotifications = React.lazy(() => import('./components/VendorNotifications'));
+const VendorProductManager = React.lazy(() => import('./components/VendorProductManager'));
+
+const WebRTCManagerFinal = React.lazy(() => import('./components/WebRTCManagerFinal'));
+const ShopPage = React.lazy(() => import('./pages/shop/ShopPage.jsx'));
+const WebRTCJoinPage = React.lazy(() => import('./pages/WebRTCJoinPage'));
+const PlanCheckoutTest = React.lazy(() => import('./pages/PlanCheckoutTest'));
+const ServiceCheckout = React.lazy(() => import('./pages/ServiceCheckout'));
+const ProviderDashboard = React.lazy(() => import('./pages/ProviderDashboard'));
+const ProviderApply = React.lazy(() => import('./pages/ProviderApply'));
+const BoostReturn = React.lazy(() => import('./pages/BoostReturn'));
+const ResetPassword = React.lazy(() => import('./pages/ResetPassword'));
+const CourierScreen = React.lazy(() => import('./pages/CourierScreen'));
+const CourierRegister = React.lazy(() => import('./pages/CourierRegister'));
+const DeliveryCheckout = React.lazy(() => import('./pages/DeliveryCheckout'));
+const OrderStatus = React.lazy(() => import('./pages/OrderStatus'));
+
+const ConnectPlusEntryPage = React.lazy(() => import('./pages/connect-plus/ConnectPlusEntryPage'));
+const ConnectPlusRedirect = React.lazy(() => import('./pages/connect-plus/ConnectPlusRedirect'));
+const ConnectPlusClientPage = React.lazy(() => import('./pages/connect-plus/ConnectPlusClientPage'));
+const ConnectPlusVendorPage = React.lazy(() => import('./pages/connect-plus/ConnectPlusVendorPage'));
+
+const LiveShoppingJoinPage = React.lazy(() => import('./pages/LiveShoppingJoinPage'));
+const InternalMeetPage = React.lazy(() => import('./pages/internal/InternalMeetPage'));
 
 // Store optimisé avec Zustand
 const useStore = create((set, get) => ({
@@ -523,6 +529,47 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
       }
     })();
 
+    if (isDevHost && normalizedEmail === 'admin@mangoo.tech' && passwordNormalized === 'admin123') {
+      const nextUser = {
+        id: 'demo-admin',
+        name: 'Administrateur',
+        role: 'admin',
+        roles: ['admin'],
+        email: 'admin@mangoo.tech',
+        avatar: '👨‍💼',
+      }
+      try {
+        localStorage.setItem('admin-demo-user', JSON.stringify({ id: 'demo-admin', email: 'admin@mangoo.tech', role: 'admin' }))
+      } catch {
+      }
+      try {
+        localStorage.setItem('mangoo-current-user', JSON.stringify(nextUser))
+      } catch {
+      }
+      try {
+        localStorage.setItem('mangoo-last-view', 'landing')
+      } catch {
+      }
+      try {
+        localStorage.setItem('mangoo-active-role:admin@mangoo.tech', 'admin')
+      } catch {
+      }
+      onLogin(nextUser)
+      try {
+        const sp = new URLSearchParams(String(window.location.search || ''))
+        const returnTo = String(sp.get('return') || '').trim()
+        if (returnTo) {
+          window.location.href = returnTo
+        } else {
+          navigate('/')
+        }
+      } catch {
+        navigate('/')
+      }
+      setSubmitting(false)
+      return
+    }
+
     const isTestEmail = (value) => {
       const e = String(value || '').trim().toLowerCase()
       return Boolean(e.match(/^(?:pc|ios|android)\d+@(?:exemple\.com|example\.com)$/))
@@ -612,6 +659,53 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
               if (hasOwnedShop) {
                 roles = Array.from(new Set([...roles, 'vendor']))
                 role = 'vendor'
+              }
+            } catch {
+            }
+          }
+
+          if (role === 'client' || !roles.includes('prestataire')) {
+            try {
+              let hasOwnedProvider = false
+              const byUserId = await supabase
+                .from('providers')
+                .select('id')
+                .eq('user_id', data.user.id)
+                .limit(1)
+              if (byUserId?.error) {
+                const msg = String(byUserId.error.message || '').toLowerCase()
+                const isMissingTable = msg.includes('public.providers') || msg.includes('schema cache') || msg.includes('does not exist')
+                if (!isMissingTable) throw byUserId.error
+              } else {
+                hasOwnedProvider = Array.isArray(byUserId?.data) && byUserId.data.length > 0
+              }
+
+              if (!hasOwnedProvider) {
+                try {
+                  const custom = JSON.parse(localStorage.getItem('mangoo_custom_vendors') || '[]')
+                  const legacy = JSON.parse(localStorage.getItem('mangoo_vendors') || '[]')
+                  const list = [...(Array.isArray(custom) ? custom : []), ...(Array.isArray(legacy) ? legacy : [])]
+                  hasOwnedProvider = list.some((v) => {
+                    const kind = String(v?.kind || '').trim().toLowerCase()
+                    const ownerEmail = String(v?.ownerEmail || '').trim().toLowerCase()
+                    return kind === 'service' && ownerEmail === normalizedEmail
+                  })
+                } catch {
+                }
+              }
+
+              if (!hasOwnedProvider) {
+                try {
+                  const rawIds = localStorage.getItem(`mangoo_my_provider_ids:${normalizedEmail}`)
+                  const parsedIds = rawIds ? JSON.parse(rawIds) : []
+                  hasOwnedProvider = Array.isArray(parsedIds) && parsedIds.some(Boolean)
+                } catch {
+                }
+              }
+
+              if (hasOwnedProvider) {
+                roles = Array.from(new Set([...roles, 'prestataire']))
+                if (role === 'client') role = 'prestataire'
               }
             } catch {
             }
@@ -3057,6 +3151,10 @@ const VendorDashboard = ({ user }) => {
     const email = normalizeEmail(user?.email)
     const supabaseList = []
     const localSyncList = []
+    try {
+      importLocalPlusShopsForCurrentUser()
+    } catch {
+    }
     if (supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey) {
       if (email) {
         try {
@@ -3247,6 +3345,18 @@ const VendorDashboard = ({ user }) => {
         if (!slug) return
         if (!bySlug.has(slug)) bySlug.set(slug, s)
       })
+      try {
+        const raw = localStorage.getItem('demo_shops')
+        const parsed = raw ? JSON.parse(raw) : []
+        const list = Array.isArray(parsed) ? parsed : []
+        const mine = email ? list.filter((s) => normalizeEmail(s?.ownerEmail || s?.owner_email) === email) : []
+        mine.forEach((s) => {
+          const slug = String(s?.slug || '').trim()
+          if (!slug) return
+          if (!bySlug.has(slug)) bySlug.set(slug, { ...s, source: s?.source || 'localplus' })
+        })
+      } catch {
+      }
       return Array.from(bySlug.values())
     })()
 
@@ -8995,7 +9105,7 @@ const AdminLayout = () => {
 };
 
 // Composant optimisé pour l'iframe Mangoo Local+
-const MANGOO_LOCAL_VERSION = 114;
+const MANGOO_LOCAL_VERSION = 146;
 const MangooLocalFrame = React.memo(({ user, onBack }) => {
   const persistCreatorLocation = useCallback(async (payload) => {
     try {
@@ -9762,6 +9872,7 @@ function AppShell() {
     }
     if (!activeRole || !roles.includes(activeRole)) activeRole = roles[0] || 'client';
     if (activeRole === 'client' && roles.includes('vendor')) activeRole = 'vendor';
+    if (activeRole === 'client' && roles.includes('prestataire') && !roles.includes('vendor')) activeRole = 'prestataire';
     const nextUser = { ...baseUser, roles, role: activeRole };
     setUser(nextUser);
     persistUserToDemoUsers(nextUser);
@@ -9781,11 +9892,18 @@ function AppShell() {
 
     seedDemoData();
     if (nextUser?.role === 'admin') {
-      navigate('/admin/dashboard');
+      setSpaceChooserOpen(true);
+      return;
     }
 
-    if (Array.isArray(roles) && roles.length > 1 && nextUser?.role !== 'admin') {
+    if (Array.isArray(roles) && roles.length > 1) {
       setSpaceChooserOpen(true);
+      return;
+    }
+
+    if (nextUser?.role === 'prestataire') {
+      navigate('/provider/dashboard');
+      return;
     }
 
     try {
@@ -9829,7 +9947,7 @@ function AppShell() {
     const email = String(user?.email || '').trim().toLowerCase();
     const roles = normalizeRoles(user);
 
-    if (!roles.includes(role) && role === 'vendor') {
+    if (!roles.includes(role) && role === 'vendor' && !roles.includes('admin')) {
       try {
         if (import.meta?.env?.DEV) {
           const nextUser = {
@@ -9879,11 +9997,17 @@ function AppShell() {
       if (email) localStorage.setItem(`mangoo-active-role:${email}`, role);
     } catch {
     }
+    try {
+      if (role === 'vendor') localStorage.setItem('mangoo-last-view', 'vendor');
+    } catch {
+    }
 
     if (role === 'client') {
       setCurrentView('marketplace');
     } else if (role === 'prestataire') {
-      setCurrentView('innovation');
+      navigate('/provider/dashboard');
+      setSpaceChooserOpen(false);
+      return;
     } else if (role === 'livreur') {
       navigate('/livreur');
     }
@@ -9942,8 +10066,43 @@ function AppShell() {
 
   useEffect(() => {
     if (location.pathname !== '/boosts') return
-    const vendorId = String(boostsParams.get('vendorId') || '').trim()
-    const vendorKind = String(boostsParams.get('vendorKind') || '').trim().toLowerCase()
+    const qpVendorId = String(boostsParams.get('vendorId') || '').trim()
+    const qpVendorKindRaw = String(boostsParams.get('vendorKind') || '').trim().toLowerCase()
+    const qpVendorKind = qpVendorKindRaw === 'provider' ? 'provider' : qpVendorKindRaw === 'shop' ? 'shop' : ''
+
+    const extractFromReturn = () => {
+      try {
+        const ret = String(boostsParams.get('return') || '').trim()
+        if (!ret) return { vendorId: '', vendorKind: '' }
+        const u = new URL(ret, window.location.origin)
+        const sp = new URLSearchParams(u.search || '')
+        const id = String(sp.get('vendorId') || sp.get('vendor_id') || sp.get('vendor') || '').trim()
+        const kindRaw = String(sp.get('vendorKind') || sp.get('vendor_kind') || sp.get('kind') || '').trim().toLowerCase()
+        const kind = kindRaw === 'provider' ? 'provider' : kindRaw === 'shop' ? 'shop' : ''
+        return { vendorId: id, vendorKind: kind }
+      } catch {
+        return { vendorId: '', vendorKind: '' }
+      }
+    }
+
+    const extractFromStorage = () => {
+      try {
+        const raw = localStorage.getItem('mangoo_boost_target')
+        const parsed = raw ? JSON.parse(raw) : null
+        const id = String(parsed?.vendorId || '').trim()
+        const kindRaw = String(parsed?.vendorKind || '').trim().toLowerCase()
+        const kind = kindRaw === 'provider' ? 'provider' : kindRaw === 'shop' ? 'shop' : ''
+        return { vendorId: id, vendorKind: kind }
+      } catch {
+        return { vendorId: '', vendorKind: '' }
+      }
+    }
+
+    const fromReturn = extractFromReturn()
+    const fromStorage = extractFromStorage()
+    const vendorId = qpVendorId || fromReturn.vendorId || fromStorage.vendorId
+    const vendorKind = qpVendorKind || fromReturn.vendorKind || fromStorage.vendorKind
+
     if (!vendorId) return
     if (vendorKind !== 'shop' && vendorKind !== 'provider') return
     try {
@@ -9954,6 +10113,16 @@ function AppShell() {
         if (e) localStorage.setItem(`mangoo_boost_target:hint:${e}`, JSON.stringify({ vendorId, vendorKind }))
       }
     } catch {
+    }
+
+    if (!qpVendorId || !qpVendorKind) {
+      try {
+        const nextParams = new URLSearchParams(location.search || '')
+        nextParams.set('vendorId', vendorId)
+        nextParams.set('vendorKind', vendorKind)
+        navigate(`${location.pathname}?${nextParams.toString()}`, { replace: true })
+      } catch {
+      }
     }
   }, [boostsEmail, boostsParams, location.pathname])
 
@@ -9971,24 +10140,52 @@ function AppShell() {
   if (location.pathname === '/boosts') {
     const returnTo = String(boostsParams.get('return') || '')
     return (
-      <div className={isDark ? 'min-h-screen bg-gray-950 text-white' : 'min-h-screen bg-gray-50 text-gray-900'}>
-        <div className="p-4 flex items-center justify-between gap-3">
+      <div
+        className={
+          isDark
+            ? 'min-h-screen bg-gray-950 text-white'
+            : 'min-h-screen bg-gradient-to-br from-orange-50 via-white to-green-50 text-gray-900'
+        }
+      >
+        <div className="p-4">
+          <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={() => {
               if (returnTo) {
+                try {
+                  if (window.self !== window.top) {
+                    window.parent.postMessage({ type: 'lp_boost_close', returnTo }, window.location.origin)
+                    return
+                  }
+                } catch {
+                }
                 window.location.href = returnTo
                 return
               }
               navigate('/')
             }}
-            className={isDark ? 'px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 font-bold' : 'px-4 py-2 rounded-xl bg-white hover:bg-gray-100 font-bold border border-gray-200'}
+            className={
+              isDark
+                ? 'px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 font-bold'
+                : 'px-4 py-2 rounded-xl bg-white/90 hover:bg-white font-bold border border-gray-200 backdrop-blur'
+            }
           >
             ← Retour
           </button>
-          <div className={isDark ? 'text-sm text-gray-300' : 'text-sm text-gray-600'}>Boost Carte</div>
+          <div
+            className={
+              isDark
+                ? 'text-sm text-gray-300'
+                : 'text-sm text-gray-700 font-bold px-3 py-1 rounded-full border border-gray-200 bg-white/70 backdrop-blur'
+            }
+          >
+            Boost Carte
+          </div>
+        </div>
         </div>
         <div className="px-4 pb-10">
+          <div className="max-w-5xl mx-auto">
           {boostsEmail ? (
             <VendorBoosts userEmail={boostsEmail} />
           ) : (
@@ -10034,6 +10231,7 @@ function AppShell() {
               </button>
             </div>
           )}
+          </div>
         </div>
       </div>
     )
@@ -10548,6 +10746,12 @@ function App() {
     if (!isLocalSyncEnabled()) return
     const pathname = String(location?.pathname || '')
     if (pathname.startsWith('/live-shopping') || pathname.startsWith('/webrtc')) return
+    const shouldPoll =
+      pathname === '/shops' ||
+      pathname.startsWith('/shop/') ||
+      pathname.startsWith('/boosts') ||
+      pathname.startsWith('/admin')
+    if (!shouldPoll) return
     let cancelled = false
     let inFlight = false
     const lockKey = 'mangoo_local_sync_shops_poll_lock'
@@ -10565,7 +10769,7 @@ function App() {
           const parsed = raw ? JSON.parse(raw) : null
           const prevTs = Number(parsed?.ts || 0)
           const prevId = String(parsed?.id || '')
-          if (Number.isFinite(prevTs) && now - prevTs < 8000 && prevId && prevId !== syncTabId) return
+          if (Number.isFinite(prevTs) && now - prevTs < 40000 && prevId && prevId !== syncTabId) return
           localStorage.setItem(lockKey, JSON.stringify({ ts: now, id: syncTabId }))
         } catch {
         }
@@ -10639,31 +10843,33 @@ function App() {
   return (
     <NotificationProvider>
       <Toaster richColors position={toasterPosition} />
-      <Routes>
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/boost/success" element={<BoostReturn mode="success" />} />
-        <Route path="/boost/cancel" element={<BoostReturn mode="cancel" />} />
-        <Route path="/checkout/livraison" element={<DeliveryCheckout />} />
-        <Route path="/commande/:orderId" element={<OrderStatus />} />
-        <Route path="/livreur/inscription" element={<CourierRegister />} />
-        <Route path="/livreur" element={<CourierScreen />} />
-        <Route path="/shops" element={<ShopsDirectory />} />
-        <Route path="/shop/:shopSlug" element={<ShopPage />} />
-        <Route path="/connect-plus" element={<ConnectPlusEntryPage />} />
-        <Route path="/connect-plus/go/:token" element={<ConnectPlusRedirect />} />
-        <Route path="/connect-plus/me" element={<ConnectPlusClientPage />} />
-        <Route path="/service-checkout" element={<ServiceCheckout />} />
-        <Route path="/provider/dashboard" element={<ProviderDashboard />} />
-        <Route path="/provider/apply" element={<ProviderApply />} />
-        <Route path="/vendor-access-qr" element={<VendorAccessQRPage />} />
-        <Route path="/webrtc" element={<WebRTCJoinPage />} />
-        <Route path="/live-shopping" element={<LiveShoppingJoinPage />} />
-        <Route path="/internal/meet" element={<InternalMeetPage />} />
-        <Route path="/plan-checkout" element={<PlanCheckoutTest />} />
-        <Route path="/admin/*" element={<AdminLayout />} />
-        <Route path="/connexion" element={<AppShell />} />
-        <Route path="/*" element={<AppShell />} />
-      </Routes>
+      <React.Suspense fallback={<LoadingFallback />}>
+        <Routes>
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/boost/success" element={<BoostReturn mode="success" />} />
+          <Route path="/boost/cancel" element={<BoostReturn mode="cancel" />} />
+          <Route path="/checkout/livraison" element={<DeliveryCheckout />} />
+          <Route path="/commande/:orderId" element={<OrderStatus />} />
+          <Route path="/livreur/inscription" element={<CourierRegister />} />
+          <Route path="/livreur" element={<CourierScreen />} />
+          <Route path="/shops" element={<ShopsDirectory />} />
+          <Route path="/shop/:shopSlug" element={<ShopPage />} />
+          <Route path="/connect-plus" element={<ConnectPlusEntryPage />} />
+          <Route path="/connect-plus/go/:token" element={<ConnectPlusRedirect />} />
+          <Route path="/connect-plus/me" element={<ConnectPlusClientPage />} />
+          <Route path="/service-checkout" element={<ServiceCheckout />} />
+          <Route path="/provider/dashboard" element={<ProviderDashboard />} />
+          <Route path="/provider/apply" element={<ProviderApply />} />
+          <Route path="/vendor-access-qr" element={<VendorAccessQRPage />} />
+          <Route path="/webrtc" element={<WebRTCJoinPage />} />
+          <Route path="/live-shopping" element={<LiveShoppingJoinPage />} />
+          <Route path="/internal/meet" element={<InternalMeetPage />} />
+          <Route path="/plan-checkout" element={<PlanCheckoutTest />} />
+          <Route path="/admin/*" element={<AdminLayout />} />
+          <Route path="/connexion" element={<AppShell />} />
+          <Route path="/*" element={<AppShell />} />
+        </Routes>
+      </React.Suspense>
     </NotificationProvider>
   );
 }
