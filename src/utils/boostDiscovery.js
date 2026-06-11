@@ -61,7 +61,17 @@ export const getBoostDiscoveryFlags = () => {
   }
 }
 
+let inFlightBoostRowsPromise = null
+let inFlightBoostRowsStartedAt = 0
+
 export const fetchActiveBoostRows = async ({ timeoutMs = 6000 } = {}) => {
+  const now = Date.now()
+  if (inFlightBoostRowsPromise && now - inFlightBoostRowsStartedAt < 2000) {
+    return await inFlightBoostRowsPromise
+  }
+  inFlightBoostRowsStartedAt = now
+
+  const doFetch = async () => {
   const host = (() => {
     try {
       return String(window.location.hostname || '')
@@ -70,9 +80,11 @@ export const fetchActiveBoostRows = async ({ timeoutMs = 6000 } = {}) => {
     }
   })()
   const isDevHost = host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')
+  const hasSupabase = Boolean(supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey)
 
+  const serverTimeoutMs = isDevHost && hasSupabase ? Math.min(1200, timeoutMs) : timeoutMs
   const controller = new AbortController()
-  const t = window.setTimeout(() => controller.abort(), timeoutMs)
+  const t = window.setTimeout(() => controller.abort(), serverTimeoutMs)
   try {
     const tryFetch = async (url) => {
       const res = await fetch(url, { method: 'GET', signal: controller.signal })
@@ -95,7 +107,6 @@ export const fetchActiveBoostRows = async ({ timeoutMs = 6000 } = {}) => {
     window.clearTimeout(t)
   }
 
-  const hasSupabase = Boolean(supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey)
   if (hasSupabase) {
     const controller = new AbortController()
     const t = window.setTimeout(() => controller.abort(), timeoutMs)
@@ -139,6 +150,23 @@ export const fetchActiveBoostRows = async ({ timeoutMs = 6000 } = {}) => {
     }
   } finally {
     window.clearTimeout(t)
+  }
+
+  return []
+  }
+
+  inFlightBoostRowsPromise = doFetch()
+  try {
+    return await inFlightBoostRowsPromise
+  } finally {
+    window.setTimeout(() => {
+      try {
+        if (inFlightBoostRowsPromise && Date.now() - inFlightBoostRowsStartedAt >= 2000) {
+          inFlightBoostRowsPromise = null
+        }
+      } catch {
+      }
+    }, 0)
   }
 }
 

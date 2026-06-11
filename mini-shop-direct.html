@@ -149,6 +149,7 @@
         const category = params.get('category') || "Divers";
         const avatar = params.get('avatar') || "https://ui-avatars.com/api/?name=Mangoo&background=random";
         const live = params.get('live') === 'true';
+        const shopSlug = params.get('shopSlug') || params.get('slug') || '';
 
         // Update UI
         document.title = `🛍️ ${name}`;
@@ -158,7 +159,13 @@
 
         const btnLive = document.getElementById('btnLive');
         if (live) {
-            btnLive.href = `webrtc-parfait.html?role=viewer&userId=clientShop&roomId=${encodeURIComponent(name)}`;
+            const roomId = String((shopSlug || name || 'live-demo-123')).trim() || 'live-demo-123';
+            const qs = new URLSearchParams();
+            qs.set('role', 'client');
+            qs.set('ui', 'simple');
+            qs.set('roomId', roomId);
+            if (shopSlug) qs.set('shopSlug', shopSlug);
+            btnLive.href = `${window.location.origin}/live-shopping?${qs.toString()}`;
             btnLive.style.display = 'inline-flex';
         } else {
             btnLive.style.display = 'none';

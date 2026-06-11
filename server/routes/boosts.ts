@@ -274,6 +274,12 @@ async function normalizeVendorIdForPurchase(params: { vendorId: string; vendorKi
       continue
     }
 
+    if (/^[0-9]{6,}$/.test(raw)) {
+      const resolved = await resolveFromLocalPlus(raw)
+      if (resolved) return resolved
+      continue
+    }
+
     if (raw.includes('-') && !raw.includes('@') && raw.length <= 80) {
       try {
         const { data } = await supabase.from('shops').select('id').eq('slug', raw).maybeSingle()
@@ -548,6 +554,15 @@ const repairBadgesHandler = async (req: any, res: any) => {
       shopId = await normalizeVendorIdForPurchase({ vendorId: rawVendorId, vendorKind: 'shop', userEmail: email })
       if (!isUuidLike(shopId)) shopId = ''
     }
+    if (!shopId && rawVendorKind === 'shop' && rawVendorId) {
+      try {
+        const localPlus = localSyncStore.listLocalPlusVendors()
+        const vendors = Array.isArray(localPlus) ? localPlus : []
+        const localMatch = vendors.find((v: any) => String(v?.id || '').trim() === rawVendorId && String(v?.kind || '').trim().toLowerCase() === 'shop') || null
+        if (localMatch) shopId = rawVendorId
+      } catch {
+      }
+    }
     if (!shopId) shopId = await resolveOwnedShopIdByEmail(email)
     if (!shopId) {
       res.status(400).json({ success: false, error: 'Aucune boutique liée à cet email.', email })
@@ -569,6 +584,27 @@ const repairBadgesHandler = async (req: any, res: any) => {
         return
       }
       orders = Array.isArray(ordersData) ? ordersData : []
+    }
+
+    try {
+      const orderVendorIds = new Set<string>([shopId])
+      if (rawVendorId) orderVendorIds.add(rawVendorId)
+      const localPlus = localSyncStore.listLocalPlusVendors()
+      const vendors = Array.isArray(localPlus) ? localPlus : []
+      const localMatch = vendors.find((v: any) => String(v?.id || '').trim() === rawVendorId && String(v?.kind || '').trim().toLowerCase() === 'shop') || null
+      const ownerEmail = String(localMatch?.ownerEmail || localMatch?.owner_email || '').trim().toLowerCase()
+      if (ownerEmail && ownerEmail.includes('@')) {
+        orderVendorIds.add(`local-${ownerEmail}`)
+        const aliases = ownerEmail.endsWith('@exemple.com')
+          ? [ownerEmail, ownerEmail.replace(/@exemple\.com$/i, '@example.com')]
+          : ownerEmail.endsWith('@example.com')
+            ? [ownerEmail, ownerEmail.replace(/@example\.com$/i, '@exemple.com')]
+            : [ownerEmail]
+        aliases.forEach((e) => orderVendorIds.add(`local-${e}`))
+      }
+      const localOrders = localBoostOrdersStore.listByVendors(Array.from(orderVendorIds), 'shop', 50)
+      if (localOrders.length) orders = [...orders, ...localOrders]
+    } catch {
     }
 
     const nowIso = new Date().toISOString()
@@ -760,6 +796,19 @@ router.get('/vendor-boosts-active', async (req, res) => {
     const normalizeRows = async (input: any[]) => {
       const rows = Array.isArray(input) ? input : []
       const isLocalShopId = (id: string) => id.startsWith('local-') && id.includes('@')
+      const getEmailAliases = (emailRaw: string): string[] => {
+        const email = String(emailRaw || '').trim().toLowerCase()
+        if (!email || !email.includes('@')) return []
+        const at = email.lastIndexOf('@')
+        if (at <= 0) return [email]
+        const local = email.slice(0, at)
+        const domain = email.slice(at + 1)
+        const out = new Set<string>()
+        out.add(email)
+        if (domain === 'example.com') out.add(`${local}@exemple.com`)
+        if (domain === 'exemple.com') out.add(`${local}@example.com`)
+        return Array.from(out)
+      }
       const emails = Array.from(
         new Set(
           rows
@@ -951,7 +1000,86 @@ router.get('/vendor-boosts-active', async (req, res) => {
         const existing = uniq.get(key)
         uniq.set(key, existing ? mergeRow(existing, normalized) : normalized)
       }
-      return Array.from(uniq.values())
+      const normalizedRows = Array.from(uniq.values())
+      try {
+        const localPlus = localSyncStore.listLocalPlusVendors()
+        const vendors = Array.isArray(localPlus) ? localPlus : []
+        const emailToLocalPlusIds = new Map<string, string[]>()
+        for (const v of vendors) {
+          const kind = String((v as any)?.kind || '').trim().toLowerCase()
+          if (kind !== 'shop') continue
+          const ownerEmail = String((v as any)?.ownerEmail || (v as any)?.owner_email || (v as any)?.email || '')
+            .trim()
+            .toLowerCase()
+          if (!ownerEmail || !ownerEmail.includes('@')) continue
+          const id = String((v as any)?.id || '').trim()
+          if (!id) continue
+          const list = emailToLocalPlusIds.get(ownerEmail) || []
+          if (!list.includes(id)) list.push(id)
+          emailToLocalPlusIds.set(ownerEmail, list)
+          for (const alias of getEmailAliases(ownerEmail)) {
+            const l2 = emailToLocalPlusIds.get(alias) || []
+            if (!l2.includes(id)) l2.push(id)
+            emailToLocalPlusIds.set(alias, l2)
+          }
+        }
+
+        const shopIds = Array.from(
+          new Set(
+            normalizedRows
+              .filter((r: any) => String(r?.vendor_kind || '').trim().toLowerCase() === 'shop')
+              .map((r: any) => String(r?.vendor_id || '').trim())
+              .filter((id: string) => isUuidLike(id))
+          )
+        )
+
+        if (shopIds.length) {
+          const r = await supabase
+            .from('shops')
+            .select('id,email,owner_email,contact_email')
+            .in('id', shopIds)
+            .limit(200)
+
+          const shops = Array.isArray((r as any)?.data) ? (r as any).data : []
+          const shopIdToEmails = new Map<string, string[]>()
+          for (const s of shops) {
+            const id = String((s as any)?.id || '').trim()
+            if (!id) continue
+            const emails: string[] = []
+            const a = String((s as any)?.email || '').trim().toLowerCase()
+            const b = String((s as any)?.owner_email || '').trim().toLowerCase()
+            const c = String((s as any)?.contact_email || '').trim().toLowerCase()
+            if (a && a.includes('@')) emails.push(...getEmailAliases(a))
+            if (b && b.includes('@')) emails.push(...getEmailAliases(b))
+            if (c && c.includes('@')) emails.push(...getEmailAliases(c))
+            const uniqEmails = Array.from(new Set(emails)).filter(Boolean)
+            if (uniqEmails.length) shopIdToEmails.set(id, uniqEmails)
+          }
+
+          normalizedRows.forEach((row: any) => {
+            const kind = String(row?.vendor_kind || '').trim().toLowerCase()
+            const id = String(row?.vendor_id || '').trim()
+            if (kind !== 'shop') return
+            if (!isUuidLike(id)) return
+            const emails = shopIdToEmails.get(id) || []
+            if (!emails.length) return
+            const aliases: string[] = []
+            for (const e of emails) {
+              const list = emailToLocalPlusIds.get(e) || []
+              for (const vId of list) {
+                const s = String(vId || '').trim()
+                if (!s) continue
+                if (s === id) continue
+                if (!aliases.includes(s)) aliases.push(s)
+              }
+            }
+            if (aliases.length) (row as any).vendor_id_aliases = aliases
+          })
+        }
+      } catch {
+      }
+
+      return normalizedRows
     }
 
     const nowIso = new Date().toISOString()

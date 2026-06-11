@@ -10,6 +10,7 @@ export default defineConfig({
     tsconfigPaths(),
   ],
   server: {
+    allowedHosts: ['.trycloudflare.com', 'localhost', '127.0.0.1'],
     https: (() => {
       if (String(process.env.DEV_HTTPS || '').trim() !== '1') return undefined
       const certPath = String(process.env.DEV_HTTPS_CERT || '').trim()

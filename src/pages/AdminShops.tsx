@@ -759,6 +759,13 @@ export default function AdminShops() {
                         </button>
                         <button
                           type="button"
+                          onClick={() => window.open(`/?lp_role=vendor&lp_view=account&lp_vendor_tab=settings&lp_vendor_edit_shop=${encodeURIComponent(String(s.slug))}`, '_blank', 'noopener,noreferrer')}
+                          className="touch-manipulation px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm inline-flex items-center gap-2"
+                        >
+                          Dashboard
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => void setApproval(String(s.slug), 'pending')}
                           disabled={status === 'pending'}
                           className="touch-manipulation px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-800 disabled:opacity-60 text-white font-bold text-sm"
@@ -837,6 +844,14 @@ export default function AdminShops() {
                             >
                               <ExternalLink className="w-4 h-4" />
                               Ouvrir
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => window.open(`/?lp_role=vendor&lp_view=account&lp_vendor_tab=settings&lp_vendor_edit_shop=${encodeURIComponent(String(s.slug))}`, '_blank', 'noopener,noreferrer')}
+                              className="px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs"
+                              title="Ouvrir le dashboard vendeur"
+                            >
+                              Dashboard
                             </button>
                             <button
                               type="button"

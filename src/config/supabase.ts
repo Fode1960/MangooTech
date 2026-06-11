@@ -34,9 +34,18 @@ const isAbortError = (error: any) => {
   return name === 'AbortError' || msg.includes('signal is aborted') || msg.includes('aborted')
 }
 
+const isDevHost = (() => {
+  try {
+    const host = String(window.location.hostname || '')
+    return host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')
+  } catch {
+    return false
+  }
+})()
+
 const supabaseFetch: typeof fetch = async (input: any, init?: any) => {
   const controller = new AbortController()
-  const timeoutMs = 25000
+  const timeoutMs = isDevHost ? 5000 : 25000
   const t = window.setTimeout(() => controller.abort(), timeoutMs)
   try {
     const { signal: _ignoredSignal, ...rest } = init || {}
@@ -44,7 +53,7 @@ const supabaseFetch: typeof fetch = async (input: any, init?: any) => {
       return await fetch(input, { ...rest, signal: controller.signal })
     } catch (e: any) {
       if (isAbortError(e)) {
-        return await fetch(input, { ...rest, signal: controller.signal })
+        throw e
       }
       throw e
     }

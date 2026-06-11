@@ -559,6 +559,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
   const loadSeqRef = useRef(0)
   const loadLockRef = useRef(false)
   const loadQueuedRef = useRef(false)
+  const forcedQueryAppliedRef = useRef('')
   const pendingCreditsRef = useRef<{ expected: number; until: number } | null>(null)
   const pendingCreditsTimerRef = useRef<number | null>(null)
 
@@ -587,7 +588,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
       const parsed = raw ? JSON.parse(raw) : null
       const parsedEmail = String(parsed?.email || '').trim().toLowerCase()
       if (!parsed || parsedEmail !== email) return null
-      const label = String(parsed?.shopName || parsed?.shop_name || parsed?.name || '').trim()
+      const label = String(parsed?.shopName || parsed?.shop_name || '').trim()
       if (!label) return null
       const explicitId = String(parsed?.shopId || parsed?.shop_id || parsed?.vendorId || parsed?.vendor_id || '').trim()
       const vendorId = explicitId || `local-${email}`
@@ -601,7 +602,32 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
     const email = String(userEmail || '').trim().toLowerCase()
     const catalog = readJson<any[]>('mangoo_local_vendors_catalog', [])
     const hint = readBoostTargetHint(email)
-    const globalHint = hint ? null : readGlobalBoostTargetHint()
+    const globalHint = readGlobalBoostTargetHint()
+    let forcedFromQuery: VendorTarget | null = null
+    try {
+      const qs = new URLSearchParams(String(window.location.search || ''))
+      const vendorId = String(qs.get('vendorId') || '').trim()
+      const vendorKindRaw = String(qs.get('vendorKind') || '').trim().toLowerCase()
+      const vendorKind = vendorKindRaw === 'provider' ? 'provider' : vendorKindRaw === 'shop' ? 'shop' : ''
+      if (vendorId && vendorKind) {
+        const match = vendorKind === 'shop'
+          ? catalog.find((x) => String(x?.id || '') === vendorId && String(x?.kind || 'shop') === 'shop')
+          : catalog.find((x) => String(x?.id || '') === vendorId && String(x?.kind || '').trim().toLowerCase() === 'service')
+        const name = String(match?.name || (vendorKind === 'shop' ? `Boutique ${vendorId}` : `Prestataire ${vendorId}`))
+        const slug = String(match?.slug || '').trim()
+        forcedFromQuery = { vendorId, vendorKind: vendorKind as any, name, ...(slug ? { slug } : {}) }
+        if (email) {
+          try {
+            localStorage.setItem(`${TARGET_PREF_KEY}${email}`, `${vendorKind}:${vendorId}`)
+            localStorage.setItem(getBoostTargetHintKey(email), JSON.stringify({ vendorId, vendorKind }))
+            localStorage.removeItem('mangoo_boost_target')
+          } catch {
+          }
+        }
+      }
+    } catch {
+      forcedFromQuery = null
+    }
     let contextShopSlug = ''
     try {
       const raw = localStorage.getItem('mangoo-vendor-edit-shop-slug')
@@ -750,6 +776,60 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
       }
     }
 
+    const localPlusShopTargets: VendorTarget[] = []
+    if (email) {
+      try {
+        const readList = (key: string) => {
+          try {
+            const raw = localStorage.getItem(key)
+            const parsed = raw ? JSON.parse(raw) : []
+            return Array.isArray(parsed) ? parsed : []
+          } catch {
+            return []
+          }
+        }
+        const list = [...readList('mangoo_custom_vendors'), ...readList('mangoo_vendors')]
+        for (const v of list as any[]) {
+          const kind = String(v?.kind || 'shop').trim().toLowerCase()
+          if (kind !== 'shop') continue
+          const ownerEmail = String(v?.ownerEmail || v?.owner_email || v?.email || '').trim().toLowerCase()
+          if (!ownerEmail || ownerEmail !== email) continue
+          const id = v?.id
+          if (id === undefined || id === null) continue
+          const vendorId = String(id).trim()
+          if (!vendorId) continue
+          const name = String(v?.name || `Boutique ${vendorId}`).trim() || `Boutique ${vendorId}`
+          const slug = String(v?.shopSlug || v?.shop_slug || v?.slug || '').trim()
+          localPlusShopTargets.push({ vendorId, vendorKind: 'shop', name, ...(slug ? { slug } : {}) })
+        }
+      } catch {
+      }
+    }
+
+    const forcedFromGlobalHint: VendorTarget | null = (() => {
+      try {
+        if (!globalHint || globalHint.vendorKind !== 'shop') return null
+        const rawId = String(globalHint.vendorId || '').trim()
+        if (!rawId) return null
+        const readList = (key: string) => {
+          try {
+            const raw = localStorage.getItem(key)
+            const parsed = raw ? JSON.parse(raw) : []
+            return Array.isArray(parsed) ? parsed : []
+          } catch {
+            return []
+          }
+        }
+        const list = [...readList('mangoo_custom_vendors'), ...readList('mangoo_vendors')]
+        const v = list.find((x: any) => String(x?.id) === rawId && String(x?.kind || 'shop').trim().toLowerCase() === 'shop') || null
+        const name = String(v?.name || `Boutique ${rawId}`).trim() || `Boutique ${rawId}`
+        const slug = String(v?.shopSlug || v?.shop_slug || v?.slug || '').trim()
+        return { vendorId: rawId, vendorKind: 'shop', name, ...(slug ? { slug } : {}) }
+      } catch {
+        return null
+      }
+    })()
+
     if (hint && hint.vendorKind === 'shop' && isUuidLike(hint.vendorId)) {
       try {
         const r = await supabase.from('shops').select('id,name,slug').eq('id', hint.vendorId).maybeSingle()
@@ -776,6 +856,9 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
 
     const currentLooksLocal = Boolean(currentUserShopTarget && String(currentUserShopTarget.vendorId || '').startsWith('local-'))
     if (currentUserShopTarget && !(currentLooksLocal && supabaseShopTargets.length)) list.push(currentUserShopTarget)
+    if (forcedFromQuery) list.push(forcedFromQuery)
+    if (forcedFromGlobalHint) list.push(forcedFromGlobalHint)
+    for (const t of localPlusShopTargets) list.push(t)
     for (const t of localSyncShopTargets) list.push(t)
     for (const t of demoShopTargets) list.push(t)
     for (const t of supabaseShopTargets) list.push(t)
@@ -788,11 +871,23 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
       if (!aCurrent && bCurrent) return 1
       return String(a.name || '').localeCompare(String(b.name || ''), 'fr', { sensitivity: 'base' })
     })
+    const looksNumericId = (value: string) => /^[0-9]{6,}$/.test(String(value || '').trim())
     const hasUuidShop = finalList.some((t) => t.vendorKind === 'shop' && isUuidLike(t.vendorId))
     const filteredList = hasUuidShop
-      ? finalList.filter((t) => t.vendorKind !== 'shop' || isUuidLike(t.vendorId))
+      ? finalList.filter((t) => t.vendorKind !== 'shop' || isUuidLike(t.vendorId) || looksNumericId(t.vendorId))
       : finalList
     setTargets(filteredList)
+    if (forcedFromQuery) {
+      const forcedKey = `${forcedFromQuery.vendorKind}:${forcedFromQuery.vendorId}`
+      const forced = filteredList.find((t) => `${t.vendorKind}:${t.vendorId}` === forcedKey) || null
+      if (forced && forcedQueryAppliedRef.current !== forcedKey) {
+        forcedQueryAppliedRef.current = forcedKey
+        setTargetKey(forcedKey)
+        return forced
+      }
+    } else if (forcedQueryAppliedRef.current) {
+      forcedQueryAppliedRef.current = ''
+    }
     const exists = targetKey ? filteredList.some((t) => `${t.vendorKind}:${t.vendorId}` === targetKey) : false
     if (targetKey && exists) {
       const [vendorKind, vendorId] = String(targetKey || '').split(':')
@@ -802,15 +897,11 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
 
     if ((!targetKey || !exists) && filteredList.length) {
       let hintCandidate: { vendorId: string; vendorKind: 'shop' | 'provider' } | null = hint
-      if (!hintCandidate && globalHint && email) {
+      if (globalHint && email) {
         const vId = String(globalHint.vendorId || '').trim()
         const vLower = vId.toLowerCase()
-        const canValidate =
-          isUuidLike(vId) ||
-          vLower.includes('@') ||
-          vLower.startsWith('local-')
         const matched = filteredList.find((t) => t.vendorKind === globalHint.vendorKind && t.vendorId === globalHint.vendorId) || null
-        if (canValidate && matched) {
+        if (matched) {
           let ok = true
           if (vLower.includes('@') && vLower !== email) ok = false
           if (ok && vLower.startsWith('local-')) {
@@ -849,7 +940,15 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
       const currentMatch = currentUserShopTarget
         ? filteredList.find((t) => t.vendorKind === currentUserShopTarget.vendorKind && t.vendorId === currentUserShopTarget.vendorId)
         : null
-      const target = hintMatch || contextMatch || preferredMatch || currentMatch || filteredList[0]
+      if (contextMatch && email) {
+        try {
+          localStorage.setItem(`${TARGET_PREF_KEY}${email}`, `${contextMatch.vendorKind}:${contextMatch.vendorId}`)
+          localStorage.setItem(getBoostTargetHintKey(email), JSON.stringify({ vendorId: contextMatch.vendorId, vendorKind: contextMatch.vendorKind }))
+          localStorage.removeItem('mangoo_boost_target')
+        } catch {
+        }
+      }
+      const target = contextMatch || hintMatch || preferredMatch || currentMatch || filteredList[0]
       setTargetKey(`${target.vendorKind}:${target.vendorId}`)
       return target
     }
@@ -857,13 +956,21 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
   }, [currentUserShopTarget, preferredTargetKey, targetKey, userEmail])
 
   const getToken = useCallback(async () => {
-    const { data } = await supabase.auth.getSession()
-    return data.session?.access_token || ''
+    try {
+      const { data } = await supabase.auth.getSession()
+      return data.session?.access_token || ''
+    } catch {
+      return ''
+    }
   }, [])
 
   const getUserId = useCallback(async () => {
-    const { data } = await supabase.auth.getSession()
-    return data.session?.user?.id || ''
+    try {
+      const { data } = await supabase.auth.getSession()
+      return data.session?.user?.id || ''
+    } catch {
+      return ''
+    }
   }, [])
 
   const fetchJsonOnce = useCallback(async (endpoint: string, init: RequestInit, timeoutMs: number) => {
@@ -890,49 +997,57 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
   }, [])
 
   const loadPricingFromSupabase = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('boost_products')
-      .select('kind, duration_hours, price_xof, currency, title, description, sponsored_tier, active')
-      .eq('active', true)
-    if (error) throw error
-    const rows = Array.isArray(data) ? data : []
-    const normalized: PricingProduct[] = rows
-      .map((p: any) => {
-        const kind = String(p?.kind || '').trim().toLowerCase()
-        if (kind !== 'sponsored' && kind !== 'promo' && kind !== 'new') return null
-        return {
-          kind,
-          durationHours: Number(p?.duration_hours),
-          priceXof: Number(p?.price_xof),
-          currency: String(p?.currency || 'XOF'),
-          title: String(p?.title || ''),
-          description: String(p?.description || ''),
-          sponsoredTier: p?.sponsored_tier ?? null,
-          active: p?.active ?? true,
-        } as PricingProduct
-      })
-      .filter(Boolean) as PricingProduct[]
-    return normalized
+    try {
+      const { data, error } = await supabase
+        .from('boost_products')
+        .select('kind, duration_hours, price_xof, currency, title, description, sponsored_tier, active')
+        .eq('active', true)
+      if (error) return []
+      const rows = Array.isArray(data) ? data : []
+      const normalized: PricingProduct[] = rows
+        .map((p: any) => {
+          const kind = String(p?.kind || '').trim().toLowerCase()
+          if (kind !== 'sponsored' && kind !== 'promo' && kind !== 'new') return null
+          return {
+            kind,
+            durationHours: Number(p?.duration_hours),
+            priceXof: Number(p?.price_xof),
+            currency: String(p?.currency || 'XOF'),
+            title: String(p?.title || ''),
+            description: String(p?.description || ''),
+            sponsoredTier: p?.sponsored_tier ?? null,
+            active: p?.active ?? true,
+          } as PricingProduct
+        })
+        .filter(Boolean) as PricingProduct[]
+      return normalized
+    } catch {
+      return []
+    }
   }, [])
 
   const loadCreditsFromSupabase = useCallback(async () => {
-    const userId = await getUserId()
-    if (!userId) return null
-    const { data, error } = await supabase
-      .from('user_credits')
-      .select('amount, expires_at, used_at')
-      .eq('user_id', userId)
-    if (error) throw error
-    const rows = Array.isArray(data) ? data : []
-    const now = Date.now()
-    let sum = 0
-    for (const r of rows) {
-      if (r?.used_at) continue
-      const exp = r?.expires_at ? Date.parse(String(r.expires_at)) : Number.POSITIVE_INFINITY
-      if (Number.isFinite(exp) && exp <= now) continue
-      sum += Number(r?.amount || 0)
+    try {
+      const userId = await getUserId()
+      if (!userId) return null
+      const { data, error } = await supabase
+        .from('user_credits')
+        .select('amount, expires_at, used_at')
+        .eq('user_id', userId)
+      if (error) return null
+      const rows = Array.isArray(data) ? data : []
+      const now = Date.now()
+      let sum = 0
+      for (const r of rows) {
+        if (r?.used_at) continue
+        const exp = r?.expires_at ? Date.parse(String(r.expires_at)) : Number.POSITIVE_INFINITY
+        if (Number.isFinite(exp) && exp <= now) continue
+        sum += Number(r?.amount || 0)
+      }
+      return sum
+    } catch {
+      return null
     }
-    return sum
   }, [getUserId])
 
   const loadOrdersFromSupabase = useCallback(async (vendorId: string, vendorKind: string) => {
@@ -988,40 +1103,44 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
       const target = await computeTargets()
       const emailLower = readEffectiveEmail(userEmail)
       const forceDevMode = isDemoLoginEmail(emailLower) || (isLocalhostRuntime() && isPcDemoEmail(emailLower))
-      const token = forceDevMode ? '' : await getToken()
-
-      let normalizedPricing: PricingProduct[] = []
-      const pricingRes = await fetchJsonOnce('/api/boosts/pricing', { method: 'GET' }, 9000)
-      if (seq !== loadSeqRef.current) return
-      if (pricingRes.ok && Array.isArray(pricingRes.json?.products)) {
-        const products = pricingRes.json.products
-        normalizedPricing = (products
-          .map((p: any) => {
-            const kind = String(p?.kind || '').trim().toLowerCase()
-            if (kind !== 'sponsored' && kind !== 'promo' && kind !== 'new') return null
-            return {
-              kind,
-              durationHours: Number(p.durationHours),
-              priceXof: Number(p.priceXof),
-              currency: String(p.currency || 'XOF'),
-              title: String(p.title || ''),
-              description: String(p.description || ''),
-              sponsoredTier: p.sponsoredTier ?? null,
-              active: p.active ?? true,
-            } as PricingProduct
-          })
-          .filter(Boolean) as PricingProduct[])
-      } else {
-        if (token) {
-          try {
-            normalizedPricing = await loadPricingFromSupabase()
-          } catch {
-            normalizedPricing = []
-          }
-        } else {
-          normalizedPricing = []
+      let token = ''
+      if (!forceDevMode) {
+        try {
+          token = await getToken()
+        } catch {
+          token = ''
         }
       }
+
+      let normalizedPricing: PricingProduct[] = []
+      try {
+        const pricingRes = await fetchJsonOnce('/api/boosts/pricing', { method: 'GET' }, 9000)
+        if (seq !== loadSeqRef.current) return
+        if (pricingRes.ok && Array.isArray(pricingRes.json?.products)) {
+          const products = pricingRes.json.products
+          normalizedPricing = (products
+            .map((p: any) => {
+              const kind = String(p?.kind || '').trim().toLowerCase()
+              if (kind !== 'sponsored' && kind !== 'promo' && kind !== 'new') return null
+              return {
+                kind,
+                durationHours: Number(p.durationHours),
+                priceXof: Number(p.priceXof),
+                currency: String(p.currency || 'XOF'),
+                title: String(p.title || ''),
+                description: String(p.description || ''),
+                sponsoredTier: p.sponsoredTier ?? null,
+                active: p.active ?? true,
+              } as PricingProduct
+            })
+            .filter(Boolean) as PricingProduct[])
+        } else if (token) {
+          normalizedPricing = await loadPricingFromSupabase()
+        }
+      } catch {
+        normalizedPricing = token ? await loadPricingFromSupabase() : []
+      }
+      if (!normalizedPricing.length) normalizedPricing = fallbackPricing
       setPricing(normalizedPricing)
 
       const emailAliases = emailLower ? getExampleDomainAliases(emailLower) : []
@@ -1061,6 +1180,28 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
             }
           }
           setBoostRow(row)
+          try {
+            if (row) {
+              const key = String(target.vendorId)
+              const cfgAll = readLocalBoostConfig()
+              const prev = cfgAll[key] || {}
+              const parseIso = (value: any): number | null => {
+                const t = value ? Date.parse(String(value)) : NaN
+                return Number.isFinite(t) ? t : null
+              }
+              const tierRaw = String(row?.sponsored_tier || '').trim().toLowerCase()
+              const tierNum = tierRaw === 'or' ? 3 : tierRaw === 'argent' ? 2 : tierRaw === 'bronze' ? 1 : null
+              cfgAll[key] = {
+                ...prev,
+                sponsoredUntil: parseIso(row?.sponsored_until),
+                sponsoredTier: tierNum ?? (prev as any)?.sponsoredTier ?? null,
+                promoUntil: parseIso(row?.promo_until),
+                newUntil: parseIso(row?.new_until),
+              }
+              writeLocalBoostConfig(cfgAll)
+            }
+          } catch {
+          }
         } else {
           setBoostRow(null)
         }
@@ -1352,7 +1493,9 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         }
       }
     } catch (e: any) {
-      setError(e?.message || 'Erreur chargement Boost')
+      const msg = String(e?.message || '').trim()
+      setError(/failed to fetch|networkerror|load failed/i.test(msg) ? 'Connexion lente. Touchez Rafraîchir.' : (msg || 'Erreur chargement Boost'))
+      setBalanceStatus((prev) => (prev === 'loading' ? 'error' : prev))
     } finally {
       setLoading(false)
       loadLockRef.current = false
@@ -1503,6 +1646,13 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
       setBusy(true)
       setError(null)
       try {
+        const aliases = await resolveShopAliases({
+          vendorId: selectedTarget.vendorId,
+          vendorKind: selectedTarget.vendorKind,
+          slug: (selectedTarget as any)?.slug || null,
+          userEmail,
+        })
+        const requestVendorId = pickCanonicalVendorId(aliases.vendorIds) || selectedTarget.vendorId
         const token = await getToken()
         if (!token) throw new Error('Connecte-toi avant d’acheter.')
 
@@ -1515,7 +1665,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              vendorId: selectedTarget.vendorId,
+              vendorId: requestVendorId,
               vendorKind: selectedTarget.vendorKind,
               boostKind: p.kind,
               durationHours: p.durationHours,
@@ -1648,7 +1798,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         setBusy(false)
       }
     },
-    [busy, fetchJsonOnce, getToken, load, selectedTarget]
+    [busy, fetchJsonOnce, getToken, load, selectedTarget, userEmail]
   )
 
   const buyByCredits = useCallback(
@@ -1661,6 +1811,13 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         const forceDevMode = isDemoLoginEmail(email) || (isLocalhostRuntime() && isPcDemoEmail(email))
         const token = forceDevMode ? '' : await getToken()
         if (!email) throw new Error('Email vendeur manquant.')
+        const aliases = await resolveShopAliases({
+          vendorId: selectedTarget.vendorId,
+          vendorKind: selectedTarget.vendorKind,
+          slug: (selectedTarget as any)?.slug || null,
+          userEmail,
+        })
+        const requestVendorId = pickCanonicalVendorId(aliases.vendorIds) || selectedTarget.vendorId
 
         const localFallbackPurchase = async () => {
           const price = Math.floor(Number(p?.priceXof || 0))
@@ -1756,7 +1913,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   email,
-                  vendorId: selectedTarget.vendorId,
+                  vendorId: requestVendorId,
                   vendorKind: selectedTarget.vendorKind,
                   boostKind: p.kind,
                   durationHours: p.durationHours,
@@ -1776,6 +1933,29 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
               if (pendingCreditsTimerRef.current) {
                 window.clearTimeout(pendingCreditsTimerRef.current)
                 pendingCreditsTimerRef.current = null
+              }
+              try {
+                const row = res.json?.row || null
+                if (row && selectedTarget) {
+                  const key = String(selectedTarget.vendorId)
+                  const cfgAll = readLocalBoostConfig()
+                  const prev = cfgAll[key] || {}
+                  const parseIso = (value: any): number | null => {
+                    const t = value ? Date.parse(String(value)) : NaN
+                    return Number.isFinite(t) ? t : null
+                  }
+                  const tierRaw = String(row?.sponsored_tier || '').trim().toLowerCase()
+                  const tierNum = tierRaw === 'or' ? 3 : tierRaw === 'argent' ? 2 : tierRaw === 'bronze' ? 1 : null
+                  cfgAll[key] = {
+                    ...prev,
+                    sponsoredUntil: parseIso(row?.sponsored_until),
+                    sponsoredTier: tierNum ?? (prev as any)?.sponsoredTier ?? null,
+                    promoUntil: parseIso(row?.promo_until),
+                    newUntil: parseIso(row?.new_until),
+                  }
+                  writeLocalBoostConfig(cfgAll)
+                }
+              } catch {
               }
               toast.success('Boost activé par crédits')
               try {
@@ -1801,7 +1981,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              vendorId: selectedTarget.vendorId,
+              vendorId: requestVendorId,
               vendorKind: selectedTarget.vendorKind,
               boostKind: p.kind,
               durationHours: p.durationHours,
@@ -1891,7 +2071,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
+      <div className="bg-white/90 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 backdrop-blur">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="text-lg font-bold text-gray-900 dark:text-white">Booster ma visibilité</div>
@@ -1903,7 +2083,9 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
               onClick={() => void repairBadges()}
               disabled={repairBusy}
               className={`px-4 py-2 rounded-xl text-sm font-bold ${
-                repairBusy ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400' : 'bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600'
+                repairBusy
+                  ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                  : 'bg-white/90 text-gray-900 hover:bg-white border border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 dark:border-gray-700'
               }`}
             >
               {repairBusy ? 'Sync…' : 'Sync badges'}
@@ -1913,7 +2095,9 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
               onClick={load}
               disabled={loading}
               className={`px-4 py-2 rounded-xl text-sm font-bold ${
-                loading ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400' : 'bg-blue-600 text-white hover:bg-blue-700'
+                loading
+                  ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                  : 'bg-gradient-to-r from-orange-500 to-emerald-600 text-white hover:from-orange-600 hover:to-emerald-700'
               }`}
             >
               {loading ? 'Chargement…' : 'Rafraîchir'}
@@ -1924,7 +2108,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 lg:col-span-2">
+        <div className="bg-white/90 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 lg:col-span-2 backdrop-blur">
           <div className="text-sm font-bold text-gray-900 dark:text-white">Cible</div>
           <select
             value={targetKey}
@@ -1933,7 +2117,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
           >
             {targets.map((t) => (
               <option key={`${t.vendorKind}:${t.vendorId}`} value={`${t.vendorKind}:${t.vendorId}`}>
-                {t.name}
+                {`${t.vendorKind === 'provider' ? '🛠️ Prestataire' : '🏪 Boutique'} • ${t.name}`}
               </option>
             ))}
           </select>
@@ -1944,7 +2128,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
           )}
         </div>
 
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
+        <div className="bg-white/90 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 backdrop-blur">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <div>
               <div className="text-sm font-bold text-gray-900 dark:text-white">Crédits</div>
@@ -1960,7 +2144,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
             <button
               type="button"
               onClick={() => setTopupOpen(true)}
-              className="w-full sm:w-auto px-4 py-3 sm:px-3 sm:py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700"
+              className="w-full sm:w-auto px-4 py-3 sm:px-3 sm:py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-orange-500 to-emerald-600 text-white hover:from-orange-600 hover:to-emerald-700"
             >
               Recharger mes crédits
             </button>
@@ -2091,7 +2275,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
+      <div className="bg-white/90 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 backdrop-blur">
         <div className="text-base font-bold text-gray-900 dark:text-white">Statut actuel</div>
         {!selectedTarget && <div className="mt-2 text-sm text-gray-600 dark:text-gray-300">Choisis une cible pour voir l’état des boosts.</div>}
         {selectedTarget && (
@@ -2114,7 +2298,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 lg:col-span-2">
+        <div className="bg-white/90 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 lg:col-span-2 backdrop-blur">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="text-base font-bold text-gray-900 dark:text-white">Offres</div>
             <div className="flex items-center gap-2">
@@ -2125,7 +2309,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                   onClick={() => setActiveKind(k)}
                   className={`px-4 py-2 rounded-2xl font-black transition-colors ${
                     activeKind === k
-                      ? 'bg-orange-500 text-white'
+                      ? 'bg-gradient-to-r from-orange-500 to-emerald-600 text-white'
                       : 'bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
                   }`}
                 >
@@ -2158,7 +2342,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                       className={`w-full sm:w-auto px-4 py-3 sm:py-2 rounded-xl text-xs font-bold ${
                         !selectedTarget || busy || p.active === false
                           ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
-                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                          : 'bg-gradient-to-r from-orange-500 to-emerald-600 text-white hover:from-orange-600 hover:to-emerald-700'
                       }`}
                     >
                       Payer par carte
@@ -2187,7 +2371,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
+        <div className="bg-white/90 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 backdrop-blur">
           <div className="text-base font-bold text-gray-900 dark:text-white">Historique</div>
           <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">Dernières commandes boost pour cette cible.</div>
           <div className="mt-4 md:hidden space-y-3">

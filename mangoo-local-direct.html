@@ -481,8 +481,17 @@
         // === OUVERTURE LIVE ===
         function openLive() {
             if (activeVendor && activeVendor.live) {
-                // Redirection vers notre module WebRTC stable
-                window.location.href = 'webrtc-parfait.html?role=viewer&userId=clientMap';
+                const vendor = activeVendor;
+                const roomId = String(vendor?.liveRoomId || vendor?.roomId || vendor?.name || '').trim() || 'live-demo-123';
+                const shopSlug = String(vendor?.shopSlug || vendor?.slug || '').trim();
+
+                const qs = new URLSearchParams();
+                qs.set('role', 'client');
+                qs.set('ui', 'simple');
+                qs.set('roomId', roomId);
+                if (shopSlug) qs.set('shopSlug', shopSlug);
+
+                window.location.href = `${window.location.origin}/live-shopping?${qs.toString()}`;
             }
         }
 

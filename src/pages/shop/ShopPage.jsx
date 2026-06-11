@@ -369,11 +369,13 @@ const ShopPage = () => {
       : (shopId.startsWith('shop-') ? shopId.slice(5) : (shopId || String(shopSlug || '')))
     try {
       localStorage.setItem('mangoo-vendor-active-tab', 'boosts')
+      localStorage.setItem('mangoo-vendor-edit-shop-slug', String(shopSlug || ''))
       localStorage.setItem('mangoo_boost_target', JSON.stringify({ vendorId, vendorKind: 'shop' }))
     } catch {
     }
     const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`
-    navigate(`/connexion?return=${encodeURIComponent(returnTo)}`)
+    const boostsUrl = `/boosts?vendorId=${encodeURIComponent(vendorId)}&vendorKind=shop&return=${encodeURIComponent(returnTo)}`
+    navigate(`/connexion?return=${encodeURIComponent(boostsUrl)}`)
   }
 
   const maskEmail = (value) => {

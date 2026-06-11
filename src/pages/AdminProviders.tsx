@@ -181,7 +181,41 @@ export default function AdminProviders() {
 
     const legacy = safeParse(safeGetItem('mangoo_vendors'), [])
     const custom = safeParse(safeGetItem('mangoo_custom_vendors'), [])
-    const list = [...(Array.isArray(legacy) ? legacy : []), ...(Array.isArray(custom) ? custom : [])]
+    const normalizeNonEmpty = (value: any) => {
+      const v = String(value ?? '').trim()
+      return v ? v : ''
+    }
+
+    const pickBetterVendor = (a: any, b: any) => {
+      const score = (v: any) => {
+        let s = 0
+        if (normalizeNonEmpty(v?.ownerEmail)) s += 5
+        if (normalizeNonEmpty(v?.phone)) s += 3
+        if (normalizeNonEmpty(v?.name)) s += 2
+        if (normalizeNonEmpty(v?.trade) || normalizeNonEmpty(v?.metier) || normalizeNonEmpty(v?.job)) s += 1
+        return s
+      }
+      return score(b) > score(a) ? b : a
+    }
+
+    const mergeVendorsById = (rows: any[]) => {
+      const out = new Map<string, any>()
+      ;(rows || []).forEach((v) => {
+        const id = normalizeNonEmpty(v?.id)
+        if (!id) return
+        const key = id
+        const prev = out.get(key)
+        if (!prev) {
+          out.set(key, v)
+          return
+        }
+        const best = pickBetterVendor(prev, v)
+        out.set(key, { ...prev, ...v, ...best })
+      })
+      return Array.from(out.values())
+    }
+
+    const list = mergeVendorsById([...(Array.isArray(legacy) ? legacy : []), ...(Array.isArray(custom) ? custom : [])])
 
     const term = search.trim().toLowerCase()
     const isLocalPlusProvider = (v: any) => {
@@ -231,7 +265,47 @@ export default function AdminProviders() {
         } as Provider
       })
 
-    const combined = [...localProviders, ...rowsFromVendors]
+    const normalizeSlug = (value: any) => {
+      const s = String(value ?? '').trim().toLowerCase()
+      return s
+    }
+
+    const mergeProviderStatus = (a: ProviderStatus, b: ProviderStatus): ProviderStatus => {
+      if (a === b) return a
+      const order: ProviderStatus[] = ['approved', 'pending', 'rejected', 'suspended']
+      const ai = order.indexOf(a)
+      const bi = order.indexOf(b)
+      return (ai >= 0 && bi >= 0 ? order[Math.min(ai, bi)] : a) as ProviderStatus
+    }
+
+    const mergeProvidersBySlug = (rows: Provider[]) => {
+      const out = new Map<string, Provider>()
+      rows.forEach((p) => {
+        const key = normalizeSlug(p?.slug) || normalizeSlug(p?.name) || String(p?.id || '')
+        if (!key) return
+        const prev = out.get(key)
+        if (!prev) {
+          out.set(key, p)
+          return
+        }
+        const merged: Provider = {
+          ...prev,
+          ...p,
+          id: String(prev.id || '').startsWith('localprov-') ? prev.id : p.id,
+          status: mergeProviderStatus(prev.status, p.status),
+          is_visible: prev.is_visible || p.is_visible,
+          email: prev.email || p.email,
+          phone: prev.phone || p.phone,
+          city: prev.city || p.city,
+          country: prev.country || p.country,
+          created_at: String(prev.created_at || p.created_at || new Date().toISOString()),
+        }
+        out.set(key, merged)
+      })
+      return Array.from(out.values())
+    }
+
+    const combined = mergeProvidersBySlug([...localProviders, ...rowsFromVendors])
     const withSeed = combined.length > 0 ? combined : ensureSeeded()
 
     const filtered = withSeed.filter((p: Provider) => {
@@ -634,6 +708,14 @@ export default function AdminProviders() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => window.open(`/provider/dashboard?vendorId=${encodeURIComponent(String(p.id))}`, '_blank', 'noopener,noreferrer')}
+                        disabled={isProcessing}
+                        className="px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 disabled:opacity-60 text-white font-bold"
+                      >
+                        Dashboard
+                      </button>
                       <button
                         type="button"
                         onClick={() => approve(p)}

@@ -107,8 +107,9 @@ const DEFAULT_PRICING_POLICY_CONFIG: PricingPolicyConfig = {
 
 function useVoiceFeedback() {
   const audioCtxRef = useRef<AudioContext | null>(null)
+  const lastSpokenRef = useRef<{ text: string; at: number }>({ text: '', at: 0 })
 
-  const beep = (frequency = 660, ms = 90) => {
+  const beep = useCallback((frequency = 660, ms = 90) => {
     try {
       const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext
       if (!Ctx) return
@@ -126,18 +127,25 @@ function useVoiceFeedback() {
       osc.stop(now + ms / 1000)
     } catch {
     }
-  }
+  }, [])
 
-  const speak = (text: string) => {
+  const speak = useCallback((text: string, opts?: { interrupt?: boolean }) => {
     const t = String(text || '').trim()
     if (!t) return
+    const now = Date.now()
+    const key = t.toLowerCase()
+    if (lastSpokenRef.current.text === key && now - lastSpokenRef.current.at < 1800) return
+    lastSpokenRef.current = { text: key, at: now }
     try {
       if (typeof window === 'undefined') return
       const synth = window.speechSynthesis
       if (!synth) return
-      try {
-        synth.cancel()
-      } catch {
+      const shouldInterrupt = opts?.interrupt !== false
+      if (shouldInterrupt) {
+        try {
+          synth.cancel()
+        } catch {
+        }
       }
       const u = new SpeechSynthesisUtterance(t)
       u.lang = 'fr-FR'
@@ -146,7 +154,7 @@ function useVoiceFeedback() {
       synth.speak(u)
     } catch {
     }
-  }
+  }, [])
 
   useEffect(() => {
     return () => {
@@ -374,7 +382,8 @@ const LiveShoppingUltraSimple: React.FC<{
   const [shopCatalogProducts, setShopCatalogProducts] = useState<LiveProduct[]>([])
   const [chatText, setChatText] = useState('')
   const { beep, speak } = useVoiceFeedback()
-  const didIntroRef = useRef(false)
+  const goAnnouncedForProductsKeyRef = useRef('')
+  const callAnnouncedForLiveOnRef = useRef(false)
   const shopPickGuardRef = useRef(0)
   const [vendorPresentedOnce, setVendorPresentedOnce] = useState(false)
   const [showCartSheet, setShowCartSheet] = useState(false)
@@ -432,20 +441,35 @@ const LiveShoppingUltraSimple: React.FC<{
     return 'call'
   }, [role, shopSlug, products, vendorPresentedOnce, live, lastAppliedShopSlug])
 
-  useEffect(() => {
-    if (didIntroRef.current) return
-    didIntroRef.current = true
-    if (role !== 'vendor') return
-    const next = vendorNextStep || 'shop'
-    speak(stepVoice[next])
-  }, [role, vendorNextStep, speak, stepVoice])
-
   const productsKey = useMemo(() => (Array.isArray(products) ? products.map((p) => p.id).join('|') : ''), [products])
 
   useEffect(() => {
     if (role !== 'vendor') return
     setVendorPresentedOnce(false)
+    goAnnouncedForProductsKeyRef.current = ''
+    callAnnouncedForLiveOnRef.current = false
   }, [role, productsKey])
+
+  useEffect(() => {
+    if (role !== 'vendor') return
+    if (!vendorPresentedOnce) return
+    const pk = String(productsKey || '').trim()
+    if (!pk) return
+    if (goAnnouncedForProductsKeyRef.current === pk) return
+    goAnnouncedForProductsKeyRef.current = pk
+    speak(stepVoice.go)
+  }, [role, vendorPresentedOnce, productsKey, speak, stepVoice])
+
+  useEffect(() => {
+    if (role !== 'vendor') return
+    if (live) {
+      if (callAnnouncedForLiveOnRef.current) return
+      callAnnouncedForLiveOnRef.current = true
+      speak(stepVoice.call)
+      return
+    }
+    callAnnouncedForLiveOnRef.current = false
+  }, [role, live, speak, stepVoice])
 
   const featuredProduct = useMemo(() => {
     const list = Array.isArray(products) ? products : []
@@ -483,20 +507,6 @@ const LiveShoppingUltraSimple: React.FC<{
     }
   }, [role, live])
 
-  useEffect(() => {
-    if (role !== 'vendor') return
-    if (!connected) return
-    setShowCallDock(true)
-    setCallDockMinimized(true)
-  }, [role, connected])
-
-  useEffect(() => {
-    if (role !== 'client') return
-    if (!connected) return
-    setShowCallDock(true)
-    setCallDockMinimized(true)
-  }, [role, connected])
-
   const toggleLive = () => {
     beep()
     if (role === 'vendor') {
@@ -506,15 +516,12 @@ const LiveShoppingUltraSimple: React.FC<{
       }
       if (!Array.isArray(products) || products.length === 0) {
         speak(stepVoice.range)
-        setProductTab('range')
         setDraftProductIds([])
-        setShowProduct(true)
+        setShowRangeSheet(true)
         if (!String(shopSlug || '').trim()) setShowShopPicker(true)
         return
       }
       const next = !live
-      setLive(next)
-      speak(next ? stepVoice.call : 'Live arrêté')
       if (next) {
         const isLocalhost =
           typeof window !== 'undefined' &&
@@ -536,11 +543,15 @@ const LiveShoppingUltraSimple: React.FC<{
               videoRef.current.muted = true
               videoRef.current.play().catch(() => {})
             }
+            setLive(true)
           })
           .catch(() => {
             speak('Caméra refusée')
+            setLive(false)
           })
       } else {
+        setLive(false)
+        speak('Live arrêté')
         const s = localStreamRef.current
         localStreamRef.current = null
         if (s) {
@@ -564,7 +575,7 @@ const LiveShoppingUltraSimple: React.FC<{
     setProductTab('present')
     setDraftProductIds((Array.isArray(products) ? products : []).map((p) => p.id))
     setShowProduct(true)
-    speak(role === 'vendor' ? stepVoice.present : 'Produit')
+    speak(role === 'vendor' ? stepVoice.present : '2 produit')
   }
 
   const openRange = () => {
@@ -1174,14 +1185,21 @@ const LiveShoppingUltraSimple: React.FC<{
       }
       const all = Array.isArray(data?.orders) ? data.orders : []
       const uid = String(userId || '').trim()
-      setMyOrders(all.filter((o: any) => String(o?.buyerId || '').trim() === uid))
+      let mine = all.filter((o: any) => String(o?.buyerId || '').trim() === uid)
+      if (!mine.length) {
+        const uname = String(userName || '').trim()
+        if (uname && uname !== 'Client') {
+          mine = all.filter((o: any) => String(o?.buyerName || '').trim() === uname)
+        }
+      }
+      setMyOrders(mine)
     } catch {
       setMyOrdersError('Erreur')
       setMyOrders([])
     } finally {
       setMyOrdersLoading(false)
     }
-  }, [roomId, userId])
+  }, [roomId, userId, userName])
 
   useEffect(() => {
     if (!showMyOrdersSheet) return
@@ -1291,7 +1309,7 @@ const LiveShoppingUltraSimple: React.FC<{
               }`}
             >
               {live ? <Square className="w-8 h-8" /> : <Play className="w-8 h-8" />}
-              <span className="text-sm">{live ? '4 Stop' : '4 Go'}</span>
+              <span className="text-sm">4 Go</span>
             </button>
 
             <button
@@ -1347,13 +1365,14 @@ const LiveShoppingUltraSimple: React.FC<{
               className="rounded-2xl bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 px-4 py-5 flex flex-col items-center justify-center gap-2 font-semibold"
             >
               <Play className="w-8 h-8" />
-              <span className="text-sm">Voir</span>
+              <span className="text-sm">1 Voir</span>
             </button>
 
             <button
               type="button"
               onClick={() => {
                 beep(740, 80)
+                speak('3 appeler')
                 setShowCallDock(true)
                 setCallDockMinimized(false)
                 setCallStartSignal((v) => v + 1)
@@ -1361,7 +1380,7 @@ const LiveShoppingUltraSimple: React.FC<{
               className="rounded-2xl bg-white/10 hover:bg-white/15 px-4 py-5 flex flex-col items-center justify-center gap-2 font-semibold"
             >
               <Phone className="w-8 h-8" />
-              <span className="text-sm">Appeler</span>
+              <span className="text-sm">3 Appeler</span>
             </button>
 
             <button
@@ -1370,20 +1389,20 @@ const LiveShoppingUltraSimple: React.FC<{
               className="rounded-2xl bg-white/10 hover:bg-white/15 px-4 py-5 flex flex-col items-center justify-center gap-2 font-semibold"
             >
               <ShoppingBag className="w-8 h-8" />
-              <span className="text-sm">Produit</span>
+              <span className="text-sm">2 Produit</span>
             </button>
 
             <button
               type="button"
               onClick={() => {
                 beep(520, 60)
-                speak('Achats')
+                speak('4 achats')
                 setShowMyOrdersSheet(true)
               }}
               className="rounded-2xl bg-white/10 hover:bg-white/15 px-4 py-5 flex flex-col items-center justify-center gap-2 font-semibold"
             >
               <Package className="w-8 h-8" />
-              <span className="text-sm">Achats</span>
+              <span className="text-sm">4 Achats</span>
             </button>
           </div>
         )}
@@ -1455,7 +1474,6 @@ const LiveShoppingUltraSimple: React.FC<{
                     setVendorPresentedOnce(true)
                     setShowProduct(false)
                     beep(990, 90)
-                    speak(stepVoice.go)
                   }}
                   className={`w-full rounded-2xl bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 px-4 py-4 font-semibold ${
                     role === 'vendor' && vendorNextStep === 'present' ? 'ring-4 ring-orange-400/60' : ''
@@ -2332,13 +2350,40 @@ const LiveShoppingUltraSimple: React.FC<{
         </div>
       )}
 
-      {showCallDock && (
-        <div
-          style={{ zIndex: role === 'vendor' ? 80 : 50 }}
-          className={`fixed bottom-4 right-4 rounded-2xl border border-white/10 bg-black/60 backdrop-blur overflow-hidden shadow-2xl ${
-            callDockMinimized ? 'w-[360px] h-[260px]' : 'w-[92vw] h-[90vh] max-w-[980px] max-h-[860px]'
-          } ${role === 'client' && (showProduct || showCartSheet) ? 'pointer-events-none' : ''}`}
-        >
+      {showCallDock && callDockMinimized && (
+        <div className="fixed bottom-4 right-4 flex flex-col gap-2" style={{ zIndex: role === 'vendor' ? 81 : 121 }}>
+          <button
+            type="button"
+            onClick={() => {
+              setShowCallDock(true)
+              setCallDockMinimized(false)
+              beep(520, 60)
+            }}
+            className="w-12 h-12 rounded-full bg-gradient-to-r from-orange-500 to-green-600 text-white shadow-2xl flex items-center justify-center"
+          >
+            <Phone className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setCallHangupSignal((v) => v + 1)
+              setShowCallDock(false)
+              setCallDockMinimized(true)
+              beep(440, 60)
+            }}
+            className="w-12 h-12 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-2xl flex items-center justify-center"
+          >
+            <PhoneOff className="w-5 h-5" />
+          </button>
+        </div>
+      )}
+
+      <div
+        style={{ zIndex: role === 'vendor' ? 80 : 120 }}
+        className={`fixed bottom-4 right-4 rounded-2xl border border-white/10 bg-black/60 backdrop-blur overflow-hidden shadow-2xl ${
+          callDockMinimized ? 'w-[360px] h-[260px]' : 'w-[92vw] h-[90vh] max-w-[980px] max-h-[860px]'
+        } ${!showCallDock ? 'hidden' : ''} ${callDockMinimized ? 'pointer-events-none' : ''}`}
+      >
           <div className="px-3 py-2 flex items-center justify-between border-b border-white/10 bg-black/40">
             <div className="text-xs font-semibold text-white truncate">Appel privé</div>
             <div className="flex items-center gap-2">
@@ -2353,11 +2398,6 @@ const LiveShoppingUltraSimple: React.FC<{
                 type="button"
                 onClick={() => {
                   setCallHangupSignal((v) => v + 1)
-                  if (role === 'client') {
-                    setShowCallDock(true)
-                    setCallDockMinimized(true)
-                    return
-                  }
                   setShowCallDock(false)
                 }}
                 className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/15"
@@ -2367,11 +2407,6 @@ const LiveShoppingUltraSimple: React.FC<{
               <button
                 type="button"
                 onClick={() => {
-                  if (role === 'client') {
-                    setShowCallDock(true)
-                    setCallDockMinimized(true)
-                    return
-                  }
                   setShowCallDock(false)
                 }}
                 className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/15"
@@ -2394,11 +2429,17 @@ const LiveShoppingUltraSimple: React.FC<{
               onIncomingCall={() => {
                 setShowCallDock(true)
                 setCallDockMinimized(false)
+                speak('Appel entrant')
+                try {
+                  beep(880, 90)
+                  window.setTimeout(() => beep(880, 90), 260)
+                  window.setTimeout(() => beep(880, 90), 520)
+                } catch {
+                }
               }}
             />
           </div>
-        </div>
-      )}
+      </div>
 
       {role === 'vendor' && lastPurchase && (
         <div className="fixed bottom-4 left-4 z-40 rounded-xl border border-white/10 bg-black/60 backdrop-blur px-4 py-3 text-white text-sm">
@@ -2416,16 +2457,32 @@ const LiveShoppingJoinPage: React.FC = () => {
   const role: Role = roleParam === 'client' ? 'client' : 'vendor'
   const uiParam = String(searchParams.get('ui') || '').toLowerCase()
   const ui: UI = uiParam === 'simple' ? 'simple' : 'full'
-  const instanceId = useMemo(() => Math.random().toString(36).slice(2, 10), [])
   const forcedUserId = String(searchParams.get('userId') || '').trim()
-  const userId = forcedUserId || `${role}_${instanceId}`
   const userName = String(searchParams.get('name') || '').trim() || (role === 'vendor' ? 'Vendeur' : 'Client')
   const shopSlug = String(searchParams.get('shopSlug') || '').trim() || undefined
 
+  const userId = useMemo(() => {
+    if (forcedUserId) return forcedUserId
+    const rid = String(roomId || '').trim() || 'live-demo-123'
+    const key = `mangoo_live_user_id_v1:${role}:${rid}`
+    try {
+      const existing = String(localStorage.getItem(key) || '').trim()
+      if (existing) return existing
+    } catch {
+    }
+    const generated = `${role}_${Math.random().toString(36).slice(2, 10)}`
+    try {
+      localStorage.setItem(key, generated)
+    } catch {
+    }
+    return generated
+  }, [forcedUserId, role, roomId])
+
   const roomQs = encodeURIComponent(roomId)
   const shopQs = shopSlug ? `&shopSlug=${encodeURIComponent(shopSlug)}` : ''
-  const vendorHref = `/live-shopping?role=vendor&roomId=${roomQs}${shopQs}`
-  const clientHref = `/live-shopping?role=client&roomId=${roomQs}${shopQs}`
+  const nameQs = userName ? `&name=${encodeURIComponent(userName)}` : ''
+  const vendorHref = `/live-shopping?role=vendor&roomId=${roomQs}${shopQs}${nameQs}`
+  const clientHref = `/live-shopping?role=client&roomId=${roomQs}${shopQs}${nameQs}`
   const vendorHrefSimple = `${vendorHref}&ui=simple`
   const clientHrefSimple = `${clientHref}&ui=simple`
 
@@ -2437,8 +2494,16 @@ const LiveShoppingJoinPage: React.FC = () => {
             <img src={mangooLogoUrl} alt="Mangoo Tech" className="w-10 h-10 shrink-0" />
             <div className="min-w-0">
               <div className="text-white font-semibold text-lg leading-tight">Mangoo Live Shopping</div>
-              <div className="text-gray-300 text-xs sm:text-sm truncate">
-                Room: {roomId} • {role === 'vendor' ? 'Vendeur' : 'Client'} • UI: {ui === 'simple' ? 'Simple' : 'Complète'}
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] sm:text-xs text-gray-300">
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/10 border border-white/10">
+                  🏪 Live&nbsp;: <span className="text-gray-100 font-semibold truncate max-w-[160px] sm:max-w-[260px]">{roomId}</span>
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/10 border border-white/10">
+                  👤 Vous&nbsp;: <span className="text-gray-100 font-semibold">{role === 'vendor' ? 'Vendeur' : 'Client'}</span>
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/10 border border-white/10">
+                  🎛️ Mode&nbsp;: <span className="text-gray-100 font-semibold">{ui === 'simple' ? 'Simple' : 'Complet'}</span>
+                </span>
               </div>
             </div>
           </div>

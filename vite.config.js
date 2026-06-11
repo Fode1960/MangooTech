@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
+    allowedHosts: ['.trycloudflare.com', 'localhost', '127.0.0.1'],
     port: 3015,
     strictPort: false,
     host: '0.0.0.0',
@@ -17,19 +18,19 @@ export default defineConfig({
     },
     proxy: {
       '/webrtc-ws': {
-        target: 'ws://localhost:3008',
+        target: 'ws://127.0.0.1:3008',
         ws: true,
         changeOrigin: true,
         secure: false,
       },
       '/socket.io': {
-        target: 'http://localhost:3045',
+        target: 'http://127.0.0.1:3045',
         ws: true,
         changeOrigin: true,
         secure: false,
       },
       '/api': {
-        target: 'http://localhost:3045',
+        target: 'http://127.0.0.1:3045',
         changeOrigin: true,
         secure: false,
       },

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useThemeStore } from '../stores/themeStore';
 import { supabase } from '../config/supabase';
@@ -35,6 +35,19 @@ function invoiceNumberFromPayment(p) {
 
 function normalizeEmail(value) {
   return String(value || '').trim().toLowerCase();
+}
+
+function normalizeName(value) {
+  return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function isServiceLike(vendor) {
+  const rawKind = String(vendor?.kind || '').trim().toLowerCase();
+  if (rawKind === 'service' || rawKind === 'provider') return true;
+  if (String(vendor?.trade || '').trim()) return true;
+  if (Array.isArray(vendor?.services) && vendor.services.length > 0) return true;
+  const category = String(vendor?.category || '').trim().toLowerCase();
+  return category.includes('service') || category.includes('prestataire') || category.includes('métier') || category.includes('metier');
 }
 
 function downloadTextFile(filename, content, mime) {
@@ -115,11 +128,18 @@ export default function ProviderDashboard() {
   const [searchParams] = useSearchParams();
   const [tab, setTab] = useState('overview');
   const [providerProfile, setProviderProfile] = useState(null);
+  const [remoteProviders, setRemoteProviders] = useState([]);
   const [localVersion, setLocalVersion] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
+  const userSelectedRef = useRef(false);
 
   const returnTo = String(searchParams.get('return') || '').trim();
   const vendorIdFromQuery = String(searchParams.get('vendorId') || '').trim();
+
+  const [selectedProviderId, setSelectedProviderId] = useState(() => {
+    if (vendorIdFromQuery) return vendorIdFromQuery;
+    return '';
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -144,10 +164,64 @@ export default function ProviderDashboard() {
   }, []);
 
   useEffect(() => {
-    if (!providerProfile?.id) return
-    if (vendorIdFromQuery) return
-    setSelectedProviderId((prev) => prev || String(providerProfile.id))
-  }, [providerProfile?.id, vendorIdFromQuery]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = String(sessionData?.session?.access_token || '').trim();
+        const authEmail = normalizeEmail(sessionData?.session?.user?.email);
+        const authUserId = String(sessionData?.session?.user?.id || '').trim();
+        if (!accessToken || (!authEmail && !authUserId)) {
+          if (!cancelled) setRemoteProviders([]);
+          return;
+        }
+        const res = await fetch('/api/local-sync/localplus/vendors', {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        const parsed = await res.json().catch(() => null);
+        const list = Array.isArray(parsed?.vendors) ? parsed.vendors : [];
+        const owned = list
+          .filter((vendor) => isServiceLike(vendor))
+          .filter((vendor) => {
+            const ownerEmail = normalizeEmail(vendor?.ownerEmail);
+            const ownerUserId = String(vendor?.userId || vendor?.user_id || '').trim();
+            return (authEmail && ownerEmail === authEmail) || (authUserId && ownerUserId === authUserId);
+          })
+          .map((vendor) => ({
+            id: String(vendor?.id || ''),
+            name: String(vendor?.name || '').trim() || 'Prestataire',
+            trade: String(vendor?.trade || '').trim(),
+            isMobile: Boolean(vendor?.isMobile),
+            coverage: Array.isArray(vendor?.coverage) ? vendor.coverage.filter(Boolean) : [],
+            phone: String(vendor?.phone || '').trim(),
+            city: String(vendor?.city || '').trim(),
+            country: String(vendor?.country || '').trim(),
+            services: Array.isArray(vendor?.services) ? vendor.services.filter(Boolean) : [],
+            portfolio: Array.isArray(vendor?.portfolio) ? vendor.portfolio.filter(Boolean) : [],
+            localPin: String(vendor?.localPin || '').trim(),
+            raw: vendor
+          }));
+        if (!cancelled) setRemoteProviders(owned);
+      } catch {
+        if (!cancelled) setRemoteProviders([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [localVersion]);
+
+  useEffect(() => {
+    if (vendorIdFromQuery) return;
+    const fromRemote = String(remoteProviders?.[0]?.id || '').trim();
+    const profileName = normalizeName(providerProfile?.name);
+    const fromProfileMatch = profileName
+      ? String(remoteProviders.find((p) => normalizeName(p?.name) === profileName)?.id || '').trim()
+      : '';
+    const next = fromProfileMatch || fromRemote;
+    if (!next) return;
+    setSelectedProviderId((prev) => prev || next);
+  }, [providerProfile?.name, remoteProviders, vendorIdFromQuery]);
 
   useEffect(() => {
     if (!showSettings) return;
@@ -171,35 +245,16 @@ export default function ProviderDashboard() {
   }, [currentUser?.role, currentUser?.roles]);
 
   const allProviders = useMemo(() => {
-    if (providerProfile?.id && !isAdmin && !vendorIdFromQuery) {
-      const id = String(providerProfile.id)
-      const name = String(providerProfile?.name || '').trim() || 'Prestataire'
-      const trade = String(providerProfile?.trade || '').trim()
-      const isMobile = Boolean(providerProfile?.is_mobile || providerProfile?.isMobile)
-      const coverage = Array.isArray(providerProfile?.coverage) ? providerProfile.coverage.filter(Boolean) : []
-      const phone = String(providerProfile?.phone || '').trim()
-      const city = String(providerProfile?.city || '').trim()
-      const country = String(providerProfile?.country || '').trim()
-      const services = Array.isArray(providerProfile?.services) ? providerProfile.services.filter(Boolean) : []
-      const portfolio = Array.isArray(providerProfile?.portfolio) ? providerProfile.portfolio.filter(Boolean) : []
-      return [{
-        id,
-        name,
-        trade,
-        isMobile,
-        coverage,
-        phone,
-        city,
-        country,
-        services,
-        portfolio,
-        localPin: '',
-        raw: providerProfile
-      }]
+    if (!isAdmin && !vendorIdFromQuery && Array.isArray(remoteProviders) && remoteProviders.length) {
+      return remoteProviders;
     }
     const legacy = safeParseJson(localStorage.getItem('mangoo_vendors'), []);
     const custom = safeParseJson(localStorage.getItem('mangoo_custom_vendors'), []);
-    const list = [...(Array.isArray(legacy) ? legacy : []), ...(Array.isArray(custom) ? custom : [])];
+    const list = [
+      ...(Array.isArray(legacy) ? legacy : []),
+      ...(Array.isArray(custom) ? custom : []),
+      ...(Array.isArray(remoteProviders) ? remoteProviders.map((item) => item?.raw || item) : [])
+    ];
 
     const allowedIds = (() => {
       if (email) {
@@ -212,7 +267,7 @@ export default function ProviderDashboard() {
     })();
 
     const providers = list
-      .filter((v) => String(v?.kind || '').toLowerCase() === 'service')
+      .filter((v) => isServiceLike(v))
       .filter((v) => {
         if (isAdmin) return true;
         if (vendorIdFromQuery && String(v?.id) === String(vendorIdFromQuery)) return true;
@@ -236,17 +291,43 @@ export default function ProviderDashboard() {
       }));
 
     const byId = new Map();
+    const score = (p) => {
+      let s = 0;
+      if (String(p?.localPin || '').trim()) s += 100;
+      if (String(p?.phone || '').trim()) s += 10;
+      if (String(p?.trade || '').trim()) s += 3;
+      if (Array.isArray(p?.services) && p.services.length) s += 2;
+      if (Array.isArray(p?.portfolio) && p.portfolio.length) s += 1;
+      return s;
+    };
     providers.forEach((p) => {
-      if (!byId.has(p.id)) byId.set(p.id, p);
+      const prev = byId.get(p.id);
+      if (!prev) {
+        byId.set(p.id, p);
+        return;
+      }
+      if (score(p) > score(prev)) byId.set(p.id, p);
     });
     return Array.from(byId.values());
-  }, [email, isAdmin, localVersion, vendorIdFromQuery, providerProfile?.id]);
+  }, [email, isAdmin, localVersion, remoteProviders, vendorIdFromQuery]);
 
-  const [selectedProviderId, setSelectedProviderId] = useState(() => {
-    if (vendorIdFromQuery) return vendorIdFromQuery;
-    const first = allProviders[0]?.id;
-    return first || '';
-  });
+  useEffect(() => {
+    if (isAdmin) return;
+    if (vendorIdFromQuery) return;
+    if (userSelectedRef.current) return;
+    const profileName = normalizeName(providerProfile?.name);
+    if (!profileName) return;
+    const match = allProviders.find((p) => normalizeName(p?.name) === profileName) || null;
+    if (!match?.id) return;
+    setSelectedProviderId((prev) => {
+      const prevId = String(prev || '').trim();
+      if (!prevId) return String(match.id);
+      const prevProvider = allProviders.find((p) => String(p?.id) === prevId) || null;
+      const prevName = normalizeName(prevProvider?.name);
+      if (prevName === profileName) return prevId;
+      return String(match.id);
+    });
+  }, [allProviders, isAdmin, providerProfile?.name, vendorIdFromQuery]);
 
   const selectedProvider = useMemo(() => {
     return allProviders.find((p) => p.id === selectedProviderId) || null;
@@ -257,6 +338,113 @@ export default function ProviderDashboard() {
     if (direct) return direct;
     return getLocalPinForVendorId(selectedProviderId);
   }, [selectedProvider?.localPin, selectedProviderId]);
+
+  const providerValidation = useMemo(() => {
+    const rawStatus = String(providerProfile?.status || '').trim().toLowerCase();
+    const isVisible = Boolean(providerProfile?.is_visible);
+
+    if (!providerProfile) {
+      return {
+        badge: 'Aucune fiche envoyée',
+        badgeClass: 'bg-orange-50 text-orange-700 border-orange-200',
+        message: "Votre fiche n'est pas encore envoyée.",
+        actionLabel: '📤 Envoyer ma fiche',
+        actionClass: 'px-3 py-2 rounded-xl text-sm font-black bg-gradient-to-r from-orange-500 to-green-600 text-white',
+      };
+    }
+
+    const isApproved = rawStatus === 'approved' || rawStatus === 'active' || rawStatus === 'validated';
+    const needsChanges =
+      rawStatus === 'rejected' ||
+      rawStatus === 'changes_requested' ||
+      rawStatus === 'needs_changes' ||
+      rawStatus === 'to_fix';
+
+    if (isApproved || isVisible) {
+      return {
+        badge: '✅ Fiche validée',
+        badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        message: isVisible ? 'Votre fiche est visible.' : 'Votre fiche est validée.',
+        actionLabel: '',
+        actionClass: '',
+      };
+    }
+
+    if (needsChanges) {
+      return {
+        badge: '✏️ Fiche à corriger',
+        badgeClass: 'bg-amber-50 text-amber-700 border-amber-200',
+        message: 'Quelques informations sont à corriger.',
+        actionLabel: '✏️ Corriger ma fiche',
+        actionClass: 'px-3 py-2 rounded-xl text-sm font-black border border-gray-200 bg-white hover:bg-gray-50 text-gray-900',
+      };
+    }
+
+    return {
+      badge: '⏳ En attente de validation',
+      badgeClass: 'bg-sky-50 text-sky-700 border-sky-200',
+      message: 'Votre fiche est en cours de vérification.',
+      actionLabel: '',
+      actionClass: '',
+    };
+  }, [providerProfile]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const pin = String(selectedProviderPin || '').trim();
+        const id = String(selectedProviderId || '').trim();
+        if (!pin || !id) return;
+        const currentRemotePin = String(selectedProvider?.raw?.localPin || selectedProvider?.raw?.local_pin || '').trim();
+        if (currentRemotePin === pin) return;
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = String(sessionData?.session?.access_token || '').trim();
+        const authEmail = normalizeEmail(sessionData?.session?.user?.email);
+        const ownerEmail = authEmail || normalizeEmail(currentUser?.email);
+        if (!ownerEmail) return;
+        const raw = selectedProvider?.raw || {};
+        const body = {
+          ownerEmail,
+          vendor: {
+            id,
+            kind: 'provider',
+            approvalStatus: 'approved',
+            name: String(raw?.name || selectedProvider?.name || '').trim(),
+            category: String(raw?.category || '').trim(),
+            status: String(raw?.status || '').trim(),
+            lat: typeof raw?.lat === 'number' ? raw.lat : undefined,
+            lng: typeof raw?.lng === 'number' ? raw.lng : undefined,
+            trade: String(raw?.trade || selectedProvider?.trade || '').trim(),
+            phone: String(raw?.phone || selectedProvider?.phone || '').trim(),
+            city: String(raw?.city || '').trim(),
+            country: String(raw?.country || '').trim(),
+            services: Array.isArray(raw?.services) ? raw.services : [],
+            coverage: Array.isArray(raw?.coverage) ? raw.coverage : [],
+            portfolio: Array.isArray(raw?.portfolio) ? raw.portfolio : [],
+            isMobile: Boolean(raw?.isMobile),
+            localPin: pin,
+            userId: String(sessionData?.session?.user?.id || raw?.userId || raw?.user_id || '').trim(),
+          },
+        };
+        const res = await fetch('/api/local-sync/localplus/vendors', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          },
+          body: JSON.stringify(body),
+        }).catch(() => null);
+        if (!cancelled && res && typeof res.ok === 'boolean' && res.ok) {
+          setLocalVersion((v) => v + 1);
+        }
+      } catch {
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser?.email, selectedProvider?.name, selectedProvider?.phone, selectedProvider?.raw, selectedProvider?.trade, selectedProviderId, selectedProviderPin]);
 
   const payments = useMemo(() => {
     const raw = safeParseJson(localStorage.getItem('mangoo_service_payments'), []);
@@ -500,7 +688,7 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
     w.document.close();
   }, [selectedProvider]);
 
-  const title = 'Espace Prestataire';
+  const title = 'Mon compte';
   const pageClass = 'min-h-dvh bg-gray-50 text-gray-900 py-10';
   const surfaceClass = 'rounded-2xl border border-gray-200 bg-white';
   const surfaceClassStrong = 'rounded-2xl border border-gray-200 bg-white';
@@ -512,15 +700,42 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
   const selectClass = 'px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-900 outline-none';
 
   const goBackToProvider = useCallback(() => {
+    const providerId = String(selectedProviderId || '').trim();
     try {
-      if (selectedProviderId) {
-        localStorage.setItem('mangoo-open-vendor-id', String(selectedProviderId));
+      if (providerId) {
+        localStorage.setItem('mangoo-open-vendor-id', providerId);
       }
     } catch {
     }
-    const target = returnTo || `/mangoo-local.html?vendor=${encodeURIComponent(String(selectedProviderId || ''))}`;
+    const fallbackTarget = `/mangoo-local.html?vendor=${encodeURIComponent(providerId)}`;
+    const rawTarget = String(returnTo || fallbackTarget).trim();
+    try {
+      const url = new URL(rawTarget, window.location.origin);
+      if (url.pathname.endsWith('/mangoo-local.html') && providerId) {
+        url.searchParams.set('vendor', providerId);
+      }
+      window.location.href = url.toString();
+      return;
+    } catch {
+    }
+    window.location.href = rawTarget;
+  }, [returnTo, selectedProvider?.raw?.id, selectedProviderId]);
+
+  const switchAccount = useCallback(async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch {
+    }
+    try {
+      localStorage.removeItem('mangoo-current-user');
+      localStorage.removeItem('user');
+      localStorage.removeItem('local_mode');
+      localStorage.removeItem('local_user');
+    } catch {
+    }
+    const target = returnTo ? `/provider/access?return=${encodeURIComponent(returnTo)}` : '/provider/access';
     window.location.href = target;
-  }, [returnTo, selectedProviderId]);
+  }, [returnTo]);
 
   const updateLocalProvider = useCallback((providerId, patch) => {
     const id = String(providerId || '').trim();
@@ -611,16 +826,19 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
               onClick={goBackToProvider}
               className={ghostBtn}
             >
-              ← Retour au prestataire
+              ← Retour à ma fiche
             </button>
-            <div className={`${mutedText} text-sm font-semibold`}>Prestataire</div>
+            <div className={`${mutedText} text-sm font-semibold`}>Ma fiche</div>
             <select
               value={selectedProviderId}
-              onChange={(e) => setSelectedProviderId(e.target.value)}
+              onChange={(e) => {
+                userSelectedRef.current = true;
+                setSelectedProviderId(e.target.value);
+              }}
               className={selectClass}
             >
               {allProviders.length === 0 ? (
-                <option value="">Aucun prestataire</option>
+                <option value="">Aucune fiche</option>
               ) : (
                 allProviders.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -634,60 +852,57 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
               onClick={() => setShowSettings(true)}
               className={ghostBtn}
             >
-              ⚙️ Réglages
+              👤 Mon compte
+            </button>
+            <button
+              type="button"
+              onClick={switchAccount}
+              className={ghostBtn}
+            >
+              🔁 Autre compte
             </button>
           </div>
         </div>
 
         <div className={`mb-6 p-4 ${surfaceClass}`}>
-          {providerProfile ? (
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div className="text-sm font-black">Profil prestataire (validation)</div>
-                <div className={`${mutedText} text-sm`}>
-                  Statut: <span className="font-bold">{String(providerProfile?.status || 'pending')}</span> · Visible: <span className="font-bold">{providerProfile?.is_visible ? 'Oui' : 'Non'}</span>
-                </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="text-sm font-black">Ma fiche (validation)</div>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-black ${providerValidation.badgeClass}`}>
+                  {providerValidation.badge}
+                </span>
               </div>
+              <div className={`${mutedText} text-sm mt-2`}>
+                {providerValidation.message}
+              </div>
+            </div>
+            {providerValidation.actionLabel ? (
               <a
                 href="/provider/apply"
-                className={ghostBtn}
+                className={providerValidation.actionClass}
               >
-                Modifier mon profil
+                {providerValidation.actionLabel}
               </a>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div className="text-sm font-black">Profil prestataire (validation)</div>
-                <div className={`${mutedText} text-sm`}>
-                  Soumettez votre profil pour approbation admin avant visibilité publique.
-                </div>
-              </div>
-              <a
-                href="/provider/apply"
-                className="px-3 py-2 rounded-xl text-sm font-black bg-gradient-to-r from-orange-500 to-green-600 text-white"
-              >
-                Soumettre mon profil
-              </a>
-            </div>
-          )}
+            ) : null}
+          </div>
         </div>
 
         {allProviders.length === 0 ? (
           <div className={`p-6 ${surfaceClassStrong}`}>
-            <div className="text-xl font-black">Aucun prestataire rattaché</div>
+            <div className="text-xl font-black">Aucune fiche</div>
             <div className={`${mutedText} mt-2`}>
-              Créez un profil prestataire dans Mangoo Local+ puis revenez ici.
+              Créez votre fiche dans Mangoo Local+ puis revenez ici.
             </div>
           </div>
         ) : (
           <>
             <div className="flex flex-wrap gap-2 mb-6">
               {[
-                { key: 'overview', label: 'Vue d’ensemble' },
+                { key: 'overview', label: 'Accueil' },
                 { key: 'payments', label: 'Paiements' },
                 { key: 'invoices', label: 'Factures' },
-                { key: 'requests', label: 'Prestations' },
+                { key: 'requests', label: 'Demandes' },
               ].map((t) => (
                 <button
                   key={t.key}
@@ -920,7 +1135,7 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-4 flex items-center justify-between border-b border-gray-200 bg-white sticky top-0 z-10">
-              <div className="font-black">Réglages prestataire</div>
+              <div className="font-black">Mon compte</div>
               <div className="flex items-center gap-2">
                 <button type="button" className={ghostBtnXs} onClick={() => setShowSettings(false)}>
                   Fermer

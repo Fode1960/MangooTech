@@ -9,6 +9,7 @@ import express, {
 } from 'express'
 import cors from 'cors'
 import path from 'path'
+import fs from 'fs'
 import dotenv from 'dotenv'
 import { fileURLToPath } from 'url'
 import authRoutes from './routes/auth'
@@ -54,6 +55,10 @@ import internalMeetRoutes from './routes/internal-meet'
 // for esm mode
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+const projectRoot = path.resolve(__dirname, '..')
+const publicDir = path.resolve(projectRoot, 'public')
+const distDir = path.resolve(projectRoot, 'dist')
+const spaIndexPath = path.resolve(distDir, 'index.html')
 
 // load env
 dotenv.config()
@@ -137,6 +142,27 @@ app.use('/api/user-pack', userPackRoutes)
 app.use('/api/geolocation', geolocationRoutes)
 app.use('/api/routing', routingRoutes)
 app.use('/api/orders', ordersRoutes)
+
+/**
+ * Mobile-safe static serving:
+ * use the built client + public HTML directly from Express
+ * so phones are not blocked by the Vite dev server.
+ */
+if (fs.existsSync(publicDir)) {
+  app.use(express.static(publicDir, { extensions: ['html'] }))
+}
+
+if (fs.existsSync(distDir)) {
+  app.use(express.static(distDir))
+}
+
+app.get('*', (req: Request, res: Response, next: NextFunction) => {
+  if (req.method !== 'GET') return next()
+  if (req.path.startsWith('/api')) return next()
+  if (path.extname(req.path)) return next()
+  if (!fs.existsSync(spaIndexPath)) return next()
+  res.sendFile(spaIndexPath)
+})
 
 /**
  * health

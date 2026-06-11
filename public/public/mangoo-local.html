@@ -1878,7 +1878,17 @@
         // === OUVERTURE LIVE ===
         function openLive() {
             if (activeVendor && activeVendor.live) {
-                window.location.href = 'webrtc-parfait.html?role=viewer&userId=clientMap&roomId=' + encodeURIComponent(activeVendor.name);
+                const vendor = activeVendor;
+                const roomId = String(vendor?.liveRoomId || vendor?.roomId || vendor?.name || '').trim() || 'live-demo-123';
+                const shopSlug = String(vendor?.shopSlug || vendor?.slug || '').trim();
+
+                const qs = new URLSearchParams();
+                qs.set('role', 'client');
+                qs.set('ui', 'simple');
+                qs.set('roomId', roomId);
+                if (shopSlug) qs.set('shopSlug', shopSlug);
+
+                window.location.href = `${window.location.origin}/live-shopping?${qs.toString()}`;
             }
         }
 
@@ -1910,17 +1920,37 @@
             btn.style.opacity = '0.7';
             
             setTimeout(() => {
+                let ownerEmail = '';
+                let ownerName = '';
+                let ownerPhone = '';
+                try {
+                    const rawUser = localStorage.getItem('mangoo-current-user') || localStorage.getItem('user');
+                    const parsed = rawUser ? JSON.parse(rawUser) : null;
+                    ownerEmail = String(parsed?.email || '').trim().toLowerCase();
+                    ownerName = String(parsed?.name || parsed?.fullName || parsed?.username || parsed?.displayName || '').trim();
+                    ownerPhone = String(parsed?.phone || parsed?.telephone || '').trim();
+                } catch {
+                    ownerEmail = '';
+                    ownerName = '';
+                    ownerPhone = '';
+                }
+
                 // Création du nouveau vendeur
                 const newVendor = {
                     id: Date.now(), // ID unique
                     name: shopName,
+                    kind: 'shop',
                     category: category,
                     lat: USER_POS[0] + (Math.random() - 0.5) * 0.005, // Position proche de l'user
                     lng: USER_POS[1] + (Math.random() - 0.5) * 0.005,
                     status: "open",
                     live: false,
                     voicePitch: "Bienvenue dans ma nouvelle boutique " + shopName + " ! Venez découvrir mes produits.",
-                    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(shopName)}&background=random&color=fff`
+                    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(shopName)}&background=random&color=fff`,
+                    phone: ownerPhone || undefined,
+                    ownerEmail: ownerEmail || undefined,
+                    ownerName: ownerName || undefined,
+                    isUserOwned: Boolean(ownerEmail)
                 };
 
                 // Ajout à la liste et sauvegarde

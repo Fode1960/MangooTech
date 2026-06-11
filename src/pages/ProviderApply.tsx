@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../config/supabase'
 import { useAuth } from '../hooks/useAuth'
 import mangooLogoUrl from '../assets/mangoo-logo.svg'
@@ -50,10 +50,11 @@ const getLocalLatLng = () => {
 
 export default function ProviderApply() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { user, loading } = useAuth()
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
-  const [phone, setPhone] = useState('')
+  const [phone, setPhone] = useState(() => String(searchParams.get('phone') || '').trim())
   const [city, setCity] = useState('')
   const [country, setCountry] = useState('BF')
   const [services, setServices] = useState('')
@@ -109,6 +110,7 @@ export default function ProviderApply() {
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean)
+    const { lat, lng } = getLocalLatLng()
 
     setIsSaving(true)
     try {
@@ -132,6 +134,57 @@ export default function ProviderApply() {
         )
 
       if (dbError) throw dbError
+      try {
+        await supabase.auth.updateUser({
+          data: {
+            full_name: name.trim(),
+            location_data: {
+              latitude: lat,
+              longitude: lng,
+              timestamp: new Date().toISOString(),
+              source: 'provider_apply'
+            }
+          }
+        })
+      } catch {
+      }
+      try {
+        const { data: sessionData } = await supabase.auth.getSession()
+        const accessToken = String(sessionData?.session?.access_token || '').trim()
+        await fetch('/api/local-sync/localplus/vendors', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          },
+          body: JSON.stringify({
+            ownerEmail: String(user.email || '').trim().toLowerCase(),
+            vendor: {
+              id: `provider-${String(user.id || '').trim() || normalizedSlug}`,
+              name: name.trim(),
+              slug: normalizedSlug,
+              category: '🔧 Services',
+              trade: servicesList[0] || 'Prestataire',
+              kind: 'provider',
+              approvalStatus: 'approved',
+              status: 'open',
+              lat,
+              lng,
+              phone: phone.trim() || '',
+              city: city.trim() || '',
+              country: country.trim() || 'BF',
+              services: servicesList,
+              portfolio: [],
+              coverage: [],
+              isMobile: false,
+              userId: String(user.id || '').trim(),
+              ownerName: String((user as any)?.user_metadata?.full_name || name || '').trim(),
+              avatar: avatarDataUrl || undefined,
+            },
+          }),
+        }).catch(() => null)
+      } catch {
+      }
       setSuccess('Profil soumis. En attente de validation par un administrateur.')
     } catch (e: any) {
       const msg = String(e?.message || '')
@@ -144,7 +197,6 @@ export default function ProviderApply() {
         try {
           const id = String(Date.now())
           const pin = reserveLocalPin(id)
-          const { lat, lng } = getLocalLatLng()
           const servicesList = services
             .split(',')
             .map((s) => s.trim())
@@ -204,6 +256,27 @@ export default function ProviderApply() {
               if (!arr.some((x) => String(x) === id)) arr.push(id)
               localStorage.setItem(k, JSON.stringify(arr))
             }
+          } catch {
+          }
+          try {
+            const { data: sessionData } = await supabase.auth.getSession()
+            const accessToken = String(sessionData?.session?.access_token || '').trim()
+            await fetch('/api/local-sync/localplus/vendors', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+              },
+              body: JSON.stringify({
+                ownerEmail: record.ownerEmail,
+                vendor: {
+                  ...record,
+                  kind: 'provider',
+                  category: '🔧 Services',
+                  approvalStatus: 'approved'
+                }
+              })
+            }).catch(() => null)
           } catch {
           }
 

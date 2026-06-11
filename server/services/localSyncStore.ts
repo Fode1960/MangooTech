@@ -39,6 +39,7 @@ type LocalPlusVendor = {
   kind: 'shop' | 'provider'
   name: string
   category: string
+  slug?: string
   lat: number
   lng: number
   status: string
@@ -48,6 +49,17 @@ type LocalPlusVendor = {
   avatar: string
   approvalStatus: 'pending' | 'approved' | 'rejected'
   ownerEmail: string | null
+  ownerName?: string | null
+  userId?: string | null
+  trade?: string | null
+  phone?: string | null
+  city?: string | null
+  country?: string | null
+  isMobile?: boolean
+  localPin?: string | null
+  services?: string[]
+  coverage?: string[]
+  portfolio?: string[]
   createdAt: string
   updatedAt: string
 }
@@ -72,6 +84,18 @@ const ensureDir = () => {
 const nowIso = () => new Date().toISOString()
 
 const normalizeEmail = (value: any) => String(value || '').trim().toLowerCase()
+const keepNonEmptyString = (nextValue: any, prevValue: any) => {
+  const next = String(nextValue || '').trim()
+  if (next) return next
+  const prev = String(prevValue || '').trim()
+  return prev || null
+}
+const keepStringArray = (nextValue: any, prevValue: any) => {
+  const next = Array.isArray(nextValue) ? nextValue.map((x: any) => String(x || '').trim()).filter(Boolean) : []
+  if (next.length) return next
+  const prev = Array.isArray(prevValue) ? prevValue.map((x: any) => String(x || '').trim()).filter(Boolean) : []
+  return prev
+}
 const getExampleDomainAliases = (email: string): Set<string> => {
   const e = normalizeEmail(email)
   const out = new Set<string>()
@@ -347,7 +371,7 @@ export const localSyncStore = {
     const idRaw = v.id
     const id = String(idRaw ?? '').trim() || `lp_${crypto.randomBytes(12).toString('hex')}`
     const kindRaw = String(v.kind || 'shop').trim().toLowerCase()
-    const kind: 'shop' | 'provider' = kindRaw === 'provider' ? 'provider' : 'shop'
+    const kind: 'shop' | 'provider' = kindRaw === 'provider' || kindRaw === 'service' ? 'provider' : 'shop'
     const name = String(v.name || '').trim() || (kind === 'provider' ? 'Prestataire' : 'Boutique')
     const category = String(v.category || 'general').trim() || 'general'
     const lat = Number(v.lat)
@@ -359,18 +383,21 @@ export const localSyncStore = {
     const voicePitch = String(v.voicePitch || '')
     const voiceAudio = v.voiceAudio ? String(v.voiceAudio) : null
     const avatar = String(v.avatar || '')
+    const slug = String(v.slug || '').trim() || undefined
     const rawApproval = String(v.approvalStatus || v.approval_status || 'pending').trim().toLowerCase()
     const approvalStatus: 'pending' | 'approved' | 'rejected' = rawApproval === 'approved' || rawApproval === 'rejected' ? rawApproval : 'pending'
 
     const now = nowIso()
     const db = safeRead()
     const idx = db.localPlusVendors.findIndex((x) => String(x.id) === id)
+    const prev = idx >= 0 ? db.localPlusVendors[idx] : null
 
     const record: LocalPlusVendor = {
       id,
       kind,
       name,
       category,
+      slug,
       lat,
       lng,
       status,
@@ -379,7 +406,18 @@ export const localSyncStore = {
       voiceAudio,
       avatar,
       approvalStatus,
-      ownerEmail: ownerEmail ? normalizeEmail(ownerEmail) : null,
+      ownerEmail: ownerEmail ? normalizeEmail(ownerEmail) : prev?.ownerEmail || null,
+      ownerName: keepNonEmptyString(v.ownerName, prev?.ownerName),
+      userId: keepNonEmptyString(v.userId ?? v.user_id, prev?.userId),
+      trade: keepNonEmptyString(v.trade, prev?.trade),
+      phone: keepNonEmptyString(v.phone, prev?.phone),
+      city: keepNonEmptyString(v.city, prev?.city),
+      country: keepNonEmptyString(v.country, prev?.country),
+      isMobile: Boolean(v.isMobile ?? v.is_mobile),
+      localPin: keepNonEmptyString(v.localPin, prev?.localPin),
+      services: keepStringArray(v.services, prev?.services),
+      coverage: keepStringArray(v.coverage, prev?.coverage),
+      portfolio: keepStringArray(v.portfolio, prev?.portfolio),
       createdAt: idx >= 0 ? db.localPlusVendors[idx].createdAt : now,
       updatedAt: now,
     }

@@ -119,6 +119,57 @@
         showBootError('Erreur au démarrage (Promise)', msg);
       });
 
+      const getBootMode = () => {
+        try {
+          const moduleScript = document.querySelector('script[type="module"][src]') || null
+          const src = String(moduleScript?.getAttribute('src') || '').trim()
+          if (src.includes('/assets/')) return { mode: 'static', scriptSrc: src }
+          if (src.includes('/src/main.tsx')) return { mode: 'vite', scriptSrc: src }
+          return { mode: 'unknown', scriptSrc: src }
+        } catch {
+          return { mode: 'unknown', scriptSrc: '' }
+        }
+      }
+
+      // If the app doesn't mount, show actionable diagnostics (bundle not loaded, cache, blocked script, etc.)
+      setTimeout(async () => {
+        try {
+          if (window.__mangoo_main_loaded) return;
+        } catch {
+        }
+
+        const boot = getBootMode();
+        const lines = [];
+        lines.push("L’application n’a pas démarré.");
+        lines.push('');
+        lines.push('Tests rapides :');
+        try {
+          const probeUrl = boot.scriptSrc || '/src/main.tsx';
+          const r1 = await fetch(probeUrl, { cache: 'no-store' });
+          lines.push(`- GET ${probeUrl} -> ${r1.status} ${r1.statusText}`);
+        } catch (e) {
+          const probeUrl = boot.scriptSrc || '/src/main.tsx';
+          lines.push(`- GET ${probeUrl} -> ERREUR: ${String(e?.message || e)}`);
+        }
+
+        if (boot.mode === 'vite') {
+          try {
+            const r2 = await fetch('/@vite/client', { cache: 'no-store' });
+            lines.push(`- GET /@vite/client -> ${r2.status} ${r2.statusText}`);
+          } catch (e) {
+            lines.push(`- GET /@vite/client -> ERREUR: ${String(e?.message || e)}`);
+          }
+        } else if (boot.mode === 'static') {
+          lines.push('- Mode détecté : build statique servi par Express');
+          lines.push(`- Entrée attendue sur mobile : ${location.origin}`);
+        } else {
+          lines.push('- Mode détecté : inconnu');
+        }
+        lines.push('');
+        lines.push('À essayer : Ctrl+F5 • Navigation privée • Désactiver extensions (adblock) • Vérifier que le serveur local répond bien.');
+        showBootError('MangooTech n’a pas démarré', lines.join('\n'));
+      }, 2500);
+
     </script>
   </head>
   <body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-300">

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
-import { supabase } from '../config/supabase'
+import { supabase, supabaseConfig } from '../config/supabase'
 import { storeGeolocationConsent, GeolocationConsentData } from '../utils/geolocationConsent'
 
 interface AuthContextType {
@@ -67,11 +67,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
-    // Check active sessions and sets the user
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
+    const isDevHost = (() => {
+      try {
+        const host = String(window.location.hostname || '')
+        return host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')
+      } catch {
+        return false
+      }
+    })()
+
+    const sessionTimeoutMs = isDevHost && supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey ? 1800 : 8000
+    let resolved = false
+
+    const t = window.setTimeout(() => {
+      if (resolved) return
+      resolved = true
       setLoading(false)
-    })
+    }, sessionTimeoutMs)
+
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        setUser(session?.user ?? null)
+      })
+      .catch(() => {
+      })
+      .finally(() => {
+        if (resolved) return
+        resolved = true
+        window.clearTimeout(t)
+        setLoading(false)
+      })
 
     // Listen for changes on auth state (logged in, signed out, etc.)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {

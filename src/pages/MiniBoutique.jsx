@@ -79,7 +79,7 @@ const MiniBoutique = () => {
             <h4 style={{ color: '#1a5f3f', marginBottom: '0.5rem' }}>Live Shopping</h4>
             <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>Vendez en direct par vidéo</p>
             <button
-              onClick={() => window.open('/webrtc-parfait.html?role=vendor&userId=vendeur1', '_blank')}
+              onClick={() => window.open('/live-shopping?role=vendor&ui=simple&roomId=vendeur1', '_blank')}
               style={{
                 marginTop: '0.5rem',
                 backgroundColor: '#e17055',

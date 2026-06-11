@@ -77,9 +77,205 @@
             setTimeout(() => toast.remove(), 3200);
         }
 
+        function lpDecodeJwtPayload(token) {
+            try {
+                const parts = String(token || '').split('.');
+                if (parts.length < 2) return null;
+                const base64 = String(parts[1] || '').replace(/-/g, '+').replace(/_/g, '/');
+                const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+                const decoded = atob(padded);
+                return JSON.parse(decoded);
+            } catch {
+                return null;
+            }
+        }
+
+        function lpReadSupabaseSession() {
+            try {
+                for (let i = 0; i < localStorage.length; i += 1) {
+                    const key = String(localStorage.key(i) || '');
+                    if (!key) continue;
+                    if (key !== 'supabase.auth.token' && !/^sb-.*-auth-token$/i.test(key)) continue;
+                    const raw = String(localStorage.getItem(key) || '').trim();
+                    if (!raw) continue;
+                    if (/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/.test(raw)) {
+                        return {
+                            accessToken: raw,
+                            payload: lpDecodeJwtPayload(raw),
+                            user: null
+                        };
+                    }
+                    try {
+                        const parsed = JSON.parse(raw);
+                        const candidates = [
+                            parsed,
+                            parsed?.currentSession,
+                            parsed?.session,
+                            ...(Array.isArray(parsed) ? parsed : [])
+                        ].filter(Boolean);
+                        for (const item of candidates) {
+                            const accessToken = String(item?.access_token || item?.accessToken || '').trim();
+                            if (!accessToken) continue;
+                            const user = item?.user || item?.currentUser || null;
+                            return {
+                                accessToken,
+                                payload: lpDecodeJwtPayload(accessToken),
+                                user
+                            };
+                        }
+                    } catch {
+                    }
+                }
+            } catch {
+            }
+            return null;
+        }
+
+        function lpGetSupabaseAccessToken() {
+            try {
+                const session = lpReadSupabaseSession();
+                return String(session?.accessToken || '');
+            } catch {
+            }
+            return '';
+        }
+
+        function lpGetAuthBearerToken() {
+            try {
+                const localToken = String(localStorage.getItem('mangoo_local_sync_token') || '').trim();
+                if (localToken) return localToken;
+            } catch {
+            }
+            try {
+                return lpGetSupabaseAccessToken();
+            } catch {
+                return '';
+            }
+        }
+
+        function lpHasSignedInUser() {
+            try {
+                const u = getLpCurrentUser ? getLpCurrentUser() : null;
+                const email = lpNormalizeEmail(u?.email);
+                if (email && email !== 'guest@mangoo.tech') return true;
+            } catch {
+            }
+            try {
+                return lpHasSupabaseSessionSignal();
+            } catch {
+                return false;
+            }
+        }
+
+        function lpNavigateTop(url) {
+            const target = String(url || '').trim();
+            if (!target) return;
+            try {
+                const topWin = window.top && window.top.location ? window.top : window;
+                topWin.location.href = target;
+            } catch {
+                window.location.href = target;
+            }
+        }
+
+        async function lpBackfillStoredProvidersToServer() {
+            try {
+                const custom = getStoredCustomVendors();
+                let legacy = [];
+                try {
+                    const raw = localStorage.getItem('mangoo_vendors');
+                    const parsed = raw ? JSON.parse(raw) : [];
+                    legacy = Array.isArray(parsed) ? parsed : [];
+                } catch {
+                    legacy = [];
+                }
+                const byId = new Map();
+                [...custom, ...legacy].forEach((vendor) => {
+                    const id = String(vendor?.id || '').trim();
+                    const lat = Number(vendor?.lat);
+                    const lng = Number(vendor?.lng);
+                    if (!id || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
+                    if (lpGetVendorKind(vendor) !== 'service') return;
+                    try {
+                        const ownerEmail = lpNormalizeEmail(vendor?.ownerEmail);
+                        if (ownerEmail.endsWith('@localplus.mangoo.tech')) return;
+                    } catch {
+                    }
+                    byId.set(id, vendor);
+                });
+                const providers = Array.from(byId.values());
+                if (!providers.length) return false;
+
+                const signature = providers
+                    .map((vendor) => `${String(vendor?.id || '').trim()}:${String(vendor?.updatedAt || vendor?.createdAt || '').trim()}:${Number(vendor?.lat)}:${Number(vendor?.lng)}`)
+                    .sort()
+                    .join('|');
+                const cacheKey = 'mangoo_local_provider_server_sync_sig_v1';
+                try {
+                    if (signature && localStorage.getItem(cacheKey) === signature) return false;
+                } catch {
+                }
+
+                const token = lpGetAuthBearerToken();
+                const currentUser = getLpCurrentUser ? getLpCurrentUser() : null;
+                const fallbackOwnerEmail = lpNormalizeEmail(currentUser?.email);
+                for (const vendor of providers) {
+                    const avatarRaw = String(vendor?.avatar || '').trim();
+                    const lightAvatar = avatarRaw && avatarRaw.length <= 4096
+                        ? avatarRaw
+                        : `https://ui-avatars.com/api/?name=${encodeURIComponent(String(vendor?.name || 'Prestataire'))}&background=random&color=fff`;
+                    const body = {
+                        vendor: {
+                            id: String(vendor?.id || '').trim(),
+                            name: String(vendor?.name || '').trim(),
+                            kind: 'provider',
+                            category: String(vendor?.category || '🔧 Services').trim() || '🔧 Services',
+                            approvalStatus: String(vendor?.approvalStatus || 'approved').trim() || 'approved',
+                            status: String(vendor?.status || 'open').trim() || 'open',
+                            slug: String(vendor?.slug || '').trim(),
+                            lat: Number(vendor?.lat),
+                            lng: Number(vendor?.lng),
+                            trade: String(vendor?.trade || '').trim(),
+                            phone: String(vendor?.phone || '').trim(),
+                            city: String(vendor?.city || '').trim(),
+                            country: String(vendor?.country || '').trim(),
+                            services: Array.isArray(vendor?.services) ? vendor.services : [],
+                            coverage: Array.isArray(vendor?.coverage) ? vendor.coverage : [],
+                            portfolio: Array.isArray(vendor?.portfolio) ? vendor.portfolio : [],
+                            ownerName: String(vendor?.ownerName || '').trim(),
+                            userId: String(vendor?.userId || vendor?.user_id || '').trim(),
+                            isMobile: Boolean(vendor?.isMobile),
+                            localPin: String(vendor?.localPin || '').trim(),
+                            voicePitch: String(vendor?.voicePitch || '').trim(),
+                            avatar: lightAvatar
+                        },
+                        ownerEmail: lpNormalizeEmail(vendor?.ownerEmail) || fallbackOwnerEmail || ''
+                    };
+                    await fetch('/api/local-sync/localplus/vendors', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                        },
+                        body: JSON.stringify(body)
+                    }).catch(() => null);
+                }
+                try {
+                    if (signature) localStorage.setItem(cacheKey, signature);
+                } catch {
+                }
+                return true;
+            } catch {
+                return false;
+            }
+        }
+
         async function syncLocalPlusFromServer() {
             try {
-                const res = await fetch('/api/local-sync/localplus/vendors?approved=1');
+                const token = lpGetAuthBearerToken();
+                const res = await fetch('/api/local-sync/localplus/vendors?approved=1', {
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                });
                 const data = await res.json().catch(() => ({}));
                 const list = Array.isArray(data?.vendors) ? data.vendors : [];
                 if (!list.length) return;
@@ -94,9 +290,24 @@
                 }
                 try { hydrateVendorsFromStorage(); } catch {}
                 try { applyBoostConfigToVendors(); } catch {}
+                try { refreshProviderDashboardFab(); } catch {}
                 try {
                     if (typeof relocateVendorsNearUser === 'function') relocateVendorsNearUser();
                     if (typeof filterVendors === 'function') filterVendors();
+                } catch {
+                }
+                try {
+                    const url = new URL(window.location.href);
+                    const vendorId = String(url.searchParams.get('vendor') || '').trim();
+                    let openId = vendorId;
+                    if (!openId) {
+                        try { openId = String(localStorage.getItem('mangoo-open-vendor-id') || '').trim(); } catch {}
+                    }
+                    if (openId) {
+                        setTimeout(() => {
+                            try { openVendorSheetById(openId, { retries: 8, retryDelay: 220, clearPendingOpenId: true }); } catch {}
+                        }, 180);
+                    }
                 } catch {
                 }
             } catch {
@@ -165,7 +376,15 @@
                 window.__mangooPickProviderLocation = true;
                 const modal = document.getElementById('providerModal');
                 if (modal) modal.style.display = 'none';
-                showLocalToast('Touchez la carte pour choisir votre position, puis revenez au formulaire.', 'success');
+                try {
+                    if (typeof closeSheet === 'function') closeSheet();
+                } catch {
+                }
+                try {
+                    if (typeof switchView === 'function') switchView('map');
+                } catch {
+                }
+                showLocalToast('Touchez la carte pour choisir votre position sur la carte.', 'success');
             } catch {
             }
         }
@@ -3701,10 +3920,10 @@
 
                     <div id="providerSection" style="margin-top:14px; display:none;">
                         <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
-                            <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">🛠️ Espace Prestataire</div>
-                            <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Ouvrir votre espace prestataire en une seule action.</div>
+                            <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">👤 Mon compte</div>
+                            <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Ouvrir mon compte en 1 clic.</div>
                             <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px;">
-                                <button type="button" class="lp-btn lp-btn-primary" onclick="openMyProviderDashboard()">🧰 Mon espace</button>
+                                <button type="button" class="lp-btn lp-btn-primary" onclick="openMyProviderDashboard()">👤 Mon compte</button>
                             </div>
                         </div>
                     </div>
@@ -3943,7 +4162,7 @@
                         <span class="arrow">›</span>
                     </div>
                     <div class="action-row" onclick="lpDisconnectProvider()">
-                        <span>🧰 Quitter mon profil prestataire</span>
+                        <span>🧰 Quitter mon compte</span>
                         <span class="arrow">›</span>
                     </div>
                     <div class="action-row" style="color: #d63031;" onclick="lpLogout()">
@@ -4048,7 +4267,7 @@
                     <span class="arrow">›</span>
                 </div>
                 <div class="action-row" onclick="lpDisconnectProvider()">
-                    <span>🧰 Quitter mon profil prestataire</span>
+                    <span>🧰 Quitter mon compte</span>
                     <span class="arrow">›</span>
                 </div>
                 <div class="action-row" style="color: #d63031;" onclick="lpLogout()">
@@ -4062,7 +4281,7 @@
             </button>
 
             <button class="btn-seller" onclick="lpStartOnboarding('service')" style="margin-top:10px; background:linear-gradient(90deg,#2563eb,#22c55e);">
-                🧰 Devenir Prestataire
+                🧰 Créer ma fiche
             </button>
 
             <p style="text-align:center; color:#b2bec3; font-size:0.8rem; margin-top:30px;">
@@ -4121,7 +4340,7 @@
             <div style="display:flex; border-bottom:1px solid #dfe6e9; margin-bottom:15px;">
                 <div class="sheet-tab active" id="vendorSheetTabBoutique" onclick="switchSheetTab('boutique', this)">Boutique</div>
                 <div class="sheet-tab" id="vendorSheetTabCarte" onclick="switchSheetTab('carte', this)">Carte</div>
-                <div class="sheet-tab" id="vendorSheetTabProfil" onclick="switchSheetTab('profil', this)">Profil</div>
+                <div class="sheet-tab" id="vendorSheetTabProfil" onclick="switchSheetTab('profil', this)">Ma fiche</div>
             </div>
 
             <!-- Tab Content: Boutique -->
@@ -4260,10 +4479,10 @@
                 <div style="font-size: 0.85rem; color: var(--ml-muted); margin-bottom: 10px; line-height: 1.4;">
                     Mangoo utilise sa propre carte. Validez votre position pour être visible.
                 </div>
-                <button id="btnCaptureGPS" class="btn btn-secondary" onclick="captureShopLocation()" style="width: 100%;">
+                <button type="button" id="btnCaptureGPS" class="btn btn-secondary" onclick="captureShopLocation()" style="width: 100%;">
                     🎯 Capturer ma position GPS
                 </button>
-                <button id="btnPickOnMap" class="btn btn-secondary dashed" onclick="enableManualShopLocationPick()" style="width: 100%; margin-top: 10px; display: none;">
+                <button type="button" id="btnPickOnMap" class="btn btn-secondary dashed" onclick="enableManualShopLocationPick()" style="width: 100%; margin-top: 10px; display: none;">
                     📍 Choisir sur la carte
                 </button>
                 <input type="hidden" id="shopLat">
@@ -4284,15 +4503,15 @@
                 <div class="lp-modal-hero">
                     <span class="modal-icon">🧰</span>
                     <div style="min-width:0;">
-                        <h2 class="lp-modal-title">Devenez Prestataire</h2>
-                        <p class="lp-modal-sub">Inscrivez votre métier en 2 minutes et recevez des clients autour de vous.</p>
+                        <h2 class="lp-modal-title">Creer ma fiche</h2>
+                        <p class="lp-modal-sub">Creez votre fiche en 2 minutes et recevez des clients autour de vous.</p>
                     </div>
                 </div>
             </div>
 
             <div class="lp-modal-body">
                 <div class="input-group">
-                    <label>Nom du prestataire</label>
+                    <label>Mon nom</label>
                     <input type="text" id="providerNameInput" class="input-field" placeholder="Ex: Plombier Express">
                 </div>
 
@@ -4443,8 +4662,8 @@
                 <div class="lp-section">
                     <div class="lp-section-title">📍 Position Exacte (Obligatoire)</div>
                     <div class="lp-section-desc">Validez votre position pour être visible sur Mangoo Maps.</div>
-                    <button id="btnCaptureProviderGPS" class="btn btn-secondary" onclick="captureProviderLocation()" style="width: 100%;">🎯 Capturer ma position GPS</button>
-                    <button type="button" class="btn btn-secondary dashed" onclick="enableManualProviderLocationPick()" style="width: 100%; margin-top: 10px;">🗺️ Choisir sur la carte</button>
+                    <button type="button" id="btnCaptureProviderGPS" class="btn btn-secondary" onclick="captureProviderLocation()" style="width: 100%;">🎯 Capturer ma position GPS</button>
+                    <button type="button" id="btnPickProviderOnMap" class="btn btn-secondary dashed" onclick="enableManualProviderLocationPick()" style="width: 100%; margin-top: 10px; display: none;">🗺️ Choisir sur la carte</button>
                     <input type="hidden" id="providerLat">
                     <input type="hidden" id="providerLng">
                 </div>
@@ -7533,7 +7752,7 @@
             const modal = document.getElementById('providerModal');
             if (modal) modal.style.display = 'flex';
             const title = modal ? modal.querySelector('.modal-title') : null;
-            if (title) title.innerText = 'Modifier mon profil';
+            if (title) title.innerText = 'Ma fiche';
 
             const nameInput = document.getElementById('providerNameInput');
             const tradeSelect = document.getElementById('providerTradeSelect');
@@ -7637,7 +7856,10 @@
             vendor.portfolio = portfolio;
             vendor.voicePitch = String(pitchInput?.value || '').trim();
             vendor.voiceAudio = currentProviderAudioBase64;
-            if (currentProviderAvatar) vendor.avatar = currentProviderAvatar;
+            {
+                const nextAvatar = String(currentProviderAvatar || portfolio[0] || vendor.avatar || '').trim();
+                if (nextAvatar) vendor.avatar = nextAvatar;
+            }
             if (latInput?.value) vendor.lat = parseFloat(latInput.value);
             if (lngInput?.value) vendor.lng = parseFloat(lngInput.value);
 
@@ -7648,6 +7870,7 @@
                 const currentUser = getLpCurrentUser ? getLpCurrentUser() : null;
                 const ownerEmail = String(currentUser?.email || vendor?.ownerEmail || '').trim().toLowerCase();
                 const ownerName = String(currentUser?.name || vendor?.ownerName || '').trim();
+                try { syncProviderVendorToServer(vendor, ownerEmail); } catch {}
                 if (typeof vendor?.lat === 'number' && typeof vendor?.lng === 'number') {
                     persistCreatorLocationEvent({
                         kind: 'provider',
@@ -7816,12 +8039,18 @@
             const submitBtn = document.getElementById('btnSubmitProvider');
             const latInput = document.getElementById('providerLat');
             const lngInput = document.getElementById('providerLng');
+            const pickBtn = document.getElementById('btnPickProviderOnMap');
             if (!btn || !submitBtn || !latInput || !lngInput) return;
 
             const secureOk = window.isSecureContext || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
             if (!secureOk) {
                 try { showLocalToast('Le GPS est bloqué en HTTP sur mobile. Utilisez “Choisir sur la carte”.', 'error'); } catch {}
-                try { enableManualProviderLocationPick(); } catch {}
+                try {
+                    btn.disabled = false;
+                    btn.innerHTML = '🎯 Capturer ma position GPS';
+                    if (pickBtn) pickBtn.style.display = 'flex';
+                } catch {
+                }
                 return;
             }
 
@@ -7874,6 +8103,10 @@
             const fail = () => {
                 btn.innerHTML = '🎯 Capturer ma position GPS';
                 btn.disabled = false;
+                try {
+                    if (pickBtn) pickBtn.style.display = 'flex';
+                } catch {
+                }
                 const toast = document.createElement('div');
                 toast.style.cssText = 'position:fixed; bottom:calc(20px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); background:#b91c1c; color:white; padding:10px 20px; border-radius:20px; font-size:0.8rem; z-index:9999;';
                 toast.innerHTML = '⚠️ Activez la géolocalisation (GPS) pour obtenir la bonne position.';
@@ -7951,6 +8184,7 @@
 
             setTimeout(() => {
                 const autoApprove = String(location?.hostname || '').includes('localhost') || String(location?.hostname || '').includes('127.0.0.1');
+                const resolvedAvatar = String(currentProviderAvatar || portfolio[0] || '').trim() || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff`;
                 const newVendor = {
                     id: Date.now(),
                     name,
@@ -7970,7 +8204,7 @@
                     live: false,
                     voicePitch: pitch || `Bonjour, je suis ${name}. Je suis ${trade.toLowerCase()}.`,
                     voiceAudio: currentProviderAudioBase64,
-                    avatar: currentProviderAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff`,
+                    avatar: resolvedAvatar,
                     ownerEmail,
                     ownerName,
                     isUserOwned: true
@@ -7979,6 +8213,7 @@
                 VENDORS.push(newVendor);
                 try { upsertCustomVendor(newVendor); } catch {}
                 try { localStorage.setItem('mangoo_vendors', JSON.stringify(VENDORS)); } catch {}
+                try { syncProviderVendorToServer(newVendor, ownerEmail); } catch {}
 
                 try {
                     persistCreatorLocationEvent({
@@ -8130,6 +8365,7 @@
                 return matchesSearch && matchesCategory && matchesFamily && matchesTrade && matchesMobile && matchesAvailable && matchesVerified;
             });
 
+            if (String(query || '').trim()) return base;
             if (lpScopeMode === 'country') return base;
             if (!(Array.isArray(USER_POS) && Number.isFinite(USER_POS[0]) && Number.isFinite(USER_POS[1]))) return base;
 
@@ -8137,6 +8373,13 @@
                 const maxKm = Number(km);
                 if (!Number.isFinite(maxKm) || maxKm <= 0) return list;
                 return list.filter(v => {
+                    try {
+                        const ownerEmail = String(v?.ownerEmail || '').trim().toLowerCase();
+                        const isPhoneFirstProvider = lpGetVendorKind(v) === 'service' && ownerEmail.endsWith('@localplus.mangoo.tech');
+                        const hasDetailedLocation = !!String(v?.city || '').trim() || !!String(v?.country || '').trim() || (Array.isArray(v?.coverage) && v.coverage.length > 0);
+                        if (isPhoneFirstProvider && !hasDetailedLocation) return true;
+                    } catch {
+                    }
                     if (!(typeof v.lat === 'number' && typeof v.lng === 'number')) return false;
                     const d = distanceKm(USER_POS[0], USER_POS[1], v.lat, v.lng);
                     return Number.isFinite(d) && d <= maxKm;
@@ -8306,6 +8549,52 @@
         // === INITIALISATION ===
         let appInitialized = false;
 
+        function lpIsMobileLikeDevice() {
+            try {
+                const ua = String(navigator.userAgent || navigator.vendor || '').toLowerCase();
+                return /android|iphone|ipad|ipod|mobile|ios/.test(ua);
+            } catch {
+                return false;
+            }
+        }
+
+        function lpShouldUseLiteStartup() {
+            try {
+                if (document.documentElement.classList.contains('low-end')) return true;
+            } catch {
+            }
+            try {
+                const mem = Number(navigator.deviceMemory || 0);
+                if (mem && mem <= 4) return true;
+            } catch {
+            }
+            try {
+                const cores = Number(navigator.hardwareConcurrency || 0);
+                if (cores && cores <= 4) return true;
+            } catch {
+            }
+            return lpIsMobileLikeDevice();
+        }
+
+        function lpDeferNonCriticalTask(task, delay = 24) {
+            const run = () => {
+                try {
+                    task();
+                } catch {
+                }
+            };
+            try {
+                if ('requestIdleCallback' in window) {
+                    window.requestIdleCallback(() => {
+                        setTimeout(run, delay);
+                    }, { timeout: 1800 });
+                    return;
+                }
+            } catch {
+            }
+            setTimeout(run, delay);
+        }
+
         function getStoredCustomVendors() {
             try {
                 const raw = localStorage.getItem('mangoo_custom_vendors');
@@ -8333,6 +8622,48 @@
                 voiceAudio: safeAudio,
                 updatedAt: new Date().toISOString(),
             };
+        }
+
+        function lpResolveVendorAvatar(vendor) {
+            try {
+                const portfolio = Array.isArray(vendor?.portfolio) ? vendor.portfolio : [];
+                const portfolioImage = portfolio.find((x) => typeof x === 'string' && String(x || '').trim());
+                if (portfolioImage) return String(portfolioImage).trim();
+            } catch {
+            }
+            try {
+                const avatar = String(vendor?.avatar || '').trim();
+                if (avatar) return avatar;
+            } catch {
+            }
+            const name = String(vendor?.name || 'Vendeur').trim() || 'Vendeur';
+            return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff`;
+        }
+
+        function syncProviderVendorToServer(vendor, ownerEmail) {
+            try {
+                const record = vendor && typeof vendor === 'object' ? vendor : null;
+                if (!record) return;
+                const token = String(localStorage.getItem('mangoo_local_sync_token') || '').trim();
+                fetch('/api/local-sync/localplus/vendors', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                    },
+                    body: JSON.stringify({
+                        ownerEmail: String(ownerEmail || record?.ownerEmail || '').trim().toLowerCase() || undefined,
+                        vendor: {
+                            ...record,
+                            kind: lpGetVendorKind(record) === 'service' ? 'provider' : String(record?.kind || 'shop'),
+                            avatar: lpResolveVendorAvatar(record)
+                        }
+                    })
+                }).then(() => {
+                    try { return syncLocalPlusFromServer(); } catch { return null; }
+                }).catch(() => null);
+            } catch {
+            }
         }
 
         function upsertCustomVendor(v) {
@@ -8402,6 +8733,28 @@
                     if (idx >= 0) merged[idx] = { ...merged[idx], ...c };
                     else merged.push(c);
                 });
+
+                try {
+                    merged = merged.map((v) => {
+                        try {
+                            const ownerEmail = String(v?.ownerEmail || '').trim().toLowerCase();
+                            const rawKind = String(v?.kind || '').trim().toLowerCase();
+                            const category = String(v?.category || '').trim().toLowerCase();
+                            const trade = String(v?.trade || '').trim();
+                            const hasServices = Array.isArray(v?.services) && v.services.length > 0;
+                            const isServiceLike = !!trade || hasServices || category.includes('service') || category.includes('métier') || category.includes('metier') || category.includes('prestataire');
+                            if (ownerEmail.endsWith('@localplus.mangoo.tech') && isServiceLike) {
+                                return { ...v, kind: 'service', approvalStatus: String(v?.approvalStatus || 'approved') || 'approved' };
+                            }
+                            if (rawKind === 'provider' && isServiceLike) {
+                                return { ...v, kind: 'service', approvalStatus: String(v?.approvalStatus || 'approved') || 'approved' };
+                            }
+                        } catch {
+                        }
+                        return v;
+                    });
+                } catch {
+                }
 
                 if (!merged.length) return;
                 try {
@@ -8554,13 +8907,13 @@
 
             try {
                 const el = document.getElementById('lpBuild');
-                if (el) el.textContent = 'build v146';
+                if (el) el.textContent = 'build v153';
             } catch {
             }
             try {
                 const hud = document.getElementById('lpVersionHud');
-                window.__lpVersionLabel = 'Local+ 2.0.34 • build v146';
-                if (hud) hud.textContent = String(window.__lpVersionLabel || 'Local+ 2.0.34 • build v146');
+                window.__lpVersionLabel = 'Local+ 2.0.41 • build v153';
+                if (hud) hud.textContent = String(window.__lpVersionLabel || 'Local+ 2.0.41 • build v153');
             } catch {
             }
             try {
@@ -8596,9 +8949,10 @@
             } catch {
                 window.__lpFastReturn = false;
             }
-
+            const fastReturn = !!window.__lpFastReturn;
+            const liteStartup = !fastReturn && lpShouldUseLiteStartup();
             try {
-                backfillCreatorLocationEvents();
+                window.__lpLiteStartup = liteStartup;
             } catch {
             }
 
@@ -8608,23 +8962,25 @@
             } catch {
             }
 
-            try {
-                Promise.resolve(syncBoostConfigFromServer()).then(() => {
-                    try { applyBoostConfigToVendors(); } catch {}
-                    try { filterVendors(); } catch {}
-                    try { refreshBoostPanel(); } catch {}
-                })
-            } catch {
-            }
-
             relocateVendorsNearUser();
             addMyProfileVendor();
             initMap();
-            const fastReturn = !!window.__lpFastReturn;
             if (!fastReturn) {
-                renderListView(VENDORS);
-                renderStories();
-                initMetiersUI();
+                if (liteStartup) {
+                    lpDeferNonCriticalTask(() => {
+                        try { renderListView(VENDORS); } catch {}
+                    }, 60);
+                    lpDeferNonCriticalTask(() => {
+                        try { renderStories(); } catch {}
+                    }, 120);
+                    lpDeferNonCriticalTask(() => {
+                        try { initMetiersUI(); } catch {}
+                    }, 180);
+                } else {
+                    renderListView(VENDORS);
+                    renderStories();
+                    initMetiersUI();
+                }
             } else {
                 setTimeout(() => {
                     try { renderListView(VENDORS); } catch {}
@@ -8653,21 +9009,57 @@
             }
 
             try {
-                refreshBoostPanel();
+                if (liteStartup) {
+                    lpDeferNonCriticalTask(() => {
+                        try { refreshBoostPanel(); } catch {}
+                    }, 220);
+                } else {
+                    refreshBoostPanel();
+                }
             } catch {
             }
 
             try {
-                localStorage.setItem('mangoo_local_vendors_catalog', JSON.stringify(VENDORS.map(v => ({
-                    id: String(v.id),
-                    name: v.name,
-                    kind: String(v.kind || '')
-                }))));
+                const writeCatalog = () => {
+                    try {
+                        localStorage.setItem('mangoo_local_vendors_catalog', JSON.stringify(VENDORS.map(v => ({
+                            id: String(v.id),
+                            name: v.name,
+                            kind: String(v.kind || '')
+                        }))));
+                    } catch {
+                    }
+                };
+                if (liteStartup) lpDeferNonCriticalTask(writeCatalog, 260);
+                else writeCatalog();
             } catch {
             }
 
             try {
-                updateBoostAdminVisibility();
+                if (liteStartup) {
+                    lpDeferNonCriticalTask(() => {
+                        try { updateBoostAdminVisibility(); } catch {}
+                    }, 300);
+                } else {
+                    updateBoostAdminVisibility();
+                }
+            } catch {
+            }
+
+            try {
+                const runPostStartup = () => {
+                    try { backfillCreatorLocationEvents(); } catch {}
+                    try {
+                        Promise.resolve(syncBoostConfigFromServer()).then(() => {
+                            try { applyBoostConfigToVendors(); } catch {}
+                            try { filterVendors(); } catch {}
+                            try { refreshBoostPanel(); } catch {}
+                        });
+                    } catch {
+                    }
+                };
+                if (liteStartup) lpDeferNonCriticalTask(runPostStartup, 380);
+                else runPostStartup();
             } catch {
             }
             
@@ -8680,9 +9072,8 @@
             try {
                 const openId = localStorage.getItem('mangoo-open-vendor-id');
                 if (openId) {
-                    localStorage.removeItem('mangoo-open-vendor-id');
                     setTimeout(() => {
-                        try { openVendorSheetById(openId); } catch {}
+                        try { openVendorSheetById(openId, { retries: 8, retryDelay: 220, clearPendingOpenId: true }); } catch {}
                     }, 400);
                 }
             } catch {
@@ -8693,7 +9084,7 @@
                 const vendorId = url.searchParams.get('vendor');
                 if (vendorId) {
                     setTimeout(() => {
-                        try { openVendorSheetById(vendorId); } catch {}
+                        try { openVendorSheetById(vendorId, { retries: 8, retryDelay: 220, clearPendingOpenId: true }); } catch {}
                     }, 450);
                 }
             } catch {
@@ -8740,7 +9131,22 @@
             } catch {
             }
 
-            try { void syncLocalPlusFromServer(); } catch {}
+            try {
+                const runProviderSync = () => {
+                    try {
+                        Promise.resolve(lpBackfillStoredProvidersToServer())
+                            .catch(() => false)
+                            .finally(() => {
+                                try { return syncLocalPlusFromServer(); } catch { return null; }
+                            });
+                    } catch {
+                        try { void syncLocalPlusFromServer(); } catch {}
+                    }
+                };
+                if (window.__lpLiteStartup) lpDeferNonCriticalTask(runProviderSync, 240);
+                else runProviderSync();
+            } catch {
+            }
 
             // Close sheet on map click (or pick shop location)
             map.on('click', (e) => {
@@ -9057,7 +9463,7 @@
                                 transition: transform 0.2s;
                                 position: relative;
                             ">
-                                <img src="${vendor.avatar}" style="width:44px; height:44px; border-radius:50%; object-fit:cover;">
+                                <img src="${lpResolveVendorAvatar(vendor)}" style="width:44px; height:44px; border-radius:50%; object-fit:cover;">
                                 ${badge}
                                 ${badge2}
                                 ${kindBadge}
@@ -9141,18 +9547,32 @@
             container.innerHTML = '';
         }
 
-        function openVendorSheetById(id) {
-            let vendor = VENDORS.find(x => x.id == id);
-            if (!vendor) {
-                try { hydrateVendorsFromStorage(); } catch {}
-                vendor = VENDORS.find(x => x.id == id);
-            }
-            if (vendor) {
-                const openIt = () => {
-                    try {
-                        lpToast(`Ouverture: ${String(vendor.name || 'Prestataire')}`, 'info');
-                    } catch {
+        function openVendorSheetById(id, options) {
+            const vendorId = String(id || '').trim();
+            if (!vendorId) return false;
+
+            const opts = options && typeof options === 'object' ? options : {};
+            const maxRetries = Math.max(0, Number(opts.retries) || 0);
+            const retryDelay = Math.max(80, Number(opts.retryDelay) || 220);
+            const clearPendingOpenId = !!opts.clearPendingOpenId;
+            let attempt = 0;
+
+            const tryOpen = () => {
+                let vendor = VENDORS.find(x => String(x?.id) === vendorId);
+                if (!vendor) {
+                    try { hydrateVendorsFromStorage(); } catch {}
+                    vendor = VENDORS.find(x => String(x?.id) === vendorId);
+                }
+
+                if (!vendor) {
+                    if (attempt < maxRetries) {
+                        attempt += 1;
+                        setTimeout(tryOpen, retryDelay);
                     }
+                    return false;
+                }
+
+                const openIt = () => {
                     try {
                         openVendorSheet(vendor);
                         try {
@@ -9161,7 +9581,25 @@
                             window.history.replaceState({}, '', url.toString());
                         } catch {
                         }
+                        try {
+                            if (clearPendingOpenId) {
+                                const stored = String(localStorage.getItem('mangoo-open-vendor-id') || '').trim();
+                                if (!stored || stored === vendorId) localStorage.removeItem('mangoo-open-vendor-id');
+                            }
+                        } catch {
+                        }
+                        try {
+                            if (typeof map !== 'undefined' && map && typeof map.flyTo === 'function' && typeof vendor.lat === 'number' && typeof vendor.lng === 'number') {
+                                map.flyTo([vendor.lat, vendor.lng], 17, { animate: true, duration: 0.5 });
+                            }
+                        } catch {
+                        }
                     } catch (e) {
+                        if (attempt < maxRetries) {
+                            attempt += 1;
+                            setTimeout(tryOpen, retryDelay);
+                            return;
+                        }
                         try { console.error('openVendorSheet failed', e); } catch {}
                         try {
                             const msg = e?.message ? String(e.message) : 'Erreur ouverture fiche.';
@@ -9171,16 +9609,13 @@
                         } catch {
                         }
                     }
-                    try {
-                        if (typeof map !== 'undefined' && map && typeof map.flyTo === 'function' && typeof vendor.lat === 'number' && typeof vendor.lng === 'number') {
-                            map.flyTo([vendor.lat, vendor.lng], 17, { animate: true, duration: 0.5 });
-                        }
-                    } catch {
-                    }
                 };
 
-                setTimeout(openIt, 50);
-            }
+                setTimeout(openIt, attempt > 0 ? 0 : 50);
+                return true;
+            };
+
+            return tryOpen();
         }
 
         function lpToast(message, tone) {
@@ -9297,7 +9732,7 @@
                 const list = Array.isArray(VENDORS) ? VENDORS : []
                 const ids = list
                     .filter((v) => String(v?.kind || '').trim().toLowerCase() === 'service')
-                    .filter((v) => !v?.isUserOwned && String(v?.id || '') !== 'user_me')
+                    .filter((v) => String(v?.id || '') !== 'user_me')
                     .filter((v) => lpNormalizeEmail(v?.ownerEmail) === email)
                     .map((v) => String(v?.id || '').trim())
                     .filter(Boolean)
@@ -9323,17 +9758,8 @@
 
         function lpHasSupabaseSessionSignal() {
             try {
-                for (let i = 0; i < localStorage.length; i += 1) {
-                    const key = String(localStorage.key(i) || '')
-                    if (!key) continue
-                    if (key === 'supabase.auth.token') {
-                        if (localStorage.getItem(key)) return true
-                        continue
-                    }
-                    if (/^sb-.*-auth-token$/i.test(key)) {
-                        if (localStorage.getItem(key)) return true
-                    }
-                }
+                const session = lpReadSupabaseSession()
+                return !!String(session?.accessToken || '').trim()
             } catch {
             }
             return false
@@ -9370,10 +9796,10 @@
                     try { lpPersistMyProviderIds(owned) } catch {}
                 }
             }
-            btn.style.display = (hasAny || hasSignedInUser) ? 'flex' : 'none';
+            btn.style.display = 'flex';
             try {
                 const section = document.getElementById('providerSection');
-                if (section) section.style.display = (hasAny || hasSignedInUser) ? 'block' : 'none';
+                if (section) section.style.display = 'block';
             } catch {
             }
             try {
@@ -9385,7 +9811,21 @@
         }
 
         function openMyProviderDashboard() {
-            try { openProviderDashboard(''); } catch {}
+            try {
+                const id = getMyProviderId();
+                const scoped = lpGetStoredProviderIdsForCurrentUser();
+                const owned = scoped.length ? scoped : lpGetOwnedProviderIds();
+                if (id || owned.length) {
+                    openProviderDashboard(String(id || owned[0] || ''));
+                    return;
+                }
+                const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+                if (lpHasSignedInUser()) {
+                    lpNavigateTop(`/provider/dashboard?return=${encodeURIComponent(returnTo)}`);
+                    return;
+                }
+                lpNavigateTop(`/provider/access?return=${encodeURIComponent(returnTo)}`);
+            } catch {}
         }
 
         function openConnectByVendorId(id) {
@@ -10742,7 +11182,7 @@
 
                     div.innerHTML = `
                         <div style="display:flex; width:100%; align-items:flex-start; gap:12px;">
-                            <img src="${vendor.avatar}">
+                            <img src="${lpResolveVendorAvatar(vendor)}">
                             <div style="flex:1; min-width:0;">
                                 <div class="vc-name" style="font-size:1.1rem;">${vendor.name}</div>
                                 <div style="margin-top:2px; color:var(--ml-muted); font-size:0.9rem; font-weight:800;">${trade || vendor.category}${quartier ? ` • Quartier: ${quartier}` : ''}</div>
@@ -10794,7 +11234,7 @@
 
                 div.innerHTML = `
                     <div style="display:flex; width:100%; align-items:center; margin-bottom:10px;">
-                        <img src="${vendor.avatar}">
+                        <img src="${lpResolveVendorAvatar(vendor)}">
                         <div>
                             <div class="vc-name" style="font-size:1.1rem;">${vendor.name}</div>
                             <div class="vc-cat">${vendor.category}${vendor.trade ? ` • ${vendor.trade}` : ''}</div>
@@ -11481,7 +11921,7 @@
             if(floatBtn) floatBtn.style.display = 'none';
 
             const vendorName = activeVendor ? activeVendor.name : "Vendeur";
-            const vendorAvatar = activeVendor ? activeVendor.avatar : "https://ui-avatars.com/api/?name=Vendeur&background=random";
+            const vendorAvatar = activeVendor ? lpResolveVendorAvatar(activeVendor) : "https://ui-avatars.com/api/?name=Vendeur&background=random";
 
             document.getElementById('chatAvatar').src = vendorAvatar;
             document.getElementById('chatName').innerText = vendorName;
@@ -12823,7 +13263,7 @@
             }
             try {
                 const el = document.getElementById('vAvatar');
-                if (el) el.src = String(vendor?.avatar || '');
+                if (el) el.src = lpResolveVendorAvatar(vendor);
             } catch {
             }
 
@@ -12937,9 +13377,9 @@
                         ownerLink.innerHTML += `
                             <div style="height:10px;"></div>
                             <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
-                                <a href="#" onclick="openProviderModalForVendor('${safeVendorId}')" style="color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px;">⚙️ Réglages</a>
+                                <a href="#" onclick="openProviderModalForVendor('${safeVendorId}')" style="color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px;">🏪 Ma fiche</a>
                                 <a href="#" onclick="startServicePayment('${safeVendorId}')" style="color:#00b894; font-size:0.85rem; text-decoration:none; border:1px solid #00b894; padding:8px 15px; border-radius:20px; font-weight:bold;">💳 Paiement</a>
-                                <a href="#" onclick="openProviderDashboard('${safeVendorId}')" style="color:#f59e0b; font-size:0.85rem; text-decoration:none; border:1px solid #f59e0b; padding:8px 15px; border-radius:20px; font-weight:bold;">📄 Dashboard</a>
+                                <a href="#" onclick="openProviderDashboard('${safeVendorId}')" style="color:#f59e0b; font-size:0.85rem; text-decoration:none; border:1px solid #f59e0b; padding:8px 15px; border-radius:20px; font-weight:bold;">👤 Mon compte</a>
                                 <a href="#" onclick="try{lpDisconnectProvider()}catch{}; try{closeSheet()}catch{}" style="color:#d63031; font-size:0.85rem; text-decoration:none; border:1px solid #d63031; padding:8px 15px; border-radius:20px; font-weight:bold;">🚪 Quitter</a>
                             </div>
                         `;
@@ -12952,9 +13392,9 @@
                     ownerLink.innerHTML = `
                         <div style="display:flex; gap:10px; justify-content:flex-start; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:0 12px; scroll-snap-type:x proximity;">
                                 <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpTryOpenBoostFromLocal('${safeVendorId}', 'provider');" style="flex:0 0 auto; white-space:nowrap; background:#f59e0b; color:white; font-size:0.95rem; border:1px solid #f59e0b; padding:10px 16px; border-radius:999px; font-weight:950; scroll-snap-align:start; cursor:pointer; pointer-events:auto;">🚀 Booster</button>
-                            <a href="#" onclick="openProviderModalForVendor('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px; scroll-snap-align:start;">⚙️ Réglages</a>
+                            <a href="#" onclick="openProviderModalForVendor('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px; scroll-snap-align:start;">🏪 Ma fiche</a>
                             <a href="#" onclick="startServicePayment('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#00b894; font-size:0.85rem; text-decoration:none; border:1px solid #00b894; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">💳 Paiement</a>
-                            <a href="#" onclick="openProviderDashboard('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#f59e0b; font-size:0.85rem; text-decoration:none; border:1px solid #f59e0b; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">📄 Dashboard</a>
+                            <a href="#" onclick="openProviderDashboard('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#f59e0b; font-size:0.85rem; text-decoration:none; border:1px solid #f59e0b; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">👤 Mon compte</a>
                             <a href="#" onclick="try{lpDisconnectProvider()}catch{}; try{closeSheet()}catch{}" style="flex:0 0 auto; white-space:nowrap; color:#d63031; font-size:0.85rem; text-decoration:none; border:1px solid #d63031; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">🚪 Quitter</a>
                         </div>
                     `;
@@ -13104,7 +13544,7 @@
                     const params = new URLSearchParams({
                         name: vendor.name,
                         category: vendor.category,
-                        avatar: vendor.avatar
+                        avatar: lpResolveVendorAvatar(vendor)
                     });
 
                     feed.insertAdjacentHTML('beforeend', `
@@ -13523,7 +13963,11 @@
         function openProviderDashboard(vendorId) {
             const rawId = String(vendorId || '').trim()
             const v = rawId ? (VENDORS.find((x) => String(x?.id) === rawId) || null) : null
-            const returnTo = `${window.location.origin}${window.location.pathname}${window.location.search}${window.location.hash}`;
+            const returnUrl = new URL(window.location.href);
+            if (v && String(v.id || '').trim()) {
+                returnUrl.searchParams.set('vendor', String(v.id));
+            }
+            const returnTo = returnUrl.toString();
             const params = new URLSearchParams({ return: returnTo });
             if (v) params.set('vendorId', String(v.id))
             const target = `/provider/dashboard?${params.toString()}`;
@@ -14017,7 +14461,7 @@
             let headerHtml = `
                 <div style="padding:0 15px; display:flex; justify-content:space-between; align-items:center; color:white; z-index:10001;">
                     <div style="display:flex; align-items:center; gap:10px;">
-                        <img src="${vendor.avatar}" style="width:35px; height:35px; border-radius:50%; border:1px solid white;">
+                        <img src="${lpResolveVendorAvatar(vendor)}" style="width:35px; height:35px; border-radius:50%; border:1px solid white;">
                         <span style="font-weight:bold;">${vendor.name}</span>
                         <span style="font-size:0.8rem; opacity:0.7;">2h</span>
                     </div>
@@ -17365,13 +17809,40 @@
         function getLpCurrentUser() {
             try {
                 const raw = localStorage.getItem('mangoo-current-user') || localStorage.getItem('user')
-                if (!raw) return null
-                const parsed = JSON.parse(raw)
-                if (!parsed || typeof parsed !== 'object') return null
-                const email = String(parsed?.email || '').trim().toLowerCase()
-                const name = String(parsed?.name || parsed?.fullName || parsed?.username || parsed?.displayName || '').trim()
-                const phone = String(parsed?.phone || parsed?.telephone || '').trim()
-                return { ...parsed, email, name, phone }
+                if (raw) {
+                    const parsed = JSON.parse(raw)
+                    if (parsed && typeof parsed === 'object') {
+                        const email = String(parsed?.email || '').trim().toLowerCase()
+                        const name = String(parsed?.name || parsed?.fullName || parsed?.username || parsed?.displayName || '').trim()
+                        const phone = String(parsed?.phone || parsed?.telephone || '').trim()
+                        return { ...parsed, email, name, phone }
+                    }
+                }
+            } catch {
+            }
+            try {
+                const session = lpReadSupabaseSession()
+                const payload = session?.payload || {}
+                const user = session?.user || {}
+                const email = String(user?.email || payload?.email || '').trim().toLowerCase()
+                if (!email) return null
+                const name = String(
+                    user?.user_metadata?.full_name ||
+                    user?.user_metadata?.name ||
+                    payload?.user_metadata?.full_name ||
+                    payload?.user_metadata?.name ||
+                    payload?.full_name ||
+                    ''
+                ).trim()
+                const phone = String(
+                    user?.phone ||
+                    user?.phone_number ||
+                    payload?.phone ||
+                    payload?.phone_number ||
+                    ''
+                ).trim()
+                const id = String(user?.id || payload?.sub || '').trim()
+                return { ...payload, ...user, id, email, name, phone }
             } catch {
                 return null
             }

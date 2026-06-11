@@ -61,6 +61,7 @@ const PlanCheckoutTest = React.lazy(() => import('./pages/PlanCheckoutTest'));
 const ServiceCheckout = React.lazy(() => import('./pages/ServiceCheckout'));
 const ProviderDashboard = React.lazy(() => import('./pages/ProviderDashboard'));
 const ProviderApply = React.lazy(() => import('./pages/ProviderApply'));
+const ProviderPhoneAccess = React.lazy(() => import('./pages/ProviderPhoneAccess'));
 const BoostReturn = React.lazy(() => import('./pages/BoostReturn'));
 const ResetPassword = React.lazy(() => import('./pages/ResetPassword'));
 const CourierScreen = React.lazy(() => import('./pages/CourierScreen'));
@@ -720,6 +721,16 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
             avatar,
           }
           onLogin(nextUser)
+          try {
+            const sp = new URLSearchParams(String(window.location.search || ''))
+            const returnTo = String(sp.get('return') || '').trim()
+            if (returnTo) {
+              window.location.href = returnTo
+              setSubmitting(false)
+              return
+            }
+          } catch {
+          }
           setSubmitting(false)
           return
         }
@@ -9105,7 +9116,7 @@ const AdminLayout = () => {
 };
 
 // Composant optimisé pour l'iframe Mangoo Local+
-const MANGOO_LOCAL_VERSION = 146;
+const MANGOO_LOCAL_VERSION = 153;
 const MangooLocalFrame = React.memo(({ user, onBack }) => {
   const persistCreatorLocation = useCallback(async (payload) => {
     try {
@@ -10858,6 +10869,7 @@ function App() {
           <Route path="/connect-plus/go/:token" element={<ConnectPlusRedirect />} />
           <Route path="/connect-plus/me" element={<ConnectPlusClientPage />} />
           <Route path="/service-checkout" element={<ServiceCheckout />} />
+          <Route path="/provider/access" element={<ProviderPhoneAccess />} />
           <Route path="/provider/dashboard" element={<ProviderDashboard />} />
           <Route path="/provider/apply" element={<ProviderApply />} />
           <Route path="/vendor-access-qr" element={<VendorAccessQRPage />} />
