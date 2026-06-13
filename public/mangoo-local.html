@@ -528,7 +528,7 @@
                                 <span style="font-size: 1.2rem;">🆔</span>
                                 <div>
                                     <div style="font-weight: bold; font-size: 0.9rem; color: #2d3436;">Identité (KYC)</div>
-                                    <div style="font-size: 0.75rem; color: #00b894;">Validé par IA • CNI Camerounaise</div>
+                                    <div id="lpKycDocumentLabel" style="font-size: 0.75rem; color: #00b894;">Validé par IA • CNI Camerounaise</div>
                                 </div>
                                 <span style="margin-left: auto; color: #00b894;">✓</span>
                             </div>
@@ -5081,7 +5081,7 @@
 
             <!-- VIEW: Demander à un tiers -->
             <div id="viewPayThird" style="display:none; flex-direction:column; flex:1;">
-                <div style="background:rgba(249,115,22,0.08); padding:15px; border-radius:14px; border:1px solid rgba(249,115,22,0.22); color:var(--ml-text); font-size:0.9rem; margin-bottom:18px;">
+                <div id="lpPayThirdHint" style="background:rgba(249,115,22,0.08); padding:15px; border-radius:14px; border:1px solid rgba(249,115,22,0.22); color:var(--ml-text); font-size:0.9rem; margin-bottom:18px;">
                     💡 <b>Astuce :</b> Envoyez le lien de paiement à un proche (Cameroun, France, USA...). Il pourra payer directement pour vous !
                 </div>
                 
@@ -5112,9 +5112,79 @@
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
+    <script src="/localplus-country-seeds.js"></script>
     
     <script>
-        const BASE_USER_POS = [4.051056, 9.767869];
+        const LP_FALLBACK_USER_POS = [4.051056, 9.767869];
+        const LP_COUNTRY_CONTEXT = (() => {
+            try {
+                if (!window.MangooLocalCountrySeeds || typeof window.MangooLocalCountrySeeds.resolveContext !== 'function') {
+                    return null;
+                }
+                return window.MangooLocalCountrySeeds.resolveContext({
+                    search: window.location.search,
+                    storage: window.localStorage,
+                    navigatorLanguage: navigator?.language || ''
+                });
+            } catch {
+                return null;
+            }
+        })();
+        const LP_COUNTRY_CODE = String(LP_COUNTRY_CONTEXT?.code || 'cm').trim().toLowerCase();
+        const LP_COUNTRY_NAME = String(LP_COUNTRY_CONTEXT?.name || 'Local+').trim();
+        const LP_COUNTRY_UI = LP_COUNTRY_CONTEXT?.ui && typeof LP_COUNTRY_CONTEXT.ui === 'object' ? LP_COUNTRY_CONTEXT.ui : {};
+
+        function lpNormalizeCoords(value, fallback) {
+            if (!Array.isArray(value) || value.length < 2) return [...fallback];
+            const lat = Number(value[0]);
+            const lng = Number(value[1]);
+            if (!Number.isFinite(lat) || !Number.isFinite(lng)) return [...fallback];
+            return [lat, lng];
+        }
+
+        function lpCloneCountryVendors(list) {
+            try {
+                const safeList = Array.isArray(list) ? list : [];
+                return safeList.map((item) => ({ ...item }));
+            } catch {
+                return [];
+            }
+        }
+
+        function lpApplyCountryUiConfig() {
+            try {
+                const kycLabel = document.getElementById('lpKycDocumentLabel');
+                if (kycLabel && LP_COUNTRY_UI.kycDocumentLabel) {
+                    kycLabel.textContent = String(LP_COUNTRY_UI.kycDocumentLabel);
+                }
+            } catch {
+            }
+            try {
+                const payThirdHint = document.getElementById('lpPayThirdHint');
+                if (payThirdHint && LP_COUNTRY_UI.payThirdHintHtml) {
+                    payThirdHint.innerHTML = String(LP_COUNTRY_UI.payThirdHintHtml);
+                }
+            } catch {
+            }
+            try {
+                const verificationImage = document.getElementById('lpVerificationDocImage');
+                if (verificationImage && LP_COUNTRY_UI.verificationDocumentImage) {
+                    verificationImage.src = String(LP_COUNTRY_UI.verificationDocumentImage);
+                }
+            } catch {
+            }
+            try {
+                document.documentElement.dataset.lpCountry = LP_COUNTRY_CODE || 'cm';
+            } catch {
+            }
+            try {
+                window.__lpCountryCode = LP_COUNTRY_CODE;
+                window.__lpCountryName = LP_COUNTRY_NAME;
+            } catch {
+            }
+        }
+
+        const BASE_USER_POS = lpNormalizeCoords(LP_COUNTRY_CONTEXT?.defaultUserPos, LP_FALLBACK_USER_POS);
         let USER_POS = [...BASE_USER_POS];
         let USER_POS_META = null;
 
@@ -5241,142 +5311,40 @@
             } catch {
             }
         }
-        const VENDORS = [
-            {
-                id: 1,
-                name: "Chez Maman Sarah",
-                category: "🥬 Vivres Frais",
-                kind: "shop",
-                newUntil: Date.now() + 1000 * 60 * 60 * 24,
-                sponsoredUntil: Date.now() + 1000 * 60 * 60 * 12,
-                sponsoredTier: 1,
-                lat: 4.052000,
-                lng: 9.768000,
-                status: "open",
-                live: true, // EN LIVE !
-                voicePitch: "Bonjour mes enfants ! Aujourd'hui j'ai reçu du Ndolé frais et des miondo de Deido. Venez vite avant que ça finisse !",
-                avatar: "https://ui-avatars.com/api/?name=Maman+Sarah&background=1a5f3f&color=fff"
-            },
-            {
-                id: 2,
-                name: "Tech Mobile Pro",
-                category: "📱 Électronique",
-                kind: "shop",
-                promoUntil: Date.now() + 1000 * 60 * 60 * 24,
-                sponsoredUntil: Date.now() + 1000 * 60 * 60 * 12,
-                sponsoredTier: 2,
-                lat: 4.050500,
-                lng: 9.767000,
-                status: "open",
-                live: false,
-                voicePitch: "Promo iPhone 12 reconditionné, garantie 3 mois. Chargeur offert si vous venez de la part de Mangoo.",
-                avatar: "https://ui-avatars.com/api/?name=Tech+Pro&background=0984e3&color=fff"
-            },
-            {
-                id: 3,
-                name: "Tailleur Élégance",
-                category: "🧵 Mode",
-                trade: "Tailleur/Couturier",
-                kind: "service",
-                verified: true,
-                rating: 4.7,
-                isMobile: false,
-                lat: 4.051500,
-                lng: 9.769000,
-                status: "closed",
-                live: false,
-                voicePitch: "Atelier fermé ce matin, je suis au marché des tissus. Ouverture à 14h pour les essayages.",
-                avatar: "https://ui-avatars.com/api/?name=Tailleur+E&background=e17055&color=fff"
-            },
-            {
-                id: 4,
-                name: "Plombier Express",
-                category: "🔧 Services",
-                trade: "Plombier",
-                kind: "service",
-                promoUntil: Date.now() + 1000 * 60 * 60 * 24,
-                verified: true,
-                rating: 4.8,
-                services: ["Dépannage fuite", "Installation", "Entretien"],
-                portfolio: [
-                    "https://source.unsplash.com/400x400/?plumbing,tools",
-                    "https://source.unsplash.com/400x400/?pipe,repair",
-                    "https://source.unsplash.com/400x400/?bathroom,plumber"
-                ],
-                isMobile: true,
-                coverage: ["Marcory", "Koumassi", "Treichville"],
-                lat: 4.051250,
-                lng: 9.766700,
-                status: "open",
-                live: false,
-                voicePitch: "Dépannage fuite et installation. Intervention rapide dans votre quartier.",
-                avatar: "https://ui-avatars.com/api/?name=Plombier+Express&background=16a085&color=fff"
-            },
-            {
-                id: 5,
-                name: "Électricien Sécurité",
-                category: "🔧 Services",
-                trade: "Électricien",
-                kind: "service",
-                verified: true,
-                rating: 4.6,
-                services: ["Dépannage", "Installation", "Sécurité"],
-                portfolio: [
-                    "https://source.unsplash.com/400x400/?electrician,wiring",
-                    "https://source.unsplash.com/400x400/?electrical,panel",
-                    "https://source.unsplash.com/400x400/?tools,electric"
-                ],
-                isMobile: true,
-                coverage: ["Bonapriso", "Akwa", "Deido"],
-                lat: 4.050900,
-                lng: 9.769800,
-                status: "open",
-                live: false,
-                voicePitch: "Pannes, installations, sécurité électrique. Devis rapide.",
-                avatar: "https://ui-avatars.com/api/?name=Electricien&background=0ea5e9&color=fff"
-            },
-            {
-                id: 6,
-                name: "Réparateur Mobile",
-                category: "📱 Électronique",
-                trade: "Réparateur téléphone",
-                kind: "service",
-                verified: false,
-                rating: 4.5,
-                services: ["Écran", "Batterie", "Charge"],
-                isMobile: true,
-                coverage: ["Akwa", "Bali", "Bonanjo"],
-                lat: 4.052150,
-                lng: 9.769300,
-                status: "open",
-                live: false,
-                voicePitch: "Écran cassé, batterie, charge. Diagnostic en 10 minutes.",
-                avatar: "https://ui-avatars.com/api/?name=Reparateur+Tel&background=2563eb&color=fff"
-            },
-            {
-                id: 7,
-                name: "Menuisier Bois Pro",
-                category: "🔧 Services",
-                trade: "Menuisier / Ébéniste",
-                kind: "service",
-                verified: true,
-                rating: 4.4,
-                services: ["Meubles", "Portes", "Réparations"],
-                portfolio: [
-                    "https://source.unsplash.com/400x400/?carpentry,wood",
-                    "https://source.unsplash.com/400x400/?furniture,wood",
-                    "https://source.unsplash.com/400x400/?workshop,carpenter"
-                ],
-                isMobile: true,
-                coverage: ["Koumassi", "Logpom", "Bepanda"],
-                lat: 4.049900,
-                lng: 9.768900,
-                status: "open",
-                live: false,
-                voicePitch: "Meubles, portes, réparations. Travail soigné.",
-                avatar: "https://ui-avatars.com/api/?name=Menuisier&background=8b5a2b&color=fff"
-            }
-        ];
+        const VENDORS = lpCloneCountryVendors(LP_COUNTRY_CONTEXT?.vendors);
+        if (!VENDORS.length) {
+            VENDORS.push(
+                {
+                    id: 'fallback_shop_1',
+                    name: 'Boutique Locale',
+                    category: '🛒 Boutique',
+                    kind: 'shop',
+                    lat: BASE_USER_POS[0] + 0.0012,
+                    lng: BASE_USER_POS[1] + 0.0012,
+                    status: 'open',
+                    live: false,
+                    voicePitch: 'Produits du quotidien autour de vous.',
+                    avatar: 'https://ui-avatars.com/api/?name=Boutique+Locale&background=1a5f3f&color=fff'
+                },
+                {
+                    id: 'fallback_service_1',
+                    name: 'Service Local+',
+                    category: '🔧 Services',
+                    kind: 'service',
+                    trade: 'Prestataire',
+                    verified: true,
+                    rating: 4.6,
+                    isMobile: true,
+                    coverage: ['Centre', 'Nord', 'Sud'],
+                    lat: BASE_USER_POS[0] + 0.0008,
+                    lng: BASE_USER_POS[1] + 0.0017,
+                    status: 'open',
+                    live: false,
+                    voicePitch: 'Prestataire de proximite disponible autour de vous.',
+                    avatar: 'https://ui-avatars.com/api/?name=Service+LocalPlus&background=0ea5e9&color=fff'
+                }
+            );
+        }
 
         // === MANGOO LAB LOGIC ===
         function openLabModal() {
@@ -5621,7 +5589,7 @@
             }
         });
 
-        // === DONNÉES (Douala, Cameroun) ===
+        // === DONNEES LOCAL+ CONTEXTUALISEES PAR PAYS ===
         // USER_POS already declared above
         // VENDORS already declared above
         let currentMarkers = [];
@@ -8961,6 +8929,10 @@
                 applyBoostConfigToVendors();
             } catch {
             }
+            try {
+                lpApplyCountryUiConfig();
+            } catch {
+            }
 
             relocateVendorsNearUser();
             addMyProfileVendor();
@@ -10349,7 +10321,7 @@
                     <div style="flex: 1; overflow-y: auto; padding: 20px;">
                         <!-- 1. SCAN SIMULATION -->
                         <div style="position: relative; width: 100%; height: 180px; background: #333; border-radius: 12px; margin-bottom: 20px; overflow: hidden;">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/6/62/Carte_d%27identit%C3%A9_Camerounaise.jpg" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.7;">
+                            <img id="lpVerificationDocImage" src="https://upload.wikimedia.org/wikipedia/commons/6/62/Carte_d%27identit%C3%A9_Camerounaise.jpg" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.7;">
                             
                             <!-- Scanning Laser -->
                             <div style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: #00ff00; box-shadow: 0 0 10px #00ff00; animation: scanDoc 2s infinite;"></div>
