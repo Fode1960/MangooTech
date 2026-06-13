@@ -13980,11 +13980,55 @@
         }
 
         function openBoostFromLocal(vendorId, vendorKind) {
-            const v = VENDORS.find((x) => String(x?.id) === String(vendorId)) || activeVendor;
+            const wantedId = String(vendorId || '').trim();
+            let v = null;
+            try {
+                v = VENDORS.find((x) => String(x?.id) === wantedId) || null;
+            } catch {
+                v = null;
+            }
+            if (!v && wantedId) {
+                try {
+                    if (typeof hydrateVendorsFromStorage === 'function') hydrateVendorsFromStorage();
+                    v = VENDORS.find((x) => String(x?.id) === wantedId) || null;
+                } catch {
+                    v = null;
+                }
+            }
+            if (!v && wantedId) {
+                try {
+                    const readList = (key) => {
+                        try {
+                            const raw = localStorage.getItem(key);
+                            const parsed = raw ? JSON.parse(raw) : [];
+                            return Array.isArray(parsed) ? parsed : [];
+                        } catch {
+                            return [];
+                        }
+                    };
+                    const all = [
+                        ...readList('mangoo_custom_vendors'),
+                        ...readList('mangoo_vendors'),
+                        ...readList('mangoo_local_vendors_catalog')
+                    ];
+                    v = all.find((x) => String(x?.id) === wantedId) || null;
+                } catch {
+                    v = null;
+                }
+            }
+            if (!v) {
+                try {
+                    const activeId = String(activeVendor?.id || '').trim();
+                    if (!wantedId || (activeId && activeId === wantedId)) v = activeVendor;
+                } catch {
+                    v = null;
+                }
+            }
             if (!v) {
                 try { lpToast("Booster indisponible: boutique introuvable.", 'error'); } catch {}
                 return;
             }
+            try { activeVendor = v; } catch {}
 
             const resolvedKind = (() => {
                 const raw = String(vendorKind || '').trim().toLowerCase()
@@ -13995,10 +14039,18 @@
 
             let email = '';
             try {
-                const currentUser = getLpCurrentUser ? getLpCurrentUser() : null;
-                email = String(currentUser?.email || '').trim().toLowerCase();
+                const ownerEmail = String(v?.ownerEmail || v?.owner_email || v?.email || '').trim().toLowerCase();
+                if (ownerEmail && ownerEmail.includes('@')) email = ownerEmail;
             } catch {
                 email = '';
+            }
+            if (!email) {
+                try {
+                    const currentUser = getLpCurrentUser ? getLpCurrentUser() : null;
+                    email = String(currentUser?.email || '').trim().toLowerCase();
+                } catch {
+                    email = '';
+                }
             }
             if (!email) {
                 try {
@@ -14019,6 +14071,7 @@
 
             try {
                 localStorage.setItem('mangoo-vendor-active-tab', 'boosts');
+                localStorage.setItem('mangoo-open-vendor-id', String(v.id));
                 localStorage.setItem(
                     'mangoo_boost_target',
                     JSON.stringify({ vendorId: String(v.id), vendorKind: String(resolvedKind || '') })
@@ -14028,6 +14081,7 @@
             let returnTo = `${window.location.origin}${window.location.pathname}${window.location.search}${window.location.hash}`;
             try {
                 const u = new URL(returnTo);
+                u.searchParams.set('vendor', String(v.id));
                 u.searchParams.set('boostSync', '1');
                 returnTo = u.toString();
             } catch {
@@ -14039,6 +14093,15 @@
                 email: email
             });
             const target = `/boosts?${params.toString()}`;
+            try {
+                window.__lpBoostReturnContext = {
+                    returnTo: String(returnTo || ''),
+                    vendorId: String(v.id || ''),
+                    vendorKind: String(resolvedKind || ''),
+                    scrollY: Number(window.scrollY || window.pageYOffset || 0) || 0
+                };
+            } catch {
+            }
             try {
                 const opened = !!lpOpenBoostOverlay(target);
                 if (opened) {
@@ -14095,9 +14158,9 @@
                     overlay.innerHTML = `
                         <div style="position:absolute; inset:0; display:flex; flex-direction:column; background: rgba(255,255,255,0.98);">
                             <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-bottom: 1px solid rgba(0,0,0,0.08); background: linear-gradient(90deg, rgba(249,115,22,0.12), rgba(16,185,129,0.12));">
-                                <button type="button" onclick="lpCloseBoostOverlay()" style="border:0; background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.08); border-radius: 999px; padding: 10px 14px; font-weight: 900; cursor:pointer;">← Retour</button>
+                                <button type="button" onclick="lpHandleBoostReturn()" style="border:0; background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.08); border-radius: 999px; padding: 10px 14px; font-weight: 900; cursor:pointer;">← Retour</button>
                                 <div style="font-weight: 950; color: #0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Boost (Informel)</div>
-                                <button type="button" onclick="lpCloseBoostOverlay()" style="border:0; background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.08); border-radius: 999px; padding: 10px 14px; font-weight: 950; cursor:pointer;">✕</button>
+                                <button type="button" onclick="lpHandleBoostReturn()" style="border:0; background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.08); border-radius: 999px; padding: 10px 14px; font-weight: 950; cursor:pointer;">✕</button>
                             </div>
                             <iframe id="lpBoostFrame" title="Boost" style="flex:1; width:100%; border:0; background:white;"></iframe>
                         </div>
@@ -14161,20 +14224,80 @@
             }
         }
 
+        function lpHandleBoostReturn(explicitReturnTo) {
+            let returnTo = '';
+            let vendorId = '';
+            let scrollY = 0;
+            try {
+                const ctx = window.__lpBoostReturnContext || {};
+                returnTo = String(explicitReturnTo || ctx.returnTo || '').trim();
+                vendorId = String(ctx.vendorId || '').trim();
+                scrollY = Number(ctx.scrollY || 0) || 0;
+            } catch {
+            }
+            if (!returnTo) {
+                try {
+                    const frame = document.getElementById('lpBoostFrame');
+                    const src = String(frame?.src || '').trim();
+                    if (src) {
+                        const u = new URL(src, window.location.origin);
+                        returnTo = String(u.searchParams.get('return') || '').trim();
+                        if (!vendorId) vendorId = String(u.searchParams.get('vendorId') || '').trim();
+                    }
+                } catch {
+                }
+            }
+
+            lpCloseBoostOverlay();
+
+            try {
+                const clearCtx = () => {
+                    try { window.__lpBoostReturnContext = null; } catch {}
+                };
+                if (returnTo) {
+                    const u = new URL(returnTo, window.location.origin);
+                    const sameOrigin = u.origin === window.location.origin;
+                    const sameLocalPage = sameOrigin && (u.pathname === window.location.pathname || u.pathname.endsWith('/mangoo-local.html'));
+                    const returnVendorId = String(u.searchParams.get('vendor') || vendorId || '').trim();
+                    if (sameLocalPage) {
+                        if (returnVendorId) {
+                            try { localStorage.setItem('mangoo-open-vendor-id', returnVendorId); } catch {}
+                            try { u.searchParams.set('vendor', returnVendorId); } catch {}
+                        }
+                        try { u.searchParams.delete('boostSync'); } catch {}
+                        try { window.history.replaceState({}, '', u.toString()); } catch {}
+                        try { window.scrollTo({ top: scrollY, behavior: 'auto' }); } catch {}
+                        if (returnVendorId) {
+                            setTimeout(() => {
+                                try { openVendorSheetById(returnVendorId, { retries: 8, retryDelay: 220, clearPendingOpenId: true }); } catch {}
+                            }, 120);
+                        }
+                        clearCtx();
+                        return;
+                    }
+                    clearCtx();
+                    window.location.href = u.toString();
+                    return;
+                }
+                if (vendorId) {
+                    try { localStorage.setItem('mangoo-open-vendor-id', vendorId); } catch {}
+                    try { window.scrollTo({ top: scrollY, behavior: 'auto' }); } catch {}
+                    setTimeout(() => {
+                        try { openVendorSheetById(vendorId, { retries: 8, retryDelay: 220, clearPendingOpenId: true }); } catch {}
+                    }, 120);
+                }
+                clearCtx();
+            } catch {
+            }
+        }
+
         window.addEventListener('message', function (event) {
             try {
                 if (!event || event.origin !== window.location.origin) return;
                 const data = event.data;
                 if (!data || typeof data !== 'object') return;
                 if (String(data.type || '') !== 'lp_boost_close') return;
-                const returnTo = String(data.returnTo || '').trim();
-                lpCloseBoostOverlay();
-                if (returnTo) {
-                    try {
-                        window.location.href = returnTo;
-                    } catch {
-                    }
-                }
+                lpHandleBoostReturn(String(data.returnTo || '').trim());
             } catch {
             }
         });
@@ -18324,9 +18447,9 @@
     <div id="lpBoostOverlay" style="display:none; position:fixed; inset:0; z-index: 999999; background: rgba(0,0,0,0.55);">
         <div style="position:absolute; inset:0; display:flex; flex-direction:column; background: rgba(255,255,255,0.98);">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-bottom: 1px solid rgba(0,0,0,0.08); background: linear-gradient(90deg, rgba(249,115,22,0.12), rgba(16,185,129,0.12));">
-                <button type="button" onclick="lpCloseBoostOverlay()" style="border:0; background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.08); border-radius: 999px; padding: 10px 14px; font-weight: 900; cursor:pointer;">← Retour</button>
+                <button type="button" onclick="lpHandleBoostReturn()" style="border:0; background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.08); border-radius: 999px; padding: 10px 14px; font-weight: 900; cursor:pointer;">← Retour</button>
                 <div style="font-weight: 950; color: #0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Boost (Informel)</div>
-                <button type="button" onclick="lpCloseBoostOverlay()" style="border:0; background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.08); border-radius: 999px; padding: 10px 14px; font-weight: 950; cursor:pointer;">✕</button>
+                <button type="button" onclick="lpHandleBoostReturn()" style="border:0; background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.08); border-radius: 999px; padding: 10px 14px; font-weight: 950; cursor:pointer;">✕</button>
             </div>
             <iframe id="lpBoostFrame" title="Boost" style="flex:1; width:100%; border:0; background:white;"></iframe>
         </div>

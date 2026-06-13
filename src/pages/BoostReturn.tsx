@@ -3,6 +3,8 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../config/supabase'
 
 const LOCAL_ORDERS_PREFIX = 'mangoo_boost_orders:'
+const PENDING_BOOST_PREFIX = 'mangoo_boost_pending:'
+const PENDING_BOOST_LAST_KEY = 'mangoo_boost_pending:last'
 
 const safeString = (v: any) => String(v ?? '').trim()
 const parseMs = (value: any) => {
@@ -35,6 +37,81 @@ function writeLocalOrders(email: string, orders: any[]) {
     localStorage.setItem(key, JSON.stringify(Array.isArray(orders) ? orders : []))
   } catch {
   }
+}
+
+function buildReturnTarget(pending: any) {
+  const explicit = safeString(pending?.returnTo)
+  if (explicit) return explicit
+  const vendorId = safeString(pending?.vendorId)
+  const vendorKind = safeString(pending?.vendorKind).toLowerCase()
+  const shopSlug = safeString(pending?.shopSlug)
+  if (vendorKind === 'provider' && vendorId) {
+    return `/mangoo-local.html?vendor=${encodeURIComponent(vendorId)}`
+  }
+  if (vendorKind === 'shop' && shopSlug) {
+    return `/shop/${encodeURIComponent(shopSlug)}`
+  }
+  return '/'
+}
+
+function buildBoostsTarget(pending: any) {
+  const vendorId = safeString(pending?.vendorId)
+  const vendorKind = safeString(pending?.vendorKind).toLowerCase()
+  if (!vendorId || (vendorKind !== 'shop' && vendorKind !== 'provider')) return '/connexion'
+  const params = new URLSearchParams()
+  params.set('vendorId', vendorId)
+  params.set('vendorKind', vendorKind)
+  const returnTo = buildReturnTarget(pending)
+  if (returnTo && returnTo !== '/') params.set('return', returnTo)
+  return `/boosts?${params.toString()}`
+}
+
+function readPendingBoostContext() {
+  try {
+    const rawUser = localStorage.getItem('mangoo-current-user')
+    const parsedUser = rawUser ? JSON.parse(rawUser) : null
+    const email = safeString(parsedUser?.email).toLowerCase()
+    if (email) {
+      const raw = localStorage.getItem(`${PENDING_BOOST_PREFIX}${email}`)
+      const pending = raw ? JSON.parse(raw) : null
+      if (pending?.vendorId && pending?.vendorKind) return { pending, email }
+    }
+  } catch {
+  }
+
+  try {
+    const raw = localStorage.getItem(PENDING_BOOST_LAST_KEY)
+    const pending = raw ? JSON.parse(raw) : null
+    const email = safeString(pending?.email).toLowerCase()
+    if (pending?.vendorId && pending?.vendorKind) return { pending, email }
+  } catch {
+  }
+
+  try {
+    let latest: any = null
+    let latestEmail = ''
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = String(localStorage.key(i) || '')
+      if (!key.startsWith(PENDING_BOOST_PREFIX)) continue
+      if (key === PENDING_BOOST_LAST_KEY) continue
+      try {
+        const raw = localStorage.getItem(key)
+        const pending = raw ? JSON.parse(raw) : null
+        if (!pending?.vendorId || !pending?.vendorKind) continue
+        const savedAt = Number(pending?.savedAt || 0)
+        const currentLatest = Number(latest?.savedAt || 0)
+        if (!latest || savedAt >= currentLatest) {
+          latest = pending
+          latestEmail = key.slice(PENDING_BOOST_PREFIX.length).trim().toLowerCase()
+        }
+      } catch {
+      }
+    }
+    if (latest?.vendorId && latest?.vendorKind) return { pending: latest, email: latestEmail }
+  } catch {
+  }
+
+  return { pending: null, email: '' }
 }
 
 async function resolveCanonicalShopIds(params: { vendorId: string; vendorKind: string; shopSlug?: string; email?: string }) {
@@ -142,6 +219,9 @@ export default function BoostReturn({ mode }: { mode: 'success' | 'cancel' }) {
   const [params] = useSearchParams()
   const navigate = useNavigate()
   const [tick, setTick] = useState(0)
+  const [returnTarget, setReturnTarget] = useState('/')
+  const [boostsTarget, setBoostsTarget] = useState('/connexion')
+  const [autoRedirectReady, setAutoRedirectReady] = useState(false)
 
   useEffect(() => {
     const id = window.setInterval(() => setTick((x) => x + 1), 1500)
@@ -152,16 +232,23 @@ export default function BoostReturn({ mode }: { mode: 'success' | 'cancel' }) {
   const orderId = useMemo(() => String(params.get('order_id') || '').trim(), [params, tick])
 
   useEffect(() => {
+    try {
+      const { pending } = readPendingBoostContext()
+      if (!pending) return
+      setReturnTarget(buildReturnTarget(pending))
+      setBoostsTarget(buildBoostsTarget(pending))
+    } catch {
+    }
+  }, [mode, orderId, sessionId])
+
+  useEffect(() => {
     if (mode !== 'success') return
     ;(async () => {
       try {
-        const rawUser = localStorage.getItem('mangoo-current-user')
-        const parsedUser = rawUser ? JSON.parse(rawUser) : null
-        const email = safeString(parsedUser?.email).toLowerCase()
-        if (!email) return
-        const raw = localStorage.getItem(`mangoo_boost_pending:${email}`)
-        const pending = raw ? JSON.parse(raw) : null
+        const { pending, email } = readPendingBoostContext()
         if (!pending?.vendorId || !pending?.vendorKind || !pending?.kind || !pending?.durationHours) return
+        setReturnTarget(buildReturnTarget(pending))
+        setBoostsTarget(buildBoostsTarget(pending))
         const savedAt = Number(pending?.savedAt || 0)
         if (!Number.isFinite(savedAt) || Date.now() - savedAt > 60 * 60 * 1000) return
 
@@ -194,18 +281,34 @@ export default function BoostReturn({ mode }: { mode: 'success' | 'cancel' }) {
           expires_at: expiresAtIso,
           created_at: new Date().toISOString(),
         }
-        const allOrders = readLocalOrders(email).filter((o: any) => String(o?.id || '') !== order.id)
-        writeLocalOrders(email, [order, ...allOrders].slice(0, 100))
+        if (email) {
+          const allOrders = readLocalOrders(email).filter((o: any) => String(o?.id || '') !== order.id)
+          writeLocalOrders(email, [order, ...allOrders].slice(0, 100))
+        }
 
         try {
           window.dispatchEvent(new Event('mangoo-boosts-updated'))
         } catch {
         }
-        localStorage.removeItem(`mangoo_boost_pending:${email}`)
+        if (email) localStorage.removeItem(`${PENDING_BOOST_PREFIX}${email}`)
+        localStorage.removeItem(PENDING_BOOST_LAST_KEY)
       } catch {
+      } finally {
+        setAutoRedirectReady(true)
       }
     })()
   }, [mode, orderId, sessionId])
+
+  useEffect(() => {
+    if (mode !== 'success') return
+    if (!autoRedirectReady) return
+    const target = safeString(returnTarget)
+    if (!target) return
+    const id = window.setTimeout(() => {
+      window.location.href = target
+    }, 1200)
+    return () => window.clearTimeout(id)
+  }, [autoRedirectReady, mode, returnTarget])
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-6">
@@ -215,7 +318,7 @@ export default function BoostReturn({ mode }: { mode: 'success' | 'cancel' }) {
         </div>
         <div className="mt-2 text-sm text-gray-600 dark:text-gray-300">
           {mode === 'success'
-            ? 'Ton boost sera activé automatiquement après confirmation serveur.'
+            ? 'Ton boost est activé. Retour vers ta fiche en cours...'
             : 'Tu peux relancer le paiement depuis ton espace vendeur.'}
         </div>
 
@@ -235,10 +338,12 @@ export default function BoostReturn({ mode }: { mode: 'success' | 'cancel' }) {
         <div className="mt-6 flex flex-wrap gap-3 justify-end">
           <button
             type="button"
-            onClick={() => navigate('/')}
+            onClick={() => {
+              window.location.href = safeString(returnTarget) || '/'
+            }}
             className="px-4 py-2 rounded-xl text-sm font-bold bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
           >
-            Retour
+            Voir ma fiche
           </button>
           <button
             type="button"
@@ -247,6 +352,11 @@ export default function BoostReturn({ mode }: { mode: 'success' | 'cancel' }) {
                 localStorage.setItem('mangoo-vendor-active-tab', 'boosts')
                 localStorage.setItem('mangoo-last-view', 'connexion')
               } catch {
+              }
+              const next = safeString(boostsTarget)
+              if (next && next !== '/connexion') {
+                window.location.href = next
+                return
               }
               navigate('/connexion')
             }}
@@ -259,4 +369,3 @@ export default function BoostReturn({ mode }: { mode: 'success' | 'cancel' }) {
     </div>
   )
 }
-

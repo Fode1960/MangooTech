@@ -58,6 +58,7 @@ const LOCAL_ORDERS_PREFIX = 'mangoo_boost_orders:'
 const LOCAL_CONFIG_KEY = 'mangoo_boost_config'
 const TARGET_PREF_KEY = 'mangoo_boost_target:'
 const PENDING_BOOST_PREFIX = 'mangoo_boost_pending:'
+const PENDING_BOOST_LAST_KEY = 'mangoo_boost_pending:last'
 const BOOST_TARGET_HINT_KEY = 'mangoo_boost_target:hint:'
 const CREDITS_SYNCED_PREFIX = 'mangoo_boost_credits:synced:'
 
@@ -69,6 +70,23 @@ function getBoostTargetHintKey(email: string) {
 function isUuidLike(value: string): boolean {
   const v = String(value || '').trim()
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v)
+}
+
+function isPrivateIpv4Host(value: string): boolean {
+  const h = String(value || '').trim().toLowerCase()
+  const host = h.includes(':') ? h.split(':')[0] : h
+  const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host)
+  if (!m) return false
+  const a = Number(m[1])
+  const b = Number(m[2])
+  const c = Number(m[3])
+  const d = Number(m[4])
+  const parts = [a, b, c, d]
+  if (parts.some((x) => !Number.isFinite(x) || x < 0 || x > 255)) return false
+  if (a === 10) return true
+  if (a === 192 && b === 168) return true
+  if (a === 172 && b >= 16 && b <= 31) return true
+  return false
 }
 
 function readBoostTargetHint(email: string): { vendorId: string; vendorKind: 'shop' | 'provider' } | null {
@@ -512,6 +530,15 @@ function isLocalhostRuntime(): boolean {
   }
 }
 
+function isLocalNetworkRuntime(): boolean {
+  try {
+    const h = String(window?.location?.hostname || '').trim().toLowerCase()
+    return isLocalhostRuntime() || isPrivateIpv4Host(h)
+  } catch {
+    return false
+  }
+}
+
 function isPcDemoEmail(email: string): boolean {
   const e = String(email || '').trim().toLowerCase()
   return /^pc\d+@/.test(e)
@@ -535,6 +562,27 @@ function getPcDemoEmailAliases(email: string): string[] {
   if (e.endsWith('@example.com')) out.add(e.replace('@example.com', '@exemple.com'))
   if (e.endsWith('@exemple.com')) out.add(e.replace('@exemple.com', '@example.com'))
   return Array.from(out)
+}
+
+function readBoostReturnTarget(params: { vendorId?: string | null; vendorKind?: string | null; shopSlug?: string | null }) {
+  try {
+    const currentUrl = new URL(window.location.href)
+    const explicit = String(currentUrl.searchParams.get('return') || '').trim()
+    if (explicit) return explicit
+  } catch {
+  }
+
+  const vendorId = String(params.vendorId || '').trim()
+  const vendorKind = String(params.vendorKind || '').trim().toLowerCase()
+  const shopSlug = String(params.shopSlug || '').trim()
+
+  if (vendorKind === 'provider' && vendorId) {
+    return `/mangoo-local.html?vendor=${encodeURIComponent(vendorId)}`
+  }
+  if (vendorKind === 'shop' && shopSlug) {
+    return `/shop/${encodeURIComponent(shopSlug)}`
+  }
+  return ''
 }
 
 export function VendorBoosts({ userEmail }: { userEmail: string }) {
@@ -806,6 +854,71 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
       }
     }
 
+    const localPlusProviderTargets: VendorTarget[] = []
+    if (email) {
+      try {
+        const readList = (key: string) => {
+          try {
+            const raw = localStorage.getItem(key)
+            const parsed = raw ? JSON.parse(raw) : []
+            return Array.isArray(parsed) ? parsed : []
+          } catch {
+            return []
+          }
+        }
+        const list = [...readList('mangoo_custom_vendors'), ...readList('mangoo_vendors')]
+        for (const v of list as any[]) {
+          const kind = String(v?.kind || '').trim().toLowerCase()
+          if (kind !== 'service' && kind !== 'provider') continue
+          const ownerEmail = String(v?.ownerEmail || v?.owner_email || v?.email || '').trim().toLowerCase()
+          if (!ownerEmail || ownerEmail !== email) continue
+          const id = v?.id
+          if (id === undefined || id === null) continue
+          const vendorId = String(id).trim()
+          if (!vendorId) continue
+          const name = String(v?.name || `Prestataire ${vendorId}`).trim() || `Prestataire ${vendorId}`
+          localPlusProviderTargets.push({ vendorId, vendorKind: 'provider', name })
+        }
+      } catch {
+      }
+    }
+
+    const remoteProviderTargets: VendorTarget[] = []
+    if (email) {
+      try {
+        let authToken = ''
+        let authUserId = ''
+        try {
+          const { data: sessionData } = await supabase.auth.getSession()
+          authToken = String(sessionData?.session?.access_token || '').trim()
+          authUserId = String(sessionData?.session?.user?.id || '').trim()
+        } catch {
+          authToken = ''
+          authUserId = ''
+        }
+        const res = await fetch('/api/local-sync/localplus/vendors?kind=provider', {
+          headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
+        })
+        const parsed = await res.json().catch(() => null as any)
+        const list = Array.isArray(parsed?.vendors) ? parsed.vendors : []
+        for (const vendor of list as any[]) {
+          const ownerEmail = String(vendor?.ownerEmail || vendor?.owner_email || '').trim().toLowerCase()
+          const ownerUserId = String(vendor?.userId || vendor?.user_id || '').trim()
+          const isOwned = Boolean(
+            (ownerEmail && ownerEmail === email) ||
+            (authUserId && ownerUserId && ownerUserId === authUserId) ||
+            vendor?.isUserOwned === true
+          )
+          if (!isOwned) continue
+          const id = String(vendor?.id || '').trim()
+          if (!id) continue
+          const name = String(vendor?.name || `Prestataire ${id}`).trim() || `Prestataire ${id}`
+          remoteProviderTargets.push({ vendorId: id, vendorKind: 'provider', name })
+        }
+      } catch {
+      }
+    }
+
     const forcedFromGlobalHint: VendorTarget | null = (() => {
       try {
         if (!globalHint || globalHint.vendorKind !== 'shop') return null
@@ -859,9 +972,11 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
     if (forcedFromQuery) list.push(forcedFromQuery)
     if (forcedFromGlobalHint) list.push(forcedFromGlobalHint)
     for (const t of localPlusShopTargets) list.push(t)
+    for (const t of localPlusProviderTargets) list.push(t)
     for (const t of localSyncShopTargets) list.push(t)
     for (const t of demoShopTargets) list.push(t)
     for (const t of supabaseShopTargets) list.push(t)
+    for (const t of remoteProviderTargets) list.push(t)
     const uniq = new Map<string, VendorTarget>()
     for (const t of list) uniq.set(`${t.vendorKind}:${t.vendorId}`, t)
     const finalList = Array.from(uniq.values()).sort((a, b) => {
@@ -1102,7 +1217,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
     try {
       const target = await computeTargets()
       const emailLower = readEffectiveEmail(userEmail)
-      const forceDevMode = isDemoLoginEmail(emailLower) || (isLocalhostRuntime() && isPcDemoEmail(emailLower))
+      const forceDevMode = isDemoLoginEmail(emailLower) || (isLocalNetworkRuntime() && isPcDemoEmail(emailLower))
       let token = ''
       if (!forceDevMode) {
         try {
@@ -1239,7 +1354,9 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         }
 
         const remoteVal = Number.isFinite(remoteCredits) ? Math.max(0, Math.floor(remoteCredits)) : 0
-        const nextCredits = sawRemote ? remoteVal : localCredits
+        const nextCredits = sawRemote
+          ? (isLocalNetworkRuntime() ? Math.max(remoteVal, localCredits) : remoteVal)
+          : localCredits
 
         const pending = pendingCreditsRef.current
         if (pending && safeNowMs() < pending.until && nextCredits !== pending.expected) {
@@ -1346,6 +1463,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
               }
             }
           }
+          if (isLocalNetworkRuntime()) next = Math.max(next, localCredits)
           const pending = pendingCreditsRef.current
           if (pending && safeNowMs() < pending.until && next !== pending.expected) {
             setBalanceStatus('ready')
@@ -1380,6 +1498,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
               }
             }
           }
+          if (isLocalNetworkRuntime()) next = Math.max(next, localCredits)
           const pending = pendingCreditsRef.current
           if (pending && safeNowMs() < pending.until && next !== pending.expected) {
             setBalanceStatus('ready')
@@ -1416,6 +1535,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
             }
           }
         }
+        if (isLocalNetworkRuntime()) next = Math.max(next, localCredits)
         const pending = pendingCreditsRef.current
         if (pending && safeNowMs() < pending.until && next !== pending.expected) {
           setBalanceStatus('ready')
@@ -1547,60 +1667,119 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
     setTopupBusy(true)
     setError(null)
     try {
-      const forceDevMode = isDemoLoginEmail(email) || (isLocalhostRuntime() && isPcDemoEmail(email))
-      const token = forceDevMode ? '' : await getToken()
-      if (token) {
-        const res = await fetchJsonOnce(
-          '/api/boosts/credits/topup',
+      const emailAliases = getExampleDomainAliases(email)
+      const forceDevMode = isDemoLoginEmail(email) || isLocalNetworkRuntime() || (isLocalhostRuntime() && isPcDemoEmail(email))
+      const localNetworkOnly = isLocalNetworkRuntime() && !isLocalhostRuntime()
+      const scheduleBackgroundRefresh = () => {
+        // Mobile Safari on local LAN can fail after the server already applied the credit update.
+        void (async () => {
+          await sleep(1200)
+          try {
+            await load()
+          } catch {
+          }
+        })()
+      }
+      const applyTopupResult = async (
+        nextValue: number,
+        options?: { refresh?: boolean; showToast?: boolean; markSynced?: boolean }
+      ) => {
+        const finalBal = Number.isFinite(nextValue) ? Math.max(0, Math.floor(nextValue)) : 0
+        for (const e of emailAliases) writeLocalCredits(e, finalBal)
+        setBalanceXof(finalBal)
+        setBalanceStatus('ready')
+        pendingCreditsRef.current = { expected: finalBal, until: safeNowMs() + 5000 }
+        if (pendingCreditsTimerRef.current) {
+          window.clearTimeout(pendingCreditsTimerRef.current)
+          pendingCreditsTimerRef.current = null
+        }
+        if (options?.markSynced) {
+          for (const e of emailAliases) markCreditsSynced(e)
+        }
+        if (options?.showToast !== false) {
+          toast.success(`Crédits rechargés: +${formatXof(amount)} XOF`)
+        }
+        setTopupOpen(false)
+        if (options?.refresh !== false) scheduleBackgroundRefresh()
+      }
+
+      const readBestLocalBalance = () => {
+        let current = balanceXof === null ? 0 : Math.max(0, Math.floor(Number(balanceXof || 0)))
+        for (const e of emailAliases) current = Math.max(current, readLocalCredits(e))
+        return current
+      }
+
+      const devSetBalanceTopup = async (wantedOverride?: number) => {
+        const wanted = Number.isFinite(wantedOverride) ? Math.max(0, Math.floor(Number(wantedOverride))) : (readBestLocalBalance() + amount)
+        const setRes = await fetchJsonOnce(
+          '/api/boosts/credits/set-dev',
           {
             method: 'POST',
-            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount_xof: amount })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, balance_xof: wanted })
           },
-          9000
+          6000
         )
-        if (res.ok && res.json?.success) {
-          const next = Math.floor(Number(res.json?.balanceXof ?? 0))
-          const finalBal = Number.isFinite(next) ? next : 0
-          writeLocalCredits(email, finalBal)
-          setBalanceXof(finalBal)
-          setBalanceStatus('ready')
-          pendingCreditsRef.current = { expected: finalBal, until: safeNowMs() + 5000 }
-          if (pendingCreditsTimerRef.current) {
-            window.clearTimeout(pendingCreditsTimerRef.current)
-            pendingCreditsTimerRef.current = null
-          }
-          toast.success(`Crédits rechargés: +${formatXof(amount)} XOF`)
-          setTopupOpen(false)
-          await sleep(1200)
-          await load()
-          return
+        if (!setRes.ok || !setRes.json?.success) {
+          throw new Error(setRes.json?.error || `HTTP ${setRes.status}`)
         }
-        throw new Error(res.json?.error || `HTTP ${res.status}`)
+        return Math.floor(Number(setRes.json?.balanceXof ?? setRes.json?.balance_xof ?? wanted))
       }
-      const wanted = readLocalCredits(email) + amount
-      const setRes = await fetchJsonOnce(
-        '/api/boosts/credits/set-dev',
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, balance_xof: wanted }) },
-        6000
-      )
-      if (!setRes.ok || !setRes.json?.success) throw new Error(setRes.json?.error || `HTTP ${setRes.status}`)
-      const next = Math.floor(Number(setRes.json?.balanceXof ?? setRes.json?.balance_xof ?? wanted))
-      const finalBal = Number.isFinite(next) ? next : wanted
-      writeLocalCredits(email, finalBal)
-      setBalanceXof(finalBal)
-      setBalanceStatus('ready')
-      pendingCreditsRef.current = { expected: finalBal, until: safeNowMs() + 5000 }
-      if (pendingCreditsTimerRef.current) {
-        window.clearTimeout(pendingCreditsTimerRef.current)
-        pendingCreditsTimerRef.current = null
+
+      const token = forceDevMode ? '' : await getToken()
+      if (!token && localNetworkOnly) {
+        const optimisticNext = readBestLocalBalance() + amount
+        await applyTopupResult(optimisticNext, { refresh: false })
+        void (async () => {
+          try {
+            const syncedNext = await devSetBalanceTopup(optimisticNext)
+            if (syncedNext !== optimisticNext) {
+              await applyTopupResult(syncedNext, { showToast: false, markSynced: true })
+              return
+            }
+            for (const e of emailAliases) markCreditsSynced(e)
+          } catch {
+          } finally {
+            scheduleBackgroundRefresh()
+          }
+        })()
+        return
       }
-      toast.success(`Crédits rechargés: +${formatXof(amount)} XOF`)
-      setTopupOpen(false)
-      await sleep(1200)
-      await load()
+
+      let remoteError: any = null
+      if (token) {
+        try {
+          const res = await fetchJsonOnce(
+            '/api/boosts/credits/topup',
+            {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ amount_xof: amount })
+            },
+            9000
+          )
+          if (res.ok && res.json?.success) {
+            const next = Math.floor(Number(res.json?.balanceXof ?? 0))
+            await applyTopupResult(next, { markSynced: true })
+            return
+          }
+          remoteError = new Error(res.json?.error || `HTTP ${res.status}`)
+        } catch (e: any) {
+          remoteError = e
+        }
+      }
+
+      try {
+        const next = await devSetBalanceTopup()
+        await applyTopupResult(next, { markSynced: true })
+        return
+      } catch (localError: any) {
+        if (remoteError) throw remoteError
+        throw localError
+      }
     } catch (e: any) {
-      const msg = String(e?.message || 'Erreur recharge crédits')
+      const rawMsg = String(e?.message || 'Erreur recharge crédits')
+      const msg = /failed to fetch|load failed|networkerror/i.test(rawMsg) ? 'Recharge impossible pour le moment. Réessayez.' : rawMsg
       setError(msg)
       toast.error(msg)
     } finally {
@@ -1726,22 +1905,29 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
         if (!url) throw new Error('URL Stripe manquante')
         try {
           const email = String(userEmail || '').trim().toLowerCase()
-          if (email && selectedTarget?.vendorId && selectedTarget?.vendorKind) {
-            localStorage.setItem(
-              `${PENDING_BOOST_PREFIX}${email}`,
-              JSON.stringify({
-                vendorId: String(selectedTarget.vendorId),
-                vendorKind: String(selectedTarget.vendorKind),
-                vendorName: String(selectedTarget.name || ''),
-                shopSlug: String((selectedTarget as any)?.slug || ''),
-                kind: p.kind,
-                durationHours: Number(p.durationHours),
-                sponsoredTier: Number((p as any)?.sponsoredTier || 0) || null,
-                amountXof: Number(p.priceXof || 0),
-                currency: String(p.currency || 'XOF'),
-                savedAt: Date.now(),
-              })
-            )
+          if (selectedTarget?.vendorId && selectedTarget?.vendorKind) {
+            const payload = {
+              email: String(email || ''),
+              vendorId: String(selectedTarget.vendorId),
+              vendorKind: String(selectedTarget.vendorKind),
+              vendorName: String(selectedTarget.name || ''),
+              shopSlug: String((selectedTarget as any)?.slug || ''),
+              returnTo: String(readBoostReturnTarget({
+                vendorId: selectedTarget.vendorId,
+                vendorKind: selectedTarget.vendorKind,
+                shopSlug: (selectedTarget as any)?.slug || null,
+              }) || ''),
+              kind: p.kind,
+              durationHours: Number(p.durationHours),
+              sponsoredTier: Number((p as any)?.sponsoredTier || 0) || null,
+              amountXof: Number(p.priceXof || 0),
+              currency: String(p.currency || 'XOF'),
+              savedAt: Date.now(),
+            }
+            if (email) {
+              localStorage.setItem(`${PENDING_BOOST_PREFIX}${email}`, JSON.stringify(payload))
+            }
+            localStorage.setItem(PENDING_BOOST_LAST_KEY, JSON.stringify(payload))
           }
         } catch {
         }
@@ -2123,7 +2309,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
           </select>
           {!targets.length && (
             <div className="mt-3 text-sm text-gray-600 dark:text-gray-300">
-              Aucune boutique liée à ton compte. Associe d’abord ta boutique (Local+ → “Ma boutique”).
+              Aucune cible liée à ton compte. Associe d’abord ta boutique ou ta fiche prestataire.
             </div>
           )}
         </div>

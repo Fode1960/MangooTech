@@ -77,6 +77,72 @@ const ConnectPlusVendorPage = React.lazy(() => import('./pages/connect-plus/Conn
 const LiveShoppingJoinPage = React.lazy(() => import('./pages/LiveShoppingJoinPage'));
 const InternalMeetPage = React.lazy(() => import('./pages/internal/InternalMeetPage'));
 
+function isProbablyEmailValue(value) {
+  const v = String(value || '').trim().toLowerCase()
+  if (!v) return false
+  const at = v.indexOf('@')
+  if (at <= 0) return false
+  const dot = v.lastIndexOf('.')
+  if (dot <= at + 1) return false
+  if (dot >= v.length - 1) return false
+  return true
+}
+
+function readBoostContextEmail({ queryEmail = '', explicitUserEmail = '' } = {}) {
+  const qp = String(queryEmail || '').trim().toLowerCase()
+  if (isProbablyEmailValue(qp)) return qp
+
+  const userEmail = String(explicitUserEmail || '').trim().toLowerCase()
+  if (isProbablyEmailValue(userEmail)) return userEmail
+
+  try {
+    const raw = localStorage.getItem('mangoo-current-user')
+    const parsed = raw ? JSON.parse(raw) : null
+    const e = String(parsed?.email || '').trim().toLowerCase()
+    if (isProbablyEmailValue(e)) return e
+  } catch {
+  }
+
+  try {
+    const readJson = (key) => {
+      try {
+        const raw = localStorage.getItem(key)
+        return raw ? JSON.parse(raw) : null
+      } catch {
+        return null
+      }
+    }
+    const ids = []
+    const boostTarget = readJson('mangoo_boost_target')
+    const boostTargetId = String(boostTarget?.vendorId || '').trim()
+    if (boostTargetId) ids.push(boostTargetId)
+    for (const key of ['mangoo_my_provider_id', 'mangoo_my_shop_id']) {
+      const value = String(localStorage.getItem(key) || '').trim()
+      if (value) ids.push(value)
+    }
+    const wanted = Array.from(new Set(ids.filter(Boolean)))
+    if (!wanted.length) return ''
+
+    const sources = [
+      readJson('mangoo_custom_vendors'),
+      readJson('mangoo_vendors'),
+      readJson('mangoo_local_vendors_catalog'),
+    ]
+    for (const source of sources) {
+      const list = Array.isArray(source) ? source : []
+      for (const item of list) {
+        const id = String(item?.id || '').trim()
+        if (!id || !wanted.includes(id)) continue
+        const email = String(item?.ownerEmail || item?.owner_email || item?.email || '').trim().toLowerCase()
+        if (isProbablyEmailValue(email)) return email
+      }
+    }
+  } catch {
+  }
+
+  return ''
+}
+
 // Store optimisé avec Zustand
 const useStore = create((set, get) => ({
   user: null,
@@ -4308,8 +4374,10 @@ const VendorDashboard = ({ user }) => {
         return <VendorOrderHistory vendorId="vendor-demo" />;
       case 'notifications':
         return <VendorNotifications vendorId="vendor-demo" />;
-      case 'boosts':
-        return <VendorBoosts userEmail={String(user?.email || '')} />;
+      case 'boosts': {
+        const boostEmail = readBoostContextEmail({ explicitUserEmail: String(user?.email || '') })
+        return <VendorBoosts userEmail={boostEmail} />;
+      }
       case 'communication': {
         const contacts = [
           { id: 'customer_3', name: 'Client Demo', avatar: '🧑‍💻', hint: 'client@example.com' },
@@ -9226,6 +9294,15 @@ function AppShell() {
   const [clientSimpleHome, setClientSimpleHome] = useState(false)
   const [initialState] = useState(() => {
     let view = 'landing';
+    const isBareRootEntry = (() => {
+      try {
+        const path = String(window?.location?.pathname || '').trim()
+        const search = String(window?.location?.search || '').trim()
+        return path === '/' && !search
+      } catch {
+        return false
+      }
+    })()
     try {
       const stored = localStorage.getItem('mangoo-last-view');
       if (stored === 'landing' || stored === 'marketplace' || stored === 'shops' || stored === 'account') {
@@ -9249,6 +9326,11 @@ function AppShell() {
             const saved = email ? localStorage.getItem(`mangoo-active-role:${email}`) : null;
             if (saved) activeRole = String(saved);
           } catch {
+          }
+          // Keep the root URL as a neutral entry point instead of reopening
+          // an old provider session from previous mobile tests.
+          if (isBareRootEntry && activeRole === 'prestataire') {
+            return null;
           }
           if (activeRole && roles.includes(activeRole)) {
             return { ...storedUser, roles, role: activeRole };
@@ -10052,20 +10134,13 @@ function AppShell() {
     return true
   }, [])
 
-  const boostsEmail = useMemo(() => {
-    const qp = String(boostsParams.get('email') || '').trim().toLowerCase()
-    if (isProbablyEmail(qp)) return qp
-    const u = String(user?.email || '').trim().toLowerCase()
-    if (isProbablyEmail(u)) return u
-    try {
-      const raw = localStorage.getItem('mangoo-current-user')
-      const parsed = raw ? JSON.parse(raw) : null
-      const e = String(parsed?.email || '').trim().toLowerCase()
-      return isProbablyEmail(e) ? e : ''
-    } catch {
-      return ''
-    }
-  }, [boostsParams, isProbablyEmail, user?.email])
+  const boostsEmail = useMemo(
+    () => readBoostContextEmail({
+      queryEmail: String(boostsParams.get('email') || ''),
+      explicitUserEmail: String(user?.email || ''),
+    }),
+    [boostsParams, user?.email]
+  )
 
   const [boostsEmailDraft, setBoostsEmailDraft] = useState('')
 
@@ -10147,6 +10222,36 @@ function AppShell() {
 
   // Ensure currentView is never undefined or null
   const safeCurrentView = currentView || 'landing';
+
+  useEffect(() => {
+    try {
+      if (window?.history && 'scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'manual';
+      }
+    } catch {
+    }
+
+    if (String(location?.pathname || '') !== '/') return;
+
+    const resetScrollTop = () => {
+      try {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      } catch {
+        try { window.scrollTo(0, 0); } catch {}
+      }
+      try { document.documentElement.scrollTop = 0; } catch {}
+      try { document.body.scrollTop = 0; } catch {}
+    };
+
+    resetScrollTop();
+    const raf = window.requestAnimationFrame(() => resetScrollTop());
+    const timer = window.setTimeout(() => resetScrollTop(), 120);
+
+    return () => {
+      try { window.cancelAnimationFrame(raf); } catch {}
+      try { window.clearTimeout(timer); } catch {}
+    };
+  }, [location?.pathname, location?.search, safeCurrentView]);
 
   if (location.pathname === '/boosts') {
     const returnTo = String(boostsParams.get('return') || '')
