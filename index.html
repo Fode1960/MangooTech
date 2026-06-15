@@ -16,9 +16,17 @@
       };
       initTheme();
 
+      const getIsDevHost = () => {
+        try {
+          const host = String(location.hostname || '')
+          return host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')
+        } catch {
+          return false
+        }
+      }
+
       try {
-        const host = String(location.hostname || '')
-        const isDevHost = host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')
+        const isDevHost = getIsDevHost()
         if (isDevHost && 'serviceWorker' in navigator) {
           navigator.serviceWorker.getRegistrations()
             .then((regs) => Promise.all((regs || []).map((r) => r.unregister().catch(() => false))))
@@ -121,7 +129,11 @@
 
       const getBootMode = () => {
         try {
-          const moduleScript = document.querySelector('script[type="module"][src]') || null
+          const scripts = Array.from(document.querySelectorAll('script[type="module"][src]'))
+          const moduleScript = scripts.find((script) => {
+            const src = String(script?.getAttribute('src') || '').trim()
+            return src.includes('/src/main.tsx') || src.includes('/assets/')
+          }) || null
           const src = String(moduleScript?.getAttribute('src') || '').trim()
           if (src.includes('/assets/')) return { mode: 'static', scriptSrc: src }
           if (src.includes('/src/main.tsx')) return { mode: 'vite', scriptSrc: src }
@@ -131,6 +143,9 @@
         }
       }
 
+      const boot = getBootMode();
+      const bootTimeoutMs = boot.mode === 'vite' && getIsDevHost() ? 12000 : 4000
+
       // If the app doesn't mount, show actionable diagnostics (bundle not loaded, cache, blocked script, etc.)
       setTimeout(async () => {
         try {
@@ -138,7 +153,6 @@
         } catch {
         }
 
-        const boot = getBootMode();
         const lines = [];
         lines.push("L’application n’a pas démarré.");
         lines.push('');
@@ -168,7 +182,7 @@
         lines.push('');
         lines.push('À essayer : Ctrl+F5 • Navigation privée • Désactiver extensions (adblock) • Vérifier que le serveur local répond bien.');
         showBootError('MangooTech n’a pas démarré', lines.join('\n'));
-      }, 2500);
+      }, bootTimeoutMs);
 
     </script>
   </head>

@@ -424,7 +424,12 @@
             if (!btn || !submitBtn || !latInput || !lngInput) return;
 
             const hostname = String(location?.hostname || '').trim();
-            const secureOk = Boolean(window.isSecureContext) || hostname === 'localhost' || hostname === '127.0.0.1';
+            const protocol = String(location?.protocol || '').trim().toLowerCase();
+            const secureOk = protocol === 'https:'
+                || Boolean(window.isSecureContext)
+                || hostname === 'localhost'
+                || hostname === '127.0.0.1'
+                || hostname.endsWith('.trycloudflare.com');
             if (!secureOk) {
                 showLocalToast("GPS bloqué sur cette adresse (HTTP non sécurisé). Utilisez « Choisir sur la carte »." , 'error');
                 const pickBtn = document.getElementById('btnPickOnMap');
@@ -946,10 +951,12 @@
             justify-content: center;
             padding: 18px;
             background: rgba(0,0,0,0.60);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
         .lp-onboard-card {
             width: min(560px, 100%);
-            max-height: calc(100vh - 36px);
+            max-height: calc(100dvh - 36px);
             min-height: 0;
             display: flex;
             flex-direction: column;
@@ -1054,8 +1061,10 @@
             border: 1px solid var(--ml-border);
             background: rgba(255,255,255,0.9);
             font-weight: 900;
+            font-size: 16px;
             color: var(--ml-text);
             outline: none;
+            box-sizing: border-box;
         }
         html.dark .lp-onboard-input { background: rgba(17,24,39,0.40); }
         .lp-onboard-media {
@@ -1083,6 +1092,20 @@
         }
         html.dark .lp-onboard-preview { border-color: rgba(255,255,255,0.14); background: rgba(255,255,255,0.06); }
         .lp-onboard-row { display: flex; align-items: center; gap: 12px; }
+        @media (max-width: 640px) {
+            .lp-onboard-overlay {
+                align-items: flex-start;
+                padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+            }
+            .lp-onboard-card {
+                width: 100%;
+                max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+                margin: 0;
+            }
+            .lp-onboard-body {
+                padding-bottom: 18px;
+            }
+        }
         .lp-onboard-pin {
             display: inline-flex;
             align-items: center;
@@ -3947,18 +3970,18 @@
                                 <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpGoToVendorDashboard('orders')}catch{}">🧾 Factures</button>
                             </div>
 
-                            <div id="boostAdminCard" style="background:white; border-radius:15px; padding:16px; margin-bottom:20px; box-shadow:0 4px 10px rgba(0,0,0,0.05); display:none;">
+                            <div id="boostAdminCard" style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:16px; margin-bottom:20px; box-shadow:var(--ml-shadow-sm); display:none;">
                                 <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;">
                                     <div>
-                                        <div style="font-weight:900; color:#2d3436;">📍 Boost Carte (Admin)</div>
-                                        <div style="font-size:0.85rem; color:#636e72;">Sponsorisé / Promo / Nouveau • Mise en avant: jusqu’à 6 par type</div>
+                                        <div style="font-weight:950; color:var(--ml-text);">📍 Boost Carte</div>
+                                        <div style="font-size:0.85rem; color:var(--ml-muted);">Sponsorisé, promo ou nouveau.</div>
                                     </div>
-                                    <button onclick="refreshBoostPanel()" style="border:none; background:#f1f2f6; color:#2d3436; padding:10px 12px; border-radius:12px; font-weight:900; cursor:pointer;">↻</button>
+                                    <button onclick="refreshBoostPanel()" style="border:1px solid var(--ml-border); background:var(--ml-panel); color:var(--ml-text); padding:10px 12px; border-radius:12px; font-weight:900; cursor:pointer;">↻</button>
                                 </div>
 
                                 <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
-                                    <select id="boostVendorSelect" style="flex:1; padding:12px; border:1px solid #dfe6e9; border-radius:12px; font-weight:900;" onchange="refreshBoostPanel()"></select>
-                                    <select id="boostTierSelect" style="width:120px; padding:12px; border:1px solid #dfe6e9; border-radius:12px; font-weight:900;" onchange="refreshBoostPanel()">
+                                    <select id="boostVendorSelect" style="flex:1; padding:12px; border:1px solid var(--ml-border); border-radius:12px; font-weight:900; background:var(--ml-panel); color:var(--ml-text);" onchange="refreshBoostPanel()"></select>
+                                    <select id="boostTierSelect" style="width:120px; padding:12px; border:1px solid var(--ml-border); border-radius:12px; font-weight:900; background:var(--ml-panel); color:var(--ml-text);" onchange="refreshBoostPanel()">
                                         <option value="1">Bronze</option>
                                         <option value="2">Argent</option>
                                         <option value="3">Or</option>
@@ -3966,27 +3989,27 @@
                                 </div>
 
                                 <div style="display:flex; flex-wrap:wrap; gap:10px;">
-                                    <button onclick="setSponsorBoost(12)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#111827; color:white; font-weight:950; cursor:pointer;">🏷️ Sponsor 12h</button>
-                                    <button onclick="setSponsorBoost(24)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#111827; color:white; font-weight:950; cursor:pointer;">🏷️ Sponsor 24h</button>
-                                    <button onclick="setSponsorBoost(72)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#111827; color:white; font-weight:950; cursor:pointer;">🏷️ Sponsor 72h</button>
-                                    <button onclick="clearSponsorBoost()" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#f1f2f6; color:#2d3436; font-weight:950; cursor:pointer;">✖ Stop Sponsor</button>
+                                    <button onclick="setSponsorBoost(12)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid rgba(17,24,39,0.10); background:#111827; color:white; font-weight:950; cursor:pointer;">🏷️ Sponsor 12h</button>
+                                    <button onclick="setSponsorBoost(24)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid rgba(17,24,39,0.10); background:#111827; color:white; font-weight:950; cursor:pointer;">🏷️ Sponsor 24h</button>
+                                    <button onclick="setSponsorBoost(72)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid rgba(17,24,39,0.10); background:#111827; color:white; font-weight:950; cursor:pointer;">🏷️ Sponsor 72h</button>
+                                    <button onclick="clearSponsorBoost()" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid var(--ml-border); background:var(--ml-panel); color:var(--ml-text); font-weight:950; cursor:pointer;">✖ Stop Sponsor</button>
                                 </div>
 
                                 <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
-                                    <button onclick="setPromoBoost(24)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#fef3c7; color:#92400e; font-weight:950; cursor:pointer;">✨ Promo 24h</button>
-                                    <button onclick="clearPromoBoost()" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#f1f2f6; color:#2d3436; font-weight:950; cursor:pointer;">✖ Stop Promo</button>
-                                    <button onclick="setNewBoost(24)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#eef2ff; color:#3730a3; font-weight:950; cursor:pointer;">🆕 Nouveau 24h</button>
-                                    <button onclick="clearNewBoost()" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid #dfe6e9; background:#f1f2f6; color:#2d3436; font-weight:950; cursor:pointer;">✖ Stop Nouveau</button>
+                                    <button onclick="setPromoBoost(24)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid rgba(146,64,14,0.18); background:#fef3c7; color:#92400e; font-weight:950; cursor:pointer;">✨ Promo 24h</button>
+                                    <button onclick="clearPromoBoost()" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid var(--ml-border); background:var(--ml-panel); color:var(--ml-text); font-weight:950; cursor:pointer;">✖ Stop Promo</button>
+                                    <button onclick="setNewBoost(24)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid rgba(55,48,163,0.16); background:#eef2ff; color:#3730a3; font-weight:950; cursor:pointer;">🆕 Nouveau 24h</button>
+                                    <button onclick="clearNewBoost()" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid var(--ml-border); background:var(--ml-panel); color:var(--ml-text); font-weight:950; cursor:pointer;">✖ Stop Nouveau</button>
                                 </div>
 
-                                <div style="margin-top:12px; background:#f8fafc; border:1px solid #eef2f7; border-radius:12px; padding:12px; color:#2d3436;">
+                                <div style="margin-top:12px; background:rgba(17,24,39,0.03); border:1px solid var(--ml-border); border-radius:12px; padding:12px; color:var(--ml-text);">
                                     <div style="display:flex; justify-content:space-between; gap:10px; font-weight:900;">
                                         <div>État</div>
-                                        <div id="boostStatusText" style="text-align:right; color:#636e72;">—</div>
+                                        <div id="boostStatusText" style="text-align:right; color:var(--ml-muted);">—</div>
                                     </div>
                                     <div style="display:flex; justify-content:space-between; gap:10px; margin-top:6px; font-weight:900;">
                                         <div>Stats (session)</div>
-                                        <div id="boostStatsText" style="text-align:right; color:#636e72;">—</div>
+                                        <div id="boostStatsText" style="text-align:right; color:var(--ml-muted);">—</div>
                                     </div>
                                 </div>
                             </div>
@@ -4141,19 +4164,19 @@
             <!-- SETTINGS FOOTER -->
             <div style="padding:16px; background:var(--ml-bg);">
                 <div class="action-list">
-                    <div class="action-row" onclick="alert('Aucune nouvelle notification.')">
+                    <div class="action-row" onclick="openLpNotificationsModal()">
                         <span>🔔 Notifications</span>
                         <span class="arrow">›</span>
                     </div>
-                    <div class="action-row" onclick="alert('Langues disponibles : Français, Anglais.')">
+                    <div class="action-row" onclick="openLpLanguageModal()">
                         <span>🌍 Langue (Français)</span>
                         <span class="arrow">›</span>
                     </div>
-                    <div class="action-row" onclick="alert('Vos données sont chiffrées et sécurisées.')">
+                    <div class="action-row" onclick="openLpSecurityModal()">
                         <span>🔒 Sécurité</span>
                         <span class="arrow">›</span>
                     </div>
-                    <div class="action-row" onclick="alert('Besoin d\'aide ? Contactez support@mangoo.cm')">
+                    <div class="action-row" onclick="openLpHelpModal()">
                         <span>❓ Aide & Support</span>
                         <span class="arrow">›</span>
                     </div>
@@ -4246,19 +4269,19 @@
             </div>
 
             <div class="action-list">
-                <div class="action-row" onclick="alert('Aucune nouvelle notification.')">
+                <div class="action-row" onclick="openLpNotificationsModal()">
                     <span>🔔 Notifications</span>
                     <span class="arrow">›</span>
                 </div>
-                <div class="action-row" onclick="alert('Langues disponibles : Français, Anglais.')">
+                <div class="action-row" onclick="openLpLanguageModal()">
                     <span>🌍 Langue (Français)</span>
                     <span class="arrow">›</span>
                 </div>
-                <div class="action-row" onclick="alert('Vos données sont chiffrées et sécurisées.')">
+                <div class="action-row" onclick="openLpSecurityModal()">
                     <span>🔒 Sécurité</span>
                     <span class="arrow">›</span>
                 </div>
-                <div class="action-row" onclick="alert('Besoin d\'aide ? Contactez support@mangoo.cm')">
+                <div class="action-row" onclick="openLpHelpModal()">
                     <span>❓ Aide & Support</span>
                     <span class="arrow">›</span>
                 </div>
@@ -4392,106 +4415,102 @@
 
     <!-- SELLER MODAL -->
     <div class="modal-overlay" id="sellerModal" onclick="closeSellerModal(event)">
-        <div class="modal-card">
-            <span class="modal-icon">🚀</span>
-            <h2 class="modal-title">Devenez Vendeur</h2>
-            <p class="modal-text">Créez votre boutique en ligne en 2 minutes et touchez des milliers de clients autour de vous.</p>
-            
-            <div class="input-group">
-                <label>Nom de votre boutique</label>
-                <input type="text" id="shopNameInput" class="input-field" placeholder="Ex: Boutique Élégance">
-            </div>
-
-            <div class="input-group">
-                <label>Logo de la boutique (optionnel)</label>
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div style="width:60px; height:60px; border-radius:14px; background:#f1f2f6; display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px dashed #b2bec3;">
-                        <img id="shopLogoPreview" alt="Logo" style="width:100%; height:100%; object-fit:cover; display:none;" />
-                        <span id="shopLogoFallback" style="font-size:1.5rem;">🏪</span>
-                    </div>
-                    <label for="shopLogoFile" style="background:#dfe6e9; color:#2d3436; padding:10px 15px; border-radius:20px; cursor:pointer; font-weight:bold; font-size:0.9rem;">
-                        Choisir une image
-                    </label>
-                    <input type="file" id="shopLogoFile" accept="image/*" style="display:none;" onchange="handleShopLogoFile(this.files && this.files[0])" />
-                </div>
-                <div style="font-size: 0.75rem; color: #999; margin-top: 8px;">PNG/JPG/WebP, max 1 MB.</div>
-            </div>
-
-            <div class="input-group">
-                <label>Catégorie</label>
-                <select class="input-field" id="shopCategoryInput">
-                    <option>🥬 Vivres Frais</option>
-                    <option>🍲 Restauration</option>
-                    <option>🧁 Pâtisserie</option>
-                    <option>🛒 Épicerie</option>
-                    <option>📱 Électronique</option>
-                    <option>📞 Téléphonie</option>
-                    <option>💻 Informatique</option>
-                    <option>🧵 Mode & Vêtements</option>
-                    <option>👟 Chaussures</option>
-                    <option>💄 Beauté & Cosmétique</option>
-                    <option>💇‍♀️ Salon & Coiffure</option>
-                    <option>🏠 Maison & Déco</option>
-                    <option>🪑 Meubles</option>
-                    <option>🧰 Bricolage</option>
-                    <option>🔩 Quincaillerie</option>
-                    <option>🛠️ Artisanat</option>
-                    <option>🎁 Cadeaux</option>
-                    <option>🍼 Bébé & Enfants</option>
-                    <option>🏥 Santé</option>
-                    <option>📚 Librairie & Éducation</option>
-                    <option>🚗 Auto & Moto</option>
-                    <option>🐓 Agriculture</option>
-                    <option>🔧 Services</option>
-                </select>
-            </div>
-
-            <!-- AUDIO RECORDER SECTION (PRIMARY FOR ACCESSIBILITY) -->
-            <div class="input-group" style="background:#f0fdf4; padding:15px; border-radius:15px; border:1px solid #00b894; margin-bottom: 20px;">
-                <label style="color:#006266; font-size: 1.1rem;">📢 Présentez votre boutique (Vocal)</label>
-                <div style="font-size: 0.85rem; color: #2d3436; margin-bottom: 12px; line-height: 1.4;">
-                    C'est votre "Répondeur Commercial".<br>
-                    <b>Décrivez vos produits et vos prix dans la langue que vos clients comprennent le mieux</b> (Français, Langue locale, etc.).
-                </div>
-                
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <button id="btnRecordAudio" onclick="toggleAudioRecord()" style="width: 60px; height: 60px; border-radius: 50%; border: none; background: #d63031; color: white; font-size: 1.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(214, 48, 49, 0.4); transition:all 0.2s;">🎙️</button>
-                    <div id="audioTimer" style="font-weight: bold; color: #d63031; display: none; font-size: 1.2rem;">00:00</div>
-                    
-                    <div id="audioPreviewContainer" style="display: none; align-items: center; gap: 10px; flex: 1;">
-                        <audio id="audioPreview" controls style="height: 40px; width: 100%; border-radius: 20px;"></audio>
-                        <button onclick="deleteAudio()" style="background: white; border: 1px solid #dfe6e9; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #d63031;">🗑️</button>
+        <div class="modal-card lp-modal-card" onclick="event.stopPropagation()">
+            <div class="lp-modal-head">
+                <button type="button" class="lp-modal-close" onclick="document.getElementById('sellerModal').style.display='none'">✕</button>
+                <div class="lp-modal-hero">
+                    <span class="modal-icon">🚀</span>
+                    <div style="min-width:0;">
+                        <h2 class="lp-modal-title">Créer ma boutique</h2>
+                        <p class="lp-modal-sub">Créez votre boutique et recevez des clients autour de vous.</p>
                     </div>
                 </div>
             </div>
 
-            <div class="input-group">
-                <label>Description écrite (Optionnel)</label>
-                <div style="position: relative;">
-                    <textarea class="input-field" id="shopPitchInput" rows="2" placeholder="Si vous le souhaitez, écrivez une courte description..."></textarea>
-                    <button onclick="startPitchRecording()" style="position:absolute; bottom:10px; right:10px; background:white; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;" title="Dictée vocale">📝</button>
+            <div class="lp-modal-body">
+                <div class="input-group">
+                    <label>Nom de la boutique</label>
+                    <input type="text" id="shopNameInput" class="input-field" placeholder="Ex: Boutique Elegance">
+                </div>
+
+                <div class="input-group">
+                    <label>Image (optionnel)</label>
+                    <div class="lp-upload-row">
+                        <div style="width:60px; height:60px; border-radius:14px; background:rgba(17,24,39,0.06); display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px dashed rgba(17,24,39,0.20);">
+                            <img id="shopLogoPreview" alt="Logo" style="width:100%; height:100%; object-fit:cover; display:none;" />
+                            <span id="shopLogoFallback" style="font-size:1.5rem;">🏪</span>
+                        </div>
+                        <label for="shopLogoFile" class="lp-file-pill">🖼️ Choisir une image</label>
+                        <input type="file" id="shopLogoFile" accept="image/*" style="display:none;" onchange="handleShopLogoFile(this.files && this.files[0])" />
+                    </div>
+                    <div class="lp-small-note">PNG/JPG/WebP, max 1 MB.</div>
+                </div>
+
+                <div class="input-group">
+                    <label>Catégorie</label>
+                    <select class="input-field" id="shopCategoryInput">
+                        <option>🥬 Vivres Frais</option>
+                        <option>🍲 Restauration</option>
+                        <option>🧁 Pâtisserie</option>
+                        <option>🛒 Épicerie</option>
+                        <option>📱 Électronique</option>
+                        <option>📞 Téléphonie</option>
+                        <option>💻 Informatique</option>
+                        <option>🧵 Mode & Vêtements</option>
+                        <option>👟 Chaussures</option>
+                        <option>💄 Beauté & Cosmétique</option>
+                        <option>💇‍♀️ Salon & Coiffure</option>
+                        <option>🏠 Maison & Déco</option>
+                        <option>🪑 Meubles</option>
+                        <option>🧰 Bricolage</option>
+                        <option>🔩 Quincaillerie</option>
+                        <option>🛠️ Artisanat</option>
+                        <option>🎁 Cadeaux</option>
+                        <option>🍼 Bébé & Enfants</option>
+                        <option>🏥 Santé</option>
+                        <option>📚 Librairie & Éducation</option>
+                        <option>🚗 Auto & Moto</option>
+                        <option>🐓 Agriculture</option>
+                        <option>🔧 Services</option>
+                    </select>
+                </div>
+
+                <div class="lp-section">
+                    <div class="lp-section-title">📢 Présentation vocale</div>
+                    <div class="lp-section-desc">Parlez avec votre voix pour présenter vos produits et prix.</div>
+
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <button id="btnRecordAudio" onclick="toggleAudioRecord()" style="width:60px; height:60px; border-radius:50%; border:none; background:#d63031; color:white; font-size:1.8rem; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 15px rgba(214, 48, 49, 0.4); transition:all 0.2s;">🎙️</button>
+                        <div id="audioTimer" style="font-weight:950; color:#d63031; display:none; font-size:1.1rem;">00:00</div>
+
+                        <div id="audioPreviewContainer" style="display:none; align-items:center; gap:10px; flex:1;">
+                            <audio id="audioPreview" controls style="height:40px; width:100%; border-radius:20px;"></audio>
+                            <button onclick="deleteAudio()" style="background:var(--ml-panel); border:1px solid var(--ml-border); border-radius:50%; width:36px; height:36px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; color:var(--ml-danger);">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Description écrite (optionnel)</label>
+                    <div style="position: relative;">
+                        <textarea class="input-field" id="shopPitchInput" rows="2" placeholder="Ajoutez une courte phrase si besoin..."></textarea>
+                        <button onclick="startPitchRecording()" style="position:absolute; bottom:10px; right:10px; background:var(--ml-panel); border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;" title="Dictée vocale">📝</button>
+                    </div>
+                </div>
+
+                <div class="lp-section">
+                    <div class="lp-section-title">📍 Position exacte</div>
+                    <div class="lp-section-desc">Validez votre position pour être visible sur la carte.</div>
+                    <button type="button" id="btnCaptureGPS" class="btn btn-secondary" onclick="captureShopLocation()" style="width:100%;">🎯 Capturer ma position GPS</button>
+                    <button type="button" id="btnPickOnMap" class="btn btn-secondary dashed" onclick="enableManualShopLocationPick()" style="width:100%; margin-top:10px; display:none;">🗺️ Choisir sur la carte</button>
+                    <input type="hidden" id="shopLat">
+                    <input type="hidden" id="shopLng">
                 </div>
             </div>
 
-            <!-- GPS LOCATION (NEW) -->
-            <div class="input-group" style="background: rgba(249,115,22,0.06); padding: 15px; border-radius: var(--ml-radius-2xl); border: 1px dashed rgba(249,115,22,0.45); margin-bottom: 20px;">
-                <label style="color: var(--ml-brand-from); font-weight: 900; margin-bottom: 5px; display: block;">📍 Position Exacte (Obligatoire)</label>
-                <div style="font-size: 0.85rem; color: var(--ml-muted); margin-bottom: 10px; line-height: 1.4;">
-                    Mangoo utilise sa propre carte. Validez votre position pour être visible.
-                </div>
-                <button type="button" id="btnCaptureGPS" class="btn btn-secondary" onclick="captureShopLocation()" style="width: 100%;">
-                    🎯 Capturer ma position GPS
-                </button>
-                <button type="button" id="btnPickOnMap" class="btn btn-secondary dashed" onclick="enableManualShopLocationPick()" style="width: 100%; margin-top: 10px; display: none;">
-                    📍 Choisir sur la carte
-                </button>
-                <input type="hidden" id="shopLat">
-                <input type="hidden" id="shopLng">
-            </div>
-
-            <button class="btn-submit" id="btnSubmitShop" onclick="submitSeller()" style="margin-top: 5px;" disabled>Créer ma boutique</button>
-            <div style="text-align: center; font-size: 0.75rem; color: #999; margin-top: 10px;">
-                * La validation GPS débloque la création
+            <div class="lp-modal-foot">
+                <button class="btn-submit" id="btnSubmitShop" onclick="submitSeller()" disabled>Créer ma boutique</button>
+                <div class="lp-foot-note">Le GPS ou le choix sur la carte débloque la création.</div>
             </div>
         </div>
     </div>
@@ -4678,59 +4697,63 @@
 
     <!-- MODAL PRODUCT (NEW) -->
     <div class="modal-overlay" id="productModal" onclick="closeProductModal(event)">
-        <div class="modal-card">
-            <span class="modal-icon">📦</span>
-            <h2 class="modal-title">Ajouter un produit</h2>
-            <p class="modal-text">Faites découvrir votre nouvel arrivage à votre communauté.</p>
-            
-            <div class="input-group">
-                <label>Nom du produit</label>
-                <input type="text" id="prodName" class="input-field" placeholder="Ex: Igname Blanc de Bafia">
-            </div>
-
-            <div class="input-group">
-                <label>Prix (FCFA)</label>
-                <input type="number" id="prodPrice" class="input-field" placeholder="Ex: 5000">
-            </div>
-
-            <!-- PHOTO UPLOAD SECTION -->
-            <div class="input-group">
-                <label>Photo du produit</label>
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div id="prodPhotoPreview" style="width:60px; height:60px; background:#f1f2f6; border-radius:10px; display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px dashed #b2bec3;">
-                        <span style="font-size:1.5rem;">📷</span>
-                    </div>
-                    <label for="prodPhotoInput" style="background:#dfe6e9; color:#2d3436; padding:10px 15px; border-radius:20px; cursor:pointer; font-weight:bold; font-size:0.9rem;">
-                        Choisir une image
-                    </label>
-                    <input type="file" id="prodPhotoInput" accept="image/*" style="display:none;" onchange="handleProdPhoto(this)">
-                </div>
-            </div>
-
-            <!-- AUDIO RECORDER SECTION (PRODUCT) -->
-            <div class="input-group" style="background:#fff3e0; padding:15px; border-radius:15px; border:1px solid #e17055; margin-bottom: 20px;">
-                <label style="color:#d35400; font-size: 1.1rem;">🎙️ Description Vocale</label>
-                <div style="font-size: 0.85rem; color: #2d3436; margin-bottom: 12px; line-height: 1.4;">
-                    Racontez l'histoire de ce produit !<br>
-                    <i>"C'est l'igname blanc de Bafia, très farineux, arrivé ce matin !"</i>
-                </div>
-                
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <button id="btnRecordProdAudio" onclick="toggleProdAudioRecord()" style="width: 60px; height: 60px; border-radius: 50%; border: none; background: #e17055; color: white; font-size: 1.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(225, 112, 85, 0.4); transition:all 0.2s;">🎙️</button>
-                    
-                    <div id="prodAudioPreviewContainer" style="display: none; align-items: center; gap: 10px; flex: 1;">
-                        <audio id="prodAudioPreview" controls style="height: 40px; width: 100%; border-radius: 20px;"></audio>
-                        <button onclick="deleteProdAudio()" style="background: white; border: 1px solid #dfe6e9; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #d63031;">🗑️</button>
+        <div class="modal-card lp-modal-card" onclick="event.stopPropagation()">
+            <div class="lp-modal-head">
+                <button type="button" class="lp-modal-close" onclick="document.getElementById('productModal').style.display='none'">✕</button>
+                <div class="lp-modal-hero">
+                    <span class="modal-icon">📦</span>
+                    <div style="min-width:0;">
+                        <h2 class="lp-modal-title">Ajouter un produit</h2>
+                        <p class="lp-modal-sub">Présentez votre arrivage simplement.</p>
                     </div>
                 </div>
             </div>
 
-            <div class="input-group">
-                <label>Description écrite (Optionnel)</label>
-                <textarea class="input-field" id="prodDesc" rows="2" placeholder="Détails supplémentaires..."></textarea>
+            <div class="lp-modal-body">
+                <div class="input-group">
+                    <label>Nom du produit</label>
+                    <input type="text" id="prodName" class="input-field" placeholder="Ex: Igname blanc">
+                </div>
+
+                <div class="input-group">
+                    <label>Prix (FCFA)</label>
+                    <input type="number" id="prodPrice" class="input-field" placeholder="Ex: 5000">
+                </div>
+
+                <div class="input-group">
+                    <label>Image</label>
+                    <div class="lp-upload-row">
+                        <div id="prodPhotoPreview" style="width:60px; height:60px; background:rgba(17,24,39,0.06); border-radius:14px; display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px dashed rgba(17,24,39,0.20);">
+                            <span style="font-size:1.5rem;">📷</span>
+                        </div>
+                        <label for="prodPhotoInput" class="lp-file-pill">🖼️ Choisir une image</label>
+                        <input type="file" id="prodPhotoInput" accept="image/*" style="display:none;" onchange="handleProdPhoto(this)">
+                    </div>
+                </div>
+
+                <div class="lp-section">
+                    <div class="lp-section-title">🎙️ Description vocale</div>
+                    <div class="lp-section-desc">Parlez avec votre voix pour présenter le produit.</div>
+
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <button id="btnRecordProdAudio" onclick="toggleProdAudioRecord()" style="width:60px; height:60px; border-radius:50%; border:none; background:#e17055; color:white; font-size:1.8rem; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 15px rgba(225, 112, 85, 0.4); transition:all 0.2s;">🎙️</button>
+
+                        <div id="prodAudioPreviewContainer" style="display:none; align-items:center; gap:10px; flex:1;">
+                            <audio id="prodAudioPreview" controls style="height:40px; width:100%; border-radius:20px;"></audio>
+                            <button onclick="deleteProdAudio()" style="background:var(--ml-panel); border:1px solid var(--ml-border); border-radius:50%; width:36px; height:36px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; color:var(--ml-danger);">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Description écrite (optionnel)</label>
+                    <textarea class="input-field" id="prodDesc" rows="2" placeholder="Ajoutez une courte phrase si besoin..."></textarea>
+                </div>
             </div>
 
-            <button class="btn-submit" onclick="submitProduct()" style="background: linear-gradient(135deg, #0984e3 0%, #74b9ff 100%);">Publier le produit</button>
+            <div class="lp-modal-foot">
+                <button class="btn-submit" onclick="submitProduct()" style="background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));">Publier le produit</button>
+            </div>
         </div>
     </div>
 
@@ -5213,6 +5236,19 @@
             return String(USER_POS_META?.source || 'country-default') === 'country-default';
         }
 
+        function lpIsSecureGeoContext() {
+            try {
+                const host = String(window.location.hostname || '').trim().toLowerCase();
+                const protocol = String(window.location.protocol || '').trim().toLowerCase();
+                if (protocol === 'https:') return true;
+                if (Boolean(window.isSecureContext)) return true;
+                if (host === 'localhost' || host === '127.0.0.1') return true;
+                if (host.endsWith('.trycloudflare.com')) return true;
+            } catch {
+            }
+            return false;
+        }
+
         function lpPersistUserPosition(lat, lng, accuracy) {
             try {
                 localStorage.setItem('user_geolocation_consent', JSON.stringify({
@@ -5249,11 +5285,9 @@
 
         function lpExplainGeolocationFailure(error, options) {
             const opts = options && typeof options === 'object' ? options : {};
-            const host = String(window.location.hostname || '').trim().toLowerCase();
             const ua = String(navigator.userAgent || '').toLowerCase();
             const isPhone = /iphone|ipad|ipod|android/.test(ua);
-            const isLocalhostHost = host === 'localhost' || host === '127.0.0.1';
-            const isSecureForGeo = Boolean(window.isSecureContext) || isLocalhostHost;
+            const isSecureForGeo = lpIsSecureGeoContext();
             const code = Number(error?.code || 0);
 
             if (!opts.force && !lpIsUsingCountryFallbackPosition()) return;
@@ -6852,6 +6886,42 @@
         }
 
         let lpOnboardRerenderTimer = null;
+        function lpSyncOnboardSubmitState() {
+            try {
+                const btn = document.getElementById('lpOnboardSubmitBtn');
+                if (!btn) return;
+                const canSubmit = lpOnboardCanSubmit();
+                btn.disabled = !canSubmit;
+                btn.style.opacity = canSubmit ? '1' : '0.55';
+                btn.style.cursor = canSubmit ? 'pointer' : 'not-allowed';
+            } catch {
+            }
+        }
+
+        function lpOnboardFocusField(el) {
+            try {
+                const target = el || document.activeElement;
+                if (!target) return;
+                const body = target.closest('.lp-onboard-body');
+                const scrollTarget = () => {
+                    try {
+                        target.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
+                    } catch {
+                    }
+                    try {
+                        if (body && typeof body.scrollTo === 'function') {
+                            const nextTop = Math.max(0, (target.offsetTop || 0) - 24);
+                            body.scrollTo({ top: nextTop, behavior: 'smooth' });
+                        }
+                    } catch {
+                    }
+                };
+                setTimeout(scrollTarget, 120);
+                setTimeout(scrollTarget, 320);
+            } catch {
+            }
+        }
+
         function lpOnboardScheduleRender() {
             let restoreId = '';
             let restoreStart = null;
@@ -6894,14 +6964,14 @@
             const s = lpOnboardState;
             if (!s) return;
             s.name = String(v || '');
-            lpOnboardScheduleRender();
+            lpSyncOnboardSubmitState();
         }
 
         function lpOnboardSetPhone(v) {
             const s = lpOnboardState;
             if (!s) return;
             s.phone = String(v || '');
-            lpOnboardScheduleRender();
+            lpSyncOnboardSubmitState();
         }
 
         function lpOnboardCanSubmit() {
@@ -7305,7 +7375,7 @@
                 document.body.removeChild(ta);
                 alert('Copié ✅');
             } catch {
-                alert('Copie impossible');
+                try { window.prompt('Copier le lien', t); } catch {}
             }
         }
 
@@ -7320,6 +7390,94 @@
             } catch {
             }
             lpCopyText(u);
+        }
+
+        function lpGetStoredShopIdsForCurrentUser() {
+            try {
+                const u = getLpCurrentUser ? getLpCurrentUser() : null;
+                const email = lpNormalizeEmail(u?.email);
+                if (!email) return [];
+                const raw = localStorage.getItem(`mangoo_my_shop_ids:${email}`);
+                const parsed = raw ? JSON.parse(raw) : [];
+                const list = Array.isArray(parsed) ? parsed : [];
+                return Array.from(new Set(list.map((x) => String(x || '').trim()).filter(Boolean)));
+            } catch {
+                return [];
+            }
+        }
+
+        function lpGetOwnedShopIds() {
+            try {
+                const u = getLpCurrentUser ? getLpCurrentUser() : null;
+                const email = lpNormalizeEmail(u?.email);
+                if (!email) return [];
+                const list = Array.isArray(VENDORS) ? VENDORS : [];
+                const ids = list
+                    .filter((v) => lpGetVendorKind(v) === 'shop')
+                    .filter((v) => String(v?.id || '') !== 'user_me')
+                    .filter((v) => lpNormalizeEmail(v?.ownerEmail) === email)
+                    .map((v) => String(v?.id || '').trim())
+                    .filter(Boolean);
+                return Array.from(new Set(ids));
+            } catch {
+                return [];
+            }
+        }
+
+        function lpIsOwnedShopVendor(vendor) {
+            try {
+                if (!vendor || lpGetVendorKind(vendor) !== 'shop') return false;
+                const vendorId = String(vendor?.id || '').trim();
+                if (!vendorId) return false;
+
+                const currentId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
+                if (currentId && currentId === vendorId) return true;
+
+                const storedIds = lpGetStoredShopIdsForCurrentUser();
+                if (storedIds.some((id) => id === vendorId)) return true;
+
+                const ownedIds = lpGetOwnedShopIds();
+                if (ownedIds.some((id) => id === vendorId)) return true;
+
+                const u = getLpCurrentUser ? getLpCurrentUser() : null;
+                const email = lpNormalizeEmail(u?.email);
+                return !!email && lpNormalizeEmail(vendor?.ownerEmail) === email;
+            } catch {
+                return false;
+            }
+        }
+
+        function lpFocusOwnedShopContext(vendorId) {
+            try {
+                const v = VENDORS.find((x) => String(x?.id) === String(vendorId));
+                if (!v || !lpIsOwnedShopVendor(v)) return false;
+                localStorage.setItem('mangoo_my_shop_id', String(v.id));
+                try { checkUserShop(); } catch {}
+                return true;
+            } catch {
+                return false;
+            }
+        }
+
+        function openSellerModalForVendor(vendorId) {
+            const v = VENDORS.find((x) => String(x?.id) === String(vendorId));
+            if (!v) return;
+            if (lpGetVendorKind(v) !== 'shop') {
+                openProviderModalForVendor(vendorId);
+                return;
+            }
+            lpFocusOwnedShopContext(vendorId);
+            openSellerModal();
+        }
+
+        function lpOpenProductModalForShop(vendorId) {
+            if (!lpFocusOwnedShopContext(vendorId)) return;
+            openProductModal();
+        }
+
+        function lpOpenSupplyModalForShop(vendorId) {
+            if (!lpFocusOwnedShopContext(vendorId)) return;
+            openSupplyModal();
         }
 
         function lpOpenPoster() {
@@ -7462,7 +7620,7 @@
                 body = `
                     <div class="lp-onboard-field">
                         <div class="lp-onboard-label">Nom</div>
-                        <input class="lp-onboard-input" id="lpObName" inputmode="text" placeholder="Ex : Maman Paul" value="${String(s.name || '').replace(/"/g,'&quot;')}" oninput="lpOnboardSetName(this.value)">
+                        <input class="lp-onboard-input" id="lpObName" inputmode="text" placeholder="Ex : Maman Paul" value="${String(s.name || '').replace(/"/g,'&quot;')}" onfocus="lpOnboardFocusField(this)" oninput="lpOnboardSetName(this.value)">
                         <div class="lp-onboard-help">Écris le nom (ou demande à quelqu’un). La voix peut expliquer le service.</div>
                     </div>
 
@@ -7498,7 +7656,7 @@
 
                     <div class="lp-onboard-field">
                         <div class="lp-onboard-label">📞 Téléphone</div>
-                        <input class="lp-onboard-input" id="lpObPhone" inputmode="tel" placeholder="Ex : 6 99 00 00 00" value="${String(s.phone || '').replace(/"/g,'&quot;')}" oninput="lpOnboardSetPhone(this.value)">
+                        <input class="lp-onboard-input" id="lpObPhone" type="tel" inputmode="tel" autocomplete="tel" enterkeyhint="done" placeholder="Ex : 6 99 00 00 00" value="${String(s.phone || '').replace(/"/g,'&quot;')}" onfocus="lpOnboardFocusField(this)" oninput="lpOnboardSetPhone(this.value)">
                     </div>
                 `;
                 footLeft = `<button class="lp-onboard-btn secondary" onclick="lpGoOnboard(2)">⬅️ Retour</button>`;
@@ -7506,7 +7664,7 @@
                 footRight = `<div class="lp-onboard-actions">
                     ${speakBtn}
                     <button class="lp-onboard-btn ghost" onclick="lpOpenLegacyForm()">⚙️ Avancé</button>
-                    <button class="lp-onboard-btn primary" ${disabled} onclick="lpOnboardSubmit()">✅ Envoyer</button>
+                    <button class="lp-onboard-btn primary" id="lpOnboardSubmitBtn" ${disabled} onclick="lpOnboardSubmit()">✅ Envoyer</button>
                 </div>`;
                 lpMaybeSpeak('step3');
                 setTimeout(() => {
@@ -7565,8 +7723,8 @@
                     footLeft = `<button class="lp-onboard-btn secondary" onclick="lpCloseOnboarding()">Fermer</button>`;
                     footRight = `<div class="lp-onboard-actions">
                         <button class="lp-onboard-btn ghost" onclick="lpOpenPoster()">🖨️ Affiche</button>
-                        <button class="lp-onboard-btn secondary" onclick="lpCopyText(${JSON.stringify(pin || '')})" ${pin ? '' : 'disabled style="opacity:0.55; cursor:not-allowed;"'}>📋 Copier PIN</button>
-                        <button class="lp-onboard-btn secondary" onclick="lpShareUrl(${JSON.stringify(url || '')}, 'Mangoo Connect+')" ${url ? '' : 'disabled style="opacity:0.55; cursor:not-allowed;"'}>📩 Partager</button>
+                        <button class="lp-onboard-btn secondary" onclick="lpCopyText('${lpEscapeInlineArg(pin || '')}')" ${pin ? '' : 'disabled style="opacity:0.55; cursor:not-allowed;"'}>📋 Copier PIN</button>
+                        <button class="lp-onboard-btn secondary" onclick="lpShareUrl('${lpEscapeInlineArg(url || '')}', 'Mangoo Connect+')" ${url ? '' : 'disabled style="opacity:0.55; cursor:not-allowed;"'}>📩 Partager</button>
                     </div>`;
                     lpMaybeSpeak('step4');
                 }
@@ -7765,9 +7923,14 @@
         }
 
         function openProviderModalForVendor(vendorId) {
-            openProviderModal();
             const v = VENDORS.find((x) => String(x?.id) === String(vendorId));
             if (!v) return;
+            if (lpGetVendorKind(v) !== 'service') {
+                openSellerModalForVendor(vendorId);
+                return;
+            }
+
+            openProviderModal();
 
             const modal = document.getElementById('providerModal');
             if (modal) modal.style.display = 'flex';
@@ -8062,7 +8225,7 @@
             const pickBtn = document.getElementById('btnPickProviderOnMap');
             if (!btn || !submitBtn || !latInput || !lngInput) return;
 
-            const secureOk = window.isSecureContext || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const secureOk = lpIsSecureGeoContext();
             if (!secureOk) {
                 try { showLocalToast('Le GPS est bloqué en HTTP sur mobile. Utilisez “Choisir sur la carte”.', 'error'); } catch {}
                 try {
@@ -8759,10 +8922,14 @@
                         try {
                             const ownerEmail = String(v?.ownerEmail || '').trim().toLowerCase();
                             const rawKind = String(v?.kind || '').trim().toLowerCase();
+                            const rawShopSlug = String(v?.shopSlug || v?.shop_slug || '').trim();
                             const category = String(v?.category || '').trim().toLowerCase();
                             const trade = String(v?.trade || '').trim();
                             const hasServices = Array.isArray(v?.services) && v.services.length > 0;
                             const isServiceLike = !!trade || hasServices || category.includes('service') || category.includes('métier') || category.includes('metier') || category.includes('prestataire');
+                            if (rawKind === 'shop' || rawShopSlug) {
+                                return { ...v, kind: 'shop' };
+                            }
                             if (ownerEmail.endsWith('@localplus.mangoo.tech') && isServiceLike) {
                                 return { ...v, kind: 'service', approvalStatus: String(v?.approvalStatus || 'approved') || 'approved' };
                             }
@@ -9470,7 +9637,7 @@
                 const safeVendorId = lpEscapeInlineArg(vendor.id);
 
                 let markerHtml = `
-                    <div style="position:relative; width:140px; height:78px;" onclick="openStory('${safeVendorId}'); event.stopPropagation();">
+                    <div style="position:relative; width:140px; height:78px;" onclick="try{openVendorSheetById('${safeVendorId}')}catch{}; event.stopPropagation();">
                         <div style="position:absolute; left:50%; top:0; transform:translateX(-50%); width:50px; height:50px;">
                             ${ringHtml}
                             <div style="
@@ -9820,16 +9987,23 @@
                     try { lpPersistMyProviderIds(owned) } catch {}
                 }
             }
-            btn.style.display = 'flex';
+            const isAccountView = String(currentView || '').trim() === 'account'
+            btn.style.display = isAccountView ? 'none' : 'flex';
             try {
                 const section = document.getElementById('providerSection');
                 if (section) section.style.display = 'block';
             } catch {
             }
             try {
-                const shopId = localStorage.getItem('mangoo_my_shop_id');
+                let shopId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
+                const scopedShopIds = lpGetStoredShopIdsForCurrentUser();
+                const ownedShopIds = scopedShopIds.length ? scopedShopIds : lpGetOwnedShopIds();
+                if (!shopId && ownedShopIds.length === 1) {
+                    shopId = String(ownedShopIds[0] || '').trim();
+                    if (shopId) localStorage.setItem('mangoo_my_shop_id', shopId);
+                }
                 const shopBtn = document.getElementById('lpOpenMyShopBtn');
-                if (shopBtn) shopBtn.style.display = shopId ? '' : 'none';
+                if (shopBtn) shopBtn.style.display = shopId || ownedShopIds.length ? '' : 'none';
             } catch {
             }
         }
@@ -11320,8 +11494,6 @@
             const espaceDiv = document.getElementById('espaceView');
             const introDiv = document.getElementById('introView');
             const accountDiv = document.getElementById('accountView');
-            const calendarFab = document.getElementById('calendarFab');
-            const geoBtn = document.querySelector('.fab-geo');
             const topSection = document.querySelector('.top-section'); // Refactored top section
             const searchBar = document.querySelector('.search-container');
             const familiesBar = document.getElementById('metiersFamiliesBar');
@@ -11332,8 +11504,6 @@
             if (espaceDiv) espaceDiv.style.display = 'none';
             if (introDiv) introDiv.style.display = 'none';
             accountDiv.style.display = 'none';
-            geoBtn.style.display = 'none';
-            if (calendarFab) calendarFab.style.display = 'none';
 
             if (searchBar) searchBar.style.display = 'flex';
             renderFamiliesBar();
@@ -11368,9 +11538,7 @@
 
             if (view === 'map') {
                 mapDiv.style.display = 'block';
-                geoBtn.style.display = 'flex';
                 if(topSection) topSection.style.display = 'flex'; // Show Filters & Stories
-                if (calendarFab) calendarFab.style.display = 'flex';
                 setTimeout(() => map.invalidateSize(), 100);
                 try { lpRefreshMapMarkersNow(); } catch {}
             } else if (view === 'espace') {
@@ -11381,13 +11549,11 @@
             } else if (view === 'list') {
                 listDiv.style.display = 'block';
                 if(topSection) topSection.style.display = 'none'; // Hide Filters & Stories in List View
-                if (calendarFab) calendarFab.style.display = 'flex';
                 filterVendors(); 
             } else if (view === 'fav') {
                 listDiv.style.display = 'block';
                 renderFavorites();
                 if(topSection) topSection.style.display = 'none'; // Hide Filters & Stories in Fav View
-                if (calendarFab) calendarFab.style.display = 'flex';
             } else if (view === 'intro') {
                 if (introDiv) introDiv.style.display = 'block';
                 if(topSection) topSection.style.display = 'none';
@@ -11410,6 +11576,7 @@
                 renderFamiliesBar();
             } catch {
             }
+            try { lpRefreshFloatingUi() } catch {}
             try { lpApplySimplePanelVisibility(); } catch {}
         }
 
@@ -11696,10 +11863,7 @@
             }
             try {
                 const u = getLpCurrentUser()
-                const email = String(u?.email || '').trim().toLowerCase()
-                if (email) {
-                    try { localStorage.removeItem(`mangoo_local_profile:${email}`) } catch {}
-                }
+                try { lpRememberSavedUser(u) } catch {}
             } catch {
             }
             try {
@@ -11721,9 +11885,6 @@
                         try { localStorage.removeItem(k) } catch {}
                         return
                     }
-                    if (k.startsWith('mangoo_local_profile:')) {
-                        try { localStorage.removeItem(k) } catch {}
-                    }
                 })
             } catch {
                 try { localStorage.removeItem('mangoo-current-user') } catch {}
@@ -11740,7 +11901,11 @@
             } catch {
             }
             try {
-                alert('✅ Déconnexion effectuée.')
+                openLpIdentityModal()
+            } catch {
+            }
+            try {
+                alert('✅ Déconnexion effectuée. Touchez votre compte pour revenir.')
             } catch {
             }
         }
@@ -13371,6 +13536,7 @@
                 const currentUser = getLpCurrentUser ? getLpCurrentUser() : null;
                 const email = String(currentUser?.email || '').trim().toLowerCase();
                 let isOwnerProvider = false;
+                let isOwnerShop = false;
                 if (email) {
                     try {
                         const key = `mangoo_my_provider_ids:${email}`;
@@ -13384,6 +13550,11 @@
                 }
                 if (!isOwnerProvider && myProviderId && String(vendor.id) === String(myProviderId)) isOwnerProvider = true;
                 if (!isOwnerProvider && email && String(vendor?.ownerEmail || '').toLowerCase() === email) isOwnerProvider = true;
+                try {
+                    isOwnerShop = kindMode === 'shop' && lpIsOwnedShopVendor(vendor);
+                } catch {
+                    isOwnerShop = false;
+                }
 
                 const isAdmin = isAdminUser() && lpIsAdminToolsEnabled();
 
@@ -13422,14 +13593,14 @@
                             <a href="#" onclick="try{lpDisconnectProvider()}catch{}; try{closeSheet()}catch{}" style="flex:0 0 auto; white-space:nowrap; color:#d63031; font-size:0.85rem; text-decoration:none; border:1px solid #d63031; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">🚪 Quitter</a>
                         </div>
                     `;
-                } else if (myShopId && vendor.id == myShopId) {
+                } else if (isOwnerShop) {
                     ownerLink.style.display = 'block';
                     ownerLink.innerHTML = `
                         <div style="display:flex; gap:10px; justify-content:flex-start; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:0 12px; scroll-snap-type:x proximity;">
                                 <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpTryOpenBoostFromLocal('${safeVendorId}', 'shop');" style="flex:0 0 auto; white-space:nowrap; background:#f59e0b; color:white; font-size:0.95rem; border:1px solid #f59e0b; padding:10px 16px; border-radius:999px; font-weight:950; scroll-snap-align:start; cursor:pointer; pointer-events:auto;">🚀 Booster</button>
-                            <a href="#" onclick="openSellerModal()" style="flex:0 0 auto; white-space:nowrap; color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px; scroll-snap-align:start;">⚙️ Réglages</a>
-                            <a href="#" onclick="openProductModal()" style="flex:0 0 auto; white-space:nowrap; color:#e17055; font-size:0.85rem; text-decoration:none; border:1px solid #e17055; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">📦 Nouveau</a>
-                            <a href="#" onclick="openSupplyModal()" style="flex:0 0 auto; white-space:nowrap; color:#0984e3; font-size:0.85rem; text-decoration:none; border:1px solid #0984e3; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">🏭 S'approvisionner</a>
+                            <a href="#" onclick="openSellerModalForVendor('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px; scroll-snap-align:start;">⚙️ Réglages</a>
+                            <a href="#" onclick="lpOpenProductModalForShop('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#e17055; font-size:0.85rem; text-decoration:none; border:1px solid #e17055; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">📦 Nouveau</a>
+                            <a href="#" onclick="lpOpenSupplyModalForShop('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#0984e3; font-size:0.85rem; text-decoration:none; border:1px solid #0984e3; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">🏭 S'approvisionner</a>
                             <a href="#" onclick="try{lpDisconnectShop()}catch{}; try{closeSheet()}catch{}" style="flex:0 0 auto; white-space:nowrap; color:#d63031; font-size:0.85rem; text-decoration:none; border:1px solid #d63031; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">🚪 Quitter</a>
                         </div>
                     `;
@@ -13587,6 +13758,9 @@
                 const services = Array.isArray(vendor.services) ? vendor.services : [];
                 const coverage = Array.isArray(vendor.coverage) ? vendor.coverage.filter(Boolean) : [];
                 const trade = String(vendor.trade || '').trim();
+                const category = String(vendor.category || '').trim();
+                const phone = String(vendor.phone || '').trim();
+                const shopPitch = String(vendor.voicePitch || '').trim();
                 const rating = typeof vendor.rating === 'number' ? vendor.rating.toFixed(1) : null;
 
                 const servicesHtml = services.length ? services.map(s => `<span class="mf-chip" style="background:rgba(255,255,255,0.04);">${s}</span>`).join('') : '<div style="color:var(--ml-muted); font-size:0.9rem;">Non renseigné.</div>';
@@ -13611,29 +13785,72 @@
                     </div>
                 `;
 
-                profilTab.innerHTML = `
-                    <div class="hub-card" style="border-radius:16px; padding:14px; margin-bottom:12px;">
-                        <div class="hub-card-title" style="font-weight:950; margin-bottom:8px;">Prestataire</div>
-                        <div style="color:var(--ml-muted); font-size:0.95rem; line-height:1.45;">
-                            ${trade ? trade : 'Métier non renseigné'}${rating ? ` • Note: ${rating}` : ''}
+                if (kind === 'shop') {
+                    const statusRaw = String(vendor.status || '').trim().toLowerCase();
+                    const statusLabel = statusRaw === 'open' ? 'Ouverte' : statusRaw === 'closed' ? 'Fermee' : 'Disponible';
+                    const statusTone = statusRaw === 'open' ? '#16a34a' : (statusRaw === 'closed' ? '#ef4444' : '#f59e0b');
+                    const connectLabel = String(vendor.shopSlug || vendor.shop_slug || '').trim()
+                        ? 'Boutique reliee a Mangoo Connect+'
+                        : 'Boutique disponible dans Local+';
+
+                    profilTab.innerHTML = `
+                        <div class="hub-card" style="border-radius:16px; padding:14px; margin-bottom:12px;">
+                            <div class="hub-card-title" style="font-weight:950; margin-bottom:8px;">Boutique</div>
+                            <div style="color:var(--ml-muted); font-size:0.95rem; line-height:1.45;">
+                                ${category || 'Categorie non renseignee'}${rating ? ` • Note: ${rating}` : ''}
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="hub-card" style="border-radius:16px; padding:14px; margin-bottom:12px;">
-                        <div class="hub-card-title" style="font-weight:950; margin-bottom:8px;">Services proposés</div>
-                        <div class="mf-chips">${servicesHtml}</div>
-                    </div>
+                        <div class="hub-card" style="border-radius:16px; padding:14px; margin-bottom:12px;">
+                            <div class="hub-card-title" style="font-weight:950; margin-bottom:8px;">Contact</div>
+                            <div style="color:var(--ml-muted); font-size:0.95rem; line-height:1.45;">
+                                ${phone || 'Telephone non renseigne'}
+                            </div>
+                        </div>
 
-                    <div class="hub-card" style="border-radius:16px; padding:14px; margin-bottom:12px;">
-                        <div class="hub-card-title" style="font-weight:950; margin-bottom:8px;">Zone couverte</div>
-                        ${coverageHtml}
-                    </div>
+                        <div class="hub-card" style="border-radius:16px; padding:14px; margin-bottom:12px;">
+                            <div class="hub-card-title" style="font-weight:950; margin-bottom:8px;">Disponibilite</div>
+                            <div style="color:var(--ml-muted); font-size:0.95rem; line-height:1.45;">
+                                <span style="display:inline-flex; align-items:center; gap:8px;">
+                                    <span style="width:10px; height:10px; border-radius:999px; background:${statusTone}; display:inline-block;"></span>
+                                    ${statusLabel}
+                                </span>
+                                <br>${connectLabel}
+                            </div>
+                        </div>
 
-                    <div class="hub-card" style="border-radius:16px; padding:14px;">
-                        <div class="hub-card-title" style="font-weight:950; margin-bottom:10px;">Portfolio</div>
-                        ${portfolioHtml}
-                    </div>
-                `;
+                        <div class="hub-card" style="border-radius:16px; padding:14px;">
+                            <div class="hub-card-title" style="font-weight:950; margin-bottom:10px;">Presentation</div>
+                            <div style="color:var(--ml-muted); font-size:0.95rem; line-height:1.55;">
+                                ${shopPitch || 'Bienvenue dans cette boutique.'}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    profilTab.innerHTML = `
+                        <div class="hub-card" style="border-radius:16px; padding:14px; margin-bottom:12px;">
+                            <div class="hub-card-title" style="font-weight:950; margin-bottom:8px;">Prestataire</div>
+                            <div style="color:var(--ml-muted); font-size:0.95rem; line-height:1.45;">
+                                ${trade ? trade : 'Métier non renseigné'}${rating ? ` • Note: ${rating}` : ''}
+                            </div>
+                        </div>
+
+                        <div class="hub-card" style="border-radius:16px; padding:14px; margin-bottom:12px;">
+                            <div class="hub-card-title" style="font-weight:950; margin-bottom:8px;">Services proposés</div>
+                            <div class="mf-chips">${servicesHtml}</div>
+                        </div>
+
+                        <div class="hub-card" style="border-radius:16px; padding:14px; margin-bottom:12px;">
+                            <div class="hub-card-title" style="font-weight:950; margin-bottom:8px;">Zone couverte</div>
+                            ${coverageHtml}
+                        </div>
+
+                        <div class="hub-card" style="border-radius:16px; padding:14px;">
+                            <div class="hub-card-title" style="font-weight:950; margin-bottom:10px;">Portfolio</div>
+                            ${portfolioHtml}
+                        </div>
+                    `;
+                }
             }
 
             document.getElementById('vendorSheet').classList.add('active');
@@ -14381,16 +14598,25 @@
         // === STORIES & COMMUNITY ===
         function lpGetVendorKind(vendor) {
             const rawKind = String(vendor?.kind || '').trim().toLowerCase();
-            if (rawKind === 'service' || rawKind === 'shop') return rawKind;
+            const rawShopSlug = String(vendor?.shopSlug || vendor?.shop_slug || '').trim();
+            let categoryService = false;
             try {
                 const category = String(vendor?.category || '').toLowerCase();
-                if (category.includes('prestataire') || category.includes('presta') || category.includes('metier') || category.includes('métier') || category.includes('service') || category.includes('🧰')) return 'service';
+                categoryService = category.includes('prestataire') || category.includes('presta') || category.includes('metier') || category.includes('métier') || category.includes('service') || category.includes('🧰');
             } catch {
+                categoryService = false;
             }
-            if (String(vendor?.trade || '').trim()) return 'service';
-            if (Array.isArray(vendor?.services) && vendor.services.length) return 'service';
-            if (Array.isArray(vendor?.coverage) && vendor.coverage.length) return 'service';
-            if (typeof vendor?.isMobile === 'boolean') return 'service';
+            const hasTrade = !!String(vendor?.trade || '').trim();
+            const hasServices = Array.isArray(vendor?.services) && vendor.services.length > 0;
+            const hasCoverage = Array.isArray(vendor?.coverage) && vendor.coverage.length > 0;
+            const hasPortfolio = Array.isArray(vendor?.portfolio) && vendor.portfolio.length > 0;
+            const isMobileService = vendor?.isMobile === true;
+            const hasServiceSignals = categoryService || hasTrade || hasServices || hasCoverage || hasPortfolio || isMobileService;
+            if (rawKind === 'shop') return 'shop';
+            if (rawShopSlug) return 'shop';
+            if ((rawKind === 'service' || rawKind === 'provider') && !hasServiceSignals) return 'shop';
+            if (rawKind === 'service' || rawKind === 'provider') return 'service';
+            if (hasServiceSignals) return 'service';
             return 'shop';
         }
 
@@ -15497,7 +15723,7 @@
             
             const title = modal.querySelector('.modal-title');
             const btnSubmit = document.getElementById('btnSubmitShop');
-            const nameInput = document.querySelector('.input-field[type="text"]');
+            const nameInput = document.getElementById('shopNameInput');
             const categoryInput = document.getElementById('shopCategoryInput');
             const pitchInput = document.getElementById('shopPitchInput');
             const logoFile = document.getElementById('shopLogoFile');
@@ -15912,7 +16138,7 @@
 
         function updateShop(id) {
             const btn = document.getElementById('btnSubmitShop');
-            const nameInput = document.querySelector('.input-field[type="text"]');
+            const nameInput = document.getElementById('shopNameInput');
             const categoryInput = document.getElementById('shopCategoryInput');
             const pitchInput = document.getElementById('shopPitchInput');
             
@@ -18024,6 +18250,172 @@
             return 'mangoo_local_profile'
         }
 
+        function lpEscapeHtml(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;')
+        }
+
+        function lpReadSavedUsers() {
+            try {
+                const raw = localStorage.getItem('mangoo_lp_saved_users')
+                const parsed = raw ? JSON.parse(raw) : []
+                if (!Array.isArray(parsed)) return []
+                return parsed
+                    .filter((item) => item && typeof item === 'object')
+                    .map((item) => {
+                        const email = String(item?.email || '').trim().toLowerCase()
+                        const name = String(item?.name || '').trim()
+                        const phone = String(item?.phone || '').trim()
+                        const role = String(item?.role || 'client').trim().toLowerCase()
+                        const lastUsedAt = Number(item?.lastUsedAt || 0) || 0
+                        return { email, name, phone, role: role === 'vendor' ? 'vendor' : 'client', lastUsedAt }
+                    })
+                    .filter((item) => !!item.email)
+                    .sort((a, b) => (b.lastUsedAt || 0) - (a.lastUsedAt || 0))
+            } catch {
+                return []
+            }
+        }
+
+        function lpRememberSavedUser(userLike) {
+            try {
+                const email = String(userLike?.email || '').trim().toLowerCase()
+                if (!email) return
+                const name = String(userLike?.name || '').trim() || (email.split('@')[0] || 'Utilisateur')
+                const phone = String(userLike?.phone || '').trim()
+                const role = String(userLike?.role || 'client').trim().toLowerCase() === 'vendor' ? 'vendor' : 'client'
+                const next = { email, name, phone, role, lastUsedAt: Date.now() }
+                const list = lpReadSavedUsers().filter((item) => item.email !== email)
+                list.unshift(next)
+                localStorage.setItem('mangoo_lp_saved_users', JSON.stringify(list.slice(0, 6)))
+            } catch {
+            }
+        }
+
+        function lpRefreshFloatingUi() {
+            try {
+                const view = String(currentView || '').trim()
+                const isMap = view === 'map'
+                const isListLike = view === 'list' || view === 'fav'
+
+                const geoBtn = document.querySelector('.fab-geo')
+                if (geoBtn) geoBtn.style.display = isMap ? 'flex' : 'none'
+
+                const quickFilter = document.querySelector('.quick-filter-fab')
+                if (quickFilter) quickFilter.style.display = isMap ? 'flex' : 'none'
+
+                const calendarFab = document.getElementById('calendarFab')
+                if (calendarFab) calendarFab.style.display = (isMap || isListLike) ? 'flex' : 'none'
+
+                if (!isMap) {
+                    const metiersToggleFab = document.getElementById('metiersToggleFab')
+                    const metiersListFab = document.getElementById('metiersListFab')
+                    const fabAddLabel = document.getElementById('fabAddLabel')
+                    if (metiersToggleFab) metiersToggleFab.style.display = 'none'
+                    if (metiersListFab) metiersListFab.style.display = 'none'
+                    if (fabAddLabel) fabAddLabel.style.display = 'none'
+                }
+            } catch {
+            }
+            try { refreshProviderDashboardFab() } catch {}
+        }
+
+        function lpForgetSavedUser(emailLike) {
+            try {
+                const email = String(emailLike || '').trim().toLowerCase()
+                if (!email) return
+                const list = lpReadSavedUsers().filter((item) => item.email !== email)
+                localStorage.setItem('mangoo_lp_saved_users', JSON.stringify(list))
+            } catch {
+            }
+        }
+
+        function lpReconnectSavedUser(emailLike) {
+            try {
+                const email = String(emailLike || '').trim().toLowerCase()
+                if (!email) return
+                const saved = lpReadSavedUsers().find((item) => item.email === email)
+                if (!saved) {
+                    alert('Compte introuvable.')
+                    return
+                }
+                const nextUser = {
+                    email: saved.email,
+                    name: saved.name || (saved.email.split('@')[0] || 'Utilisateur'),
+                    phone: saved.phone || '',
+                    role: saved.role === 'vendor' ? 'vendor' : 'client',
+                }
+                localStorage.setItem('mangoo-current-user', JSON.stringify(nextUser))
+                localStorage.setItem('user', JSON.stringify(nextUser))
+                try {
+                    const profileKey = `mangoo_local_profile:${saved.email}`
+                    const raw = localStorage.getItem(profileKey) || localStorage.getItem('mangoo_local_profile')
+                    const prev = raw ? JSON.parse(raw) : {}
+                    const nextProfile = { ...(prev && typeof prev === 'object' ? prev : {}), name: nextUser.name, phone: nextUser.phone }
+                    localStorage.setItem(profileKey, JSON.stringify(nextProfile))
+                    localStorage.setItem('mangoo_local_profile', JSON.stringify(nextProfile))
+                } catch {
+                }
+                lpRememberSavedUser(nextUser)
+                try { applyLpHeaderUser() } catch {}
+                try { loadLpProfile() } catch {}
+                try { closeLpIdentityModal() } catch {}
+                try { showLocalToast('Compte reconnecte.', 'success') } catch {}
+            } catch {
+                try { alert('Impossible de reconnecter ce compte.') } catch {}
+            }
+        }
+
+        function lpSetIdentityAdvancedVisible(visible) {
+            try {
+                const v = !!visible
+                const adv = document.getElementById('lpIdentityAdvanced')
+                const quick = document.getElementById('lpIdentityQuick')
+                if (adv) adv.style.display = v ? '' : 'none'
+                if (quick) quick.style.display = v ? 'none' : ''
+            } catch {
+            }
+        }
+
+        function lpQuickEnterIdentityFromModal() {
+            try {
+                const email = String(document.getElementById('lpIdentityQuickEmail')?.value || '').trim().toLowerCase()
+                if (!email) {
+                    alert('Entrez un email.')
+                    return
+                }
+                const saved = lpReadSavedUsers().find((item) => item.email === email)
+                if (saved) {
+                    lpReconnectSavedUser(email)
+                    return
+                }
+                const fallbackName = email.split('@')[0] || 'Utilisateur'
+                const u = { email, name: fallbackName, phone: '', role: 'client' }
+                localStorage.setItem('mangoo-current-user', JSON.stringify(u))
+                localStorage.setItem('user', JSON.stringify(u))
+                lpRememberSavedUser(u)
+                try {
+                    const profileKey = `mangoo_local_profile:${email}`
+                    const raw = localStorage.getItem(profileKey) || localStorage.getItem('mangoo_local_profile')
+                    const prev = raw ? JSON.parse(raw) : {}
+                    const next = { ...(prev && typeof prev === 'object' ? prev : {}), name: u.name, phone: u.phone }
+                    localStorage.setItem(profileKey, JSON.stringify(next))
+                    localStorage.setItem('mangoo_local_profile', JSON.stringify(next))
+                } catch {
+                }
+                try { applyLpHeaderUser() } catch {}
+                try { loadLpProfile() } catch {}
+                try { closeLpIdentityModal() } catch {}
+                try { showLocalToast('Compte cree.', 'success') } catch {}
+            } catch {
+                try { alert('Erreur.') } catch {}
+            }
+        }
+
         function applyLpHeaderUser() {
             const elName = document.getElementById('lpUserName')
             const elPhone = document.getElementById('lpUserPhone')
@@ -18163,7 +18555,7 @@
         }
 
         function setLpUiVisibility(visible) {
-            const ids = ['calendarFab', 'metiersListFab', 'metiersToggleFab', 'metiersListFab', 'metiersToggleFab', 'fabAddLabel']
+            const ids = ['calendarFab', 'providerDashFab', 'metiersListFab', 'metiersToggleFab', 'metiersListFab', 'metiersToggleFab', 'fabAddLabel', 'floatingBackBtn']
             ids.forEach((id) => {
                 try {
                     const el = document.getElementById(id)
@@ -18203,40 +18595,76 @@
             try { setLpUiVisibility(false) } catch {}
 
             const u = getLpCurrentUser()
-            const key = lpProfileStorageKey()
-            let rawUser = null
-            try {
-                rawUser = localStorage.getItem('mangoo-current-user') || localStorage.getItem('user')
-            } catch {
-                rawUser = null
-            }
+            const savedUsers = lpReadSavedUsers()
 
             const overlay = document.createElement('div')
             overlay.id = 'lpIdentityOverlay'
             overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.60); z-index:20000; display:flex; align-items:center; justify-content:center; padding:16px; box-sizing:border-box; overflow-y:auto; -webkit-overflow-scrolling:touch;'
 
-            const status = u ? '✅ Utilisateur détecté' : '⚠️ Aucun utilisateur détecté'
-            const explain = u
-                ? "Local+ lit l’identité depuis localStorage (mangoo-current-user)."
-                : "Ouvrez d’abord l’app Mangoo (secteur formel) et connectez-vous, puis ouvrez Local+ depuis le menu."
             const email = String(u?.email || '').trim()
             const name = String(u?.name || '').trim()
             const phone = String(u?.phone || '').trim()
             const role = String(u?.role || u?.currentRole || '').trim()
-
-            const identityCard = `
-                <div id="lpIdentityFormCard" style="padding:12px; border-radius:14px; background:rgba(249,115,22,0.10); border:1px solid rgba(249,115,22,0.35);">
-                    <div style="font-weight:950;">📝 Identité Local+ (modifiable)</div>
-                    <div style="color:var(--ml-muted); font-size:0.9rem; margin-top:4px; line-height:1.45;">Ce bloc sert à définir votre identité Local+ (client ou vendeur). Il ne remplace pas la connexion du secteur formel.</div>
+            const savedUsersHtml = savedUsers.length ? `
+                <div style="padding:12px; border-radius:14px; background:rgba(17,24,39,0.04); border:1px solid var(--ml-border);">
+                    <div style="font-weight:950;">⚡ Mes comptes</div>
+                    <div style="color:var(--ml-muted); font-size:0.92rem; margin-top:4px;">Touchez un compte pour revenir sans tout retaper.</div>
                     <div style="display:grid; gap:10px; margin-top:12px;">
-                        <input id="lpIdentityEmail" placeholder="Email (ex: client@example.com)" value="${email ? email.replace(/"/g, '&quot;') : ''}" style="width:100%; padding:12px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:800; pointer-events:auto;" />
-                        <input id="lpIdentityName" placeholder="Nom (ex: Parfait)" value="${name ? name.replace(/"/g, '&quot;') : ''}" style="width:100%; padding:12px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:800; pointer-events:auto;" />
-                        <input id="lpIdentityPhone" placeholder="Téléphone (ex: +237 6xx xx xx xx)" value="${phone ? phone.replace(/"/g, '&quot;') : ''}" style="width:100%; padding:12px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:800; pointer-events:auto;" />
-                        <select id="lpIdentityRole" style="width:100%; padding:12px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:900;" >
-                            <option value="client" ${role === 'client' || !role ? 'selected' : ''}>👤 Client</option>
-                            <option value="vendor" ${role === 'vendor' ? 'selected' : ''}>🏪 Vendeur</option>
-                        </select>
-                        <button type="button" class="lp-btn lp-btn-primary" onclick="lpSaveIdentityFromModal()">Enregistrer l’identité</button>
+                        ${savedUsers.map((item) => {
+                            const initial = lpEscapeHtml((item.name || item.email || 'U').trim().charAt(0).toUpperCase() || 'U')
+                            const displayName = lpEscapeHtml(item.name || (item.email.split('@')[0] || 'Utilisateur'))
+                            const displayEmail = lpEscapeHtml(item.email)
+                            const safeEmailJs = item.email.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+                            return `
+                                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px; border-radius:14px; border:1px solid var(--ml-border); background:var(--ml-panel);">
+                                    <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+                                        <div style="width:40px; height:40px; border-radius:999px; background:#1a5f3f; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:950; flex:0 0 auto;">${initial}</div>
+                                        <div style="min-width:0;">
+                                            <div style="font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${displayName}</div>
+                                            <div style="font-size:0.88rem; color:var(--ml-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${displayEmail}</div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="lp-btn lp-btn-primary" style="min-width:120px; padding:12px 16px; border-radius:14px; font-weight:950;" onclick="lpReconnectSavedUser('${safeEmailJs}')">Entrer</button>
+                                </div>
+                            `
+                        }).join('')}
+                    </div>
+                </div>
+            ` : ''
+
+            const identityQuick = `
+                <div id="lpIdentityQuick" style="display:${savedUsers.length ? '' : ''};">
+                    ${savedUsersHtml}
+                    ${savedUsers.length ? `
+                        <button type="button" class="lp-btn lp-btn-secondary" style="width:100%; padding:14px 16px; border-radius:16px; font-weight:950;" onclick="lpSetIdentityAdvancedVisible(true)">Créer un nouveau compte</button>
+                    ` : `
+                        <div style="padding:12px; border-radius:14px; background:rgba(17,24,39,0.04); border:1px solid var(--ml-border);">
+                            <div style="font-weight:950;">📧 Entrer</div>
+                            <div style="display:grid; gap:10px; margin-top:12px;">
+                                <input id="lpIdentityQuickEmail" placeholder="Email" value="${email ? email.replace(/"/g, '&quot;') : ''}" style="width:100%; padding:12px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:900; pointer-events:auto;" />
+                                <button type="button" class="lp-btn lp-btn-primary" style="width:100%; padding:14px 16px; border-radius:16px; font-weight:950;" onclick="lpQuickEnterIdentityFromModal()">Entrer</button>
+                                <button type="button" class="lp-btn lp-btn-secondary" style="width:100%; padding:14px 16px; border-radius:16px; font-weight:950;" onclick="lpSetIdentityAdvancedVisible(true)">Créer un nouveau compte</button>
+                            </div>
+                        </div>
+                    `}
+                </div>
+            `
+
+            const identityAdvanced = `
+                <div id="lpIdentityAdvanced" style="display:none;">
+                    <div style="padding:12px; border-radius:14px; background:rgba(249,115,22,0.10); border:1px solid rgba(249,115,22,0.35);">
+                        <div style="font-weight:950;">🪪 Nouveau compte</div>
+                        <div style="display:grid; gap:10px; margin-top:12px;">
+                            <input id="lpIdentityEmail" placeholder="Email" value="${email ? email.replace(/"/g, '&quot;') : ''}" style="width:100%; padding:12px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:800; pointer-events:auto;" />
+                            <input id="lpIdentityName" placeholder="Nom" value="${name ? name.replace(/"/g, '&quot;') : ''}" style="width:100%; padding:12px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:800; pointer-events:auto;" />
+                            <input id="lpIdentityPhone" placeholder="Téléphone" value="${phone ? phone.replace(/"/g, '&quot;') : ''}" style="width:100%; padding:12px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:800; pointer-events:auto;" />
+                            <select id="lpIdentityRole" style="width:100%; padding:12px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:900;" >
+                                <option value="client" ${role === 'client' || !role ? 'selected' : ''}>👤 Client</option>
+                                <option value="vendor" ${role === 'vendor' ? 'selected' : ''}>🏪 Vendeur</option>
+                            </select>
+                            <button type="button" class="lp-btn lp-btn-primary" style="width:100%; padding:14px 16px; border-radius:16px; font-weight:950;" onclick="lpSaveIdentityFromModal()">Enregistrer</button>
+                            <button type="button" class="lp-btn lp-btn-secondary" style="width:100%; padding:14px 16px; border-radius:16px; font-weight:950;" onclick="lpSetIdentityAdvancedVisible(false)">Retour</button>
+                        </div>
                     </div>
                 </div>
             `
@@ -18248,52 +18676,13 @@
                         <button type="button" class="lp-btn lp-btn-secondary" onclick="closeLpIdentityModal()" style="background: rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.22); color:#fff;">Fermer</button>
                     </div>
                     <div style="padding:16px; display:grid; gap:12px; overflow:auto; flex:1; min-height:0;">
-                        <div style="padding:12px; border-radius:14px; background:rgba(17,24,39,0.06); border:1px solid var(--ml-border);">
-                            <div style="font-weight:900;">${status}</div>
-                            <div style="color:var(--ml-muted); font-size:0.9rem; margin-top:4px; line-height:1.45;">${explain}</div>
-                        </div>
-
-                        ${identityCard}
-
-                        <div style="padding:12px; border-radius:14px; background:rgba(17,24,39,0.06); border:1px solid var(--ml-border);">
-                            <div style="font-weight:950;">Informations détectées (lecture seule)</div>
-                            <div style="color:var(--ml-muted); font-size:0.9rem; margin-top:4px; line-height:1.45;">Ces champs reflètent l’utilisateur courant. Pour modifier, utilisez le bloc “Identité Local+ (modifiable)” ci-dessus.</div>
-                        </div>
-
-                        <div style="display:grid; gap:8px;">
-                            <div style="display:flex; justify-content:space-between; gap:10px; font-size:0.95rem;">
-                                <div style="color:var(--ml-muted);">Email</div>
-                                <div style="font-weight:900; text-align:right;">${email || '—'}</div>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; gap:10px; font-size:0.95rem;">
-                                <div style="color:var(--ml-muted);">Nom</div>
-                                <div style="font-weight:900; text-align:right;">${name || '—'}</div>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; gap:10px; font-size:0.95rem;">
-                                <div style="color:var(--ml-muted);">Téléphone</div>
-                                <div style="font-weight:900; text-align:right;">${phone || '—'}</div>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; gap:10px; font-size:0.95rem;">
-                                <div style="color:var(--ml-muted);">Type</div>
-                                <div style="font-weight:900; text-align:right;">${role || '—'}</div>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; gap:10px; font-size:0.95rem;">
-                                <div style="color:var(--ml-muted);">Clé profil Local+</div>
-                                <div style="font-weight:900; text-align:right;">${key}</div>
-                            </div>
-                        </div>
-
-                        <div style="padding:12px; border-radius:14px; background:rgba(17,24,39,0.06); border:1px solid var(--ml-border);">
-                            <div style="font-weight:900;">Raw localStorage</div>
-                            <div style="color:var(--ml-muted); font-size:0.85rem; margin-top:6px; white-space:pre-wrap; word-break:break-word;">${rawUser ? rawUser : '—'}</div>
-                        </div>
+                        ${identityQuick}
+                        ${identityAdvanced}
                     </div>
                     <div style="flex:0 0 auto; padding: 12px 16px calc(14px + env(safe-area-inset-bottom)) 16px; border-top: 1px solid rgba(0,0,0,0.06); background: var(--ml-panel);">
                         <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                            <button type="button" class="lp-btn lp-btn-primary" onclick="try{applyLpHeaderUser()}catch{}">Rafraîchir l’entête</button>
-                            <button type="button" class="lp-btn lp-btn-secondary" onclick="try{document.getElementById('lpIdentityFormCard')?.scrollIntoView({behavior:'smooth', block:'start'})}catch{}; try{document.getElementById('lpIdentityName')?.focus()}catch{};">Modifier l’identité</button>
-                            <button type="button" class="lp-btn lp-btn-secondary" onclick="lpIdentityGoToDeliveryProfile()">Profil livraison</button>
-                            ${u ? '<button type="button" class="lp-btn lp-btn-secondary" onclick="lpClearIdentityFromModal()">Effacer identité</button>' : ''}
+                            <button type="button" class="lp-btn lp-btn-secondary" onclick="lpClearIdentityFromModal()">Effacer</button>
+                            <button type="button" class="lp-btn lp-btn-secondary" onclick="lpLogout()">Déconnexion</button>
                         </div>
                     </div>
                 </div>
@@ -18320,6 +18709,16 @@
                 const u = { email, name: name || fallbackName, phone, role: role === 'vendor' ? 'vendor' : 'client' }
                 localStorage.setItem('mangoo-current-user', JSON.stringify(u))
                 localStorage.setItem('user', JSON.stringify(u))
+                lpRememberSavedUser(u)
+                try {
+                    const profileKey = `mangoo_local_profile:${email}`
+                    const raw = localStorage.getItem(profileKey) || localStorage.getItem('mangoo_local_profile')
+                    const prev = raw ? JSON.parse(raw) : {}
+                    const next = { ...(prev && typeof prev === 'object' ? prev : {}), name: u.name, phone: u.phone }
+                    localStorage.setItem(profileKey, JSON.stringify(next))
+                    localStorage.setItem('mangoo_local_profile', JSON.stringify(next))
+                } catch {
+                }
                 try { applyLpHeaderUser() } catch {}
                 try { loadLpProfile() } catch {}
                 alert('✅ Identité enregistrée.')
@@ -18329,11 +18728,104 @@
             }
         }
 
+        function lpOpenModalShell(title, innerHtml) {
+            try { lpCloseModalShell() } catch {}
+            try { setLpUiVisibility(false) } catch {}
+
+            const overlay = document.createElement('div')
+            overlay.id = 'lpModalShellOverlay'
+            overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.60); z-index:20000; display:flex; align-items:center; justify-content:center; padding:16px; box-sizing:border-box; overflow-y:auto; -webkit-overflow-scrolling:touch;'
+
+            overlay.innerHTML = `
+                <div style="background:var(--ml-panel); color:var(--ml-text); width:100%; max-width:560px; border-radius:18px; border:1px solid var(--ml-border); box-shadow:0 20px 60px rgba(0,0,0,0.35); overflow:hidden; max-height: calc(100vh - 32px); display:flex; flex-direction:column;">
+                    <div style="padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:10px; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#fff;">
+                        <div style="font-weight:950;">${String(title || '').replace(/</g, '&lt;')}</div>
+                        <button type="button" class="lp-btn lp-btn-secondary" onclick="lpCloseModalShell()" style="background: rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.22); color:#fff;">Fermer</button>
+                    </div>
+                    <div style="padding:16px; display:grid; gap:12px; overflow:auto; flex:1; min-height:0;">
+                        ${innerHtml || ''}
+                    </div>
+                </div>
+            `
+
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) lpCloseModalShell()
+            })
+
+            document.body.appendChild(overlay)
+        }
+
+        function lpCloseModalShell() {
+            try {
+                const overlay = document.getElementById('lpModalShellOverlay')
+                if (overlay) overlay.remove()
+            } catch {
+            }
+            try { setLpUiVisibility(true) } catch {}
+        }
+
+        function openLpNotificationsModal() {
+            const html = `
+                <div style="padding:14px; border-radius:16px; border:1px solid var(--ml-border); background:rgba(17,24,39,0.04);">
+                    <div style="font-weight:950; margin-bottom:6px;">🔔 Notifications</div>
+                    <div style="color:var(--ml-muted); font-size:0.95rem; line-height:1.45;">Aucune notification pour le moment.</div>
+                </div>
+            `
+            lpOpenModalShell('🔔 Notifications', html)
+        }
+
+        function openLpLanguageModal() {
+            const current = String(localStorage.getItem('mangoo_lp_ui_lang') || 'fr').trim().toLowerCase()
+            const html = `
+                <div style="padding:14px; border-radius:16px; border:1px solid var(--ml-border); background:rgba(17,24,39,0.04);">
+                    <div style="font-weight:950; margin-bottom:10px;">🌍 Langue</div>
+                    <div style="display:grid; gap:10px;">
+                        <button type="button" class="lp-btn ${current === 'fr' ? 'lp-btn-primary' : 'lp-btn-secondary'}" onclick="try{localStorage.setItem('mangoo_lp_ui_lang','fr')}catch{}; try{lpToast('Langue enregistrée.','ok')}catch{}; lpCloseModalShell();">Français</button>
+                        <button type="button" class="lp-btn ${current === 'en' ? 'lp-btn-primary' : 'lp-btn-secondary'}" onclick="try{localStorage.setItem('mangoo_lp_ui_lang','en')}catch{}; try{lpToast('Langue enregistrée.','ok')}catch{}; lpCloseModalShell();">English</button>
+                    </div>
+                </div>
+            `
+            lpOpenModalShell('🌍 Langue', html)
+        }
+
+        function openLpSecurityModal() {
+            const current = String(localStorage.getItem('mangoo_lp_pin') || '').trim()
+            const html = `
+                <div style="padding:14px; border-radius:16px; border:1px solid var(--ml-border); background:rgba(17,24,39,0.04);">
+                    <div style="font-weight:950; margin-bottom:6px;">🔒 Sécurité</div>
+                    <div style="color:var(--ml-muted); font-size:0.95rem; line-height:1.45;">Définissez un code PIN simple (4 chiffres) pour valider certaines actions.</div>
+                    <div style="display:grid; gap:10px; margin-top:12px;">
+                        <input id="lpPinInput" inputmode="numeric" placeholder="PIN (4 chiffres)" value="${current ? current.replace(/"/g, '&quot;') : ''}" style="width:100%; padding:12px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:900; letter-spacing: 4px;" />
+                        <button type="button" class="lp-btn lp-btn-primary" onclick="try{const v=String(document.getElementById('lpPinInput')?.value||'').replace(/\\D+/g,'').slice(0,4); if(v.length!==4){alert('Entrez 4 chiffres.'); return;} localStorage.setItem('mangoo_lp_pin', v); try{lpToast('PIN enregistré.','ok')}catch{}; lpCloseModalShell();}catch{alert('Erreur.')}">Enregistrer</button>
+                        <button type="button" class="lp-btn lp-btn-secondary" onclick="try{localStorage.removeItem('mangoo_lp_pin'); try{lpToast('PIN supprimé.','ok')}catch{}; lpCloseModalShell();}catch{lpCloseModalShell();}">Supprimer le PIN</button>
+                    </div>
+                </div>
+            `
+            lpOpenModalShell('🔒 Sécurité', html)
+        }
+
+        function openLpHelpModal() {
+            const html = `
+                <div style="padding:14px; border-radius:16px; border:1px solid var(--ml-border); background:rgba(17,24,39,0.04);">
+                    <div style="font-weight:950; margin-bottom:6px;">❓ Aide & Support</div>
+                    <div style="display:grid; gap:10px; margin-top:10px;">
+                        <button type="button" class="lp-btn lp-btn-primary" onclick="try{window.location.href='mailto:support@mangoo.cm'}catch{}">📧 Email support</button>
+                        <button type="button" class="lp-btn lp-btn-secondary" onclick="try{window.location.href='https://wa.me/'}catch{}">💬 WhatsApp</button>
+                        <button type="button" class="lp-btn lp-btn-secondary" onclick="try{alert('Support : support@mangoo.cm')}catch{}">ℹ️ Infos</button>
+                    </div>
+                </div>
+            `
+            lpOpenModalShell('❓ Aide & Support', html)
+        }
+
         function lpClearIdentityFromModal() {
             try {
                 const u = getLpCurrentUser()
                 const email = String(u?.email || '').trim().toLowerCase()
-                if (email) localStorage.removeItem(`mangoo_local_profile:${email}`)
+                if (email) {
+                    localStorage.removeItem(`mangoo_local_profile:${email}`)
+                    lpForgetSavedUser(email)
+                }
             } catch {
             }
             try { localStorage.removeItem('mangoo_local_profile') } catch {}

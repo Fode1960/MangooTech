@@ -73,11 +73,19 @@ const isServiceCategory = (value: any) => {
 
 const isServiceLikeVendor = (vendor: any) => {
   const rawKind = String(vendor?.kind || '').trim().toLowerCase()
+  const rawShopSlug = String(vendor?.shopSlug || vendor?.shop_slug || '').trim()
+  const categoryService = isServiceCategory(vendor?.category)
+  const hasTrade = !!String(vendor?.trade || '').trim()
+  const hasServices = Array.isArray(vendor?.services) && vendor.services.some((x: any) => String(x || '').trim())
+  const hasCoverage = Array.isArray(vendor?.coverage) && vendor.coverage.some((x: any) => String(x || '').trim())
+  const hasPortfolio = Array.isArray(vendor?.portfolio) && vendor.portfolio.some((x: any) => String(x || '').trim())
+  const isMobileService = vendor?.isMobile === true
+  const hasServiceSignals = categoryService || hasTrade || hasServices || hasCoverage || hasPortfolio || isMobileService
+  if (rawKind === 'shop') return false
+  if (rawShopSlug) return false
+  if ((rawKind === 'provider' || rawKind === 'service') && !hasServiceSignals) return false
   if (rawKind === 'provider' || rawKind === 'service') return true
-  if (isServiceCategory(vendor?.category)) return true
-  if (String(vendor?.trade || '').trim()) return true
-  if (Array.isArray(vendor?.services) && vendor.services.some((x: any) => String(x || '').trim())) return true
-  if (String(vendor?.localPin || '').trim()) return true
+  if (hasServiceSignals) return true
   return false
 }
 
@@ -495,13 +503,10 @@ router.post('/localplus/provider-access', async (req, res) => {
 
     const vendors = localSyncStore.listLocalPlusVendors()
     const candidates = (Array.isArray(vendors) ? vendors : [])
-      .filter((v: any) => {
-        const kindRaw = String(v?.kind || '').trim().toLowerCase()
-        return kindRaw === 'provider' || kindRaw === 'service'
-      })
       .map((v: any) => {
+        const kind = getNormalizedVendorKind(v)
         const meta = phoneMatchMeta(getResolvedVendorPhone(v), phone)
-        return { v, score: meta.score, suffixLen: meta.suffixLen }
+        return { v, kind, score: meta.score, suffixLen: meta.suffixLen }
       })
       .filter((x) => x.score > 0)
       .sort((a, b) => {
@@ -520,22 +525,30 @@ router.post('/localplus/provider-access', async (req, res) => {
     const bestSuffix = best.suffixLen
     const bestGroup = candidates.filter((c) => c.score === bestScore && c.suffixLen === bestSuffix)
     const ambiguous = bestGroup.length > 1
-    const provider = best.v
+    const vendor = best.v
+    const vendorKind = getNormalizedVendorKind(vendor)
+    const payload = ambiguous ? null : {
+      id: String((vendor as any)?.id || '').trim(),
+      name:
+        String((vendor as any)?.name || '').trim() ||
+        String((vendor as any)?.ownerName || '').trim() ||
+        (vendorKind === 'shop' ? 'Boutique' : 'Prestataire'),
+      phone: getResolvedVendorPhone(vendor),
+      trade: String((vendor as any)?.trade || '').trim(),
+      kind: vendorKind,
+      category: String((vendor as any)?.category || '').trim(),
+      shopSlug: String((vendor as any)?.shopSlug || (vendor as any)?.shop_slug || '').trim(),
+    }
 
     res.json({
       success: true,
       found: true,
       ambiguous,
-      ownerEmail: ambiguous ? '' : normalizeEmail((provider as any)?.ownerEmail),
-      provider: ambiguous ? null : {
-          id: String((provider as any)?.id || '').trim(),
-          name:
-            String((provider as any)?.name || '').trim() ||
-            String((provider as any)?.ownerName || '').trim() ||
-            'Prestataire',
-          phone: getResolvedVendorPhone(provider),
-          trade: String((provider as any)?.trade || '').trim(),
-        }
+      ownerEmail: ambiguous ? '' : normalizeEmail((vendor as any)?.ownerEmail),
+      vendorKind: ambiguous ? '' : vendorKind,
+      vendorId: ambiguous ? '' : String((vendor as any)?.id || '').trim(),
+      vendor: payload,
+      provider: payload,
     })
   } catch (e: any) {
     res.status(400).json({ success: false, error: String(e?.message || e || 'Bad request') })
@@ -558,14 +571,11 @@ router.post('/localplus/provider-verify-pin', async (req, res) => {
 
     const vendors = localSyncStore.listLocalPlusVendors()
     const candidates = (Array.isArray(vendors) ? vendors : [])
-      .filter((v: any) => {
-        const kindRaw = String(v?.kind || '').trim().toLowerCase()
-        return kindRaw === 'provider' || kindRaw === 'service'
-      })
       .map((v: any) => {
+        const kind = getNormalizedVendorKind(v)
         const meta = phoneMatchMeta(getResolvedVendorPhone(v), phone)
         const stored = String((v as any)?.localPin || (v as any)?.local_pin || '').trim()
-        return { v, score: meta.score, suffixLen: meta.suffixLen, stored }
+        return { v, kind, score: meta.score, suffixLen: meta.suffixLen, stored }
       })
       .filter((x) => x.score > 0)
       .sort((a, b) => {
@@ -582,14 +592,15 @@ router.post('/localplus/provider-verify-pin', async (req, res) => {
     const matchingPin = candidates.filter((c) => !!c.stored && c.stored === pin)
     const winner = matchingPin[0] || null
     const ok = !!winner
-    const providerId = ok ? String((winner as any)?.v?.id || '').trim() : ''
-    const scopedEmail = ok ? providerScopedOwnerEmail(phoneDigits, providerId) : ''
+    const vendorId = ok ? String((winner as any)?.v?.id || '').trim() : ''
+    const vendorKind = ok ? String((winner as any)?.kind || '').trim() : ''
+    const scopedEmail = ok && vendorKind === 'service' ? providerScopedOwnerEmail(phoneDigits, vendorId) : ''
     if (ok && scopedEmail) {
       try {
         localSyncStore.upsertLocalPlusVendor(
           {
             ...((winner as any)?.v || {}),
-            id: providerId,
+            id: vendorId,
             localPin: String((winner as any)?.stored || '').trim(),
           },
           scopedEmail,
@@ -602,11 +613,14 @@ router.post('/localplus/provider-verify-pin', async (req, res) => {
       found: true,
       verified: ok,
       ownerEmail: ok ? (scopedEmail || normalizeEmail((winner as any)?.v?.ownerEmail)) : '',
-      providerId,
-      provider: ok
+      providerId: vendorId,
+      vendorId,
+      vendorKind,
+      vendor: ok
         ? {
-            id: providerId,
+            id: vendorId,
             name: String((winner as any)?.v?.name || '').trim(),
+            kind: vendorKind,
             category: String((winner as any)?.v?.category || '').trim(),
             trade: String((winner as any)?.v?.trade || '').trim(),
             phone: getResolvedVendorPhone((winner as any)?.v),
@@ -624,6 +638,32 @@ router.post('/localplus/provider-verify-pin', async (req, res) => {
             coverage: Array.isArray((winner as any)?.v?.coverage) ? (winner as any).v.coverage : [],
             portfolio: Array.isArray((winner as any)?.v?.portfolio) ? (winner as any).v.portfolio : [],
             localPin: String((winner as any)?.stored || '').trim(),
+            shopSlug: String((winner as any)?.v?.shopSlug || (winner as any)?.v?.shop_slug || '').trim(),
+          }
+        : null,
+      provider: ok
+        ? {
+            id: vendorId,
+            name: String((winner as any)?.v?.name || '').trim(),
+            kind: vendorKind,
+            category: String((winner as any)?.v?.category || '').trim(),
+            trade: String((winner as any)?.v?.trade || '').trim(),
+            phone: getResolvedVendorPhone((winner as any)?.v),
+            lat: Number((winner as any)?.v?.lat),
+            lng: Number((winner as any)?.v?.lng),
+            city: String((winner as any)?.v?.city || '').trim(),
+            country: String((winner as any)?.v?.country || '').trim(),
+            status: String((winner as any)?.v?.status || '').trim(),
+            live: Boolean((winner as any)?.v?.live),
+            voicePitch: String((winner as any)?.v?.voicePitch || '').trim(),
+            voiceAudio: (winner as any)?.v?.voiceAudio || null,
+            avatar: String((winner as any)?.v?.avatar || '').trim(),
+            isMobile: Boolean((winner as any)?.v?.isMobile),
+            services: Array.isArray((winner as any)?.v?.services) ? (winner as any).v.services : [],
+            coverage: Array.isArray((winner as any)?.v?.coverage) ? (winner as any).v.coverage : [],
+            portfolio: Array.isArray((winner as any)?.v?.portfolio) ? (winner as any).v.portfolio : [],
+            localPin: String((winner as any)?.stored || '').trim(),
+            shopSlug: String((winner as any)?.v?.shopSlug || (winner as any)?.v?.shop_slug || '').trim(),
           }
         : null,
     })

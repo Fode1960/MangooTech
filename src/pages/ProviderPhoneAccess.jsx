@@ -75,7 +75,7 @@ export default function ProviderPhoneAccess() {
   const [resolved, setResolved] = useState(null)
 
   const returnTo = String(searchParams.get('return') || '').trim()
-  const defaultReturn = '/mangoo-local.html?v=153'
+  const defaultReturn = '/mangoo-local.html'
 
   const buildDashboardUrl = useCallback((opts) => {
     const ret = String(returnTo || defaultReturn).trim() || defaultReturn
@@ -85,6 +85,23 @@ export default function ProviderPhoneAccess() {
     if (vendorId) params.set('vendorId', vendorId)
     return `/provider/dashboard?${params.toString()}`
   }, [returnTo])
+
+  const buildLocalVendorUrl = useCallback((opts) => {
+    const fallback = '/mangoo-local.html'
+    const rawTarget = String(returnTo || defaultReturn || fallback).trim() || fallback
+    const looksHtml = rawTarget.includes('.html') || rawTarget.startsWith('/mangoo-local') || rawTarget.startsWith('http')
+    const target = looksHtml ? rawTarget : fallback
+    try {
+      const url = new URL(target, window.location.origin)
+      const vendorId = String(opts?.vendorId || '').trim()
+      const pin = String(opts?.pin || '').trim()
+      if (vendorId) url.searchParams.set('vendor', vendorId)
+      if (pin) url.searchParams.set('pin', pin)
+      return `${url.pathname}${url.search}${url.hash}`
+    } catch {
+      return fallback
+    }
+  }, [defaultReturn, returnTo])
 
   useEffect(() => {
     speakFR("Entrez votre numéro de téléphone pour ouvrir votre espace prestataire.")
@@ -137,17 +154,19 @@ export default function ProviderPhoneAccess() {
   const persistPrestataireUser = useCallback((payload) => {
     try {
       const email = String(payload?.email || '').trim().toLowerCase()
+      const role = String(payload?.role || 'prestataire').trim().toLowerCase() === 'vendor' ? 'vendor' : 'prestataire'
+      const name = String(payload?.name || '').trim() || (role === 'vendor' ? 'Boutique' : 'Prestataire')
       const nextUser = {
         id: payload?.id || email || `prestataire-${Date.now()}`,
         email,
         phone: normalizedPhone,
-        name: String(payload?.name || '').trim() || 'Prestataire',
-        role: 'prestataire',
-        roles: ['prestataire', 'client'],
-        avatar: '🧰'
+        name,
+        role,
+        roles: role === 'vendor' ? ['vendor', 'client'] : ['prestataire', 'client'],
+        avatar: role === 'vendor' ? '🏪' : '🧰'
       }
       localStorage.setItem('mangoo-current-user', JSON.stringify(nextUser))
-      if (email) localStorage.setItem(`mangoo-active-role:${email}`, 'prestataire')
+      if (email) localStorage.setItem(`mangoo-active-role:${email}`, role)
     } catch {
     }
   }, [normalizedPhone])
@@ -168,15 +187,17 @@ export default function ProviderPhoneAccess() {
   const persistLocalModeUser = useCallback((payload) => {
     try {
       const email = String(payload?.email || '').trim().toLowerCase()
+      const role = String(payload?.role || 'prestataire').trim().toLowerCase() === 'vendor' ? 'vendor' : 'prestataire'
+      const name = String(payload?.name || (role === 'vendor' ? 'Boutique' : 'Prestataire')).trim()
       const localUser = {
         id: payload?.id || `local-user-${Date.now()}`,
         email,
-        role: 'prestataire',
-        full_name: String(payload?.name || 'Prestataire').trim(),
+        role,
+        full_name: name,
         app_metadata: { provider: 'local' },
         user_metadata: {
-          role: 'prestataire',
-          full_name: String(payload?.name || 'Prestataire').trim(),
+          role,
+          full_name: name,
           phone: normalizedPhone,
         },
         aud: 'authenticated',
@@ -188,11 +209,12 @@ export default function ProviderPhoneAccess() {
     }
   }, [normalizedPhone])
 
-  const syncResolvedProviderOwner = useCallback(async ({ ownerEmail, secretUsed, userId, providerId, provider }) => {
+  const syncResolvedProviderOwner = useCallback(async ({ ownerEmail, secretUsed, userId, providerId, provider, kind }) => {
     try {
       const vendorId = String(providerId || provider?.id || resolved?.provider?.id || '').trim()
       if (!vendorId) return
       const source = provider && typeof provider === 'object' ? provider : (resolved?.provider || {})
+      const vendorKind = String(kind || source?.kind || '').trim().toLowerCase() === 'shop' ? 'shop' : 'provider'
       const lat = Number(source?.lat)
       const lng = Number(source?.lng)
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
@@ -208,9 +230,9 @@ export default function ProviderPhoneAccess() {
           ownerEmail: String(ownerEmail || '').trim().toLowerCase(),
           vendor: {
             id: vendorId,
-            kind: 'provider',
+            kind: vendorKind,
             approvalStatus: 'approved',
-            name: String(source?.name || '').trim() || 'Prestataire',
+            name: String(source?.name || '').trim() || (vendorKind === 'shop' ? 'Boutique' : 'Prestataire'),
             category: String(source?.category || '').trim() || 'general',
             lat,
             lng,
@@ -228,6 +250,7 @@ export default function ProviderPhoneAccess() {
             services: Array.isArray(source?.services) ? source.services : [],
             coverage: Array.isArray(source?.coverage) ? source.coverage : [],
             portfolio: Array.isArray(source?.portfolio) ? source.portfolio : [],
+            shopSlug: String(source?.shopSlug || '').trim(),
             userId: String(userId || '').trim(),
           },
         }),
@@ -417,6 +440,7 @@ export default function ProviderPhoneAccess() {
       let verifiedProviderId = ''
       let forcedEmail = ''
       let verifiedProvider = null
+      let verifiedKind = ''
       const pinCheck = await verifyPinAgainstProvider()
       if (pinCheck?.networkError) {
         setError(pinCheck.message || 'Connexion impossible. Vérifiez le réseau puis réessayez.')
@@ -430,6 +454,31 @@ export default function ProviderPhoneAccess() {
       verifiedProviderId = String(pinCheck?.providerId || '').trim()
       forcedEmail = String(pinCheck?.ownerEmail || '').trim().toLowerCase()
       verifiedProvider = pinCheck?.provider && typeof pinCheck.provider === 'object' ? pinCheck.provider : null
+      verifiedKind = String(pinCheck?.vendorKind || pinCheck?.provider?.kind || '').trim().toLowerCase()
+
+      if (verifiedKind === 'shop' && verifiedProviderId) {
+        const shopEmail = String(forcedEmail || probe.ownerEmail || '').trim().toLowerCase()
+        const shopName = String(verifiedProvider?.name || resolved?.provider?.name || probe?.provider?.name || 'Boutique').trim() || 'Boutique'
+        persistPrestataireUser({ id: verifiedProviderId, email: shopEmail, name: shopName, role: 'vendor' })
+        persistLocalModeUser({ id: verifiedProviderId, email: shopEmail, name: shopName, role: 'vendor' })
+        try {
+          localStorage.setItem('mangoo_my_shop_id', verifiedProviderId)
+          if (shopEmail) {
+            const key = `mangoo_my_shop_ids:${shopEmail}`
+            const raw = localStorage.getItem(key)
+            const parsed = raw ? JSON.parse(raw) : []
+            const list = Array.isArray(parsed) ? parsed : []
+            if (!list.some((x) => String(x) === String(verifiedProviderId))) {
+              list.push(verifiedProviderId)
+              localStorage.setItem(key, JSON.stringify(list))
+            }
+          }
+          localStorage.setItem('mangoo-open-vendor-id', verifiedProviderId)
+        } catch {
+        }
+        window.location.href = buildLocalVendorUrl({ vendorId: verifiedProviderId, pin: secret })
+        return
+      }
 
       const candidates = forcedEmail ? [forcedEmail] : defaultCandidates
       let userId = ''
@@ -485,14 +534,15 @@ export default function ProviderPhoneAccess() {
         throw lastError || new Error('CODE_INCORRECT')
       }
 
-      persistPrestataireUser({ id: userId, email: ownerEmailUsed || candidates[0], name: fullName })
-      if (usedLocalSync) persistLocalModeUser({ id: userId, email: ownerEmailUsed || candidates[0], name: fullName })
+      persistPrestataireUser({ id: userId, email: ownerEmailUsed || candidates[0], name: fullName, role: 'prestataire' })
+      if (usedLocalSync) persistLocalModeUser({ id: userId, email: ownerEmailUsed || candidates[0], name: fullName, role: 'prestataire' })
       await syncResolvedProviderOwner({
         ownerEmail: ownerEmailUsed || candidates[0],
         secretUsed: secret,
         userId,
         providerId: verifiedProviderId || resolved?.provider?.id || '',
         provider: verifiedProvider || probe?.provider || resolved?.provider || null,
+        kind: verifiedKind || 'service',
       })
       try {
         window.location.href = buildDashboardUrl({ vendorId: verifiedProviderId })
