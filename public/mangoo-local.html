@@ -207,7 +207,7 @@
                 if (!providers.length) return false;
 
                 const signature = providers
-                    .map((vendor) => `${String(vendor?.id || '').trim()}:${String(vendor?.updatedAt || vendor?.createdAt || '').trim()}:${Number(vendor?.lat)}:${Number(vendor?.lng)}`)
+                    .map((vendor) => `${String(vendor?.id || '').trim()}:${String(vendor?.updatedAt || vendor?.createdAt || '').trim()}:${Number(vendor?.lat)}:${Number(vendor?.lng)}:${String(vendor?.avatar || '').trim().length}`)
                     .sort()
                     .join('|');
                 const cacheKey = 'mangoo_local_provider_server_sync_sig_v1';
@@ -221,7 +221,7 @@
                 const fallbackOwnerEmail = lpNormalizeEmail(currentUser?.email);
                 for (const vendor of providers) {
                     const avatarRaw = String(vendor?.avatar || '').trim();
-                    const lightAvatar = avatarRaw && avatarRaw.length <= 4096
+                    const lightAvatar = avatarRaw
                         ? avatarRaw
                         : `https://ui-avatars.com/api/?name=${encodeURIComponent(String(vendor?.name || 'Prestataire'))}&background=random&color=fff`;
                     const body = {
@@ -5186,7 +5186,11 @@
 
         const BASE_USER_POS = lpNormalizeCoords(LP_COUNTRY_CONTEXT?.defaultUserPos, LP_FALLBACK_USER_POS);
         let USER_POS = [...BASE_USER_POS];
-        let USER_POS_META = null;
+        let USER_POS_META = {
+            source: 'country-default',
+            countryCode: LP_COUNTRY_CODE,
+            timestamp: ''
+        };
 
         try {
             const rawConsent = localStorage.getItem('user_geolocation_consent');
@@ -5198,45 +5202,93 @@
                 USER_POS = [lat, lng];
                 USER_POS_META = {
                     accuracy: typeof loc?.accuracy === 'number' ? loc.accuracy : Number(loc?.accuracy),
-                    timestamp: String(loc?.timestamp || consent?.consentTimestamp || consent?.consent_timestamp || '')
+                    timestamp: String(loc?.timestamp || consent?.consentTimestamp || consent?.consent_timestamp || ''),
+                    source: 'stored-geolocation'
                 };
             }
         } catch {
         }
 
+        function lpIsUsingCountryFallbackPosition() {
+            return String(USER_POS_META?.source || 'country-default') === 'country-default';
+        }
+
+        function lpPersistUserPosition(lat, lng, accuracy) {
+            try {
+                localStorage.setItem('user_geolocation_consent', JSON.stringify({
+                    consentTimestamp: new Date().toISOString(),
+                    locationData: {
+                        latitude: lat,
+                        longitude: lng,
+                        accuracy: Number.isFinite(accuracy) ? accuracy : null,
+                        timestamp: new Date().toISOString()
+                    }
+                }));
+            } catch {
+            }
+        }
+
+        function lpApplyResolvedUserPosition(lat, lng, accuracy, source, options) {
+            const opts = options && typeof options === 'object' ? options : {};
+            if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+            USER_POS = [lat, lng];
+            USER_POS_META = {
+                accuracy: Number.isFinite(accuracy) ? accuracy : null,
+                timestamp: new Date().toISOString(),
+                source: String(source || 'geolocation').trim() || 'geolocation'
+            };
+            lpPersistUserPosition(lat, lng, accuracy);
+            try {
+                relocateVendorsNearUser();
+                if (map && typeof map.flyTo === 'function' && opts.flyTo !== false) map.flyTo(USER_POS, 16);
+                if (typeof updateUserMarker === 'function') updateUserMarker();
+                if (typeof filterVendors === 'function') filterVendors();
+            } catch {
+            }
+        }
+
+        function lpExplainGeolocationFailure(error, options) {
+            const opts = options && typeof options === 'object' ? options : {};
+            const host = String(window.location.hostname || '').trim().toLowerCase();
+            const ua = String(navigator.userAgent || '').toLowerCase();
+            const isPhone = /iphone|ipad|ipod|android/.test(ua);
+            const isLocalhostHost = host === 'localhost' || host === '127.0.0.1';
+            const isSecureForGeo = Boolean(window.isSecureContext) || isLocalhostHost;
+            const code = Number(error?.code || 0);
+
+            if (!opts.force && !lpIsUsingCountryFallbackPosition()) return;
+            if (!opts.force && window.__lpGeoFallbackNoticeShown) return;
+            window.__lpGeoFallbackNoticeShown = true;
+
+            let text = 'Position par defaut affichee. Touchez le bouton GPS pour reessayer.';
+            if (!isSecureForGeo && isPhone) {
+                text = 'GPS bloque sur ce lien mobile. Ouvrez Mangoo Local+ en HTTPS pour afficher votre vraie position.';
+            } else if (code === 1) {
+                text = 'GPS non autorise. Activez la localisation pour afficher votre vraie position.';
+            } else if (code === 3) {
+                text = 'GPS trop lent. Touchez le bouton GPS pour reessayer.';
+            } else if (!navigator.geolocation) {
+                text = 'GPS non disponible sur cet appareil.';
+            }
+            showLocalToast(text, 'info');
+        }
+
         function requestUserGeolocation() {
             try {
-                if (!navigator.geolocation) return;
+                if (!navigator.geolocation) {
+                    lpExplainGeolocationFailure(null);
+                    return;
+                }
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
                         const lat = Number(pos?.coords?.latitude);
                         const lng = Number(pos?.coords?.longitude);
                         const acc = Number(pos?.coords?.accuracy);
-                        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-                        USER_POS = [lat, lng];
-                        USER_POS_META = { accuracy: Number.isFinite(acc) ? acc : null, timestamp: new Date().toISOString() };
-                        try {
-                            localStorage.setItem('user_geolocation_consent', JSON.stringify({
-                                consentTimestamp: new Date().toISOString(),
-                                locationData: {
-                                    latitude: lat,
-                                    longitude: lng,
-                                    accuracy: Number.isFinite(acc) ? acc : null,
-                                    timestamp: new Date().toISOString()
-                                }
-                            }));
-                        } catch {
-                        }
-
-                        try {
-                            relocateVendorsNearUser();
-                            if (map && typeof map.flyTo === 'function') map.flyTo(USER_POS, 16);
-                            if (typeof updateUserMarker === 'function') updateUserMarker();
-                            if (typeof filterVendors === 'function') filterVendors();
-                        } catch {
-                        }
+                        lpApplyResolvedUserPosition(lat, lng, acc, 'live-geolocation');
                     },
-                    () => {},
+                    (error) => {
+                        lpExplainGeolocationFailure(error);
+                    },
                     { enableHighAccuracy: true, timeout: 12000, maximumAge: 600000 }
                 );
             } catch {
@@ -13157,21 +13209,21 @@
                 
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
-                        const lat = position.coords.latitude;
-                        const lng = position.coords.longitude;
-                        USER_POS = [lat, lng];
-                        
-                        updateUserMarker();
-                        if(map) map.flyTo(USER_POS, 16);
+                        const lat = Number(position?.coords?.latitude);
+                        const lng = Number(position?.coords?.longitude);
+                        const acc = Number(position?.coords?.accuracy);
+                        lpApplyResolvedUserPosition(lat, lng, acc, 'manual-geolocation');
                         if(btn) btn.innerHTML = '📍';
-                        try { filterVendors(); } catch {}
                     },
                     (error) => {
                         console.warn("Locate error:", error);
                         if(btn) btn.innerHTML = '📍';
+                        lpExplainGeolocationFailure(error, { force: true });
                     },
                     { enableHighAccuracy: false, timeout: 5000 } // Faster, less accurate
                 );
+            } else {
+                lpExplainGeolocationFailure(null, { force: true });
             }
         }
 

@@ -95,6 +95,29 @@ const fallbackAvatarUrl = (vendor: any) => {
   return `https://ui-avatars.com/api/?name=${name}&background=random&color=fff`
 }
 
+const isPlaceholderAvatar = (value: any) => {
+  const raw = String(value || '').trim()
+  if (!raw) return true
+  return raw.includes('ui-avatars.com/api/')
+}
+
+const getFirstImage = (...values: any[]) => {
+  for (const value of values) {
+    if (typeof value !== 'string') continue
+    const raw = String(value || '').trim()
+    if (raw) return raw
+  }
+  return ''
+}
+
+const pickPreferredAvatar = (...values: any[]) => {
+  const normalized = values
+    .map((value) => (typeof value === 'string' ? String(value || '').trim() : ''))
+    .filter(Boolean)
+  const rich = normalized.find((value) => !isPlaceholderAvatar(value))
+  return rich || normalized[0] || ''
+}
+
 const decodeJwtPayload = (token: string) => {
   try {
     const parts = String(token || '').split('.')
@@ -346,7 +369,11 @@ router.get('/localplus/vendors', async (req, res) => {
           parseLatLng((localMatch as any)?.lng)
 
         const localAvatar = String((localMatch as any)?.avatar || '').trim()
-        const rowAvatar = String((row as any)?.avatar || '').trim()
+        const rowAvatar = getFirstImage((row as any)?.avatar_url, (row as any)?.avatar)
+        const portfolioAvatar = getFirstImage(
+          Array.isArray((row as any)?.portfolio) ? (row as any).portfolio[0] : '',
+          Array.isArray((localMatch as any)?.portfolio) ? (localMatch as any).portfolio[0] : ''
+        )
 
         supabaseProviders.push({
           ...(localMatch || {}),
@@ -384,7 +411,7 @@ router.get('/localplus/vendors', async (req, res) => {
             hiddenEmailPhoneDigits(rowEmail),
           city: String((row as any)?.city || (localMatch as any)?.city || '').trim(),
           country: String((row as any)?.country || (localMatch as any)?.country || '').trim(),
-          avatar: localAvatar || rowAvatar,
+          avatar: pickPreferredAvatar(localAvatar, rowAvatar, portfolioAvatar),
           lat: lat ?? undefined,
           lng: lng ?? undefined,
           userId,
@@ -424,7 +451,7 @@ router.get('/localplus/vendors', async (req, res) => {
     })
 
   const MAX_VOICE_AUDIO_LEN = 350000
-  const MAX_AVATAR_LEN = 4096
+  const MAX_AVATAR_LEN = 350000
   const sanitized = filtered.map((v: any) => {
     const voiceAudioRaw = v?.voiceAudio ?? v?.voice_audio ?? null
     const voiceAudio = typeof voiceAudioRaw === 'string' ? String(voiceAudioRaw) : null
