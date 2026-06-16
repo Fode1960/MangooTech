@@ -493,76 +493,67 @@
                     <div style="padding: 0 20px; text-align: center; margin-top: -40px; position: relative;">
                         <div style="width: 80px; height: 80px; background: white; border-radius: 50%; padding: 3px; margin: 0 auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
                             <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(vendorName)}&background=random&size=128" style="width: 100%; height: 100%; border-radius: 50%;">
-                            <!-- Mangoo Balance (New) -->
-                            <div onclick="selectThirdPartyMethod(this, 'mangoo_balance')" class="tp-method" style="border:2px solid #dfe6e9; padding:15px; border-radius:10px; margin-bottom:10px; cursor:pointer; display:flex; align-items:center; gap:15px; transition:all 0.2s;">
-                                <div style="font-size:1.5rem; color:#00b894;">💰</div>
-                                <div style="flex:1;">
-                                    <div style="font-weight:bold; color:#2d3436;">Solde Mangoo</div>
-                                    <div style="font-size:0.8rem; color:#636e72;">Utilisateurs Mangoo</div>
-                                </div>
-                                <div class="tp-radio" style="width:20px; height:20px; border:2px solid #dfe6e9; border-radius:50%;"></div>
-                            </div>
                         </div>
-                        <h2 style="margin: 10px 0 5px 0; color: #2d3436; font-size: 1.4rem;">${vendorName}</h2>
-                        <div style="color: #00b894; font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                        <h2 style="margin: 10px 0 5px 0; color: var(--ml-text); font-size: 1.4rem;">${vendorName}</h2>
+                        <div style="color: var(--ml-brand-to); font-weight: 900; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 5px;">
                             <span>✅ Vendeur Vérifié</span> • <span>⭐ 4.8/5</span>
                         </div>
                     </div>
                     
                     <div style="flex: 1; overflow-y: auto; padding: 20px;">
                         <!-- TRUST METRICS -->
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 12px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 20px; background: rgba(17,24,39,0.04); border: 1px solid var(--ml-border); padding: 15px; border-radius: 12px;">
                             <div style="text-align: center;">
-                                <div style="font-weight: bold; color: #2d3436; font-size: 1.1rem;">3 ans</div>
-                                <div style="font-size: 0.75rem; color: #636e72;">Ancienneté</div>
+                                <div style="font-weight: 950; color: var(--ml-text); font-size: 1.1rem;">3 ans</div>
+                                <div style="font-size: 0.75rem; color: var(--ml-muted);">Ancienneté</div>
                             </div>
-                            <div style="text-align: center; border-left: 1px solid #dfe6e9; border-right: 1px solid #dfe6e9; padding: 0 15px;">
-                                <div style="font-weight: bold; color: #2d3436; font-size: 1.1rem;">100%</div>
-                                <div style="font-size: 0.75rem; color: #636e72;">Réponse</div>
+                            <div style="text-align: center; border-left: 1px solid var(--ml-border); border-right: 1px solid var(--ml-border); padding: 0 15px;">
+                                <div style="font-weight: 950; color: var(--ml-text); font-size: 1.1rem;">100%</div>
+                                <div style="font-size: 0.75rem; color: var(--ml-muted);">Réponse</div>
                             </div>
                             <div style="text-align: center;">
-                                <div style="font-weight: bold; color: #2d3436; font-size: 1.1rem;">154</div>
-                                <div style="font-size: 0.75rem; color: #636e72;">Ventes</div>
+                                <div style="font-weight: 950; color: var(--ml-text); font-size: 1.1rem;">154</div>
+                                <div style="font-size: 0.75rem; color: var(--ml-muted);">Ventes</div>
                             </div>
                         </div>
 
                         <!-- VERIFICATIONS -->
-                        <h3 style="font-size: 1rem; color: #2d3436; margin-bottom: 10px;">Badges de Confiance</h3>
+                        <h3 style="font-size: 1rem; color: var(--ml-text); margin-bottom: 10px;">Badges de Confiance</h3>
                         <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px;">
-                            <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #e2e8f0; border-radius: 10px;">
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--ml-border); background: var(--ml-panel); border-radius: 10px;">
                                 <span style="font-size: 1.2rem;">🆔</span>
                                 <div>
-                                    <div style="font-weight: bold; font-size: 0.9rem; color: #2d3436;">Identité (KYC)</div>
-                                    <div id="lpKycDocumentLabel" style="font-size: 0.75rem; color: #00b894;">Validé par IA • CNI Camerounaise</div>
+                                    <div style="font-weight: 950; font-size: 0.9rem; color: var(--ml-text);">Identité (KYC)</div>
+                                    <div id="lpKycDocumentLabel" style="font-size: 0.75rem; color: var(--ml-brand-to);">Validé par IA • CNI Camerounaise</div>
                                 </div>
-                                <span style="margin-left: auto; color: #00b894;">✓</span>
+                                <span style="margin-left: auto; color: var(--ml-brand-to);">✓</span>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #e2e8f0; border-radius: 10px;">
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--ml-border); background: var(--ml-panel); border-radius: 10px;">
                                 <span style="font-size: 1.2rem;">🏢</span>
                                 <div>
-                                    <div style="font-weight: bold; font-size: 0.9rem; color: #2d3436;">Entreprise (KYB)</div>
-                                    <div style="font-size: 0.75rem; color: #00b894;">RCCM Validé • Kbis Vérifié</div>
+                                    <div style="font-weight: 950; font-size: 0.9rem; color: var(--ml-text);">Entreprise (KYB)</div>
+                                    <div style="font-size: 0.75rem; color: var(--ml-brand-to);">RCCM Validé • Kbis Vérifié</div>
                                 </div>
-                                <span style="margin-left: auto; color: #00b894;">✓</span>
+                                <span style="margin-left: auto; color: var(--ml-brand-to);">✓</span>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #e2e8f0; border-radius: 10px;">
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--ml-border); background: var(--ml-panel); border-radius: 10px;">
                                 <span style="font-size: 1.2rem;">📍</span>
                                 <div>
-                                    <div style="font-weight: bold; font-size: 0.9rem; color: #2d3436;">Localisation</div>
-                                    <div style="font-size: 0.75rem; color: #00b894;">Adresse physique visitée</div>
+                                    <div style="font-weight: 950; font-size: 0.9rem; color: var(--ml-text);">Localisation</div>
+                                    <div style="font-size: 0.75rem; color: var(--ml-brand-to);">Adresse physique visitée</div>
                                 </div>
-                                <span style="margin-left: auto; color: #00b894;">✓</span>
+                                <span style="margin-left: auto; color: var(--ml-brand-to);">✓</span>
                             </div>
                         </div>
 
                         <!-- REVIEWS PREVIEW -->
-                        <h3 style="font-size: 1rem; color: #2d3436; margin-bottom: 10px;">Avis Clients (12)</h3>
-                        <div style="background: #fff; border: 1px solid #eee; border-radius: 10px; padding: 10px; margin-bottom: 10px;">
+                        <h3 style="font-size: 1rem; color: var(--ml-text); margin-bottom: 10px;">Avis Clients (12)</h3>
+                        <div style="background: var(--ml-panel); border: 1px solid var(--ml-border); border-radius: 10px; padding: 10px; margin-bottom: 10px;">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                                 <span style="font-weight: bold; font-size: 0.85rem;">Moussa D.</span>
                                 <span style="color: #f1c40f; font-size: 0.8rem;">⭐⭐⭐⭐⭐</span>
                             </div>
-                            <div style="font-size: 0.8rem; color: #636e72;">"Produit reçu en 2 jours via Tontine. Très sérieux, je recommande !"</div>
+                            <div style="font-size: 0.8rem; color: var(--ml-muted);">"Produit reçu en 2 jours via Tontine. Très sérieux, je recommande !"</div>
                         </div>
                     </div>
                     
@@ -3352,7 +3343,7 @@
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: var(--ml-bg);
-            z-index: 5000;
+            z-index: 22000;
             display: none;
             flex-direction: column;
         }
@@ -3628,7 +3619,7 @@
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: black;
-            z-index: 6000;
+            z-index: 22000;
             display: none;
             flex-direction: column;
         }
@@ -3825,11 +3816,11 @@
                     <div class="hub-chevron" style="font-size:1.6rem;">›</div>
                 </div>
 
-                <div class="hub-card lp-hub-card" onclick="openDriverModal()">
+                <div class="hub-card lp-hub-card" onclick="lpOpenDriverSpace()">
                     <div class="hub-card-icon hub-card-icon--delivery">🛵</div>
                     <div style="flex:1; min-width:0;">
-                        <div class="hub-card-title" style="font-weight:950;">Livraison</div>
-                        <div class="hub-card-subtitle" style="font-size:0.9rem;">Devenir Livreur Express</div>
+                        <div class="hub-card-title" style="font-weight:950;">Livreur</div>
+                        <div class="hub-card-subtitle" style="font-size:0.9rem;">Ouvrir l'Espace Livreur</div>
                     </div>
                     <div class="hub-chevron" style="font-size:1.6rem;">›</div>
                 </div>
@@ -3879,7 +3870,7 @@
         <div id="accountView" class="scrollable-view" style="background:var(--ml-bg);">
             <div class="hub-header" style="padding:20px; text-align:center; position:relative;">
                 <!-- Back Button -->
-                <button class="btn-back-account" onclick="switchView('map')" style="position:absolute; top:20px; left:20px;">
+                <button class="btn-back-account" onclick="lpHandleAccountBack()" style="position:absolute; top:20px; left:20px;">
                     ←
                 </button>
 
@@ -3937,16 +3928,18 @@
                         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px;">
                             <button type="button" class="lp-btn lp-btn-secondary" onclick="switchAccountTab('orders')">🛒 Retour Acheter</button>
                             <button type="button" class="lp-btn lp-btn-primary" onclick="openAddProductModal()">📸 Vendre un article</button>
-                            <button id="lpOpenMyShopBtn" type="button" class="lp-btn lp-btn-secondary" style="display:none;" onclick="try{const id=localStorage.getItem('mangoo_my_shop_id'); if(id) openVendorSheetById(id);}catch{}">🏪 Ma boutique</button>
+                            <button id="lpOpenMyShopBtn" type="button" class="lp-btn lp-btn-secondary" style="display:none;" onclick="try{lpOpenMyShopSheet()}catch{}">🏪 Ma boutique</button>
+                            <button type="button" class="lp-btn lp-btn-secondary" onclick="lpOpenDriverSpace()">🛵 Espace Livreur</button>
                         </div>
                     </div>
 
                     <div id="providerSection" style="margin-top:14px; display:none;">
                         <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
                             <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">👤 Mon compte</div>
-                            <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Ouvrir mon compte en 1 clic.</div>
+                            <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Ouvrir mon compte ou l'espace livreur.</div>
                             <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px;">
-                                <button type="button" class="lp-btn lp-btn-primary" onclick="openMyProviderDashboard()">👤 Mon compte</button>
+                                <button type="button" class="lp-btn lp-btn-primary" onclick="lpOpenClientAccountProfile()">👤 Mon compte</button>
+                                <button type="button" class="lp-btn lp-btn-secondary" onclick="lpOpenDriverSpace()">🛵 Espace Livreur</button>
                             </div>
                         </div>
                     </div>
@@ -3961,13 +3954,24 @@
                             <button type="button" onclick="try{lpGoToVendorDashboard('notifications')}catch{}; try{switchVendorTab('notifications')}catch{}" class="lp-tab" id="lp-vtab-notifications">🔔 Notifications</button>
                             <button type="button" onclick="try{lpGoToVendorDashboard('communication')}catch{}; try{switchVendorTab('communication')}catch{}" class="lp-tab" id="lp-vtab-communication">📞 Communication</button>
                             <button type="button" onclick="try{lpGoToVendorDashboard('shops')}catch{}; try{switchVendorTab('shops')}catch{}" class="lp-tab" id="lp-vtab-shops">🏪 Mes boutiques</button>
-                            <button type="button" onclick="try{lpGoToVendorDashboard('supply')}catch{}" class="lp-tab" id="lp-vtab-supply">🏭 Appro</button>
+                            <button type="button" onclick="try{lpGoToVendorDashboard('supply')}catch{}; try{switchVendorTab('supply')}catch{}" class="lp-tab" id="lp-vtab-supply">🏭 Appro</button>
                         </div>
 
                         <div id="lp-vendor-overview" class="lp-pane active" data-vpane="overview">
                             <div style="display:flex; gap:10px; flex-wrap:wrap; margin:-6px 0 18px;">
-                                <button type="button" class="lp-btn lp-btn-primary" onclick="try{lpGoToVendorDashboard('orders')}catch{}">🚚 Livraisons</button>
-                                <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpGoToVendorDashboard('orders')}catch{}">🧾 Factures</button>
+                                <button type="button" class="lp-btn lp-btn-primary" onclick="try{lpGoToVendorDashboard('orders')}catch{}">🚚 Gérer livraisons</button>
+                                <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpGoToVendorDashboard('orders')}catch{}">🧾 Voir commandes</button>
+                            </div>
+
+                            <div style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:16px; margin-bottom:18px;">
+                                <div style="font-weight:950; color:var(--ml-text); font-size:1.02rem;">Livraison simple</div>
+                                <div style="color:var(--ml-muted); font-size:0.9rem; margin-top:6px; line-height:1.45;">
+                                    Le client paie, renseigne son adresse, puis la boutique confirme la commande et Mangoo Express prend le relais.
+                                </div>
+                                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+                                    <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpGoToVendorDashboard('orders')}catch{}">📦 Commandes a preparer</button>
+                                    <button type="button" class="lp-btn lp-btn-secondary" onclick="openSupplyModal()">🏭 Voir appro</button>
+                                </div>
                             </div>
 
                             <div id="boostAdminCard" style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:16px; margin-bottom:20px; box-shadow:var(--ml-shadow-sm); display:none;">
@@ -4051,7 +4055,7 @@
                                 <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Communication</div>
                                 <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Contactez vos clients via Mangoo Connect+.</div>
                                 <div style="margin-top: 14px;">
-                                    <button type="button" class="lp-btn lp-btn-primary" onclick="try{lpGoToVendorDashboard('communication')}catch{}">💬 Ouvrir le chat</button>
+                                    <button type="button" class="lp-btn lp-btn-primary" onclick="try{lpOpenVendorCommunication()}catch{}">💬 Ouvrir le chat</button>
                                 </div>
                             </div>
                         </div>
@@ -4060,6 +4064,17 @@
                             <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
                                 <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Mes boutiques</div>
                                 <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Créez et gérez vos boutiques Local+.</div>
+                            </div>
+                        </div>
+
+                        <div id="lp-vendor-supply" class="lp-pane" data-vpane="supply">
+                            <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
+                                <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Approvisionnement</div>
+                                <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Ouvrez Mangoo Supply pour ajouter des produits et voir les arrivages.</div>
+                                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 14px;">
+                                    <button type="button" class="lp-btn lp-btn-primary" onclick="openSupplyModal()">🏭 Ouvrir l'appro</button>
+                                    <button type="button" class="lp-btn lp-btn-secondary" onclick="try{switchVendorTab('products')}catch{}">🧾 Voir mes produits</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -4259,13 +4274,13 @@
             </div>
 
             <!-- DRIVER RECRUITMENT CARD -->
-            <div style="background:white; border-radius:15px; padding:15px; margin-top:20px; box-shadow:0 4px 10px rgba(0,0,0,0.05); display:flex; align-items:center; gap:15px; cursor:pointer;" onclick="alert('🚀 Module Livreur bientôt disponible ! Vous pourrez gagner de l\'argent en livrant des colis Mangoo Express.')">
-                <div style="background:#fff3e0; width:50px; height:50px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.8rem;">🛵</div>
-                <div>
-                    <div style="font-weight:bold; color:#2d3436;">Devenir Livreur Express</div>
-                    <div style="font-size:0.8rem; color:#e67e22;">Gagnez de l'argent avec votre moto</div>
+            <div class="hub-card lp-hub-card" style="margin-top:20px;" onclick="lpOpenDriverSpace()">
+                <div class="hub-card-icon hub-card-icon--delivery">🛵</div>
+                <div style="flex:1; min-width:0;">
+                    <div class="hub-card-title" style="font-weight:950;">Espace Livreur</div>
+                    <div class="hub-card-subtitle" style="font-size:0.9rem;">Devenir Livreur Express</div>
                 </div>
-                <span style="margin-left:auto; color:#b2bec3;">›</span>
+                <div class="hub-chevron" style="font-size:1.6rem;">›</div>
             </div>
 
             <div class="action-list">
@@ -4318,7 +4333,7 @@
 
     <!-- BOTTOM SHEET (Détails Vendeur) -->
     <div class="bottom-sheet" id="vendorSheet">
-        <div class="sheet-handle" onclick="closeSheet()"></div>
+        <div class="sheet-handle" onclick="lpHandleVendorSheetBack()"></div>
         <div class="sheet-content">
             <!-- Header Vendeur -->
             <div class="vendor-header">
@@ -5590,7 +5605,7 @@
             selectionOverlay.style.width = '100%';
             selectionOverlay.style.height = '100%';
             selectionOverlay.style.backgroundColor = 'rgba(0,0,0,0.8)';
-            selectionOverlay.style.zIndex = '7000';
+            selectionOverlay.style.zIndex = '22000';
             selectionOverlay.style.display = 'flex';
             selectionOverlay.style.alignItems = 'center';
             selectionOverlay.style.justifyContent = 'center';
@@ -7359,7 +7374,13 @@
             if (!t) return;
             try {
                 if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(t).then(() => alert('Copié ✅')).catch(() => alert('Copie impossible'));
+                    navigator.clipboard.writeText(t).then(() => {
+                        try { showLocalToast('Lien copié', 'success'); } catch {}
+                        try { alert('Copié ✅'); } catch {}
+                    }).catch(() => {
+                        try { showLocalToast('Copie impossible', 'info'); } catch {}
+                        try { alert('Copie impossible'); } catch {}
+                    });
                     return;
                 }
             } catch {
@@ -7373,23 +7394,38 @@
                 ta.select();
                 document.execCommand('copy');
                 document.body.removeChild(ta);
-                alert('Copié ✅');
+                try { showLocalToast('Lien copié', 'success'); } catch {}
+                try { alert('Copié ✅'); } catch {}
             } catch {
+                try { showLocalToast('Copiez le lien manuellement', 'info'); } catch {}
                 try { window.prompt('Copier le lien', t); } catch {}
             }
         }
 
         async function lpShareUrl(url, title) {
             const u = String(url || '');
-            if (!u) return;
+            if (!u) {
+                try { showLocalToast('Lien indisponible', 'info'); } catch {}
+                return false;
+            }
             try {
                 if (navigator.share) {
                     await navigator.share({ title: String(title || 'Mangoo'), text: 'Ouvrir', url: u });
-                    return;
+                    try { showLocalToast('Lien prêt à partager', 'success'); } catch {}
+                    return true;
+                }
+            } catch {
+            }
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(u);
+                    try { showLocalToast('Lien copié', 'success'); } catch {}
+                    return true;
                 }
             } catch {
             }
             lpCopyText(u);
+            return true;
         }
 
         function lpGetStoredShopIdsForCurrentUser() {
@@ -7478,6 +7514,11 @@
         function lpOpenSupplyModalForShop(vendorId) {
             if (!lpFocusOwnedShopContext(vendorId)) return;
             openSupplyModal();
+        }
+
+        function lpOpenShopDashboard(vendorId, tab) {
+            if (!lpFocusOwnedShopContext(vendorId)) return;
+            try { lpGoToVendorDashboard(String(tab || 'overview')); } catch {}
         }
 
         function lpOpenPoster() {
@@ -10014,7 +10055,22 @@
                 const scoped = lpGetStoredProviderIdsForCurrentUser();
                 const owned = scoped.length ? scoped : lpGetOwnedProviderIds();
                 if (id || owned.length) {
-                    openProviderDashboard(String(id || owned[0] || ''));
+                    const providerId = String(id || owned[0] || '').trim()
+                    let backVendorId = ''
+                    try {
+                        const shopId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim()
+                        if (shopId) backVendorId = shopId
+                    } catch {
+                    }
+                    if (!backVendorId) {
+                        try {
+                            const activeId = String(activeVendor?.id || '').trim()
+                            const k = activeId ? lpGetVendorKind(activeVendor) : ''
+                            if (activeId && String(k || '') === 'shop') backVendorId = activeId
+                        } catch {
+                        }
+                    }
+                    openProviderDashboard(providerId, backVendorId);
                     return;
                 }
                 const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
@@ -10024,6 +10080,199 @@
                 }
                 lpNavigateTop(`/provider/access?return=${encodeURIComponent(returnTo)}`);
             } catch {}
+        }
+
+        function lpGetPreferredShopAccountId() {
+            try {
+                const activeId = String(activeVendor?.id || '').trim();
+                const activeKind = activeId ? lpGetVendorKind(activeVendor) : '';
+                if (activeId && activeKind === 'shop') return activeId;
+            } catch {
+            }
+            try {
+                const openId = String(localStorage.getItem('mangoo-open-vendor-id') || '').trim();
+                if (openId) {
+                    const openVendor = VENDORS.find((x) => String(x?.id) === openId) || null;
+                    if (openVendor && lpGetVendorKind(openVendor) === 'shop') return openId;
+                }
+            } catch {
+            }
+            try {
+                const myShopId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
+                if (myShopId) return myShopId;
+            } catch {
+            }
+            try {
+                const scoped = lpGetStoredShopIdsForCurrentUser();
+                const owned = scoped.length ? scoped : lpGetOwnedShopIds();
+                if (owned.length === 1) return String(owned[0] || '').trim();
+            } catch {
+            }
+            return '';
+        }
+
+        function lpGetActiveAccountPane() {
+            try {
+                return String(document.querySelector('.lp-pane.active[data-pane]')?.getAttribute('data-pane') || '').trim();
+            } catch {
+            }
+            return '';
+        }
+
+        function lpGetActiveVendorPane() {
+            try {
+                return String(document.querySelector('.lp-pane.active[data-vpane]')?.getAttribute('data-vpane') || '').trim();
+            } catch {
+            }
+            return '';
+        }
+
+        function lpOpenClientAccountProfile() {
+            try { switchView('account'); } catch {}
+            try { switchAccountTab('profile'); } catch {}
+            try { loadLpProfile(true); } catch {}
+        }
+
+        function lpHandleAccountBack() {
+            try {
+                const pane = String(lpGetActiveAccountPane() || '').trim();
+                if (pane === 'sell') {
+                    const shopId = String(lpGetPreferredShopAccountId() || '').trim();
+                    if (shopId) {
+                        try {
+                            lpSetVendorSheetOrigin({
+                                view: 'account',
+                                accountTab: 'sell',
+                                vendorTab: String(lpGetActiveVendorPane() || '').trim() || 'overview'
+                            });
+                        } catch {
+                        }
+                        try { openVendorSheetById(shopId, { retries: 2, retryDelay: 220 }); } catch {}
+                        return;
+                    }
+                }
+            } catch {
+            }
+            try { switchView('map'); } catch {}
+        }
+
+        function lpOpenMyShopSheet() {
+            let shopId = '';
+            try { shopId = String(lpGetPreferredShopAccountId() || '').trim(); } catch {}
+            if (!shopId) {
+                try { showLocalToast('Aucune boutique active.', 'info'); } catch {}
+                return;
+            }
+            try { lpFocusOwnedShopContext(shopId); } catch {}
+            try {
+                const v = VENDORS.find((x) => String(x?.id) === shopId) || null;
+                if (v) activeVendor = v;
+            } catch {
+            }
+            try {
+                const currentPane = String(lpGetActiveAccountPane() || '').trim();
+                if (String(currentView || '').trim() === 'account') {
+                    lpSetVendorSheetOrigin({
+                        view: 'account',
+                        accountTab: currentPane || 'sell',
+                        vendorTab: String(lpGetActiveVendorPane() || '').trim() || 'overview'
+                    });
+                }
+            } catch {
+            }
+            try { localStorage.setItem('mangoo-open-vendor-id', shopId); } catch {}
+            try {
+                if (openVendorSheetById(shopId, { retries: 2, retryDelay: 220 })) return;
+            } catch {
+            }
+            try {
+                try { hydrateVendorsFromStorage(); } catch {}
+                const v = VENDORS.find((x) => String(x?.id) === String(shopId)) || null;
+                if (v) {
+                    openVendorSheet(v);
+                    try {
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('vendor', String(v.id));
+                        window.history.replaceState({}, '', url.toString());
+                    } catch {
+                    }
+                    return;
+                }
+            } catch {
+            }
+            try { showLocalToast('Boutique introuvable.', 'error'); } catch {}
+        }
+
+        function lpOpenVendorCommunication() {
+            let shopId = '';
+            try { shopId = String(lpGetPreferredShopAccountId() || '').trim(); } catch {}
+            if (shopId) {
+                try { lpFocusOwnedShopContext(shopId); } catch {}
+                try {
+                    const v = VENDORS.find((x) => String(x?.id) === shopId) || null;
+                    if (v) activeVendor = v;
+                } catch {
+                }
+            }
+            try { lpGoToVendorDashboard('communication'); } catch {}
+            try { switchVendorTab('communication'); } catch {}
+            try { openChat(); } catch {}
+        }
+
+        function lpOpenShopAccountFromSheet(vendorId) {
+            const shopId = String(vendorId || lpGetPreferredShopAccountId() || '').trim();
+            if (!shopId) return;
+            try { lpFocusOwnedShopContext(shopId); } catch {}
+            try { localStorage.setItem('mangoo-open-vendor-id', shopId); } catch {}
+            try { closeSheet(); } catch {}
+            try { switchView('account'); } catch {}
+            try { switchAccountTab('sell'); } catch {}
+            try { switchVendorTab('overview'); } catch {}
+        }
+
+        function lpOpenDriverSpace() {
+            try {
+                const existingDriver = document.getElementById('driverOverlay');
+                if (existingDriver) existingDriver.remove();
+            } catch {
+            }
+            try {
+                const existingOnboarding = document.getElementById('driverOnboarding');
+                if (existingOnboarding) existingOnboarding.remove();
+            } catch {
+            }
+            try { closeSheet(); } catch {}
+            try { openDriverModal(); } catch {}
+        }
+
+        function openMyAccountDashboard() {
+            try {
+                const currentPane = lpGetActiveAccountPane();
+                const currentVendorPane = lpGetActiveVendorPane();
+                if (currentPane === 'sell' || currentVendorPane) {
+                    lpOpenClientAccountProfile();
+                    return;
+                }
+            } catch {
+            }
+            try {
+                const shopId = String(lpGetPreferredShopAccountId() || '').trim();
+                if (shopId) {
+                    try { lpFocusOwnedShopContext(shopId); } catch {}
+                    try {
+                        const v = VENDORS.find((x) => String(x?.id) === shopId) || null;
+                        if (v) activeVendor = v;
+                    } catch {
+                    }
+                    try { localStorage.setItem('mangoo-open-vendor-id', shopId); } catch {}
+                    try { switchView('account'); } catch {}
+                    try { switchAccountTab('sell'); } catch {}
+                    try { switchVendorTab('overview'); } catch {}
+                    return;
+                }
+            } catch {
+            }
+            openMyProviderDashboard();
         }
 
         function openConnectByVendorId(id) {
@@ -10278,7 +10527,7 @@
                         
                         <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px; font-size:0.8rem; color:#636e72;">
                             <input type="checkbox" checked disabled>
-                            <span>J'accepte les <a href="#" style="color:#0984e3;">CGU Mangoo</a></span>
+                            <span>J'accepte les <a href="cgu.html" target="_blank" rel="noopener" style="color:#0984e3;">CGU Mangoo</a></span>
                         </div>
 
                         <button onclick="confirmSignature('${name}', ${total}, ${share})" style="width:100%; padding:15px; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:white; border:none; border-radius:var(--ml-radius-xl); font-weight:900; font-size:1rem; cursor:pointer; box-shadow:var(--ml-shadow-md);">
@@ -13171,51 +13420,64 @@
         function openAddProductModal() {
             const overlay = document.createElement('div');
             overlay.id = 'addProductOverlay';
-            overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9000; display:flex; align-items:center; justify-content:center; flex-direction:column;";
+            overlay.className = 'modal-overlay';
             
             overlay.innerHTML = `
-                <div style="background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 380px; position:relative; animation: slideUp 0.3s;">
-                    <div style="text-align:center; margin-bottom:20px;">
-                        <div style="width:120px; height:120px; margin:0 auto; border-radius:15px; overflow:hidden; position:relative; cursor:pointer; background:#f1f2f6; border:2px dashed #b2bec3; display:flex; align-items:center; justify-content:center;" onclick="triggerCameraInput()">
-                            <img id="previewImg" style="width:100%; height:100%; object-fit:cover; display:none;">
-                            <span id="cameraIcon" style="font-size:3rem; opacity:0.7;">📸</span>
-                            <div style="position:absolute; bottom:0; left:0; right:0; background:rgba(0,0,0,0.5); color:white; font-size:0.7rem; padding:5px;">Toucher pour photo</div>
+                <div class="modal-card lp-modal-card" onclick="event.stopPropagation()">
+                    <div class="lp-modal-head">
+                        <button type="button" class="lp-modal-close" onclick="document.getElementById('addProductOverlay')?.remove()">✕</button>
+                        <div class="lp-modal-hero">
+                            <span class="modal-icon">📦</span>
+                            <div style="min-width:0;">
+                                <h2 class="lp-modal-title">Vendre un article</h2>
+                                <p class="lp-modal-sub">Photo • Nom • Prix</p>
+                            </div>
                         </div>
-                        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handleImageUpload(this)">
-                        
-                        <h2 style="margin:10px 0 0; color:#2d3436;">Vendre un article</h2>
-                        <div style="font-size:0.9rem; color:#636e72;">Ajoutez un produit à votre boutique</div>
-                    </div>
-                    
-                    <div style="margin-bottom:15px;">
-                        <label style="display:block; font-weight:bold; color:#2d3436; margin-bottom:5px;">Nom du produit</label>
-                        <input type="text" id="newProdName" placeholder="Ex: Sac de Riz 50kg" style="width:100%; padding:12px; border:1px solid #dfe6e9; border-radius:10px; font-size:1rem;">
-                    </div>
-                    
-                    <div style="margin-bottom:15px;">
-                        <label style="display:block; font-weight:bold; color:#2d3436; margin-bottom:5px;">Prix (FCFA)</label>
-                        <input type="number" id="newProdPrice" placeholder="Ex: 25000" style="width:100%; padding:12px; border:1px solid #dfe6e9; border-radius:10px; font-size:1rem;">
-                    </div>
-                    
-                    <div style="margin-bottom:20px;">
-                        <label style="display:block; font-weight:bold; color:#2d3436; margin-bottom:5px;">Catégorie</label>
-                        <select id="newProdCategory" style="width:100%; padding:12px; border:1px solid #dfe6e9; border-radius:10px; font-size:1rem; background:white;">
-                            <option value="🥬 Vivres Frais">🥬 Vivres Frais</option>
-                            <option value="📱 Électronique">📱 Électronique</option>
-                            <option value="🧵 Mode">🧵 Mode</option>
-                            <option value="🏠 Maison">🏠 Maison</option>
-                        </select>
                     </div>
 
-                    <button onclick="publishProduct()" style="width:100%; padding:15px; background:#27ae60; color:white; border:none; border-radius:12px; font-weight:bold; font-size:1.1rem; cursor:pointer; box-shadow:0 4px 10px rgba(39, 174, 96, 0.3);">
-                        🚀 Publier maintenant
-                    </button>
-                    
-                    <button onclick="document.getElementById('addProductOverlay').remove()" style="width:100%; padding:15px; background:transparent; color:#636e72; border:none; margin-top:5px; font-weight:bold; cursor:pointer;">
-                        Annuler
-                    </button>
+                    <div class="lp-modal-body">
+                        <div class="input-group">
+                            <label>Photo</label>
+                            <div class="lp-upload-row">
+                                <div style="width:72px; height:72px; background:rgba(17,24,39,0.06); border-radius:14px; display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px dashed rgba(17,24,39,0.20); position:relative;">
+                                    <img id="previewImg" style="width:100%; height:100%; object-fit:cover; display:none;">
+                                    <span id="cameraIcon" style="font-size:1.8rem; opacity:0.7;">📸</span>
+                                </div>
+                                <label for="cameraInput" class="lp-file-pill">📸 Prendre une photo</label>
+                                <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handleImageUpload(this)">
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Nom</label>
+                            <input type="text" id="newProdName" class="input-field" placeholder="Ex: Sac de Riz 50kg">
+                        </div>
+
+                        <div class="input-group">
+                            <label>Prix (FCFA)</label>
+                            <input type="number" id="newProdPrice" class="input-field" placeholder="Ex: 25000">
+                        </div>
+
+                        <div class="input-group">
+                            <label>Catégorie</label>
+                            <select id="newProdCategory" class="input-field">
+                                <option value="🥬 Vivres Frais">🥬 Vivres Frais</option>
+                                <option value="📱 Électronique">📱 Électronique</option>
+                                <option value="🧵 Mode">🧵 Mode</option>
+                                <option value="🏠 Maison">🏠 Maison</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="lp-modal-foot">
+                        <button class="btn-submit" onclick="publishProduct()" style="background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));">Publier</button>
+                        <button type="button" class="lp-btn lp-btn-secondary" onclick="document.getElementById('addProductOverlay')?.remove()" style="width:100%; margin-top:10px;">Annuler</button>
+                    </div>
                 </div>
             `;
+            overlay.addEventListener('click', (e) => {
+                if (e && e.target === overlay) overlay.remove();
+            });
             document.body.appendChild(overlay);
         }
 
@@ -13392,8 +13654,96 @@
             }
         }
 
+        function lpSetVendorSheetOrigin(state) {
+            try {
+                const next = state && typeof state === 'object' ? state : null;
+                window.lpVendorSheetOrigin = next;
+                if (next) localStorage.setItem('mangoo-lp-vendor-sheet-origin', JSON.stringify(next));
+                else localStorage.removeItem('mangoo-lp-vendor-sheet-origin');
+            } catch {
+            }
+        }
+
+        function lpGetVendorSheetOrigin() {
+            try {
+                const fromWindow = window.lpVendorSheetOrigin;
+                if (fromWindow && typeof fromWindow === 'object') return fromWindow;
+            } catch {
+            }
+            try {
+                const raw = localStorage.getItem('mangoo-lp-vendor-sheet-origin');
+                const parsed = raw ? JSON.parse(raw) : null;
+                return parsed && typeof parsed === 'object' ? parsed : null;
+            } catch {
+            }
+            return null;
+        }
+
+        function lpRememberVendorSheetOrigin() {
+            try {
+                const view = String(currentView || '').trim() || 'map';
+                const state = {
+                    view,
+                    accountTab: String(lpGetActiveAccountPane() || '').trim(),
+                    vendorTab: String(lpGetActiveVendorPane() || '').trim()
+                };
+                if (view && view !== 'map') {
+                    lpSetVendorSheetOrigin(state);
+                    return;
+                }
+            } catch {
+            }
+            try {
+                const existing = lpGetVendorSheetOrigin();
+                if (existing && typeof existing === 'object') return;
+            } catch {
+            }
+            lpSetVendorSheetOrigin(null);
+        }
+
+        function lpRestoreVendorSheetOrigin() {
+            const state = lpGetVendorSheetOrigin();
+            lpSetVendorSheetOrigin(null);
+            if (!state || typeof state !== 'object') return false;
+
+            const view = String(state.view || '').trim();
+            if (!view || view === 'map') return false;
+
+            try { switchView(view); } catch {}
+
+            if (view === 'account') {
+                const accountTab = String(state.accountTab || '').trim() || 'orders';
+                try { switchAccountTab(accountTab); } catch {}
+                if (accountTab === 'sell') {
+                    const vendorTab = String(state.vendorTab || '').trim() || 'overview';
+                    try { switchVendorTab(vendorTab); } catch {}
+                }
+            }
+            return true;
+        }
+
+        function lpHandleVendorSheetBack() {
+            let vendor = null;
+            try { vendor = activeVendor || null; } catch { vendor = null; }
+            try { closeSheet(); } catch {}
+            try {
+                if (lpRestoreVendorSheetOrigin()) return;
+            } catch {
+            }
+            try {
+                if (vendor && lpGetVendorKind(vendor) === 'shop' && lpIsOwnedShopVendor(vendor)) {
+                    try { switchView('account'); } catch {}
+                    try { switchAccountTab('sell'); } catch {}
+                    try { switchVendorTab('overview'); } catch {}
+                    return;
+                }
+            } catch {
+            }
+        }
+
         // === GESTION DE LA FICHE VENDEUR ===
         function openVendorSheet(vendor) {
+            try { lpRememberVendorSheetOrigin(); } catch {}
             activeVendor = vendor;
             try { lpHideSimplePanel(); } catch {}
 
@@ -13598,10 +13948,11 @@
                     ownerLink.innerHTML = `
                         <div style="display:flex; gap:10px; justify-content:flex-start; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:0 12px; scroll-snap-type:x proximity;">
                                 <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpTryOpenBoostFromLocal('${safeVendorId}', 'shop');" style="flex:0 0 auto; white-space:nowrap; background:#f59e0b; color:white; font-size:0.95rem; border:1px solid #f59e0b; padding:10px 16px; border-radius:999px; font-weight:950; scroll-snap-align:start; cursor:pointer; pointer-events:auto;">🚀 Booster</button>
-                            <a href="#" onclick="openSellerModalForVendor('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px; scroll-snap-align:start;">⚙️ Réglages</a>
-                            <a href="#" onclick="lpOpenProductModalForShop('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#e17055; font-size:0.85rem; text-decoration:none; border:1px solid #e17055; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">📦 Nouveau</a>
-                            <a href="#" onclick="lpOpenSupplyModalForShop('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#0984e3; font-size:0.85rem; text-decoration:none; border:1px solid #0984e3; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">🏭 S'approvisionner</a>
-                            <a href="#" onclick="try{lpDisconnectShop()}catch{}; try{closeSheet()}catch{}" style="flex:0 0 auto; white-space:nowrap; color:#d63031; font-size:0.85rem; text-decoration:none; border:1px solid #d63031; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">🚪 Quitter</a>
+                            <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; openSellerModalForVendor('${safeVendorId}');" style="flex:0 0 auto; white-space:nowrap; color:#636e72; font-size:0.85rem; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px; background:transparent; font-weight:900; scroll-snap-align:start; cursor:pointer;">🏪 Ma fiche</button>
+                            <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpOpenShopAccountFromSheet('${safeVendorId}');" style="flex:0 0 auto; white-space:nowrap; color:#f59e0b; font-size:0.85rem; border:1px solid #f59e0b; padding:8px 15px; border-radius:20px; background:transparent; font-weight:950; scroll-snap-align:start; cursor:pointer;">👤 Mon compte</button>
+                            <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpOpenProductModalForShop('${safeVendorId}');" style="flex:0 0 auto; white-space:nowrap; color:#e17055; font-size:0.85rem; border:1px solid #e17055; padding:8px 15px; border-radius:20px; background:transparent; font-weight:950; scroll-snap-align:start; cursor:pointer;">📦 Nouveau</button>
+                            <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpOpenSupplyModalForShop('${safeVendorId}');" style="flex:0 0 auto; white-space:nowrap; color:#0984e3; font-size:0.85rem; border:1px solid #0984e3; padding:8px 15px; border-radius:20px; background:transparent; font-weight:950; scroll-snap-align:start; cursor:pointer;">🏭 S'approvisionner</button>
+                            <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; try{lpDisconnectShop()}catch{}; try{closeSheet()}catch{}" style="flex:0 0 auto; white-space:nowrap; color:#d63031; font-size:0.85rem; border:1px solid #d63031; padding:8px 15px; border-radius:20px; background:transparent; font-weight:950; scroll-snap-align:start; cursor:pointer;">🚪 Quitter</button>
                         </div>
                     `;
                 } else {
@@ -13611,11 +13962,10 @@
             
             // Add Close Button to Vendor Sheet (if not already there)
             const sheet = document.getElementById('vendorSheet');
-            if (!sheet.querySelector('.close-sheet-btn')) {
-                const closeBtn = document.createElement('button');
+            let closeBtn = sheet ? sheet.querySelector('.close-sheet-btn') : null;
+            if (!closeBtn) {
+                closeBtn = document.createElement('button');
                 closeBtn.className = 'close-sheet-btn';
-                closeBtn.innerHTML = '←';
-                closeBtn.onclick = closeSheet;
                 closeBtn.style.cssText = `
                     position: absolute;
                     top: 15px;
@@ -13634,8 +13984,10 @@
                     backdrop-filter: blur(5px);
                     z-index: 2100;
                 `;
-                sheet.appendChild(closeBtn);
+                if (sheet) sheet.appendChild(closeBtn);
             }
+            try { closeBtn.innerHTML = '←'; } catch {}
+            try { closeBtn.onclick = lpHandleVendorSheetBack; } catch {}
             
             // Update Fav Button
             updateFavBtn();
@@ -14201,13 +14553,12 @@
             }
         }
 
-        function openProviderDashboard(vendorId) {
+        function openProviderDashboard(vendorId, returnVendorId) {
             const rawId = String(vendorId || '').trim()
             const v = rawId ? (VENDORS.find((x) => String(x?.id) === rawId) || null) : null
             const returnUrl = new URL(window.location.href);
-            if (v && String(v.id || '').trim()) {
-                returnUrl.searchParams.set('vendor', String(v.id));
-            }
+            const backVendorId = String(returnVendorId || '') || String(v?.id || '')
+            if (String(backVendorId || '').trim()) returnUrl.searchParams.set('vendor', String(backVendorId).trim());
             const returnTo = returnUrl.toString();
             const params = new URLSearchParams({ return: returnTo });
             if (v) params.set('vendorId', String(v.id))
@@ -14995,6 +15346,16 @@
 
         // === DRIVER MODULE ===
         function openDriverModal() {
+            try {
+                const existingDriver = document.getElementById('driverOverlay');
+                if (existingDriver) existingDriver.remove();
+            } catch {
+            }
+            try {
+                const existingOnboarding = document.getElementById('driverOnboarding');
+                if (existingOnboarding) existingOnboarding.remove();
+            } catch {
+            }
             // Check if user is "verified" as driver (Mock)
             const isDriverVerified = localStorage.getItem('mangoo_driver_verified');
             
@@ -15005,10 +15366,10 @@
             
             const overlay = document.createElement('div');
             overlay.id = 'driverOverlay';
-            overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:10000; display:flex; flex-direction:column; overflow-y:auto;";
+            overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:var(--ml-bg); z-index:10000; display:flex; flex-direction:column; overflow-y:auto; color:var(--ml-text);";
             
             overlay.innerHTML = `
-                <div style="background:#e67e22; color:white; padding:20px; display:flex; align-items:center; gap:15px;">
+                <div style="background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:white; padding:20px; display:flex; align-items:center; gap:15px;">
                     <button onclick="document.getElementById('driverOverlay').remove()" style="background:none; border:none; color:white; font-size:1.5rem;">←</button>
                     <h2 style="margin:0; flex:1;">Espace Livreur</h2>
                     <label class="switch">
@@ -15017,17 +15378,16 @@
                     </label>
                 </div>
                 
-                <div style="padding:20px; flex:1; background:#f8f9fa;">
+                <div style="padding:20px; flex:1; background:var(--ml-bg);">
                     <!-- Earnings Card -->
-                    <div style="background:white; border-radius:15px; padding:20px; box-shadow:0 4px 10px rgba(0,0,0,0.05); margin-bottom:20px; text-align:center;">
-                        <div style="color:#636e72; margin-bottom:5px;">Gains du jour</div>
-                        <div style="font-size:2.5rem; font-weight:bold; color:#2d3436;" id="driverEarnings">0 FCFA</div>
-                        <div style="font-size:0.9rem; color:#00b894;">+0% vs hier</div>
+                    <div style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:20px; box-shadow:var(--ml-shadow-sm); margin-bottom:20px; text-align:center;">
+                        <div style="color:var(--ml-muted); margin-bottom:5px; font-weight:900;">Gains du jour</div>
+                        <div style="font-size:2.5rem; font-weight:950; color:var(--ml-text);" id="driverEarnings">0 FCFA</div>
+                        <div id="driverEarningsDelta" style="font-size:0.9rem; color:var(--ml-brand-to); font-weight:900;">+0% vs hier</div>
                     </div>
                     
                     <!-- Map / Radar Area -->
-                    <div id="driverMapArea" style="background:#2d3436; border-radius:15px; height:200px; margin-bottom:20px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;">
-                        <div style="position:absolute; width:100%; height:100%; opacity:0.3; background:url('https://api.mapbox.com/styles/v1/mapbox/dark-v10/static/9.767869,4.051056,14,0/600x300?access_token=pk.eyJ1IjoiZGVtb21hcHMiLCJhIjoiY2xwbmJ3bHl0MDBzbzJrbzZ5b3J6Z3J6ZSJ9.xxxxx'); background-size:cover;"></div>
+                    <div id="driverMapArea" style="background: radial-gradient(120% 120% at 50% 30%, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 40%, rgba(0,0,0,0.12) 100%), linear-gradient(135deg, #1f2937, #111827); border-radius:15px; height:200px; margin-bottom:20px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;">
                         
                         <!-- Radar Pulse -->
                         <div id="radarPulse" style="width:20px; height:20px; background:#e67e22; border-radius:50%; position:relative; z-index:2;">
@@ -15046,7 +15406,7 @@
                     </style>
                     
                     <!-- Pending Requests -->
-                    <div id="driverRequests">
+                    <div id="driverRequests" style="position:relative; z-index:5;">
                         <div style="text-align:center; color:#b2bec3; margin-top:40px;">
                             En attente de commandes...
                         </div>
@@ -15055,63 +15415,210 @@
             `;
             
             document.body.appendChild(overlay);
+            try { lpDeliveryBindDriverOverlay(overlay); } catch {}
+            try { lpDeliveryDriverInit(); } catch {}
+            try { lpDeliveryRenderDriverEarnings(); } catch {}
             startDriverSimulation();
         }
 
         function openDriverOnboarding() {
+            try {
+                const existingDriver = document.getElementById('driverOverlay');
+                if (existingDriver) existingDriver.remove();
+            } catch {
+            }
+            try {
+                const existingOnboarding = document.getElementById('driverOnboarding');
+                if (existingOnboarding) existingOnboarding.remove();
+            } catch {
+            }
             const overlay = document.createElement('div');
             overlay.id = 'driverOnboarding';
-            overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:var(--ml-bg); z-index:10000; display:flex; flex-direction:column; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; color:var(--ml-text);";
-            
-            overlay.innerHTML = `
-                <div style="background:linear-gradient(135deg, #e67e22 0%, #d35400 100%); padding:24px 16px 18px; text-align:center; color:white; border-radius:0 0 22px 22px; box-shadow:0 10px 30px rgba(230, 126, 34, 0.25);">
-                    <div style="font-size:3rem; margin-bottom:6px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.2));">🛵</div>
-                    <h2 style="margin:0; font-size:1.55rem; font-weight:800; line-height:1.15;">Mangoo Express</h2>
-                    <p style="opacity:0.9; margin:6px 0 0; font-size:0.9rem;">Devenez partenaire et gagnez plus.</p>
+            overlay.className = 'lp-onboard-overlay';
+            try { overlay.style.display = 'flex'; } catch {}
+
+            try {
+                window.lpDriverOnboard = {
+                    step: 0,
+                    vehicle: 'Moto',
+                    licenseDataUrl: ''
+                };
+            } catch {
+            }
+
+            overlay.addEventListener('click', (e) => {
+                if (e && e.target === overlay) overlay.remove();
+            });
+
+            document.body.appendChild(overlay);
+            try { lpDriverRenderOnboarding(); } catch {}
+        }
+
+        function lpDriverSetStep(step) {
+            try {
+                const s = window.lpDriverOnboard || {};
+                const next = Math.max(0, Math.min(2, Number(step) || 0));
+                s.step = next;
+                window.lpDriverOnboard = s;
+            } catch {
+            }
+            try { lpDriverRenderOnboarding(); } catch {}
+            try { lpDriverMaybeSpeak('step_' + String((window.lpDriverOnboard || {}).step || 0)); } catch {}
+        }
+
+        function lpDriverPickVehicle(vehicle) {
+            try {
+                const s = window.lpDriverOnboard || {};
+                s.vehicle = String(vehicle || 'Moto').trim() || 'Moto';
+                window.lpDriverOnboard = s;
+            } catch {
+            }
+            lpDriverSetStep(1);
+        }
+
+        function lpDriverPrimaryAction() {
+            const s = window.lpDriverOnboard || {};
+            const step = Number(s.step || 0) || 0;
+            if (step === 0) {
+                lpDriverSetStep(1);
+                return;
+            }
+            if (step === 1) {
+                const hasDoc = !!String(s.licenseDataUrl || '').trim();
+                if (!hasDoc) {
+                    try { document.getElementById('driverLicenseInput')?.click(); } catch {}
+                    return;
+                }
+                lpDriverSetStep(2);
+                return;
+            }
+        }
+
+        function lpDriverGetVoiceText() {
+            const s = window.lpDriverOnboard || {};
+            const step = Number(s.step || 0) || 0;
+            if (step === 0) return "Bienvenue. Pour t'inscrire comme livreur, choisis ton véhicule. Appuie sur Moto, Tricycle, Voiture ou Camion.";
+            if (step === 1) return "Deuxième étape. Prends une photo claire de ta carte d'identité ou de ton permis. Appuie sur Ajouter photo.";
+            if (step === 2) return "Dernière étape. Vérifie le résumé. Si tout est bon, appuie sur Envoyer.";
+            return "";
+        }
+
+        function lpDriverMaybeSpeak(key) {
+            try {
+                const s = window.lpDriverOnboard || {};
+                const k = String(key || '').trim();
+                if (!k) return;
+                if (String(s.lastSpokenKey || '') === k) return;
+                s.lastSpokenKey = k;
+                window.lpDriverOnboard = s;
+                const t = lpDriverGetVoiceText();
+                if (t) lpSpeak(t, lpGetVoicePrefs());
+            } catch {
+            }
+        }
+
+        function lpDriverRenderOnboarding() {
+            const overlay = document.getElementById('driverOnboarding');
+            if (!overlay) return;
+
+            const s = window.lpDriverOnboard || { step: 0, vehicle: 'Moto', licenseDataUrl: '' };
+            const step = Number(s.step || 0) || 0;
+            const vehicle = String(s.vehicle || 'Moto').trim() || 'Moto';
+            const hasDoc = !!String(s.licenseDataUrl || '').trim();
+
+            const head = `
+                <div class="lp-onboard-head">
+                    <div class="lp-onboard-title">🛵 Mangoo Express</div>
+                    <div class="lp-onboard-sub">Étape ${step + 1}/3</div>
                 </div>
-                
-                <div style="flex:1; overflow-y:auto; padding:18px 16px 20px;">
-                    <h3 style="color:var(--ml-text); margin-bottom:20px; font-size:1.2rem;">📝 Votre Profil</h3>
-                    
-                    <div style="background:var(--ml-card); border-radius:20px; padding:20px; box-shadow:0 5px 20px rgba(0,0,0,0.05); border:1px solid var(--ml-border);">
-                        <div style="margin-bottom:20px;">
-                            <label style="font-weight:bold; display:block; margin-bottom:8px; color:var(--ml-muted); font-size:0.9rem;">Type de Véhicule</label>
-                            <div style="position:relative;">
-                                <select id="vehicleType" style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--ml-border); background:var(--ml-bg); font-size:1rem; color:var(--ml-text); appearance:none; font-weight:bold;">
-                                    <option>Moto</option>
-                                    <option>Tricycle</option>
-                                    <option>Voiture</option>
-                                    <option>Camion</option>
-                                </select>
-                                <div style="position:absolute; right:15px; top:50%; transform:translateY(-50%); pointer-events:none; color:var(--ml-muted);">▼</div>
+            `;
+
+            let body = '';
+            if (step === 0) {
+                body = `
+                    <div class="lp-onboard-cardlet">
+                        <div style="font-weight:950; color:var(--ml-text);">Choisir ton véhicule</div>
+                        <div class="lp-onboard-help">Appuie une fois.</div>
+                    </div>
+                    <div class="lp-onboard-grid cols-3" style="margin-top:10px;">
+                        ${['Moto','Tricycle','Voiture','Camion'].map((v) => `
+                            <div class="lp-onboard-choice" role="button" tabindex="0" onclick="lpDriverPickVehicle(${JSON.stringify(v)})">
+                                <strong>${v === 'Moto' ? '🏍️ Moto' : v === 'Tricycle' ? '🛺 Tricycle' : v === 'Voiture' ? '🚗 Voiture' : '🚚 Camion'}</strong>
+                                <span>${v === vehicle ? 'Sélectionné' : 'Appuie'}</span>
                             </div>
-                        </div>
-                        
-                        <div style="margin-bottom:10px;">
-                            <label style="font-weight:bold; display:block; margin-bottom:8px; color:var(--ml-muted); font-size:0.9rem;">Permis de Conduire / CNI</label>
-                            <div style="border:2px dashed #b2bec3; padding:30px 20px; text-align:center; border-radius:15px; background:var(--ml-bg); color:var(--ml-muted); cursor:pointer; position:relative; overflow:hidden; transition:all 0.2s;" onclick="document.getElementById('driverLicenseInput').click()" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
+                        `).join('')}
+                    </div>
+                `;
+            } else if (step === 1) {
+                const preview = `
+                    <img class="lp-onboard-preview" id="licensePreview" src="${hasDoc ? String(s.licenseDataUrl || '') : ''}" style="display:${hasDoc ? 'block' : 'none'};">
+                    <div class="lp-onboard-preview" id="licensePlaceholder" style="display:${hasDoc ? 'none' : 'flex'}; align-items:center; justify-content:center; font-weight:950; color:var(--ml-muted);">📷</div>
+                `;
+                body = `
+                    <div class="lp-onboard-cardlet">
+                        <div style="font-weight:950; color:var(--ml-text);">Photo CNI / Permis</div>
+                        <div class="lp-onboard-help">Une photo claire suffit.</div>
+                        <div class="lp-onboard-row" style="margin-top:10px;">
+                            ${preview}
+                            <div style="flex:1; min-width:0;">
                                 <input type="file" id="driverLicenseInput" accept="image/*" style="display:none;" onchange="handleLicenseUpload(this)">
-                                <img id="licensePreview" style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; display:none;">
-                                <div id="licensePlaceholder">
-                                    <div style="font-size:2rem; margin-bottom:5px;">📷</div>
-                                    <div style="font-weight:bold; font-size:0.9rem;">Toucher pour ajouter</div>
-                                    <div style="font-size:0.75rem; opacity:0.7;">Format clair et lisible</div>
-                                </div>
+                                <button class="lp-onboard-btn ${hasDoc ? 'primary' : 'secondary'}" onclick="document.getElementById('driverLicenseInput').click()">${hasDoc ? '✅ Photo ajoutée' : '📷 Ajouter photo'}</button>
                             </div>
                         </div>
                     </div>
-                </div>
-                
-                <div style="padding:14px 16px 16px; border-top:1px solid var(--ml-border); background:var(--ml-panel);">
-                    <button onclick="submitDriverApp()" style="width:100%; padding:14px; background:linear-gradient(135deg, #e67e22 0%, #d35400 100%); color:white; border:none; border-radius:14px; font-weight:900; font-size:1.05rem; cursor:pointer; box-shadow:0 10px 20px rgba(230, 126, 34, 0.25);">
-                        🚀 Envoyer ma candidature
-                    </button>
-                    <button onclick="document.getElementById('driverOnboarding').remove()" style="width:100%; padding:12px; background:transparent; color:var(--ml-muted); border:none; font-weight:900; cursor:pointer; margin-top:8px;">
-                        Annuler
-                    </button>
+                `;
+            } else {
+                body = `
+                    <div class="lp-onboard-cardlet">
+                        <div style="font-weight:950; color:var(--ml-text);">Résumé</div>
+                        <div class="lp-onboard-help">Véhicule: <b>${lpEscapeHtml(vehicle)}</b></div>
+                        <div class="lp-onboard-help">Document: <b>${hasDoc ? '✅ OK' : '❌ manquant'}</b></div>
+                    </div>
+                `;
+            }
+
+            let footLeft = '';
+            let footRight = '';
+            const voiceText = lpDriverGetVoiceText();
+            const speakBtn = voiceText
+                ? `<button class="lp-onboard-btn ghost" onclick="lpSpeak(${JSON.stringify(voiceText)}, lpGetVoicePrefs())">🔊 Réécouter</button>`
+                : '';
+            if (step > 0) {
+                footLeft = `<div class="lp-onboard-actions">
+                    <button class="lp-onboard-btn secondary" onclick="lpDriverSetStep(${step - 1})">⬅️ Retour</button>
+                    ${speakBtn}
+                </div>`;
+            } else {
+                footLeft = `<div class="lp-onboard-actions">${speakBtn}</div>`;
+            }
+
+            if (step === 2) {
+                const disabled = hasDoc ? '' : 'disabled style="opacity:0.55; cursor:not-allowed;"';
+                footRight = `<div class="lp-onboard-actions">
+                    <button type="button" class="lp-onboard-btn primary" data-driver-submit ${disabled} onclick="submitDriverApp()">🚀 Envoyer</button>
+                    <button type="button" class="lp-onboard-btn ghost" onclick="document.getElementById('driverOnboarding')?.remove()">Fermer</button>
+                </div>`;
+            } else {
+                const label = step === 1 ? (hasDoc ? '▶️ Continuer' : '📷 Ajouter photo') : '▶️ Continuer';
+                footRight = `<div class="lp-onboard-actions">
+                    <button class="lp-onboard-btn primary" onclick="lpDriverPrimaryAction()">${label}</button>
+                    <button class="lp-onboard-btn ghost" onclick="document.getElementById('driverOnboarding')?.remove()">Fermer</button>
+                </div>`;
+            }
+
+            overlay.innerHTML = `
+                <div class="lp-onboard-card">
+                    ${head}
+                    <div class="lp-onboard-body">${body}</div>
+                    <div class="lp-onboard-foot">
+                        <div style="display:flex; justify-content:space-between; gap:10px; align-items:center;">
+                            ${footLeft}
+                            ${footRight}
+                        </div>
+                    </div>
                 </div>
             `;
-            document.body.appendChild(overlay);
+            try { lpDriverMaybeSpeak('render_' + String(step)); } catch {}
         }
 
         function handleLicenseUpload(input) {
@@ -15120,22 +15627,36 @@
                 reader.onload = function(e) {
                     const img = document.getElementById('licensePreview');
                     const placeholder = document.getElementById('licensePlaceholder');
-                    const container = img.parentElement;
+                    const container = img && img.parentElement ? img.parentElement : null;
+                    try {
+                        const s = window.lpDriverOnboard || {};
+                        s.licenseDataUrl = String(e?.target?.result || '').trim();
+                        window.lpDriverOnboard = s;
+                    } catch {
+                    }
                     
                     if(img) {
                         img.src = e.target.result;
                         img.style.display = 'block';
                     }
                     if(placeholder) placeholder.style.display = 'none';
-                    container.style.border = '2px solid #27ae60';
+                    try { if (container) container.style.border = '2px solid var(--ml-brand-to)'; } catch {}
+                    try { lpDriverRenderOnboarding(); } catch {}
                 }
                 reader.readAsDataURL(input.files[0]);
             }
         }
 
         function submitDriverApp() {
-            const btn = document.querySelector('#driverOnboarding button');
-            btn.innerText = "Vérification en cours...";
+            const btn =
+                document.querySelector('#driverOnboarding [data-driver-submit]') ||
+                document.querySelector('#driverOnboarding .lp-onboard-btn.primary') ||
+                document.querySelector('#driverOnboarding button');
+            if (btn) {
+                try { btn.innerText = "Vérification en cours..."; } catch {}
+                try { btn.disabled = true; } catch {}
+                try { btn.style.opacity = '0.7'; } catch {}
+            }
             
             setTimeout(() => {
                 localStorage.setItem('mangoo_driver_verified', 'true');
@@ -15157,119 +15678,1581 @@
             } else {
                 radar.style.display = 'none';
                 txt.innerText = "Hors ligne 🔴";
-                clearTimeout(window.driverSimTimeout);
+                try { clearTimeout(window.driverSimTimeout); } catch {}
+                try { lpDeliveryStopTracking(); } catch {}
             }
         }
 
-        function startDriverSimulation() {
-            if(window.driverSimTimeout) clearTimeout(window.driverSimTimeout);
-            
-            window.driverSimTimeout = setTimeout(() => {
+        function lpDeliverySafeParseJson(raw, fallback) {
+            try {
+                const v = JSON.parse(String(raw || ''));
+                return v === undefined ? fallback : v;
+            } catch {
+                return fallback;
+            }
+        }
+
+        function lpDeliveryRead(key, fallback) {
+            try {
+                return lpDeliverySafeParseJson(localStorage.getItem(String(key || '')), fallback);
+            } catch {
+                return fallback;
+            }
+        }
+
+        function lpDeliveryWrite(key, value) {
+            try { localStorage.setItem(String(key || ''), JSON.stringify(value)); } catch {}
+        }
+
+        function lpDeliveryDriverId() {
+            try {
+                let id = String(localStorage.getItem('mangoo_driver_id') || '').trim();
+                if (!id) {
+                    id = 'drv_' + String(Date.now()) + '_' + Math.floor(Math.random() * 100000);
+                    localStorage.setItem('mangoo_driver_id', id);
+                }
+                return id;
+            } catch {
+                return 'drv_local';
+            }
+        }
+
+        function lpDeliveryDriverName() {
+            try {
+                let n = String(localStorage.getItem('mangoo_driver_name') || '').trim();
+                if (!n) {
+                    const suffix = String(lpDeliveryDriverId()).slice(-4);
+                    n = 'Livreur ' + suffix;
+                    localStorage.setItem('mangoo_driver_name', n);
+                }
+                return n;
+            } catch {
+                return 'Livreur';
+            }
+        }
+
+        function lpDeliveryRecentDoneKey() {
+            return 'mangoo_delivery_recent_done:' + lpDeliveryDriverId();
+        }
+
+        function lpDeliveryGetRecentDone() {
+            return lpDeliveryRead(lpDeliveryRecentDoneKey(), null);
+        }
+
+        function lpDeliverySetRecentDone(job) {
+            const j = job || null;
+            if (!j) return;
+            lpDeliveryWrite(lpDeliveryRecentDoneKey(), {
+                id: String(j.id || '').trim(),
+                price: Number(j.price || 0),
+                pickup: { ...(j.pickup || {}) },
+                dropoff: { ...(j.dropoff || {}) },
+                proof: { ...(j.proof || {}) },
+                doneAt: Date.now()
+            });
+        }
+
+        function lpDeliveryClearRecentDone() {
+            try { localStorage.removeItem(lpDeliveryRecentDoneKey()); } catch {}
+        }
+
+        function lpDeliveryTodayKey() {
+            try {
+                const d = new Date();
+                const y = String(d.getFullYear());
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return y + '-' + m + '-' + day;
+            } catch {
+                return 'today';
+            }
+        }
+
+        function lpDeliveryYesterdayKey() {
+            try {
+                const d = new Date();
+                d.setDate(d.getDate() - 1);
+                const y = String(d.getFullYear());
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return y + '-' + m + '-' + day;
+            } catch {
+                return 'yesterday';
+            }
+        }
+
+        function lpDeliveryEarningsKey(dayKey) {
+            const k = String(dayKey || lpDeliveryTodayKey()).trim() || lpDeliveryTodayKey();
+            return 'mangoo_delivery_earnings:' + lpDeliveryDriverId() + ':' + k;
+        }
+
+        function lpDeliveryGetEarnings(dayKey) {
+            const v = lpDeliveryRead(lpDeliveryEarningsKey(dayKey), 0);
+            const n = Number(v);
+            return Number.isFinite(n) ? n : 0;
+        }
+
+        function lpDeliverySetEarnings(amount, dayKey) {
+            const n = Number(amount);
+            lpDeliveryWrite(lpDeliveryEarningsKey(dayKey), Number.isFinite(n) ? n : 0);
+            lpDeliveryRenderDriverEarnings();
+        }
+
+        function lpDeliveryAddEarnings(delta) {
+            const d = Number(delta);
+            if (!Number.isFinite(d) || d <= 0) return;
+            const cur = lpDeliveryGetEarnings(lpDeliveryTodayKey());
+            lpDeliverySetEarnings(cur + d, lpDeliveryTodayKey());
+        }
+
+        function lpDeliveryRenderDriverEarnings() {
+            try {
+                const cur = lpDeliveryGetEarnings(lpDeliveryTodayKey());
+                const el = document.getElementById('driverEarnings');
+                if (el) el.innerText = cur.toLocaleString('fr-FR') + ' FCFA';
+            } catch {
+            }
+            try {
+                const cur = lpDeliveryGetEarnings(lpDeliveryTodayKey());
+                const prev = lpDeliveryGetEarnings(lpDeliveryYesterdayKey());
+                const deltaEl = document.getElementById('driverEarningsDelta');
+                if (!deltaEl) return;
+                if (!(Number.isFinite(prev) && prev > 0)) {
+                    deltaEl.innerText = '+0% vs hier';
+                    return;
+                }
+                const pct = Math.round(((cur - prev) / prev) * 100);
+                deltaEl.innerText = (pct >= 0 ? '+' : '') + String(pct) + '% vs hier';
+            } catch {
+            }
+        }
+
+        function lpDeliveryEmit(type, payload) {
+            const msg = { t: String(type || ''), p: payload || null, ts: Date.now() };
+            try {
+                if (!window.__lpDeliveryBC && 'BroadcastChannel' in window) window.__lpDeliveryBC = new BroadcastChannel('mangoo_delivery');
+                if (window.__lpDeliveryBC) window.__lpDeliveryBC.postMessage(msg);
+            } catch {
+            }
+            try {
+                localStorage.setItem('mangoo_delivery_event', JSON.stringify({ ...msg, r: Math.random() }));
+            } catch {
+            }
+        }
+
+        function lpDeliveryOnEvent(msg) {
+            try {
+                const t = String(msg?.t || '').trim();
+                if (!t) return;
+                if (t === 'job_created' || t === 'job_updated' || t === 'track_update') {
+                    try { lpDeliveryRenderDriverRequests(); } catch {}
+                }
+                if (t === 'job_created') {
+                    try { lpSpeak("Nouvelle course. Appuie sur accepter si tu es disponible.", lpGetVoicePrefs()); } catch {}
+                }
+            } catch {
+            }
+        }
+
+        function lpDeliveryDriverInit() {
+            try {
+                if (!window.__lpDeliveryInitDone) window.__lpDeliveryInitDone = false;
+                if (window.__lpDeliveryInitDone) return;
+                window.__lpDeliveryInitDone = true;
+            } catch {
+            }
+            try {
+                if ('BroadcastChannel' in window) {
+                    window.__lpDeliveryBC = new BroadcastChannel('mangoo_delivery');
+                    window.__lpDeliveryBC.onmessage = (e) => {
+                        try { lpDeliveryOnEvent(e?.data || null); } catch {}
+                    };
+                }
+            } catch {
+            }
+            try {
+                window.addEventListener('storage', (e) => {
+                    if (!e) return;
+                    if (e.key !== 'mangoo_delivery_event') return;
+                    const data = lpDeliverySafeParseJson(e.newValue, null);
+                    lpDeliveryOnEvent(data);
+                });
+            } catch {
+            }
+            try { lpDeliveryEnsureDispatcher(); } catch {}
+            try {
+                if (!window.__lpDeliveryEnsureTimer) {
+                    window.__lpDeliveryEnsureTimer = setInterval(() => {
+                        try { lpDeliveryEnsureDispatcher(); } catch {}
+                    }, 4000);
+                }
+            } catch {
+            }
+            try { lpDeliveryRenderDriverRequests(); } catch {}
+        }
+
+        function lpDeliveryListJobs() {
+            const list = [];
+            try {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (!k) continue;
+                    if (!String(k).startsWith('mangoo_delivery_job:')) continue;
+                    const job = lpDeliveryRead(k, null);
+                    if (job && typeof job === 'object') list.push(job);
+                }
+            } catch {
+            }
+            list.sort((a, b) => Number(b?.createdAt || 0) - Number(a?.createdAt || 0));
+            return list;
+        }
+
+        function lpDeliveryGetJob(jobId) {
+            const id = String(jobId || '').trim();
+            if (!id) return null;
+            return lpDeliveryRead('mangoo_delivery_job:' + id, null);
+        }
+
+        function lpDeliverySaveJob(job) {
+            const id = String(job?.id || '').trim();
+            if (!id) return;
+            lpDeliveryWrite('mangoo_delivery_job:' + id, job);
+            lpDeliveryEmit('job_updated', { id });
+        }
+
+        function lpDeliveryEnsureDispatcher() {
+            const me = lpDeliveryDriverId();
+            const now = Date.now();
+            const lock = lpDeliveryRead('mangoo_delivery_dispatcher', null) || {};
+            const age = now - Number(lock.ts || 0);
+            const active = lock.id && age < 8000;
+            if (!active || lock.id === me) {
+                lpDeliveryWrite('mangoo_delivery_dispatcher', { id: me, ts: now });
+                try {
+                    if (window.__lpDeliveryDispatcherTimer) return;
+                } catch {
+                }
+                window.__lpDeliveryDispatcherTimer = setInterval(() => {
+                    try { lpDeliveryWrite('mangoo_delivery_dispatcher', { id: me, ts: Date.now() }); } catch {}
+                }, 3000);
+                window.__lpDeliveryJobTimer = setInterval(() => {
+                    try {
+                        const openJobs = lpDeliveryListJobs().filter((j) => String(j?.status || '') === 'open');
+                        if (openJobs.length) return;
+                        lpDeliveryCreateDemoJob();
+                    } catch {
+                    }
+                }, 12000);
+            }
+        }
+
+        function lpDeliveryPickShopForJob() {
+            try {
+                const shops = Array.isArray(VENDORS) ? VENDORS.filter((v) => String(lpGetVendorKind(v) || '') === 'shop') : [];
+                if (!shops.length) return null;
+                const idx = Math.floor(Math.random() * shops.length);
+                return shops[idx] || shops[0] || null;
+            } catch {
+                return null;
+            }
+        }
+
+        function lpDeliveryCreateDemoJob() {
+            const shop = lpDeliveryPickShopForJob();
+            const id = 'job_' + String(Date.now()) + '_' + Math.floor(Math.random() * 100000);
+            const baseLat = Number(shop?.lat);
+            const baseLng = Number(shop?.lng);
+            const pickLat = Number.isFinite(baseLat) ? baseLat : (Array.isArray(USER_POS) ? Number(USER_POS[0]) : 4.051056);
+            const pickLng = Number.isFinite(baseLng) ? baseLng : (Array.isArray(USER_POS) ? Number(USER_POS[1]) : 9.767869);
+            const dropLat = pickLat + (Math.random() > 0.5 ? 0.01 : -0.01);
+            const dropLng = pickLng + (Math.random() > 0.5 ? 0.01 : -0.01);
+            const job = {
+                id,
+                status: 'open',
+                phase: 'offer',
+                price: 1500,
+                createdAt: Date.now(),
+                pickup: {
+                    kind: 'vendor',
+                    vendorId: shop ? String(shop.id) : '',
+                    name: shop ? String(shop.name || 'Boutique') : 'Boutique',
+                    phone: shop ? String(shop.phone || '') : '',
+                    lat: pickLat,
+                    lng: pickLng,
+                    address: shop ? String(shop.address || '') : ''
+                },
+                dropoff: {
+                    kind: 'client',
+                    name: 'Client',
+                    phone: '',
+                    lat: dropLat,
+                    lng: dropLng,
+                    address: 'Destination'
+                },
+                assignedDriverId: '',
+                assignedAt: 0,
+                track: { lat: null, lng: null, updatedAt: 0 }
+            };
+            lpDeliveryWrite('mangoo_delivery_job:' + id, job);
+            lpDeliveryEmit('job_created', { id });
+            return id;
+        }
+
+        function lpDeliveryIsOnline() {
+            try { return !!document.getElementById('driverStatusSwitch')?.checked; } catch { return false; }
+        }
+
+        function lpDeliveryIgnoredJobIds() {
+            const id = lpDeliveryDriverId();
+            return lpDeliveryRead('mangoo_delivery_ignored:' + id, []);
+        }
+
+        function lpDeliveryIgnoreJob(jobId) {
+            const id = lpDeliveryDriverId();
+            const list = lpDeliveryIgnoredJobIds();
+            const j = String(jobId || '').trim();
+            if (!j) return;
+            if (!Array.isArray(list)) return;
+            if (!list.includes(j)) list.push(j);
+            lpDeliveryWrite('mangoo_delivery_ignored:' + id, list.slice(-50));
+            lpDeliveryRenderDriverRequests();
+        }
+
+        function lpDeliveryAcceptJob(jobId) {
+            const id = String(jobId || '').trim();
+            if (!id) return false;
+            const me = lpDeliveryDriverId();
+            const job = lpDeliveryGetJob(id);
+            if (!job || String(job.status || '') !== 'open') {
+                try { showLocalToast('Course déjà prise.', 'error'); } catch {}
+                lpDeliveryRenderDriverRequests();
+                return false;
+            }
+            job.assignedDriverId = me;
+            job.assignedAt = Date.now();
+            job.status = 'assigned';
+            job.phase = 'pickup';
+            try {
+                lpDeliveryWrite('mangoo_delivery_job:' + id, job);
+            } catch {
+                try { showLocalToast('Erreur: stockage bloqué. Recharge la page.', 'error'); } catch {}
+                lpDeliveryRenderDriverRequests();
+                return false;
+            }
+            const verify = lpDeliveryGetJob(id);
+            if (!verify || String(verify.assignedDriverId || '') !== me) {
+                try { showLocalToast('Trop tard. Quelqu’un a déjà accepté.', 'error'); } catch {}
+                lpDeliveryRenderDriverRequests();
+                return false;
+            }
+            lpDeliveryEmit('job_updated', { id });
+            try { if (navigator.vibrate) navigator.vibrate([80, 60, 80]); } catch {}
+            try { lpSpeak("Course acceptée. Va au retrait.", lpGetVoicePrefs()); } catch {}
+            lpDeliveryStartTracking(id);
+            lpDeliveryRenderDriverRequests();
+            return true;
+        }
+
+        function lpDeliveryIgnoreJobUI(jobId, btnEl) {
+            const id = String(jobId || '').trim();
+            if (!id) return;
+            try {
+                if (window.driverSimTimeout) clearTimeout(window.driverSimTimeout);
+            } catch {
+            }
+            try {
                 const reqContainer = document.getElementById('driverRequests');
-                const isOnline = document.getElementById('driverStatusSwitch')?.checked;
-                
-                if(reqContainer && isOnline) {
+                if (reqContainer) {
                     reqContainer.innerHTML = `
-                        <div style="background:white; border-radius:15px; padding:15px; border-left:5px solid #e67e22; box-shadow:0 5px 15px rgba(0,0,0,0.1); animation:slideUp 0.3s;">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                                <span style="font-weight:bold; color:#e67e22;">Nouvelle Course ! 📦</span>
-                                <span style="font-weight:bold;">1 500 FCFA</span>
-                            </div>
-                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
-                                <div style="width:40px; height:40px; background:#f1f2f6; border-radius:50%; display:flex; align-items:center; justify-content:center;">🏪</div>
-                                <div>
-                                    <div style="font-weight:bold; font-size:0.9rem;">Chez Maman Sarah</div>
-                                    <div style="font-size:0.8rem; color:#636e72;">~1.2 km</div>
-                                </div>
-                            </div>
-                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
-                                <div style="width:40px; height:40px; background:#f1f2f6; border-radius:50%; display:flex; align-items:center; justify-content:center;">👤</div>
-                                <div>
-                                    <div style="font-weight:bold; font-size:0.9rem;">Client: Paul</div>
-                                    <div style="font-size:0.8rem; color:#636e72;">Akwa Nord</div>
-                                </div>
-                            </div>
-                            
-                            <div style="display:flex; gap:10px;">
-                                <button onclick="acceptDriverJob(this)" style="flex:1; padding:15px; background:#2d3436; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">
-                                    Accepter
-                                </button>
-                                <button onclick="rejectDriverJob()" style="padding:15px; background:#f1f2f6; color:#d63031; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">
-                                    Refuser
-                                </button>
-                            </div>
+                        <div style="background:white; border-radius:15px; padding:15px; border-left:5px solid #d63031; box-shadow:0 5px 15px rgba(0,0,0,0.08); text-align:center;">
+                            <div style="font-weight:950; color:#d63031; margin-bottom:6px;">Refusé</div>
+                            <div style="color:#6b7280; font-weight:800;">Recherche d’une autre course…</div>
                         </div>
                     `;
-                    if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
                 }
-            }, 3000);
+            } catch {
+            }
+            try {
+                if (btnEl) {
+                    btnEl.disabled = true;
+                    btnEl.style.opacity = '0.92';
+                    btnEl.innerText = 'Refusé';
+                }
+            } catch {
+            }
+            try { lpDeliveryIgnoreJob(id); } catch { try { showLocalToast('Erreur refus', 'error'); } catch {} }
+            try { lpDeliveryRenderDriverRequests(); } catch {}
+        }
+
+        function lpDeliveryAcceptJobUI(jobId, btnEl) {
+            const id = String(jobId || '').trim();
+            if (!id) return;
+            try {
+                if (window.driverSimTimeout) clearTimeout(window.driverSimTimeout);
+            } catch {
+            }
+            try {
+                if (btnEl) {
+                    btnEl.disabled = true;
+                    btnEl.style.opacity = '0.92';
+                    btnEl.style.transform = 'scale(0.98)';
+                    btnEl.style.background = 'linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to))';
+                    btnEl.innerText = 'Attribution...';
+                }
+            } catch {
+            }
+            try {
+                const reqContainer = document.getElementById('driverRequests');
+                if (reqContainer) {
+                    reqContainer.innerHTML = `
+                        <div style="background:white; border-radius:15px; padding:15px; border-left:5px solid #2d3436; box-shadow:0 5px 15px rgba(0,0,0,0.08); text-align:center;">
+                            <div style="font-weight:950; color:#2d3436; margin-bottom:6px;">Attribution…</div>
+                            <div style="color:#6b7280; font-weight:800;">Un instant</div>
+                        </div>
+                    `;
+                }
+            } catch {
+            }
+            let ok = false;
+            try { ok = !!lpDeliveryAcceptJob(id); } catch { try { showLocalToast('Erreur acceptation', 'error'); } catch {} }
+            if (!ok) {
+                try {
+                    const reqContainer = document.getElementById('driverRequests');
+                    if (reqContainer) {
+                        reqContainer.innerHTML = `
+                            <div style="background:white; border-radius:15px; padding:15px; border-left:5px solid #d63031; box-shadow:0 5px 15px rgba(0,0,0,0.08); text-align:center;">
+                                <div style="font-weight:950; color:#d63031; margin-bottom:6px;">Impossible</div>
+                                <div style="color:#6b7280; font-weight:800;">Course déjà prise ou erreur</div>
+                            </div>
+                        `;
+                    }
+                } catch {
+                }
+                try {
+                    window.driverSimTimeout = setTimeout(() => {
+                        try { lpDeliveryRenderDriverRequests(); } catch {}
+                    }, 1200);
+                } catch {
+                }
+                return;
+            }
+        }
+
+        function lpDeliveryHandleOverlayAction(evt) {
+            try {
+                const target = evt && evt.target && evt.target.closest ? evt.target.closest('[data-delivery-action]') : null;
+                if (!target) return;
+                const action = String(target.getAttribute('data-delivery-action') || '').trim();
+                const jobId = String(target.getAttribute('data-job-id') || '').trim();
+                const nextPhase = String(target.getAttribute('data-next-phase') || '').trim();
+                const proofInputId = String(target.getAttribute('data-proof-input-id') || '').trim();
+                if (!action || (!jobId && action !== 'close-contact-picker')) return;
+                try { evt.preventDefault(); } catch {}
+                try { evt.stopPropagation(); } catch {}
+                const sig = action + ':' + jobId + ':' + nextPhase + ':' + proofInputId;
+                const now = Date.now();
+                try {
+                    if (window.lpDeliveryLastActionSig === sig && (now - Number(window.lpDeliveryLastActionTs || 0)) < 700) return;
+                    window.lpDeliveryLastActionSig = sig;
+                    window.lpDeliveryLastActionTs = now;
+                } catch {
+                }
+                if (action === 'accept') {
+                    lpDeliveryAcceptJobUI(jobId, target);
+                    return;
+                }
+                if (action === 'ignore') {
+                    lpDeliveryIgnoreJobUI(jobId, target);
+                    return;
+                }
+                if (action === 'call') {
+                    lpDeliveryPickContact('call', jobId);
+                    return;
+                }
+                if (action === 'chat') {
+                    lpDeliveryPickContact('chat', jobId);
+                    return;
+                }
+                if (action === 'maps') {
+                    lpDeliveryOpenMapsForJob(jobId);
+                    return;
+                }
+                if (action === 'track') {
+                    lpOpenDeliveryTracking(jobId);
+                    return;
+                }
+                if (action === 'proof-open') {
+                    lpDeliveryOpenProofPicker(jobId, proofInputId);
+                    return;
+                }
+                if (action === 'seed-job') {
+                    try {
+                        lpDeliveryCreateDemoJob();
+                        lpDeliveryRenderDriverRequests();
+                    } catch {
+                    }
+                    return;
+                }
+                if (action === 'speak-phase') {
+                    const phase = String(target.getAttribute('data-phase') || '').trim();
+                    lpDeliverySpeakPhase(phase || 'pickup');
+                    return;
+                }
+                if (action === 'phase') {
+                    if (!nextPhase) return;
+                    try {
+                        target.disabled = true;
+                        target.style.opacity = '0.92';
+                    } catch {
+                    }
+                    lpDeliverySetJobPhase(jobId, nextPhase);
+                    return;
+                }
+                if (action === 'done-clear') {
+                    lpDeliveryClearRecentDone();
+                    lpDeliveryRenderDriverRequests();
+                }
+            } catch {
+            }
+        }
+
+        function lpDeliveryHandleOverlayChange(evt) {
+            try {
+                const target = evt && evt.target && evt.target.matches ? (evt.target.matches('[data-delivery-proof-input]') ? evt.target : null) : null;
+                if (!target) return;
+                const jobId = String(target.getAttribute('data-job-id') || '').trim();
+                if (!jobId) return;
+                lpDeliveryOnProofFileChange(jobId, target);
+            } catch {
+            }
+        }
+
+        function lpDeliveryBindDriverOverlay(overlayEl) {
+            const overlay = overlayEl || document.getElementById('driverOverlay');
+            if (!overlay) return;
+            if (overlay.dataset && overlay.dataset.deliveryBound === '1') return;
+            try {
+                overlay.addEventListener('click', lpDeliveryHandleOverlayAction, true);
+                overlay.addEventListener('pointerup', lpDeliveryHandleOverlayAction, true);
+                overlay.addEventListener('touchend', lpDeliveryHandleOverlayAction, true);
+                overlay.addEventListener('change', lpDeliveryHandleOverlayChange, true);
+            } catch {
+            }
+            try {
+                overlay.dataset.deliveryBound = '1';
+            } catch {
+            }
+        }
+
+        function lpDeliverySetJobPhase(jobId, nextPhase) {
+            const id = String(jobId || '').trim();
+            const job = lpDeliveryGetJob(id);
+            if (!job) return;
+            const me = lpDeliveryDriverId();
+            if (String(job.assignedDriverId || '') !== me) return;
+            const p = String(nextPhase || '').trim();
+            const prevPhase = String(job.phase || '').trim() || 'pickup';
+            if (p === 'delivered' && prevPhase === 'proof' && !lpDeliveryHasProof(job)) {
+                try { showLocalToast('Ajoutez la photo avant de valider ✅', 'info'); } catch {}
+                try { lpSpeak("Ajoute la photo avant de valider.", lpGetVoicePrefs()); } catch {}
+                return;
+            }
+            job.phase = p || String(job.phase || '');
+            if (p === 'delivered') {
+                job.status = 'done';
+                lpDeliverySetRecentDone(job);
+                lpDeliveryAddEarnings(Number(job.price || 0));
+            }
+            lpDeliverySaveJob(job);
+            if (p === 'dropoff') {
+                try { lpSpeak("Colis récupéré. Va chez le client.", lpGetVoicePrefs()); } catch {}
+            }
+            if (p === 'proof') {
+                try { lpSpeak("Dernière étape. Photo puis valider.", lpGetVoicePrefs()); } catch {}
+            }
+            if (p === 'delivered') {
+                try { lpDeliveryCelebrateDone(job); } catch {}
+            }
+            lpDeliveryRenderDriverRequests();
+        }
+
+        function lpDeliveryNormalizePhone(phone) {
+            const raw = String(phone || '').trim();
+            if (!raw) return '';
+            const plus = raw.startsWith('+') ? '+' : '';
+            const digits = raw.replace(/[^\d]/g, '');
+            if (!digits) return '';
+            return plus + digits;
+        }
+
+        function lpDeliverySafeDomId(id) {
+            return String(id || '').trim().replace(/[^a-zA-Z0-9_-]/g, '_');
+        }
+
+        function lpDeliveryCallContact(label, phone) {
+            const name = String(label || '').trim() || 'Appel';
+            const p = lpDeliveryNormalizePhone(phone);
+            try {
+                const prev = (typeof activeVendor !== 'undefined') ? activeVendor : null;
+                const displayName = p ? (name + ' • ' + p) : name;
+                try { activeVendor = { id: 'lp-delivery-call', name: displayName, phone: p || '' }; } catch {}
+                try { launchCall('audio'); return; } catch {}
+                try { activeVendor = prev; } catch {}
+            } catch {}
+            const callFrame = document.getElementById('callFrame');
+            const callOverlay = document.getElementById('callOverlay');
+            if (!callFrame || !callOverlay) {
+                if (p) {
+                    try { navigator.clipboard.writeText(p); } catch {}
+                    try { showLocalToast('Numero copié: ' + p, 'info'); } catch {}
+                    return alert(name + '\n' + p);
+                }
+                return alert(name);
+            }
+            const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+            const callee = p ? (name + ' • ' + p) : name;
+            const url = `test-webrtc-audio.html?callee=${encodeURIComponent(callee)}&theme=${isDark}&mode=audio`;
+            callFrame.src = url;
+            callOverlay.style.display = 'flex';
+            try {
+                if (p) showLocalToast('Appel Mangoo vers ' + p, 'success');
+                else showLocalToast('Appel Mangoo en cours', 'info');
+            } catch {}
+        }
+
+        function lpDeliveryGetContact(job, who) {
+            const j = job || null;
+            const w = String(who || '').trim();
+            if (!j) return { label: '', phone: '' };
+            if (w === 'vendor') {
+                const pickupName = String(j?.pickup?.name || 'Vendeur').trim();
+                return { label: 'Vendeur ' + pickupName, phone: String(j?.pickup?.phone || '').trim() };
+            }
+            const drop = String(j?.dropoff?.address || 'Client').trim();
+            return { label: 'Client ' + drop, phone: String(j?.dropoff?.phone || '').trim() };
+        }
+
+        function lpDeliveryCloseContactPicker() {
+            try { document.getElementById('lpDeliveryContactPicker')?.remove(); } catch {}
+        }
+
+        function lpDeliveryContactChoice(mode, jobId, role) {
+            const m = String(mode || '').trim();
+            const id = String(jobId || '').trim();
+            const r = String(role || '').trim();
+            if (!id || !r) return;
+            const job = lpDeliveryGetJob(id);
+            if (!job) return;
+            const contact = lpDeliveryGetContact(job, r);
+            if (m === 'call') {
+                lpDeliveryCallContact(contact.label, contact.phone);
+            } else {
+                lpDeliveryOpenChat(id, r);
+            }
+            lpDeliveryCloseContactPicker();
+        }
+
+        function lpDeliveryBindContactPicker(overlayEl) {
+            const overlay = overlayEl || document.getElementById('lpDeliveryContactPicker');
+            if (!overlay) return;
+            if (overlay.dataset && overlay.dataset.deliveryBound === '1') return;
+            const onAction = (evt) => {
+                try {
+                    const target = evt && evt.target && evt.target.closest ? evt.target.closest('[data-delivery-picker-action]') : null;
+                    if (!target) return;
+                    evt.preventDefault();
+                    evt.stopPropagation();
+                    const action = String(target.getAttribute('data-delivery-picker-action') || '').trim();
+                    if (action === 'close') {
+                        lpDeliveryCloseContactPicker();
+                        return;
+                    }
+                    if (action === 'contact') {
+                        lpDeliveryContactChoice(
+                            String(target.getAttribute('data-contact-mode') || ''),
+                            String(target.getAttribute('data-job-id') || ''),
+                            String(target.getAttribute('data-contact-role') || '')
+                        );
+                    }
+                } catch {
+                }
+            };
+            try {
+                overlay.addEventListener('click', onAction, true);
+                overlay.addEventListener('pointerup', onAction, true);
+                overlay.addEventListener('touchend', onAction, true);
+                overlay.dataset.deliveryBound = '1';
+            } catch {
+            }
+        }
+
+        function lpDeliveryPickContact(mode, jobId) {
+            const id = String(jobId || '').trim();
+            const job = lpDeliveryGetJob(id);
+            if (!job) return;
+            lpDeliveryCloseContactPicker();
+
+            const m = String(mode || '').trim();
+            const overlay = document.createElement('div');
+            overlay.id = 'lpDeliveryContactPicker';
+            overlay.style.cssText = "position:fixed; inset:0; width:100%; height:100%; background:rgba(0,0,0,0.60); z-index:22000; display:flex; align-items:center; justify-content:center; padding:16px; box-sizing:border-box; backdrop-filter: blur(5px);";
+            overlay.onclick = (e) => { if (e && e.target === overlay) lpDeliveryCloseContactPicker(); };
+
+            const v = lpDeliveryGetContact(job, 'vendor');
+            const c = lpDeliveryGetContact(job, 'client');
+            const title = m === 'call' ? '📞 Appeler' : '💬 Écrire';
+
+            overlay.innerHTML = `
+                <div style="width:min(420px, 100%); background: var(--ml-panel); border: 1px solid var(--ml-border); border-radius: var(--ml-radius-2xl); box-shadow: var(--ml-shadow-md); overflow:hidden;" onclick="event.stopPropagation()">
+                    <div style="padding:16px 16px 12px 16px; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#fff;">
+                        <div style="font-weight:950; font-size:1.05rem;">${title}</div>
+                        <div style="opacity:0.92; font-weight:800; font-size:0.88rem; margin-top:3px;">Choisissez une personne</div>
+                    </div>
+                    <div style="padding:14px 16px 16px 16px; display:grid; gap:10px;">
+                        <button type="button" data-delivery-picker-action="contact" data-contact-mode="${lpEscapeHtml(m)}" data-job-id="${lpEscapeHtml(id)}" data-contact-role="vendor" style="width:100%; padding:14px; background: rgba(249,115,22,0.10); border:1px solid rgba(249,115,22,0.32); border-radius: var(--ml-radius-2xl); font-weight:950; color: var(--ml-text); cursor:pointer;">
+                            🏪 ${lpEscapeHtml(v.label || 'Vendeur')}
+                        </button>
+                        <button type="button" data-delivery-picker-action="contact" data-contact-mode="${lpEscapeHtml(m)}" data-job-id="${lpEscapeHtml(id)}" data-contact-role="client" style="width:100%; padding:14px; background: rgba(59,130,246,0.10); border:1px solid rgba(59,130,246,0.30); border-radius: var(--ml-radius-2xl); font-weight:950; color: var(--ml-text); cursor:pointer;">
+                            👤 ${lpEscapeHtml(c.label || 'Client')}
+                        </button>
+                        <button type="button" data-delivery-picker-action="close" style="width:100%; padding:12px; background: transparent; border:none; color: var(--ml-muted); font-weight:950; cursor:pointer;">
+                            Annuler
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            lpDeliveryBindContactPicker(overlay);
+        }
+
+        function lpDeliveryOpenMapsForJob(jobId) {
+            const id = String(jobId || '').trim();
+            const job = lpDeliveryGetJob(id);
+            if (!job) return;
+            const phase = String(job.phase || 'pickup');
+            const tr = lpDeliveryGetLastTrack(job);
+            const meLat = tr ? Number(tr.lat) : (Array.isArray(USER_POS) ? Number(USER_POS[0]) : Number(job.pickup.lat));
+            const meLng = tr ? Number(tr.lng) : (Array.isArray(USER_POS) ? Number(USER_POS[1]) : Number(job.pickup.lng));
+            const target = phase === 'pickup' ? job.pickup : job.dropoff;
+            const link = lpDeliveryMapsLink(meLat, meLng, Number(target.lat), Number(target.lng));
+            if (!link) {
+                try { showLocalToast('Itinéraire indisponible', 'info'); } catch {}
+                return;
+            }
+            try { window.open(link, '_blank'); } catch {}
+        }
+
+        function lpDeliveryHasProof(job) {
+            try { return !!(job && job.proof && typeof job.proof.photoDataUrl === 'string' && job.proof.photoDataUrl.length > 50); } catch {}
+            return false;
+        }
+
+        function lpDeliveryCompressImageDataUrl(dataUrl, maxSize, cb) {
+            const src = String(dataUrl || '');
+            if (!src.startsWith('data:image/')) return cb('');
+            const img = new Image();
+            img.onload = () => {
+                try {
+                    const w = Number(img.naturalWidth || img.width || 0);
+                    const h = Number(img.naturalHeight || img.height || 0);
+                    if (!w || !h) return cb(src);
+                    const ms = Math.max(320, Number(maxSize) || 900);
+                    const scale = Math.min(1, ms / Math.max(w, h));
+                    const cw = Math.max(1, Math.round(w * scale));
+                    const ch = Math.max(1, Math.round(h * scale));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = cw;
+                    canvas.height = ch;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) return cb(src);
+                    ctx.drawImage(img, 0, 0, cw, ch);
+                    const out = canvas.toDataURL('image/jpeg', 0.82);
+                    return cb(out || src);
+                } catch {
+                    return cb(src);
+                }
+            };
+            img.onerror = () => cb(src);
+            img.src = src;
+        }
+
+        function lpDeliveryOnProofFileChange(jobId, inputEl) {
+            const id = String(jobId || '').trim();
+            const el = inputEl || null;
+            if (!id || !el) return;
+            const job = lpDeliveryGetJob(id);
+            if (!job) return;
+            const file = (el.files && el.files[0]) ? el.files[0] : null;
+            try { el.value = ''; } catch {}
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const raw = String(reader.result || '');
+                    lpDeliveryCompressImageDataUrl(raw, 900, (dataUrl) => {
+                        try {
+                            job.proof = { photoDataUrl: String(dataUrl || ''), updatedAt: Date.now() };
+                            lpDeliverySaveJob(job);
+                            try { showLocalToast('Photo enregistrée ✅', 'success'); } catch {}
+                            lpDeliveryRenderDriverRequests();
+                        } catch {
+                            try { showLocalToast('Erreur photo', 'error'); } catch {}
+                        }
+                    });
+                } catch {
+                    try { showLocalToast('Erreur photo', 'error'); } catch {}
+                }
+            };
+            reader.onerror = () => { try { showLocalToast('Erreur photo', 'error'); } catch {} };
+            try { reader.readAsDataURL(file); } catch {}
+        }
+
+        function lpDeliveryOpenProofPicker(jobId, inputId) {
+            const id = String(jobId || '').trim();
+            const proofId = String(inputId || '').trim();
+            if (!id || !proofId) return;
+            try {
+                const input = document.getElementById(proofId);
+                if (!input) {
+                    try { showLocalToast('Photo indisponible', 'info'); } catch {}
+                    return;
+                }
+                input.click();
+            } catch {
+                try { showLocalToast('Impossible d’ouvrir la photo', 'error'); } catch {}
+            }
+        }
+
+        function lpDeliveryOpenChat(jobId, who) {
+            const id = String(jobId || '').trim();
+            const job = lpDeliveryGetJob(id);
+            if (!job) return;
+            const target = String(who || '').trim();
+            let prev = null;
+            try { prev = (typeof activeVendor !== 'undefined') ? activeVendor : null; } catch {}
+            if (target === 'vendor') {
+                try {
+                    const vId = String(job?.pickup?.vendorId || '').trim();
+                    if (vId) {
+                        const v = VENDORS.find((x) => String(x?.id) === vId) || null;
+                        if (v) activeVendor = v;
+                    }
+                } catch {
+                }
+                try { openChat("🛵 Bonjour, je suis le livreur. Je viens récupérer le colis."); } catch {}
+                try { activeVendor = prev; } catch {}
+                return;
+            }
+            try {
+                activeVendor = {
+                    id: 'lp-delivery-client:' + id,
+                    name: 'Client',
+                    trade: 'Client',
+                    coverage: []
+                };
+            } catch {
+            }
+            try { openChat("🛵 Bonjour, je suis le livreur. Je suis en route."); } catch {}
+            try { activeVendor = prev; } catch {}
+        }
+
+        function lpDeliveryMapsLink(originLat, originLng, destLat, destLng) {
+            const oLat = Number(originLat), oLng = Number(originLng), dLat = Number(destLat), dLng = Number(destLng);
+            if (![oLat, oLng, dLat, dLng].every((n) => Number.isFinite(n))) return '';
+            return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(oLat + ',' + oLng)}&destination=${encodeURIComponent(dLat + ',' + dLng)}&travelmode=driving`;
+        }
+
+        function lpDeliveryGetLastTrack(job) {
+            const id = String(job?.id || '').trim();
+            if (!id) return null;
+            const tr = lpDeliveryRead('mangoo_delivery_track:' + id, null);
+            if (tr && Number.isFinite(Number(tr.lat)) && Number.isFinite(Number(tr.lng))) return tr;
+            const t = job?.track || null;
+            if (t && Number.isFinite(Number(t.lat)) && Number.isFinite(Number(t.lng))) return t;
+            return null;
+        }
+
+        function lpDeliveryTrackAgeLabel(updatedAt) {
+            const ts = Number(updatedAt || 0);
+            if (!ts) return 'Position en attente';
+            const delta = Math.max(0, Date.now() - ts);
+            const sec = Math.round(delta / 1000);
+            if (sec <= 10) return 'Direct';
+            if (sec < 60) return 'Il y a ' + sec + ' s';
+            const min = Math.round(sec / 60);
+            if (min < 60) return 'Il y a ' + min + ' min';
+            return 'Suivi ancien';
+        }
+
+        function lpDeliveryEtaLabel(km) {
+            const dist = Number(km);
+            if (!Number.isFinite(dist) || dist < 0) return '';
+            if (dist < 0.12) return 'Arrive';
+            const minutes = Math.max(1, Math.round((dist / 25) * 60));
+            return 'Env. ' + minutes + ' min';
+        }
+
+        function lpDeliveryLiveSummary(job, phase, track) {
+            const p = String(phase || 'pickup').trim() || 'pickup';
+            const meta = lpDeliveryPhaseMeta(p);
+            if (p === 'delivered') {
+                return { status: 'Livraison terminee', detail: 'Colis remis au client', freshness: 'OK' };
+            }
+            if (p === 'proof') {
+                return { status: 'Livreur chez le client', detail: 'Photo puis validation', freshness: lpDeliveryTrackAgeLabel(track?.updatedAt) };
+            }
+            const target = p === 'pickup' ? job?.pickup : job?.dropoff;
+            const lat = Number(track?.lat);
+            const lng = Number(track?.lng);
+            const tLat = Number(target?.lat);
+            const tLng = Number(target?.lng);
+            let detail = meta.helper || '';
+            if ([lat, lng, tLat, tLng].every((n) => Number.isFinite(n))) {
+                const km = distanceKm(lat, lng, tLat, tLng);
+                if (Number.isFinite(km)) {
+                    const kmLabel = km < 1 ? Math.max(50, Math.round(km * 1000)) + ' m' : km.toFixed(1).replace('.', ',') + ' km';
+                    const eta = lpDeliveryEtaLabel(km);
+                    detail = kmLabel + (eta ? ' • ' + eta : '');
+                }
+            }
+            return {
+                status: p === 'pickup' ? 'Livreur vers la boutique' : 'Livreur vers le client',
+                detail,
+                freshness: lpDeliveryTrackAgeLabel(track?.updatedAt)
+            };
+        }
+
+        function lpDeliveryPlaySuccessChime() {
+            try {
+                const Ctx = window.AudioContext || window.webkitAudioContext;
+                if (!Ctx) return;
+                if (!window.__lpDeliveryAudioCtx) window.__lpDeliveryAudioCtx = new Ctx();
+                const ctx = window.__lpDeliveryAudioCtx;
+                const now = ctx.currentTime;
+                const notes = [
+                    { f: 659.25, d: 0.11, g: 0.05, t: 0.00 },
+                    { f: 783.99, d: 0.11, g: 0.06, t: 0.13 },
+                    { f: 1046.5, d: 0.18, g: 0.08, t: 0.28 }
+                ];
+                notes.forEach((n) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(n.f, now + n.t);
+                    gain.gain.setValueAtTime(0.0001, now + n.t);
+                    gain.gain.exponentialRampToValueAtTime(n.g, now + n.t + 0.01);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + n.t + n.d);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now + n.t);
+                    osc.stop(now + n.t + n.d + 0.03);
+                });
+            } catch {
+            }
+        }
+
+        function lpDeliveryCelebrateDone(job) {
+            const id = String(job?.id || '').trim() || 'done';
+            try {
+                if (window.__lpDeliveryCelebratedSig === id) return;
+                window.__lpDeliveryCelebratedSig = id;
+            } catch {
+            }
+            try { lpDeliveryPlaySuccessChime(); } catch {}
+            try {
+                const amount = Number(job?.price || 0);
+                const msg = amount > 0
+                    ? `Bravo. Livraison terminée. ${amount.toLocaleString('fr-FR')} francs CFA ajoutés à votre solde du jour.`
+                    : 'Bravo. Livraison terminée avec succès.';
+                lpSpeak(msg, lpGetVoicePrefs());
+            } catch {
+            }
+        }
+
+        function lpDeliveryDriverMarkerIcon(track) {
+            const freshness = lpDeliveryTrackAgeLabel(track?.updatedAt);
+            const isFresh = freshness === 'Direct' || freshness.startsWith('Il y a ');
+            const badgeBg = isFresh ? 'linear-gradient(135deg, #f97316, #22c55e)' : 'linear-gradient(135deg, #64748b, #94a3b8)';
+            const halo = isFresh ? 'rgba(34,197,94,0.22)' : 'rgba(100,116,139,0.22)';
+            const html = `
+                <div style="position:relative; width:118px; height:74px;">
+                    <div style="position:absolute; left:50%; top:18px; width:44px; height:44px; transform:translateX(-50%); border-radius:999px; background:${halo}; animation:pulse-user 1.8s infinite;"></div>
+                    <div style="position:absolute; left:50%; top:10px; transform:translateX(-50%); background:${badgeBg}; color:#fff; border-radius:999px; min-width:50px; height:50px; display:flex; align-items:center; justify-content:center; border:3px solid #fff; box-shadow:0 10px 24px rgba(0,0,0,0.25); font-size:1.25rem; font-weight:950;">🛵</div>
+                    <div style="position:absolute; left:50%; bottom:0; transform:translateX(-50%); background:rgba(17,24,39,0.94); color:#fff; padding:6px 10px; border-radius:999px; font-size:0.72rem; font-weight:950; white-space:nowrap; box-shadow:0 8px 20px rgba(0,0,0,0.22);">
+                        Livreur
+                    </div>
+                </div>
+            `;
+            return L.divIcon({
+                className: 'lp-delivery-driver-marker',
+                html,
+                iconSize: [118, 74],
+                iconAnchor: [59, 37],
+                popupAnchor: [0, -24]
+            });
+        }
+
+        function lpDeliveryStopTracking() {
+            try {
+                if (window.__lpDeliveryWatchId) navigator.geolocation.clearWatch(window.__lpDeliveryWatchId);
+            } catch {
+            }
+            window.__lpDeliveryWatchId = null;
+            try { if (window.__lpDeliverySimTimer) clearInterval(window.__lpDeliverySimTimer); } catch {}
+            window.__lpDeliverySimTimer = null;
+            window.__lpDeliveryTrackingJobId = '';
+        }
+
+        function lpDeliveryPublishTrack(jobId, lat, lng) {
+            const id = String(jobId || '').trim();
+            if (!id) return;
+            const tr = { lat: Number(lat), lng: Number(lng), updatedAt: Date.now() };
+            lpDeliveryWrite('mangoo_delivery_track:' + id, tr);
+            try {
+                const job = lpDeliveryGetJob(id);
+                if (job) {
+                    job.track = { ...tr };
+                    lpDeliveryWrite('mangoo_delivery_job:' + id, job);
+                }
+            } catch {
+            }
+            lpDeliveryEmit('track_update', { id });
+        }
+
+        function lpDeliveryStartTracking(jobId) {
+            const id = String(jobId || '').trim();
+            if (!id) return;
+            lpDeliveryStopTracking();
+            window.__lpDeliveryTrackingJobId = id;
+            const job = lpDeliveryGetJob(id);
+            if (!job) return;
+            const start = (() => {
+                const t = lpDeliveryGetLastTrack(job);
+                if (t) return [Number(t.lat), Number(t.lng)];
+                if (Array.isArray(USER_POS)) return [Number(USER_POS[0]), Number(USER_POS[1])];
+                return [Number(job.pickup.lat), Number(job.pickup.lng)];
+            })();
+            lpDeliveryPublishTrack(id, start[0], start[1]);
+            try {
+                if (navigator.geolocation && typeof navigator.geolocation.watchPosition === 'function') {
+                    window.__lpDeliveryWatchId = navigator.geolocation.watchPosition(
+                        (pos) => {
+                            try {
+                                const lat = Number(pos?.coords?.latitude);
+                                const lng = Number(pos?.coords?.longitude);
+                                if (Number.isFinite(lat) && Number.isFinite(lng)) lpDeliveryPublishTrack(id, lat, lng);
+                            } catch {
+                            }
+                        },
+                        () => {
+                        },
+                        { enableHighAccuracy: false, maximumAge: 8000, timeout: 15000 }
+                    );
+                    return;
+                }
+            } catch {
+            }
+            const route = [
+                [Number(start[0]), Number(start[1])],
+                [Number(job.pickup.lat), Number(job.pickup.lng)],
+                [Number(job.dropoff.lat), Number(job.dropoff.lng)]
+            ].filter((p) => Number.isFinite(Number(p[0])) && Number.isFinite(Number(p[1])));
+            let seg = 0;
+            let t = 0;
+            window.__lpDeliverySimTimer = setInterval(() => {
+                try {
+                    if (seg >= route.length - 1) return;
+                    const a = route[seg], b = route[seg + 1];
+                    t += 0.06;
+                    if (t >= 1) {
+                        t = 0;
+                        seg += 1;
+                    }
+                    const lat = a[0] + (b[0] - a[0]) * t;
+                    const lng = a[1] + (b[1] - a[1]) * t;
+                    lpDeliveryPublishTrack(id, lat, lng);
+                } catch {
+                }
+            }, 1200);
+        }
+
+        function lpOpenDeliveryTracking(jobId) {
+            const id = String(jobId || '').trim();
+            if (!id) return;
+            const job = lpDeliveryGetJob(id);
+            if (!job) return;
+            const phase = String(job?.phase || (String(job?.status || '') === 'done' ? 'delivered' : 'pickup')).trim() || 'pickup';
+            const meta = lpDeliveryPhaseMeta(phase);
+            const isPhone = (() => {
+                try { return Number(window.innerWidth || 0) <= 768; } catch {}
+                return false;
+            })();
+            try {
+                const existing = document.getElementById('deliveryTrackOverlay');
+                if (existing) existing.remove();
+            } catch {
+            }
+            const overlay = document.createElement('div');
+            overlay.id = 'deliveryTrackOverlay';
+            overlay.style.cssText = "position:fixed; inset:0; z-index:22000; background:rgba(0,0,0,0.65); display:flex; align-items:stretch; justify-content:center; padding:0;";
+            const shareUrl = (() => {
+                try {
+                    const u = new URL(window.location.href);
+                    u.searchParams.set('track', id);
+                    u.searchParams.delete('vendor');
+                    return u.toString();
+                } catch {
+                    return '';
+                }
+            })();
+            const cardStyle = "width:100%; height:100%; max-width:none; background:var(--ml-panel); border:none; border-radius:0; overflow:hidden; box-shadow:none; display:flex; flex-direction:column;";
+            const topPanelInset = isPhone ? '12px' : '16px';
+            const bottomPanelInset = isPhone ? '12px' : '16px';
+            const stepRail = lpDeliveryRenderStepRail(phase, phase === 'delivered').replace('margin:12px 0 14px;', 'margin:0;');
+            const liveInfo = lpDeliveryLiveSummary(job, phase, lpDeliveryGetLastTrack(job));
+            overlay.innerHTML = `
+                <div style="${cardStyle}">
+                    <div style="background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:white; padding:${isPhone ? 'calc(12px + env(safe-area-inset-top)) 12px 12px' : '14px 16px'}; display:flex; align-items:center; gap:10px;">
+                        <button type="button" onclick="document.getElementById('deliveryTrackOverlay')?.remove()" style="background:rgba(255,255,255,0.15); border:0; color:white; width:38px; height:38px; border-radius:999px; font-weight:950;">←</button>
+                        <div style="flex:1; min-width:0; font-weight:950;">🚚 Suivi livraison</div>
+                        <button id="lpDeliveryTrackShareBtn" type="button" style="background:rgba(255,255,255,0.15); border:0; color:white; padding:10px 12px; border-radius:999px; font-weight:950;">🔗 Partager</button>
+                    </div>
+                    <div style="position:relative; flex:1; min-height:0; background:#dfe6e9;">
+                        <div id="deliveryTrackMap" style="position:absolute; inset:0; background:#dfe6e9;"></div>
+                        <div style="position:absolute; top:${topPanelInset}; left:${topPanelInset}; right:${topPanelInset}; display:grid; gap:10px; pointer-events:none;">
+                            <div style="background:rgba(255,255,255,0.96); color:#2d3436; border:1px solid rgba(0,0,0,0.06); border-radius:${isPhone ? '18px' : '16px'}; padding:${isPhone ? '14px' : '12px 14px'}; box-shadow:0 10px 24px rgba(0,0,0,0.12); backdrop-filter: blur(8px); pointer-events:auto;">
+                                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:4px;">
+                                    <div style="font-size:0.82rem; font-weight:950; color:${meta.tone};">Étape ${meta.step}/${meta.total}</div>
+                                    <div style="font-size:0.78rem; font-weight:950; color:#4b5563;">Suivi partagé</div>
+                                </div>
+                                <div style="font-size:${isPhone ? '1.08rem' : '1rem'}; font-weight:950; margin-bottom:4px;">${lpEscapeHtml(meta.title)}</div>
+                                <div style="font-size:${isPhone ? '0.96rem' : '0.92rem'}; font-weight:800; color:#4b5563;">${lpEscapeHtml(meta.helper)}</div>
+                            </div>
+                            <div style="background:rgba(255,255,255,0.96); color:#2d3436; border:1px solid rgba(0,0,0,0.06); border-radius:${isPhone ? '18px' : '16px'}; padding:${isPhone ? '12px 14px' : '10px 12px'}; box-shadow:0 10px 24px rgba(0,0,0,0.12); backdrop-filter: blur(8px); pointer-events:auto;">
+                                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:4px;">
+                                    <div id="lpDeliveryTrackLiveStatus" style="font-size:${isPhone ? '1rem' : '0.94rem'}; font-weight:950; color:#111827;">${lpEscapeHtml(liveInfo.status || 'Suivi')}</div>
+                                    <div id="lpDeliveryTrackFreshness" style="font-size:0.78rem; font-weight:950; color:${meta.tone};">${lpEscapeHtml(liveInfo.freshness || 'Direct')}</div>
+                                </div>
+                                <div id="lpDeliveryTrackLiveDetail" style="font-size:${isPhone ? '0.9rem' : '0.86rem'}; font-weight:800; color:#4b5563;">${lpEscapeHtml(liveInfo.detail || '')}</div>
+                            </div>
+                        </div>
+                        <div style="position:absolute; left:${bottomPanelInset}; right:${bottomPanelInset}; bottom:calc(${bottomPanelInset} + env(safe-area-inset-bottom)); display:grid; gap:10px; pointer-events:none;">
+                            <div style="background:rgba(255,255,255,0.96); border:1px solid rgba(0,0,0,0.06); border-radius:${isPhone ? '18px' : '16px'}; padding:${isPhone ? '10px' : '12px'}; box-shadow:0 10px 24px rgba(0,0,0,0.14); backdrop-filter: blur(8px); pointer-events:auto;">
+                                ${stepRail}
+                            </div>
+                            <div style="display:grid; gap:8px; ${isPhone ? '' : 'grid-template-columns:1fr 1fr;'} pointer-events:auto;">
+                                <div style="background:rgba(255,243,224,0.96); padding:${isPhone ? '12px' : '10px'}; border-radius:12px; font-weight:900; border:1px solid rgba(245,158,11,0.18); box-shadow:0 6px 18px rgba(0,0,0,0.08);">🏪 Retrait: <b>${lpEscapeHtml(String(job?.pickup?.name || ''))}</b></div>
+                                <div style="background:rgba(234,246,255,0.96); padding:${isPhone ? '12px' : '10px'}; border-radius:12px; font-weight:900; border:1px solid rgba(14,165,233,0.16); box-shadow:0 6px 18px rgba(0,0,0,0.08);">👤 Livraison: <b>${lpEscapeHtml(String(job?.dropoff?.address || 'Client'))}</b></div>
+                            </div>
+                        </div>
+                        <div style="position:absolute; right:${bottomPanelInset}; bottom:calc(${isPhone ? '150px' : '132px'} + env(safe-area-inset-bottom)); pointer-events:none;">
+                            <button type="button" class="lp-btn lp-btn-secondary" style="pointer-events:auto; box-shadow:0 10px 24px rgba(0,0,0,0.16); background:rgba(255,255,255,0.96);" onclick="try{lpOpenDeliveryTracking(${JSON.stringify(id)})}catch{}">🔄 Actualiser</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            overlay.addEventListener('click', (e) => { if (e && e.target === overlay) overlay.remove(); });
+            document.body.appendChild(overlay);
+            try {
+                const shareBtn = document.getElementById('lpDeliveryTrackShareBtn');
+                if (shareBtn && shareBtn.dataset.deliveryBound !== '1') {
+                    const onShare = (evt) => {
+                        try { evt.preventDefault(); evt.stopPropagation(); } catch {}
+                        try { lpShareUrl(shareUrl, 'Suivi livraison'); } catch {}
+                    };
+                    shareBtn.addEventListener('click', onShare, true);
+                    shareBtn.addEventListener('pointerup', onShare, true);
+                    shareBtn.addEventListener('touchend', onShare, true);
+                    shareBtn.dataset.deliveryBound = '1';
+                }
+            } catch {
+            }
+
+            try {
+                if (!window.L || !document.getElementById('deliveryTrackMap')) return;
+                const mapEl = document.getElementById('deliveryTrackMap');
+                const map = L.map(mapEl, { zoomControl: false, attributionControl: false });
+                const center = [Number(job.pickup.lat), Number(job.pickup.lng)];
+                map.setView(center, 14);
+                try { setTimeout(() => map.invalidateSize(), 80); } catch {}
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+                const pickup = [Number(job.pickup.lat), Number(job.pickup.lng)];
+                const drop = [Number(job.dropoff.lat), Number(job.dropoff.lng)];
+                const pickupMarker = L.marker(pickup).addTo(map);
+                const dropMarker = L.marker(drop).addTo(map);
+                pickupMarker.bindPopup('🏪 Retrait').openPopup();
+                dropMarker.bindPopup('👤 Livraison');
+                const line = L.polyline([pickup, drop], { color: '#0984e3', weight: 4, opacity: 0.8 }).addTo(map);
+                map.fitBounds(line.getBounds(), { padding: isPhone ? [48, 220] : [40, 160] });
+                const tr = lpDeliveryGetLastTrack(job);
+                let driverMarker = null;
+                if (tr) {
+                    driverMarker = L.marker([Number(tr.lat), Number(tr.lng)], {
+                        icon: lpDeliveryDriverMarkerIcon(tr),
+                        zIndexOffset: 1600
+                    }).addTo(map).bindPopup('🛵 Livreur Mangoo Express');
+                }
+                const refresh = () => {
+                    try {
+                        const next = lpDeliveryRead('mangoo_delivery_track:' + id, null);
+                        const live = lpDeliveryLiveSummary(job, phase, next || tr || null);
+                        const statusEl = document.getElementById('lpDeliveryTrackLiveStatus');
+                        const detailEl = document.getElementById('lpDeliveryTrackLiveDetail');
+                        const freshEl = document.getElementById('lpDeliveryTrackFreshness');
+                        if (statusEl) statusEl.textContent = String(live.status || 'Suivi');
+                        if (detailEl) detailEl.textContent = String(live.detail || '');
+                        if (freshEl) freshEl.textContent = String(live.freshness || '');
+                        if (!next) return;
+                        const lat = Number(next.lat), lng = Number(next.lng);
+                        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+                        if (!driverMarker) {
+                            driverMarker = L.marker([lat, lng], {
+                                icon: lpDeliveryDriverMarkerIcon(next),
+                                zIndexOffset: 1600
+                            }).addTo(map).bindPopup('🛵 Livreur Mangoo Express');
+                        }
+                        try { driverMarker.setIcon(lpDeliveryDriverMarkerIcon(next)); } catch {}
+                        driverMarker.setLatLng([lat, lng]);
+                    } catch {
+                    }
+                };
+                refresh();
+                const timer = setInterval(() => {
+                    if (!document.getElementById('deliveryTrackOverlay')) return clearInterval(timer);
+                    refresh();
+                }, 1200);
+            } catch {
+            }
+        }
+
+        function lpDeliveryPhaseMeta(phase) {
+            const key = String(phase || 'pickup').trim() || 'pickup';
+            if (key === 'dropoff') {
+                return {
+                    key,
+                    step: 2,
+                    total: 4,
+                    title: 'Chez le client',
+                    short: 'Client',
+                    helper: 'Va chez le client.',
+                    tone: '#0ea5e9',
+                    bg: '#eaf6ff'
+                };
+            }
+            if (key === 'proof') {
+                return {
+                    key,
+                    step: 3,
+                    total: 4,
+                    title: 'Photo preuve',
+                    short: 'Photo',
+                    helper: 'Photo du colis remis.',
+                    tone: '#27ae60',
+                    bg: '#e8f5e9'
+                };
+            }
+            if (key === 'delivered') {
+                return {
+                    key,
+                    step: 4,
+                    total: 4,
+                    title: 'Mission terminee',
+                    short: 'Termine',
+                    helper: 'La livraison est finie.',
+                    tone: '#27ae60',
+                    bg: '#e8f5e9'
+                };
+            }
+            return {
+                key: 'pickup',
+                step: 1,
+                total: 4,
+                title: 'Retrait colis',
+                short: 'Retrait',
+                helper: 'Va a la boutique.',
+                tone: '#f59e0b',
+                bg: '#fff3e0'
+            };
+        }
+
+        function lpDeliverySpeakPhase(phase) {
+            const meta = lpDeliveryPhaseMeta(phase);
+            const text = (() => {
+                if (meta.key === 'pickup') return 'Étape un. Va à la boutique et appuie sur colis récupéré.';
+                if (meta.key === 'dropoff') return 'Étape deux. Va chez le client et appuie sur arrivé chez le client.';
+                if (meta.key === 'proof') return 'Étape trois. Prends la photo du colis remis au client, puis valide la livraison.';
+                if (meta.key === 'delivered') return 'Mission terminée. Bravo.';
+                return '';
+            })();
+            if (!text) return;
+            try { lpSpeak(text, lpGetVoicePrefs()); } catch {}
+        }
+
+        function lpDeliveryMaybeSpeakPhase(phase, jobId) {
+            const key = String(phase || 'pickup').trim() || 'pickup';
+            const id = String(jobId || '').trim() || 'global';
+            const sig = id + ':' + key;
+            try {
+                if (window.__lpDeliverySpokenSig === sig) return;
+                window.__lpDeliverySpokenSig = sig;
+            } catch {
+            }
+            try {
+                setTimeout(() => {
+                    try { lpDeliverySpeakPhase(key); } catch {}
+                }, 80);
+            } catch {
+            }
+        }
+
+        function lpDeliveryRenderStepRail(activePhase, completeAll = false) {
+            const stages = [
+                { key: 'pickup', label: 'Retrait' },
+                { key: 'dropoff', label: 'Client' },
+                { key: 'proof', label: 'Photo' },
+                { key: 'delivered', label: 'Termine' }
+            ];
+            const meta = lpDeliveryPhaseMeta(activePhase);
+            return `
+                <div style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:8px; margin:12px 0 14px;">
+                    ${stages.map((stage, idx) => {
+                        const stepNum = idx + 1;
+                        const isDone = completeAll || stepNum < Number(meta.step || 1);
+                        const isCurrent = !completeAll && stage.key === meta.key;
+                        const bg = isDone ? '#27ae60' : (isCurrent ? 'linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to))' : '#edf1f7');
+                        const color = (isDone || isCurrent) ? '#fff' : '#6b7280';
+                        const border = isCurrent ? '2px solid rgba(230,126,34,0.28)' : '1px solid rgba(0,0,0,0.06)';
+                        const dot = isDone ? '✓' : String(stepNum);
+                        return `
+                            <div style="text-align:center; background:${bg}; color:${color}; border:${border}; border-radius:16px; padding:10px 6px; box-shadow:${isCurrent ? '0 8px 20px rgba(230,126,34,0.18)' : 'none'};">
+                                <div style="width:28px; height:28px; border-radius:999px; margin:0 auto 6px; display:flex; align-items:center; justify-content:center; background:${(isDone || isCurrent) ? 'rgba(255,255,255,0.18)' : '#fff'}; font-weight:950;">${dot}</div>
+                                <div style="font-size:0.78rem; font-weight:950; line-height:1.15;">${stage.label}</div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function lpDeliveryRenderDriverRequests() {
+            const reqContainer = document.getElementById('driverRequests');
+            if (!reqContainer) return;
+            const online = lpDeliveryIsOnline();
+            if (!online) {
+                reqContainer.innerHTML = `<div style="text-align:center; color:#b2bec3; margin-top:40px;">Hors ligne 🔴</div>`;
+                return;
+            }
+            const recentDone = lpDeliveryGetRecentDone();
+            if (recentDone && String(recentDone.id || '').trim()) {
+                const pickupDone = String(recentDone?.pickup?.name || 'Retrait');
+                const dropDone = String(recentDone?.dropoff?.address || 'Client');
+                const donePrice = Number(recentDone.price || 0);
+                const doneProof = String(((recentDone.proof || {}).photoDataUrl) || '').trim();
+                reqContainer.innerHTML = `
+                    <div style="background:linear-gradient(180deg, rgba(34,197,94,0.05), rgba(249,115,22,0.04) 42%, #fff 100%); border-radius:24px; padding:16px; border:1px solid rgba(39,174,96,0.16); border-left:5px solid #27ae60; box-shadow:0 14px 34px rgba(0,0,0,0.10); overflow:hidden; position:relative;">
+                        <div style="position:absolute; top:-10px; right:-8px; width:110px; height:110px; border-radius:999px; background:radial-gradient(circle, rgba(34,197,94,0.22) 0%, rgba(34,197,94,0.08) 42%, rgba(34,197,94,0) 70%);"></div>
+                        <div style="position:absolute; top:18px; left:18px; width:12px; height:12px; border-radius:999px; background:#f59e0b; box-shadow:28px 12px 0 rgba(34,197,94,0.85), 56px -2px 0 rgba(14,165,233,0.65), 82px 14px 0 rgba(249,115,22,0.72);"></div>
+                        <div style="position:relative; z-index:1; display:grid; gap:12px;">
+                            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <div style="width:52px; height:52px; border-radius:18px; background:linear-gradient(135deg, #f59e0b, #22c55e); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.6rem; box-shadow:0 14px 28px rgba(34,197,94,0.22);">🎉</div>
+                                    <div>
+                                        <div style="font-weight:950; color:#27ae60; font-size:1rem;">Livraison validée ✅</div>
+                                        <div style="font-size:0.86rem; color:#4b5563; font-weight:850;">Mission terminée avec succès</div>
+                                    </div>
+                                </div>
+                                <div style="background:rgba(39,174,96,0.10); color:#27ae60; border:1px solid rgba(39,174,96,0.18); border-radius:999px; padding:10px 12px; font-weight:950; white-space:nowrap;">
+                                    + ${donePrice.toLocaleString('fr-FR')} FCFA
+                                </div>
+                            </div>
+                            ${lpDeliveryRenderStepRail('delivered', true)}
+                            <div style="background:linear-gradient(135deg, #f59e0b 0%, #22c55e 100%); color:#fff; border-radius:22px; padding:20px 16px 18px; text-align:center; box-shadow:0 16px 32px rgba(34,197,94,0.18);">
+                                <div style="font-size:2.4rem; line-height:1; margin-bottom:8px;">🥭</div>
+                                <div style="font-weight:950; font-size:1.14rem; margin-bottom:4px;">Bravo ! Course terminée</div>
+                                <div style="font-size:0.94rem; font-weight:900; opacity:0.98;">Le gain est ajouté au solde du jour</div>
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px;">
+                                    <div style="background:rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.20); border-radius:16px; padding:10px;">
+                                        <div style="font-size:0.74rem; font-weight:900; opacity:0.92;">STATUT</div>
+                                        <div style="font-size:0.96rem; font-weight:950; margin-top:2px;">Réussi</div>
+                                    </div>
+                                    <div style="background:rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.20); border-radius:16px; padding:10px;">
+                                        <div style="font-size:0.74rem; font-weight:900; opacity:0.92;">GAIN</div>
+                                        <div style="font-size:0.96rem; font-weight:950; margin-top:2px;">${donePrice.toLocaleString('fr-FR')} FCFA</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display:grid; gap:8px;">
+                                <div style="background:#fff3e0; padding:12px; border-radius:14px; font-weight:900; border:1px solid rgba(245,158,11,0.12);">🏪 Retrait: <b>${lpEscapeHtml(pickupDone)}</b></div>
+                                <div style="background:#eaf6ff; padding:12px; border-radius:14px; font-weight:900; border:1px solid rgba(14,165,233,0.12);">👤 Livraison: <b>${lpEscapeHtml(dropDone)}</b></div>
+                            </div>
+                            ${doneProof ? `
+                                <div style="background:#ffffff; border:1px solid rgba(0,0,0,0.06); border-radius:18px; padding:10px; box-shadow:0 8px 18px rgba(0,0,0,0.06);">
+                                    <div style="font-size:0.82rem; font-weight:950; color:#27ae60; margin-bottom:8px;">📷 Preuve remise au client</div>
+                                    <div style="display:flex; align-items:center; justify-content:center;">
+                                        <img src="${lpEscapeHtml(doneProof)}" alt="preuve livraison" style="width:100%; max-height:190px; object-fit:cover; border-radius:14px; border:1px solid rgba(0,0,0,0.08);">
+                                    </div>
+                                </div>
+                            ` : `
+                                <div style="background:#f7fff7; border:1px dashed rgba(39,174,96,0.35); color:#27ae60; border-radius:16px; padding:12px; text-align:center; font-weight:900;">
+                                    ✅ Livraison bien enregistrée
+                                </div>
+                            `}
+                            <div style="display:grid; gap:10px;">
+                                <button type="button" data-delivery-action="speak-phase" data-job-id="${lpEscapeHtml(String(recentDone.id || ''))}" data-phase="delivered" style="width:100%; padding:12px; background:#f7f8fb; color:#2d3436; border:1px solid rgba(0,0,0,0.06); border-radius:16px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">🔊 Réécouter</button>
+                                <button type="button" data-delivery-action="done-clear" data-job-id="${lpEscapeHtml(String(recentDone.id || ''))}" style="width:100%; padding:16px; background:linear-gradient(90deg, #27ae60, #16a34a); color:white; border:none; border-radius:18px; font-weight:950; font-size:1rem; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation; box-shadow:0 14px 30px rgba(39,174,96,0.22);">📦 Prochaine course</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                lpDeliveryMaybeSpeakPhase('delivered', String(recentDone.id || 'done'));
+                return;
+            }
+            const me = lpDeliveryDriverId();
+            const jobs = lpDeliveryListJobs();
+            const mine = jobs.find((j) => String(j?.assignedDriverId || '') === me && String(j?.status || '') !== 'done') || null;
+            if (mine) {
+                const phase = String(mine.phase || 'pickup');
+                const meta = lpDeliveryPhaseMeta(phase);
+                const pickupName = String(mine?.pickup?.name || 'Retrait');
+                const dropAddr = String(mine?.dropoff?.address || 'Client');
+                const tr = lpDeliveryGetLastTrack(mine);
+                const meLat = tr ? Number(tr.lat) : (Array.isArray(USER_POS) ? Number(USER_POS[0]) : Number(mine.pickup.lat));
+                const meLng = tr ? Number(tr.lng) : (Array.isArray(USER_POS) ? Number(USER_POS[1]) : Number(mine.pickup.lng));
+                const target = phase === 'pickup' ? mine.pickup : mine.dropoff;
+                const nextBtn = (() => {
+                    if (phase === 'pickup') return `<button type="button" data-delivery-action="phase" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" data-next-phase="dropoff" style="width:100%; padding:14px; background:#2d3436; color:white; border:none; border-radius:12px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">📦 Colis récupéré</button>`;
+                    if (phase === 'dropoff') return `<button type="button" data-delivery-action="phase" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" data-next-phase="proof" style="width:100%; padding:14px; background:#2d3436; color:white; border:none; border-radius:12px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">✅ Arrivé chez le client</button>`;
+                    if (phase === 'proof') return `<button type="button" data-delivery-action="phase" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" data-next-phase="delivered" style="width:100%; padding:14px; background:#27ae60; color:white; border:none; border-radius:12px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">✅ Valider livraison</button>`;
+                    return '';
+                })();
+                const proofInputId = 'lp-proof-file-' + lpDeliverySafeDomId(mine.id);
+                const hasProof = lpDeliveryHasProof(mine);
+                const proofBlock = phase === 'proof'
+                    ? `
+                        <div style="margin:10px 0;">
+                            <div style="font-weight:950; color:#27ae60; margin-bottom:8px;">Étape 3 sur 4 : photo du colis remis</div>
+                            <input id="${proofInputId}" data-delivery-proof-input="1" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" type="file" accept="image/*" capture="environment" style="display:none">
+                            <button type="button" data-delivery-action="proof-open" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" data-proof-input-id="${lpEscapeHtml(proofInputId)}" style="width:100%; padding:14px; background:${hasProof ? '#e8f5e9' : '#f1f2f6'}; border:2px dashed ${hasProof ? '#27ae60' : '#ccc'}; border-radius:12px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">
+                                ${hasProof ? '✅ Photo preuve enregistrée' : '📷 Photo preuve'}
+                            </button>
+                            ${hasProof ? `<div style="margin-top:10px; display:flex; align-items:center; justify-content:center;">
+                                <img src="${lpEscapeHtml(String((mine.proof || {}).photoDataUrl || ''))}" alt="preuve" style="max-width:100%; max-height:140px; border-radius:12px; border:1px solid rgba(0,0,0,0.08);">
+                            </div>` : ``}
+                        </div>
+                    `
+                    : '';
+                reqContainer.innerHTML = `
+                    <div style="background:white; border-radius:20px; padding:16px; border:1px solid rgba(0,0,0,0.06); border-left:5px solid ${meta.tone}; box-shadow:0 10px 24px rgba(0,0,0,0.08);">
+                        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;">
+                            <div style="font-weight:950; color:#2d3436;">Course en cours 🛵</div>
+                            <div style="font-weight:950; color:#27ae60;">${Number(mine.price || 0).toLocaleString('fr-FR')} FCFA</div>
+                        </div>
+                        ${lpDeliveryRenderStepRail(phase, false)}
+                        <div style="background:${meta.bg}; color:#2d3436; border:1px solid rgba(0,0,0,0.04); border-radius:16px; padding:12px 14px; margin-bottom:12px;">
+                            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:4px;">
+                                <div style="font-weight:950;">Étape ${meta.step}/${meta.total} : ${meta.title}</div>
+                                <div style="font-size:0.82rem; font-weight:950; color:${meta.tone};">Action principale</div>
+                            </div>
+                            <div style="font-size:0.92rem; font-weight:800; color:#4b5563;">${meta.helper}</div>
+                        </div>
+                        <div style="display:grid; gap:8px; margin-bottom:12px;">
+                            <div style="background:#fff3e0; padding:10px; border-radius:12px; font-weight:900;">🏪 Retrait: <b>${lpEscapeHtml(pickupName)}</b></div>
+                            <div style="background:#eaf6ff; padding:10px; border-radius:12px; font-weight:900;">👤 Livraison: <b>${lpEscapeHtml(dropAddr)}</b></div>
+                        </div>
+                        <div style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:10px; margin-bottom:12px;">
+                            <button type="button" data-delivery-action="call" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" style="background:#f7f8fb; border:1px solid rgba(0,0,0,0.06); padding:10px 6px; border-radius:16px; min-height:68px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">
+                                <div style="font-size:1.1rem; margin-bottom:4px;">📞</div>
+                                <div style="font-size:0.76rem;">Appeler</div>
+                            </button>
+                            <button type="button" data-delivery-action="chat" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" style="background:#f7f8fb; border:1px solid rgba(0,0,0,0.06); padding:10px 6px; border-radius:16px; min-height:68px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">
+                                <div style="font-size:1.1rem; margin-bottom:4px;">💬</div>
+                                <div style="font-size:0.76rem;">Message</div>
+                            </button>
+                            <button type="button" data-delivery-action="maps" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" style="background:#f7f8fb; border:1px solid rgba(0,0,0,0.06); padding:10px 6px; border-radius:16px; min-height:68px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">
+                                <div style="font-size:1.1rem; margin-bottom:4px;">📍</div>
+                                <div style="font-size:0.76rem;">Itinéraire</div>
+                            </button>
+                            <button type="button" data-delivery-action="track" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" style="background:#f7f8fb; border:1px solid rgba(0,0,0,0.06); padding:10px 6px; border-radius:16px; min-height:68px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">
+                                <div style="font-size:1.1rem; margin-bottom:4px;">🗺️</div>
+                                <div style="font-size:0.76rem;">Suivi</div>
+                            </button>
+                        </div>
+                        <button type="button" data-delivery-action="speak-phase" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" data-phase="${lpEscapeHtml(phase)}" style="width:100%; padding:12px; margin-bottom:12px; background:#f7f8fb; color:#2d3436; border:1px solid rgba(0,0,0,0.06); border-radius:14px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">🔊 Écouter l’étape</button>
+                        ${proofBlock}
+                        ${nextBtn}
+                    </div>
+                `;
+                lpDeliveryMaybeSpeakPhase(phase, String(mine.id || 'mine'));
+                return;
+            }
+            const ignored = lpDeliveryIgnoredJobIds();
+            const openJobs = jobs.filter((j) => String(j?.status || '') === 'open' && !ignored.includes(String(j?.id || '')));
+            if (!openJobs.length) {
+                try { lpDeliveryEnsureDispatcher(); } catch {}
+                reqContainer.innerHTML = `
+                    <div style="background:white; border-radius:20px; padding:18px 16px; border:1px solid rgba(0,0,0,0.06); box-shadow:0 10px 24px rgba(0,0,0,0.06); text-align:center;">
+                        <div style="font-weight:950; color:#2d3436; margin-bottom:6px;">En attente de commandes...</div>
+                        <div style="color:#6b7280; font-weight:800; font-size:0.92rem; margin-bottom:12px;">Lance une course test pour continuer.</div>
+                        <button type="button" data-delivery-action="seed-job" data-job-id="seed-now" style="width:100%; padding:14px; background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#fff; border:none; border-radius:14px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">📦 Lancer une course test</button>
+                    </div>
+                `;
+                return;
+            }
+            const j = openJobs[0];
+            const price = Number(j.price || 0);
+            const pick = String(j?.pickup?.name || 'Retrait');
+            const drop = String(j?.dropoff?.address || 'Client');
+            reqContainer.innerHTML = `
+                <div style="background:white; border-radius:20px; padding:16px; border:1px solid rgba(230,126,34,0.16); border-left:5px solid #e67e22; box-shadow:0 10px 24px rgba(0,0,0,0.08);">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <span style="font-weight:950; color:#e67e22;">Nouvelle Course 📦</span>
+                        <span style="font-weight:950;">${price.toLocaleString('fr-FR')} FCFA</span>
+                    </div>
+                    <div style="background:#fff8ef; color:#6b4f1d; border-radius:16px; padding:12px 14px; margin-bottom:12px;">
+                        <div style="font-weight:950; margin-bottom:4px;">Étape 1 : choisir</div>
+                        <div style="font-size:0.92rem; font-weight:800;">Accepte pour démarrer la mission, ou refuse pour passer à une autre course.</div>
+                    </div>
+                    <div style="display:grid; gap:8px; margin-bottom:12px;">
+                        <div style="background:#fff3e0; padding:10px; border-radius:12px; font-weight:900;">🏪 Retrait: <b>${lpEscapeHtml(pick)}</b></div>
+                        <div style="background:#eaf6ff; padding:10px; border-radius:12px; font-weight:900;">👤 Livraison: <b>${lpEscapeHtml(drop)}</b></div>
+                    </div>
+                    <button type="button" data-delivery-action="speak-phase" data-job-id="${lpEscapeHtml(String(j.id || ''))}" data-phase="pickup" style="width:100%; padding:12px; margin-bottom:12px; background:#f7f8fb; color:#2d3436; border:1px solid rgba(0,0,0,0.06); border-radius:14px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">🔊 Écouter l’étape</button>
+                    <div style="display:flex; gap:10px;">
+                        <button type="button" data-delivery-action="accept" data-job-id="${lpEscapeHtml(String(j.id || ''))}" style="flex:1; min-height:52px; padding:14px; background:#2d3436; color:white; border:none; border-radius:12px; font-weight:950; cursor:pointer; transition:transform .12s ease, opacity .12s ease, background .18s ease; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">Accepter</button>
+                        <button type="button" data-delivery-action="ignore" data-job-id="${lpEscapeHtml(String(j.id || ''))}" style="flex:1; min-height:52px; padding:14px; background:#f1f2f6; color:#d63031; border:none; border-radius:12px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">Refuser</button>
+                    </div>
+                </div>
+            `;
+            lpDeliveryMaybeSpeakPhase('pickup', String(j.id || 'open'));
+        }
+
+        function startDriverSimulation() {
+            try { lpDeliveryDriverInit(); } catch {}
+            try { lpDeliveryRenderDriverRequests(); } catch {}
+            try {
+                if (window.driverSimTimeout) clearTimeout(window.driverSimTimeout);
+            } catch {
+            }
+            window.driverSimTimeout = setTimeout(() => {
+                try { lpDeliveryRenderDriverRequests(); } catch {}
+            }, 1200);
         }
 
         function rejectDriverJob() {
-            document.getElementById('driverRequests').innerHTML = `
-                <div style="text-align:center; color:#b2bec3; margin-top:40px;">
-                    Recherche de nouvelles courses...
-                </div>
-            `;
-            startDriverSimulation();
+            try { lpDeliveryIgnoreJob(''); } catch {}
+            try { lpDeliveryRenderDriverRequests(); } catch {}
         }
 
         function acceptDriverJob(btn) {
-            // Transform card into "Active Job" mode
-            const card = btn.closest('div[style*="background:white"]');
-            card.innerHTML = `
-                <div style="text-align:center; padding:10px;">
-                    <div style="font-size:1.2rem; font-weight:bold; color:#e67e22; margin-bottom:10px;">Course en cours 🛵</div>
-                    
-                    <div style="display:flex; justify-content:space-around; margin-bottom:20px;">
-                        <button style="background:#f1f2f6; border:none; padding:10px; border-radius:50%; width:50px; height:50px;">📞</button>
-                        <button style="background:#f1f2f6; border:none; padding:10px; border-radius:50%; width:50px; height:50px;">💬</button>
-                        <button style="background:#f1f2f6; border:none; padding:10px; border-radius:50%; width:50px; height:50px;">📍</button>
-                    </div>
-                    
-                    <div style="background:#fff3e0; padding:10px; border-radius:10px; margin-bottom:15px; font-size:0.9rem;">
-                        Récupérez le colis chez <b>Maman Sarah</b>
-                    </div>
-                    
-                    <button onclick="driverArrived(this)" style="width:100%; padding:15px; background:#2d3436; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">
-                        Je suis arrivé chez le client
-                    </button>
-                </div>
-            `;
+            try { lpDeliveryRenderDriverRequests(); } catch {}
         }
 
         function driverArrived(btn) {
-            const card = btn.closest('div');
-            card.innerHTML = `
-                <div style="text-align:center; padding:10px;">
-                    <div style="font-size:1.2rem; font-weight:bold; color:#27ae60; margin-bottom:10px;">Preuve de Livraison 📸</div>
-                    <p style="font-size:0.9rem; color:#666;">Prenez une photo du colis remis au client.</p>
-                    
-                    <div style="width:100%; height:150px; background:#f1f2f6; border:2px dashed #ccc; border-radius:10px; margin-bottom:15px; display:flex; align-items:center; justify-content:center; cursor:pointer;" onclick="this.style.background='#e8f5e9'; this.innerHTML='✅ Photo Ajoutée';">
-                        📷 Toucher pour photo
-                    </div>
-                    
-                    <button onclick="finishDriverJob()" style="width:100%; padding:15px; background:#27ae60; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">
-                        Valider la livraison
-                    </button>
-                </div>
-            `;
+            try { lpDeliveryRenderDriverRequests(); } catch {}
         }
 
         function finishDriverJob() {
-            // Update Earnings
-            const earnEl = document.getElementById('driverEarnings');
-            earnEl.innerText = "1 500 FCFA";
-            earnEl.style.color = "#27ae60";
-            
-            alert("Bravo ! Course terminée. Votre compte a été crédité.");
-            
-            document.getElementById('driverRequests').innerHTML = `
-                <div style="text-align:center; color:#b2bec3; margin-top:40px;">
-                    Recherche de nouvelles courses...
-                </div>
-            `;
-            startDriverSimulation();
+            try { lpDeliveryRenderDriverRequests(); } catch {}
         }
 
         // === GESTION DU VOICE PITCH ===
@@ -15314,6 +17297,17 @@
             } else {
                 alert(activeVendor.voicePitch);
             }
+        }
+
+        try {
+            const u = new URL(window.location.href);
+            const trackId = String(u.searchParams.get('track') || '').trim();
+            if (trackId) {
+                setTimeout(() => {
+                    try { lpOpenDeliveryTracking(trackId); } catch {}
+                }, 700);
+            }
+        } catch {
         }
 
         // === MODAL NEW PRODUCT LOGIC ===
@@ -18446,7 +20440,7 @@
         }
 
         function switchVendorTab(tabName) {
-            const allowed = ['overview', 'stock', 'products', 'orders', 'notifications', 'communication', 'shops']
+            const allowed = ['overview', 'stock', 'products', 'orders', 'notifications', 'communication', 'shops', 'supply']
             const next = allowed.includes(String(tabName || '')) ? String(tabName) : 'overview'
 
             allowed.forEach((k) => {
@@ -18534,13 +20528,75 @@
             } catch {
             }
             try {
-                if (typeof openDriverModal === 'function') {
-                    openDriverModal()
-                    return
-                }
+                lpOpenDeliveryRequestSheet(orderLabel)
+                return
             } catch {
             }
             alert(`🚚 Livraison demandée pour ${orderLabel}.`) 
+        }
+
+        function lpOpenDeliveryRequestSheet(orderLabel) {
+            const label = String(orderLabel || 'commande').trim() || 'commande'
+            const existing = document.getElementById('deliveryOverlay')
+            if (existing) {
+                try { existing.remove() } catch {}
+            }
+
+            const overlay = document.createElement('div')
+            overlay.id = 'deliveryOverlay'
+            overlay.className = 'lp-delivery-overlay'
+            overlay.innerHTML = `
+                <div class="lp-delivery-sheet">
+                    <div class="lp-delivery-header">
+                        <div>
+                            <h3 class="lp-delivery-title">🚚 Livraison Mangoo Express</h3>
+                            <div class="lp-delivery-subtitle">Commande ${label}</div>
+                        </div>
+                        <button class="lp-close-btn" onclick="document.getElementById('deliveryOverlay').remove()">×</button>
+                    </div>
+
+                    <div style="padding:14px; border-radius:16px; background:rgba(14,165,233,0.08); border:1px solid rgba(14,165,233,0.20); margin-bottom:14px;">
+                        <div style="font-weight:950; color:var(--ml-text);">Parcours simple</div>
+                        <div style="margin-top:8px; color:var(--ml-muted); font-size:0.9rem; line-height:1.45;">
+                            1. Votre adresse est envoyée.
+                            <br>2. La boutique prépare la commande.
+                            <br>3. Mangoo Express envoie le livreur.
+                        </div>
+                    </div>
+
+                    <div class="lp-delivery-options">
+                        <div class="lp-delivery-option" onclick="selectDeliveryOption(this)">
+                            <div class="t">Standard</div>
+                            <div class="s">Aujourd'hui</div>
+                            <div class="p">2 000 F</div>
+                        </div>
+                        <div class="lp-delivery-option selected" onclick="selectDeliveryOption(this)">
+                            <div class="t">Express</div>
+                            <div class="s">Rapide</div>
+                            <div class="p">3 500 F</div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary lp-delivery-cta" onclick="lpConfirmDeliveryRequest(${JSON.stringify(String(orderLabel || 'commande'))})" style="padding:15px; font-weight:950;">
+                        ✅ Demander un livreur
+                    </button>
+                    <button type="button" class="lp-btn lp-btn-secondary" onclick="try{document.getElementById('deliveryOverlay').remove()}catch{}; try{lpIdentityGoToDeliveryProfile()}catch{}" style="width:100%; margin-top:10px;">
+                        ✍️ Modifier mon adresse
+                    </button>
+                </div>
+            `
+
+            document.body.appendChild(overlay)
+        }
+
+        function lpConfirmDeliveryRequest(orderLabel) {
+            const selected = document.querySelector('#deliveryOverlay .lp-delivery-option.selected')
+            const mode = selected ? String(selected.querySelector('.t')?.textContent || '').trim() : 'Express'
+            try { document.getElementById('deliveryOverlay').remove() } catch {}
+            try { lpToast(`Livraison ${mode.toLowerCase()} demandée.`, 'success') } catch {}
+            setTimeout(() => {
+                alert(`✅ Livraison ${mode.toLowerCase()} demandée pour ${orderLabel}. La boutique prépare la commande puis Mangoo Express envoie le livreur.`)
+            }, 120)
         }
 
         function lpOpenInvoice(orderLabel, totalFcfa) {

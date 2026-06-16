@@ -60,6 +60,19 @@ const publicDir = path.resolve(projectRoot, 'public')
 const distDir = path.resolve(projectRoot, 'dist')
 const spaIndexPath = path.resolve(distDir, 'index.html')
 
+function setStaticCacheHeaders(res: Response, filePath: string): void {
+  const lower = String(filePath || '').toLowerCase()
+  if (lower.endsWith('.html')) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate')
+    res.setHeader('Pragma', 'no-cache')
+    res.setHeader('Expires', '0')
+    return
+  }
+  if (lower.endsWith('/sw.js') || lower.endsWith('\\sw.js')) {
+    res.setHeader('Cache-Control', 'no-cache')
+  }
+}
+
 // load env
 dotenv.config()
 
@@ -149,11 +162,20 @@ app.use('/api/orders', ordersRoutes)
  * so phones are not blocked by the Vite dev server.
  */
 if (fs.existsSync(publicDir)) {
-  app.use(express.static(publicDir, { extensions: ['html'] }))
+  app.use(
+    express.static(publicDir, {
+      extensions: ['html'],
+      setHeaders: setStaticCacheHeaders,
+    }),
+  )
 }
 
 if (fs.existsSync(distDir)) {
-  app.use(express.static(distDir))
+  app.use(
+    express.static(distDir, {
+      setHeaders: setStaticCacheHeaders,
+    }),
+  )
 }
 
 app.get('*', (req: Request, res: Response, next: NextFunction) => {
