@@ -15372,6 +15372,7 @@
                 <div style="background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:white; padding:20px; display:flex; align-items:center; gap:15px;">
                     <button onclick="document.getElementById('driverOverlay').remove()" style="background:none; border:none; color:white; font-size:1.5rem;">←</button>
                     <h2 style="margin:0; flex:1;">Espace Livreur</h2>
+                    <div style="font-weight:950; font-size:0.78rem; opacity:0.9;">v20260617</div>
                     <label class="switch">
                         <input type="checkbox" id="driverStatusSwitch" checked onchange="toggleDriverStatus()">
                         <span class="slider round"></span>
@@ -15415,6 +15416,7 @@
             `;
             
             document.body.appendChild(overlay);
+            try { lpDeliveryBindGlobalActions(); } catch {}
             try { lpDeliveryBindDriverOverlay(overlay); } catch {}
             try { lpDeliveryDriverInit(); } catch {}
             try { lpDeliveryRenderDriverEarnings(); } catch {}
@@ -15451,7 +15453,76 @@
             });
 
             document.body.appendChild(overlay);
+            try { lpDriverBindOnboarding(overlay); } catch {}
             try { lpDriverRenderOnboarding(); } catch {}
+        }
+
+        function lpDriverBindOnboarding(overlayEl) {
+            const overlay = overlayEl || document.getElementById('driverOnboarding');
+            if (!overlay) return;
+            if (overlay.dataset.driverBound === '1') return;
+            const onAction = (evt) => {
+                const now = Date.now();
+                const evtType = String(evt?.type || '').trim();
+                const pointerType = String(evt?.pointerType || '').trim().toLowerCase();
+                const touchLike = evtType === 'touchend' || (evtType === 'pointerup' && pointerType && pointerType !== 'mouse');
+                if (evtType === 'click' && now < Number(window.__lpDriverIgnoreClickUntil || 0)) return;
+                if (touchLike) window.__lpDriverIgnoreClickUntil = now + 900;
+
+                let target = evt?.target;
+                try {
+                    if (target && target.closest) target = target.closest('[data-driver-action]');
+                } catch {
+                }
+                const action = String(target?.dataset?.driverAction || '').trim();
+                if (!action) return;
+                try { evt.preventDefault(); evt.stopPropagation(); } catch {}
+
+                if (action === 'close') {
+                    try { document.getElementById('driverOnboarding')?.remove(); } catch {}
+                    return;
+                }
+                if (action === 'back') {
+                    try {
+                        const s = window.lpDriverOnboard || {};
+                        const step = Number(s.step || 0) || 0;
+                        lpDriverSetStep(step - 1);
+                    } catch {}
+                    return;
+                }
+                if (action === 'speak') {
+                    try {
+                        const voiceText = lpDriverGetVoiceText();
+                        if (voiceText) lpSpeak(voiceText, lpGetVoicePrefs());
+                    } catch {}
+                    return;
+                }
+                if (action === 'pick-vehicle') {
+                    const v = String(target?.dataset?.vehicle || '').trim();
+                    lpDriverPickVehicle(v || 'Moto');
+                    return;
+                }
+                if (action === 'primary') {
+                    lpDriverPrimaryAction();
+                    return;
+                }
+                if (action === 'pick-photo') {
+                    try { document.getElementById('driverLicenseInput')?.click(); } catch {}
+                    return;
+                }
+                if (action === 'submit') {
+                    try {
+                        const btn = target;
+                        if (btn && btn.disabled) return;
+                    } catch {}
+                    submitDriverApp();
+                    return;
+                }
+            };
+            overlay.addEventListener('click', onAction, true);
+            overlay.addEventListener('pointerup', onAction, true);
+            overlay.addEventListener('touchend', onAction, true);
+            overlay.dataset.driverBound = '1';
         }
 
         function lpDriverSetStep(step) {
@@ -15542,7 +15613,7 @@
                     </div>
                     <div class="lp-onboard-grid cols-3" style="margin-top:10px;">
                         ${['Moto','Tricycle','Voiture','Camion'].map((v) => `
-                            <div class="lp-onboard-choice" role="button" tabindex="0" onclick="lpDriverPickVehicle(${JSON.stringify(v)})">
+                            <div class="lp-onboard-choice" role="button" tabindex="0" data-driver-action="pick-vehicle" data-vehicle=${JSON.stringify(v)}>
                                 <strong>${v === 'Moto' ? '🏍️ Moto' : v === 'Tricycle' ? '🛺 Tricycle' : v === 'Voiture' ? '🚗 Voiture' : '🚚 Camion'}</strong>
                                 <span>${v === vehicle ? 'Sélectionné' : 'Appuie'}</span>
                             </div>
@@ -15562,7 +15633,7 @@
                             ${preview}
                             <div style="flex:1; min-width:0;">
                                 <input type="file" id="driverLicenseInput" accept="image/*" style="display:none;" onchange="handleLicenseUpload(this)">
-                                <button class="lp-onboard-btn ${hasDoc ? 'primary' : 'secondary'}" onclick="document.getElementById('driverLicenseInput').click()">${hasDoc ? '✅ Photo ajoutée' : '📷 Ajouter photo'}</button>
+                                <button class="lp-onboard-btn ${hasDoc ? 'primary' : 'secondary'}" type="button" data-driver-action="pick-photo">${hasDoc ? '✅ Photo ajoutée' : '📷 Ajouter photo'}</button>
                             </div>
                         </div>
                     </div>
@@ -15581,11 +15652,11 @@
             let footRight = '';
             const voiceText = lpDriverGetVoiceText();
             const speakBtn = voiceText
-                ? `<button class="lp-onboard-btn ghost" onclick="lpSpeak(${JSON.stringify(voiceText)}, lpGetVoicePrefs())">🔊 Réécouter</button>`
+                ? `<button class="lp-onboard-btn ghost" type="button" data-driver-action="speak">🔊 Réécouter</button>`
                 : '';
             if (step > 0) {
                 footLeft = `<div class="lp-onboard-actions">
-                    <button class="lp-onboard-btn secondary" onclick="lpDriverSetStep(${step - 1})">⬅️ Retour</button>
+                    <button class="lp-onboard-btn secondary" type="button" data-driver-action="back">⬅️ Retour</button>
                     ${speakBtn}
                 </div>`;
             } else {
@@ -15595,14 +15666,14 @@
             if (step === 2) {
                 const disabled = hasDoc ? '' : 'disabled style="opacity:0.55; cursor:not-allowed;"';
                 footRight = `<div class="lp-onboard-actions">
-                    <button type="button" class="lp-onboard-btn primary" data-driver-submit ${disabled} onclick="submitDriverApp()">🚀 Envoyer</button>
-                    <button type="button" class="lp-onboard-btn ghost" onclick="document.getElementById('driverOnboarding')?.remove()">Fermer</button>
+                    <button type="button" class="lp-onboard-btn primary" data-driver-submit data-driver-action="submit" ${disabled}>🚀 Envoyer</button>
+                    <button type="button" class="lp-onboard-btn ghost" data-driver-action="close">Fermer</button>
                 </div>`;
             } else {
                 const label = step === 1 ? (hasDoc ? '▶️ Continuer' : '📷 Ajouter photo') : '▶️ Continuer';
                 footRight = `<div class="lp-onboard-actions">
-                    <button class="lp-onboard-btn primary" onclick="lpDriverPrimaryAction()">${label}</button>
-                    <button class="lp-onboard-btn ghost" onclick="document.getElementById('driverOnboarding')?.remove()">Fermer</button>
+                    <button class="lp-onboard-btn primary" type="button" data-driver-action="primary">${label}</button>
+                    <button class="lp-onboard-btn ghost" type="button" data-driver-action="close">Fermer</button>
                 </div>`;
             }
 
@@ -15862,6 +15933,27 @@
             } catch {
             }
             try {
+                if (navigator.geolocation && typeof navigator.geolocation.getCurrentPosition === 'function') {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            try {
+                                const lat = Number(pos?.coords?.latitude);
+                                const lng = Number(pos?.coords?.longitude);
+                                const acc = Number(pos?.coords?.accuracy);
+                                lpApplyResolvedUserPosition(lat, lng, acc, 'live-geolocation', { flyTo: false });
+                            } catch {
+                            }
+                            try { lpDeliveryRenderDriverRequests(); } catch {}
+                        },
+                        () => {
+                            try { lpExplainGeolocationFailure(null, { force: false }); } catch {}
+                        },
+                        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+                    );
+                }
+            } catch {
+            }
+            try {
                 if ('BroadcastChannel' in window) {
                     window.__lpDeliveryBC = new BroadcastChannel('mangoo_delivery');
                     window.__lpDeliveryBC.onmessage = (e) => {
@@ -15891,6 +15983,140 @@
             try { lpDeliveryRenderDriverRequests(); } catch {}
         }
 
+        function lpDeliveryHasResolvedUserPosition() {
+            try {
+                if (!(Array.isArray(USER_POS) && Number.isFinite(Number(USER_POS[0])) && Number.isFinite(Number(USER_POS[1])))) return false;
+                const src = String(USER_POS_META?.source || '').trim();
+                if (!src || src === 'country-default') return false;
+                return true;
+            } catch {
+                return false;
+            }
+        }
+
+        async function lpDeliveryRequestLivePosition(options) {
+            const opts = options && typeof options === 'object' ? options : {};
+            const rerender = opts.rerender !== false;
+            try {
+                if (!navigator.geolocation || typeof navigator.geolocation.getCurrentPosition !== 'function') {
+                    try { showLocalToast('GPS non disponible sur cet appareil.', 'error'); } catch {}
+                    return false;
+                }
+                return await new Promise((resolve) => {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            try {
+                                const lat = Number(pos?.coords?.latitude);
+                                const lng = Number(pos?.coords?.longitude);
+                                const acc = Number(pos?.coords?.accuracy);
+                                lpApplyResolvedUserPosition(lat, lng, acc, 'live-geolocation', { flyTo: false });
+                                try { showLocalToast('Position réelle détectée ✅', 'success'); } catch {}
+                                if (rerender) {
+                                    try { lpDeliveryRenderDriverRequests(); } catch {}
+                                }
+                                resolve(true);
+                            } catch {
+                                resolve(false);
+                            }
+                        },
+                        async (error) => {
+                            try {
+                                const perm = navigator.permissions && navigator.permissions.query
+                                    ? await navigator.permissions.query({ name: 'geolocation' })
+                                    : null;
+                                if (perm && perm.state === 'denied') {
+                                    const host = String(window.location.host || 'ce site').trim();
+                                    showLocalToast('GPS bloqué. Autorisez la localisation pour ' + host + ' dans Chrome.', 'error');
+                                } else if (!window.isSecureContext) {
+                                    const host = String(window.location.host || '').trim();
+                                    showLocalToast(host.includes('localhost') ? 'GPS bloqué. Ouvrez bien la page avec localhost.' : 'GPS bloqué. Ouvrez la page HTTPS locale pour autoriser la localisation.', 'error');
+                                } else {
+                                    lpExplainGeolocationFailure(error, { force: true });
+                                }
+                            } catch {
+                                try { lpExplainGeolocationFailure(error, { force: true }); } catch {}
+                            }
+                            resolve(false);
+                        },
+                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                    );
+                });
+            } catch {
+                return false;
+            }
+        }
+
+        function lpDeliverySetButtonVisual(btnEl, text, disabled, tone) {
+            try {
+                if (!btnEl) return;
+                btnEl.innerText = String(text || '');
+                btnEl.style.transition = 'transform 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease';
+                btnEl.disabled = !!disabled;
+                btnEl.style.opacity = disabled ? '0.92' : '';
+                btnEl.style.transform = disabled ? 'scale(1.04)' : 'scale(1)';
+                btnEl.style.boxShadow = tone === 'success'
+                    ? '0 0 0 3px rgba(34,197,94,0.18), 0 12px 24px rgba(34,197,94,0.12)'
+                    : (tone === 'error' ? '0 0 0 3px rgba(239,68,68,0.16), 0 12px 24px rgba(239,68,68,0.10)' : (disabled ? '0 10px 22px rgba(14,165,233,0.14)' : ''));
+            } catch {
+            }
+        }
+
+        async function lpDeliveryHoldButtonResult(btnEl, text, resetText, tone, waitMs = 1100) {
+            try { lpDeliverySetButtonVisual(btnEl, text, false, tone); } catch {}
+            try {
+                await new Promise((resolve) => setTimeout(resolve, Math.max(250, Number(waitMs) || 1100)));
+            } catch {
+            }
+            try { lpDeliverySetButtonVisual(btnEl, resetText, false, ''); } catch {}
+        }
+
+        function lpDeliveryRefreshPositionUI(btnEl) {
+            try {
+                lpDeliverySetButtonVisual(btnEl, '🎯 GPS…', true, '');
+            } catch {
+            }
+            try { showLocalToast('🎯 Demande de position…', 'info'); } catch {}
+            try {
+                Promise.resolve(lpDeliveryRequestLivePosition({ rerender: true })).then((ok) => {
+                    return lpDeliveryHoldButtonResult(btnEl, ok ? '🎯 GPS OK' : '🎯 GPS refusé', '🎯 Ma position', ok ? 'success' : 'error', 1300);
+                }).catch(() => {
+                    return lpDeliveryHoldButtonResult(btnEl, '🎯 GPS refusé', '🎯 Ma position', 'error', 1300);
+                });
+            } catch {
+                try { lpDeliveryHoldButtonResult(btnEl, '🎯 GPS refusé', '🎯 Ma position', 'error', 1300); } catch {}
+            }
+        }
+
+        function lpDeliveryResetDemoUI(btnEl) {
+            try {
+                lpDeliverySetButtonVisual(btnEl, '♻️ …', true, '');
+            } catch {
+            }
+            try { showLocalToast('♻️ Réinitialisation…', 'info'); } catch {}
+            try { lpDeliveryResetDemoState(); } catch {}
+            try {
+                Promise.resolve(lpDeliveryHoldButtonResult(btnEl, '♻️ OK', '♻️ Réinitialiser', 'success', 700)).finally(() => {
+                    try { lpDeliveryRenderDriverRequests(); } catch {}
+                });
+            } catch {
+                try { lpDeliveryRenderDriverRequests(); } catch {}
+            }
+        }
+
+        function lpDeliveryBindGlobalActions() {
+            try {
+                if (window.__lpDeliveryGlobalBound) return;
+                window.__lpDeliveryGlobalBound = 1;
+            } catch {
+            }
+            try {
+                document.addEventListener('click', lpDeliveryHandleOverlayAction, true);
+                document.addEventListener('pointerup', lpDeliveryHandleOverlayAction, true);
+                document.addEventListener('touchend', lpDeliveryHandleOverlayAction, true);
+            } catch {
+            }
+        }
+
         function lpDeliveryListJobs() {
             const list = [];
             try {
@@ -15905,6 +16131,28 @@
             }
             list.sort((a, b) => Number(b?.createdAt || 0) - Number(a?.createdAt || 0));
             return list;
+        }
+
+        function lpDeliveryResetDemoState() {
+            try {
+                const keys = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (!k) continue;
+                    if (
+                        String(k).startsWith('mangoo_delivery_job:')
+                        || String(k).startsWith('mangoo_delivery_track:')
+                        || String(k).startsWith('mangoo_delivery_recent_done:')
+                        || String(k).startsWith('mangoo_delivery_ignored:')
+                    ) keys.push(k);
+                }
+                keys.forEach((k) => {
+                    try { localStorage.removeItem(k); } catch {}
+                });
+                try { lpDeliveryStopTracking(); } catch {}
+                try { showLocalToast('Course test réinitialisée', 'success'); } catch {}
+            } catch {
+            }
         }
 
         function lpDeliveryGetJob(jobId) {
@@ -15937,6 +16185,7 @@
                 }, 3000);
                 window.__lpDeliveryJobTimer = setInterval(() => {
                     try {
+                        if (!lpDeliveryHasResolvedUserPosition()) return;
                         const openJobs = lpDeliveryListJobs().filter((j) => String(j?.status || '') === 'open');
                         if (openJobs.length) return;
                         lpDeliveryCreateDemoJob();
@@ -15950,6 +16199,21 @@
             try {
                 const shops = Array.isArray(VENDORS) ? VENDORS.filter((v) => String(lpGetVendorKind(v) || '') === 'shop') : [];
                 if (!shops.length) return null;
+                const uLat = Array.isArray(USER_POS) ? Number(USER_POS[0]) : NaN;
+                const uLng = Array.isArray(USER_POS) ? Number(USER_POS[1]) : NaN;
+                if (Number.isFinite(uLat) && Number.isFinite(uLng) && typeof distanceKm === 'function') {
+                    const near = shops
+                        .map((s) => {
+                            const lat = Number(s?.lat);
+                            const lng = Number(s?.lng);
+                            const d = (Number.isFinite(lat) && Number.isFinite(lng)) ? distanceKm(uLat, uLng, lat, lng) : Number.POSITIVE_INFINITY;
+                            return { s, d };
+                        })
+                        .filter((x) => Number.isFinite(x.d))
+                        .sort((a, b) => a.d - b.d);
+                    const picked = (near.find((x) => x.d <= 15) || near[0] || null);
+                    if (picked && picked.s) return picked.s;
+                }
                 const idx = Math.floor(Math.random() * shops.length);
                 return shops[idx] || shops[0] || null;
             } catch {
@@ -15962,8 +16226,13 @@
             const id = 'job_' + String(Date.now()) + '_' + Math.floor(Math.random() * 100000);
             const baseLat = Number(shop?.lat);
             const baseLng = Number(shop?.lng);
-            const pickLat = Number.isFinite(baseLat) ? baseLat : (Array.isArray(USER_POS) ? Number(USER_POS[0]) : 4.051056);
-            const pickLng = Number.isFinite(baseLng) ? baseLng : (Array.isArray(USER_POS) ? Number(USER_POS[1]) : 9.767869);
+            const uLat = Array.isArray(USER_POS) ? Number(USER_POS[0]) : NaN;
+            const uLng = Array.isArray(USER_POS) ? Number(USER_POS[1]) : NaN;
+            const hasUser = Number.isFinite(uLat) && Number.isFinite(uLng);
+            const hasShop = Number.isFinite(baseLat) && Number.isFinite(baseLng);
+            const useShop = hasShop && (!hasUser || distanceKm(uLat, uLng, baseLat, baseLng) <= 30);
+            const pickLat = useShop ? baseLat : (hasUser ? uLat : 4.051056);
+            const pickLng = useShop ? baseLng : (hasUser ? uLng : 9.767869);
             const dropLat = pickLat + (Math.random() > 0.5 ? 0.01 : -0.01);
             const dropLng = pickLng + (Math.random() > 0.5 ? 0.01 : -0.01);
             const job = {
@@ -15974,12 +16243,12 @@
                 createdAt: Date.now(),
                 pickup: {
                     kind: 'vendor',
-                    vendorId: shop ? String(shop.id) : '',
-                    name: shop ? String(shop.name || 'Boutique') : 'Boutique',
-                    phone: shop ? String(shop.phone || '') : '',
+                    vendorId: (useShop && shop) ? String(shop.id) : '',
+                    name: (useShop && shop) ? String(shop.name || 'Boutique') : 'Boutique',
+                    phone: (useShop && shop) ? String(shop.phone || '') : '',
                     lat: pickLat,
                     lng: pickLng,
-                    address: shop ? String(shop.address || '') : ''
+                    address: (useShop && shop) ? String(shop.address || '') : ''
                 },
                 dropoff: {
                     kind: 'client',
@@ -16047,7 +16316,6 @@
             }
             lpDeliveryEmit('job_updated', { id });
             try { if (navigator.vibrate) navigator.vibrate([80, 60, 80]); } catch {}
-            try { lpSpeak("Course acceptée. Va au retrait.", lpGetVoicePrefs()); } catch {}
             lpDeliveryStartTracking(id);
             lpDeliveryRenderDriverRequests();
             return true;
@@ -16142,15 +16410,23 @@
             try {
                 const target = evt && evt.target && evt.target.closest ? evt.target.closest('[data-delivery-action]') : null;
                 if (!target) return;
+                const now = Date.now();
+                const evtType = String(evt?.type || '').trim();
+                const pointerType = String(evt?.pointerType || '').trim().toLowerCase();
+                const touchLike = evtType === 'touchend' || (evtType === 'pointerup' && pointerType && pointerType !== 'mouse');
+                try {
+                    if (evtType === 'click' && now < Number(window.__lpDeliveryIgnoreClickUntil || 0)) return;
+                    if (touchLike) window.__lpDeliveryIgnoreClickUntil = now + 900;
+                } catch {
+                }
                 const action = String(target.getAttribute('data-delivery-action') || '').trim();
                 const jobId = String(target.getAttribute('data-job-id') || '').trim();
                 const nextPhase = String(target.getAttribute('data-next-phase') || '').trim();
                 const proofInputId = String(target.getAttribute('data-proof-input-id') || '').trim();
-                if (!action || (!jobId && action !== 'close-contact-picker')) return;
+                if (!action || (!jobId && action !== 'close-contact-picker' && action !== 'gps-refresh' && action !== 'reset-demo')) return;
                 try { evt.preventDefault(); } catch {}
                 try { evt.stopPropagation(); } catch {}
                 const sig = action + ':' + jobId + ':' + nextPhase + ':' + proofInputId;
-                const now = Date.now();
                 try {
                     if (window.lpDeliveryLastActionSig === sig && (now - Number(window.lpDeliveryLastActionTs || 0)) < 700) return;
                     window.lpDeliveryLastActionSig = sig;
@@ -16187,10 +16463,25 @@
                 }
                 if (action === 'seed-job') {
                     try {
+                        if (!lpDeliveryHasResolvedUserPosition()) {
+                            lpDeliveryRequestLivePosition({ rerender: true });
+                            return;
+                        }
                         lpDeliveryCreateDemoJob();
                         lpDeliveryRenderDriverRequests();
                     } catch {
                     }
+                    return;
+                }
+                if (action === 'gps-refresh') {
+                    try { showLocalToast('🎯 Demande de position…', 'info'); } catch {}
+                    lpDeliveryRequestLivePosition({ rerender: true });
+                    return;
+                }
+                if (action === 'reset-demo') {
+                    try { showLocalToast('♻️ Réinitialisation…', 'info'); } catch {}
+                    lpDeliveryResetDemoState();
+                    lpDeliveryRenderDriverRequests();
                     return;
                 }
                 if (action === 'speak-phase') {
@@ -16214,6 +16505,69 @@
                 }
             } catch {
             }
+        }
+
+        async function lpDeliveryRefreshRouteGpsUI(btnEl) {
+            try {
+                lpDeliverySetButtonVisual(btnEl, '🎯 GPS…', true, '');
+            } catch {
+            }
+            try { showLocalToast('🎯 Demande de position…', 'info'); } catch {}
+            try {
+                const ok = await lpDeliveryRequestLivePosition({ rerender: false });
+                const hasPos = ok && Array.isArray(USER_POS) && Number.isFinite(Number(USER_POS[0])) && Number.isFinite(Number(USER_POS[1]));
+                if (hasPos && typeof window.__lpDeliveryRouteUpdate === 'function') {
+                    try {
+                        window.__lpDeliveryRouteUpdate(Number(USER_POS[0]), Number(USER_POS[1]), 'Position GPS du téléphone');
+                    } catch {
+                    }
+                }
+                await lpDeliveryHoldButtonResult(btnEl, hasPos ? '🎯 GPS OK' : '🎯 GPS refusé', '🎯 Ma position', hasPos ? 'success' : 'error', 1300);
+            } catch {
+                try { await lpDeliveryHoldButtonResult(btnEl, '🎯 GPS refusé', '🎯 Ma position', 'error', 1300); } catch {}
+            }
+        }
+
+        async function lpDeliveryResetRouteUI(btnEl) {
+            try {
+                lpDeliverySetButtonVisual(btnEl, '♻️ …', true, '');
+            } catch {
+            }
+            try { showLocalToast('♻️ Réinitialisation…', 'info'); } catch {}
+            try { lpDeliveryResetDemoState(); } catch {}
+            try { await lpDeliveryHoldButtonResult(btnEl, '♻️ OK', '♻️ Réinitialiser', 'success', 550); } catch {}
+            try { document.getElementById('deliveryRouteOverlay')?.remove(); } catch {}
+            try { document.getElementById('deliveryTrackOverlay')?.remove(); } catch {}
+            try { lpDeliveryRenderDriverRequests(); } catch {}
+        }
+
+        async function lpDeliveryRefreshTrackingGpsUI(btnEl) {
+            try {
+                lpDeliverySetButtonVisual(btnEl, '🎯 GPS…', true, '');
+            } catch {
+            }
+            try { showLocalToast('🎯 Demande de position…', 'info'); } catch {}
+            try {
+                const ok = await lpDeliveryRequestLivePosition({ rerender: false });
+                if (ok && typeof window.__lpDeliveryTrackRefresh === 'function') {
+                    try { window.__lpDeliveryTrackRefresh(); } catch {}
+                }
+                await lpDeliveryHoldButtonResult(btnEl, ok ? '🎯 GPS OK' : '🎯 GPS refusé', '🎯 Ma position', ok ? 'success' : 'error', 1300);
+            } catch {
+                try { await lpDeliveryHoldButtonResult(btnEl, '🎯 GPS refusé', '🎯 Ma position', 'error', 1300); } catch {}
+            }
+        }
+
+        async function lpDeliveryResetTrackingUI(btnEl) {
+            try {
+                lpDeliverySetButtonVisual(btnEl, '♻️ …', true, '');
+            } catch {
+            }
+            try { showLocalToast('♻️ Réinitialisation…', 'info'); } catch {}
+            try { lpDeliveryResetDemoState(); } catch {}
+            try { await lpDeliveryHoldButtonResult(btnEl, '♻️ OK', '♻️ Réinitialiser', 'success', 550); } catch {}
+            try { lpCloseDeliveryTracking(false); } catch {}
+            try { lpDeliveryRenderDriverRequests(); } catch {}
         }
 
         function lpDeliveryHandleOverlayChange(evt) {
@@ -16264,12 +16618,6 @@
                 lpDeliveryAddEarnings(Number(job.price || 0));
             }
             lpDeliverySaveJob(job);
-            if (p === 'dropoff') {
-                try { lpSpeak("Colis récupéré. Va chez le client.", lpGetVoicePrefs()); } catch {}
-            }
-            if (p === 'proof') {
-                try { lpSpeak("Dernière étape. Photo puis valider.", lpGetVoicePrefs()); } catch {}
-            }
             if (p === 'delivered') {
                 try { lpDeliveryCelebrateDone(job); } catch {}
             }
@@ -16431,15 +16779,242 @@
             if (!job) return;
             const phase = String(job.phase || 'pickup');
             const tr = lpDeliveryGetLastTrack(job);
-            const meLat = tr ? Number(tr.lat) : (Array.isArray(USER_POS) ? Number(USER_POS[0]) : Number(job.pickup.lat));
-            const meLng = tr ? Number(tr.lng) : (Array.isArray(USER_POS) ? Number(USER_POS[1]) : Number(job.pickup.lng));
             const target = phase === 'pickup' ? job.pickup : job.dropoff;
-            const link = lpDeliveryMapsLink(meLat, meLng, Number(target.lat), Number(target.lng));
+            const targetLat = Number(target?.lat);
+            const targetLng = Number(target?.lng);
+            const pickupLat = Number(job?.pickup?.lat);
+            const pickupLng = Number(job?.pickup?.lng);
+            const dropLat = Number(job?.dropoff?.lat);
+            const dropLng = Number(job?.dropoff?.lng);
+
+            const hasTrackOrigin = !!(tr && Number.isFinite(Number(tr.lat)) && Number.isFinite(Number(tr.lng)));
+            const hasUserOrigin = (() => {
+                try {
+                    if (!(Array.isArray(USER_POS) && Number.isFinite(Number(USER_POS[0])) && Number.isFinite(Number(USER_POS[1])))) return false;
+                    const src = String(USER_POS_META?.source || '');
+                    if (!src) return false;
+                    return src !== 'country-default';
+                } catch {
+                    return false;
+                }
+            })();
+
+            const originLat = hasTrackOrigin ? Number(tr.lat) : (hasUserOrigin ? Number(USER_POS[0]) : NaN);
+            const originLng = hasTrackOrigin ? Number(tr.lng) : (hasUserOrigin ? Number(USER_POS[1]) : NaN);
+            let hasLiveOrigin = Number.isFinite(originLat) && Number.isFinite(originLng);
+            let originRejected = false;
+            try {
+                if (hasLiveOrigin && !lpDeliveryIsPlausibleMissionPosition(job, originLat, originLng)) {
+                        hasLiveOrigin = false;
+                        originRejected = true;
+                }
+            } catch {
+            }
+
+            const link = (() => {
+                if (hasLiveOrigin) return lpDeliveryMapsLink(originLat, originLng, targetLat, targetLng);
+                if (!(Number.isFinite(targetLat) && Number.isFinite(targetLng))) return '';
+                return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(targetLat + ',' + targetLng)}&travelmode=driving`;
+            })();
             if (!link) {
                 try { showLocalToast('Itinéraire indisponible', 'info'); } catch {}
                 return;
             }
-            try { window.open(link, '_blank'); } catch {}
+            try {
+                const existing = document.getElementById('deliveryRouteOverlay');
+                if (existing) existing.remove();
+            } catch {
+            }
+            const overlay = document.createElement('div');
+            overlay.id = 'deliveryRouteOverlay';
+            overlay.style.cssText = "position:fixed; inset:0; z-index:22010; background:rgba(0,0,0,0.65); display:flex; align-items:stretch; justify-content:center; padding:0;";
+            const isPhone = (() => {
+                try { return Number(window.innerWidth || 0) <= 768; } catch {}
+                return false;
+            })();
+            const topInset = isPhone ? '12px' : '16px';
+            const bottomInset = isPhone ? '12px' : '16px';
+            const destinationLabel = phase === 'pickup'
+                ? `Boutique: ${String(target?.name || 'Point de retrait')}`
+                : `Client: ${String(target?.address || 'Destination')}`;
+            const currentLabel = hasLiveOrigin
+                ? (hasTrackOrigin
+                    ? `Position GPS: ${Number(originLat || 0).toFixed(5)}, ${Number(originLng || 0).toFixed(5)}`
+                    : 'Position: GPS appareil')
+                : (originRejected ? 'Position enregistree trop loin. Mangoo affiche la mission locale.' : 'GPS non actif. Mangoo affiche la mission. Ouvrez Google Maps pour le guidage.');
+            try {
+                const u = new URL(window.location.href);
+                if (u.hash !== '#itineraire') u.hash = 'itineraire';
+                history.pushState({ __lp: 'deliveryRoute', id }, '', u.toString());
+                if (!window.__lpDeliveryRoutePopBound) {
+                    window.addEventListener('popstate', () => {
+                        try {
+                            document.getElementById('deliveryRouteOverlay')?.remove();
+                        } catch {
+                        }
+                    });
+                    window.__lpDeliveryRoutePopBound = 1;
+                }
+            } catch {
+            }
+            overlay.innerHTML = `
+                <div style="width:100%; height:100%; max-width:none; background:var(--ml-panel); border:none; border-radius:0; overflow:hidden; box-shadow:none; display:flex; flex-direction:column;">
+                    <div style="background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:white; padding:${isPhone ? 'calc(12px + env(safe-area-inset-top)) 12px 12px' : '14px 16px'}; display:flex; align-items:center; gap:10px;">
+                        <button type="button" onclick="lpCloseDeliveryRoute(true)" style="background:rgba(255,255,255,0.15); border:0; color:white; width:${isPhone ? '64px' : '38px'}; height:38px; border-radius:999px; font-weight:950; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 10px 24px rgba(0,0,0,0.18);">${isPhone ? '← Retour' : '←'}</button>
+                        <div style="flex:1; min-width:0; font-weight:950;">📍 Itineraire livraison</div>
+                    </div>
+                    <div style="position:relative; flex:1; min-height:0; background:#dfe6e9;">
+                        <div id="deliveryRouteMap" style="position:absolute; inset:0; background:#dfe6e9;"></div>
+                        <div style="position:absolute; top:${topInset}; left:${topInset}; right:${topInset}; display:grid; gap:10px; pointer-events:none;">
+                            <div style="background:rgba(255,255,255,0.96); color:#2d3436; border:1px solid rgba(0,0,0,0.06); border-radius:${isPhone ? '18px' : '16px'}; padding:${isPhone ? '14px' : '12px 14px'}; box-shadow:0 10px 24px rgba(0,0,0,0.12); backdrop-filter: blur(8px); pointer-events:auto;">
+                                <div style="font-size:0.82rem; font-weight:950; color:#0f766e; margin-bottom:4px;">Guidage Mangoo</div>
+                                <div style="font-size:${isPhone ? '1.06rem' : '1rem'}; font-weight:950; margin-bottom:4px;">${lpEscapeHtml(destinationLabel)}</div>
+                                <div data-route-live-label style="font-size:${isPhone ? '0.94rem' : '0.9rem'}; font-weight:800; color:#4b5563;">${lpEscapeHtml(currentLabel)}</div>
+                            </div>
+                        </div>
+                        <div style="position:absolute; left:${bottomInset}; right:${bottomInset}; bottom:calc(${bottomInset} + env(safe-area-inset-bottom)); display:grid; gap:10px; pointer-events:none;">
+                            <div style="background:rgba(255,255,255,0.96); border:1px solid rgba(0,0,0,0.06); border-radius:${isPhone ? '18px' : '16px'}; padding:${isPhone ? '14px' : '12px'}; box-shadow:0 10px 24px rgba(0,0,0,0.14); backdrop-filter: blur(8px); display:grid; gap:10px; pointer-events:auto;">
+                                <button type="button" id="lpDeliveryRefreshRouteGpsBtn" onclick="lpDeliveryRefreshRouteGpsUI(this)" class="lp-btn lp-btn-secondary" style="min-height:${isPhone ? '50px' : '46px'};">🎯 Activer ma position</button>
+                                <button type="button" id="lpDeliveryResetRouteDemoBtn" onclick="lpDeliveryResetRouteUI(this)" class="lp-btn lp-btn-secondary" style="min-height:${isPhone ? '50px' : '46px'};">♻️ Réinitialiser</button>
+                                <button type="button" id="lpDeliveryOpenExternalMapsBtn" data-route-href="${lpEscapeHtml(link)}" class="lp-btn lp-btn-primary" style="min-height:${isPhone ? '54px' : '48px'}; font-size:${isPhone ? '1rem' : '0.95rem'};">📍 Ouvrir Google Maps</button>
+                                <button type="button" class="lp-btn lp-btn-secondary" style="min-height:${isPhone ? '50px' : '46px'};" onclick="lpCloseDeliveryRoute(true)">← Revenir a Mangoo</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            overlay.addEventListener('click', (e) => { if (e && e.target === overlay) lpCloseDeliveryRoute(true); });
+            document.body.appendChild(overlay);
+            try {
+                const extBtn = document.getElementById('lpDeliveryOpenExternalMapsBtn');
+                if (extBtn && extBtn.dataset.deliveryBound !== '1') {
+                    const onOpen = (evt) => {
+                        const now = Date.now();
+                        const evtType = String(evt?.type || '').trim();
+                        const pointerType = String(evt?.pointerType || '').trim().toLowerCase();
+                        const touchLike = evtType === 'touchend' || (evtType === 'pointerup' && pointerType && pointerType !== 'mouse');
+                        try { evt.preventDefault(); evt.stopPropagation(); } catch {}
+                        if (evtType === 'click' && now < Number(window.__lpDeliveryRouteIgnoreClickUntil || 0)) return;
+                        if (touchLike) window.__lpDeliveryRouteIgnoreClickUntil = now + 900;
+                        const href = String(extBtn.dataset.routeHref || link || '').trim();
+                        try { showLocalToast('Google Maps s ouvre sans fermer Mangoo', 'info'); } catch {}
+                        try { if (href) window.open(href, '_blank', 'noopener,noreferrer'); } catch {}
+                    };
+                    extBtn.addEventListener('click', onOpen, true);
+                    extBtn.addEventListener('pointerup', onOpen, true);
+                    extBtn.addEventListener('touchend', onOpen, true);
+                    extBtn.dataset.deliveryBound = '1';
+                }
+            } catch {
+            }
+            try {
+                if (window.L && document.getElementById('deliveryRouteMap')) {
+                    const mapEl = document.getElementById('deliveryRouteMap');
+                    const map = L.map(mapEl, { zoomControl: false, attributionControl: false, zoomSnap: 0.25, zoomDelta: 0.5 });
+                    lpDeliveryAddBaseTileLayer(map);
+
+                    const dest = (Number.isFinite(targetLat) && Number.isFinite(targetLng)) ? [targetLat, targetLng] : [dropLat, dropLng];
+                    const start = (hasLiveOrigin ? [originLat, originLng] : [pickupLat, pickupLng]);
+                    const startLabel = hasLiveOrigin ? 'Vous' : 'Depart';
+                    const startMarker = L.marker(start, {
+                        icon: lpDeliveryCreateMapPinIcon({
+                            emoji: hasTrackOrigin ? '🛵' : '📍',
+                            label: startLabel,
+                            tone: '#7c3aed',
+                            ring: 'rgba(124,58,237,0.20)',
+                            glow: 'rgba(124,58,237,0.08)'
+                        })
+                    }).addTo(map).bindPopup(hasLiveOrigin ? '🛵 Position du livreur' : '📍 Point de depart');
+                    const destMarker = L.marker(dest, {
+                        icon: lpDeliveryCreateMapPinIcon({
+                            emoji: phase === 'pickup' ? '🏪' : '👤',
+                            label: phase === 'pickup' ? 'Boutique' : 'Client',
+                            tone: phase === 'pickup' ? '#f59e0b' : '#0ea5e9',
+                            ring: phase === 'pickup' ? 'rgba(245,158,11,0.22)' : 'rgba(14,165,233,0.20)',
+                            glow: phase === 'pickup' ? 'rgba(245,158,11,0.08)' : 'rgba(14,165,233,0.08)'
+                        })
+                    }).addTo(map).bindPopup(phase === 'pickup' ? '🏪 Point de retrait' : '👤 Adresse client').openPopup();
+                    const routeBundle = lpDeliveryCreateRouteBundle(map, [start, dest], '#7c3aed');
+                    try {
+                        L.circleMarker(dest, {
+                            radius: phase === 'pickup' ? 16 : 15,
+                            color: phase === 'pickup' ? '#f59e0b' : '#0ea5e9',
+                            weight: 2,
+                            fillColor: '#ffffff',
+                            fillOpacity: 0.88
+                        }).addTo(map);
+                    } catch {
+                    }
+                    lpDeliveryFitMapToPoints(map, [start, dest], isPhone, {
+                        paddingTopLeft: isPhone ? [14, 78] : [18, 60],
+                        paddingBottomRight: isPhone ? [14, 154] : [18, 104]
+                    });
+
+                    const updateRoute = (lat, lng, label) => {
+                        try {
+                            const oLat = Number(lat), oLng = Number(lng);
+                            if (!Number.isFinite(oLat) || !Number.isFinite(oLng)) return;
+                            startMarker.setLatLng([oLat, oLng]);
+                            lpDeliverySetRouteBundleLatLngs(routeBundle, [[oLat, oLng], dest]);
+                            lpDeliveryFitMapToPoints(map, [[oLat, oLng], dest], isPhone, {
+                                paddingTopLeft: isPhone ? [14, 78] : [18, 60],
+                                paddingBottomRight: isPhone ? [14, 154] : [18, 104]
+                            });
+                            const infoBox = document.querySelector('#deliveryRouteOverlay [data-route-live-label]');
+                            if (infoBox && label) infoBox.textContent = String(label);
+                            const btn = document.getElementById('lpDeliveryOpenExternalMapsBtn');
+                            if (btn) {
+                                const href = lpDeliveryMapsLink(oLat, oLng, Number(dest[0]), Number(dest[1]));
+                                if (href) btn.dataset.routeHref = href;
+                            }
+                            lpDeliveryApplyRouteBundle(routeBundle, oLat, oLng, Number(dest[0]), Number(dest[1]), [[oLat, oLng], dest]).then((pts) => {
+                                lpDeliveryFitMapToPoints(map, pts, isPhone, {
+                                    paddingTopLeft: isPhone ? [14, 78] : [18, 60],
+                                    paddingBottomRight: isPhone ? [14, 154] : [18, 104]
+                                });
+                            });
+                        } catch {
+                        }
+                    };
+                    try { window.__lpDeliveryRouteUpdate = updateRoute; } catch {}
+
+                    if (hasLiveOrigin) updateRoute(originLat, originLng, hasTrackOrigin ? 'Position GPS livreur' : 'Position GPS');
+                    if (!hasLiveOrigin && navigator.geolocation && typeof navigator.geolocation.getCurrentPosition === 'function') {
+                        navigator.geolocation.getCurrentPosition((pos) => {
+                            try {
+                                const lat = Number(pos?.coords?.latitude);
+                                const lng = Number(pos?.coords?.longitude);
+                                const acc = Number(pos?.coords?.accuracy);
+                                if (!lpDeliveryIsPlausibleMissionPosition(job, lat, lng)) return;
+                                lpApplyResolvedUserPosition(lat, lng, acc, 'live-geolocation', { flyTo: false });
+                                updateRoute(lat, lng, 'Position GPS du téléphone');
+                            } catch {
+                            }
+                        }, () => {}, { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 });
+                    }
+                }
+            } catch {
+            }
+        }
+
+        function lpCloseDeliveryRoute(popHistory = true) {
+            try { document.getElementById('deliveryRouteOverlay')?.remove(); } catch {}
+            try {
+                if (!popHistory) return;
+                const st = history && history.state ? history.state : null;
+                if (st && st.__lp === 'deliveryRoute') history.back();
+            } catch {
+            }
+        }
+
+        function lpCloseDeliveryTracking(popHistory = true) {
+            try { document.getElementById('deliveryTrackOverlay')?.remove(); } catch {}
+            try {
+                if (!popHistory) return;
+                const st = history && history.state ? history.state : null;
+                if (st && st.__lp === 'deliveryTrack') history.back();
+            } catch {
+            }
         }
 
         function lpDeliveryHasProof(job) {
@@ -16562,13 +17137,223 @@
             return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(oLat + ',' + oLng)}&destination=${encodeURIComponent(dLat + ',' + dLng)}&travelmode=driving`;
         }
 
+        function lpDeliveryMapsEmbedUrl(originLat, originLng, destLat, destLng) {
+            const oLat = Number(originLat), oLng = Number(originLng), dLat = Number(destLat), dLng = Number(destLng);
+            if (Number.isFinite(oLat) && Number.isFinite(oLng) && Number.isFinite(dLat) && Number.isFinite(dLng)) {
+                return `https://maps.google.com/maps?hl=fr&saddr=${encodeURIComponent(oLat + ',' + oLng)}&daddr=${encodeURIComponent(dLat + ',' + dLng)}&z=16&output=embed`;
+            }
+            if (Number.isFinite(dLat) && Number.isFinite(dLng)) {
+                return `https://maps.google.com/maps?hl=fr&q=${encodeURIComponent(dLat + ',' + dLng)}&z=16&output=embed`;
+            }
+            return '';
+        }
+
+        async function lpDeliveryFetchRouteGeoJson(fromLat, fromLng, toLat, toLng) {
+            try {
+                const aLat = Number(fromLat), aLng = Number(fromLng), bLat = Number(toLat), bLng = Number(toLng);
+                if (![aLat, aLng, bLat, bLng].every((n) => Number.isFinite(n))) return null;
+                const url = `/api/routing/route?from=${encodeURIComponent(aLat + ',' + aLng)}&to=${encodeURIComponent(bLat + ',' + bLng)}&overview=full`;
+                const res = await fetch(url, { method: 'GET' });
+                if (!res.ok) return null;
+                const payload = await res.json().catch(() => null);
+                const coords = Array.isArray(payload?.geometry?.coordinates) ? payload.geometry.coordinates : [];
+                const latLngs = coords
+                    .map((p) => [Number(p?.[1]), Number(p?.[0])])
+                    .filter((p) => Number.isFinite(p[0]) && Number.isFinite(p[1]));
+                return latLngs.length >= 2 ? latLngs : null;
+            } catch {
+                return null;
+            }
+        }
+
+        async function lpDeliveryApplyRouteLine(polyline, fromLat, fromLng, toLat, toLng, fallbackLatLngs) {
+            try {
+                const road = await lpDeliveryFetchRouteGeoJson(fromLat, fromLng, toLat, toLng);
+                if (road && road.length >= 2) {
+                    polyline.setLatLngs(road);
+                    return road;
+                }
+            } catch {
+            }
+            try {
+                if (Array.isArray(fallbackLatLngs) && fallbackLatLngs.length >= 2) polyline.setLatLngs(fallbackLatLngs);
+            } catch {
+            }
+            return Array.isArray(fallbackLatLngs) ? fallbackLatLngs : [];
+        }
+
+        function lpDeliveryMapTileConfig() {
+            return {
+                url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                options: {
+                    maxZoom: 20,
+                    subdomains: 'abc'
+                }
+            };
+        }
+
+        function lpDeliveryAddBaseTileLayer(map) {
+            try {
+                const primary = lpDeliveryMapTileConfig();
+                return L.tileLayer(primary.url, primary.options).addTo(map);
+            } catch {
+                return null;
+            }
+        }
+
+        function lpDeliveryCreateMapPinIcon(options) {
+            const opts = options && typeof options === 'object' ? options : {};
+            const emoji = String(opts.emoji || '📍');
+            const label = String(opts.label || '').trim();
+            const tone = String(opts.tone || '#7c3aed');
+            const ring = String(opts.ring || 'rgba(124,58,237,0.18)');
+            const glow = String(opts.glow || 'rgba(15,23,42,0.18)');
+            const html = `
+                <div style="position:relative; width:120px; height:92px;">
+                    <div style="position:absolute; left:50%; top:14px; width:54px; height:54px; transform:translateX(-50%); border-radius:999px; background:${ring}; box-shadow:0 0 0 10px ${glow};"></div>
+                    <div style="position:absolute; left:50%; top:10px; transform:translateX(-50%) rotate(45deg); width:54px; height:54px; border-radius:18px 18px 18px 4px; background:${tone}; box-shadow:0 12px 26px rgba(15,23,42,0.28); border:3px solid rgba(255,255,255,0.96);"></div>
+                    <div style="position:absolute; left:50%; top:19px; transform:translateX(-50%); width:38px; height:38px; border-radius:999px; background:rgba(255,255,255,0.95); display:flex; align-items:center; justify-content:center; font-size:1.05rem; box-shadow:inset 0 0 0 1px rgba(0,0,0,0.04);">${emoji}</div>
+                    ${label
+                        ? `<div style="position:absolute; left:50%; bottom:0; transform:translateX(-50%); background:rgba(17,24,39,0.92); color:#fff; padding:6px 10px; border-radius:999px; font-size:0.72rem; font-weight:950; white-space:nowrap; box-shadow:0 8px 18px rgba(0,0,0,0.18);">${lpEscapeHtml(label)}</div>`
+                        : ''}
+                </div>
+            `;
+            return L.divIcon({
+                className: 'lp-delivery-map-pin',
+                html,
+                iconSize: [120, 92],
+                iconAnchor: [60, 50],
+                popupAnchor: [0, -28]
+            });
+        }
+
+        function lpDeliveryCreateRouteBundle(map, latLngs, accentColor) {
+            const pts = Array.isArray(latLngs) ? latLngs : [];
+            const accent = String(accentColor || '#7c3aed');
+            const shadow = L.polyline(pts, {
+                color: 'rgba(15,23,42,0.20)',
+                weight: 14,
+                opacity: 0.95,
+                lineCap: 'round',
+                lineJoin: 'round'
+            }).addTo(map);
+            const main = L.polyline(pts, {
+                color: accent,
+                weight: 8,
+                opacity: 0.96,
+                lineCap: 'round',
+                lineJoin: 'round'
+            }).addTo(map);
+            const dash = L.polyline(pts, {
+                color: 'rgba(255,255,255,0.92)',
+                weight: 2.5,
+                opacity: 0.95,
+                dashArray: '10 12',
+                lineCap: 'round',
+                lineJoin: 'round'
+            }).addTo(map);
+            return { shadow, main, dash };
+        }
+
+        function lpDeliverySetRouteBundleLatLngs(bundle, latLngs) {
+            const pts = Array.isArray(latLngs) ? latLngs : [];
+            try { bundle?.shadow?.setLatLngs(pts); } catch {}
+            try { bundle?.main?.setLatLngs(pts); } catch {}
+            try { bundle?.dash?.setLatLngs(pts); } catch {}
+            return pts;
+        }
+
+        async function lpDeliveryApplyRouteBundle(bundle, fromLat, fromLng, toLat, toLng, fallbackLatLngs) {
+            const pts = await lpDeliveryApplyRouteLine(bundle?.main, fromLat, fromLng, toLat, toLng, fallbackLatLngs);
+            return lpDeliverySetRouteBundleLatLngs(bundle, (Array.isArray(pts) && pts.length >= 2) ? pts : fallbackLatLngs);
+        }
+
+        function lpDeliveryFitMapToPoints(map, points, isPhone, options) {
+            try {
+                const opts = options && typeof options === 'object' ? options : {};
+                const pts = Array.isArray(points) ? points.filter((p) => Array.isArray(p) && Number.isFinite(Number(p[0])) && Number.isFinite(Number(p[1]))) : [];
+                if (!pts.length) return;
+                if (pts.length === 1) {
+                    map.setView(pts[0], Number(opts.singleZoom || 16));
+                    return;
+                }
+                const focusCandidates = Array.isArray(opts.focusPoints)
+                    ? opts.focusPoints.filter((p) => Array.isArray(p) && Number.isFinite(Number(p[0])) && Number.isFinite(Number(p[1])))
+                    : [];
+                const baseBounds = L.latLngBounds(pts);
+                if (!baseBounds.isValid()) return;
+                const baseSw = baseBounds.getSouthWest();
+                const baseNe = baseBounds.getNorthEast();
+                const diagKm = (typeof distanceKm === 'function')
+                    ? Number(distanceKm(Number(baseSw.lat), Number(baseSw.lng), Number(baseNe.lat), Number(baseNe.lng)))
+                    : NaN;
+                const boundsPoints = (focusCandidates.length >= 2 && Number.isFinite(diagKm) && diagKm > Number(opts.focusThresholdKm || 1.8))
+                    ? focusCandidates
+                    : pts;
+                const bounds = L.latLngBounds(boundsPoints);
+                if (!bounds.isValid()) return;
+                const sw = bounds.getSouthWest();
+                const ne = bounds.getNorthEast();
+                const visibleDiagKm = (typeof distanceKm === 'function')
+                    ? Number(distanceKm(Number(sw.lat), Number(sw.lng), Number(ne.lat), Number(ne.lng)))
+                    : NaN;
+                const paddingTopLeft = opts.paddingTopLeft || (isPhone ? [12, 66] : [14, 48]);
+                const paddingBottomRight = opts.paddingBottomRight || (isPhone ? [12, 118] : [14, 72]);
+                let maxZoom = Number(opts.maxZoom || 17);
+                if (Number.isFinite(visibleDiagKm)) {
+                    if (visibleDiagKm < 0.18) maxZoom = 18;
+                    else if (visibleDiagKm < 0.6) maxZoom = 17.5;
+                    else if (visibleDiagKm < 1.5) maxZoom = 17;
+                    else if (visibleDiagKm < 3.5) maxZoom = 16.5;
+                    else if (visibleDiagKm < 6) maxZoom = 16;
+                }
+                map.fitBounds(bounds, { paddingTopLeft, paddingBottomRight, maxZoom });
+            } catch {
+            }
+        }
+
+        function lpDeliveryTrackingEmbedUrl(job, phase, track) {
+            const j = job || null;
+            if (!j) return '';
+            const key = String(phase || j.phase || 'pickup').trim() || 'pickup';
+            const target = key === 'pickup' ? j.pickup : j.dropoff;
+            const targetLat = Number(target?.lat);
+            const targetLng = Number(target?.lng);
+            const pickupLat = Number(j?.pickup?.lat);
+            const pickupLng = Number(j?.pickup?.lng);
+            const originLat = track && Number.isFinite(Number(track.lat)) ? Number(track.lat) : pickupLat;
+            const originLng = track && Number.isFinite(Number(track.lng)) ? Number(track.lng) : pickupLng;
+            return lpDeliveryMapsEmbedUrl(originLat, originLng, targetLat, targetLng);
+        }
+
+        function lpDeliveryMissionDistanceKm(job, lat, lng) {
+            const j = job || null;
+            const aLat = Number(lat), aLng = Number(lng);
+            if (!j || !Number.isFinite(aLat) || !Number.isFinite(aLng)) return Number.POSITIVE_INFINITY;
+            const pickup = [Number(j?.pickup?.lat), Number(j?.pickup?.lng)];
+            const dropoff = [Number(j?.dropoff?.lat), Number(j?.dropoff?.lng)];
+            const candidates = [pickup, dropoff].filter((p) => Number.isFinite(p[0]) && Number.isFinite(p[1]));
+            if (!candidates.length || typeof haversineKm !== 'function') return Number.POSITIVE_INFINITY;
+            let best = Number.POSITIVE_INFINITY;
+            candidates.forEach((p) => {
+                const d = haversineKm([aLat, aLng], p);
+                if (Number.isFinite(d) && d < best) best = d;
+            });
+            return best;
+        }
+
+        function lpDeliveryIsPlausibleMissionPosition(job, lat, lng, maxKm = 80) {
+            const d = lpDeliveryMissionDistanceKm(job, lat, lng);
+            return Number.isFinite(d) && d <= Number(maxKm || 80);
+        }
+
         function lpDeliveryGetLastTrack(job) {
             const id = String(job?.id || '').trim();
             if (!id) return null;
             const tr = lpDeliveryRead('mangoo_delivery_track:' + id, null);
-            if (tr && Number.isFinite(Number(tr.lat)) && Number.isFinite(Number(tr.lng))) return tr;
+            if (tr && Number.isFinite(Number(tr.lat)) && Number.isFinite(Number(tr.lng)) && lpDeliveryIsPlausibleMissionPosition(job, Number(tr.lat), Number(tr.lng))) return tr;
             const t = job?.track || null;
-            if (t && Number.isFinite(Number(t.lat)) && Number.isFinite(Number(t.lng))) return t;
+            if (t && Number.isFinite(Number(t.lat)) && Number.isFinite(Number(t.lng)) && lpDeliveryIsPlausibleMissionPosition(job, Number(t.lat), Number(t.lng))) return t;
             return null;
         }
 
@@ -16729,7 +17514,7 @@
             const start = (() => {
                 const t = lpDeliveryGetLastTrack(job);
                 if (t) return [Number(t.lat), Number(t.lng)];
-                if (Array.isArray(USER_POS)) return [Number(USER_POS[0]), Number(USER_POS[1])];
+                if (Array.isArray(USER_POS) && lpDeliveryIsPlausibleMissionPosition(job, Number(USER_POS[0]), Number(USER_POS[1]))) return [Number(USER_POS[0]), Number(USER_POS[1])];
                 return [Number(job.pickup.lat), Number(job.pickup.lng)];
             })();
             lpDeliveryPublishTrack(id, start[0], start[1]);
@@ -16795,6 +17580,22 @@
             const overlay = document.createElement('div');
             overlay.id = 'deliveryTrackOverlay';
             overlay.style.cssText = "position:fixed; inset:0; z-index:22000; background:rgba(0,0,0,0.65); display:flex; align-items:stretch; justify-content:center; padding:0;";
+            try {
+                const u = new URL(window.location.href);
+                if (u.hash !== '#suivi') u.hash = 'suivi';
+                history.pushState({ __lp: 'deliveryTrack', id }, '', u.toString());
+                if (!window.__lpDeliveryTrackPopBound) {
+                    window.addEventListener('popstate', () => {
+                        try {
+                            const o = document.getElementById('deliveryTrackOverlay');
+                            if (o) o.remove();
+                        } catch {
+                        }
+                    });
+                    window.__lpDeliveryTrackPopBound = 1;
+                }
+            } catch {
+            }
             const shareUrl = (() => {
                 try {
                     const u = new URL(window.location.href);
@@ -16809,11 +17610,12 @@
             const topPanelInset = isPhone ? '12px' : '16px';
             const bottomPanelInset = isPhone ? '12px' : '16px';
             const stepRail = lpDeliveryRenderStepRail(phase, phase === 'delivered').replace('margin:12px 0 14px;', 'margin:0;');
-            const liveInfo = lpDeliveryLiveSummary(job, phase, lpDeliveryGetLastTrack(job));
+            const initialTrack = lpDeliveryGetLastTrack(job);
+            const liveInfo = lpDeliveryLiveSummary(job, phase, initialTrack);
             overlay.innerHTML = `
                 <div style="${cardStyle}">
                     <div style="background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:white; padding:${isPhone ? 'calc(12px + env(safe-area-inset-top)) 12px 12px' : '14px 16px'}; display:flex; align-items:center; gap:10px;">
-                        <button type="button" onclick="document.getElementById('deliveryTrackOverlay')?.remove()" style="background:rgba(255,255,255,0.15); border:0; color:white; width:38px; height:38px; border-radius:999px; font-weight:950;">←</button>
+                        <button type="button" onclick="lpCloseDeliveryTracking(true)" style="background:rgba(255,255,255,0.15); border:0; color:white; width:${isPhone ? '64px' : '38px'}; height:38px; border-radius:999px; font-weight:950; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 10px 24px rgba(0,0,0,0.18);">${isPhone ? '← Retour' : '←'}</button>
                         <div style="flex:1; min-width:0; font-weight:950;">🚚 Suivi livraison</div>
                         <button id="lpDeliveryTrackShareBtn" type="button" style="background:rgba(255,255,255,0.15); border:0; color:white; padding:10px 12px; border-radius:999px; font-weight:950;">🔗 Partager</button>
                     </div>
@@ -16845,13 +17647,15 @@
                                 <div style="background:rgba(234,246,255,0.96); padding:${isPhone ? '12px' : '10px'}; border-radius:12px; font-weight:900; border:1px solid rgba(14,165,233,0.16); box-shadow:0 6px 18px rgba(0,0,0,0.08);">👤 Livraison: <b>${lpEscapeHtml(String(job?.dropoff?.address || 'Client'))}</b></div>
                             </div>
                         </div>
-                        <div style="position:absolute; right:${bottomPanelInset}; bottom:calc(${isPhone ? '150px' : '132px'} + env(safe-area-inset-bottom)); pointer-events:none;">
+                        <div style="position:absolute; right:${bottomPanelInset}; bottom:calc(${isPhone ? '150px' : '132px'} + env(safe-area-inset-bottom)); pointer-events:none; display:grid; gap:8px;">
+                            <button type="button" class="lp-btn lp-btn-secondary" style="pointer-events:auto; box-shadow:0 10px 24px rgba(0,0,0,0.16); background:rgba(255,255,255,0.96);" onclick="lpDeliveryRefreshTrackingGpsUI(this)">🎯 Ma position</button>
+                            <button type="button" class="lp-btn lp-btn-secondary" style="pointer-events:auto; box-shadow:0 10px 24px rgba(0,0,0,0.16); background:rgba(255,255,255,0.96);" onclick="lpDeliveryResetTrackingUI(this)">♻️ Réinitialiser</button>
                             <button type="button" class="lp-btn lp-btn-secondary" style="pointer-events:auto; box-shadow:0 10px 24px rgba(0,0,0,0.16); background:rgba(255,255,255,0.96);" onclick="try{lpOpenDeliveryTracking(${JSON.stringify(id)})}catch{}">🔄 Actualiser</button>
                         </div>
                     </div>
                 </div>
             `;
-            overlay.addEventListener('click', (e) => { if (e && e.target === overlay) overlay.remove(); });
+            overlay.addEventListener('click', (e) => { if (e && e.target === overlay) lpCloseDeliveryTracking(true); });
             document.body.appendChild(overlay);
             try {
                 const shareBtn = document.getElementById('lpDeliveryTrackShareBtn');
@@ -16871,38 +17675,78 @@
             try {
                 if (!window.L || !document.getElementById('deliveryTrackMap')) return;
                 const mapEl = document.getElementById('deliveryTrackMap');
-                const map = L.map(mapEl, { zoomControl: false, attributionControl: false });
+                const map = L.map(mapEl, { zoomControl: false, attributionControl: false, zoomSnap: 0.25, zoomDelta: 0.5 });
                 const center = [Number(job.pickup.lat), Number(job.pickup.lng)];
                 map.setView(center, 14);
                 try { setTimeout(() => map.invalidateSize(), 80); } catch {}
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+                lpDeliveryAddBaseTileLayer(map);
                 const pickup = [Number(job.pickup.lat), Number(job.pickup.lng)];
                 const drop = [Number(job.dropoff.lat), Number(job.dropoff.lng)];
-                const pickupMarker = L.marker(pickup).addTo(map);
-                const dropMarker = L.marker(drop).addTo(map);
+                const pickupMarker = L.marker(pickup, {
+                    icon: lpDeliveryCreateMapPinIcon({
+                        emoji: '🏪',
+                        label: 'Retrait',
+                        tone: '#f59e0b',
+                        ring: 'rgba(245,158,11,0.22)',
+                        glow: 'rgba(245,158,11,0.08)'
+                    })
+                }).addTo(map);
+                const dropMarker = L.marker(drop, {
+                    icon: lpDeliveryCreateMapPinIcon({
+                        emoji: '👤',
+                        label: 'Client',
+                        tone: '#0ea5e9',
+                        ring: 'rgba(14,165,233,0.22)',
+                        glow: 'rgba(14,165,233,0.08)'
+                    })
+                }).addTo(map);
                 pickupMarker.bindPopup('🏪 Retrait').openPopup();
                 dropMarker.bindPopup('👤 Livraison');
-                const line = L.polyline([pickup, drop], { color: '#0984e3', weight: 4, opacity: 0.8 }).addTo(map);
-                map.fitBounds(line.getBounds(), { padding: isPhone ? [48, 220] : [40, 160] });
-                const tr = lpDeliveryGetLastTrack(job);
+                const targetPoint = phase === 'pickup' ? pickup : drop;
+                const missionLine = L.polyline([pickup, drop], {
+                    color: 'rgba(15,23,42,0.34)',
+                    weight: 5,
+                    opacity: 0.9,
+                    dashArray: '8 10',
+                    lineCap: 'round',
+                    lineJoin: 'round'
+                }).addTo(map);
+                const liveLine = lpDeliveryCreateRouteBundle(map, [pickup, targetPoint], '#0ea5e9');
+                lpDeliveryFitMapToPoints(map, [pickup, drop], isPhone, {
+                    paddingTopLeft: isPhone ? [14, 96] : [18, 68],
+                    paddingBottomRight: isPhone ? [14, 138] : [18, 102]
+                });
                 let driverMarker = null;
-                if (tr) {
-                    driverMarker = L.marker([Number(tr.lat), Number(tr.lng)], {
-                        icon: lpDeliveryDriverMarkerIcon(tr),
+                if (initialTrack) {
+                    driverMarker = L.marker([Number(initialTrack.lat), Number(initialTrack.lng)], {
+                        icon: lpDeliveryDriverMarkerIcon(initialTrack),
                         zIndexOffset: 1600
                     }).addTo(map).bindPopup('🛵 Livreur Mangoo Express');
+                    lpDeliveryApplyRouteBundle(liveLine, Number(initialTrack.lat), Number(initialTrack.lng), Number(targetPoint[0]), Number(targetPoint[1]), [[Number(initialTrack.lat), Number(initialTrack.lng)], targetPoint]).then((pts) => {
+                        lpDeliveryFitMapToPoints(map, [pickup, drop].concat(Array.isArray(pts) ? pts : []), isPhone, {
+                            paddingTopLeft: isPhone ? [14, 96] : [18, 68],
+                            paddingBottomRight: isPhone ? [14, 138] : [18, 102]
+                        });
+                    });
+                } else {
+                    lpDeliveryApplyRouteBundle(liveLine, Number(pickup[0]), Number(pickup[1]), Number(targetPoint[0]), Number(targetPoint[1]), [pickup, targetPoint]).then((pts) => {
+                        lpDeliveryFitMapToPoints(map, [pickup, drop].concat(Array.isArray(pts) ? pts : []), isPhone, {
+                            paddingTopLeft: isPhone ? [14, 96] : [18, 68],
+                            paddingBottomRight: isPhone ? [14, 138] : [18, 102]
+                        });
+                    });
                 }
                 const refresh = () => {
                     try {
                         const next = lpDeliveryRead('mangoo_delivery_track:' + id, null);
-                        const live = lpDeliveryLiveSummary(job, phase, next || tr || null);
+                        const live = lpDeliveryLiveSummary(job, phase, next || initialTrack || null);
                         const statusEl = document.getElementById('lpDeliveryTrackLiveStatus');
                         const detailEl = document.getElementById('lpDeliveryTrackLiveDetail');
                         const freshEl = document.getElementById('lpDeliveryTrackFreshness');
                         if (statusEl) statusEl.textContent = String(live.status || 'Suivi');
                         if (detailEl) detailEl.textContent = String(live.detail || '');
                         if (freshEl) freshEl.textContent = String(live.freshness || '');
-                        if (!next) return;
+                        if (!next || !lpDeliveryIsPlausibleMissionPosition(job, Number(next.lat), Number(next.lng))) return;
                         const lat = Number(next.lat), lng = Number(next.lng);
                         if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
                         if (!driverMarker) {
@@ -16913,9 +17757,22 @@
                         }
                         try { driverMarker.setIcon(lpDeliveryDriverMarkerIcon(next)); } catch {}
                         driverMarker.setLatLng([lat, lng]);
+                        try {
+                            missionLine.setLatLngs([pickup, drop]);
+                        } catch {
+                        }
+                        lpDeliveryApplyRouteBundle(liveLine, lat, lng, Number(targetPoint[0]), Number(targetPoint[1]), [[lat, lng], targetPoint]).then((pts) => {
+                            lpDeliveryFitMapToPoints(map, [pickup, drop, [lat, lng]].concat(Array.isArray(pts) ? pts : []), isPhone, {
+                                paddingTopLeft: isPhone ? [14, 96] : [18, 68],
+                                paddingBottomRight: isPhone ? [14, 138] : [18, 102],
+                                focusPoints: [[lat, lng], targetPoint],
+                                focusThresholdKm: 1.25
+                            });
+                        });
                     } catch {
                     }
                 };
+                try { window.__lpDeliveryTrackRefresh = refresh; } catch {}
                 refresh();
                 const timer = setInterval(() => {
                     if (!document.getElementById('deliveryTrackOverlay')) return clearInterval(timer);
@@ -16993,14 +17850,37 @@
             const id = String(jobId || '').trim() || 'global';
             const sig = id + ':' + key;
             try {
-                if (window.__lpDeliverySpokenSig === sig) return;
-                window.__lpDeliverySpokenSig = sig;
+                if (window.__lpDeliverySpeakTimer) {
+                    clearTimeout(window.__lpDeliverySpeakTimer);
+                    window.__lpDeliverySpeakTimer = null;
+                }
+                window.__lpDeliveryPendingSpeakSig = sig;
             } catch {
             }
             try {
-                setTimeout(() => {
+                window.__lpDeliverySpeakTimer = setTimeout(() => {
+                    try {
+                        const pendingSig = String(window.__lpDeliveryPendingSpeakSig || '').trim();
+                        if (pendingSig !== sig) return;
+                    } catch {
+                    }
+                    try {
+                        if (id !== 'global') {
+                            const currentJob = lpDeliveryGetJob(id);
+                            const currentPhase = String(currentJob?.phase || '').trim();
+                            const recentDoneId = String((lpDeliveryGetRecentDone() || {}).id || '').trim();
+                            const phaseMatches = currentPhase === key || (key === 'delivered' && recentDoneId === id);
+                            if (!phaseMatches) return;
+                        }
+                    } catch {
+                    }
+                    try {
+                        if (window.__lpDeliverySpokenSig === sig) return;
+                        window.__lpDeliverySpokenSig = sig;
+                    } catch {
+                    }
                     try { lpDeliverySpeakPhase(key); } catch {}
-                }, 80);
+                }, 20);
             } catch {
             }
         }
@@ -17116,8 +17996,8 @@
                 const pickupName = String(mine?.pickup?.name || 'Retrait');
                 const dropAddr = String(mine?.dropoff?.address || 'Client');
                 const tr = lpDeliveryGetLastTrack(mine);
-                const meLat = tr ? Number(tr.lat) : (Array.isArray(USER_POS) ? Number(USER_POS[0]) : Number(mine.pickup.lat));
-                const meLng = tr ? Number(tr.lng) : (Array.isArray(USER_POS) ? Number(USER_POS[1]) : Number(mine.pickup.lng));
+                const meLat = tr ? Number(tr.lat) : (Array.isArray(USER_POS) && lpDeliveryIsPlausibleMissionPosition(mine, Number(USER_POS[0]), Number(USER_POS[1])) ? Number(USER_POS[0]) : Number(mine.pickup.lat));
+                const meLng = tr ? Number(tr.lng) : (Array.isArray(USER_POS) && lpDeliveryIsPlausibleMissionPosition(mine, Number(USER_POS[0]), Number(USER_POS[1])) ? Number(USER_POS[1]) : Number(mine.pickup.lng));
                 const target = phase === 'pickup' ? mine.pickup : mine.dropoff;
                 const nextBtn = (() => {
                     if (phase === 'pickup') return `<button type="button" data-delivery-action="phase" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" data-next-phase="dropoff" style="width:100%; padding:14px; background:#2d3436; color:white; border:none; border-radius:12px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">📦 Colis récupéré</button>`;
@@ -17159,6 +18039,10 @@
                             <div style="background:#fff3e0; padding:10px; border-radius:12px; font-weight:900;">🏪 Retrait: <b>${lpEscapeHtml(pickupName)}</b></div>
                             <div style="background:#eaf6ff; padding:10px; border-radius:12px; font-weight:900;">👤 Livraison: <b>${lpEscapeHtml(dropAddr)}</b></div>
                         </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+                            <button type="button" data-delivery-action="gps-refresh" onclick="lpDeliveryRefreshPositionUI(this)" style="padding:12px; background:rgba(14,165,233,0.10); border:1px solid rgba(14,165,233,0.28); border-radius:14px; color:#0f172a; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">🎯 Ma position</button>
+                            <button type="button" data-delivery-action="reset-demo" onclick="lpDeliveryResetDemoUI(this)" style="padding:12px; background:rgba(249,115,22,0.10); border:1px solid rgba(249,115,22,0.28); border-radius:14px; color:#0f172a; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">♻️ Réinitialiser</button>
+                        </div>
                         <div style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:10px; margin-bottom:12px;">
                             <button type="button" data-delivery-action="call" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" style="background:#f7f8fb; border:1px solid rgba(0,0,0,0.06); padding:10px 6px; border-radius:16px; min-height:68px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">
                                 <div style="font-size:1.1rem; margin-bottom:4px;">📞</div>
@@ -17186,14 +18070,35 @@
                 return;
             }
             const ignored = lpDeliveryIgnoredJobIds();
-            const openJobs = jobs.filter((j) => String(j?.status || '') === 'open' && !ignored.includes(String(j?.id || '')));
+            const openJobs = jobs
+                .filter((j) => String(j?.status || '') === 'open' && !ignored.includes(String(j?.id || '')))
+                .filter((j) => {
+                    try {
+                        if (!(Array.isArray(USER_POS) && Number.isFinite(Number(USER_POS[0])) && Number.isFinite(Number(USER_POS[1])))) return true;
+                        const src = String(USER_POS_META?.source || '');
+                        if (!src || src === 'country-default') return true;
+                        const pickLat = Number(j?.pickup?.lat);
+                        const pickLng = Number(j?.pickup?.lng);
+                        if (!Number.isFinite(pickLat) || !Number.isFinite(pickLng)) return true;
+                        const d = distanceKm(Number(USER_POS[0]), Number(USER_POS[1]), pickLat, pickLng);
+                        return !Number.isFinite(d) || d <= 80;
+                    } catch {
+                        return true;
+                    }
+                });
             if (!openJobs.length) {
                 try { lpDeliveryEnsureDispatcher(); } catch {}
+                const hasGps = lpDeliveryHasResolvedUserPosition();
                 reqContainer.innerHTML = `
                     <div style="background:white; border-radius:20px; padding:18px 16px; border:1px solid rgba(0,0,0,0.06); box-shadow:0 10px 24px rgba(0,0,0,0.06); text-align:center;">
                         <div style="font-weight:950; color:#2d3436; margin-bottom:6px;">En attente de commandes...</div>
-                        <div style="color:#6b7280; font-weight:800; font-size:0.92rem; margin-bottom:12px;">Lance une course test pour continuer.</div>
-                        <button type="button" data-delivery-action="seed-job" data-job-id="seed-now" style="width:100%; padding:14px; background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#fff; border:none; border-radius:14px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">📦 Lancer une course test</button>
+                        <div style="color:#6b7280; font-weight:800; font-size:0.92rem; margin-bottom:12px;">${hasGps ? 'Lance une course test pour continuer.' : 'Active ta position réelle avant de lancer une course test.'}</div>
+                        ${hasGps
+                            ? `<button type="button" data-delivery-action="seed-job" data-job-id="seed-now" style="width:100%; padding:14px; background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#fff; border:none; border-radius:14px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">📦 Lancer une course test</button>`
+                            : `<div style="display:grid; gap:10px;">
+                                <button type="button" data-delivery-action="gps-refresh" onclick="lpDeliveryRefreshPositionUI(this)" style="width:100%; padding:14px; background:linear-gradient(90deg, #0ea5e9, #22c55e); color:#fff; border:none; border-radius:14px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">🎯 Activer ma position</button>
+                                <div style="font-size:0.82rem; color:#6b7280; font-weight:800;">Si rien ne s’affiche, autorisez la localisation pour ce site dans Chrome.</div>
+                            </div>`}
                     </div>
                 `;
                 return;
