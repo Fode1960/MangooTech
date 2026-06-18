@@ -7428,6 +7428,77 @@
             return true;
         }
 
+        function lpCloseShareSheet() {
+            try {
+                const el = document.getElementById('lpShareSheet');
+                if (el) el.remove();
+            } catch {
+            }
+        }
+
+        async function lpShareFromSheet() {
+            try {
+                const input = document.getElementById('lpShareSheetUrl');
+                const url = String(input && 'value' in input ? input.value : '').trim();
+                if (!url) {
+                    try { showLocalToast('Lien indisponible', 'info'); } catch {}
+                    return false;
+                }
+                const ok = await lpShareUrl(url, 'Suivi livraison');
+                if (ok) return true;
+            } catch {
+            }
+            return false;
+        }
+
+        function lpOpenShareSheet(url, title, helperText) {
+            const u = String(url || '').trim();
+            if (!u) {
+                try { showLocalToast('Lien indisponible', 'info'); } catch {}
+                return false;
+            }
+            try { lpCloseShareSheet(); } catch {}
+            const overlay = document.createElement('div');
+            overlay.id = 'lpShareSheet';
+            overlay.style.cssText = 'position:fixed; inset:0; z-index:23000; background:rgba(15,23,42,0.6); display:flex; align-items:center; justify-content:center; padding:16px;';
+            overlay.innerHTML = `
+                <div role="dialog" aria-modal="true" style="width:min(100%, 560px); background:var(--ml-panel, #ffffff); color:var(--ml-text, #111827); border-radius:24px; box-shadow:0 24px 64px rgba(0,0,0,0.28); overflow:hidden;">
+                    <div style="background:linear-gradient(90deg, var(--ml-brand-from, #f97316), var(--ml-brand-to, #16a34a)); color:white; padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                        <div style="font-weight:950; font-size:1.05rem;">🔗 ${lpEscapeHtml(String(title || 'Partager le lien'))}</div>
+                        <button type="button" onclick="lpCloseShareSheet()" style="border:0; background:rgba(255,255,255,0.16); color:white; width:38px; height:38px; border-radius:999px; font-weight:900;">✕</button>
+                    </div>
+                    <div style="padding:18px; display:grid; gap:14px;">
+                        <div style="font-weight:800; color:#374151;">${lpEscapeHtml(String(helperText || 'Copiez ce lien puis ouvrez-le sur le PC vendeur et sur l’iPhone client.'))}</div>
+                        <div style="display:grid; gap:8px;">
+                            <div style="font-size:0.9rem; font-weight:900; color:#4b5563;">Lien du suivi</div>
+                            <input id="lpShareSheetUrl" type="text" readonly value="${lpEscapeInlineArg(u)}" style="width:100%; padding:14px 16px; border-radius:16px; border:1px solid rgba(0,0,0,0.12); background:#f8fafc; color:#111827; font-size:0.92rem; font-weight:700;" />
+                        </div>
+                        <div style="display:grid; gap:10px; grid-template-columns:1fr 1fr;">
+                            <button type="button" onclick="lpCopyText(document.getElementById('lpShareSheetUrl').value)" style="border:0; border-radius:16px; padding:14px 16px; font-weight:900; background:#111827; color:white;">📋 Copier le lien</button>
+                            <button type="button" onclick="lpShareFromSheet()" style="border:1px solid rgba(0,0,0,0.1); border-radius:16px; padding:14px 16px; font-weight:900; background:#ffffff; color:#111827;">📲 Partager ici</button>
+                        </div>
+                        <div style="background:rgba(249,115,22,0.08); color:#7c2d12; border:1px solid rgba(249,115,22,0.16); border-radius:16px; padding:12px 14px; font-size:0.9rem; font-weight:800;">
+                            Même si aucun contact n’apparaît ici, c’est normal : prenez ce lien et envoyez-le vous-même au vendeur PC et au client iPhone.
+                        </div>
+                    </div>
+                </div>
+            `;
+            overlay.addEventListener('click', (e) => {
+                try {
+                    if (e && e.target === overlay) lpCloseShareSheet();
+                } catch {
+                }
+            });
+            document.body.appendChild(overlay);
+            try {
+                const input = document.getElementById('lpShareSheetUrl');
+                if (input && typeof input.focus === 'function') input.focus();
+                if (input && typeof input.select === 'function') input.select();
+            } catch {
+            }
+            return true;
+        }
+
         function lpGetStoredShopIdsForCurrentUser() {
             try {
                 const u = getLpCurrentUser ? getLpCurrentUser() : null;
@@ -14286,11 +14357,71 @@
             try { lpApplySimplePanelVisibility(); } catch {}
         }
 
+        function lpIsIOSDevice() {
+            try {
+                const ua = String(navigator.userAgent || navigator.vendor || '').toLowerCase();
+                return /iphone|ipad|ipod/.test(ua) || (ua.includes('mac') && 'ontouchend' in document);
+            } catch {
+                return false;
+            }
+        }
+
+        function lpPrimeSpeechPlayback() {
+            try {
+                if (!('speechSynthesis' in window)) return;
+                if (window.__lpSpeechPrimed) return;
+                window.__lpSpeechPrimed = true;
+                try { window.speechSynthesis.cancel(); } catch {}
+                try { window.speechSynthesis.resume(); } catch {}
+                try {
+                    const u = new SpeechSynthesisUtterance(' ');
+                    u.volume = 0;
+                    u.rate = 1;
+                    u.pitch = 1;
+                    window.speechSynthesis.speak(u);
+                } catch {
+                }
+                try {
+                    const pending = window.__lpPendingSpeech || null;
+                    if (pending && pending.text) {
+                        window.__lpPendingSpeech = null;
+                        setTimeout(() => {
+                            try { lpSpeak(String(pending.text || ''), pending.opts || {}); } catch {}
+                        }, 80);
+                    }
+                } catch {
+                }
+            } catch {
+            }
+        }
+
+        function lpInstallSpeechPrimer() {
+            try {
+                if (window.__lpSpeechPrimerInstalled) return;
+                window.__lpSpeechPrimerInstalled = true;
+                const once = () => {
+                    try { lpPrimeSpeechPlayback(); } catch {}
+                    try { document.removeEventListener('pointerdown', once, true); } catch {}
+                    try { document.removeEventListener('touchstart', once, true); } catch {}
+                    try { document.removeEventListener('click', once, true); } catch {}
+                };
+                document.addEventListener('pointerdown', once, true);
+                document.addEventListener('touchstart', once, true);
+                document.addEventListener('click', once, true);
+            } catch {
+            }
+        }
+
         function lpSpeak(text, opts = {}) {
             const msg = String(text || '').trim();
             if (!msg) return;
             try {
                 if (!('speechSynthesis' in window)) return;
+                try { lpInstallSpeechPrimer(); } catch {}
+                if (lpIsIOSDevice() && !window.__lpSpeechPrimed) {
+                    window.__lpPendingSpeech = { text: msg, opts: { ...opts } };
+                    return;
+                }
                 const pref = typeof lpGetVoicePrefs === 'function' ? lpGetVoicePrefs() : { lang: 'fr-FR' };
                 const desiredLang = String(opts.lang || pref.lang || 'fr-FR');
                 let lang = desiredLang;
@@ -14315,6 +14446,8 @@
         function lpSpeakHelp() {
             lpSpeak("Bienvenue sur Mangoo Local plus. Appuyez sur Autour de moi pour voir ce qui est proche. Appuyez sur Tout le pays pour élargir. Ou appuyez sur Parler et dites un besoin. Exemple: vivres, plombier, électricien.");
         }
+
+        try { lpInstallSpeechPrimer(); } catch {}
 
         function lpSimpleAroundMe() {
             try { setLpScope('nearby'); } catch {}
@@ -15632,8 +15765,10 @@
                         <div class="lp-onboard-row" style="margin-top:10px;">
                             ${preview}
                             <div style="flex:1; min-width:0;">
-                                <input type="file" id="driverLicenseInput" accept="image/*" style="display:none;" onchange="handleLicenseUpload(this)">
-                                <button class="lp-onboard-btn ${hasDoc ? 'primary' : 'secondary'}" type="button" data-driver-action="pick-photo">${hasDoc ? '✅ Photo ajoutée' : '📷 Ajouter photo'}</button>
+                                <input type="file" id="driverLicenseInput" accept="image/*" capture="environment" style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;" onchange="handleLicenseUpload(this)">
+                                ${hasDoc
+                                    ? `<button class="lp-onboard-btn primary" type="button" data-driver-action="pick-photo">✅ Photo ajoutée</button>`
+                                    : `<label class="lp-onboard-btn secondary" for="driverLicenseInput" style="display:inline-flex; align-items:center; justify-content:center;">📷 Ajouter photo</label>`}
                             </div>
                         </div>
                     </div>
@@ -15670,9 +15805,11 @@
                     <button type="button" class="lp-onboard-btn ghost" data-driver-action="close">Fermer</button>
                 </div>`;
             } else {
-                const label = step === 1 ? (hasDoc ? '▶️ Continuer' : '📷 Ajouter photo') : '▶️ Continuer';
+                const primaryAction = step === 1 && !hasDoc
+                    ? `<label class="lp-onboard-btn primary" for="driverLicenseInput" style="display:inline-flex; align-items:center; justify-content:center;">📷 Ajouter photo</label>`
+                    : `<button class="lp-onboard-btn primary" type="button" data-driver-action="primary">${step === 1 ? '▶️ Continuer' : '▶️ Continuer'}</button>`;
                 footRight = `<div class="lp-onboard-actions">
-                    <button class="lp-onboard-btn primary" type="button" data-driver-action="primary">${label}</button>
+                    ${primaryAction}
                     <button class="lp-onboard-btn ghost" type="button" data-driver-action="close">Fermer</button>
                 </div>`;
             }
@@ -15773,6 +15910,227 @@
 
         function lpDeliveryWrite(key, value) {
             try { localStorage.setItem(String(key || ''), JSON.stringify(value)); } catch {}
+        }
+
+        async function lpDeliveryFetchJobRemote(jobId) {
+            try {
+                const id = String(jobId || '').trim();
+                if (!id) return null;
+                const res = await fetch('/api/delivery-tracking/job/' + encodeURIComponent(id), {
+                    method: 'GET',
+                    cache: 'no-store'
+                });
+                if (!res.ok) return null;
+                const payload = await res.json().catch(() => null);
+                const job = payload && payload.job ? payload.job : null;
+                if (!job || typeof job !== 'object') return null;
+                if (!String(job.id || '').trim()) return null;
+                return job;
+            } catch {
+                return null;
+            }
+        }
+
+        async function lpDeliveryPushJobRemote(job, reason) {
+            try {
+                const id = String(job?.id || '').trim();
+                if (!id || !job || typeof job !== 'object') return;
+                const next = {
+                    ...job,
+                    remoteUpdatedAt: Date.now(),
+                    remoteReason: String(reason || 'job_updated').trim() || 'job_updated'
+                };
+                await fetch('/api/delivery-tracking/job/' + encodeURIComponent(id), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ job: next })
+                }).catch(() => null);
+            } catch {
+            }
+        }
+
+        async function lpDeliveryFetchLatestRemoteJob() {
+            try {
+                const res = await fetch('/api/delivery-tracking/latest-active', {
+                    method: 'GET',
+                    cache: 'no-store'
+                });
+                if (!res.ok) return null;
+                const payload = await res.json().catch(() => null);
+                const job = payload && payload.job ? payload.job : null;
+                if (!job || typeof job !== 'object') return null;
+                if (!String(job.id || '').trim()) return null;
+                return job;
+            } catch {
+                return null;
+            }
+        }
+
+        function lpDeliverySetRemoteNoticeSeen(jobId, ts) {
+            try {
+                window.__lpDeliveryRemoteNoticeSeen = {
+                    jobId: String(jobId || '').trim(),
+                    assignedAt: Number(ts || 0)
+                };
+            } catch {
+            }
+        }
+
+        function lpDeliveryIsRemoteNoticeSeen(jobId, ts) {
+            try {
+                const seen = window.__lpDeliveryRemoteNoticeSeen || null;
+                if (!seen) return false;
+                return String(seen.jobId || '').trim() === String(jobId || '').trim()
+                    && Number(seen.assignedAt || 0) >= Number(ts || 0);
+            } catch {
+                return false;
+            }
+        }
+
+        function lpDeliveryAnnounceRemoteNotice(job) {
+            try {
+                const id = String(job?.id || '').trim();
+                const assignedAt = Number(job?.assignedAt || 0);
+                if (!id || !Number.isFinite(assignedAt) || assignedAt <= 0) return;
+                if (!window.__lpDeliveryRemoteNoticeSpeechAnnounced) window.__lpDeliveryRemoteNoticeSpeechAnnounced = {};
+                const key = id + ':' + String(assignedAt);
+                if (window.__lpDeliveryRemoteNoticeSpeechAnnounced[key]) return;
+                window.__lpDeliveryRemoteNoticeSpeechAnnounced[key] = 1;
+                const phase = String(job?.phase || '').trim();
+                const msg = phase === 'dropoff'
+                    ? 'Notification Mangoo. Le livreur est en route vers le client. Appuyez pour voir.'
+                    : 'Notification Mangoo. Le livreur est en route. Appuyez pour voir.';
+                try { lpSpeak(msg, { ...lpGetVoicePrefs(), rate: 1.0, pitch: 1.0 }); } catch {}
+            } catch {
+            }
+        }
+
+        function lpDeliveryHideRemoteTrackNotice() {
+            try {
+                const el = document.getElementById('lpDeliveryRemoteTrackNotice');
+                if (el) el.remove();
+            } catch {
+            }
+        }
+
+        function lpDeliveryShowRemoteTrackNotice(job) {
+            const id = String(job?.id || '').trim();
+            const assignedAt = Number(job?.assignedAt || 0);
+            if (!id || !Number.isFinite(assignedAt) || assignedAt <= 0) return;
+            if (String(job?.assignedDriverId || '').trim() === String(lpDeliveryDriverId() || '').trim()) {
+                lpDeliverySetRemoteNoticeSeen(id, assignedAt);
+                return;
+            }
+            const isPhone = (() => {
+                try { return Number(window.innerWidth || 0) <= 768; } catch {}
+                return false;
+            })();
+            try {
+                const existing = document.getElementById('lpDeliveryRemoteTrackNotice');
+                if (existing) {
+                    const sameJob = String(existing.dataset.jobId || '').trim() === id;
+                    const sameAssignedAt = Number(existing.dataset.assignedAt || 0) === assignedAt;
+                    if (sameJob && sameAssignedAt) return;
+                    existing.remove();
+                }
+            } catch {
+            }
+            const pickupName = String(job?.pickup?.name || 'Boutique').trim() || 'Boutique';
+            const dropName = String(job?.dropoff?.address || job?.dropoff?.name || 'Client').trim() || 'Client';
+            const wrap = document.createElement('div');
+            wrap.id = 'lpDeliveryRemoteTrackNotice';
+            wrap.dataset.jobId = id;
+            wrap.dataset.assignedAt = String(assignedAt);
+            wrap.style.cssText = isPhone
+                ? 'position:fixed; left:12px; right:12px; bottom:calc(14px + env(safe-area-inset-bottom)); z-index:23500; display:flex; justify-content:center; pointer-events:none;'
+                : 'position:fixed; left:16px; right:16px; top:16px; z-index:23500; display:flex; justify-content:center; pointer-events:none;';
+            wrap.innerHTML = `
+                <div style="width:min(100%, ${isPhone ? '560px' : '680px'}); background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:white; border-radius:${isPhone ? '22px' : '24px'}; box-shadow:0 20px 50px rgba(0,0,0,0.28); padding:${isPhone ? '16px' : '18px 20px'}; pointer-events:auto; border:${isPhone ? '0' : '2px solid rgba(255,255,255,0.24)'};">
+                    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+                        <div style="min-width:0;">
+                            <div style="font-weight:950; font-size:${isPhone ? '1rem' : '1.1rem'};">🔔 Livraison en cours</div>
+                            <div style="margin-top:4px; font-size:${isPhone ? '0.92rem' : '0.98rem'}; font-weight:800; opacity:0.98;">${lpEscapeHtml(pickupName)} vers ${lpEscapeHtml(dropName)}</div>
+                            <div style="margin-top:6px; font-size:${isPhone ? '0.86rem' : '0.92rem'}; font-weight:800; opacity:0.92;">${isPhone ? 'Appuyez une fois pour voir le livreur bouger sur la carte.' : 'Vendeur : cliquez une fois pour voir le livreur bouger sur la carte.'}</div>
+                        </div>
+                        <button type="button" data-lp-track-notice-close="1" style="border:0; background:rgba(255,255,255,0.16); color:white; width:38px; height:38px; border-radius:999px; font-weight:950;">✕</button>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr; gap:10px; margin-top:12px;">
+                        <button type="button" data-lp-track-notice-open="1" style="border:0; border-radius:16px; padding:${isPhone ? '14px 16px' : '15px 18px'}; font-weight:950; background:white; color:#111827; font-size:${isPhone ? '1rem' : '1.02rem'}; box-shadow:0 12px 28px rgba(0,0,0,0.18);">🚚 Voir le livreur</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(wrap);
+            try {
+                if (!window.__lpDeliveryRemoteNoticeAnnounced) window.__lpDeliveryRemoteNoticeAnnounced = {};
+                const announceKey = id + ':' + String(assignedAt);
+                if (!window.__lpDeliveryRemoteNoticeAnnounced[announceKey]) {
+                    window.__lpDeliveryRemoteNoticeAnnounced[announceKey] = 1;
+                    try { showLocalToast('🔔 Livraison en cours - cliquez pour voir le livreur', 'info'); } catch {}
+                }
+            } catch {
+            }
+            try { lpDeliveryAnnounceRemoteNotice(job); } catch {}
+            try {
+                const openBtn = wrap.querySelector('[data-lp-track-notice-open="1"]');
+                const closeBtn = wrap.querySelector('[data-lp-track-notice-close="1"]');
+                if (openBtn) openBtn.addEventListener('click', () => {
+                    try { lpDeliverySetRemoteNoticeSeen(id, assignedAt); } catch {}
+                    try { lpDeliveryHideRemoteTrackNotice(); } catch {}
+                    try { lpOpenDeliveryTracking(id); } catch {}
+                }, { passive: true });
+                if (closeBtn) closeBtn.addEventListener('click', () => {
+                    try { lpDeliverySetRemoteNoticeSeen(id, assignedAt); } catch {}
+                    try { lpDeliveryHideRemoteTrackNotice(); } catch {}
+                }, { passive: true });
+            } catch {
+            }
+        }
+
+        async function lpDeliveryPollRemoteTrackNotice() {
+            try {
+                if (window.__lpDeliveryRemotePollBusy) return;
+                window.__lpDeliveryRemotePollBusy = true;
+                const job = await lpDeliveryFetchLatestRemoteJob();
+                if (!job) return;
+                const id = String(job?.id || '').trim();
+                const assignedAt = Number(job?.assignedAt || 0);
+                if (!id || !Number.isFinite(assignedAt) || assignedAt <= 0) return;
+                if (lpDeliveryIsRemoteNoticeSeen(id, assignedAt)) return;
+                if (String(job?.assignedDriverId || '').trim() === String(lpDeliveryDriverId() || '').trim()) {
+                    lpDeliverySetRemoteNoticeSeen(id, assignedAt);
+                    return;
+                }
+                try {
+                    const remoteTrack = await lpDeliveryFetchTrackRemote(id);
+                    if (remoteTrack && lpDeliveryIsPlausibleMissionPosition(job, Number(remoteTrack.lat), Number(remoteTrack.lng))) {
+                        lpDeliveryMaybeAnnounceRemoteMilestone(job, remoteTrack);
+                    }
+                } catch {
+                }
+                if (document.getElementById('deliveryTrackOverlay')) {
+                    lpDeliverySetRemoteNoticeSeen(id, assignedAt);
+                    return;
+                }
+                lpDeliveryShowRemoteTrackNotice(job);
+            } catch {
+            } finally {
+                window.__lpDeliveryRemotePollBusy = false;
+            }
+        }
+
+        function lpDeliveryInitRemoteTrackNotice() {
+            try {
+                if (window.__lpDeliveryRemoteNoticeInit) return;
+                window.__lpDeliveryRemoteNoticeInit = 1;
+            } catch {
+            }
+            try { lpDeliveryPollRemoteTrackNotice(); } catch {}
+            try {
+                window.__lpDeliveryRemoteNoticeTimer = setInterval(() => {
+                    try { lpDeliveryPollRemoteTrackNotice(); } catch {}
+                }, 1200);
+            } catch {
+            }
         }
 
         function lpDeliveryDriverId() {
@@ -16070,24 +16428,22 @@
             try { lpDeliverySetButtonVisual(btnEl, resetText, false, ''); } catch {}
         }
 
-        function lpDeliveryRefreshPositionUI(btnEl) {
+        async function lpDeliveryRefreshPositionUI(btnEl) {
             try {
                 lpDeliverySetButtonVisual(btnEl, '🎯 GPS…', true, '');
             } catch {
             }
             try { showLocalToast('🎯 Demande de position…', 'info'); } catch {}
             try {
-                Promise.resolve(lpDeliveryRequestLivePosition({ rerender: true })).then((ok) => {
-                    return lpDeliveryHoldButtonResult(btnEl, ok ? '🎯 GPS OK' : '🎯 GPS refusé', '🎯 Ma position', ok ? 'success' : 'error', 1300);
-                }).catch(() => {
-                    return lpDeliveryHoldButtonResult(btnEl, '🎯 GPS refusé', '🎯 Ma position', 'error', 1300);
-                });
+                const ok = await lpDeliveryRequestLivePosition({ rerender: false });
+                await lpDeliveryHoldButtonResult(btnEl, ok ? '🎯 GPS OK' : '🎯 GPS refusé', '🎯 Ma position', ok ? 'success' : 'error', 1300);
             } catch {
-                try { lpDeliveryHoldButtonResult(btnEl, '🎯 GPS refusé', '🎯 Ma position', 'error', 1300); } catch {}
+                try { await lpDeliveryHoldButtonResult(btnEl, '🎯 GPS refusé', '🎯 Ma position', 'error', 1300); } catch {}
             }
+            try { lpDeliveryRenderDriverRequests(); } catch {}
         }
 
-        function lpDeliveryResetDemoUI(btnEl) {
+        async function lpDeliveryResetDemoUI(btnEl) {
             try {
                 lpDeliverySetButtonVisual(btnEl, '♻️ …', true, '');
             } catch {
@@ -16095,12 +16451,10 @@
             try { showLocalToast('♻️ Réinitialisation…', 'info'); } catch {}
             try { lpDeliveryResetDemoState(); } catch {}
             try {
-                Promise.resolve(lpDeliveryHoldButtonResult(btnEl, '♻️ OK', '♻️ Réinitialiser', 'success', 700)).finally(() => {
-                    try { lpDeliveryRenderDriverRequests(); } catch {}
-                });
+                await lpDeliveryHoldButtonResult(btnEl, '♻️ OK', '♻️ Réinitialiser', 'success', 700);
             } catch {
-                try { lpDeliveryRenderDriverRequests(); } catch {}
             }
+            try { lpDeliveryRenderDriverRequests(); } catch {}
         }
 
         function lpDeliveryBindGlobalActions() {
@@ -16166,6 +16520,7 @@
             if (!id) return;
             lpDeliveryWrite('mangoo_delivery_job:' + id, job);
             lpDeliveryEmit('job_updated', { id });
+            try { lpDeliveryPushJobRemote(job, 'job_updated'); } catch {}
         }
 
         function lpDeliveryEnsureDispatcher() {
@@ -16264,6 +16619,7 @@
             };
             lpDeliveryWrite('mangoo_delivery_job:' + id, job);
             lpDeliveryEmit('job_created', { id });
+            try { lpDeliveryPushJobRemote(job, 'job_created'); } catch {}
             return id;
         }
 
@@ -16315,6 +16671,7 @@
                 return false;
             }
             lpDeliveryEmit('job_updated', { id });
+            try { lpDeliveryPushJobRemote(job, 'job_accepted'); } catch {}
             try { if (navigator.vibrate) navigator.vibrate([80, 60, 80]); } catch {}
             lpDeliveryStartTracking(id);
             lpDeliveryRenderDriverRequests();
@@ -16474,14 +16831,11 @@
                     return;
                 }
                 if (action === 'gps-refresh') {
-                    try { showLocalToast('🎯 Demande de position…', 'info'); } catch {}
-                    lpDeliveryRequestLivePosition({ rerender: true });
+                    lpDeliveryRefreshPositionUI(target);
                     return;
                 }
                 if (action === 'reset-demo') {
-                    try { showLocalToast('♻️ Réinitialisation…', 'info'); } catch {}
-                    lpDeliveryResetDemoState();
-                    lpDeliveryRenderDriverRequests();
+                    lpDeliveryResetDemoUI(target);
                     return;
                 }
                 if (action === 'speak-phase') {
@@ -16950,15 +17304,22 @@
                         paddingBottomRight: isPhone ? [14, 154] : [18, 104]
                     });
 
-                    const updateRoute = (lat, lng, label) => {
+                    let routeLiveTrack = hasLiveOrigin ? { lat: originLat, lng: originLng, updatedAt: Date.now() } : null;
+                    let routeLastRebuildAt = 0;
+                    const updateRoute = (lat, lng, label, options) => {
                         try {
+                            const opts = options && typeof options === 'object' ? options : {};
+                            const shouldRebuild = opts.rebuild !== false;
                             const oLat = Number(lat), oLng = Number(lng);
                             if (!Number.isFinite(oLat) || !Number.isFinite(oLng)) return;
                             startMarker.setLatLng([oLat, oLng]);
                             lpDeliverySetRouteBundleLatLngs(routeBundle, [[oLat, oLng], dest]);
                             lpDeliveryFitMapToPoints(map, [[oLat, oLng], dest], isPhone, {
                                 paddingTopLeft: isPhone ? [14, 78] : [18, 60],
-                                paddingBottomRight: isPhone ? [14, 154] : [18, 104]
+                                paddingBottomRight: isPhone ? [14, 154] : [18, 104],
+                                focusPoints: [[oLat, oLng], dest],
+                                focusThresholdKm: 0.08,
+                                maxZoom: 19
                             });
                             const infoBox = document.querySelector('#deliveryRouteOverlay [data-route-live-label]');
                             if (infoBox && label) infoBox.textContent = String(label);
@@ -16967,10 +17328,15 @@
                                 const href = lpDeliveryMapsLink(oLat, oLng, Number(dest[0]), Number(dest[1]));
                                 if (href) btn.dataset.routeHref = href;
                             }
+                            if (!shouldRebuild) return;
+                            routeLastRebuildAt = Date.now();
                             lpDeliveryApplyRouteBundle(routeBundle, oLat, oLng, Number(dest[0]), Number(dest[1]), [[oLat, oLng], dest]).then((pts) => {
                                 lpDeliveryFitMapToPoints(map, pts, isPhone, {
                                     paddingTopLeft: isPhone ? [14, 78] : [18, 60],
-                                    paddingBottomRight: isPhone ? [14, 154] : [18, 104]
+                                    paddingBottomRight: isPhone ? [14, 154] : [18, 104],
+                                    focusPoints: [[oLat, oLng], dest],
+                                    focusThresholdKm: 0.08,
+                                    maxZoom: 19
                                 });
                             });
                         } catch {
@@ -16992,6 +17358,32 @@
                             }
                         }, () => {}, { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 });
                     }
+                    const refreshRouteLive = async () => {
+                        try {
+                            let next = lpDeliveryRead('mangoo_delivery_track:' + id, null);
+                            try {
+                                const remote = await lpDeliveryFetchTrackRemote(id);
+                                const remoteTs = Number(remote?.updatedAt || 0);
+                                const localTs = Number(next?.updatedAt || 0);
+                                if (remote && remoteTs >= localTs && lpDeliveryIsPlausibleMissionPosition(job, Number(remote.lat), Number(remote.lng))) {
+                                    next = remote;
+                                    try { lpDeliveryWrite('mangoo_delivery_track:' + id, remote); } catch {}
+                                }
+                            } catch {
+                            }
+                            if (!next || !lpDeliveryIsPlausibleMissionPosition(job, Number(next.lat), Number(next.lng))) return;
+                            const movedEnough = lpDeliveryHasMovedEnough(routeLiveTrack, next, 5);
+                            const shouldRebuild = movedEnough && (Date.now() - routeLastRebuildAt >= 2500);
+                            routeLiveTrack = { lat: Number(next.lat), lng: Number(next.lng), updatedAt: Number(next.updatedAt || Date.now()) };
+                            updateRoute(Number(next.lat), Number(next.lng), 'Position GPS livreur', { rebuild: shouldRebuild });
+                        } catch {
+                        }
+                    };
+                    refreshRouteLive();
+                    const routeTimer = setInterval(() => {
+                        if (!document.getElementById('deliveryRouteOverlay')) return clearInterval(routeTimer);
+                        refreshRouteLive();
+                    }, 900);
                 }
             } catch {
             }
@@ -17342,6 +17734,95 @@
             return best;
         }
 
+        function lpDeliveryHasMovedEnough(prevTrack, nextTrack, minMeters = 5) {
+            try {
+                const aLat = Number(prevTrack?.lat);
+                const aLng = Number(prevTrack?.lng);
+                const bLat = Number(nextTrack?.lat);
+                const bLng = Number(nextTrack?.lng);
+                if (!Number.isFinite(aLat) || !Number.isFinite(aLng) || !Number.isFinite(bLat) || !Number.isFinite(bLng)) return true;
+                if (typeof haversineKm !== 'function') return true;
+                const meters = Number(haversineKm([aLat, aLng], [bLat, bLng])) * 1000;
+                return Number.isFinite(meters) ? meters >= Number(minMeters || 5) : true;
+            } catch {
+                return true;
+            }
+        }
+
+        function lpDeliveryTargetDistanceMeters(job, track) {
+            try {
+                const j = job || null;
+                const tr = track || null;
+                if (!j || !tr) return Number.POSITIVE_INFINITY;
+                const phase = String(j?.phase || 'pickup').trim() || 'pickup';
+                let target = phase === 'dropoff' ? j?.dropoff : j?.pickup;
+                let targetLabel = phase === 'dropoff' ? 'client' : 'point de retrait';
+                try {
+                    const isAssignedDriver = String(j?.assignedDriverId || '').trim() === String(lpDeliveryDriverId() || '').trim();
+                    const viewerLat = Array.isArray(USER_POS) ? Number(USER_POS[0]) : NaN;
+                    const viewerLng = Array.isArray(USER_POS) ? Number(USER_POS[1]) : NaN;
+                    const viewerSource = String(USER_POS_META?.source || '').trim();
+                    const dropAddress = String(j?.dropoff?.address || '').trim().toLowerCase();
+                    const canUseViewer = !isAssignedDriver
+                        && Number.isFinite(viewerLat)
+                        && Number.isFinite(viewerLng)
+                        && viewerSource
+                        && viewerSource !== 'country-default'
+                        && (phase === 'dropoff' || dropAddress === 'destination');
+                    if (canUseViewer) {
+                        target = { lat: viewerLat, lng: viewerLng };
+                        targetLabel = 'vous';
+                    }
+                } catch {
+                }
+                const tLat = Number(target?.lat);
+                const tLng = Number(target?.lng);
+                const lat = Number(tr?.lat);
+                const lng = Number(tr?.lng);
+                if (!Number.isFinite(tLat) || !Number.isFinite(tLng) || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+                    return { meters: Number.POSITIVE_INFINITY, targetLabel };
+                }
+                if (typeof haversineKm !== 'function') return Number.POSITIVE_INFINITY;
+                const meters = Number(haversineKm([lat, lng], [tLat, tLng])) * 1000;
+                return {
+                    meters: Number.isFinite(meters) ? meters : Number.POSITIVE_INFINITY,
+                    targetLabel
+                };
+            } catch {
+                return { meters: Number.POSITIVE_INFINITY, targetLabel: 'point de retrait' };
+            }
+        }
+
+        function lpDeliveryMaybeAnnounceRemoteMilestone(job, track) {
+            try {
+                const id = String(job?.id || '').trim();
+                const assignedAt = Number(job?.assignedAt || 0);
+                if (!id || !Number.isFinite(assignedAt) || assignedAt <= 0) return;
+                const targetInfo = lpDeliveryTargetDistanceMeters(job, track);
+                const meters = Number(targetInfo?.meters);
+                if (!Number.isFinite(meters)) return;
+                const targetLabel = String(targetInfo?.targetLabel || 'point de retrait');
+                if (!window.__lpDeliveryRemoteMilestones) window.__lpDeliveryRemoteMilestones = {};
+                const store = window.__lpDeliveryRemoteMilestones;
+                const phase = String(job?.phase || 'pickup').trim() || 'pickup';
+                const keyBase = id + ':' + String(assignedAt) + ':' + phase + ':' + targetLabel;
+                const nearKey = keyBase + ':near';
+                const arrivedKey = keyBase + ':arrived';
+                if (meters <= 2 && !store[arrivedKey]) {
+                    store[arrivedKey] = 1;
+                    try { showLocalToast('📍 Livreur arrivé', 'success'); } catch {}
+                    try { lpSpeak(targetLabel === 'vous' ? 'Notification Mangoo. Le livreur est arrive chez vous.' : `Notification Mangoo. Le livreur est arrive au ${targetLabel}.`, { ...lpGetVoicePrefs(), rate: 1.0, pitch: 1.0 }); } catch {}
+                    return;
+                }
+                if (meters <= 5 && !store[nearKey]) {
+                    store[nearKey] = 1;
+                    try { showLocalToast('🛵 Livreur proche', 'info'); } catch {}
+                    try { lpSpeak(targetLabel === 'vous' ? 'Notification Mangoo. Le livreur est proche de vous.' : `Notification Mangoo. Le livreur est proche du ${targetLabel}.`, { ...lpGetVoicePrefs(), rate: 1.0, pitch: 1.0 }); } catch {}
+                }
+            } catch {
+            }
+        }
+
         function lpDeliveryIsPlausibleMissionPosition(job, lat, lng, maxKm = 80) {
             const d = lpDeliveryMissionDistanceKm(job, lat, lng);
             return Number.isFinite(d) && d <= Number(maxKm || 80);
@@ -17477,12 +17958,62 @@
             });
         }
 
+        async function lpDeliveryFetchTrackRemote(jobId) {
+            try {
+                const id = String(jobId || '').trim();
+                if (!id) return null;
+                const res = await fetch('/api/delivery-tracking/' + encodeURIComponent(id), {
+                    method: 'GET',
+                    cache: 'no-store'
+                });
+                if (!res.ok) return null;
+                const payload = await res.json().catch(() => null);
+                const tr = payload && payload.track ? payload.track : null;
+                const lat = Number(tr?.lat);
+                const lng = Number(tr?.lng);
+                const updatedAt = Number(tr?.updatedAt || 0);
+                if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+                return {
+                    lat,
+                    lng,
+                    updatedAt: Number.isFinite(updatedAt) && updatedAt > 0 ? updatedAt : Date.now(),
+                    accuracy: Number(tr?.accuracy)
+                };
+            } catch {
+                return null;
+            }
+        }
+
+        async function lpDeliveryPushTrackRemote(jobId, track) {
+            try {
+                const id = String(jobId || '').trim();
+                const tr = track || null;
+                if (!id || !tr) return;
+                await fetch('/api/delivery-tracking/' + encodeURIComponent(id), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        lat: Number(tr.lat),
+                        lng: Number(tr.lng),
+                        updatedAt: Number(tr.updatedAt || Date.now()),
+                        accuracy: Number(tr.accuracy),
+                        driverId: String(lpDeliveryDriverId() || '').trim(),
+                        phase: String(lpDeliveryGetJob(id)?.phase || '').trim(),
+                        source: 'device'
+                    })
+                }).catch(() => null);
+            } catch {
+            }
+        }
+
         function lpDeliveryStopTracking() {
             try {
                 if (window.__lpDeliveryWatchId) navigator.geolocation.clearWatch(window.__lpDeliveryWatchId);
             } catch {
             }
             window.__lpDeliveryWatchId = null;
+            try { if (window.__lpDeliveryTrackPollTimer) clearInterval(window.__lpDeliveryTrackPollTimer); } catch {}
+            window.__lpDeliveryTrackPollTimer = null;
             try { if (window.__lpDeliverySimTimer) clearInterval(window.__lpDeliverySimTimer); } catch {}
             window.__lpDeliverySimTimer = null;
             window.__lpDeliveryTrackingJobId = '';
@@ -17502,6 +18033,7 @@
             } catch {
             }
             lpDeliveryEmit('track_update', { id });
+            try { lpDeliveryPushTrackRemote(id, tr); } catch {}
         }
 
         function lpDeliveryStartTracking(jobId) {
@@ -17531,8 +18063,30 @@
                         },
                         () => {
                         },
-                        { enableHighAccuracy: false, maximumAge: 8000, timeout: 15000 }
+                        { enableHighAccuracy: true, maximumAge: 0, timeout: 12000 }
                     );
+                    try {
+                        window.__lpDeliveryTrackPollTimer = setInterval(() => {
+                            try {
+                                if (!(navigator.geolocation && typeof navigator.geolocation.getCurrentPosition === 'function')) return;
+                                navigator.geolocation.getCurrentPosition(
+                                    (pos) => {
+                                        try {
+                                            const lat = Number(pos?.coords?.latitude);
+                                            const lng = Number(pos?.coords?.longitude);
+                                            if (Number.isFinite(lat) && Number.isFinite(lng)) lpDeliveryPublishTrack(id, lat, lng);
+                                        } catch {
+                                        }
+                                    },
+                                    () => {
+                                    },
+                                    { enableHighAccuracy: true, maximumAge: 0, timeout: 9000 }
+                                );
+                            } catch {
+                            }
+                        }, 1500);
+                    } catch {
+                    }
                     return;
                 }
             } catch {
@@ -17565,7 +18119,24 @@
             const id = String(jobId || '').trim();
             if (!id) return;
             const job = lpDeliveryGetJob(id);
-            if (!job) return;
+            if (!job) {
+                try { showLocalToast('Ouverture du suivi…', 'info'); } catch {}
+                try {
+                    lpDeliveryFetchJobRemote(id).then((remoteJob) => {
+                        try {
+                            if (!remoteJob) {
+                                try { showLocalToast('Suivi indisponible', 'error'); } catch {}
+                                return;
+                            }
+                            lpDeliveryWrite('mangoo_delivery_job:' + id, remoteJob);
+                            lpOpenDeliveryTracking(id);
+                        } catch {
+                        }
+                    });
+                } catch {
+                }
+                return;
+            }
             const phase = String(job?.phase || (String(job?.status || '') === 'done' ? 'delivered' : 'pickup')).trim() || 'pickup';
             const meta = lpDeliveryPhaseMeta(phase);
             const isPhone = (() => {
@@ -17662,7 +18233,13 @@
                 if (shareBtn && shareBtn.dataset.deliveryBound !== '1') {
                     const onShare = (evt) => {
                         try { evt.preventDefault(); evt.stopPropagation(); } catch {}
-                        try { lpShareUrl(shareUrl, 'Suivi livraison'); } catch {}
+                        try {
+                            lpOpenShareSheet(
+                                shareUrl,
+                                'Partager le suivi',
+                                'Copiez ce même lien puis ouvrez-le sur le PC vendeur et sur l’iPhone client.'
+                            );
+                        } catch {}
                     };
                     shareBtn.addEventListener('click', onShare, true);
                     shareBtn.addEventListener('pointerup', onShare, true);
@@ -17677,7 +18254,7 @@
                 const mapEl = document.getElementById('deliveryTrackMap');
                 const map = L.map(mapEl, { zoomControl: false, attributionControl: false, zoomSnap: 0.25, zoomDelta: 0.5 });
                 const center = [Number(job.pickup.lat), Number(job.pickup.lng)];
-                map.setView(center, 14);
+                map.setView(center, 16);
                 try { setTimeout(() => map.invalidateSize(), 80); } catch {}
                 lpDeliveryAddBaseTileLayer(map);
                 const pickup = [Number(job.pickup.lat), Number(job.pickup.lng)];
@@ -17717,11 +18294,14 @@
                     paddingBottomRight: isPhone ? [14, 138] : [18, 102]
                 });
                 let driverMarker = null;
+                let liveRouteTrack = initialTrack ? { lat: Number(initialTrack.lat), lng: Number(initialTrack.lng), updatedAt: Number(initialTrack.updatedAt || Date.now()) } : null;
+                let liveRouteLastRebuildAt = 0;
                 if (initialTrack) {
                     driverMarker = L.marker([Number(initialTrack.lat), Number(initialTrack.lng)], {
                         icon: lpDeliveryDriverMarkerIcon(initialTrack),
                         zIndexOffset: 1600
                     }).addTo(map).bindPopup('🛵 Livreur Mangoo Express');
+                    liveRouteLastRebuildAt = Date.now();
                     lpDeliveryApplyRouteBundle(liveLine, Number(initialTrack.lat), Number(initialTrack.lng), Number(targetPoint[0]), Number(targetPoint[1]), [[Number(initialTrack.lat), Number(initialTrack.lng)], targetPoint]).then((pts) => {
                         lpDeliveryFitMapToPoints(map, [pickup, drop].concat(Array.isArray(pts) ? pts : []), isPhone, {
                             paddingTopLeft: isPhone ? [14, 96] : [18, 68],
@@ -17729,6 +18309,7 @@
                         });
                     });
                 } else {
+                    liveRouteLastRebuildAt = Date.now();
                     lpDeliveryApplyRouteBundle(liveLine, Number(pickup[0]), Number(pickup[1]), Number(targetPoint[0]), Number(targetPoint[1]), [pickup, targetPoint]).then((pts) => {
                         lpDeliveryFitMapToPoints(map, [pickup, drop].concat(Array.isArray(pts) ? pts : []), isPhone, {
                             paddingTopLeft: isPhone ? [14, 96] : [18, 68],
@@ -17736,9 +18317,19 @@
                         });
                     });
                 }
-                const refresh = () => {
+                const refresh = async () => {
                     try {
-                        const next = lpDeliveryRead('mangoo_delivery_track:' + id, null);
+                        let next = lpDeliveryRead('mangoo_delivery_track:' + id, null);
+                        try {
+                            const remote = await lpDeliveryFetchTrackRemote(id);
+                            const remoteTs = Number(remote?.updatedAt || 0);
+                            const localTs = Number(next?.updatedAt || 0);
+                            if (remote && remoteTs >= localTs && lpDeliveryIsPlausibleMissionPosition(job, Number(remote.lat), Number(remote.lng))) {
+                                next = remote;
+                                try { lpDeliveryWrite('mangoo_delivery_track:' + id, remote); } catch {}
+                            }
+                        } catch {
+                        }
                         const live = lpDeliveryLiveSummary(job, phase, next || initialTrack || null);
                         const statusEl = document.getElementById('lpDeliveryTrackLiveStatus');
                         const detailEl = document.getElementById('lpDeliveryTrackLiveDetail');
@@ -17761,14 +18352,29 @@
                             missionLine.setLatLngs([pickup, drop]);
                         } catch {
                         }
-                        lpDeliveryApplyRouteBundle(liveLine, lat, lng, Number(targetPoint[0]), Number(targetPoint[1]), [[lat, lng], targetPoint]).then((pts) => {
-                            lpDeliveryFitMapToPoints(map, [pickup, drop, [lat, lng]].concat(Array.isArray(pts) ? pts : []), isPhone, {
-                                paddingTopLeft: isPhone ? [14, 96] : [18, 68],
-                                paddingBottomRight: isPhone ? [14, 138] : [18, 102],
-                                focusPoints: [[lat, lng], targetPoint],
-                                focusThresholdKm: 1.25
-                            });
+                        const movedEnough = lpDeliveryHasMovedEnough(liveRouteTrack, next, 5);
+                        lpDeliveryFitMapToPoints(map, [pickup, drop, [lat, lng]], isPhone, {
+                            paddingTopLeft: isPhone ? [14, 96] : [18, 68],
+                            paddingBottomRight: isPhone ? [14, 138] : [18, 102],
+                            focusPoints: [[lat, lng], targetPoint],
+                            focusThresholdKm: 0.08,
+                            maxZoom: 19
                         });
+                        if (movedEnough && (Date.now() - liveRouteLastRebuildAt >= 2500)) {
+                            liveRouteTrack = { lat, lng, updatedAt: Number(next.updatedAt || Date.now()) };
+                            liveRouteLastRebuildAt = Date.now();
+                            lpDeliveryApplyRouteBundle(liveLine, lat, lng, Number(targetPoint[0]), Number(targetPoint[1]), [[lat, lng], targetPoint]).then((pts) => {
+                                lpDeliveryFitMapToPoints(map, [pickup, drop, [lat, lng]].concat(Array.isArray(pts) ? pts : []), isPhone, {
+                                    paddingTopLeft: isPhone ? [14, 96] : [18, 68],
+                                    paddingBottomRight: isPhone ? [14, 138] : [18, 102],
+                                    focusPoints: [[lat, lng], targetPoint],
+                                    focusThresholdKm: 0.08,
+                                    maxZoom: 19
+                                });
+                            });
+                        } else if (movedEnough) {
+                            liveRouteTrack = { lat, lng, updatedAt: Number(next.updatedAt || Date.now()) };
+                        }
                     } catch {
                     }
                 };
@@ -17777,7 +18383,7 @@
                 const timer = setInterval(() => {
                     if (!document.getElementById('deliveryTrackOverlay')) return clearInterval(timer);
                     refresh();
-                }, 1200);
+                }, 700);
             } catch {
             }
         }
@@ -18212,6 +18818,12 @@
                     try { lpOpenDeliveryTracking(trackId); } catch {}
                 }, 700);
             }
+        } catch {
+        }
+        try {
+            setTimeout(() => {
+                try { lpDeliveryInitRemoteTrackNotice(); } catch {}
+            }, 1200);
         } catch {
         }
 

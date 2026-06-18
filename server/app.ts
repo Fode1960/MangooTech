@@ -38,6 +38,7 @@ import testShopsRoutes from './routes/test-shops'
 import demoBillingRoutes from './routes/demo-billing'
 import userPackRoutes from './routes/user-pack'
 import geolocationRoutes from './routes/geolocation'
+import deliveryTrackingRoutes from './routes/delivery-tracking'
 import routingRoutes from './routes/routing'
 import ordersRoutes from './routes/orders'
 import boostsRoutes from './routes/boosts'
@@ -153,6 +154,7 @@ app.use('/api/user-pack', userPackRoutes)
  * Maps & Geolocation (propriétaire)
  */
 app.use('/api/geolocation', geolocationRoutes)
+app.use('/api/delivery-tracking', deliveryTrackingRoutes)
 app.use('/api/routing', routingRoutes)
 app.use('/api/orders', ordersRoutes)
 
