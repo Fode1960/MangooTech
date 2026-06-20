@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Copy, RefreshCw, Eye, EyeOff, QrCode } from 'lucide-react';
+import { Copy, RefreshCw, Eye, EyeOff, QrCode, Volume2 } from 'lucide-react';
+import { QRCodeCanvas } from 'qrcode.react';
+import { supabase } from '../config/supabase';
 
 const STORAGE_KEY = 'demo_shops';
 
@@ -22,12 +24,55 @@ const generatePassword = () => {
   return Math.random().toString(36).slice(-10);
 };
 
+const normalizePin = (value) => String(value || '').replace(/[^\d]/g, '').slice(0, 6);
+
+const speakFR = (text) => {
+  try {
+    if (!('speechSynthesis' in window)) return;
+    const content = String(text || '').trim();
+    if (!content) return;
+    const utterance = new SpeechSynthesisUtterance(content);
+    utterance.lang = 'fr-FR';
+    utterance.rate = 0.98;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  } catch {
+  }
+};
+
+const speakDigitsFR = (pin) => {
+  const clean = normalizePin(pin);
+  if (!clean) return;
+  speakFR(clean.split('').join(' '));
+};
+
+const fetchJson = async (url, init = {}, options = {}) => {
+  const timeoutMs = Number(options?.timeoutMs || 0);
+  if (!timeoutMs) {
+    const res = await fetch(url, init);
+    const json = await res.json().catch(() => null);
+    return { res, json };
+  }
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...init, signal: controller.signal });
+    const json = await res.json().catch(() => null);
+    return { res, json };
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+};
+
 const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerPassword }) => {
   const [authData, setAuthData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [copiedField, setCopiedField] = useState(null);
+  const [pin, setPin] = useState('');
+  const [pinBusy, setPinBusy] = useState(false);
+  const [pinError, setPinError] = useState('');
 
   const loadAuthData = useCallback(() => {
     try {
@@ -91,12 +136,95 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
     }
   }, [shopId, shopOwnerEmail, shopSlug]);
 
+  const getAuthHeaders = useCallback(async () => {
+    const host = (() => {
+      try {
+        return String(window.location.hostname || '').trim().toLowerCase();
+      } catch {
+        return '';
+      }
+    })();
+    const isDevHost = host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.');
+    if (isDevHost) return {};
+    const { data } = await supabase.auth.getSession();
+    const token = String(data?.session?.access_token || '');
+    if (!token) return null;
+    return { Authorization: `Bearer ${token}` };
+  }, []);
+
+  const ensurePin = useCallback((mode = 'ensure') => {
+    const run = async () => {
+      const slug = String(shopSlug || '').trim();
+      const ownerEmail = String(shopOwnerEmail || '').trim();
+      if (!slug) return;
+      setPinError('');
+      setPinBusy(true);
+      try {
+        const authHeaders = await getAuthHeaders();
+        if (authHeaders === null) {
+          setPinError('Connexion requise');
+          return;
+        }
+        const endpoint = mode === 'change'
+          ? '/api/connect-plus/stable/change'
+          : '/api/connect-plus/stable/ensure';
+        const { res, json } = await fetchJson(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(authHeaders || {}),
+          },
+          body: JSON.stringify({
+            shopSlug: slug,
+            ownerEmail,
+            pinLen: 6,
+          }),
+        }, { timeoutMs: 8000 });
+        if (res.ok && json?.success && json?.pin) {
+          setPin(String(json.pin));
+          return;
+        }
+        setPinError(String(json?.error || `HTTP ${res.status}`));
+      } catch {
+        setPinError('Erreur réseau / délai dépassé');
+      } finally {
+        setPinBusy(false);
+      }
+    };
+    void run();
+  }, [getAuthHeaders, shopOwnerEmail, shopSlug]);
+
+  const readPin = useCallback(() => {
+    const clean = normalizePin(pin);
+    if (!clean) return;
+    speakFR('Votre code est');
+    speakDigitsFR(clean);
+  }, [pin]);
+
+  const openPinKeypad = useCallback(() => {
+    try {
+      const clean = normalizePin(pin);
+      const target = clean ? `/connect-plus?pin=${encodeURIComponent(clean)}` : '/connect-plus';
+      window.open(target, '_blank', 'noopener,noreferrer');
+    } catch {
+    }
+  }, [pin]);
+
   // Charger les données au montage
   useEffect(() => {
     if (shopId) {
       loadAuthData();
     }
   }, [shopId, loadAuthData]);
+
+  useEffect(() => {
+    if (!shopSlug) {
+      setPin('');
+      setPinError('');
+      return;
+    }
+    ensurePin('ensure');
+  }, [ensurePin, shopSlug]);
 
   // Affichage du chargement
   if (loading) {
@@ -149,6 +277,11 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
           Paramètres d'accès - {shopName}
         </h2>
         <p className="text-gray-600">Informations de connexion pour le vendeur</p>
+      </div>
+
+      <div className="mb-6 rounded-lg border border-orange-200 bg-orange-50 p-4">
+        <h3 className="text-lg font-semibold text-gray-800 mb-2">3 façons d'ouvrir la boutique</h3>
+        <p className="text-sm text-gray-700">Le client peut ouvrir la boutique avec le lien, le QR code ou le PIN. Le vendeur continue de se connecter avec son login et son mot de passe.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -259,6 +392,65 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
               Ouvrir la boutique
             </a>
           </div>
+
+          <div className="bg-orange-50 rounded-lg p-4">
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">PIN de la boutique</h3>
+                <p className="text-sm text-gray-600">Acces rapide client sans compte</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => ensurePin('change')}
+                disabled={pinBusy || !shopSlug}
+                className="flex items-center px-3 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-60"
+              >
+                <RefreshCw size={16} className="mr-2" />
+                {pinBusy ? 'Chargement...' : 'Changer le PIN'}
+              </button>
+            </div>
+
+            <div className="mb-4 rounded-lg border border-orange-200 bg-white px-4 py-5">
+              <div className="text-sm font-medium text-gray-700 mb-2">Code PIN</div>
+              <div className="text-4xl font-black tracking-widest text-gray-900">{normalizePin(pin) || '------'}</div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => copyToClipboard(normalizePin(pin), 'pin')}
+                disabled={!normalizePin(pin)}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
+              >
+                <Copy size={16} className="mr-2" />
+                Copier le PIN
+              </button>
+              <button
+                type="button"
+                onClick={readPin}
+                disabled={!normalizePin(pin)}
+                className="flex items-center px-4 py-2 bg-white text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-60"
+              >
+                <Volume2 size={16} className="mr-2" />
+                Lire le PIN
+              </button>
+              <button
+                type="button"
+                onClick={openPinKeypad}
+                disabled={!normalizePin(pin)}
+                className="px-4 py-2 bg-white text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-60"
+              >
+                Ouvrir le clavier PIN
+              </button>
+            </div>
+
+            {copiedField === 'pin' && (
+              <p className="text-sm text-green-600 mt-2">Copie!</p>
+            )}
+            {pinError && (
+              <p className="text-sm text-red-600 mt-2">{pinError}</p>
+            )}
+          </div>
         </div>
 
         {/* QR Code */}
@@ -268,7 +460,9 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
             <div className="flex justify-center mb-4">
               <div className="bg-white p-4 rounded-lg shadow-md border-2 border-gray-200">
                 <div className="text-center">
-                  <QrCode size={120} className="mx-auto mb-2 text-gray-600" />
+                  <div className="flex justify-center mb-2">
+                    <QRCodeCanvas value={shopUrl} size={180} includeMargin />
+                  </div>
                   <p className="text-sm text-gray-600 mb-2">QR Code</p>
                   <div className="bg-gray-100 p-3 rounded border">
                     <code className="text-xs text-gray-800 break-all">{shopUrl}</code>
@@ -343,11 +537,11 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
               </li>
               <li className="flex items-start">
                 <span className="bg-green-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mr-3 mt-0.5">2</span>
-                <span>Vous pouvez scanner le QR code pour accéder rapidement à votre boutique</span>
+                <span>Le client peut ouvrir la boutique avec le lien, le QR code ou le PIN ci-dessus</span>
               </li>
               <li className="flex items-start">
                 <span className="bg-green-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mr-3 mt-0.5">3</span>
-                <span>Partagez le lien URL avec vos clients</span>
+                <span>Partagez le lien URL ou lisez le PIN pour les clients non-lettrés</span>
               </li>
               <li className="flex items-start">
                 <span className="bg-green-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mr-3 mt-0.5">4</span>

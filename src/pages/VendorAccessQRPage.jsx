@@ -2,12 +2,28 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import VendorAccessQR from '../components/VendorAccessQR';
 import { useTheme } from '../hooks/useTheme';
 
+const generatePassword = () => Math.random().toString(36).slice(-10);
+const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
+const normalizeSearchText = (value) => String(value || '')
+  .toLowerCase()
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .trim();
+const buildFallbackOwnerEmail = (shop) => {
+  const existing = normalizeEmail(shop?.ownerEmail || shop?.owner_email || shop?.email);
+  if (existing) return existing;
+  const slug = String(shop?.slug || '').trim().toLowerCase();
+  if (!slug) return '';
+  return `${slug}@boutique.mangoo.local`;
+};
+
 const VendorAccessQRPage = () => {
   const { isDark } = useTheme();
   const [shops, setShops] = useState([]);
   const [selectedShop, setSelectedShop] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const loadShops = useCallback(() => {
     try {
@@ -16,13 +32,37 @@ const VendorAccessQRPage = () => {
       const raw = localStorage.getItem('demo_shops');
       const parsed = raw ? JSON.parse(raw) : [];
       const list = Array.isArray(parsed) ? parsed : [];
-      const normalized = list
+      const listWithSlug = list.filter((s) => s?.slug);
+      const enriched = listWithSlug
+        .map((s) => {
+          const ownerEmail = buildFallbackOwnerEmail(s);
+          const ownerPassword = String(s?.ownerPassword || s?.owner_password || '').trim() || generatePassword();
+          return {
+            ...s,
+            id: s.id || s.slug,
+            ownerEmail,
+            ownerPassword,
+            approvalStatus: s.approvalStatus || 'pending'
+          };
+        });
+      const changed = enriched.some((s, idx) => {
+        const current = listWithSlug[idx] || {};
+        const currentEmail = normalizeEmail(current?.ownerEmail || current?.owner_email || current?.email);
+        const currentPassword = String(current?.ownerPassword || current?.owner_password || '').trim();
+        return currentEmail !== String(s.ownerEmail || '').trim().toLowerCase()
+          || currentPassword !== String(s.ownerPassword || '').trim()
+          || String(current?.approvalStatus || 'pending') !== String(s.approvalStatus || 'pending');
+      });
+      if (changed) {
+        const bySlug = new Map(enriched.map((s) => [String(s.slug), s]));
+        const rewritten = list.map((s) => {
+          const slug = String(s?.slug || '').trim();
+          return bySlug.get(slug) || s;
+        });
+        localStorage.setItem('demo_shops', JSON.stringify(rewritten));
+      }
+      const normalized = enriched
         .filter((s) => s?.slug)
-        .map((s) => ({
-          ...s,
-          id: s.id || s.slug,
-          approvalStatus: s.approvalStatus || 'pending'
-        }))
         .sort((a, b) => String(a?.name || '').localeCompare(String(b?.name || ''), 'fr'));
 
       setShops(normalized);
@@ -61,6 +101,14 @@ const VendorAccessQRPage = () => {
 
   const approvedCount = useMemo(() => shops.filter((s) => String(s?.approvalStatus || 'pending') === 'approved').length, [shops]);
   const pendingCount = useMemo(() => shops.filter((s) => String(s?.approvalStatus || 'pending') === 'pending').length, [shops]);
+  const filteredShops = useMemo(() => {
+    const q = normalizeSearchText(searchTerm);
+    if (!q) return shops;
+    return shops.filter((shop) => {
+      const hay = normalizeSearchText(`${shop?.name || ''} ${shop?.slug || ''} ${shop?.ownerEmail || ''}`);
+      return hay.includes(q);
+    });
+  }, [searchTerm, shops]);
 
   if (loading) {
     return (
@@ -106,7 +154,7 @@ const VendorAccessQRPage = () => {
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
           <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Accès & QR des Vendeurs</h1>
-          <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mt-2`}>Générez des identifiants et un QR pour l’accès vendeur (mode démo local).</p>
+          <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mt-2`}>Générez les identifiants, le lien, le QR et le PIN pour l’accès vendeur.</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <div className={`${isDark ? 'bg-gray-800 border-gray-700 text-gray-200' : 'bg-white border-gray-200 text-gray-800'} border rounded-lg px-3 py-2 text-sm font-semibold`}>Total: {shops.length}</div>
             <div className={`${isDark ? 'bg-emerald-900/30 border-emerald-700 text-emerald-200' : 'bg-emerald-50 border-emerald-200 text-emerald-800'} border rounded-lg px-3 py-2 text-sm font-semibold`}>Approuvées: {approvedCount}</div>
@@ -119,8 +167,14 @@ const VendorAccessQRPage = () => {
           <div className="lg:col-span-1">
             <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg shadow p-4`}>
               <h2 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-800'} mb-4`}>Sélectionner une boutique</h2>
+              <input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Rechercher une boutique"
+                className={`w-full mb-4 px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'}`}
+              />
               <div className="space-y-2">
-                {shops.map((shop) => (
+                {filteredShops.map((shop) => (
                   <button
                     key={shop.id}
                     onClick={() => {
@@ -139,6 +193,11 @@ const VendorAccessQRPage = () => {
                     )}
                   </button>
                 ))}
+                {filteredShops.length === 0 && (
+                  <div className={`px-3 py-6 text-sm text-center rounded-lg border ${isDark ? 'bg-gray-900 border-gray-700 text-gray-400' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
+                    Aucune boutique ne correspond a la recherche.
+                  </div>
+                )}
               </div>
             </div>
           </div>

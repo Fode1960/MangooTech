@@ -17,6 +17,22 @@ type Provider = {
   status: ProviderStatus
   is_visible: boolean
   created_at: string
+  source?: string | null
+}
+
+const normalizeSearchText = (value: any) => {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+}
+
+const matchesProviderSearch = (provider: Provider, term: string) => {
+  const q = normalizeSearchText(term)
+  if (!q) return true
+  const hay = normalizeSearchText(`${provider.name} ${provider.slug} ${provider.email || ''} ${provider.phone || ''} ${provider.city || ''} ${provider.country || ''}`)
+  return hay.includes(q)
 }
 
 const statusToLabel = (s: ProviderStatus) => {
@@ -217,7 +233,7 @@ export default function AdminProviders() {
 
     const list = mergeVendorsById([...(Array.isArray(legacy) ? legacy : []), ...(Array.isArray(custom) ? custom : [])])
 
-    const term = search.trim().toLowerCase()
+    const term = search
     const isLocalPlusProvider = (v: any) => {
       const kind = String(v?.kind || '').trim().toLowerCase()
       if (kind === 'service') return true
@@ -261,7 +277,8 @@ export default function AdminProviders() {
           country,
           status: normalizedStatus,
           is_visible,
-          created_at: String(v?.createdAt || v?.updatedAt || new Date().toISOString())
+          created_at: String(v?.createdAt || v?.updatedAt || new Date().toISOString()),
+          source: 'localplus'
         } as Provider
       })
 
@@ -310,9 +327,7 @@ export default function AdminProviders() {
 
     const filtered = withSeed.filter((p: Provider) => {
       if (status !== 'all' && p.status !== status) return false
-      if (!term) return true
-      const hay = `${p.name} ${p.slug} ${p.email || ''}`.toLowerCase()
-      return hay.includes(term)
+      return matchesProviderSearch(p, term)
     })
 
     setProviders(filtered)
@@ -334,16 +349,14 @@ export default function AdminProviders() {
             .order('created_at', { ascending: false })
 
           if (status !== 'all') q = q.eq('status', status)
-          if (term) {
-            const safe = term.replace(/,/g, ' ')
-            q = q.or(`name.ilike.%${safe}%,slug.ilike.%${safe}%,email.ilike.%${safe}%`)
-          }
 
           const { data, error: supaError } = await q
           if (seq !== loadSeqRef.current) return
           if (supaError) throw supaError
           if (Array.isArray(data)) {
-            const rows = (data as any[]).filter((p) => Boolean((p as any)?.id))
+            const rows = (data as any[])
+              .filter((p) => Boolean((p as any)?.id))
+              .filter((p: any) => matchesProviderSearch(p as Provider, term))
             if (rows.length > 0) {
               setProviders(rows as any)
               setIsLocalMode(false)
@@ -351,14 +364,14 @@ export default function AdminProviders() {
               return
             }
             loadProvidersFromLocalPlus()
-            setNotice('Aucun prestataire Supabase (ou droits insuffisants) : affichage en mode local (démo)')
+            setNotice('Serveur indisponible pour le moment. Affichage des donnees disponibles.')
             setIsLocalMode(true)
             return
           }
         } catch {
           if (seq !== loadSeqRef.current) return
           loadProvidersFromLocalPlus()
-          setNotice('Lecture Supabase indisponible : affichage en mode local (démo)')
+          setNotice('Serveur indisponible pour le moment. Affichage des donnees disponibles.')
           setIsLocalMode(true)
           return
         }
@@ -367,7 +380,7 @@ export default function AdminProviders() {
       const token = await getAdminToken()
       if (!token) {
         loadProvidersFromLocalPlus()
-        setNotice('Mode Local : données locales (sans backend)')
+        setNotice('Serveur indisponible pour le moment. Affichage des donnees disponibles.')
         setIsLocalMode(true)
         return
       }
@@ -379,7 +392,6 @@ export default function AdminProviders() {
 
       const qs = new URLSearchParams()
       if (status !== 'all') qs.set('status', status)
-      if (search.trim()) qs.set('search', search.trim())
       const endpoint = `/api/admin/providers/providers${qs.toString() ? `?${qs.toString()}` : ''}`
       void (async () => {
         try {
@@ -404,23 +416,25 @@ export default function AdminProviders() {
             Array.isArray((res.json as any).data)
 
           if (isValidApiResponse) {
-            const data = ((res.json as any).data as Provider[]).filter((p) => Boolean(p?.id))
+            const data = ((res.json as any).data as Provider[])
+              .filter((p) => Boolean(p?.id))
+              .filter((p) => matchesProviderSearch(p, search))
             if (data.length > 0) {
               setProviders(data)
               setIsLocalMode(false)
               setNotice(null)
               return
             }
-            setNotice('Backend vide : conservation des données locales')
+            setNotice('Aucune donnee distante disponible pour le moment. Affichage des donnees disponibles.')
             setIsLocalMode(true)
             return
           }
 
-          setNotice('Backend indisponible : affichage en mode local (démo)')
+          setNotice('Serveur indisponible pour le moment. Affichage des donnees disponibles.')
           setIsLocalMode(true)
         } catch {
           if (seq !== loadSeqRef.current) return
-          setNotice('Backend indisponible : affichage en mode local (démo)')
+          setNotice('Serveur indisponible pour le moment. Affichage des donnees disponibles.')
           setIsLocalMode(true)
         }
       })()
@@ -428,7 +442,7 @@ export default function AdminProviders() {
       try {
         loadProvidersFromLocalPlus()
         setIsLocalMode(true)
-        setNotice('Backend indisponible : affichage en mode local (démo)')
+        setNotice('Serveur indisponible pour le moment. Affichage des donnees disponibles.')
         setError(null)
       } catch {
         const msg = e?.message || 'Erreur lors du chargement'
@@ -595,7 +609,12 @@ export default function AdminProviders() {
             <div className="flex flex-col gap-0.5">
               <div className="whitespace-nowrap">· En attente: {stats.pending}</div>
               <div className="whitespace-nowrap">· Approuvés: {stats.approved}</div>
+              <div className="whitespace-nowrap">· Rejetés: {stats.rejected}</div>
+              <div className="whitespace-nowrap">· Suspendus: {stats.suspended}</div>
             </div>
+          </div>
+          <div className="mt-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-black bg-fuchsia-50 text-fuchsia-900 dark:bg-fuchsia-900/30 dark:text-fuchsia-200">
+            Secteur informel
           </div>
         </div>
 
@@ -603,20 +622,9 @@ export default function AdminProviders() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher (nom, slug, email)…"
+            placeholder="Rechercher (nom, slug, email, telephone...)"
             className="w-full sm:w-72 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           />
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as any)}
-            className="w-full sm:w-48 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-          >
-            <option value="all">Tous</option>
-            <option value="pending">En attente</option>
-            <option value="approved">Approuvés</option>
-            <option value="rejected">Rejetés</option>
-            <option value="suspended">Suspendus</option>
-          </select>
           <button
             type="button"
             onClick={loadProviders}
@@ -638,10 +646,48 @@ export default function AdminProviders() {
               disabled={loading || isProcessing}
               className="px-4 py-2 rounded-lg bg-gray-900 hover:bg-gray-800 disabled:opacity-60 text-white font-bold"
             >
-              Réinitialiser démo
+              Réinitialiser les donnees locales
             </button>
           )}
         </div>
+      </div>
+
+      <div className="flex gap-2 flex-wrap">
+        <button
+          type="button"
+          onClick={() => setStatus('all')}
+          className={`px-3 py-2 rounded-lg text-sm font-semibold border ${status === 'all' ? 'bg-white text-gray-900 border-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-700' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-800'}`}
+        >
+          Tous
+        </button>
+        <button
+          type="button"
+          onClick={() => setStatus('pending')}
+          className={`px-3 py-2 rounded-lg text-sm font-semibold border ${status === 'pending' ? 'bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-900/30 dark:text-amber-100 dark:border-amber-700' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-800'}`}
+        >
+          En attente
+        </button>
+        <button
+          type="button"
+          onClick={() => setStatus('approved')}
+          className={`px-3 py-2 rounded-lg text-sm font-semibold border ${status === 'approved' ? 'bg-emerald-50 text-emerald-900 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-100 dark:border-emerald-700' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-800'}`}
+        >
+          Approuvés
+        </button>
+        <button
+          type="button"
+          onClick={() => setStatus('rejected')}
+          className={`px-3 py-2 rounded-lg text-sm font-semibold border ${status === 'rejected' ? 'bg-rose-50 text-rose-900 border-rose-200 dark:bg-rose-900/30 dark:text-rose-100 dark:border-rose-700' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-800'}`}
+        >
+          Rejetés
+        </button>
+        <button
+          type="button"
+          onClick={() => setStatus('suspended')}
+          className={`px-3 py-2 rounded-lg text-sm font-semibold border ${status === 'suspended' ? 'bg-gray-100 text-gray-900 border-gray-300 dark:bg-gray-900/40 dark:text-gray-100 dark:border-gray-700' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-800'}`}
+        >
+          Suspendus
+        </button>
       </div>
 
       {error && (
@@ -662,6 +708,7 @@ export default function AdminProviders() {
             <tr>
               <th className="px-4 py-3 text-left">Prestataire</th>
               <th className="px-4 py-3 text-left">Contact</th>
+              <th className="px-4 py-3 text-left">Secteur</th>
               <th className="px-4 py-3 text-left">Statut</th>
               <th className="px-4 py-3 text-left">Visible</th>
               <th className="px-4 py-3 text-right">Actions</th>
@@ -670,11 +717,11 @@ export default function AdminProviders() {
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
             {loading ? (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-gray-600 dark:text-gray-300">Chargement…</td>
+                <td colSpan={6} className="px-4 py-6 text-center text-gray-600 dark:text-gray-300">Chargement…</td>
               </tr>
             ) : providers.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-gray-600 dark:text-gray-300">Aucun prestataire</td>
+                <td colSpan={6} className="px-4 py-6 text-center text-gray-600 dark:text-gray-300">Aucun prestataire</td>
               </tr>
             ) : (
               providers.map((p) => (
@@ -686,6 +733,11 @@ export default function AdminProviders() {
                   <td className="px-4 py-3">
                     <div className="text-xs">{p.email || '—'}</div>
                     <div className="text-xs">{p.phone || '—'}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-black bg-fuchsia-50 text-fuchsia-900 dark:bg-fuchsia-900/30 dark:text-fuchsia-200">
+                      Informel
+                    </span>
                   </td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-black ${statusToBadge(p.status)}`}>

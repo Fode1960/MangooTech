@@ -1213,10 +1213,10 @@ const ShopPage = () => {
         </div>
         <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
         
-        {/* Éléments décoratifs */}
-        <div className="absolute top-20 left-10 w-20 h-20 bg-white/10 rounded-full animate-float pointer-events-none"></div>
-        <div className="absolute top-40 right-20 w-16 h-16 bg-white/10 rounded-full animate-float delay-200 pointer-events-none"></div>
-        <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-white/10 rounded-full animate-float delay-400 pointer-events-none"></div>
+        {/* Éléments décoratifs statiques pour garder une page stable */}
+        <div className="absolute top-20 left-10 w-20 h-20 bg-white/10 rounded-full pointer-events-none"></div>
+        <div className="absolute top-40 right-20 w-16 h-16 bg-white/10 rounded-full pointer-events-none"></div>
+        <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-white/10 rounded-full pointer-events-none"></div>
         
         <div className="container relative z-10">
           <div className="max-w-4xl mx-auto text-center text-white">

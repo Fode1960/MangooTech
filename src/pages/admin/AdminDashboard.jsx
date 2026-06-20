@@ -154,9 +154,9 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {/* Liens vers les tests admin */}
+        {/* Outils systeme admin */}
         <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '2px solid #dee2e6' }}>
-          <h3 style={{ color: '#1a5f3f', marginBottom: '1rem' }}>Tests et Diagnostics</h3>
+          <h3 style={{ color: '#1a5f3f', marginBottom: '1rem' }}>Outils systeme</h3>
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
             <Link
               to="/admin/test-system"
@@ -169,7 +169,7 @@ const AdminDashboard = () => {
                 display: 'inline-block'
               }}
             >
-              Test Système
+              Systeme
             </Link>
             <Link
               to="/admin/test-super-admin"
@@ -182,7 +182,7 @@ const AdminDashboard = () => {
                 display: 'inline-block'
               }}
             >
-              Test Super Admin
+              Super Admin
             </Link>
             <Link
               to="/admin/test-service-fix"
@@ -195,7 +195,7 @@ const AdminDashboard = () => {
                 display: 'inline-block'
               }}
             >
-              Test Service Fix
+              Service
             </Link>
           </div>
         </div>

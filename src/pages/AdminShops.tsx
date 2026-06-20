@@ -5,6 +5,7 @@ import { supabase, supabaseConfig } from '../config/supabase';
 import { toast } from 'sonner';
 
 type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'suspended';
+type SectorFilter = 'all' | 'formal' | 'informal';
 
 type DemoShop = {
   id?: string;
@@ -108,6 +109,14 @@ const slugify = (value: any) => {
     .slice(0, 64);
 };
 
+const normalizeSearchText = (value: any) => {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+};
+
 const ensureUniqueSlug = (base: string, existing: Set<string>, suffix: string) => {
   let slug = base;
   if (!slug) slug = `boutique-${suffix}`;
@@ -122,6 +131,14 @@ const writeDemoShops = (shops: DemoShop[]) => {
   window.dispatchEvent(new Event('demo-shops-updated'));
 };
 
+const sameShopsSnapshot = (a: DemoShop[], b: DemoShop[]) => {
+  try {
+    return JSON.stringify(a || []) === JSON.stringify(b || []);
+  } catch {
+    return false;
+  }
+};
+
 const normalizeStatus = (shop: DemoShop): DemoShop => {
   const status = (shop.approvalStatus || 'pending') as ApprovalStatus;
   return { ...shop, approvalStatus: status };
@@ -134,10 +151,21 @@ const statusBadge = (status: ApprovalStatus, isDark: boolean) => {
   return isDark ? 'bg-amber-900/30 text-amber-200 border border-amber-700' : 'bg-amber-50 text-amber-800 border border-amber-200';
 };
 
+const resolveSector = (shop: DemoShop): Exclude<SectorFilter, 'all'> => {
+  const source = String(shop?.source || '').trim().toLowerCase();
+  return source === 'localplus' ? 'informal' : 'formal';
+};
+
+const sectorBadge = (sector: Exclude<SectorFilter, 'all'>, isDark: boolean) => {
+  if (sector === 'informal') return isDark ? 'bg-fuchsia-900/30 text-fuchsia-200 border border-fuchsia-700' : 'bg-fuchsia-50 text-fuchsia-800 border border-fuchsia-200';
+  return isDark ? 'bg-sky-900/30 text-sky-200 border border-sky-700' : 'bg-sky-50 text-sky-800 border border-sky-200';
+};
+
 export default function AdminShops() {
   const { isDark } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | ApprovalStatus>('all');
+  const [filterSector, setFilterSector] = useState<SectorFilter>('all');
   const [shops, setShops] = useState<DemoShop[]>([]);
 
   const canUseSupabase = useMemo(() => Boolean(supabaseConfig?.hasUrl && supabaseConfig?.hasAnonKey), [])
@@ -154,6 +182,11 @@ export default function AdminShops() {
     billingAddress: '',
     billingPhone: '',
   });
+
+  const applySectorFilter = useCallback((sector: SectorFilter) => {
+    setFilterSector(sector);
+    setFilterStatus('all');
+  }, []);
 
   const refresh = useCallback(() => {
     void (async () => {
@@ -343,9 +376,14 @@ export default function AdminShops() {
             const slug = String(s?.slug || '').trim()
             if (!slug) return
             const statusRaw = String(s?.status || 'pending').trim().toLowerCase()
-            const approvalStatus: ApprovalStatus = (statusRaw === 'approved' || statusRaw === 'rejected') ? (statusRaw as any) : 'pending'
+            const prev = bySlug.get(slug) || {}
+            const previousStatus = normalizeApprovalStatus((prev as any)?.approvalStatus)
+            const approvalStatus: ApprovalStatus =
+              statusRaw === 'approved' || statusRaw === 'rejected' || statusRaw === 'suspended'
+                ? (statusRaw as any)
+                : (previousStatus === 'suspended' ? 'suspended' : 'pending')
             const nextShop: DemoShop = {
-              ...(bySlug.get(slug) || {}),
+              ...prev,
               id: String(s?.id || slug),
               name: String(s?.name || 'Boutique'),
               slug,
@@ -382,7 +420,7 @@ export default function AdminShops() {
       didMerge = true
     }
 
-    if (didMigrate || didMerge) writeDemoShops(merged);
+    if ((didMigrate || didMerge) && !sameShopsSnapshot(merged, current)) writeDemoShops(merged);
     const next = merged.map(normalizeStatus).filter((s) => s.slug);
     setShops(next);
     })()
@@ -599,6 +637,17 @@ export default function AdminShops() {
     setBillingOpen(true);
   }, []);
 
+  const openShopPreview = useCallback((shop: DemoShop) => {
+    const slug = String(shop?.slug || '').trim();
+    if (!slug) return;
+    const sector = resolveSector(shop);
+    const sourceVendorId = String(shop?.sourceVendorId || '').trim();
+    const target = sector === 'informal' && sourceVendorId
+      ? `/mangoo-local.html?vendor=${encodeURIComponent(sourceVendorId)}`
+      : `/shop/${encodeURIComponent(slug)}?view=client`;
+    window.open(target, '_blank', 'noopener,noreferrer');
+  }, []);
+
   const saveBilling = useCallback(() => {
     if (!billingSlug) return;
     const now = new Date().toISOString();
@@ -622,13 +671,15 @@ export default function AdminShops() {
   }, [billingForm, billingSlug]);
 
   const filtered = useMemo(() => {
-    const q = String(searchTerm || '').trim().toLowerCase();
+    const q = normalizeSearchText(searchTerm);
     return (shops || [])
       .filter((s) => {
         const status = (s.approvalStatus || 'pending') as ApprovalStatus;
         if (filterStatus !== 'all' && status !== filterStatus) return false;
+        const sector = resolveSector(s);
+        if (filterSector !== 'all' && sector !== filterSector) return false;
         if (!q) return true;
-        const hay = `${s.name || ''} ${s.slug || ''} ${s.ownerEmail || ''} ${s.ownerName || ''} ${s.category || ''}`.toLowerCase();
+        const hay = normalizeSearchText(`${s.name || ''} ${s.slug || ''} ${s.ownerEmail || ''} ${s.ownerName || ''} ${s.category || ''} ${s.source || ''} ${sector}`);
         return hay.includes(q);
       })
       .sort((a, b) => {
@@ -639,7 +690,7 @@ export default function AdminShops() {
         if (d !== 0) return d;
         return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
       });
-  }, [filterStatus, searchTerm, shops]);
+  }, [filterSector, filterStatus, searchTerm, shops]);
 
   return (
     <div className={`${isDark ? 'bg-gray-900' : 'bg-gray-50'} min-h-full`}>
@@ -650,6 +701,27 @@ export default function AdminShops() {
             <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mt-1`}>Approuvez les boutiques créées côté vendeur avant publication.</p>
           </div>
           <div className="flex gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => applySectorFilter('all')}
+              className={`px-3 py-2 rounded-lg text-sm font-semibold border ${filterSector === 'all' ? (isDark ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-gray-900 border-gray-200') : (isDark ? 'bg-gray-900 text-gray-300 border-gray-700 hover:bg-gray-800' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white')}`}
+            >
+              Tous secteurs
+            </button>
+            <button
+              type="button"
+              onClick={() => applySectorFilter('formal')}
+              className={`px-3 py-2 rounded-lg text-sm font-semibold border ${filterSector === 'formal' ? (isDark ? 'bg-sky-900/30 text-sky-100 border-sky-700' : 'bg-sky-50 text-sky-900 border-sky-200') : (isDark ? 'bg-gray-900 text-gray-300 border-gray-700 hover:bg-gray-800' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white')}`}
+            >
+              Formel
+            </button>
+            <button
+              type="button"
+              onClick={() => applySectorFilter('informal')}
+              className={`px-3 py-2 rounded-lg text-sm font-semibold border ${filterSector === 'informal' ? (isDark ? 'bg-fuchsia-900/30 text-fuchsia-100 border-fuchsia-700' : 'bg-fuchsia-50 text-fuchsia-900 border-fuchsia-200') : (isDark ? 'bg-gray-900 text-gray-300 border-gray-700 hover:bg-gray-800' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white')}`}
+            >
+              Informel
+            </button>
             <button
               type="button"
               onClick={() => setFilterStatus('all')}
@@ -695,7 +767,7 @@ export default function AdminShops() {
               <input
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Rechercher une boutique (nom, slug, email…)"
+                placeholder="Rechercher une boutique (nom, slug, email, secteur...)"
                 className={`w-full pl-10 pr-3 py-2 rounded-lg border ${isDark ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'}`}
               />
             </div>
@@ -708,6 +780,7 @@ export default function AdminShops() {
               <div className="divide-y divide-gray-200 dark:divide-gray-700">
                 {filtered.map((s) => {
                   const status = (s.approvalStatus || 'pending') as ApprovalStatus;
+                  const sector = resolveSector(s);
                   return (
                     <div key={String(s.slug)} className="p-4">
                       <div className="flex items-start justify-between gap-3">
@@ -715,7 +788,10 @@ export default function AdminShops() {
                           <div className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{s.name || 'Boutique'}</div>
                           <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-xs break-all`}>{s.slug}</div>
                           <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm mt-1`}>{s.category || 'general'}</div>
-                          <div className="mt-2">
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${sectorBadge(sector, isDark)}`}>
+                              {sector === 'informal' ? 'Informel' : 'Formel'}
+                            </span>
                             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${statusBadge(status, isDark)}`}>
                               {status === 'approved' ? 'Approuvée' : status === 'rejected' ? 'Rejetée' : status === 'suspended' ? 'Suspendue' : 'En attente'}
                             </span>
@@ -751,7 +827,7 @@ export default function AdminShops() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => window.open(`/shop/${encodeURIComponent(String(s.slug))}`, '_blank', 'noopener,noreferrer')}
+                          onClick={() => openShopPreview(s)}
                           className={`touch-manipulation ${isDark ? 'bg-gray-900 border border-gray-700 text-gray-200 hover:bg-gray-800' : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-lg text-sm font-semibold inline-flex items-center gap-2`}
                         >
                           <ExternalLink className="w-4 h-4" />
@@ -795,6 +871,7 @@ export default function AdminShops() {
                   <th className="text-left px-4 py-3 font-semibold">Boutique</th>
                   <th className="text-left px-4 py-3 font-semibold">Propriétaire</th>
                   <th className="text-left px-4 py-3 font-semibold">Catégorie</th>
+                  <th className="text-left px-4 py-3 font-semibold">Secteur</th>
                   <th className="text-left px-4 py-3 font-semibold">Statut</th>
                   <th className="text-right px-4 py-3 font-semibold">Actions</th>
                 </tr>
@@ -802,13 +879,14 @@ export default function AdminShops() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className={`px-4 py-10 text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <td colSpan={6} className={`px-4 py-10 text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                       Aucune boutique.
                     </td>
                   </tr>
                 ) : (
                   filtered.map((s) => {
                     const status = (s.approvalStatus || 'pending') as ApprovalStatus;
+                    const sector = resolveSector(s);
                     return (
                       <tr key={String(s.slug)} className={isDark ? 'border-t border-gray-700' : 'border-t border-gray-200'}>
                         <td className="px-4 py-3">
@@ -820,6 +898,11 @@ export default function AdminShops() {
                           <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-xs break-all`}>{s.ownerEmail || '—'}</div>
                         </td>
                         <td className={`px-4 py-3 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{s.category || 'general'}</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${sectorBadge(sector, isDark)}`}>
+                            {sector === 'informal' ? 'Informel' : 'Formel'}
+                          </span>
+                        </td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${statusBadge(status, isDark)}`}>
                             {status === 'approved' ? 'Approuvée' : status === 'rejected' ? 'Rejetée' : status === 'suspended' ? 'Suspendue' : 'En attente'}
@@ -838,7 +921,7 @@ export default function AdminShops() {
                             </button>
                             <button
                               type="button"
-                              onClick={() => window.open(`/shop/${encodeURIComponent(String(s.slug))}`, '_blank', 'noopener,noreferrer')}
+                              onClick={() => openShopPreview(s)}
                               className={`${isDark ? 'bg-gray-900 border border-gray-700 text-gray-200 hover:bg-gray-800' : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-lg text-xs font-semibold inline-flex items-center gap-2`}
                               title="Ouvrir la boutique"
                             >

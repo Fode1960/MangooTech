@@ -3,7 +3,7 @@ export default function AdminSettings() {
     <div className="p-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Paramètres</h1>
-        <p className="text-gray-600 dark:text-gray-300 mt-2">Configuration de la plateforme (démo).</p>
+        <p className="text-gray-600 dark:text-gray-300 mt-2">Configuration de la plateforme.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -15,8 +15,8 @@ export default function AdminSettings() {
               <span className="font-semibold">XOF</span>
             </div>
             <div className="flex items-center justify-between">
-              <span>Mode</span>
-              <span className="font-semibold">Démo</span>
+              <span>Mode actif</span>
+              <span className="font-semibold">Production</span>
             </div>
           </div>
         </div>
@@ -29,7 +29,7 @@ export default function AdminSettings() {
               <span className="font-semibold">Activé</span>
             </div>
             <div className="flex items-center justify-between">
-              <span>Fallback mode démo</span>
+              <span>Relais de sécurité</span>
               <span className="font-semibold">Activé</span>
             </div>
           </div>
