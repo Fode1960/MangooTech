@@ -212,6 +212,26 @@ export const connectPlusStore = {
     return null
   },
 
+  listActiveEntries: () => {
+    const db = safeRead()
+    const entries = Array.isArray(db.entries) ? db.entries : []
+    const now = Date.now()
+    return entries
+      .filter((e) => {
+        if (!e || typeof e !== 'object') return false
+        if (!e.is_active) return false
+        const exp = e.expires_at ? Date.parse(String(e.expires_at)) : NaN
+        if (Number.isFinite(exp) && exp <= now) return false
+        return true
+      })
+      .sort((a, b) => {
+        const stableA = a.expires_at ? 0 : 1
+        const stableB = b.expires_at ? 0 : 1
+        if (stableA !== stableB) return stableB - stableA
+        return Date.parse(String(b.created_at || '')) - Date.parse(String(a.created_at || ''))
+      })
+  },
+
   deactivateByShopSlug: (params: { shopSlug: string; mode?: 'all' | 'stable' | 'temp'; keepId?: string }) => {
     const slug = normalizeSlug(params.shopSlug)
     if (!slug) return

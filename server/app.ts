@@ -23,6 +23,7 @@ import mobileMoneyWebhooksRoutes from './routes/mobile-money-webhooks'
 import packsRoutes from './routes/packs'
 import adminShopsRoutes from './routes/admin-shops'
 import adminProvidersRoutes from './routes/admin-providers'
+import adminAccountsRoutes from './routes/admin-accounts'
 import shopsSimpleRoutes from './routes/shops-simple'
 import shopsRoutes from './routes/shops'
 import adminCommissionsRoutes from './routes/admin-commissions'
@@ -128,6 +129,7 @@ app.use('/api/local-sync', localSyncRoutes)
  */
 app.use('/api/admin/shops', adminShopsRoutes)
 app.use('/api/admin/providers', adminProvidersRoutes)
+app.use('/api/admin/accounts', adminAccountsRoutes)
 app.use('/api/admin/commissions', adminCommissionsRoutes)
 app.use('/api/admin/analytics', adminAnalyticsRoutes)
 app.use('/api/admin/payments', adminPaymentsRoutes)
