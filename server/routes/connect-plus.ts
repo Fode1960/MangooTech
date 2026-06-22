@@ -360,9 +360,7 @@ router.post('/issue', async (req, res) => {
     const token = allowDevBypass ? '' : readBearerToken(req)
     const shopSlug = safeString(req.body?.shopSlug || req.body?.slug)
     const ownerEmailHint = safeString(req.body?.ownerEmail || req.body?.email)
-    const pinLen = req.body?.pinLen === undefined || req.body?.pinLen === null
-      ? undefined
-      : Math.max(4, Math.min(6, Math.floor(Number(req.body?.pinLen))))
+    const pinLen = 6
     const expiresHours = req.body?.expiresHours === null || req.body?.expiresHours === undefined ? 72 : Math.max(1, Math.floor(Number(req.body?.expiresHours || 72)))
 
     const perm = await canIssueForShop({ shopSlug, token, allowDevBypass, ownerEmailHint })
@@ -382,9 +380,7 @@ router.post('/ensure', async (req, res) => {
     const token = allowDevBypass ? '' : readBearerToken(req)
     const shopSlug = safeString(req.body?.shopSlug || req.body?.slug)
     const ownerEmailHint = safeString(req.body?.ownerEmail || req.body?.email)
-    const pinLen = req.body?.pinLen === undefined || req.body?.pinLen === null
-      ? undefined
-      : Math.max(4, Math.min(6, Math.floor(Number(req.body?.pinLen))))
+    const pinLen = 6
     const expiresHours = req.body?.expiresHours === null || req.body?.expiresHours === undefined ? 72 : Math.max(1, Math.floor(Number(req.body?.expiresHours || 72)))
 
     const perm = await canIssueForShop({ shopSlug, token, allowDevBypass, ownerEmailHint })
@@ -423,9 +419,7 @@ router.post('/stable/ensure', async (req, res) => {
     const token = allowDevBypass ? '' : readBearerToken(req)
     const shopSlug = safeString(req.body?.shopSlug || req.body?.slug)
     const ownerEmailHint = safeString(req.body?.ownerEmail || req.body?.email)
-    const pinLen = req.body?.pinLen === undefined || req.body?.pinLen === null
-      ? undefined
-      : Math.max(4, Math.min(6, Math.floor(Number(req.body?.pinLen))))
+    const pinLen = 6
 
     const perm = await canIssueForShop({ shopSlug, token, allowDevBypass, ownerEmailHint })
     if (!perm.ok) return res.status(perm.status).json({ success: false, error: perm.error })
@@ -447,9 +441,7 @@ router.post('/stable/change', async (req, res) => {
     const token = allowDevBypass ? '' : readBearerToken(req)
     const shopSlug = safeString(req.body?.shopSlug || req.body?.slug)
     const ownerEmailHint = safeString(req.body?.ownerEmail || req.body?.email)
-    const pinLen = req.body?.pinLen === undefined || req.body?.pinLen === null
-      ? undefined
-      : Math.max(4, Math.min(6, Math.floor(Number(req.body?.pinLen))))
+    const pinLen = 6
 
     const perm = await canIssueForShop({ shopSlug, token, allowDevBypass, ownerEmailHint })
     if (!perm.ok) return res.status(perm.status).json({ success: false, error: perm.error })

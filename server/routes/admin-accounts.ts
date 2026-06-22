@@ -2,6 +2,7 @@ import express from 'express'
 import { createClient } from '@supabase/supabase-js'
 import { localSyncStore } from '../services/localSyncStore'
 import { connectPlusStore } from '../services/connectPlusStore'
+import { connectPlusIssuer } from '../services/connectPlusIssuer'
 
 const router = express.Router()
 
@@ -11,6 +12,27 @@ const supabase = supabaseUrl && supabaseServiceKey ? createClient(supabaseUrl, s
 const isNonProd = String(process.env.NODE_ENV || '').trim().toLowerCase() !== 'production'
 
 const normalizeEmail = (value: any) => String(value || '').trim().toLowerCase()
+const buildHumanName = (firstName: any, lastName: any) => {
+  return [String(firstName || '').trim(), String(lastName || '').trim()].filter(Boolean).join(' ').trim()
+}
+const inferNameFromEmail = (value: any) => {
+  const email = normalizeEmail(value)
+  if (!email) return null
+  const localPart = email.split('@')[0] || ''
+  if (!localPart) return null
+  if (localPart.startsWith('prestataire-') || localPart.startsWith('provider-') || localPart.includes('localplus')) return null
+  const candidate = localPart
+    .replace(/[._-]+/g, ' ')
+    .replace(/([a-z])(\d)/gi, '$1 $2')
+    .replace(/\s+/g, ' ')
+    .trim()
+  if (!candidate) return null
+  return candidate
+    .split(' ')
+    .map((part) => (part ? part.charAt(0).toUpperCase() + part.slice(1) : ''))
+    .join(' ')
+    .trim()
+}
 
 const requireSupabase = (res: express.Response) => {
   if (supabase) return true
@@ -92,6 +114,7 @@ type AdminPinRecord = {
   account_type: 'shop' | 'provider'
   access_role: 'client' | 'vendor'
   account_name: string
+  owner_name: string | null
   reference: string | null
   sector: 'formal' | 'informal'
   source: 'supabase' | 'local-sync'
@@ -138,6 +161,7 @@ const matchesPinSearch = (record: AdminPinRecord, search: string) => {
   const haystack = [
     record.pin,
     record.account_name,
+    record.owner_name || '',
     record.reference || '',
     record.email || '',
     record.phone || '',
@@ -582,6 +606,7 @@ router.get('/pins', authenticateAdmin, async (req, res) => {
       string,
       {
         name: string
+        owner_name: string | null
         sector: 'formal' | 'informal'
         status: string | null
         email: string | null
@@ -593,11 +618,35 @@ router.get('/pins', authenticateAdmin, async (req, res) => {
     let formalError: string | null = null
     let pinSource = false
     let pinSourceError: string | null = null
+    const formalUserNameByEmail = new Map<string, string>()
+    const formalUserNameById = new Map<string, string>()
+    const formalUserEmailById = new Map<string, string>()
 
     if (supabase) {
+      try {
+        const usersResult = await supabase
+          .from('users')
+          .select('id, email, first_name, last_name')
+          .order('created_at', { ascending: false })
+          .limit(2000)
+        if (!usersResult.error) {
+          for (const row of usersResult.data || []) {
+            const id = String((row as any)?.id || '').trim()
+            const email = normalizeEmail((row as any)?.email)
+            const fullName = buildHumanName((row as any)?.first_name, (row as any)?.last_name)
+            if (email && fullName && !formalUserNameByEmail.has(email)) formalUserNameByEmail.set(email, fullName)
+            if (id && fullName && !formalUserNameById.has(id)) formalUserNameById.set(id, fullName)
+            if (id && email && !formalUserEmailById.has(id)) formalUserEmailById.set(id, email)
+          }
+        }
+      } catch {
+      }
+
       const shopSelectAttempts = [
+        'id, user_id, name, slug, status, owner_name, owner_email, email, created_at',
         'id, user_id, name, slug, status, owner_email, email, created_at',
         'id, user_id, name, slug, status, email, created_at',
+        'id, user_id, name, slug, status, created_at',
       ]
       let shopData: any[] | null = null
       let shopError: any = null
@@ -623,11 +672,23 @@ router.get('/pins', authenticateAdmin, async (req, res) => {
         for (const row of shopData || []) {
           const slug = String((row as any)?.slug || '').trim().toLowerCase()
           if (!slug) continue
+          const userId = String((row as any)?.user_id || '').trim()
+          const ownerEmail =
+            normalizeEmail((row as any)?.owner_email || (row as any)?.email) ||
+            formalUserEmailById.get(userId) ||
+            ''
+          const ownerName =
+            String((row as any)?.owner_name || '').trim() ||
+            formalUserNameById.get(userId) ||
+            formalUserNameByEmail.get(ownerEmail) ||
+            inferNameFromEmail(ownerEmail) ||
+            null
           shopMetaBySlug.set(slug, {
             name: String((row as any)?.name || '').trim() || 'Boutique',
+            owner_name: ownerName,
             sector: 'formal',
             status: String((row as any)?.status || '').trim() || null,
-            email: normalizeEmail((row as any)?.owner_email || (row as any)?.email) || null,
+            email: ownerEmail || null,
             created_at: String((row as any)?.created_at || '').trim() || null,
           })
         }
@@ -678,6 +739,7 @@ router.get('/pins', authenticateAdmin, async (req, res) => {
               account_type: 'shop',
               access_role: 'client',
               account_name: meta?.name || slug || 'Boutique',
+              owner_name: meta?.owner_name || null,
               reference: slug || null,
               sector: meta?.sector || 'formal',
               source: 'supabase',
@@ -704,6 +766,7 @@ router.get('/pins', authenticateAdmin, async (req, res) => {
       const user = localUserById.get(String((shop as any)?.userId || '').trim())
       shopMetaBySlug.set(slug, {
         name: String((shop as any)?.name || '').trim() || 'Boutique',
+        owner_name: String((user as any)?.name || '').trim() || null,
         sector: 'informal',
         status: String((shop as any)?.status || '').trim() || 'pending',
         email: normalizeEmail((user as any)?.email) || null,
@@ -729,6 +792,7 @@ router.get('/pins', authenticateAdmin, async (req, res) => {
         account_type: 'shop',
         access_role: 'client',
         account_name: meta?.name || slug || 'Boutique',
+        owner_name: meta?.owner_name || null,
         reference: slug || null,
         sector: meta?.sector || 'informal',
         source: 'local-sync',
@@ -747,12 +811,19 @@ router.get('/pins', authenticateAdmin, async (req, res) => {
     for (const provider of localProviders || []) {
       const pin = String((provider as any)?.localPin || '').replace(/[^\d]/g, '').slice(0, 6)
       if (!pin) continue
+      const providerUser = localUserById.get(String((provider as any)?.userId || '').trim())
       rawRecords.push({
         id: `provider:${String((provider as any)?.id || pin).trim()}`,
         pin,
         account_type: 'provider',
         access_role: 'vendor',
         account_name: String((provider as any)?.name || '').trim() || 'Prestataire',
+        owner_name:
+          String((provider as any)?.ownerName || '').trim() ||
+          String((providerUser as any)?.name || '').trim() ||
+          inferNameFromEmail((provider as any)?.ownerEmail) ||
+          String((provider as any)?.name || '').trim() ||
+          null,
         reference:
           String((provider as any)?.trade || '').trim() ||
           String((provider as any)?.category || '').trim() ||
@@ -765,7 +836,7 @@ router.get('/pins', authenticateAdmin, async (req, res) => {
           'pending',
         created_at: String((provider as any)?.createdAt || '').trim() || null,
         expires_at: null,
-        email: normalizeEmail((provider as any)?.ownerEmail) || null,
+        email: normalizeEmail((provider as any)?.ownerEmail) || normalizeEmail((providerUser as any)?.email) || null,
         phone: String((provider as any)?.phone || '').trim() || null,
         target_path: `/mangoo-local.html?pin=${encodeURIComponent(pin)}`,
       })
@@ -809,6 +880,38 @@ router.get('/pins', authenticateAdmin, async (req, res) => {
         pin_error: pinSourceError,
       },
     })
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error?.message || 'Erreur serveur' })
+  }
+})
+
+router.post('/pins/shop/regenerate', authenticateAdmin, async (req, res) => {
+  try {
+    const shopSlug = String(req.body?.shopSlug || req.body?.slug || '').trim().toLowerCase()
+    const pinLen = 6
+
+    if (!shopSlug) {
+      return res.status(400).json({ success: false, error: 'shopSlug manquant' })
+    }
+
+    const originHeader = String(req.headers.origin || '').trim()
+    const host = String(req.headers.host || '').trim()
+    const proto = String(req.headers['x-forwarded-proto'] || req.protocol || 'http').trim() || 'http'
+    const origin = originHeader || (host ? `${proto}://${host}` : '')
+
+    const issued = await connectPlusIssuer.changeStable({ shopSlug, origin, pinLen })
+    if (!issued?.pin) {
+      return res.status(500).json({ success: false, error: 'Generation du PIN impossible' })
+    }
+
+    if (issued.storage !== 'supabase') {
+      return res.status(503).json({
+        success: false,
+        error: 'La regeneration admin doit rester sur Supabase pour les boutiques formelles.',
+      })
+    }
+
+    res.json({ success: true, ...issued })
   } catch (error: any) {
     res.status(500).json({ success: false, error: error?.message || 'Erreur serveur' })
   }

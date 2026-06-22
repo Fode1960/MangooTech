@@ -21,7 +21,7 @@ const isMissingTable = (msg) => {
   return m.includes('does not exist') || m.includes('relation') || m.includes('schema cache')
 }
 
-const randomPin = (len = 4) => {
+const randomPin = (len = 6) => {
   const digits = Math.max(4, Math.min(6, Math.floor(Number(len || 4))))
   const max = 10 ** digits
   const n = crypto.randomInt(0, max)
@@ -58,10 +58,10 @@ async function fetchAllShopSlugs() {
   return Array.from(new Set(slugs))
 }
 
-async function hasActiveEntry(shopSlug) {
-  const { count, error } = await supabase
+async function getActiveEntries(shopSlug) {
+  const { data, error } = await supabase
     .from('connect_plus_entries')
-    .select('id', { head: true, count: 'exact' })
+    .select('id,pin,shop_slug,is_active,expires_at,created_at')
     .eq('shop_slug', shopSlug)
     .eq('is_active', true)
 
@@ -72,10 +72,21 @@ async function hasActiveEntry(shopSlug) {
     throw new Error(String(error.message || error))
   }
 
-  return Number(count || 0) > 0
+  return Array.isArray(data) ? data : []
 }
 
-async function insertEntry(shopSlug, preferredPinLen = 4) {
+async function deactivateOtherEntries(shopSlug, keepId) {
+  const { error } = await supabase
+    .from('connect_plus_entries')
+    .update({ is_active: false })
+    .eq('shop_slug', shopSlug)
+    .eq('is_active', true)
+    .neq('id', keepId)
+
+  if (error) throw new Error(String(error.message || error))
+}
+
+async function insertEntry(shopSlug, preferredPinLen = 6) {
   const start = Math.max(4, Math.min(6, Math.floor(Number(preferredPinLen || 4))))
   for (let pinLen = start; pinLen <= 6; pinLen += 1) {
     const attemptsForLen = pinLen === 4 ? 60 : pinLen === 5 ? 40 : 25
@@ -104,26 +115,32 @@ async function insertEntry(shopSlug, preferredPinLen = 4) {
 const main = async () => {
   const slugs = await fetchAllShopSlugs()
   let created = 0
+  let upgraded = 0
   let skipped = 0
   let failures = 0
   const errors = []
 
   for (const slug of slugs) {
     try {
-      const exists = await hasActiveEntry(slug)
-      if (exists) {
+      const entries = await getActiveEntries(slug)
+      const compliant = entries.find((row) => String(row?.pin || '').replace(/[^\d]/g, '').length === 6)
+      if (compliant) {
         skipped += 1
         continue
       }
-      await insertEntry(slug, 4)
-      created += 1
+
+      const inserted = await insertEntry(slug, 6)
+      await deactivateOtherEntries(slug, inserted?.id)
+
+      if (entries.length > 0) upgraded += 1
+      else created += 1
     } catch (e) {
       failures += 1
       errors.push({ slug, error: String(e?.message || e || 'Unknown error') })
     }
   }
 
-  console.log(JSON.stringify({ success: failures === 0, totalShops: slugs.length, created, skipped, failures, errors }, null, 2))
+  console.log(JSON.stringify({ success: failures === 0, totalShops: slugs.length, created, upgraded, skipped, failures, errors }, null, 2))
   process.exit(failures === 0 ? 0 : 1)
 }
 

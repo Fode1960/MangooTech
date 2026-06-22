@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ExternalLink, KeyRound, RefreshCw, Search } from "lucide-react";
+import { Copy, ExternalLink, KeyRound, RefreshCw, RotateCw, Search } from "lucide-react";
+import { toast } from "sonner";
 import { buildApiUrl } from "../config/api";
 import { supabase } from "../config/supabase";
 import { useTheme } from "../hooks/useTheme";
@@ -13,6 +14,7 @@ type AdminPinRecord = {
   account_type: "shop" | "provider";
   access_role: "client" | "vendor";
   account_name: string;
+  owner_name: string | null;
   reference: string | null;
   sector: PinSector;
   source: "supabase" | "local-sync";
@@ -52,6 +54,10 @@ const formatAccessRole = (value: "client" | "vendor") => {
   return value === "client" ? "Client" : "Vendeur";
 };
 
+const formatPinFamily = (item: AdminPinRecord) => {
+  return item.account_type === "shop" ? "PIN Boutique Client" : "PIN Gestion Prestataire";
+};
+
 const formatStatus = (value: string | null | undefined) => {
   const normalized = String(value || "").trim().toLowerCase();
   if (normalized === "approved") return "Approuve";
@@ -75,6 +81,50 @@ const sectorBadgeClass = (sector: PinSector, isDark: boolean) => {
   return isDark ? "bg-sky-900/30 text-sky-200" : "bg-sky-50 text-sky-700";
 };
 
+const sourceBadgeClass = (source: "supabase" | "local-sync", isDark: boolean) => {
+  if (source === "supabase") return isDark ? "bg-emerald-900/30 text-emerald-200" : "bg-emerald-50 text-emerald-700";
+  return isDark ? "bg-violet-900/30 text-violet-200" : "bg-violet-50 text-violet-700";
+};
+
+const accessBadgeClass = (role: "client" | "vendor", isDark: boolean) => {
+  if (role === "client") return isDark ? "bg-cyan-900/30 text-cyan-200" : "bg-cyan-50 text-cyan-700";
+  return isDark ? "bg-orange-900/30 text-orange-200" : "bg-orange-50 text-orange-700";
+};
+
+const pinModeBadgeClass = (expiresAt: string | null | undefined, isDark: boolean) => {
+  if (String(expiresAt || "").trim()) return isDark ? "bg-amber-900/30 text-amber-200" : "bg-amber-50 text-amber-700";
+  return isDark ? "bg-blue-900/30 text-blue-200" : "bg-blue-50 text-blue-700";
+};
+
+const formatPinMode = (expiresAt: string | null | undefined) => {
+  return String(expiresAt || "").trim() ? "Temporaire" : "Stable";
+};
+
+const humanizeReference = (value: string | null | undefined) => {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  return raw
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+};
+
+const resolveDisplayName = (item: AdminPinRecord) => {
+  const rawName = String(item.account_name || "").trim();
+  if (rawName && rawName.toLowerCase() !== "boutique" && rawName.toLowerCase() !== "prestataire") return rawName;
+  const fromReference = humanizeReference(item.reference);
+  if (fromReference) return fromReference;
+  return rawName || "Compte";
+};
+
+const resolveOwnerName = (item: AdminPinRecord) => {
+  const owner = String(item.owner_name || "").trim();
+  if (owner) return owner;
+  if (item.email) return item.email;
+  return "Proprietaire non renseigne";
+};
+
 export default function AdminPinAccess({ embedded = false }: AdminPinAccessProps) {
   const { isDark } = useTheme();
   const isDev = Boolean(import.meta.env.DEV);
@@ -86,6 +136,7 @@ export default function AdminPinAccess({ embedded = false }: AdminPinAccessProps
   const [counts, setCounts] = useState<PinCounts>({ total: 0, shops: 0, providers: 0, formal: 0, informal: 0 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(
     "Vue active: acces PIN deja disponibles pour les boutiques et les prestataires."
   );
@@ -176,6 +227,57 @@ export default function AdminPinAccess({ embedded = false }: AdminPinAccessProps
   }, [loadPins]);
 
   const visiblePins = useMemo(() => pins, [pins]);
+
+  const copyPin = useCallback(async (pin: string) => {
+    try {
+      await navigator.clipboard.writeText(String(pin || ""));
+      toast.success("PIN copie dans le presse-papiers");
+    } catch {
+      toast.error("Impossible de copier le PIN");
+    }
+  }, []);
+
+  const regenerateStablePin = useCallback(
+    async (item: AdminPinRecord) => {
+      const slug = String(item.reference || "").trim();
+      if (!slug) {
+        toast.error("Boutique introuvable pour la regeneration");
+        return;
+      }
+
+      const confirmed = window.confirm(`Regenerer le PIN stable de ${item.account_name || slug} ?`);
+      if (!confirmed) return;
+
+      setBusyId(item.id);
+      try {
+        const token = await getAdminToken();
+        if (!token) throw new Error("Connectez-vous avec un compte admin pour regenerer un PIN.");
+
+        const response = await fetch(buildApiUrl("/api/admin/accounts/pins/shop/regenerate"), {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ shopSlug: slug, pinLen: 6 }),
+        });
+
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !payload?.success) {
+          throw new Error(payload?.error || `HTTP ${response.status}`);
+        }
+
+        toast.success(`Nouveau PIN stable genere pour ${item.account_name || slug}`);
+        await loadPins();
+      } catch (err: any) {
+        toast.error(err?.message || "Impossible de regenerer le PIN");
+      } finally {
+        setBusyId(null);
+      }
+    },
+    [getAdminToken, loadPins]
+  );
 
   return (
     <div className={`${embedded ? "space-y-6" : `p-8 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}`}>
@@ -311,10 +413,9 @@ export default function AdminPinAccess({ embedded = false }: AdminPinAccessProps
       )}
 
       <div className={`overflow-hidden rounded-2xl border ${isDark ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"}`}>
-        <div className={`grid grid-cols-[120px_minmax(0,1.2fr)_130px_130px_130px_110px_90px] gap-4 border-b px-4 py-3 text-xs font-semibold uppercase tracking-wide ${isDark ? "border-gray-700 text-gray-400" : "border-gray-200 text-gray-500"}`}>
+        <div className={`grid grid-cols-[160px_minmax(0,1.7fr)_120px_130px_120px_190px] gap-4 border-b px-4 py-3 text-xs font-semibold uppercase tracking-wide ${isDark ? "border-gray-700 text-gray-400" : "border-gray-200 text-gray-500"}`}>
           <div>PIN</div>
-          <div>Compte</div>
-          <div>Type</div>
+          <div>Titulaire</div>
           <div>Secteur</div>
           <div>Statut</div>
           <div>Depuis</div>
@@ -328,20 +429,43 @@ export default function AdminPinAccess({ embedded = false }: AdminPinAccessProps
         ) : (
           <div className="divide-y divide-gray-100 dark:divide-gray-700">
             {visiblePins.map((item) => (
-              <div key={item.id} className="grid grid-cols-[120px_minmax(0,1.2fr)_130px_130px_130px_110px_90px] gap-4 px-4 py-4">
-                <div className="flex items-center">
+              <div key={item.id} className="grid grid-cols-[160px_minmax(0,1.7fr)_120px_130px_120px_190px] gap-4 px-4 py-4">
+                <div className="flex flex-col gap-2">
                   <div className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-black tracking-[0.25em] ${isDark ? "bg-gray-900 text-orange-200" : "bg-orange-50 text-orange-700"}`}>
                     <KeyRound className="h-4 w-4 shrink-0" />
                     <span>{item.pin || "----"}</span>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => void copyPin(item.pin)}
+                    className={`inline-flex w-fit items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold ${isDark ? "bg-gray-900 text-gray-200 hover:bg-gray-700" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                    Copier
+                  </button>
                 </div>
                 <div className="min-w-0">
-                  <div className={`truncate text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{item.account_name || "Compte"}</div>
-                  <div className={`truncate text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>{item.reference || item.email || item.phone || "Sans reference"}</div>
-                </div>
-                <div>
-                  <div className={`text-sm font-semibold ${isDark ? "text-gray-100" : "text-gray-800"}`}>{formatType(item.account_type)}</div>
-                  <div className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>{formatAccessRole(item.access_role)}</div>
+                  <div className={`text-[11px] font-semibold uppercase tracking-wide ${isDark ? "text-orange-200" : "text-orange-700"}`}>
+                    {formatPinFamily(item)}
+                  </div>
+                  <div className={`truncate text-base font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{resolveDisplayName(item)}</div>
+                  <div className={`truncate text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                    {formatType(item)} · {formatAccessRole(item.access_role)}
+                  </div>
+                  <div className={`truncate text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                    Proprietaire / contact: {resolveOwnerName(item)}
+                  </div>
+                  <div className={`truncate text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                    {item.reference ? `Slug: ${item.reference}` : item.email ? `Email: ${item.email}` : item.phone ? `Tel: ${item.phone}` : "Sans reference"}
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${sourceBadgeClass(item.source, isDark)}`}>
+                      {item.source === "supabase" ? "Supabase" : "Local"}
+                    </span>
+                    <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${pinModeBadgeClass(item.expires_at, isDark)}`}>
+                      {formatPinMode(item.expires_at)}
+                    </span>
+                  </div>
                 </div>
                 <div>
                   <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${sectorBadgeClass(item.sector, isDark)}`}>
@@ -353,19 +477,39 @@ export default function AdminPinAccess({ embedded = false }: AdminPinAccessProps
                     {formatStatus(item.status)}
                   </span>
                 </div>
-                <div className={`text-sm ${isDark ? "text-gray-200" : "text-gray-700"}`}>{formatDate(item.created_at)}</div>
-                <div>
+                <div className={`text-sm ${isDark ? "text-gray-200" : "text-gray-700"}`}>
+                  <div>{formatDate(item.created_at)}</div>
+                  <div className={`mt-1 text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                    {item.expires_at ? `Expire le ${formatDate(item.expires_at)}` : "Sans expiration"}
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
                   {item.target_path ? (
                     <button
                       type="button"
                       onClick={() => window.open(item.target_path || "", "_blank", "noopener,noreferrer")}
-                      className={`inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold ${isDark ? "bg-gray-900 text-orange-200 hover:bg-gray-700" : "bg-orange-50 text-orange-700 hover:bg-orange-100"}`}
+                      className={`inline-flex items-center justify-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold ${isDark ? "bg-gray-900 text-orange-200 hover:bg-gray-700" : "bg-orange-50 text-orange-700 hover:bg-orange-100"}`}
                     >
                       <ExternalLink className="h-4 w-4" />
                       Ouvrir
                     </button>
                   ) : (
                     <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>—</span>
+                  )}
+                  {item.account_type === "shop" && item.source === "supabase" ? (
+                    <button
+                      type="button"
+                      onClick={() => void regenerateStablePin(item)}
+                      disabled={busyId === item.id}
+                      className={`inline-flex items-center justify-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold ${isDark ? "bg-emerald-900/30 text-emerald-200 hover:bg-emerald-900/50" : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"} ${busyId === item.id ? "cursor-wait opacity-70" : ""}`}
+                    >
+                      <RotateCw className={`h-4 w-4 ${busyId === item.id ? "animate-spin" : ""}`} />
+                      Regenerer
+                    </button>
+                  ) : (
+                    <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>
+                      {item.account_type === "provider" ? "Gestion PIN locale" : "Source locale"}
+                    </span>
                   )}
                 </div>
               </div>
