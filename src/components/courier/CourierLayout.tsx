@@ -32,18 +32,18 @@ export default function CourierLayout({ title, subtitle, children }: Props) {
   return (
     <div
       className={`min-h-screen overflow-x-hidden ${
-        isDark ? 'bg-gradient-to-br from-gray-900 to-gray-800 text-white' : 'bg-gray-50 text-gray-900'
+        isDark ? 'bg-gradient-to-br from-gray-900 to-gray-800 text-white' : 'bg-gradient-to-br from-orange-50 via-white to-emerald-50 text-gray-900'
       }`}
     >
       <nav
         className={`shadow-lg border-b-4 border-orange-500 transition-colors duration-300 ${
-          isDark ? 'bg-gray-800 border-gray-700' : 'bg-white'
+          isDark ? 'bg-gray-800 border-gray-700' : 'bg-white/95 backdrop-blur'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}>
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${isDark ? 'bg-gray-900' : 'bg-gradient-to-br from-orange-100 to-emerald-100 border border-orange-200 shadow-sm'}`}>
                 <Truck className={isDark ? 'text-emerald-300' : 'text-emerald-600'} />
               </div>
               <div className="min-w-0">
@@ -62,7 +62,7 @@ export default function CourierLayout({ title, subtitle, children }: Props) {
                 type="button"
                 onClick={openBoussole}
                 className={`px-3 py-2 rounded-xl font-black text-sm inline-flex items-center gap-2 transition-colors ${
-                  isDark ? 'bg-gray-900 text-white hover:bg-gray-700 border border-gray-700' : 'bg-gray-100 text-gray-900 hover:bg-gray-200 border border-gray-200'
+                  isDark ? 'bg-gray-900 text-white hover:bg-gray-700 border border-gray-700' : 'bg-white text-gray-900 hover:bg-orange-50 border border-orange-200 shadow-sm'
                 }`}
               >
                 <Compass className="w-4 h-4" />
@@ -72,7 +72,7 @@ export default function CourierLayout({ title, subtitle, children }: Props) {
                 type="button"
                 onClick={logout}
                 className={`px-3 py-2 rounded-xl font-black text-sm inline-flex items-center gap-2 transition-colors ${
-                  isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white text-gray-900 hover:bg-gray-50 border border-gray-200'
+                  isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white text-gray-900 hover:bg-emerald-50 border border-gray-200 shadow-sm'
                 }`}
               >
                 <LogOut className="w-4 h-4" />

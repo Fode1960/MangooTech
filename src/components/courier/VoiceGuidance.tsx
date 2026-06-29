@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Mic2, Square, Volume2 } from 'lucide-react'
 import type { LatLng } from '../../utils/geo'
 import { haversineMeters } from '../../utils/geo'
+import { useThemeStore } from '../../stores/themeStore'
 
 type OsrmStep = {
   distance?: number
@@ -78,6 +79,7 @@ function speak(text: string) {
 }
 
 export default function VoiceGuidance({ enabled, onToggle, courier, steps }: Props) {
+  const { isDark } = useThemeStore()
   const [lastSpoken, setLastSpoken] = useState<string>('')
   const spokenRef = useRef<Set<number>>(new Set())
   const nextIdxRef = useRef<number>(0)
@@ -120,14 +122,18 @@ export default function VoiceGuidance({ enabled, onToggle, courier, steps }: Pro
   }, [enabled, courier, steps])
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-zinc-950/40 overflow-hidden">
-      <div className="px-4 py-4 border-b border-white/10 flex items-center justify-between gap-3">
+    <div className={`rounded-2xl overflow-hidden ${
+      isDark ? 'border border-white/10 bg-zinc-950/40' : 'border border-gray-200 bg-white/95 shadow-xl'
+    }`}>
+      <div className={`px-4 py-4 flex items-center justify-between gap-3 ${
+        isDark ? 'border-b border-white/10' : 'border-b border-orange-100 bg-gradient-to-r from-orange-50 to-emerald-50'
+      }`}>
         <div>
           <div className="text-sm font-black flex items-center gap-2">
-            <Volume2 className="w-4 h-4" />
+            <Volume2 className={`w-4 h-4 ${isDark ? 'text-white' : 'text-emerald-600'}`} />
             Guidage vocal
           </div>
-          <div className="text-xs text-zinc-300">Démo: annonce à ~110m des manœuvres</div>
+          <div className={`text-xs ${isDark ? 'text-zinc-300' : 'text-gray-600'}`}>Annonce vocale à environ 110 m des manoeuvres.</div>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -140,7 +146,7 @@ export default function VoiceGuidance({ enabled, onToggle, courier, steps }: Pro
             className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl font-black text-xs border ${
               enabled
                 ? 'bg-emerald-500 text-emerald-950 border-emerald-400/30 hover:bg-emerald-400'
-                : 'bg-white/5 text-white border-white/10 hover:bg-white/10'
+                : (isDark ? 'bg-white/5 text-white border-white/10 hover:bg-white/10' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50')
             }`}
           >
             <Mic2 className="w-4 h-4" />
@@ -152,7 +158,9 @@ export default function VoiceGuidance({ enabled, onToggle, courier, steps }: Pro
               reset()
               stopSpeech()
             }}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-black"
+            className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-black ${
+              isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-orange-50 border border-orange-200 shadow-sm'
+            }`}
             title="Stop"
           >
             <Square className="w-4 h-4" />
@@ -162,14 +170,18 @@ export default function VoiceGuidance({ enabled, onToggle, courier, steps }: Pro
       </div>
 
       <div className="p-4">
-        <div className="text-xs text-zinc-300">Dernière instruction</div>
+        <div className={`text-xs ${isDark ? 'text-zinc-300' : 'text-gray-500'}`}>Dernière instruction</div>
         <div className="mt-1 text-sm font-black">{lastSpoken || '—'}</div>
-        <div className="mt-3 max-h-48 overflow-auto rounded-xl border border-white/10 bg-white/5">
+        <div className={`mt-3 max-h-48 overflow-auto rounded-xl ${
+          isDark ? 'border border-white/10 bg-white/5' : 'border border-gray-200 bg-gradient-to-b from-orange-50/60 to-white'
+        }`}>
           {stepTexts.length === 0 ? (
-            <div className="p-3 text-sm text-zinc-300">Aucune instruction disponible.</div>
+            <div className={`p-3 text-sm ${isDark ? 'text-zinc-300' : 'text-gray-600'}`}>Aucune instruction disponible.</div>
           ) : (
             stepTexts.map((t, i) => (
-              <div key={i} className="px-3 py-2 text-xs text-zinc-200 border-b border-white/10">{t}</div>
+              <div key={i} className={`px-3 py-2 text-xs ${
+                isDark ? 'text-zinc-200 border-b border-white/10' : 'text-gray-700 border-b border-orange-100'
+              }`}>{t}</div>
             ))
           )}
         </div>

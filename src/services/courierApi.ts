@@ -72,7 +72,29 @@ export async function fetchOrderById(id: string): Promise<Order> {
 export async function createOrder(body: {
   userId: string
   vendorId?: string | null
+  vendorKind?: 'shop' | 'provider' | null
+  vendorName?: string | null
+  sourceOrderId?: string | null
+  sourceOrder?: any
+  feeFcfa?: number | null
   note?: string | null
+  pickup?: {
+    kind?: 'vendor' | 'client'
+    vendorId?: string | null
+    name?: string | null
+    phone?: string | null
+    lat?: number | null
+    lng?: number | null
+    address?: string | null
+  } | null
+  customer?: {
+    kind?: 'vendor' | 'client'
+    name?: string | null
+    phone?: string | null
+    lat?: number | null
+    lng?: number | null
+    address?: string | null
+  } | null
   delivery: {
     source?: 'profile' | 'current' | 'manual'
     capturedAt?: string

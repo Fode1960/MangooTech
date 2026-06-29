@@ -7,6 +7,7 @@ import CourierMap from '../components/courier/CourierMap'
 import VoiceGuidance from '../components/courier/VoiceGuidance'
 import CourierLayout from '../components/courier/CourierLayout'
 import CourierInvoiceModal from '../components/invoice/CourierInvoiceModal'
+import { buildPremiumDeliveryTrackingUrl } from '../utils/deliveryTracking'
 import { detectRegionKey, distanceToLineStringMeters, haversineMeters, type LatLng } from '../utils/geo'
 import { useGeolocationWatch } from '../hooks/useGeolocationWatch'
 import { fetchOrders, fetchRoute, patchOrder, type RouteGeometry } from '../services/courierApi'
@@ -46,18 +47,6 @@ export default function CourierScreen() {
   const courierId = useMemo(() => getId(user), [user])
   const preferredRegion = useMemo(() => getPreferredRegion(user), [user])
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('demo') !== '1') return
-    if (!user) return
-    if (canAccess) return
-    const nextRoles = Array.from(new Set([...(Array.isArray(roles) ? roles : []), 'livreur']))
-    const nextUser = { ...user, role: 'livreur', roles: nextRoles }
-    saveCurrentUser(nextUser)
-    setUser(nextUser)
-  }, [canAccess, roles, user])
-
   const [notificationPermission, setNotificationPermission] = useState<'default' | 'denied' | 'granted'>(() => {
     if (typeof window === 'undefined') return 'default'
     if (!('Notification' in window)) return 'denied'
@@ -83,6 +72,10 @@ export default function CourierScreen() {
 
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null)
   const activeOrder = useMemo(() => orders.find((o) => o.id === activeOrderId) || null, [orders, activeOrderId])
+  const premiumTrackingUrl = useMemo(
+    () => buildPremiumDeliveryTrackingUrl((activeOrder || selectedOrder)?.deliveryJobId),
+    [activeOrder, selectedOrder]
+  )
 
   const [route, setRoute] = useState<RouteGeometry | null>(null)
   const [routeError, setRouteError] = useState<string | null>(null)
@@ -104,6 +97,11 @@ export default function CourierScreen() {
     }
     return routeError
   }, [routeError])
+
+  const hasActiveDelivery = useMemo(
+    () => myOrders.some((o) => o.status === 'assigned' || o.status === 'picked_up'),
+    [myOrders]
+  )
 
   const { position: courierPos, error: gpsError } = useGeolocationWatch(trackingEnabled)
 
@@ -130,7 +128,21 @@ export default function CourierScreen() {
   const destination: LatLng | null = useMemo(() => {
     const o = activeOrder || selectedOrder
     if (!o) return null
-    return { lat: o.delivery.position.latitude, lng: o.delivery.position.longitude }
+
+    const pickupLat = Number(o.pickup?.lat)
+    const pickupLng = Number(o.pickup?.lng)
+    const customerLat = Number(o.customer?.lat ?? o.delivery.position.latitude)
+    const customerLng = Number(o.customer?.lng ?? o.delivery.position.longitude)
+
+    if ((o.status === 'assigned' || o.status === 'created') && Number.isFinite(pickupLat) && Number.isFinite(pickupLng)) {
+      return { lat: pickupLat, lng: pickupLng }
+    }
+
+    if (Number.isFinite(customerLat) && Number.isFinite(customerLng)) {
+      return { lat: customerLat, lng: customerLng }
+    }
+
+    return null
   }, [activeOrder, selectedOrder])
 
   const loadOrders = useCallback(async () => {
@@ -213,17 +225,6 @@ export default function CourierScreen() {
       toast.error('Impossible d’activer les notifications')
     }
   }, [])
-
-  const testBrowserNotification = useCallback(() => {
-    toast.success('Test notification', { description: 'Si autorisé, une notification système apparaît.' })
-    if (!('Notification' in window)) return
-    if (notificationPermission !== 'granted') return
-    try {
-      const n = new Notification('Mangoo Livreur', { body: 'Test: nouvelle commande' })
-      window.setTimeout(() => n.close(), 3500)
-    } catch {
-    }
-  }, [notificationPermission])
 
   useEffect(() => {
     if (!canAccess) return
@@ -336,6 +337,12 @@ export default function CourierScreen() {
   }, [routeCacheKey])
 
   const startDelivery = useCallback(async (id: string) => {
+    if (myOrders.some((o) => o.status === 'assigned' || o.status === 'picked_up')) {
+      const message = 'Terminez la livraison en cours avant d en prendre une nouvelle.'
+      setRouteError(message)
+      toast.error(message)
+      return
+    }
     try {
       const updated = await patchOrder(id, { action: 'start', courierId })
       setPoolOrders((prev) => prev.filter((o) => o.id !== updated.id))
@@ -348,9 +355,11 @@ export default function CourierScreen() {
       setRoute(null)
       setRouteError(null)
     } catch (e: any) {
-      setRouteError(String(e?.message || e))
+      const message = String(e?.message || e)
+      setRouteError(message)
+      toast.error(message)
     }
-  }, [courierId])
+  }, [courierId, myOrders])
 
   const markDelivered = useCallback(async (id: string) => {
     try {
@@ -368,6 +377,19 @@ export default function CourierScreen() {
       setRouteError(String(e?.message || e))
     }
   }, [activeOrderId])
+
+  const markPickedUp = useCallback(async (id: string) => {
+    try {
+      const updated = await patchOrder(id, { action: 'picked_up' })
+      setMyOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)))
+      setActiveOrderId(updated.id)
+      setSelectedId(updated.id)
+      setRoute(null)
+      setRouteError(null)
+    } catch (e: any) {
+      setRouteError(String(e?.message || e))
+    }
+  }, [])
 
   const computeRoute = useCallback(async (from: LatLng, to: LatLng, wantSteps: boolean, orderId: string) => {
     try {
@@ -406,6 +428,11 @@ export default function CourierScreen() {
     if (!id) return
     computeRoute({ lat: courierPos.lat, lng: courierPos.lng }, destination, voiceEnabled, id)
   }, [courierPos, destination, computeRoute, voiceEnabled, activeOrderId, selectedId])
+
+  const openPremiumTracking = useCallback(() => {
+    if (!premiumTrackingUrl) return
+    window.open(premiumTrackingUrl, '_blank', 'noopener,noreferrer')
+  }, [premiumTrackingUrl])
 
   useEffect(() => {
     if (!destination) return
@@ -483,7 +510,7 @@ export default function CourierScreen() {
               <Shield className={`w-6 h-6 ${isDark ? 'text-amber-300' : 'text-amber-600'}`} />
               <div className="text-lg font-black">Accès refusé</div>
             </div>
-            <div className={`mt-2 text-sm ${isDark ? 'text-zinc-300' : 'text-gray-600'}`}>Activez le rôle livreur ou créez un compte livreur.</div>
+            <div className={`mt-2 text-sm ${isDark ? 'text-zinc-300' : 'text-gray-600'}`}>Connectez-vous avec un compte livreur ou créez un compte dédié.</div>
             <div className="mt-5 flex flex-wrap gap-3">
               <button
                 type="button"
@@ -494,21 +521,10 @@ export default function CourierScreen() {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  const next = { ...user, role: 'livreur', roles: Array.from(new Set([...(roles || []), 'livreur'])) }
-                  saveCurrentUser(next)
-                  setUser(next)
-                }}
-                className={`px-4 py-2 rounded-xl font-black transition-colors ${isDark ? 'bg-emerald-500 text-emerald-950 hover:bg-emerald-400' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}
-              >
-                Activer mode livreur (démo)
-              </button>
-              <button
-                type="button"
                 onClick={() => navigate('/connexion')}
                 className={`px-4 py-2 rounded-xl font-black transition-colors ${isDark ? 'bg-white/5 border border-white/10 hover:bg-white/10 text-white' : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-900'}`}
               >
-                Retour
+                Se connecter
               </button>
             </div>
           </div>
@@ -529,26 +545,19 @@ export default function CourierScreen() {
       <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-4" style={{ minHeight: 'calc(100vh - 160px)' }}>
           <div className="h-full flex flex-col gap-4">
             {notificationPermission !== 'granted' ? (
-              <div className={`px-4 py-3 rounded-2xl border text-sm flex items-center justify-between gap-3 ${isDark ? 'bg-sky-500/10 border-sky-500/20 text-sky-100' : 'bg-sky-50 border-sky-200 text-sky-900'}`}>
+              <div className={`px-4 py-3 rounded-2xl border text-sm flex items-center justify-between gap-3 ${isDark ? 'bg-sky-500/10 border-sky-500/20 text-sky-100' : 'bg-white/90 border-sky-200 text-sky-900 shadow-sm'}`}>
                 <div className="min-w-0">Notifications: activez pour être alerté quand une commande arrive.</div>
                 <button
                   type="button"
                   onClick={requestBrowserNotifications}
-                  className={`shrink-0 px-3 py-2 rounded-xl font-black text-xs transition-colors ${isDark ? 'bg-white/5 border border-white/10 hover:bg-white/10' : 'bg-white border border-sky-200 hover:bg-sky-100'}`}
+                  className={`shrink-0 px-3 py-2 rounded-xl font-black text-xs transition-colors ${isDark ? 'bg-white/5 border border-white/10 hover:bg-white/10' : 'bg-gradient-to-r from-orange-500 to-emerald-600 text-white hover:from-orange-600 hover:to-emerald-700 shadow-sm'}`}
                 >
                   Activer
                 </button>
               </div>
             ) : (
-              <div className={`px-4 py-3 rounded-2xl border text-sm flex items-center justify-between gap-3 ${isDark ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-100' : 'bg-emerald-50 border-emerald-200 text-emerald-900'}`}>
+              <div className={`px-4 py-3 rounded-2xl border text-sm ${isDark ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-100' : 'bg-white/90 border-emerald-200 text-emerald-900 shadow-sm'}`}>
                 <div className="min-w-0">Notifications: activées.</div>
-                <button
-                  type="button"
-                  onClick={testBrowserNotification}
-                  className={`shrink-0 px-3 py-2 rounded-xl font-black text-xs transition-colors ${isDark ? 'bg-white/5 border border-white/10 hover:bg-white/10' : 'bg-white border border-emerald-200 hover:bg-emerald-100'}`}
-                >
-                  Tester
-                </button>
               </div>
             )}
             {ordersError && (
@@ -571,14 +580,37 @@ export default function CourierScreen() {
             )}
 
             {(selectedOrder || activeOrder) && (
-              <button
-                type="button"
-                onClick={() => setInvoiceOpen(true)}
-                className={`w-full px-4 py-3 rounded-2xl font-black transition-colors ${isDark ? 'bg-white/5 border border-white/10 hover:bg-white/10 text-white' : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-900'}`}
-                title="Voir la fiche livreur"
-              >
-                🧾 Fiche livreur
-              </button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setInvoiceOpen(true)}
+                  className={`w-full px-4 py-3 rounded-2xl font-black transition-colors ${isDark ? 'bg-white/5 border border-white/10 hover:bg-white/10 text-white' : 'bg-gradient-to-r from-orange-500 to-emerald-600 text-white hover:from-orange-600 hover:to-emerald-700 shadow-lg shadow-orange-100/60'}`}
+                  title="Voir la fiche livreur"
+                >
+                  🧾 Fiche livreur
+                </button>
+                {premiumTrackingUrl && (
+                  <button
+                    type="button"
+                    onClick={openPremiumTracking}
+                    className={`w-full px-4 py-3 rounded-2xl font-black transition-colors ${isDark ? 'bg-white/5 border border-white/10 hover:bg-white/10 text-white' : 'bg-white border border-orange-200 text-gray-900 hover:bg-orange-50 shadow-sm'}`}
+                    title="Ouvrir le suivi premium"
+                  >
+                    🚚 Suivi premium
+                  </button>
+                )}
+              </div>
+            )}
+
+            {(selectedOrder || activeOrder) && !premiumTrackingUrl && (
+              <div className={`px-4 py-3 rounded-2xl border text-sm ${
+                isDark ? 'bg-white/5 border-white/10 text-zinc-200' : 'bg-gray-50 border-gray-200 text-gray-700'
+              }`}>
+                <div className="font-black">Suivi standard</div>
+                <div className="mt-1 text-xs opacity-90">
+                  Cette course est une demande rapide sans point de retrait. Le suivi premium Mangoo s active seulement sur les missions avec retrait reel.
+                </div>
+              </div>
             )}
 
             <OrdersPanel
@@ -586,9 +618,11 @@ export default function CourierScreen() {
               myOrders={myOrders}
               historyOrders={historyOrders}
               selectedId={selectedId}
+              canStartOrders={!hasActiveDelivery}
               onSelect={(id) => setSelectedId(id)}
               onRefresh={loadOrders}
               onStart={startDelivery}
+              onPickedUp={markPickedUp}
               onDelivered={markDelivered}
             />
 
@@ -606,16 +640,20 @@ export default function CourierScreen() {
             />
           </div>
 
-          <div className={`h-full rounded-2xl border overflow-hidden relative ${isDark ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-white shadow-xl'}`}>
+          <div className={`h-full rounded-2xl border overflow-hidden relative ${isDark ? 'border-white/10 bg-white/5' : 'border-orange-100 bg-white/95 shadow-xl'}`}>
             <div className="absolute top-4 left-4 z-[500] flex flex-wrap items-center gap-2">
-              <div className={`px-3 py-2 rounded-xl backdrop-blur border text-xs font-black inline-flex items-center gap-2 ${isDark ? 'bg-black/40 border-white/10 text-white' : 'bg-white/70 border-gray-200 text-gray-900'}`}>
-                <Navigation className={`w-4 h-4 ${isDark ? 'text-sky-300' : 'text-sky-600'}`} />
-                {activeOrderId ? 'Livraison active' : 'Sélectionnez une commande'}
+              <div className={`px-3 py-2 rounded-xl backdrop-blur border text-xs font-black inline-flex items-center gap-2 ${isDark ? 'bg-black/40 border-white/10 text-white' : 'bg-white/85 border-orange-200 text-gray-900 shadow-sm'}`}>
+                <Navigation className={`w-4 h-4 ${isDark ? 'text-sky-300' : 'text-emerald-600'}`} />
+                {activeOrderId
+                  ? activeOrder?.status === 'picked_up'
+                    ? 'Trajet vers le client'
+                    : 'Trajet vers le point de retrait'
+                  : 'Sélectionnez une commande'}
               </div>
               <button
                 type="button"
                 onClick={() => setTrackingEnabled((v) => !v)}
-                className={`px-3 py-2 rounded-xl backdrop-blur border text-xs font-black transition-colors ${isDark ? 'bg-black/40 border-white/10 hover:bg-black/50 text-white' : 'bg-white/70 border-gray-200 hover:bg-white text-gray-900'}`}
+                className={`px-3 py-2 rounded-xl backdrop-blur border text-xs font-black transition-colors ${isDark ? 'bg-black/40 border-white/10 hover:bg-black/50 text-white' : 'bg-white/85 border-gray-200 hover:bg-white text-gray-900 shadow-sm'}`}
               >
                 GPS: {trackingEnabled ? 'ON' : 'OFF'}
               </button>
