@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { localSyncStore } from '../services/localSyncStore'
 import { supabaseAdmin } from '../config/supabase'
+import { findActiveByEmail as findUserIdentityByEmail, findActiveByPin as findUserIdentityByPin } from '../services/connectPlusUserIdentityStore'
 
 const router = Router()
 
@@ -23,6 +24,35 @@ const readToken = (req: any) => {
 }
 
 const normalizeEmail = (value: any) => String(value || '').trim().toLowerCase()
+const normalizePin = (value: any) => String(value || '').replace(/[^\d]/g, '').slice(0, 6)
+const isProbablyEmail = (value: any) => {
+  const v = normalizeEmail(value)
+  const at = v.indexOf('@')
+  const dot = v.lastIndexOf('.')
+  return Boolean(v && at > 0 && dot > at + 1 && dot < v.length - 1)
+}
+const getExampleDomainAliases = (email: string): Set<string> => {
+  const e = normalizeEmail(email)
+  const out = new Set<string>()
+  if (!e) return out
+  out.add(e)
+  const at = e.lastIndexOf('@')
+  if (at <= 0) return out
+  const localPart = e.slice(0, at)
+  const domain = e.slice(at + 1)
+  if (domain === 'example.com') out.add(`${localPart}@exemple.com`)
+  if (domain === 'exemple.com') out.add(`${localPart}@example.com`)
+  return out
+}
+const emailsMatch = (a: any, b: any) => {
+  const A = getExampleDomainAliases(String(a || ''))
+  const B = getExampleDomainAliases(String(b || ''))
+  if (!A.size || !B.size) return false
+  for (const x of A) {
+    if (B.has(x)) return true
+  }
+  return false
+}
 
 const parseLatLng = (value: any): number | null => {
   if (typeof value === 'number' && Number.isFinite(value)) return value
@@ -64,6 +94,108 @@ const phoneMatchMeta = (a: any, b: any) => {
   return { score: 1, suffixLen: i }
 }
 const phonesMatch = (a: any, b: any) => phoneMatchMeta(a, b).score > 0
+
+const findLocalUserByEmail = (users: any[], email: string) => {
+  const target = normalizeEmail(email)
+  if (!target) return null
+  return users.find((u: any) => emailsMatch(u?.email, target)) || null
+}
+
+const getOwnedVendorsForEmail = (vendors: any[], email: string) => {
+  const target = normalizeEmail(email)
+  if (!target) return []
+  return (Array.isArray(vendors) ? vendors : []).filter((v: any) => {
+    const ownerEmail = normalizeEmail(v?.ownerEmail)
+    return !!ownerEmail && emailsMatch(ownerEmail, target)
+  })
+}
+
+const getPreferredPhoneForUser = (user: any, vendors: any[]) => {
+  const direct = String(user?.phone || '').trim()
+  if (direct) return direct
+  const email = normalizeEmail(user?.email)
+  if (!email) return ''
+  const owned = getOwnedVendorsForEmail(vendors, email)
+    .map((v: any) => ({ v, phone: getResolvedVendorPhone(v) }))
+    .filter((item) => !!String(item.phone || '').trim())
+    .sort((a, b) => new Date(String(b.v?.updatedAt || 0)).getTime() - new Date(String(a.v?.updatedAt || 0)).getTime())
+  return String(owned[0]?.phone || '').trim()
+}
+
+const buildResolvedIdentityFromUser = (params: {
+  user: any
+  vendors: any[]
+  shops: any[]
+  preferredRole?: string
+  matchedPhone?: string
+}) => {
+  const user = params.user || {}
+  const vendors = Array.isArray(params.vendors) ? params.vendors : []
+  const shops = Array.isArray(params.shops) ? params.shops : []
+  const email = normalizeEmail(user?.email)
+  if (!email) return null
+
+  const ownedShops = shops.filter((s: any) => String(s?.userId || '').trim() === String(user?.id || '').trim())
+  const ownedVendors = getOwnedVendorsForEmail(vendors, email)
+  const ownedShopVendor = ownedVendors.find((v: any) => getNormalizedVendorKind(v) === 'shop') || null
+  const ownedProviderVendor = ownedVendors.find((v: any) => getNormalizedVendorKind(v) === 'service') || null
+
+  const requestedRole = String(params.preferredRole || '').trim().toLowerCase()
+  const defaultRole = ownedShops.length || ownedShopVendor || ownedProviderVendor ? 'vendor' : 'client'
+  const role = requestedRole === 'vendor' || requestedRole === 'client' ? requestedRole : defaultRole
+  const vendorRef = role === 'vendor' ? (ownedShopVendor || ownedProviderVendor || null) : null
+  const vendorKind = role === 'vendor'
+    ? String(vendorRef ? getNormalizedVendorKind(vendorRef) : (ownedProviderVendor ? 'service' : 'shop'))
+    : ''
+  const phone = String(params.matchedPhone || getPreferredPhoneForUser(user, vendors) || '').trim()
+  const identityPin = String(findUserIdentityByEmail(email)?.pin || '').trim()
+  const name = String(
+    user?.name ||
+    user?.full_name ||
+    user?.ownerName ||
+    user?.owner_name ||
+    (ownedShops[0]?.name || '') ||
+    email.split('@')[0] ||
+    'Utilisateur'
+  ).trim()
+
+  return {
+    email,
+    name,
+    phone,
+    role,
+    roles: role === 'vendor' ? ['vendor', 'client'] : ['client'],
+    pin: identityPin,
+    vendorId: role === 'vendor' ? String(vendorRef?.id || '').trim() : '',
+    vendorKind,
+    vendorName: role === 'vendor'
+      ? String(vendorRef?.name || ownedShops[0]?.name || name || 'Boutique').trim()
+      : '',
+    shopSlug: role === 'vendor'
+      ? String(vendorRef?.slug || ownedShops[0]?.slug || '').trim()
+      : '',
+  }
+}
+
+const buildResolvedIdentityFromVendor = (vendor: any, preferredRole?: string) => {
+  if (!vendor || typeof vendor !== 'object') return null
+  const ownerEmail = normalizeEmail(vendor?.ownerEmail)
+  if (!ownerEmail) return null
+  const role = String(preferredRole || '').trim().toLowerCase() === 'client' ? 'client' : 'vendor'
+  const vendorKind = getNormalizedVendorKind(vendor)
+  return {
+    email: ownerEmail,
+    name: String(vendor?.ownerName || vendor?.name || ownerEmail.split('@')[0] || 'Utilisateur').trim(),
+    phone: String(getResolvedVendorPhone(vendor) || '').trim(),
+    role,
+    roles: role === 'vendor' ? ['vendor', 'client'] : ['client'],
+    pin: String(findUserIdentityByEmail(ownerEmail)?.pin || '').trim(),
+    vendorId: role === 'vendor' ? String(vendor?.id || '').trim() : '',
+    vendorKind: role === 'vendor' ? vendorKind : '',
+    vendorName: role === 'vendor' ? String(vendor?.name || '').trim() : '',
+    shopSlug: role === 'vendor' ? String(vendor?.slug || vendor?.shopSlug || vendor?.shop_slug || '').trim() : '',
+  }
+}
 
 const isServiceCategory = (value: any) => {
   const s = String(value || '').trim().toLowerCase()
@@ -194,12 +326,13 @@ router.post('/auth/register', (req, res) => {
     const email = localSyncStore.normalizeEmail(req.body?.email)
     const password = String(req.body?.password || '')
     const name = String(req.body?.name || '').trim()
-    const user = localSyncStore.registerUser({ email, password, name })
+    const phone = String(req.body?.phone || '').trim()
+    const user = localSyncStore.registerUser({ email, password, name, phone })
     const session = localSyncStore.createSession(user.id)
     res.json({
       success: true,
       token: session.token,
-      user: { id: user.id, email: user.email, name: user.name },
+      user: { id: user.id, email: user.email, name: user.name, phone: (user as any)?.phone || '' },
     })
   } catch (e: any) {
     res.status(400).json({ success: false, error: String(e?.message || e || 'Bad request') })
@@ -219,7 +352,7 @@ router.post('/auth/login', (req, res) => {
     res.json({
       success: true,
       token: session.token,
-      user: { id: user.id, email: user.email, name: user.name },
+      user: { id: user.id, email: user.email, name: user.name, phone: (user as any)?.phone || '' },
     })
   } catch (e: any) {
     res.status(400).json({ success: false, error: String(e?.message || e || 'Bad request') })
@@ -228,7 +361,7 @@ router.post('/auth/login', (req, res) => {
 
 router.get('/me', requireAuth, (req: any, res) => {
   const u = req.localUser
-  res.json({ success: true, user: { id: u.id, email: u.email, name: u.name } })
+  res.json({ success: true, user: { id: u.id, email: u.email, name: u.name, phone: (u as any)?.phone || '' } })
 })
 
 router.get('/shops/mine', requireAuth, (req: any, res) => {
@@ -667,6 +800,130 @@ router.post('/localplus/provider-verify-pin', async (req, res) => {
           }
         : null,
     })
+  } catch (e: any) {
+    res.status(400).json({ success: false, error: String(e?.message || e || 'Bad request') })
+  }
+})
+
+router.post('/localplus/identity/resolve', async (req, res) => {
+  try {
+    const modeRaw = String(req.body?.mode || req.body?.method || 'auto').trim().toLowerCase()
+    const preferredRole = String(req.body?.role || '').trim().toLowerCase()
+    const valueRaw = String(req.body?.value || req.body?.identifier || req.body?.email || req.body?.phone || req.body?.pin || '').trim()
+    const emailValue = normalizeEmail(valueRaw)
+    const phoneValue = String(valueRaw || '').trim()
+    const pinValue = normalizePin(valueRaw)
+
+    if (!valueRaw) {
+      res.status(400).json({ success: false, error: 'Valeur manquante' })
+      return
+    }
+
+    const users = localSyncStore.listAllUsers()
+    const shops = localSyncStore.listAllShops()
+    const vendors = localSyncStore.listLocalPlusVendors()
+
+    const resolveByEmail = () => {
+      const user = findLocalUserByEmail(users as any[], emailValue)
+      if (user) return buildResolvedIdentityFromUser({ user, vendors: vendors as any[], shops: shops as any[], preferredRole })
+
+      const vendor = getOwnedVendorsForEmail(vendors as any[], emailValue)
+        .sort((a: any, b: any) => new Date(String(b?.updatedAt || 0)).getTime() - new Date(String(a?.updatedAt || 0)).getTime())[0] || null
+      if (vendor) return buildResolvedIdentityFromVendor(vendor, preferredRole)
+      return null
+    }
+
+    const resolveByPhone = () => {
+      const candidates = (Array.isArray(users) ? users : [])
+        .map((user: any) => {
+          const resolvedPhone = getPreferredPhoneForUser(user, vendors as any[])
+          const meta = phoneMatchMeta(resolvedPhone, phoneValue)
+          return { user, resolvedPhone, score: meta.score, suffixLen: meta.suffixLen }
+        })
+        .filter((item: any) => item.score > 0)
+        .sort((a: any, b: any) => {
+          if (b.score !== a.score) return b.score - a.score
+          if (b.suffixLen !== a.suffixLen) return b.suffixLen - a.suffixLen
+          return new Date(String(b.user?.createdAt || 0)).getTime() - new Date(String(a.user?.createdAt || 0)).getTime()
+        })
+
+      const best = candidates[0] || null
+      if (best) {
+        const bestGroup = candidates.filter((item: any) => item.score === best.score && item.suffixLen === best.suffixLen)
+        if (bestGroup.length > 1) return { ambiguous: true, identity: null }
+        return {
+          ambiguous: false,
+          identity: buildResolvedIdentityFromUser({
+            user: best.user,
+            vendors: vendors as any[],
+            shops: shops as any[],
+            preferredRole,
+            matchedPhone: best.resolvedPhone,
+          }),
+        }
+      }
+
+      const vendorCandidates = (Array.isArray(vendors) ? vendors : [])
+        .map((v: any) => {
+          const resolvedPhone = getResolvedVendorPhone(v)
+          const meta = phoneMatchMeta(resolvedPhone, phoneValue)
+          return { v, score: meta.score, suffixLen: meta.suffixLen }
+        })
+        .filter((item: any) => item.score > 0)
+        .sort((a: any, b: any) => {
+          if (b.score !== a.score) return b.score - a.score
+          if (b.suffixLen !== a.suffixLen) return b.suffixLen - a.suffixLen
+          return new Date(String(b.v?.updatedAt || 0)).getTime() - new Date(String(a.v?.updatedAt || 0)).getTime()
+        })
+
+      const bestVendor = vendorCandidates[0] || null
+      if (!bestVendor) return { ambiguous: false, identity: null }
+      const bestGroup = vendorCandidates.filter((item: any) => item.score === bestVendor.score && item.suffixLen === bestVendor.suffixLen)
+      if (bestGroup.length > 1) return { ambiguous: true, identity: null }
+      return { ambiguous: false, identity: buildResolvedIdentityFromVendor(bestVendor.v, preferredRole) }
+    }
+
+    const resolveByPin = () => {
+      const userIdentity = findUserIdentityByPin(pinValue)
+      if (userIdentity?.user_email) {
+        const user = findLocalUserByEmail(users as any[], String(userIdentity.user_email || ''))
+        if (user) return { ambiguous: false, identity: buildResolvedIdentityFromUser({ user, vendors: vendors as any[], shops: shops as any[], preferredRole }) }
+      }
+
+      const vendorCandidates = (Array.isArray(vendors) ? vendors : [])
+        .filter((v: any) => String(v?.localPin || v?.local_pin || '').trim() === pinValue)
+        .sort((a: any, b: any) => new Date(String(b?.updatedAt || 0)).getTime() - new Date(String(a?.updatedAt || 0)).getTime())
+
+      if (!vendorCandidates.length) return { ambiguous: false, identity: null }
+      if (vendorCandidates.length > 1) return { ambiguous: true, identity: null }
+      return { ambiguous: false, identity: buildResolvedIdentityFromVendor(vendorCandidates[0], preferredRole) }
+    }
+
+    let result: any = { ambiguous: false, identity: null }
+    if (modeRaw === 'email') {
+      result.identity = isProbablyEmail(emailValue) ? resolveByEmail() : null
+    } else if (modeRaw === 'phone') {
+      result = resolveByPhone()
+    } else if (modeRaw === 'pin') {
+      result = resolveByPin()
+    } else {
+      if (pinValue && pinValue.length >= 4 && /^[0-9]+$/.test(pinValue)) result = resolveByPin()
+      else if (isProbablyEmail(emailValue)) result.identity = resolveByEmail()
+      else result = resolveByPhone()
+    }
+
+    if (result?.ambiguous) {
+      res.json({ success: true, found: true, ambiguous: true, identity: null })
+      return
+    }
+
+    const identity = result?.identity || null
+    if (!identity) {
+      res.json({ success: true, found: false, ambiguous: false, identity: null })
+      return
+    }
+
+    res.json({ success: true, found: true, ambiguous: false, identity })
   } catch (e: any) {
     res.status(400).json({ success: false, error: String(e?.message || e || 'Bad request') })
   }

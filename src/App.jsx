@@ -27,7 +27,7 @@ const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
 const AdminShops = React.lazy(() => import('./pages/AdminShops'));
 const AdminProviders = React.lazy(() => import('./pages/AdminProviders'));
 const AdminCommissions = React.lazy(() => import('./pages/AdminCommissions'));
-const AdminUsers = React.lazy(() => import('./pages/AdminUsers'));
+const AdminAccounts = React.lazy(() => import('./pages/AdminAccounts'));
 const AdminCreateShop = React.lazy(() => import('./pages/AdminCreateShop'));
 const AdminPayments = React.lazy(() => import('./pages/AdminPayments'));
 const AdminWallet = React.lazy(() => import('./pages/AdminWallet'));
@@ -36,8 +36,6 @@ const AdminSettings = React.lazy(() => import('./pages/AdminSettings'));
 const AdminBoosts = React.lazy(() => import('./pages/AdminBoosts'));
 const AdminInvoices = React.lazy(() => import('./pages/AdminInvoices'));
 const AdminNavigation = React.lazy(() => import('./components/AdminNavigation'));
-const SimpleTest = React.lazy(() => import('./pages/SimpleTest'));
-
 const ProductCard = React.lazy(() => import('./components/OptimizedProductCard'));
 const MarketplaceFilters = React.lazy(() => import('./components/MarketplaceFilters'));
 const PerformanceMonitor = React.lazy(() => import('./components/PerformanceMonitor'));
@@ -86,6 +84,19 @@ function isProbablyEmailValue(value) {
   if (dot <= at + 1) return false
   if (dot >= v.length - 1) return false
   return true
+}
+
+function isDevLikeHost(hostname) {
+  const host = String(hostname || '').trim().toLowerCase()
+  if (!host) return false
+  return (
+    host === 'localhost' ||
+    host === '127.0.0.1' ||
+    host.startsWith('192.168.') ||
+    host.startsWith('10.') ||
+    host.startsWith('172.') ||
+    host.endsWith('.trycloudflare.com')
+  )
 }
 
 function readBoostContextEmail({ queryEmail = '', explicitUserEmail = '' } = {}) {
@@ -589,8 +600,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
 
     const isDevHost = (() => {
       try {
-        const host = String(window.location.hostname || '').trim().toLowerCase();
-        return host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.');
+        return isDevLikeHost(window.location.hostname)
       } catch {
         return false;
       }
@@ -3751,7 +3761,7 @@ const VendorDashboard = ({ user }) => {
         return ''
       }
     })()
-    const isDevHost = host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')
+    const isDevHost = isDevLikeHost(host)
 
     let didRemote = false
     try {
@@ -5522,6 +5532,7 @@ const VendorDashboard = ({ user }) => {
 };
 
 const CLIENT_ORDERS_KEY = 'demo_client_orders';
+const VENDOR_ORDERS_KEY = 'mangoo_vendor_orders_v1';
 
 const readClientOrdersMap = () => {
   try {
@@ -5535,6 +5546,148 @@ const readClientOrdersMap = () => {
 
 const writeClientOrdersMap = (next) => {
   localStorage.setItem(CLIENT_ORDERS_KEY, JSON.stringify(next));
+};
+
+const readVendorOrdersMap = () => {
+  try {
+    const raw = localStorage.getItem(VENDOR_ORDERS_KEY);
+    const data = raw ? JSON.parse(raw) : {};
+    return data && typeof data === 'object' ? data : {};
+  } catch {
+    return {};
+  }
+};
+
+const writeVendorOrdersMap = (next) => {
+  localStorage.setItem(VENDOR_ORDERS_KEY, JSON.stringify(next));
+};
+
+const readJsonLocal = (key) => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const normalizeTextLocal = (value) => {
+  const v = String(value || '').trim();
+  return v || '';
+};
+
+const normalizeSlugLocal = (value) => {
+  return normalizeTextLocal(value).toLowerCase();
+};
+
+const normalizeVendorIdLocal = (value) => {
+  return normalizeTextLocal(value).replace(/^shop:/i, '').replace(/^provider:/i, '').replace(/^shop-/i, '');
+};
+
+const readShopDirectoryLocal = () => {
+  const demo = readJsonLocal('demo_shops');
+  const cache = readJsonLocal('mangoo_shops_directory_cache_v1');
+  const demoList = Array.isArray(demo) ? demo : [];
+  const cacheList = Array.isArray(cache?.shops) ? cache.shops : [];
+  return [...demoList, ...cacheList].filter((entry) => entry && typeof entry === 'object');
+};
+
+const readVendorDirectoryLocal = () => {
+  const legacy = readJsonLocal('mangoo_vendors');
+  const custom = readJsonLocal('mangoo_custom_vendors');
+  const legacyList = Array.isArray(legacy) ? legacy : [];
+  const customList = Array.isArray(custom) ? custom : [];
+  return [...legacyList, ...customList].filter((entry) => entry && typeof entry === 'object');
+};
+
+const resolveVendorScopeForOrderItem = (item) => {
+  const shopSlug = normalizeSlugLocal(item?.shopSlug || item?.shop_slug);
+  const vendorId = normalizeVendorIdLocal(item?.vendorId || item?.vendor_id || item?.sourceVendorId || item?.source_vendor_id);
+  const vendorName = normalizeTextLocal(item?.vendorName || item?.vendor);
+  let vendorOwnerEmail = normalizeTextLocal(item?.vendorOwnerEmail || item?.vendor_owner_email).toLowerCase();
+  let vendorKind = normalizeTextLocal(item?.vendorKind || item?.vendor_kind) || 'shop';
+
+  if (!vendorOwnerEmail || !vendorId) {
+    const shops = readShopDirectoryLocal();
+    const vendors = readVendorDirectoryLocal();
+    const shopMatch = shops.find((entry) => {
+      const slug = normalizeSlugLocal(entry?.slug);
+      if (shopSlug && slug === shopSlug) return true;
+      const candidateVendorId = normalizeVendorIdLocal(entry?.sourceVendorId || entry?.source_vendor_id || entry?.vendorId || entry?.vendor_id || entry?.id);
+      return Boolean(vendorId && candidateVendorId && candidateVendorId === vendorId);
+    }) || null;
+    const vendorMatch = vendors.find((entry) => {
+      const candidateVendorId = normalizeVendorIdLocal(entry?.id || entry?.vendorId || entry?.vendor_id);
+      if (vendorId && candidateVendorId && candidateVendorId === vendorId) return true;
+      const candidateName = normalizeTextLocal(entry?.name || entry?.trade).toLowerCase();
+      return Boolean(vendorName && candidateName && candidateName === vendorName.toLowerCase());
+    }) || null;
+    vendorOwnerEmail = vendorOwnerEmail || normalizeTextLocal(shopMatch?.ownerEmail || shopMatch?.owner_email || vendorMatch?.ownerEmail || vendorMatch?.owner_email || vendorMatch?.email).toLowerCase();
+    vendorKind = normalizeTextLocal(vendorMatch?.kind || vendorKind || 'shop') || 'shop';
+  }
+
+  const scopeKey = vendorId
+    ? `vendor:${vendorId}`
+    : shopSlug
+      ? `shop:${shopSlug}`
+      : vendorOwnerEmail
+        ? `email:${vendorOwnerEmail}`
+        : vendorName
+          ? `name:${vendorName.toLowerCase()}`
+          : '';
+
+  return {
+    key: scopeKey,
+    vendorId: vendorId || null,
+    vendorKind: vendorKind || 'shop',
+    vendorName: vendorName || null,
+    vendorOwnerEmail: vendorOwnerEmail || null,
+    shopSlug: shopSlug || null,
+  };
+};
+
+const upsertVendorOrders = (order, clientMeta = {}) => {
+  try {
+    const items = Array.isArray(order?.items) ? order.items : [];
+    const groups = new Map();
+    items.forEach((item) => {
+      const scope = resolveVendorScopeForOrderItem(item);
+      if (!scope.key) return;
+      if (!groups.has(scope.key)) groups.set(scope.key, { scope, items: [] });
+      groups.get(scope.key).items.push(item);
+    });
+    if (!groups.size) return;
+
+    const map = readVendorOrdersMap();
+    for (const { scope, items: vendorItems } of groups.values()) {
+      const list = Array.isArray(map[scope.key]) ? map[scope.key] : [];
+      const totalCents = vendorItems.reduce((sum, item) => sum + ((Number(item?.unitPriceCents || 0) || 0) * (Number(item?.qty || 0) || 0)), 0);
+      const nextOrder = {
+        id: String(order?.id || ''),
+        sourceOrderId: String(order?.id || ''),
+        createdAt: String(order?.createdAt || new Date().toISOString()),
+        status: String(order?.status || 'paid'),
+        totalCents,
+        currency: String(order?.currency || 'XOF'),
+        items: vendorItems,
+        payment: order?.payment || null,
+        customerId: normalizeTextLocal(clientMeta?.id || clientMeta?.email) || null,
+        customerName: normalizeTextLocal(clientMeta?.name) || 'Client',
+        customerEmail: normalizeTextLocal(clientMeta?.email) || null,
+        customerPhone: normalizeTextLocal(clientMeta?.phone) || null,
+        customerAddress: normalizeTextLocal(clientMeta?.address) || null,
+        vendorId: scope.vendorId,
+        vendorKind: scope.vendorKind,
+        vendorName: scope.vendorName,
+        vendorOwnerEmail: scope.vendorOwnerEmail,
+        shopSlug: scope.shopSlug,
+      };
+      map[scope.key] = [nextOrder, ...list.filter((entry) => String(entry?.id || '') !== String(nextOrder.id))].slice(0, 300);
+    }
+    writeVendorOrdersMap(map);
+  } catch {
+    // ignore
+  }
 };
 
 const upsertClientOrder = (email, order) => {
@@ -5768,6 +5921,7 @@ const ClientMarketplace = ({ user }) => {
   const handlePaymentSuccess = useCallback((transaction) => {
     const items = cart.map((item) => {
       const unit = parseFloat(String(item.price || '').replace(/[^\d]/g, '')) || 0;
+      const vendorScope = resolveVendorScopeForOrderItem(item);
       return {
         productId: item.id,
         name: item.name,
@@ -5775,7 +5929,10 @@ const ClientMarketplace = ({ user }) => {
         unitPriceCents: Math.round(unit * 100),
         currency: 'XOF',
         shopSlug: item.shopSlug || item.shop_slug || null,
+        vendorId: item.vendorId || item.vendor_id || item.sourceVendorId || item.source_vendor_id || vendorScope.vendorId || null,
+        vendorKind: item.vendorKind || item.vendor_kind || vendorScope.vendorKind || 'shop',
         vendorName: item.vendorName || item.vendor || null,
+        vendorOwnerEmail: item.vendorOwnerEmail || item.vendor_owner_email || vendorScope.vendorOwnerEmail || null,
         vendorCountry: item.vendorCountry || item.country || null
       };
     });
@@ -5787,6 +5944,11 @@ const ClientMarketplace = ({ user }) => {
       totalCents: Math.round(cartTotal * 100),
       currency: 'XOF',
       items,
+      customerId: String(user?.id || email || ''),
+      customerName: String(user?.name || ''),
+      customerEmail: email,
+      customerPhone: String(user?.phone || ''),
+      customerAddress: String(user?.address || ''),
       payment: {
         id: transaction?.id || '',
         provider: transaction?.provider || 'demo'
@@ -5795,6 +5957,13 @@ const ClientMarketplace = ({ user }) => {
 
     if (email) {
       upsertClientOrder(email, order);
+      upsertVendorOrders(order, {
+        id: String(user?.id || email || ''),
+        email,
+        name: String(user?.name || ''),
+        phone: String(user?.phone || ''),
+        address: String(user?.address || ''),
+      });
 
       try {
         const vatRate = 0.18;
@@ -5825,7 +5994,7 @@ const ClientMarketplace = ({ user }) => {
     toast.success('Paiement réussi');
     useStore.getState().setCart([]);
     setShowPayment(false);
-  }, [cart, cartTotal, email]);
+  }, [cart, cartTotal, email, user?.address, user?.email, user?.id, user?.name, user?.phone]);
 
   const handlePaymentError = useCallback((error) => {
     alert(`Erreur de paiement: ${error.message}`);
@@ -6645,7 +6814,7 @@ const ShopsDirectory = () => {
         return ''
       }
     })()
-    const isDevHost = host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')
+    const isDevHost = isDevLikeHost(host)
     const preferSupabase = Boolean(hasSupabase && supabaseShops.length)
     const forceLocalSources = (() => {
       try {
@@ -8437,15 +8606,11 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                           <div className="mt-3 flex flex-wrap gap-2">
                             <button
                               type="button"
-                              onClick={() => requestDeliveryForOrder(o)}
-                              disabled={String(o.status || '') !== 'paid'}
-                              className={String(o.status || '') === 'paid'
-                                ? 'px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-green-600 text-white font-black hover:from-orange-600 hover:to-green-700 transition-all'
-                                : `${isDark ? 'bg-white/5 border border-white/10 text-gray-400' : 'bg-white border border-gray-200 text-gray-400'} px-4 py-2 rounded-xl font-black opacity-60 cursor-not-allowed`
-                              }
-                              title={String(o.status || '') === 'paid' ? 'Demander une livraison pour cette commande' : 'Disponible après paiement'}
+                              disabled
+                              className={`${isDark ? 'bg-white/5 border border-white/10 text-gray-400' : 'bg-white border border-gray-200 text-gray-500'} px-4 py-2 rounded-xl font-black opacity-80 cursor-not-allowed`}
+                              title="Dans le secteur formel, le vendeur lance la livraison quand le colis est prêt"
                             >
-                              🚚 Demander livraison
+                              🏪 Le vendeur lance
                             </button>
                             <button
                               type="button"
@@ -9143,14 +9308,18 @@ const AdminLayout = () => {
                 isDark ? 'text-white' : 'text-gray-900'
               } truncate max-w-[60vw] sm:max-w-none`}>
                 {location.pathname === '/admin/dashboard' && 'Tableau de bord'}
-                {location.pathname === '/admin/shops' && 'Commerces'}
+                {location.pathname === '/admin/shops' && 'Boutiques'}
                 {location.pathname === '/admin/providers' && 'Prestataires'}
                 {location.pathname === '/admin/boosts' && 'Boost Carte'}
+                {location.pathname === '/admin/vendor-access-qr' && 'Accès vendeur'}
                 {location.pathname === '/admin/commissions' && 'Commissions'}
-                {location.pathname === '/admin/pricing' && 'Tarification'}
-                {location.pathname === '/admin/users' && 'Utilisateurs'}
+                {location.pathname === '/admin/users' && 'Comptes'}
                 {location.pathname === '/admin/payments' && 'Paiements'}
-                {location.pathname === '/admin/create-shop' && 'Créer un commerce'}
+                {location.pathname === '/admin/analytics' && 'Pilotage'}
+                {location.pathname === '/admin/wallet' && 'Portefeuille'}
+                {location.pathname === '/admin/invoices' && 'Factures'}
+                {location.pathname === '/admin/settings' && 'Paramètres'}
+                {location.pathname === '/admin/create-shop' && 'Créer une boutique'}
               </h1>
             </div>
             <div className="flex items-center space-x-4" />
@@ -9167,14 +9336,13 @@ const AdminLayout = () => {
             <Route path="boosts" element={<AdminBoosts />} />
             <Route path="vendor-access-qr" element={<VendorAccessQRPage />} />
             <Route path="commissions" element={<AdminCommissions />} />
-            <Route path="users" element={<AdminUsers />} />
+            <Route path="users" element={<AdminAccounts />} />
             <Route path="payments" element={<AdminPayments />} />
             <Route path="analytics" element={<AdminAnalytics />} />
             <Route path="wallet" element={<AdminWallet />} />
             <Route path="invoices" element={<AdminInvoices />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="create-shop" element={<AdminCreateShop />} />
-            <Route path="simple-test" element={<SimpleTest />} />
             <Route path="*" element={<AdminDashboard />} />
           </Routes>
         </main>
