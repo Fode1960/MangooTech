@@ -4022,7 +4022,7 @@
                         <div id="lp-vendor-stock" class="lp-pane" data-vpane="stock">
                             <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
                                 <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Gestion Stock</div>
-                                <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Module stock Local+ (démo). Utilisez « Produits » pour publier.</div>
+                                <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Module stock Local+. Utilisez « Produits » pour publier.</div>
                             </div>
                         </div>
 
@@ -4039,7 +4039,7 @@
                         <div id="lp-vendor-orders" class="lp-pane" data-vpane="orders">
                             <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
                                 <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Commandes vendeur</div>
-                                <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Historique des commandes reçues (démo).</div>
+                                <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Historique des commandes reçues.</div>
                             </div>
                         </div>
 
@@ -9395,7 +9395,7 @@
                 const pin = String(qs.get('pin') || '').trim();
                 const vendorId = String(qs.get('vendor') || '').trim();
                 if (pin) {
-                    setTimeout(() => {
+                    setTimeout(async () => {
                         try { lpClaimVendorByPin(pin); } catch {}
                     }, 250);
                 } else if (vendorId) {
@@ -11337,7 +11337,7 @@
                      overlay.innerHTML = `
                          <div class="modal-card">
                              <span class="modal-icon">💳</span>
-                             <h3 class="modal-title">Paiement Participant (Test)</h3>
+                            <h3 class="modal-title">Paiement participant</h3>
                              <p class="modal-text">Simulez le paiement d'un autre membre du groupe.</p>
                              
                              <div style="background:#f9f9f9; padding:15px; border-radius:10px; margin-bottom:20px;">
@@ -11400,7 +11400,7 @@
                          </div>
                          <div style="margin-top: 15px;">
                              <button onclick="simulateThirdPartyPay(${shareAmount})" style="width: 100%; padding: 10px; background: #fff3e0; color: #e65100; border: 1px dashed #e65100; border-radius: 8px; font-size: 0.85rem; font-weight: bold; cursor: pointer;">
-                                 👁️ Simuler Vue Participant (Test)
+                                 👁️ Ouvrir la vue participant
                              </button>
                          </div>
                      </div>
@@ -12940,6 +12940,349 @@
             document.body.appendChild(overlay);
         }
 
+        function lpClientOrdersStorageKey() {
+            const email = String(getLpCurrentUser?.()?.email || '').trim().toLowerCase();
+            return email ? `mangoo_lp_client_orders:${email}` : 'mangoo_lp_client_orders';
+        }
+
+        function lpReadClientOrders() {
+            try {
+                const raw = localStorage.getItem(lpClientOrdersStorageKey());
+                const parsed = raw ? JSON.parse(raw) : [];
+                return Array.isArray(parsed) ? parsed : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function lpWriteClientOrders(list) {
+            try {
+                const next = Array.isArray(list) ? list : [];
+                localStorage.setItem(lpClientOrdersStorageKey(), JSON.stringify(next.slice(0, 30)));
+            } catch {
+            }
+        }
+
+        function lpRememberClientOrder(orderLike) {
+            const order = orderLike && typeof orderLike === 'object' ? orderLike : null;
+            const id = String(order?.id || '').trim();
+            if (!id) return;
+            const next = lpReadClientOrders().filter((item) => String(item?.id || '').trim() !== id);
+            next.unshift(order);
+            next.sort((a, b) => String(b?.createdAt || '').localeCompare(String(a?.createdAt || '')));
+            lpWriteClientOrders(next);
+        }
+
+        function lpGetPendingDirectPurchase() {
+            try {
+                if (window.pendingLocalPlusOrder && typeof window.pendingLocalPlusOrder === 'object') {
+                    return window.pendingLocalPlusOrder;
+                }
+            } catch {
+            }
+            try {
+                const raw = localStorage.getItem('mangoo_lp_pending_order');
+                const parsed = raw ? JSON.parse(raw) : null;
+                if (parsed && typeof parsed === 'object') {
+                    window.pendingLocalPlusOrder = parsed;
+                    return parsed;
+                }
+            } catch {
+            }
+            return null;
+        }
+
+        function lpSetPendingDirectPurchase(draft) {
+            const next = draft && typeof draft === 'object' ? draft : null;
+            window.pendingLocalPlusOrder = next;
+            try {
+                if (next) localStorage.setItem('mangoo_lp_pending_order', JSON.stringify(next));
+                else localStorage.removeItem('mangoo_lp_pending_order');
+            } catch {
+            }
+        }
+
+        function lpResolveShopVendorContext(preferredVendor) {
+            let vendor = preferredVendor && lpGetVendorKind(preferredVendor) === 'shop' ? preferredVendor : null;
+            const currentUser = getLpCurrentUser ? getLpCurrentUser() : null;
+            try {
+                if (!vendor && activeVendor && lpGetVendorKind(activeVendor) === 'shop') vendor = activeVendor;
+            } catch {
+            }
+            try {
+                if (!vendor) {
+                    const preferredId = String(lpGetPreferredShopAccountId ? lpGetPreferredShopAccountId() : '').trim();
+                    if (preferredId) vendor = (Array.isArray(VENDORS) ? VENDORS.find((x) => String(x?.id || '').trim() === preferredId) : null) || null;
+                }
+            } catch {
+            }
+            try {
+                if (!vendor) {
+                    const userVendorId = String(currentUser?.vendorId || '').trim();
+                    if (userVendorId) vendor = (Array.isArray(VENDORS) ? VENDORS.find((x) => String(x?.id || '').trim() === userVendorId) : null) || null;
+                }
+            } catch {
+            }
+
+            let shopSlug = String(vendor?.shopSlug || vendor?.shop_slug || currentUser?.shopSlug || '').trim();
+            if (!shopSlug && vendor) {
+                try { shopSlug = String(lpGetShopSlugForVendor(vendor) || '').trim(); } catch {}
+            }
+
+            const vendorId = String(vendor?.id || currentUser?.vendorId || '').trim();
+            const shopName = String(vendor?.name || currentUser?.name || '').trim() || 'Boutique';
+            const roomId = String(vendor?.liveRoomId || vendor?.roomId || shopSlug || shopName || vendorId || '').trim() || 'live-demo-123';
+
+            return { vendor, vendorId, shopSlug, shopName, roomId };
+        }
+
+        function lpMapPaymentProvider(methodLike) {
+            const method = String(methodLike || '').trim().toLowerCase();
+            if (method === 'card' || method === 'stripe') return 'stripe';
+            if (method === 'paypal') return 'paypal';
+            if (method === 'mangoo_balance') return 'mangoo_balance';
+            return 'mobile_money';
+        }
+
+        async function lpFinalizePendingDirectPurchase(paymentLike) {
+            const pending = lpGetPendingDirectPurchase();
+            if (!pending || String(pending?.kind || '') !== 'direct_purchase') return null;
+            if (String(pending?.serverOrderId || '').trim()) {
+                const existing = lpReadClientOrders().find((item) => String(item?.id || '').trim() === String(pending.serverOrderId || '').trim()) || null;
+                return existing;
+            }
+            if (pending.finalizing) return null;
+
+            const draft = { ...pending, finalizing: true };
+            lpSetPendingDirectPurchase(draft);
+
+            try {
+                const amount = Number(paymentLike?.amount || draft?.amountCfa || 0) || 0;
+                const paidAt = String(paymentLike?.paidAt || new Date().toISOString()).trim();
+                const method = String(paymentLike?.method || 'mobile_money').trim();
+                const provider = lpMapPaymentProvider(method);
+                const createResponse = await fetch('/api/live-orders/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        roomId: String(draft.roomId || '').trim() || 'live-demo-123',
+                        shopSlug: String(draft.shopSlug || '').trim() || undefined,
+                        shopName: String(draft.shopName || draft.vendorName || '').trim() || undefined,
+                        buyerId: String(draft.buyerId || '').trim() || undefined,
+                        buyerName: String(draft.buyerName || draft.buyerEmail || 'Client').trim(),
+                        qty: Math.max(1, Number(draft.qty || 1) || 1),
+                        product: {
+                            id: String(draft.productId || '').trim() || `lp-${Date.now()}`,
+                            title: String(draft.productName || 'Produit').trim(),
+                            priceCfa: Number(draft.amountCfa || amount || 0) || 0,
+                        },
+                        pricing: {
+                            currency: 'XAF',
+                            unitPriceCfa: Number(draft.amountCfa || amount || 0) || 0,
+                            qty: Math.max(1, Number(draft.qty || 1) || 1),
+                            subtotalCfa: Number(draft.amountCfa || amount || 0) || 0,
+                            mangooCommissionCfa: 0,
+                            mobileMoneyFeeCfa: 0,
+                            totalCfa: Number(amount || draft.amountCfa || 0) || 0,
+                            method,
+                        },
+                    }),
+                });
+                const createdPayload = await createResponse.json().catch(() => ({}));
+                const createdOrder = createdPayload?.order;
+                const createdId = String(createdOrder?.id || '').trim();
+                if (!createResponse.ok || !createdPayload?.success || !createdId) {
+                    throw new Error(String(createdPayload?.error || 'order_create_failed'));
+                }
+
+                const paymentResponse = await fetch(`/api/live-orders/${encodeURIComponent(createdId)}/set-payment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        provider,
+                        method,
+                        status: 'succeeded',
+                        amount: Number(amount || draft.amountCfa || 0) || 0,
+                        currency: 'XAF',
+                        paidAt,
+                    }),
+                });
+                const paymentPayload = await paymentResponse.json().catch(() => ({}));
+                const finalOrder = paymentPayload?.order || createdOrder || null;
+                if (!paymentResponse.ok || !paymentPayload?.success || !finalOrder?.id) {
+                    throw new Error(String(paymentPayload?.error || 'order_payment_sync_failed'));
+                }
+
+                lpRememberClientOrder(finalOrder);
+                lpSetPendingDirectPurchase({
+                    ...draft,
+                    finalizing: false,
+                    finalizedAt: paidAt,
+                    serverOrderId: String(finalOrder.id || '').trim(),
+                });
+                try { updateDashboard() } catch {}
+                return finalOrder;
+            } catch (error) {
+                console.error('Local+ live order sync failed:', error);
+                lpSetPendingDirectPurchase({ ...draft, finalizing: false, syncError: String(error?.message || error || 'sync_failed') });
+                return null;
+            }
+        }
+
+        async function lpFetchVendorLiveOrders() {
+            const ctx = lpResolveShopVendorContext();
+            if (!ctx.roomId) return { ctx, orders: [] };
+            const response = await fetch(`/api/live-orders/by-room/${encodeURIComponent(String(ctx.roomId || '').trim())}`, { method: 'GET' });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok || !payload?.success) {
+                throw new Error(String(payload?.error || 'vendor_orders_fetch_failed'));
+            }
+            let orders = Array.isArray(payload?.orders) ? payload.orders : [];
+            if (ctx.shopSlug) {
+                orders = orders.filter((order) => {
+                    const orderSlug = String(order?.shopSlug || '').trim();
+                    return !orderSlug || orderSlug === ctx.shopSlug;
+                });
+            }
+            return { ctx, orders };
+        }
+
+        function lpRenderVendorOrdersPane(orders, ctx, errorText) {
+            const pane = document.getElementById('lp-vendor-orders');
+            if (!pane) return;
+
+            const list = Array.isArray(orders) ? orders : [];
+            const statusUi = {
+                created: { label: 'Nouvelle', fg: '#2563eb', bg: 'rgba(37,99,235,0.10)', border: 'rgba(37,99,235,0.20)' },
+                payment_pending: { label: 'Paiement en attente', fg: '#d97706', bg: 'rgba(217,119,6,0.10)', border: 'rgba(217,119,6,0.20)' },
+                paid_escrow: { label: 'Payee', fg: '#16a34a', bg: 'rgba(22,163,74,0.10)', border: 'rgba(22,163,74,0.22)' },
+                delivered: { label: 'Remise au livreur', fg: '#7c3aed', bg: 'rgba(124,58,237,0.10)', border: 'rgba(124,58,237,0.22)' },
+                received: { label: 'Recue', fg: '#0f766e', bg: 'rgba(15,118,110,0.10)', border: 'rgba(15,118,110,0.22)' },
+                escrow_released: { label: 'Terminee', fg: '#0f766e', bg: 'rgba(15,118,110,0.10)', border: 'rgba(15,118,110,0.22)' },
+                cancelled: { label: 'Annulee', fg: '#dc2626', bg: 'rgba(220,38,38,0.10)', border: 'rgba(220,38,38,0.22)' },
+            };
+
+            const cards = list.map((order) => {
+                const statusKey = String(order?.status || '').trim();
+                const status = statusUi[statusKey] || { label: statusKey || 'Inconnue', fg: 'var(--ml-muted)', bg: 'rgba(148,163,184,0.10)', border: 'rgba(148,163,184,0.22)' };
+                const createdAt = String(order?.createdAt || '').trim();
+                const total = Number(order?.pricing?.totalCfa || order?.payment?.amount || order?.product?.priceCfa || 0) || 0;
+                const qty = Math.max(1, Number(order?.qty || 1) || 1);
+                const buyerName = String(order?.buyerName || order?.buyerId || 'Client').trim();
+                const productTitle = String(order?.product?.title || 'Produit').trim();
+                const paymentLabel = String(order?.payment?.status || '').trim() === 'succeeded' ? 'Paiement confirme' : 'Paiement non confirme';
+                const orderId = String(order?.id || '').trim();
+                const safeOrderId = lpEscapeInlineArg(orderId);
+                return `
+                    <div style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:16px; margin-top:12px;">
+                        <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
+                            <div>
+                                <div style="font-weight:950; color:var(--ml-text);">${lpEscapeHtml(productTitle)}</div>
+                                <div style="margin-top:4px; color:var(--ml-muted); font-size:0.86rem;">Commande ${lpEscapeHtml(orderId)}</div>
+                                <div style="margin-top:2px; color:var(--ml-muted); font-size:0.86rem;">Client: ${lpEscapeHtml(buyerName)}</div>
+                                <div style="margin-top:2px; color:var(--ml-muted); font-size:0.82rem;">${createdAt ? new Date(createdAt).toLocaleString('fr-FR') : ''}</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-weight:950; color:#f97316;">${total.toLocaleString()} FCFA</div>
+                                <div style="margin-top:6px; display:inline-flex; padding:4px 10px; border-radius:999px; font-size:0.75rem; font-weight:900; color:${status.fg}; background:${status.bg}; border:1px solid ${status.border};">${status.label}</div>
+                            </div>
+                        </div>
+                        <div style="margin-top:12px; display:flex; justify-content:space-between; gap:12px; color:var(--ml-muted); font-size:0.85rem;">
+                            <div>${lpEscapeHtml(productTitle)} x ${qty}</div>
+                            <div>${paymentLabel}</div>
+                        </div>
+                        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+                            <button type="button" class="lp-btn lp-btn-primary" onclick="lpRequestDelivery('${safeOrderId}')">🚚 Demander livraison</button>
+                            <button type="button" class="lp-btn lp-btn-secondary" onclick="lpOpenInvoice('${lpEscapeInlineArg(productTitle)}', ${total})">🧾 Facture</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const headerText = ctx?.shopName ? `Boutique: ${lpEscapeHtml(String(ctx.shopName || '').trim())}` : 'Commandes synchronisees';
+            const bodyHtml = errorText
+                ? `<div style="margin-top:12px; padding:14px; border-radius:16px; background:rgba(220,38,38,0.08); border:1px solid rgba(220,38,38,0.18); color:#b91c1c; font-weight:800;">${lpEscapeHtml(errorText)}</div>`
+                : list.length
+                    ? cards
+                    : `<div style="margin-top:12px; text-align:center; padding:18px 0; color:var(--ml-muted);">
+                            <div style="font-size:2rem; margin-bottom:8px;">🧾</div>
+                            <div style="font-weight:900;">Aucune commande recue pour le moment</div>
+                            <div style="margin-top:6px; font-size:0.86rem;">Les achats payes Local+ apparaitront ici pour ${lpEscapeHtml(String(ctx?.shopName || 'votre boutique'))}.</div>
+                       </div>`;
+
+            pane.innerHTML = `
+                <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
+                    <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Commandes vendeur</div>
+                    <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">${headerText}</div>
+                    ${bodyHtml}
+                </div>
+            `;
+        }
+
+        async function lpRefreshVendorOrders() {
+            const pane = document.getElementById('lp-vendor-orders');
+            if (!pane) return;
+            lpRenderVendorOrdersPane([], lpResolveShopVendorContext(), '');
+            try {
+                const { ctx, orders } = await lpFetchVendorLiveOrders();
+                lpRenderVendorOrdersPane(orders, ctx, '');
+            } catch (error) {
+                lpRenderVendorOrdersPane([], lpResolveShopVendorContext(), "Impossible de charger les commandes synchronisees.");
+                console.error('Vendor live orders refresh failed:', error);
+            }
+        }
+
+        function startDirectPurchase(productName, productPrice, vendorName) {
+            const cleanPrice = parseInt(String(productPrice || '').replace(/[^0-9]/g, '')) || 0;
+            if (!cleanPrice) {
+                alert("Prix indisponible pour cet achat.");
+                return;
+            }
+
+            const user = getLpCurrentUser ? getLpCurrentUser() : null;
+            const vendorContext = lpResolveShopVendorContext(activeVendor);
+            const safeProductName = String(productName || 'Produit').trim() || 'Produit';
+            const safeVendorName = String(vendorContext.shopName || vendorName || 'Boutique').trim() || 'Boutique';
+            const productSlug = typeof lpSlugifyName === 'function'
+                ? lpSlugifyName(safeProductName, `prod-${Date.now()}`)
+                : safeProductName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+            lpSetPendingDirectPurchase({
+                kind: 'direct_purchase',
+                createdAt: new Date().toISOString(),
+                productId: productSlug,
+                productName: safeProductName,
+                vendorName: safeVendorName,
+                shopName: safeVendorName,
+                vendorId: String(vendorContext.vendorId || '').trim(),
+                shopSlug: String(vendorContext.shopSlug || '').trim(),
+                roomId: String(vendorContext.roomId || safeVendorName).trim() || 'live-demo-123',
+                qty: 1,
+                amountCfa: cleanPrice,
+                buyerId: String(user?.id || user?.email || '').trim(),
+                buyerEmail: String(user?.email || '').trim().toLowerCase(),
+                buyerName: String(user?.name || user?.email || 'Client').trim(),
+            });
+
+            window.crowdfundingState = {
+                productName: safeProductName,
+                vendorName: safeVendorName,
+                mode: 'direct',
+                totalNeeded: cleanPrice,
+                currentRaised: 0,
+                raised: 0,
+                participants: [],
+                totalParts: 1
+            };
+            window.pendingTotalAmount = cleanPrice;
+
+            try { saveCrowdfundingState(); } catch {}
+            try { lpSpeak(`Achat simple de ${productName}. Choisissez le moyen de paiement.`); } catch {}
+            try { simulateThirdPartyPay(cleanPrice); } catch {
+                alert("Le parcours de paiement n'a pas pu être ouvert.");
+            }
+        }
+
         function submitOffer(productName, originalPrice) {
             const offerInput = document.getElementById('offerInput');
             const offer = parseInt(offerInput.value);
@@ -13549,7 +13892,7 @@
                         </div>
 
                         <div style="padding:12px; border-radius:14px; background:rgba(249,115,22,0.06); border:1px solid rgba(249,115,22,0.18);">
-                            <div style="font-weight:950; color:var(--ml-text);">Paiement (démo)</div>
+                            <div style="font-weight:950; color:var(--ml-text);">Paiement immédiat</div>
                             <div style="margin-top:6px; color:var(--ml-muted); font-weight:850; line-height:1.35;">Recharge immédiate.</div>
                         </div>
                     </div>
@@ -13611,7 +13954,7 @@
                             <input id="lpWithdrawAmount" inputmode="numeric" placeholder="Ex : 2 000" style="width:100%; padding:12px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:950; box-sizing:border-box;" />
                         </div>
                         <div style="padding:12px; border-radius:14px; background:rgba(37,99,235,0.06); border:1px solid rgba(37,99,235,0.18);">
-                            <div style="font-weight:950; color:var(--ml-text);">Mobile Money (démo)</div>
+                            <div style="font-weight:950; color:var(--ml-text);">Mobile Money</div>
                             <div style="margin-top:6px; color:var(--ml-muted); font-weight:850; line-height:1.35;">Retrait immédiat.</div>
                         </div>
                     </div>
@@ -14647,6 +14990,49 @@
                 try { window.speechSynthesis.cancel(); } catch {}
                 window.speechSynthesis.speak(u);
             } catch {
+            }
+        }
+
+        function lpSpeakMangooAlert(text, opts = {}) {
+            const msg = String(text || '').trim();
+            if (!msg) return;
+            const voiceOpts = opts && typeof opts === 'object' ? { ...opts } : {};
+            const repeats = Math.max(1, Math.min(3, Number(voiceOpts.repeats) || 2));
+            const intervalMs = Math.max(900, Number(voiceOpts.intervalMs) || 1800);
+            const cooldownMs = Math.max(2500, Number(voiceOpts.cooldownMs) || 12000);
+            const dedupeKey = String(voiceOpts.dedupeKey || msg).trim() || msg;
+            const forcePrime = voiceOpts.forcePrime !== false;
+            delete voiceOpts.repeats;
+            delete voiceOpts.intervalMs;
+            delete voiceOpts.cooldownMs;
+            delete voiceOpts.dedupeKey;
+            delete voiceOpts.forcePrime;
+            try {
+                if (!window.__lpMangooAlertSpokenAt) window.__lpMangooAlertSpokenAt = {};
+                const lastAt = Number(window.__lpMangooAlertSpokenAt[dedupeKey] || 0);
+                const now = Date.now();
+                if (lastAt && (now - lastAt) < cooldownMs) return;
+                window.__lpMangooAlertSpokenAt[dedupeKey] = now;
+            } catch {
+            }
+            const speakOnce = (idx) => {
+                try {
+                    if (idx === 0 && forcePrime && lpIsIOSDevice && lpIsIOSDevice() && !window.__lpSpeechPrimed) {
+                        lpPrimeSpeechPlayback({ text: msg, opts: voiceOpts });
+                        return;
+                    }
+                } catch {
+                }
+                try { lpSpeak(msg, voiceOpts); } catch {}
+            };
+            speakOnce(0);
+            for (let i = 1; i < repeats; i += 1) {
+                try {
+                    setTimeout(() => {
+                        try { speakOnce(i); } catch {}
+                    }, intervalMs * i);
+                } catch {
+                }
             }
         }
 
@@ -16173,22 +16559,24 @@
             }
         }
 
-        function lpDeliverySetRemoteNoticeSeen(jobId, ts) {
+        function lpDeliverySetRemoteNoticeSeen(jobId, ts, phase) {
             try {
                 window.__lpDeliveryRemoteNoticeSeen = {
                     jobId: String(jobId || '').trim(),
-                    assignedAt: Number(ts || 0)
+                    assignedAt: Number(ts || 0),
+                    phase: String(phase || '').trim()
                 };
             } catch {
             }
         }
 
-        function lpDeliveryIsRemoteNoticeSeen(jobId, ts) {
+        function lpDeliveryIsRemoteNoticeSeen(jobId, ts, phase) {
             try {
                 const seen = window.__lpDeliveryRemoteNoticeSeen || null;
                 if (!seen) return false;
                 return String(seen.jobId || '').trim() === String(jobId || '').trim()
-                    && Number(seen.assignedAt || 0) >= Number(ts || 0);
+                    && Number(seen.assignedAt || 0) >= Number(ts || 0)
+                    && String(seen.phase || '').trim() === String(phase || '').trim();
             } catch {
                 return false;
             }
@@ -16200,14 +16588,22 @@
                 const assignedAt = Number(job?.assignedAt || 0);
                 if (!id || !Number.isFinite(assignedAt) || assignedAt <= 0) return;
                 if (!window.__lpDeliveryRemoteNoticeSpeechAnnounced) window.__lpDeliveryRemoteNoticeSpeechAnnounced = {};
-                const key = id + ':' + String(assignedAt);
+                const phase = String(job?.phase || '').trim();
+                const key = id + ':' + String(assignedAt) + ':' + phase;
                 if (window.__lpDeliveryRemoteNoticeSpeechAnnounced[key]) return;
                 window.__lpDeliveryRemoteNoticeSpeechAnnounced[key] = 1;
-                const phase = String(job?.phase || '').trim();
-                const msg = phase === 'dropoff'
-                    ? 'Notification Mangoo. Le livreur est en route vers le client. Appuyez pour voir.'
-                    : 'Notification Mangoo. Le livreur est en route. Appuyez pour voir.';
-                try { lpSpeak(msg, { ...lpGetVoicePrefs(), rate: 1.0, pitch: 1.0 }); } catch {}
+                const msg = lpDeliveryRemoteNoticeMessage(job);
+                try {
+                    lpSpeakMangooAlert(msg, {
+                        ...lpGetVoicePrefs(),
+                        rate: 1.0,
+                        pitch: 1.0,
+                        repeats: 2,
+                        intervalMs: 1800,
+                        dedupeKey: 'remote-notice:' + key,
+                        cooldownMs: 15000
+                    });
+                } catch {}
             } catch {
             }
         }
@@ -16215,9 +16611,14 @@
         function lpDeliveryRemoteNoticeMessage(job) {
             try {
                 const phase = String(job?.phase || '').trim();
+                if (phase === 'pickup') {
+                    return 'Notification Mangoo. Le livreur a accepté la course et part vers la boutique. Appuyez pour suivre sa position.';
+                }
                 return phase === 'dropoff'
-                    ? 'Notification Mangoo. Le livreur est en route vers le client. Appuyez pour voir.'
-                    : 'Notification Mangoo. Le livreur est en route. Appuyez pour voir.';
+                    ? 'Notification Mangoo. Le livreur a récupéré le colis et part vers le client. Appuyez pour suivre sa position.'
+                    : (phase === 'proof' || phase === 'delivered')
+                        ? 'Notification Mangoo. Le livreur est arrivé chez le client. Appuyez pour suivre la fin de la livraison.'
+                        : 'Notification Mangoo. Le livreur est en route. Appuyez pour suivre sa position.';
             } catch {
                 return 'Notification Mangoo. Le livreur est en route. Appuyez pour voir.';
             }
@@ -16227,10 +16628,18 @@
             try {
                 const msg = lpDeliveryRemoteNoticeMessage(job);
                 if (!msg) return;
-                if (forcePrime) {
-                    try { lpPrimeSpeechPlayback(); } catch {}
-                }
-                try { lpSpeak(msg, { ...lpGetVoicePrefs(), rate: 1.0, pitch: 1.0 }); } catch {}
+                try {
+                    lpSpeakMangooAlert(msg, {
+                        ...lpGetVoicePrefs(),
+                        rate: 1.0,
+                        pitch: 1.0,
+                        repeats: 2,
+                        intervalMs: 1800,
+                        dedupeKey: 'remote-notice-open:' + String(job?.id || '') + ':' + String(job?.phase || ''),
+                        cooldownMs: 9000,
+                        forcePrime
+                    });
+                } catch {}
             } catch {
             }
         }
@@ -16260,6 +16669,15 @@
                 const el = document.getElementById('lpDeliveryRemoteTrackPill');
                 if (el) el.remove();
             } catch {
+            }
+        }
+
+        function lpDeliveryCurrentTrackingOverlayJobId() {
+            try {
+                const overlay = document.getElementById('deliveryTrackOverlay');
+                return String(overlay?.dataset?.jobId || '').trim();
+            } catch {
+                return '';
             }
         }
 
@@ -16328,9 +16746,10 @@
         function lpDeliveryShowRemoteTrackNotice(job) {
             const id = String(job?.id || '').trim();
             const assignedAt = Number(job?.assignedAt || 0);
+            const phase = String(job?.phase || '').trim();
             if (!id || !Number.isFinite(assignedAt) || assignedAt <= 0) return;
             if (String(job?.assignedDriverId || '').trim() === String(lpDeliveryDriverId() || '').trim()) {
-                lpDeliverySetRemoteNoticeSeen(id, assignedAt);
+                lpDeliverySetRemoteNoticeSeen(id, assignedAt, phase);
                 return;
             }
             const isPhone = (() => {
@@ -16380,7 +16799,7 @@
             document.body.appendChild(wrap);
             try {
                 if (!window.__lpDeliveryRemoteNoticeAnnounced) window.__lpDeliveryRemoteNoticeAnnounced = {};
-                const announceKey = id + ':' + String(assignedAt);
+                const announceKey = id + ':' + String(assignedAt) + ':' + phase;
                 if (!window.__lpDeliveryRemoteNoticeAnnounced[announceKey]) {
                     window.__lpDeliveryRemoteNoticeAnnounced[announceKey] = 1;
                     try { showLocalToast('🔔 Livraison en cours - cliquez pour voir le livreur', 'info'); } catch {}
@@ -16403,12 +16822,12 @@
                     } catch {
                     }
                     try { if (lpIsIOSDevice()) lpDeliveryRequestLivePosition({ rerender: false }); } catch {}
-                    try { lpDeliverySetRemoteNoticeSeen(id, assignedAt); } catch {}
+                    try { lpDeliverySetRemoteNoticeSeen(id, assignedAt, phase); } catch {}
                     try { lpDeliveryHideRemoteTrackNotice(); } catch {}
                     try { lpOpenDeliveryTracking(id); } catch {}
                 }, { passive: true });
                 if (closeBtn) closeBtn.addEventListener('click', () => {
-                    try { lpDeliverySetRemoteNoticeSeen(id, assignedAt); } catch {}
+                    try { lpDeliverySetRemoteNoticeSeen(id, assignedAt, phase); } catch {}
                     try { lpDeliveryHideRemoteTrackNotice(); } catch {}
                 }, { passive: true });
             } catch {
@@ -16426,11 +16845,12 @@
                 }
                 const id = String(job?.id || '').trim();
                 const assignedAt = Number(job?.assignedAt || 0);
+                const phase = String(job?.phase || '').trim();
                 if (!id || !Number.isFinite(assignedAt) || assignedAt <= 0) return;
                 const isDriver = String(job?.assignedDriverId || '').trim() === String(lpDeliveryDriverId() || '').trim();
                 if (isDriver) {
                     try { lpDeliveryHideRemoteTrackPill(); } catch {}
-                    lpDeliverySetRemoteNoticeSeen(id, assignedAt);
+                    lpDeliverySetRemoteNoticeSeen(id, assignedAt, phase);
                     return;
                 }
                 try { lpDeliveryRenderRemoteTrackPill(job); } catch {}
@@ -16442,9 +16862,10 @@
                     }
                 } catch {
                 }
-                if (lpDeliveryIsRemoteNoticeSeen(id, assignedAt)) return;
-                if (document.getElementById('deliveryTrackOverlay')) {
-                    lpDeliverySetRemoteNoticeSeen(id, assignedAt);
+                if (lpDeliveryIsRemoteNoticeSeen(id, assignedAt, phase)) return;
+                const openOverlayJobId = lpDeliveryCurrentTrackingOverlayJobId();
+                if (openOverlayJobId && openOverlayJobId === id) {
+                    lpDeliverySetRemoteNoticeSeen(id, assignedAt, phase);
                     return;
                 }
                 lpDeliveryShowRemoteTrackNotice(job);
@@ -16613,7 +17034,14 @@
                     try { lpDeliveryRenderDriverRequests(); } catch {}
                 }
                 if (t === 'job_created') {
-                    try { lpSpeak("Nouvelle course. Appuie sur accepter si tu es disponible.", lpGetVoicePrefs()); } catch {}
+                    try {
+                        lpSpeakMangooAlert("Nouvelle course. Appuie sur accepter si tu es disponible.", {
+                            ...lpGetVoicePrefs(),
+                            repeats: 3,
+                            intervalMs: 1700,
+                            dedupeKey: 'driver-job-created:' + String(msg?.p?.id || 'global')
+                        });
+                    } catch {}
                 }
             } catch {
             }
@@ -16666,11 +17094,20 @@
             } catch {
             }
             try { lpDeliveryEnsureDispatcher(); } catch {}
+            try { lpDeliverySyncRemoteJobs({ announce: true }); } catch {}
             try {
                 if (!window.__lpDeliveryEnsureTimer) {
                     window.__lpDeliveryEnsureTimer = setInterval(() => {
                         try { lpDeliveryEnsureDispatcher(); } catch {}
                     }, 4000);
+                }
+            } catch {
+            }
+            try {
+                if (!window.__lpDeliveryRemoteJobsTimer) {
+                    window.__lpDeliveryRemoteJobsTimer = setInterval(() => {
+                        try { lpDeliverySyncRemoteJobs({ announce: true }); } catch {}
+                    }, 2200);
                 }
             } catch {
             }
@@ -16793,6 +17230,17 @@
             try { lpDeliveryRenderDriverRequests(); } catch {}
         }
 
+        async function lpDeliveryManualRefreshJobs(btnEl) {
+            try { lpDeliverySetButtonVisual(btnEl, '🔄 Recherche…', true, ''); } catch {}
+            try {
+                await lpDeliverySyncRemoteJobs({ announce: true, rerender: false });
+                try { await lpDeliveryHoldButtonResult(btnEl, '🔄 Courses OK', '🔄 Actualiser les courses', 'success', 900); } catch {}
+            } catch {
+                try { await lpDeliveryHoldButtonResult(btnEl, '🔄 Échec', '🔄 Actualiser les courses', 'error', 1100); } catch {}
+            }
+            try { lpDeliveryRenderDriverRequests(); } catch {}
+        }
+
         function lpDeliveryBindGlobalActions() {
             try {
                 if (window.__lpDeliveryGlobalBound) return;
@@ -16823,6 +17271,91 @@
             return list;
         }
 
+        async function lpDeliverySyncRemoteJobs(options = {}) {
+            try {
+                if (window.__lpDeliveryRemoteJobsBusy) return [];
+                window.__lpDeliveryRemoteJobsBusy = true;
+                const announce = options && typeof options === 'object' ? options.announce !== false : true;
+                const rerender = options && typeof options === 'object' ? options.rerender !== false : true;
+                const response = await fetch('/api/delivery-tracking/jobs/recent?status=open,assigned,done', {
+                    method: 'GET',
+                    cache: 'no-store'
+                });
+                const payload = await response.json().catch(() => ({}));
+                const jobs = Array.isArray(payload?.jobs) ? payload.jobs : [];
+                let newestOpenId = '';
+                let hasRemoteChanges = false;
+                jobs.forEach((job) => {
+                    const id = String(job?.id || '').trim();
+                    if (!id) return;
+                    const localJob = lpDeliveryGetJob(id);
+                    const localTs = Number(localJob?.remoteUpdatedAt || localJob?.assignedAt || localJob?.createdAt || 0);
+                    const remoteTs = Number(job?.remoteUpdatedAt || job?.assignedAt || job?.createdAt || 0);
+                    if (!localJob || remoteTs >= localTs) {
+                        try {
+                            lpDeliveryWrite('mangoo_delivery_job:' + id, job);
+                            hasRemoteChanges = true;
+                        } catch {}
+                    }
+                    if (!newestOpenId && String(job?.status || '').trim() === 'open') newestOpenId = id;
+                });
+                //#region debug-point driver-job-sync.remote-sync
+                try {
+                    const openJobs = jobs.filter((job) => String(job?.status || '').trim() === 'open');
+                    fetch('http://192.168.1.18:7777/event', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        keepalive: true,
+                        body: JSON.stringify({
+                            sessionId: 'driver-job-sync',
+                            event: 'driver_remote_sync',
+                            data: {
+                                totalJobs: jobs.length,
+                                openJobs: openJobs.length,
+                                newestOpenId,
+                                userPos: Array.isArray(USER_POS) ? [Number(USER_POS[0]), Number(USER_POS[1])] : null,
+                                userPosSource: String(USER_POS_META?.source || ''),
+                                sampleOpenJobs: openJobs.slice(0, 5).map((job) => ({
+                                    id: String(job?.id || ''),
+                                    shopSlug: String(job?.shopSlug || ''),
+                                    roomId: String(job?.roomId || ''),
+                                    pickupLat: Number(job?.pickup?.lat),
+                                    pickupLng: Number(job?.pickup?.lng),
+                                    remoteUpdatedAt: Number(job?.remoteUpdatedAt || 0)
+                                }))
+                            }
+                        })
+                    }).catch(() => {});
+                } catch {
+                }
+                //#endregion debug-point driver-job-sync.remote-sync
+                if (announce && newestOpenId && lpDeliveryIsOnline()) {
+                    try {
+                        lpSpeakMangooAlert("Nouvelle course Mangoo. Ouvre la mission et accepte si tu es disponible.", {
+                            ...lpGetVoicePrefs(),
+                            repeats: 3,
+                            intervalMs: 1800,
+                            dedupeKey: 'driver-remote-open:' + newestOpenId,
+                            cooldownMs: 15000
+                        });
+                    } catch {}
+                }
+                if (hasRemoteChanges && rerender) {
+                    try {
+                        setTimeout(() => {
+                            try { lpDeliveryRenderDriverRequests(); } catch {}
+                        }, 0);
+                    } catch {
+                    }
+                }
+                return jobs;
+            } catch {
+                return [];
+            } finally {
+                window.__lpDeliveryRemoteJobsBusy = false;
+            }
+        }
+
         function lpDeliveryResetDemoState() {
             try {
                 const keys = [];
@@ -16849,6 +17382,19 @@
             const id = String(jobId || '').trim();
             if (!id) return null;
             return lpDeliveryRead('mangoo_delivery_job:' + id, null);
+        }
+
+        function lpDeliveryShouldBypassDistanceFilter(job) {
+            try {
+                const sourceOrderId = String(job?.sourceOrderId || '').trim();
+                const roomId = String(job?.roomId || '').trim().toLowerCase();
+                const shopSlug = String(job?.shopSlug || '').trim().toLowerCase();
+                if (sourceOrderId && (roomId.includes('local') || roomId.includes('pc4') || shopSlug.includes('local') || shopSlug.includes('pc4'))) {
+                    return true;
+                }
+            } catch {
+            }
+            return false;
         }
 
         function lpDeliverySaveJob(job) {
@@ -16993,6 +17539,7 @@
             job.assignedAt = Date.now();
             job.status = 'assigned';
             job.phase = 'pickup';
+            job.phaseUpdatedAt = Date.now();
             try {
                 lpDeliveryWrite('mangoo_delivery_job:' + id, job);
             } catch {
@@ -17101,6 +17648,12 @@
                 } catch {
                 }
                 return;
+            }
+            try {
+                setTimeout(() => {
+                    try { lpOpenDeliveryTracking(id); } catch {}
+                }, 120);
+            } catch {
             }
         }
 
@@ -17307,6 +17860,7 @@
                 return;
             }
             job.phase = p || String(job.phase || '');
+            job.phaseUpdatedAt = Date.now();
             if (p === 'delivered') {
                 job.status = 'done';
                 lpDeliverySetRecentDone(job);
@@ -18096,8 +18650,9 @@
                 const tr = track || null;
                 if (!j || !tr) return Number.POSITIVE_INFINITY;
                 const phase = String(j?.phase || 'pickup').trim() || 'pickup';
-                let target = phase === 'dropoff' ? j?.dropoff : j?.pickup;
-                let targetLabel = phase === 'dropoff' ? 'client' : 'point de retrait';
+                const isClientSidePhase = phase === 'dropoff' || phase === 'proof' || phase === 'delivered';
+                let target = isClientSidePhase ? j?.dropoff : j?.pickup;
+                let targetLabel = isClientSidePhase ? 'client' : 'point de retrait';
                 try {
                     const isAssignedDriver = String(j?.assignedDriverId || '').trim() === String(lpDeliveryDriverId() || '').trim();
                     const viewerLat = Array.isArray(USER_POS) ? Number(USER_POS[0]) : NaN;
@@ -18141,14 +18696,15 @@
                 const id = String(job?.id || '').trim();
                 const assignedAt = Number(job?.assignedAt || 0);
                 if (!id || !Number.isFinite(assignedAt) || assignedAt <= 0) return;
+                const phase = String(job?.phase || 'pickup').trim() || 'pickup';
+                if (phase === 'pickup') return;
                 const targetInfo = lpDeliveryTargetDistanceMeters(job, track);
                 const meters = Number(targetInfo?.meters);
                 if (!Number.isFinite(meters)) return;
                 const targetLabel = String(targetInfo?.targetLabel || 'point de retrait');
                 if (!window.__lpDeliveryRemoteMilestones) window.__lpDeliveryRemoteMilestones = {};
                 const store = window.__lpDeliveryRemoteMilestones;
-                const phase = String(job?.phase || 'pickup').trim() || 'pickup';
-                const keyBase = id + ':' + String(assignedAt) + ':' + phase + ':' + targetLabel;
+                const keyBase = id + ':' + String(assignedAt) + ':client:' + targetLabel;
                 if (!store[keyBase] || typeof store[keyBase] !== 'object') {
                     store[keyBase] = {
                         near: 0,
@@ -18162,31 +18718,59 @@
                 }
                 const state = store[keyBase];
                 const acc = Number(track?.accuracy);
-                const nearMeters = Math.max(5, Number.isFinite(acc) && acc > 0 ? Math.min(35, Math.round(acc)) : 5);
-                const arrivedMeters = Math.max(3, Number.isFinite(acc) && acc > 0 ? Math.min(20, Math.round(acc / 2)) : 3);
-                const stickyNearMeters = Math.max(nearMeters, 8);
-                const stickyArrivedMeters = Math.max(arrivedMeters, Math.min(8, nearMeters));
+                const hasAccuracy = Number.isFinite(acc) && acc > 0;
+                const nearMeters = hasAccuracy ? Math.max(25, Math.min(120, Math.round(acc * 1.6))) : 90;
+                const arrivedMeters = hasAccuracy ? Math.max(12, Math.min(60, Math.round(acc * 0.9))) : 35;
+                const stickyNearMeters = Math.max(nearMeters, 110);
+                const stickyArrivedMeters = Math.max(arrivedMeters, 45);
                 const now = Date.now();
                 const minGapMs = 3000;
+                const phaseUpdatedAt = Number(job?.phaseUpdatedAt || job?.assignedAt || 0);
                 state.bestMeters = Math.min(Number(state.bestMeters || Number.POSITIVE_INFINITY), meters);
                 state.lastMeters = meters;
                 state.updatedAt = now;
-                const nearReady = meters <= Math.max(nearMeters, arrivedMeters + 1) || state.bestMeters <= stickyNearMeters;
-                const arrivedReady = meters <= arrivedMeters || state.bestMeters <= stickyArrivedMeters;
+                const nearFallbackReady = phase === 'dropoff' && phaseUpdatedAt > 0 && (now - phaseUpdatedAt) >= 6000;
+                const arrivedFallbackReady = (phase === 'proof' || phase === 'delivered') && phaseUpdatedAt > 0 && (now - phaseUpdatedAt) >= 1200;
+                const nearReady = meters <= Math.max(nearMeters, arrivedMeters + 1) || state.bestMeters <= stickyNearMeters || nearFallbackReady;
+                const arrivedReady = meters <= arrivedMeters || state.bestMeters <= stickyArrivedMeters || arrivedFallbackReady;
                 if (!state.near && nearReady) {
                     state.near = 1;
                     state.nearAt = now;
                     try { showLocalToast('🛵 Livreur proche', 'info'); } catch {}
-                    try { lpSpeak(targetLabel === 'vous' ? 'Notification Mangoo. Le livreur est proche de vous.' : `Notification Mangoo. Le livreur est proche du ${targetLabel}.`, { ...lpGetVoicePrefs(), rate: 1.0, pitch: 1.0 }); } catch {}
+                    try {
+                        lpSpeakMangooAlert(targetLabel === 'vous' ? 'Notification Mangoo. Le livreur est proche de vous.' : `Notification Mangoo. Le livreur est proche du ${targetLabel}.`, {
+                            ...lpGetVoicePrefs(),
+                            rate: 1.0,
+                            pitch: 1.0,
+                            repeats: 2,
+                            intervalMs: 1700,
+                            dedupeKey: 'delivery-near:' + keyBase,
+                            cooldownMs: 20000
+                        });
+                    } catch {}
                     return;
                 }
                 const nearDelayElapsed = !state.near
                     || (now - Number(state.nearAt || 0)) >= minGapMs;
                 if (!state.arrived && arrivedReady && nearDelayElapsed) {
+                    if (!state.near) {
+                        state.near = 1;
+                        state.nearAt = Math.max(0, now - minGapMs);
+                    }
                     state.arrived = 1;
                     state.arrivedAt = now;
                     try { showLocalToast('📍 Livreur arrivé', 'success'); } catch {}
-                    try { lpSpeak(targetLabel === 'vous' ? 'Notification Mangoo. Le livreur est arrive chez vous.' : `Notification Mangoo. Le livreur est arrive au ${targetLabel}.`, { ...lpGetVoicePrefs(), rate: 1.0, pitch: 1.0 }); } catch {}
+                    try {
+                        lpSpeakMangooAlert(targetLabel === 'vous' ? 'Notification Mangoo. Le livreur est arrive chez vous.' : `Notification Mangoo. Le livreur est arrive au ${targetLabel}.`, {
+                            ...lpGetVoicePrefs(),
+                            rate: 1.0,
+                            pitch: 1.0,
+                            repeats: 3,
+                            intervalMs: 1700,
+                            dedupeKey: 'delivery-arrived:' + keyBase,
+                            cooldownMs: 25000
+                        });
+                    } catch {}
                 }
             } catch {
             }
@@ -18388,10 +18972,16 @@
             window.__lpDeliveryTrackingJobId = '';
         }
 
-        function lpDeliveryPublishTrack(jobId, lat, lng) {
+        function lpDeliveryPublishTrack(jobId, lat, lng, accuracy) {
             const id = String(jobId || '').trim();
             if (!id) return;
-            const tr = { lat: Number(lat), lng: Number(lng), updatedAt: Date.now() };
+            const acc = Number(accuracy);
+            const tr = {
+                lat: Number(lat),
+                lng: Number(lng),
+                updatedAt: Date.now(),
+                ...(Number.isFinite(acc) && acc > 0 ? { accuracy: acc } : {})
+            };
             try {
                 window.__lpDeliveryLastTrackUpdateAt = tr.updatedAt;
                 window.__lpDeliveryLastTrackJobId = id;
@@ -18431,7 +19021,7 @@
                         }
                         const lat = a[0] + (b[0] - a[0]) * t;
                         const lng = a[1] + (b[1] - a[1]) * t;
-                        lpDeliveryPublishTrack(id, lat, lng);
+                        lpDeliveryPublishTrack(id, lat, lng, 22);
                     } catch {
                     }
                 }, 1200);
@@ -18452,7 +19042,7 @@
                 if (Array.isArray(USER_POS) && lpDeliveryIsPlausibleMissionPosition(job, Number(USER_POS[0]), Number(USER_POS[1]))) return [Number(USER_POS[0]), Number(USER_POS[1])];
                 return [Number(job.pickup.lat), Number(job.pickup.lng)];
             })();
-            lpDeliveryPublishTrack(id, start[0], start[1]);
+            lpDeliveryPublishTrack(id, start[0], start[1], 22);
             try {
                 if (window.__lpDeliveryTrackPollTimer) clearInterval(window.__lpDeliveryTrackPollTimer);
             } catch {
@@ -18466,7 +19056,8 @@
                                 try {
                                     const lat = Number(pos?.coords?.latitude);
                                     const lng = Number(pos?.coords?.longitude);
-                                    if (Number.isFinite(lat) && Number.isFinite(lng)) lpDeliveryPublishTrack(id, lat, lng);
+                                    const acc = Number(pos?.coords?.accuracy);
+                                    if (Number.isFinite(lat) && Number.isFinite(lng)) lpDeliveryPublishTrack(id, lat, lng, acc);
                                 } catch {
                                 }
                             },
@@ -18486,7 +19077,8 @@
                             try {
                                 const lat = Number(pos?.coords?.latitude);
                                 const lng = Number(pos?.coords?.longitude);
-                                if (Number.isFinite(lat) && Number.isFinite(lng)) lpDeliveryPublishTrack(id, lat, lng);
+                                const acc = Number(pos?.coords?.accuracy);
+                                if (Number.isFinite(lat) && Number.isFinite(lng)) lpDeliveryPublishTrack(id, lat, lng, acc);
                             } catch {
                             }
                         },
@@ -18544,6 +19136,7 @@
             }
             const overlay = document.createElement('div');
             overlay.id = 'deliveryTrackOverlay';
+            overlay.dataset.jobId = id;
             overlay.style.cssText = "position:fixed; inset:0; z-index:22000; background:rgba(0,0,0,0.65); display:flex; align-items:stretch; justify-content:center; padding:0;";
             try {
                 const u = new URL(window.location.href);
@@ -18835,14 +19428,22 @@
         function lpDeliverySpeakPhase(phase) {
             const meta = lpDeliveryPhaseMeta(phase);
             const text = (() => {
-                if (meta.key === 'pickup') return 'Étape un. Va à la boutique et appuie sur colis récupéré.';
-                if (meta.key === 'dropoff') return 'Étape deux. Va chez le client et appuie sur arrivé chez le client.';
-                if (meta.key === 'proof') return 'Étape trois. Prends la photo du colis remis au client, puis valide la livraison.';
-                if (meta.key === 'delivered') return 'Mission terminée. Bravo.';
+                if (meta.key === 'pickup') return 'Mangoo Express. Étape un. Va à la boutique puis appuie sur colis récupéré.';
+                if (meta.key === 'dropoff') return 'Mangoo Express. Étape deux. Va chez le client puis appuie sur arrivé chez le client.';
+                if (meta.key === 'proof') return 'Mangoo Express. Étape trois. Prends la photo du colis remis au client, puis valide la livraison.';
+                if (meta.key === 'delivered') return 'Mangoo Express. Livraison terminée. Bravo.';
                 return '';
             })();
             if (!text) return;
-            try { lpSpeak(text, lpGetVoicePrefs()); } catch {}
+            try {
+                lpSpeakMangooAlert(text, {
+                    ...lpGetVoicePrefs(),
+                    repeats: meta.key === 'delivered' ? 2 : 1,
+                    intervalMs: 1600,
+                    dedupeKey: 'delivery-phase:' + String(meta.key || ''),
+                    cooldownMs: 3500
+                });
+            } catch {}
         }
 
         function lpDeliveryMaybeSpeakPhase(phase, jobId) {
@@ -19070,10 +19671,13 @@
                 return;
             }
             const ignored = lpDeliveryIgnoredJobIds();
+            const openJobsBeforeDistance = jobs
+                .filter((j) => String(j?.status || '') === 'open' && !ignored.includes(String(j?.id || '')));
             const openJobs = jobs
                 .filter((j) => String(j?.status || '') === 'open' && !ignored.includes(String(j?.id || '')))
                 .filter((j) => {
                     try {
+                        if (lpDeliveryShouldBypassDistanceFilter(j)) return true;
                         if (!(Array.isArray(USER_POS) && Number.isFinite(Number(USER_POS[0])) && Number.isFinite(Number(USER_POS[1])))) return true;
                         const src = String(USER_POS_META?.source || '');
                         if (!src || src === 'country-default') return true;
@@ -19086,13 +19690,64 @@
                         return true;
                     }
                 });
+            //#region debug-point driver-job-sync.render-filter
+            try {
+                const sample = openJobsBeforeDistance.slice(0, 5).map((job) => {
+                    const pickLat = Number(job?.pickup?.lat);
+                    const pickLng = Number(job?.pickup?.lng);
+                    const distance = (Array.isArray(USER_POS) && Number.isFinite(Number(USER_POS[0])) && Number.isFinite(Number(USER_POS[1])) && Number.isFinite(pickLat) && Number.isFinite(pickLng))
+                        ? distanceKm(Number(USER_POS[0]), Number(USER_POS[1]), pickLat, pickLng)
+                        : null;
+                    return {
+                        id: String(job?.id || ''),
+                        shopSlug: String(job?.shopSlug || ''),
+                        roomId: String(job?.roomId || ''),
+                        distanceKm: distance,
+                        kept: openJobs.some((entry) => String(entry?.id || '') === String(job?.id || ''))
+                    };
+                });
+                fetch('http://192.168.1.18:7777/event', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    keepalive: true,
+                    body: JSON.stringify({
+                        sessionId: 'driver-job-sync',
+                        event: 'driver_render_filter',
+                        data: {
+                            online,
+                            ignoredCount: ignored.length,
+                            beforeDistanceCount: openJobsBeforeDistance.length,
+                            afterDistanceCount: openJobs.length,
+                            userPos: Array.isArray(USER_POS) ? [Number(USER_POS[0]), Number(USER_POS[1])] : null,
+                            userPosSource: String(USER_POS_META?.source || ''),
+                            sample
+                        }
+                    })
+                }).catch(() => {});
+            } catch {
+            }
+            //#endregion debug-point driver-job-sync.render-filter
             if (!openJobs.length) {
+                try {
+                    const now = Date.now();
+                    const lastSync = Number(window.__lpDeliveryRenderEmptySyncAt || 0);
+                    if ((now - lastSync) > 1600) {
+                        window.__lpDeliveryRenderEmptySyncAt = now;
+                        Promise.resolve(lpDeliverySyncRemoteJobs({ announce: true, rerender: false }))
+                            .then(() => {
+                                try { lpDeliveryRenderDriverRequests(); } catch {}
+                            })
+                            .catch(() => {});
+                    }
+                } catch {
+                }
                 try { lpDeliveryEnsureDispatcher(); } catch {}
                 const hasGps = lpDeliveryHasResolvedUserPosition();
                 reqContainer.innerHTML = `
                     <div style="background:white; border-radius:20px; padding:18px 16px; border:1px solid rgba(0,0,0,0.06); box-shadow:0 10px 24px rgba(0,0,0,0.06); text-align:center;">
                         <div style="font-weight:950; color:#2d3436; margin-bottom:6px;">En attente de commandes...</div>
                         <div style="color:#6b7280; font-weight:800; font-size:0.92rem; margin-bottom:12px;">${hasGps ? 'Lance une course pour continuer.' : 'Active ta position réelle avant de lancer une course.'}</div>
+                        <button type="button" onclick="lpDeliveryManualRefreshJobs(this)" style="width:100%; padding:14px; margin-bottom:10px; background:#f7f8fb; color:#2d3436; border:1px solid rgba(0,0,0,0.06); border-radius:14px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">🔄 Actualiser les courses</button>
                         ${hasGps
                             ? `<button type="button" data-delivery-action="seed-job" data-job-id="seed-now" style="width:100%; padding:14px; background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#fff; border:none; border-radius:14px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">📦 Lancer une course</button>`
                             : `<div style="display:grid; gap:10px;">
@@ -19397,6 +20052,7 @@
                         <button onclick="playProductAudio(this, '${audioSrc}')" style="background:#e17055; color:white; border:none; width:35px; height:35px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-bottom:5px;">
                             🔊
                         </button>` : ''}
+                        <button onclick="startDirectPurchase('${post.name}', '${post.price}', '${post.vendorName || 'Tech Mobile Pro'}')" style="width:100%; background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:white; border:none; padding:9px 12px; border-radius:10px; font-size:0.78rem; font-weight:900; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.12);">🛒 Acheter</button>
                         <div style="display:flex; gap:5px;">
                             <button onclick="startTontine('${post.name}', '${post.price}')" style="background:#8B5CF6; color:white; border:none; padding:8px 12px; border-radius:10px; font-size:0.75rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.1);">👥 Tontine</button>
                             <button onclick="startBargain('${post.name}', '${post.price}')" style="background:#f1c40f; color:#2d3436; border:none; padding:8px 12px; border-radius:10px; font-size:0.75rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.1);">🤝 Marchander</button>
@@ -21360,7 +22016,7 @@
                     const confirmPhone = phoneInput ? phoneInput.value : '07XXXXXXXX';
 
                     // FORCE UPDATE - Remove old overlay and create new one to avoid DOM issues
-                    setTimeout(() => {
+                    setTimeout(async () => {
                         try {
                             // 1. Remove existing overlay(s)
                             const oldOverlays = document.querySelectorAll('[id*="checkout-overlay"]');
@@ -21383,6 +22039,16 @@
                             }
                             
                             let finalHtml = "";
+                            if (realIsComplete && String(window.crowdfundingState?.mode || '').trim() === 'direct') {
+                                try {
+                                    await lpFinalizePendingDirectPurchase({
+                                        amount: contribution,
+                                        method: String(window.selectedMethod || '').trim() || 'mobile_money',
+                                        paidAt: new Date().toISOString(),
+                                    });
+                                } catch {
+                                }
+                            }
                             
                             // IMPORTANT: Show "Success" only if TRULY complete. Otherwise show "Progress"
                             if(!realIsComplete) {
@@ -22055,10 +22721,13 @@
         function switchAccountTab(tabName) {
             let allowSell = false
             try { allowSell = isLpVendorUser(getLpCurrentUser()) } catch {}
+            const wantsOrders = String(tabName || '') === 'orders'
             const allowed = allowSell
                 ? ['orders', 'sell', 'profile', 'favorites', 'pay', 'communication']
                 : ['orders', 'profile', 'favorites', 'pay', 'communication']
-            const next = allowed.includes(String(tabName || '')) ? String(tabName) : 'orders'
+            const next = allowSell && wantsOrders
+                ? 'sell'
+                : (allowed.includes(String(tabName || '')) ? String(tabName) : 'orders')
 
             try { updateLpSellTabVisibility() } catch {}
 
@@ -22078,9 +22747,29 @@
                 try { loadLpProfile() } catch {}
             }
             if (next === 'sell') {
-                try { switchVendorTab('overview') } catch {}
+                try { switchVendorTab(wantsOrders ? 'orders' : 'overview') } catch {}
                 try { refreshBoostPanel() } catch {}
                 try { updateBoostAdminVisibility() } catch {}
+            }
+        }
+
+        function lpNormalizeVisibleUserName(name, email, role, source) {
+            try {
+                const rawName = String(name || '').trim();
+                const rawEmail = String(email || '').trim().toLowerCase();
+                const rawRole = String(role || '').trim().toLowerCase();
+                const rawSource = String(source || '').trim().toLowerCase();
+                const hasDemoLabel = /demo|démo/i.test(rawName);
+                if (!hasDemoLabel) return rawName;
+                if (rawEmail === 'client@example.com') return 'Client Mangoo';
+                if (rawEmail === 'livreur@exemple.com') return 'Livreur Mangoo';
+                if (rawEmail === 'pc4@exemple.com' || rawEmail === 'pc4@example.com') return 'pc4';
+                if (rawRole === 'livreur' || rawRole === 'driver' || rawSource.includes('livreur')) return 'Livreur Mangoo';
+                if (rawRole === 'vendor' || rawRole === 'seller' || rawSource.includes('vendeur')) return 'Vendeur Mangoo';
+                if (rawRole === 'client' || rawSource.includes('client')) return 'Client Mangoo';
+                return rawName.replace(/\b(demo|démo)\b/gi, 'Mangoo').replace(/\s{2,}/g, ' ').trim() || rawName;
+            } catch {
+                return String(name || '').trim();
             }
         }
 
@@ -22091,9 +22780,20 @@
                     const parsed = JSON.parse(raw)
                     if (parsed && typeof parsed === 'object') {
                         const email = String(parsed?.email || '').trim().toLowerCase()
-                        const name = String(parsed?.name || parsed?.fullName || parsed?.username || parsed?.displayName || '').trim()
+                        const role = String(parsed?.role || '').trim().toLowerCase()
+                        const source = String(parsed?.source || parsed?.kind || '').trim().toLowerCase()
+                        const rawName = String(parsed?.name || parsed?.fullName || parsed?.username || parsed?.displayName || '').trim()
+                        const name = lpNormalizeVisibleUserName(rawName, email, role, source)
                         const phone = String(parsed?.phone || parsed?.telephone || '').trim()
-                        return { ...parsed, email, name, phone }
+                        const nextUser = { ...parsed, email, name, phone }
+                        try {
+                            if (name !== rawName) {
+                                localStorage.setItem('mangoo-current-user', JSON.stringify(nextUser))
+                                localStorage.setItem('user', JSON.stringify(nextUser))
+                            }
+                        } catch {
+                        }
+                        return nextUser
                     }
                 }
             } catch {
@@ -22104,7 +22804,7 @@
                 const user = session?.user || {}
                 const email = String(user?.email || payload?.email || '').trim().toLowerCase()
                 if (!email) return null
-                const name = String(
+                const rawName = String(
                     user?.user_metadata?.full_name ||
                     user?.user_metadata?.name ||
                     payload?.user_metadata?.full_name ||
@@ -22112,6 +22812,9 @@
                     payload?.full_name ||
                     ''
                 ).trim()
+                const role = String(payload?.role || user?.role || '').trim().toLowerCase()
+                const source = String(payload?.source || '').trim().toLowerCase()
+                const name = lpNormalizeVisibleUserName(rawName, email, role, source)
                 const phone = String(
                     user?.phone ||
                     user?.phone_number ||
@@ -22128,7 +22831,50 @@
 
         function isLpVendorUser(u) {
             const role = String(u?.role || u?.currentRole || '').trim().toLowerCase()
-            return role === 'vendor' || role === 'vendeur' || role === 'seller' || role === 'merchant'
+            if (role === 'vendor' || role === 'vendeur' || role === 'seller' || role === 'merchant') return true
+            try {
+                const roles = Array.isArray(u?.roles) ? u.roles.map((item) => String(item || '').trim().toLowerCase()) : []
+                if (roles.some((item) => item === 'vendor' || item === 'vendeur' || item === 'seller' || item === 'merchant')) return true
+            } catch {
+            }
+            try {
+                const vendorId = String(u?.vendorId || '').trim()
+                if (vendorId) return true
+            } catch {
+            }
+            try {
+                const preferredShopId = String(lpGetPreferredShopAccountId ? lpGetPreferredShopAccountId() : '').trim()
+                if (preferredShopId) return true
+            } catch {
+            }
+            return false
+        }
+
+        function lpIsVendorDeliveryContext(orderLabel) {
+            try {
+                if (isLpVendorUser(getLpCurrentUser ? getLpCurrentUser() : null)) return true
+            } catch {
+            }
+            try {
+                if (document.querySelector('.lp-pane.active[data-pane="sell"]')) return true
+            } catch {
+            }
+            try {
+                if (document.querySelector('.lp-pane.active[data-vpane="orders"]')) return true
+            } catch {
+            }
+            try {
+                const preferredShopId = String(lpGetPreferredShopAccountId ? lpGetPreferredShopAccountId() : '').trim()
+                if (!preferredShopId) return false
+                const orderId = String(orderLabel || '').trim()
+                if (!orderId) return true
+                const liveOrders = lpReadClientOrders()
+                const known = Array.isArray(liveOrders) ? liveOrders.find((item) => String(item?.id || '').trim() === orderId) : null
+                if (!known) return true
+                return String(known?.vendorId || '').trim() === preferredShopId
+            } catch {
+                return false
+            }
         }
 
         function updateLpSellTabVisibility() {
@@ -22173,9 +22919,10 @@
                     .filter((item) => item && typeof item === 'object')
                     .map((item) => {
                         const email = String(item?.email || '').trim().toLowerCase()
-                        const name = String(item?.name || '').trim()
-                        const phone = String(item?.phone || '').trim()
                         const role = String(item?.role || 'client').trim().toLowerCase()
+                        const rawName = String(item?.name || '').trim()
+                        const name = lpNormalizeVisibleUserName(rawName, email, role, 'saved-user')
+                        const phone = String(item?.phone || '').trim()
                         const lastUsedAt = Number(item?.lastUsedAt || 0) || 0
                         return { email, name, phone, role: role === 'vendor' ? 'vendor' : 'client', lastUsedAt }
                     })
@@ -22190,9 +22937,10 @@
             try {
                 const email = String(userLike?.email || '').trim().toLowerCase()
                 if (!email) return
-                const name = String(userLike?.name || '').trim() || (email.split('@')[0] || 'Utilisateur')
-                const phone = String(userLike?.phone || '').trim()
                 const role = String(userLike?.role || 'client').trim().toLowerCase() === 'vendor' ? 'vendor' : 'client'
+                const rawName = String(userLike?.name || '').trim() || (email.split('@')[0] || 'Utilisateur')
+                const name = lpNormalizeVisibleUserName(rawName, email, role, 'saved-user')
+                const phone = String(userLike?.phone || '').trim()
                 const next = { email, name, phone, role, lastUsedAt: Date.now() }
                 const list = lpReadSavedUsers().filter((item) => item.email !== email)
                 list.unshift(next)
@@ -22473,7 +23221,7 @@
                 lpSetIdentityEntryStatus('Connexion reussie.', 'success')
                 try { closeLpIdentityModal() } catch {}
                 try { switchView('account') } catch {}
-                try { switchAccountTab(role === 'vendor' ? 'orders' : 'profile') } catch {}
+                try { switchAccountTab(role === 'vendor' ? 'sell' : 'profile') } catch {}
                 try { loadLpProfile(true) } catch {}
                 try { lpToast(`Connecte en tant que ${String(nextUser?.name || 'Utilisateur')}.`, 'ok') } catch {}
             } catch (e) {
@@ -22538,6 +23286,10 @@
             document.querySelectorAll('.lp-pane[data-vpane]').forEach((el) => {
                 el.classList.toggle('active', String(el.getAttribute('data-vpane') || '') === next)
             })
+
+            if (next === 'orders') {
+                try { lpRefreshVendorOrders() } catch {}
+            }
         }
 
         function loadLpProfile(withFeedback) {
@@ -22603,16 +23355,20 @@
         }
 
         function lpRequestDelivery(orderLabel) {
-            try {
-                const raw = localStorage.getItem('mangoo_local_profile')
-                const data = raw ? JSON.parse(raw) : {}
-                const addr = String(data?.address || '').trim()
-                if (!addr) {
-                    alert('✍️ Ajoutez votre adresse avant de demander une livraison.')
-                    switchAccountTab('profile')
-                    return
+            const currentUser = getLpCurrentUser ? getLpCurrentUser() : null
+            const isVendor = lpIsVendorDeliveryContext ? lpIsVendorDeliveryContext(orderLabel) : (isLpVendorUser ? isLpVendorUser(currentUser) : false)
+            if (!isVendor) {
+                try {
+                    const raw = localStorage.getItem(lpProfileStorageKey()) || localStorage.getItem('mangoo_local_profile')
+                    const data = raw ? JSON.parse(raw) : {}
+                    const addr = String(data?.address || '').trim()
+                    if (!addr) {
+                        alert('✍️ Ajoutez votre adresse avant de demander une livraison.')
+                        switchAccountTab('profile')
+                        return
+                    }
+                } catch {
                 }
-            } catch {
             }
             try {
                 lpOpenDeliveryRequestSheet(orderLabel)
@@ -22664,7 +23420,7 @@
                         </div>
                     </div>
 
-                    <button class="btn btn-primary lp-delivery-cta" onclick="lpConfirmDeliveryRequest(${JSON.stringify(String(orderLabel || 'commande'))})" style="padding:15px; font-weight:950;">
+                    <button type="button" id="lpDeliveryConfirmBtn" class="btn btn-primary lp-delivery-cta" data-order-label="${lpEscapeHtml(label)}" onclick="lpSubmitDeliveryRequestFromModal(this)" style="padding:15px; font-weight:950; cursor:pointer; touch-action:manipulation; position:relative; z-index:2;">
                         ✅ Demander un livreur
                     </button>
                     <button type="button" class="lp-btn lp-btn-secondary" onclick="try{document.getElementById('deliveryOverlay').remove()}catch{}; try{lpIdentityGoToDeliveryProfile()}catch{}" style="width:100%; margin-top:10px;">
@@ -22674,16 +23430,195 @@
             `
 
             document.body.appendChild(overlay)
+            try {
+                const confirmBtn = overlay.querySelector('#lpDeliveryConfirmBtn')
+                if (confirmBtn) {
+                    confirmBtn.addEventListener('pointerup', () => {
+                        try { confirmBtn.style.transform = 'scale(0.98)' } catch {}
+                        try {
+                            setTimeout(() => {
+                                try { confirmBtn.style.transform = 'scale(1)' } catch {}
+                            }, 140)
+                        } catch {}
+                    }, { passive: true })
+                }
+            } catch {
+            }
         }
 
-        function lpConfirmDeliveryRequest(orderLabel) {
+        function lpDeliveryModePrice(mode) {
+            const key = String(mode || 'Express').trim().toLowerCase()
+            return key === 'standard' ? 2000 : 3500
+        }
+
+        function lpDeliveryFindJobByOrder(orderId) {
+            const target = String(orderId || '').trim()
+            if (!target) return null
+            return lpDeliveryListJobs().find((job) => {
+                const sourceOrderId = String(job?.sourceOrderId || '').trim()
+                const status = String(job?.status || '').trim()
+                return sourceOrderId === target && status !== 'done' && status !== 'delivered'
+            }) || null
+        }
+
+        async function lpDeliveryFetchOrderDetails(orderId) {
+            const id = String(orderId || '').trim()
+            if (!id) return null
+            try {
+                const localOrder = lpReadClientOrders().find((item) => String(item?.id || '').trim() === id) || null
+                if (localOrder) return localOrder
+            } catch {
+            }
+            try {
+                const response = await fetch(`/api/live-orders/${encodeURIComponent(id)}`, { method: 'GET', cache: 'no-store' })
+                const payload = await response.json().catch(() => ({}))
+                if (response.ok && payload?.success && payload?.order) return payload.order
+            } catch {
+            }
+            return null
+        }
+
+        function lpDeliveryReadCurrentProfile() {
+            try {
+                const raw = localStorage.getItem(lpProfileStorageKey()) || localStorage.getItem('mangoo_local_profile')
+                const parsed = raw ? JSON.parse(raw) : null
+                return parsed && typeof parsed === 'object' ? parsed : {}
+            } catch {
+                return {}
+            }
+        }
+
+        function lpDeliveryFindVendorForOrder(orderLike) {
+            const order = orderLike && typeof orderLike === 'object' ? orderLike : null
+            const orderVendorId = String(order?.vendorId || '').trim()
+            const orderShopSlug = String(order?.shopSlug || '').trim()
+            const orderShopName = String(order?.shopName || order?.vendorName || '').trim()
+            try {
+                const ctxVendor = lpResolveShopVendorContext()?.vendor || null
+                if (ctxVendor) {
+                    const ctxId = String(ctxVendor?.id || '').trim()
+                    const ctxSlug = String(ctxVendor?.shopSlug || ctxVendor?.shop_slug || lpGetShopSlugForVendor?.(ctxVendor) || '').trim()
+                    if (!orderVendorId || ctxId === orderVendorId || (orderShopSlug && ctxSlug === orderShopSlug)) return ctxVendor
+                }
+            } catch {
+            }
+            try {
+                const all = Array.isArray(VENDORS) ? VENDORS : []
+                return all.find((vendor) => {
+                    const vendorId = String(vendor?.id || '').trim()
+                    const vendorSlug = String(vendor?.shopSlug || vendor?.shop_slug || lpGetShopSlugForVendor?.(vendor) || '').trim()
+                    const vendorName = String(vendor?.name || '').trim()
+                    if (orderVendorId && vendorId === orderVendorId) return true
+                    if (orderShopSlug && vendorSlug === orderShopSlug) return true
+                    if (orderShopName && vendorName && vendorName === orderShopName) return true
+                    return false
+                }) || null
+            } catch {
+                return null
+            }
+        }
+
+        async function lpDeliveryCreateJobFromOrder(orderId, mode) {
+            const order = await lpDeliveryFetchOrderDetails(orderId)
+            if (!order) throw new Error('Commande introuvable pour la livraison.')
+            const existing = lpDeliveryFindJobByOrder(orderId)
+            if (existing) return existing
+            const vendor = lpDeliveryFindVendorForOrder(order)
+            const profile = lpDeliveryReadCurrentProfile()
+            const currentUser = getLpCurrentUser ? getLpCurrentUser() : null
+            const pickupLat = Number(vendor?.lat)
+            const pickupLng = Number(vendor?.lng)
+            const fallbackLat = Number.isFinite(pickupLat) ? pickupLat + 0.008 : 4.0597
+            const fallbackLng = Number.isFinite(pickupLng) ? pickupLng + 0.008 : 9.7867
+            const userLat = Array.isArray(USER_POS) ? Number(USER_POS[0]) : NaN
+            const userLng = Array.isArray(USER_POS) ? Number(USER_POS[1]) : NaN
+            const dropLat = Number.isFinite(userLat) ? userLat : fallbackLat
+            const dropLng = Number.isFinite(userLng) ? userLng : fallbackLng
+            const deliveryMode = String(mode || 'Express').trim() || 'Express'
+            const job = {
+                id: 'job_' + String(Date.now()) + '_' + Math.floor(Math.random() * 100000),
+                status: 'open',
+                phase: 'offer',
+                createdAt: Date.now(),
+                remoteUpdatedAt: Date.now(),
+                sourceOrderId: String(order?.id || orderId || '').trim(),
+                sourceOrderLabel: String(order?.product?.name || order?.productName || 'Commande').trim(),
+                roomId: String(order?.roomId || '').trim(),
+                shopSlug: String(order?.shopSlug || vendor?.shopSlug || vendor?.shop_slug || '').trim(),
+                price: lpDeliveryModePrice(deliveryMode),
+                mode: deliveryMode,
+                pickup: {
+                    kind: 'vendor',
+                    vendorId: String(order?.vendorId || vendor?.id || '').trim(),
+                    name: String(order?.shopName || order?.vendorName || vendor?.name || 'Boutique').trim(),
+                    phone: String(vendor?.phone || '').trim(),
+                    lat: Number.isFinite(pickupLat) ? pickupLat : 4.051056,
+                    lng: Number.isFinite(pickupLng) ? pickupLng : 9.767869,
+                    address: String(vendor?.address || 'Boutique').trim()
+                },
+                dropoff: {
+                    kind: 'client',
+                    name: String(order?.buyerName || currentUser?.name || profile?.name || 'Client').trim(),
+                    phone: String(profile?.phone || '').trim(),
+                    lat: dropLat,
+                    lng: dropLng,
+                    address: String(profile?.address || order?.deliveryAddress || 'Chez le client').trim()
+                },
+                assignedDriverId: '',
+                assignedAt: 0,
+                track: { lat: null, lng: null, updatedAt: 0 }
+            }
+            try { lpDeliveryWrite('mangoo_delivery_job:' + String(job.id || ''), job) } catch {}
+            try { lpDeliveryEmit('job_created', { id: job.id, orderId: job.sourceOrderId }) } catch {}
+            try { await lpDeliveryPushJobRemote(job, 'job_created') } catch {}
+            return job
+        }
+
+        function lpSetDeliveryConfirmButtonState(btnEl, busy, text) {
+            try {
+                if (!btnEl) return
+                btnEl.disabled = !!busy
+                btnEl.style.opacity = busy ? '0.94' : '1'
+                btnEl.style.transform = busy ? 'scale(0.98)' : 'scale(1)'
+                btnEl.style.boxShadow = busy
+                    ? '0 0 0 3px rgba(14,165,233,0.16), 0 12px 26px rgba(14,165,233,0.16)'
+                    : ''
+                if (text) btnEl.textContent = String(text)
+            } catch {
+            }
+        }
+
+        function lpSubmitDeliveryRequestFromModal(btnEl) {
+            const button = btnEl || document.getElementById('lpDeliveryConfirmBtn')
+            const orderLabel = String(button?.getAttribute('data-order-label') || '').trim()
+            return lpConfirmDeliveryRequest(orderLabel, button)
+        }
+
+        async function lpConfirmDeliveryRequest(orderLabel, btnEl) {
             const selected = document.querySelector('#deliveryOverlay .lp-delivery-option.selected')
             const mode = selected ? String(selected.querySelector('.t')?.textContent || '').trim() : 'Express'
-            try { document.getElementById('deliveryOverlay').remove() } catch {}
-            try { lpToast(`Livraison ${mode.toLowerCase()} demandée.`, 'success') } catch {}
-            setTimeout(() => {
-                alert(`✅ Livraison ${mode.toLowerCase()} demandée pour ${orderLabel}. La boutique prépare la commande puis Mangoo Express envoie le livreur.`)
-            }, 120)
+            try { lpSetDeliveryConfirmButtonState(btnEl, true, '⏳ Demande...') } catch {}
+            try {
+                const job = await lpDeliveryCreateJobFromOrder(orderLabel, mode)
+                try { document.getElementById('deliveryOverlay').remove() } catch {}
+                try { lpToast(`Livraison ${mode.toLowerCase()} demandée.`, 'success') } catch {}
+                try {
+                    lpSpeakMangooAlert(`Livraison ${mode.toLowerCase()} demandée. Mangoo appelle un livreur.`, {
+                        ...lpGetVoicePrefs(),
+                        repeats: 2,
+                        intervalMs: 1700,
+                        dedupeKey: 'delivery-requested:' + String(job?.id || orderLabel),
+                        cooldownMs: 9000
+                    })
+                } catch {}
+                setTimeout(() => {
+                    alert(`✅ Livraison ${mode.toLowerCase()} demandée pour ${orderLabel}. La boutique prépare la commande puis Mangoo Express envoie le livreur.`)
+                }, 120)
+            } catch (error) {
+                try { lpSetDeliveryConfirmButtonState(btnEl, false, '✅ Demander un livreur') } catch {}
+                try { lpToast('Impossible de lancer la livraison.', 'error') } catch {}
+                alert(String(error?.message || 'Impossible de lancer la livraison pour cette commande.'))
+            }
         }
 
         function lpOpenInvoice(orderLabel, totalFcfa) {
@@ -23004,76 +23939,82 @@
             // 1. ORDERS
             const ordersContainer = document.getElementById('ordersListContainer');
             if(ordersContainer) {
-                // Mock Orders + Real recent state
                 let ordersHtml = '';
-                
-                // Check if we have a recent crowdfunding purchase (Completed)
-                // Also check if we have a 'negotiated' purchase stored somewhere? 
-                // Currently we don't persist negotiated purchases in a global state except alert.
-                // Let's assume crowdfundingState covers Tontine/Epargne completed.
-                
-                if(window.crowdfundingState && (window.crowdfundingState.raised >= window.crowdfundingState.totalNeeded)) {
-                     const state = window.crowdfundingState;
-                     const orderLabel = 'order-' + Math.floor(Math.random()*1000000000);
-                     const createdAt = new Date().toLocaleString('fr-FR');
-                     const totalFcfa = Number(state.totalNeeded || 0) || 0;
-                     ordersHtml += `
+                const clientOrders = lpReadClientOrders();
+
+                clientOrders.forEach((order) => {
+                    const orderId = String(order?.id || '').trim();
+                    const createdAtRaw = String(order?.createdAt || '').trim();
+                    const createdAt = createdAtRaw ? new Date(createdAtRaw).toLocaleString('fr-FR') : new Date().toLocaleString('fr-FR');
+                    const totalFcfa = Number(order?.pricing?.totalCfa || order?.payment?.amount || order?.product?.priceCfa || 0) || 0;
+                    const qty = Math.max(1, Number(order?.qty || 1) || 1);
+                    const productName = String(order?.product?.title || 'Produit').trim();
+                    const paymentSucceeded = String(order?.payment?.status || '').trim() === 'succeeded';
+                    const statusLabel = paymentSucceeded ? 'paye' : 'en attente';
+                    const statusStyles = paymentSucceeded
+                        ? 'background: rgba(34,197,94,0.14); color:#22c55e; border:1px solid rgba(34,197,94,0.25);'
+                        : 'background: rgba(245,158,11,0.14); color:#d97706; border:1px solid rgba(245,158,11,0.25);';
+                    ordersHtml += `
                         <div style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:16px; margin-bottom:12px;">
                             <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
                                 <div>
-                                    <div style="font-weight:950; color:var(--ml-text);">Commande ${orderLabel}</div>
+                                    <div style="font-weight:950; color:var(--ml-text);">Commande ${lpEscapeHtml(orderId)}</div>
+                                    <div style="color:var(--ml-muted); font-size:0.85rem; margin-top:2px;">${createdAt}</div>
+                                    <div style="color:var(--ml-muted); font-size:0.85rem; margin-top:2px;">${qty} article(s)</div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div style="font-weight:950; color:#f97316;">${totalFcfa.toLocaleString()} FCFA</div>
+                                    <div style="display:inline-flex; margin-top:6px; padding:3px 10px; border-radius:999px; font-weight:900; font-size:0.75rem; ${statusStyles}">${statusLabel}</div>
+                                </div>
+                            </div>
+
+                            <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+                                <button type="button" class="lp-btn lp-btn-primary" onclick="lpRequestDelivery('${lpEscapeInlineArg(orderId)}')" title="Demander une livraison pour cette commande">🚚 Demander livraison</button>
+                                <button type="button" class="lp-btn lp-btn-secondary" onclick="lpOpenInvoice('${lpEscapeInlineArg(productName || 'Commande')}', ${totalFcfa})" title="Voir la facture">🧾 Facture</button>
+                                <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpGoToClientAccount('profile')}catch{}" title="Renseigner mon adresse">✍️ Mon adresse</button>
+                            </div>
+
+                            <div style="margin-top:12px; padding-top:12px; border-top: 1px solid rgba(255,255,255,0.06); color: var(--ml-muted); font-size:0.85rem; display:flex; justify-content:space-between; gap:12px;">
+                                <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${lpEscapeHtml(productName)} × ${qty}</div>
+                                <div style="white-space:nowrap;">${totalFcfa.toLocaleString()} FCFA</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                if(!ordersHtml && window.crowdfundingState && (window.crowdfundingState.raised >= window.crowdfundingState.totalNeeded)) {
+                    const state = window.crowdfundingState;
+                    const pending = lpGetPendingDirectPurchase();
+                    const orderLabel = String(pending?.serverOrderId || 'commande-locale').trim();
+                    const createdAt = new Date().toLocaleString('fr-FR');
+                    const totalFcfa = Number(state.totalNeeded || 0) || 0;
+                    ordersHtml = `
+                        <div style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:16px; margin-bottom:12px;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+                                <div>
+                                    <div style="font-weight:950; color:var(--ml-text);">Commande ${lpEscapeHtml(orderLabel)}</div>
                                     <div style="color:var(--ml-muted); font-size:0.85rem; margin-top:2px;">${createdAt}</div>
                                     <div style="color:var(--ml-muted); font-size:0.85rem; margin-top:2px;">1 article(s)</div>
                                 </div>
                                 <div style="text-align:right;">
                                     <div style="font-weight:950; color:#f97316;">${totalFcfa.toLocaleString()} FCFA</div>
-                                    <div style="display:inline-flex; margin-top:6px; padding:3px 10px; border-radius:999px; font-weight:900; font-size:0.75rem; background: rgba(34,197,94,0.14); color:#22c55e; border:1px solid rgba(34,197,94,0.25);">paid</div>
+                                    <div style="display:inline-flex; margin-top:6px; padding:3px 10px; border-radius:999px; font-weight:900; font-size:0.75rem; background: rgba(34,197,94,0.14); color:#22c55e; border:1px solid rgba(34,197,94,0.25);">paye</div>
                                 </div>
                             </div>
-
                             <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
-                                <button type="button" class="lp-btn lp-btn-primary" onclick="lpRequestDelivery('${orderLabel}')" title="Demander une livraison pour cette commande">🚚 Demander livraison</button>
-                                <button type="button" class="lp-btn lp-btn-secondary" onclick="lpOpenInvoice('${state.productName || 'Commande'}', ${totalFcfa})" title="Voir la facture">🧾 Facture</button>
-                                <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpGoToClientAccount('profile')}catch{}" title="Renseigner mon adresse">✍️ Mon adresse</button>
-                            </div>
-
-                            <div style="margin-top:12px; padding-top:12px; border-top: 1px solid rgba(255,255,255,0.06); color: var(--ml-muted); font-size:0.85rem; display:flex; justify-content:space-between; gap:12px;">
-                                <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${state.productName || 'Produit'} × 1</div>
-                                <div style="white-space:nowrap;">${totalFcfa.toLocaleString()} FCFA</div>
+                                <button type="button" class="lp-btn lp-btn-primary" onclick="lpRequestDelivery('${lpEscapeInlineArg(orderLabel)}')" title="Demander une livraison pour cette commande">🚚 Demander livraison</button>
+                                <button type="button" class="lp-btn lp-btn-secondary" onclick="lpOpenInvoice('${lpEscapeInlineArg(state.productName || 'Commande')}', ${totalFcfa})" title="Voir la facture">🧾 Facture</button>
                             </div>
                         </div>
-                     `;
+                    `;
                 }
-                
-                // Add some mock history
-                ordersHtml += `
-                    <div style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:16px; margin-bottom:12px;">
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
-                            <div>
-                                <div style="font-weight:950; color:var(--ml-text);">Commande order-8921</div>
-                                <div style="color:var(--ml-muted); font-size:0.85rem; margin-top:2px;">10/02/2026</div>
-                                <div style="color:var(--ml-muted); font-size:0.85rem; margin-top:2px;">1 article(s)</div>
-                            </div>
-                            <div style="text-align:right;">
-                                <div style="font-weight:950; color:#f97316;">25 000 FCFA</div>
-                                <div style="display:inline-flex; margin-top:6px; padding:3px 10px; border-radius:999px; font-weight:900; font-size:0.75rem; background: rgba(148,163,184,0.14); color: var(--ml-muted); border:1px solid rgba(148,163,184,0.25);">livré</div>
-                            </div>
-                        </div>
 
-                        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
-                            <button type="button" class="lp-btn lp-btn-primary" disabled title="Disponible après paiement">🚚 Demander livraison</button>
-                            <button type="button" class="lp-btn lp-btn-secondary" onclick="lpOpenInvoice('Sac de Riz 50kg', 25000)" title="Voir la facture">🧾 Facture</button>
-                            <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpGoToClientAccount('profile')}catch{}" title="Renseigner mon adresse">✍️ Mon adresse</button>
-                        </div>
-
-                        <div style="margin-top:12px; padding-top:12px; border-top: 1px solid rgba(255,255,255,0.06); color: var(--ml-muted); font-size:0.85rem; display:flex; justify-content:space-between; gap:12px;">
-                            <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Sac de Riz 50kg × 1</div>
-                            <div style="white-space:nowrap;">25 000 FCFA</div>
-                        </div>
+                ordersContainer.innerHTML = ordersHtml || `
+                    <div style="text-align:center; padding:40px 0; color:var(--ml-muted);">
+                        <div style="font-size:3rem; margin-bottom:10px;">📦</div>
+                        <div style="font-weight:900;">Aucune commande recente</div>
                     </div>
                 `;
-                
-                if(ordersHtml) ordersContainer.innerHTML = ordersHtml;
             }
 
             // 2. TONTINES

@@ -95,6 +95,34 @@ function normalizeNumber(value: unknown): number | null {
 
 const router = Router()
 
+router.get('/jobs/recent', async (req, res) => {
+  const all = await readAllJobs()
+  const now = Date.now()
+  const statusFilterRaw = String(req.query.status || '').trim().toLowerCase()
+  const statusFilter = statusFilterRaw
+    ? statusFilterRaw.split(',').map((item) => String(item || '').trim()).filter(Boolean)
+    : []
+  const maxAgeMs = Math.max(60 * 60 * 1000, normalizeNumber(req.query.maxAgeMs) || 12 * 60 * 60 * 1000)
+
+  const jobs = Object.values(all)
+    .filter((job) => {
+      const id = String(job?.id || '').trim()
+      const status = String(job?.status || '').trim().toLowerCase()
+      const ts = normalizeNumber(job?.remoteUpdatedAt) || normalizeNumber(job?.assignedAt) || normalizeNumber(job?.createdAt) || 0
+      if (!id || !ts) return false
+      if ((now - ts) > maxAgeMs) return false
+      if (statusFilter.length && !statusFilter.includes(status)) return false
+      return true
+    })
+    .sort((a, b) => {
+      const aTs = normalizeNumber(a?.remoteUpdatedAt) || normalizeNumber(a?.assignedAt) || normalizeNumber(a?.createdAt) || 0
+      const bTs = normalizeNumber(b?.remoteUpdatedAt) || normalizeNumber(b?.assignedAt) || normalizeNumber(b?.createdAt) || 0
+      return bTs - aTs
+    })
+
+  return res.status(200).json({ success: true, jobs })
+})
+
 router.get('/latest-active', async (_req, res) => {
   const all = await readAllJobs()
   const now = Date.now()
