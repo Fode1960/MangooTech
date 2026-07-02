@@ -16424,8 +16424,53 @@
 
         function handleLicenseUpload(input) {
             if (input.files && input.files[0]) {
+                // #region debug-point PPB-A:license-file-selected
+                try {
+                    fetch('http://192.168.1.18:7777/event', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        keepalive: true,
+                        body: JSON.stringify({
+                            sessionId: 'product-photo-blocked',
+                            runId: 'pre-fix',
+                            hypothesisId: 'A',
+                            location: 'mangoo-local.html:handleLicenseUpload',
+                            msg: '[DEBUG] working license photo input received file',
+                            data: {
+                                hasFile: !!(input.files && input.files[0]),
+                                fileName: String(input.files?.[0]?.name || ''),
+                                fileType: String(input.files?.[0]?.type || ''),
+                                fileSize: Number(input.files?.[0]?.size || 0)
+                            },
+                            ts: Date.now()
+                        })
+                    }).catch(() => {});
+                } catch {
+                }
+                // #endregion
                 const reader = new FileReader();
                 reader.onload = function(e) {
+                    // #region debug-point PPB-B:license-reader-load
+                    try {
+                        fetch('http://192.168.1.18:7777/event', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            keepalive: true,
+                            body: JSON.stringify({
+                                sessionId: 'product-photo-blocked',
+                                runId: 'pre-fix',
+                                hypothesisId: 'A',
+                                location: 'mangoo-local.html:handleLicenseUpload.onload',
+                                msg: '[DEBUG] working license photo reader loaded',
+                                data: {
+                                    resultLength: String(e?.target?.result || '').length
+                                },
+                                ts: Date.now()
+                            })
+                        }).catch(() => {});
+                    } catch {
+                    }
+                    // #endregion
                     const img = document.getElementById('licensePreview');
                     const placeholder = document.getElementById('licensePlaceholder');
                     const container = img && img.parentElement ? img.parentElement : null;
@@ -16505,6 +16550,16 @@
             try { localStorage.setItem(String(key || ''), JSON.stringify(value)); } catch {}
         }
 
+        function lpDeliveryWriteChecked(key, value) {
+            try {
+                const storageKey = String(key || '');
+                localStorage.setItem(storageKey, JSON.stringify(value));
+                return localStorage.getItem(storageKey) != null;
+            } catch {
+                return false;
+            }
+        }
+
         async function lpDeliveryFetchJobRemote(jobId) {
             try {
                 const id = String(jobId || '').trim();
@@ -16533,11 +16588,39 @@
                     remoteUpdatedAt: Date.now(),
                     remoteReason: String(reason || 'job_updated').trim() || 'job_updated'
                 };
-                await fetch('/api/delivery-tracking/job/' + encodeURIComponent(id), {
+                const response = await fetch('/api/delivery-tracking/job/' + encodeURIComponent(id), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ job: next })
                 }).catch(() => null);
+                // #region debug-point B:push-remote-job
+                try {
+                    fetch('http://192.168.1.18:7777/event', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        keepalive: true,
+                        body: JSON.stringify({
+                            sessionId: 'driver-job-missing',
+                            runId: 'pre-fix',
+                            hypothesisId: 'B',
+                            location: 'mangoo-local.html:lpDeliveryPushJobRemote',
+                            msg: '[DEBUG] remote job push attempted',
+                            data: {
+                                id,
+                                reason: String(next?.remoteReason || ''),
+                                status: String(next?.status || ''),
+                                phase: String(next?.phase || ''),
+                                roomId: String(next?.roomId || ''),
+                                shopSlug: String(next?.shopSlug || ''),
+                                responseOk: !!response?.ok,
+                                responseStatus: Number(response?.status || 0)
+                            },
+                            ts: Date.now()
+                        })
+                    }).catch(() => {});
+                } catch {
+                }
+                // #endregion
             } catch {
             }
         }
@@ -17026,6 +17109,32 @@
             }
         }
 
+        function lpDeliveryJobActivityTs(job) {
+            return Math.max(
+                Number(job?.remoteUpdatedAt || 0),
+                Number(job?.phaseUpdatedAt || 0),
+                Number(job?.assignedAt || 0),
+                Number(job?.createdAt || 0)
+            );
+        }
+
+        function lpDeliveryPickDriverActiveJob(list, driverId) {
+            const me = String(driverId || lpDeliveryDriverId() || '').trim();
+            if (!me || !Array.isArray(list)) return null;
+            const jobs = list.filter((job) =>
+                String(job?.assignedDriverId || '').trim() === me &&
+                String(job?.status || '').trim() !== 'done'
+            );
+            if (!jobs.length) return null;
+            jobs.sort((a, b) => {
+                const aLocal = lpDeliveryShouldBypassDistanceFilter(a) ? 1 : 0;
+                const bLocal = lpDeliveryShouldBypassDistanceFilter(b) ? 1 : 0;
+                if (bLocal !== aLocal) return bLocal - aLocal;
+                return lpDeliveryJobActivityTs(b) - lpDeliveryJobActivityTs(a);
+            });
+            return jobs[0] || null;
+        }
+
         function lpDeliveryOnEvent(msg) {
             try {
                 const t = String(msg?.t || '').trim();
@@ -17034,14 +17143,17 @@
                     try { lpDeliveryRenderDriverRequests(); } catch {}
                 }
                 if (t === 'job_created') {
-                    try {
-                        lpSpeakMangooAlert("Mangoo Express. Nouvelle course. Appuie sur accepter si tu es disponible.", {
-                            ...lpGetVoicePrefs(),
-                            repeats: 3,
-                            intervalMs: 1700,
-                            dedupeKey: 'driver-job-created:' + String(msg?.p?.id || 'global')
-                        });
-                    } catch {}
+                    const mine = lpDeliveryPickDriverActiveJob(lpDeliveryListJobs(), lpDeliveryDriverId());
+                    if (!mine) {
+                        try {
+                            lpSpeakMangooAlert("Mangoo Express. Nouvelle course. Appuie sur accepter si tu es disponible.", {
+                                ...lpGetVoicePrefs(),
+                                repeats: 3,
+                                intervalMs: 1700,
+                                dedupeKey: 'driver-job-created:' + String(msg?.p?.id || 'global')
+                            });
+                        } catch {}
+                    }
                 }
             } catch {
             }
@@ -17299,7 +17411,7 @@
                     }
                     if (!newestOpenId && String(job?.status || '').trim() === 'open') newestOpenId = id;
                 });
-                //#region debug-point driver-job-sync.remote-sync
+                // #region debug-point C:remote-sync
                 try {
                     const openJobs = jobs.filter((job) => String(job?.status || '').trim() === 'open');
                     fetch('http://192.168.1.18:7777/event', {
@@ -17307,8 +17419,11 @@
                         headers: { 'Content-Type': 'application/json' },
                         keepalive: true,
                         body: JSON.stringify({
-                            sessionId: 'driver-job-sync',
-                            event: 'driver_remote_sync',
+                            sessionId: 'driver-job-missing',
+                            runId: 'pre-fix',
+                            hypothesisId: 'C',
+                            location: 'mangoo-local.html:lpDeliverySyncRemoteJobs',
+                            msg: '[DEBUG] remote jobs synced for driver surface',
                             data: {
                                 totalJobs: jobs.length,
                                 openJobs: openJobs.length,
@@ -17319,17 +17434,21 @@
                                     id: String(job?.id || ''),
                                     shopSlug: String(job?.shopSlug || ''),
                                     roomId: String(job?.roomId || ''),
+                                    status: String(job?.status || ''),
+                                    phase: String(job?.phase || ''),
                                     pickupLat: Number(job?.pickup?.lat),
                                     pickupLng: Number(job?.pickup?.lng),
                                     remoteUpdatedAt: Number(job?.remoteUpdatedAt || 0)
                                 }))
-                            }
+                            },
+                            ts: Date.now()
                         })
                     }).catch(() => {});
                 } catch {
                 }
-                //#endregion debug-point driver-job-sync.remote-sync
-                if (announce && newestOpenId && lpDeliveryIsOnline()) {
+                // #endregion
+                const activeMine = lpDeliveryPickDriverActiveJob(jobs, lpDeliveryDriverId());
+                if (announce && newestOpenId && lpDeliveryIsOnline() && !activeMine) {
                     try {
                         lpSpeakMangooAlert("Mangoo Express. Nouvelle course. Appuie sur accepter si tu es disponible.", {
                             ...lpGetVoicePrefs(),
@@ -17399,10 +17518,14 @@
 
         function lpDeliverySaveJob(job) {
             const id = String(job?.id || '').trim();
-            if (!id) return;
-            lpDeliveryWrite('mangoo_delivery_job:' + id, job);
+            if (!id) return false;
+            const saved = lpDeliveryWriteChecked('mangoo_delivery_job:' + id, job);
+            if (!saved) return false;
+            const verify = lpDeliveryGetJob(id);
+            if (!verify || String(verify?.id || '').trim() !== id) return false;
             lpDeliveryEmit('job_updated', { id });
             try { lpDeliveryPushJobRemote(job, 'job_updated'); } catch {}
+            return true;
         }
 
         function lpDeliveryEnsureDispatcher() {
@@ -17422,10 +17545,7 @@
                 }, 3000);
                 window.__lpDeliveryJobTimer = setInterval(() => {
                     try {
-                        if (!lpDeliveryHasResolvedUserPosition()) return;
-                        const openJobs = lpDeliveryListJobs().filter((j) => String(j?.status || '') === 'open');
-                        if (openJobs.length) return;
-                        lpDeliveryCreateDemoJob();
+                        return;
                     } catch {
                     }
                 }, 12000);
@@ -17540,9 +17660,8 @@
             job.status = 'assigned';
             job.phase = 'pickup';
             job.phaseUpdatedAt = Date.now();
-            try {
-                lpDeliveryWrite('mangoo_delivery_job:' + id, job);
-            } catch {
+            const saved = lpDeliveryWriteChecked('mangoo_delivery_job:' + id, job);
+            if (!saved) {
                 try { showLocalToast('Erreur: stockage bloqué. Recharge la page.', 'error'); } catch {}
                 lpDeliveryRenderDriverRequests();
                 return false;
@@ -17824,6 +17943,33 @@
                 if (!target) return;
                 const jobId = String(target.getAttribute('data-job-id') || '').trim();
                 if (!jobId) return;
+                // #region debug-point B:proof-input-change
+                try {
+                    const file = (target.files && target.files[0]) ? target.files[0] : null;
+                    fetch('http://192.168.1.18:7777/event', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        keepalive: true,
+                        body: JSON.stringify({
+                            sessionId: 'driver-proof-android',
+                            runId: 'pre-fix',
+                            hypothesisId: 'B',
+                            location: 'mangoo-local.html:lpDeliveryHandleOverlayChange',
+                            msg: '[DEBUG] proof input change captured',
+                            data: {
+                                jobId,
+                                inputId: String(target.id || ''),
+                                hasFile: !!file,
+                                fileName: String(file?.name || ''),
+                                fileType: String(file?.type || ''),
+                                fileSize: Number(file?.size || 0)
+                            },
+                            ts: Date.now()
+                        })
+                    }).catch(() => {});
+                } catch {
+                }
+                // #endregion
                 lpDeliveryOnProofFileChange(jobId, target);
             } catch {
             }
@@ -17863,11 +18009,15 @@
             job.phaseUpdatedAt = Date.now();
             if (p === 'delivered') {
                 job.status = 'done';
+            }
+            const saved = lpDeliverySaveJob(job);
+            if (!saved) {
+                try { showLocalToast('Erreur: stockage bloqué. Recharge la page.', 'error'); } catch {}
+                return;
+            }
+            if (p === 'delivered') {
                 lpDeliverySetRecentDone(job);
                 lpDeliveryAddEarnings(Number(job.price || 0));
-            }
-            lpDeliverySaveJob(job);
-            if (p === 'delivered') {
                 try { lpDeliveryCelebrateDone(job); } catch {}
             }
             lpDeliveryRenderDriverRequests();
@@ -18341,32 +18491,98 @@
         function lpDeliveryOnProofFileChange(jobId, inputEl) {
             const id = String(jobId || '').trim();
             const el = inputEl || null;
-            if (!id || !el) return;
-            const job = lpDeliveryGetJob(id);
-            if (!job) return;
-            const file = (el.files && el.files[0]) ? el.files[0] : null;
-            try { el.value = ''; } catch {}
-            if (!file) return;
+            if (!id || !el || !(el.files && el.files[0])) return;
+            const file = el.files[0];
+            // #region debug-point PPB-C:proof-file-selected
+            try {
+                fetch('http://192.168.1.18:7777/event', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    keepalive: true,
+                    body: JSON.stringify({
+                        sessionId: 'product-photo-blocked',
+                        runId: 'pre-fix',
+                        hypothesisId: 'B',
+                        location: 'mangoo-local.html:lpDeliveryOnProofFileChange',
+                        msg: '[DEBUG] proof photo input received file',
+                        data: {
+                            jobId: id,
+                            inputConnected: !!el?.isConnected,
+                            activeTag: String(document?.activeElement?.tagName || ''),
+                            fileName: String(file?.name || ''),
+                            fileType: String(file?.type || ''),
+                            fileSize: Number(file?.size || 0)
+                        },
+                        ts: Date.now()
+                    })
+                }).catch(() => {});
+            } catch {
+            }
+            // #endregion
             const reader = new FileReader();
-            reader.onload = () => {
+            reader.onload = function(e) {
+                // #region debug-point PPB-D:proof-reader-load
                 try {
-                    const raw = String(reader.result || '');
-                    lpDeliveryCompressImageDataUrl(raw, 900, (dataUrl) => {
-                        try {
-                            job.proof = { photoDataUrl: String(dataUrl || ''), updatedAt: Date.now() };
-                            lpDeliverySaveJob(job);
-                            try { showLocalToast('Photo enregistrée ✅', 'success'); } catch {}
-                            lpDeliveryRenderDriverRequests();
-                        } catch {
-                            try { showLocalToast('Erreur photo', 'error'); } catch {}
-                        }
-                    });
+                    fetch('http://192.168.1.18:7777/event', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        keepalive: true,
+                        body: JSON.stringify({
+                            sessionId: 'product-photo-blocked',
+                            runId: 'pre-fix',
+                            hypothesisId: 'B',
+                            location: 'mangoo-local.html:lpDeliveryOnProofFileChange.onload',
+                            msg: '[DEBUG] proof photo reader loaded',
+                            data: {
+                                jobId: id,
+                                inputConnected: !!el?.isConnected,
+                                resultLength: String(e?.target?.result || '').length
+                            },
+                            ts: Date.now()
+                        })
+                    }).catch(() => {});
+                } catch {
+                }
+                // #endregion
+                try {
+                    const job = lpDeliveryGetJob(id);
+                    if (!job) {
+                        try { showLocalToast('Course introuvable', 'error'); } catch {}
+                        return;
+                    }
+                    const dataUrl = String(e?.target?.result || '').trim();
+                    if (!dataUrl.startsWith('data:image/')) {
+                        try { showLocalToast('Photo invalide', 'error'); } catch {}
+                        return;
+                    }
+                    job.proof = { photoDataUrl: dataUrl, updatedAt: Date.now() };
+                    const saved = lpDeliverySaveJob(job);
+                    if (!saved) {
+                        try { showLocalToast('Erreur photo', 'error'); } catch {}
+                        return;
+                    }
+                    const img = document.getElementById('lpDeliveryProofPreview-' + lpDeliverySafeDomId(id));
+                    const placeholder = document.getElementById('lpDeliveryProofPlaceholder-' + lpDeliverySafeDomId(id));
+                    const container = img && img.parentElement ? img.parentElement : null;
+                    if (img) {
+                        img.src = dataUrl;
+                        img.style.display = 'block';
+                    }
+                    if (placeholder) placeholder.style.display = 'none';
+                    try { if (container) container.style.border = '2px solid #27ae60'; } catch {}
+                    try { el.value = ''; } catch {}
+                    try { showLocalToast('Photo enregistrée ✅', 'success'); } catch {}
+                    try { lpDeliveryRenderDriverRequests(); } catch {}
                 } catch {
                     try { showLocalToast('Erreur photo', 'error'); } catch {}
                 }
             };
-            reader.onerror = () => { try { showLocalToast('Erreur photo', 'error'); } catch {} };
-            try { reader.readAsDataURL(file); } catch {}
+            reader.onerror = () => {
+                try { showLocalToast('Erreur photo', 'error'); } catch {}
+            };
+            try { reader.readAsDataURL(file); } catch {
+                try { showLocalToast('Erreur photo', 'error'); } catch {}
+            }
         }
 
         function lpDeliveryOpenProofPicker(jobId, inputId) {
@@ -18375,6 +18591,29 @@
             if (!id || !proofId) return;
             try {
                 const input = document.getElementById(proofId);
+                // #region debug-point A:proof-picker-open
+                try {
+                    fetch('http://192.168.1.18:7777/event', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        keepalive: true,
+                        body: JSON.stringify({
+                            sessionId: 'driver-proof-android',
+                            runId: 'pre-fix',
+                            hypothesisId: 'A',
+                            location: 'mangoo-local.html:lpDeliveryOpenProofPicker',
+                            msg: '[DEBUG] proof picker open requested',
+                            data: {
+                                jobId: id,
+                                proofInputId: proofId,
+                                inputFound: !!input
+                            },
+                            ts: Date.now()
+                        })
+                    }).catch(() => {});
+                } catch {
+                }
+                // #endregion
                 if (!input) {
                     try { showLocalToast('Photo indisponible', 'info'); } catch {}
                     return;
@@ -19524,74 +19763,27 @@
                 return;
             }
             const recentDone = lpDeliveryGetRecentDone();
-            if (recentDone && String(recentDone.id || '').trim()) {
-                const pickupDone = String(recentDone?.pickup?.name || 'Retrait');
-                const dropDone = String(recentDone?.dropoff?.address || 'Client');
-                const donePrice = Number(recentDone.price || 0);
-                const doneProof = String(((recentDone.proof || {}).photoDataUrl) || '').trim();
-                reqContainer.innerHTML = `
-                    <div style="background:linear-gradient(180deg, rgba(34,197,94,0.05), rgba(249,115,22,0.04) 42%, #fff 100%); border-radius:24px; padding:16px; border:1px solid rgba(39,174,96,0.16); border-left:5px solid #27ae60; box-shadow:0 14px 34px rgba(0,0,0,0.10); overflow:hidden; position:relative;">
-                        <div style="position:absolute; top:-10px; right:-8px; width:110px; height:110px; border-radius:999px; background:radial-gradient(circle, rgba(34,197,94,0.22) 0%, rgba(34,197,94,0.08) 42%, rgba(34,197,94,0) 70%);"></div>
-                        <div style="position:absolute; top:18px; left:18px; width:12px; height:12px; border-radius:999px; background:#f59e0b; box-shadow:28px 12px 0 rgba(34,197,94,0.85), 56px -2px 0 rgba(14,165,233,0.65), 82px 14px 0 rgba(249,115,22,0.72);"></div>
-                        <div style="position:relative; z-index:1; display:grid; gap:12px;">
-                            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <div style="width:52px; height:52px; border-radius:18px; background:linear-gradient(135deg, #f59e0b, #22c55e); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.6rem; box-shadow:0 14px 28px rgba(34,197,94,0.22);">🎉</div>
-                                    <div>
-                                        <div style="font-weight:950; color:#27ae60; font-size:1rem;">Livraison validée ✅</div>
-                                        <div style="font-size:0.86rem; color:#4b5563; font-weight:850;">Mission terminée avec succès</div>
-                                    </div>
-                                </div>
-                                <div style="background:rgba(39,174,96,0.10); color:#27ae60; border:1px solid rgba(39,174,96,0.18); border-radius:999px; padding:10px 12px; font-weight:950; white-space:nowrap;">
-                                    + ${donePrice.toLocaleString('fr-FR')} FCFA
-                                </div>
-                            </div>
-                            ${lpDeliveryRenderStepRail('delivered', true)}
-                            <div style="background:linear-gradient(135deg, #f59e0b 0%, #22c55e 100%); color:#fff; border-radius:22px; padding:20px 16px 18px; text-align:center; box-shadow:0 16px 32px rgba(34,197,94,0.18);">
-                                <div style="font-size:2.4rem; line-height:1; margin-bottom:8px;">🥭</div>
-                                <div style="font-weight:950; font-size:1.14rem; margin-bottom:4px;">Bravo ! Course terminée</div>
-                                <div style="font-size:0.94rem; font-weight:900; opacity:0.98;">Le gain est ajouté au solde du jour</div>
-                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px;">
-                                    <div style="background:rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.20); border-radius:16px; padding:10px;">
-                                        <div style="font-size:0.74rem; font-weight:900; opacity:0.92;">STATUT</div>
-                                        <div style="font-size:0.96rem; font-weight:950; margin-top:2px;">Réussi</div>
-                                    </div>
-                                    <div style="background:rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.20); border-radius:16px; padding:10px;">
-                                        <div style="font-size:0.74rem; font-weight:900; opacity:0.92;">GAIN</div>
-                                        <div style="font-size:0.96rem; font-weight:950; margin-top:2px;">${donePrice.toLocaleString('fr-FR')} FCFA</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div style="display:grid; gap:8px;">
-                                <div style="background:#fff3e0; padding:12px; border-radius:14px; font-weight:900; border:1px solid rgba(245,158,11,0.12);">🏪 Retrait: <b>${lpEscapeHtml(pickupDone)}</b></div>
-                                <div style="background:#eaf6ff; padding:12px; border-radius:14px; font-weight:900; border:1px solid rgba(14,165,233,0.12);">👤 Livraison: <b>${lpEscapeHtml(dropDone)}</b></div>
-                            </div>
-                            ${doneProof ? `
-                                <div style="background:#ffffff; border:1px solid rgba(0,0,0,0.06); border-radius:18px; padding:10px; box-shadow:0 8px 18px rgba(0,0,0,0.06);">
-                                    <div style="font-size:0.82rem; font-weight:950; color:#27ae60; margin-bottom:8px;">📷 Preuve remise au client</div>
-                                    <div style="display:flex; align-items:center; justify-content:center;">
-                                        <img src="${lpEscapeHtml(doneProof)}" alt="preuve livraison" style="width:100%; max-height:190px; object-fit:cover; border-radius:14px; border:1px solid rgba(0,0,0,0.08);">
-                                    </div>
-                                </div>
-                            ` : `
-                                <div style="background:#f7fff7; border:1px dashed rgba(39,174,96,0.35); color:#27ae60; border-radius:16px; padding:12px; text-align:center; font-weight:900;">
-                                    ✅ Livraison bien enregistrée
-                                </div>
-                            `}
-                            <div style="display:grid; gap:10px;">
-                                <button type="button" data-delivery-action="speak-phase" data-job-id="${lpEscapeHtml(String(recentDone.id || ''))}" data-phase="delivered" style="width:100%; padding:12px; background:#f7f8fb; color:#2d3436; border:1px solid rgba(0,0,0,0.06); border-radius:16px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">🔊 Réécouter</button>
-                                <button type="button" data-delivery-action="done-clear" data-job-id="${lpEscapeHtml(String(recentDone.id || ''))}" style="width:100%; padding:16px; background:linear-gradient(90deg, #27ae60, #16a34a); color:white; border:none; border-radius:18px; font-weight:950; font-size:1rem; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation; box-shadow:0 14px 30px rgba(39,174,96,0.22);">📦 Prochaine course</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                lpDeliveryMaybeSpeakPhase('delivered', String(recentDone.id || 'done'));
-                return;
-            }
             const me = lpDeliveryDriverId();
             const jobs = lpDeliveryListJobs();
-            const mine = jobs.find((j) => String(j?.assignedDriverId || '') === me && String(j?.status || '') !== 'done') || null;
+            const mine = lpDeliveryPickDriverActiveJob(jobs, me);
             if (mine) {
+                try {
+                    const activeTrackingId = String(window.__lpDeliveryTrackingJobId || '').trim();
+                    const lastTrack = lpDeliveryGetLastTrack(mine);
+                    const lastTrackAge = Date.now() - Number(lastTrack?.updatedAt || 0);
+                    if (activeTrackingId !== String(mine.id || '').trim() || !Number.isFinite(lastTrackAge) || lastTrackAge > 7000) {
+                        setTimeout(() => {
+                            try {
+                                const currentMine = lpDeliveryPickDriverActiveJob(lpDeliveryListJobs(), lpDeliveryDriverId());
+                                if (!currentMine) return;
+                                if (String(currentMine.id || '').trim() !== String(mine.id || '').trim()) return;
+                                lpDeliveryStartTracking(String(mine.id || '').trim());
+                            } catch {
+                            }
+                        }, 0);
+                    }
+                } catch {
+                }
                 const phase = String(mine.phase || 'pickup');
                 const meta = lpDeliveryPhaseMeta(phase);
                 const pickupName = String(mine?.pickup?.name || 'Retrait');
@@ -19607,18 +19799,78 @@
                     return '';
                 })();
                 const proofInputId = 'lp-proof-file-' + lpDeliverySafeDomId(mine.id);
+                const proofPreviewId = 'lpDeliveryProofPreview-' + lpDeliverySafeDomId(mine.id);
+                const proofPlaceholderId = 'lpDeliveryProofPlaceholder-' + lpDeliverySafeDomId(mine.id);
                 const hasProof = lpDeliveryHasProof(mine);
+                if (phase === 'proof') {
+                    // #region debug-point V:proof-ui-version
+                    try {
+                        fetch('http://192.168.1.18:7777/event', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            keepalive: true,
+                            body: JSON.stringify({
+                                sessionId: 'driver-proof-android',
+                                runId: 'post-fix',
+                                hypothesisId: 'V',
+                                location: 'mangoo-local.html:lpDeliveryRenderDriverRequests',
+                                msg: '[DEBUG] proof ui version rendered',
+                                data: {
+                                    jobId: String(mine.id || ''),
+                                    proofUiVersion: 'native-label-v1',
+                                    hasProof
+                                },
+                                ts: Date.now()
+                            })
+                        }).catch(() => {});
+                    } catch {
+                    }
+                    // #endregion
+                    // #region debug-point PPB-E:proof-render
+                    try {
+                        fetch('http://192.168.1.18:7777/event', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            keepalive: true,
+                            body: JSON.stringify({
+                                sessionId: 'product-photo-blocked',
+                                runId: 'pre-fix',
+                                hypothesisId: 'C',
+                                location: 'mangoo-local.html:lpDeliveryRenderDriverRequests',
+                                msg: '[DEBUG] proof block rendered',
+                                data: {
+                                    jobId: String(mine.id || ''),
+                                    hasProof,
+                                    phase: String(phase || ''),
+                                    proofUiVersion: 'proof-license-logic-1'
+                                },
+                                ts: Date.now()
+                            })
+                        }).catch(() => {});
+                    } catch {
+                    }
+                    // #endregion
+                }
                 const proofBlock = phase === 'proof'
                     ? `
                         <div style="margin:10px 0;">
                             <div style="font-weight:950; color:#27ae60; margin-bottom:8px;">Étape 3 sur 4 : photo du colis remis</div>
-                            <input id="${proofInputId}" data-delivery-proof-input="1" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" type="file" accept="image/*" capture="environment" style="display:none">
-                            <button type="button" data-delivery-action="proof-open" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" data-proof-input-id="${lpEscapeHtml(proofInputId)}" style="width:100%; padding:14px; background:${hasProof ? '#e8f5e9' : '#f1f2f6'}; border:2px dashed ${hasProof ? '#27ae60' : '#ccc'}; border-radius:12px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">
-                                ${hasProof ? '✅ Photo preuve enregistrée' : '📷 Photo preuve'}
-                            </button>
-                            ${hasProof ? `<div style="margin-top:10px; display:flex; align-items:center; justify-content:center;">
-                                <img src="${lpEscapeHtml(String((mine.proof || {}).photoDataUrl || ''))}" alt="preuve" style="max-width:100%; max-height:140px; border-radius:12px; border:1px solid rgba(0,0,0,0.08);">
-                            </div>` : ``}
+                            <div style="background:#f8fafc; border:1px solid rgba(0,0,0,0.06); border-radius:16px; padding:12px;">
+                                <div style="font-weight:950; color:#111827;">Photo du produit</div>
+                                <div style="font-size:0.86rem; font-weight:800; color:#6b7280; margin-top:2px;">Une photo claire suffit.</div>
+                                <div style="display:flex; align-items:center; gap:12px; margin-top:10px;">
+                                    <div style="width:72px; height:72px; border-radius:16px; background:${hasProof ? '#e8f5e9' : '#f3f4f6'}; border:2px solid ${hasProof ? '#27ae60' : '#e5e7eb'}; overflow:hidden; display:flex; align-items:center; justify-content:center; flex:0 0 auto;">
+                                        <img id="${proofPreviewId}" src="${hasProof ? lpEscapeHtml(String((mine.proof || {}).photoDataUrl || '')) : ''}" alt="preuve" style="display:${hasProof ? 'block' : 'none'}; width:100%; height:100%; object-fit:cover;">
+                                        <div id="${proofPlaceholderId}" style="display:${hasProof ? 'none' : 'flex'}; align-items:center; justify-content:center; font-weight:950; color:#9ca3af;">📷</div>
+                                    </div>
+                                    <div style="flex:1; min-width:0;">
+                                        <input id="${proofInputId}" data-delivery-proof-input="1" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" type="file" accept="image/*" capture="environment" onchange="try{lpDeliveryOnProofFileChange(${JSON.stringify(String(mine.id || ''))}, this)}catch{}" style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;">
+                                        ${hasProof
+                                            ? `<button type="button" data-delivery-action="proof-open" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" data-proof-input-id="${lpEscapeHtml(proofInputId)}" style="width:100%; padding:14px; background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:white; border:none; border-radius:999px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">✅ Photo ajoutée</button>`
+                                            : `<label for="${lpEscapeHtml(proofInputId)}" onclick="try{fetch('http://192.168.1.18:7777/event',{method:'POST',headers:{'Content-Type':'application/json'},keepalive:true,body:JSON.stringify({sessionId:'product-photo-blocked',runId:'pre-fix',hypothesisId:'D',location:'mangoo-local.html:proof-label',msg:'[DEBUG] proof label clicked',data:{jobId:${JSON.stringify(String(mine.id || ''))},proofInputId:${JSON.stringify(proofInputId)}},ts:Date.now()})}).catch(()=>{})}catch{}" style="display:inline-flex; align-items:center; justify-content:center; width:100%; padding:14px; background:#f3f4f6; color:#111827; border:1px solid rgba(0,0,0,0.08); border-radius:999px; font-weight:950; cursor:pointer; box-sizing:border-box;">📷 Ajouter photo</label>`}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     `
                     : '';
@@ -19690,7 +19942,7 @@
                         return true;
                     }
                 });
-            //#region debug-point driver-job-sync.render-filter
+            // #region debug-point D:render-filter
             try {
                 const sample = openJobsBeforeDistance.slice(0, 5).map((job) => {
                     const pickLat = Number(job?.pickup?.lat);
@@ -19711,8 +19963,11 @@
                     headers: { 'Content-Type': 'application/json' },
                     keepalive: true,
                     body: JSON.stringify({
-                        sessionId: 'driver-job-sync',
-                        event: 'driver_render_filter',
+                        sessionId: 'driver-job-missing',
+                        runId: 'pre-fix',
+                        hypothesisId: 'D',
+                        location: 'mangoo-local.html:lpDeliveryRenderDriverRequests',
+                        msg: '[DEBUG] driver request filter evaluated',
                         data: {
                             online,
                             ignoredCount: ignored.length,
@@ -19721,12 +19976,77 @@
                             userPos: Array.isArray(USER_POS) ? [Number(USER_POS[0]), Number(USER_POS[1])] : null,
                             userPosSource: String(USER_POS_META?.source || ''),
                             sample
-                        }
+                        },
+                        ts: Date.now()
                     })
                 }).catch(() => {});
             } catch {
             }
-            //#endregion debug-point driver-job-sync.render-filter
+            // #endregion
+            if (recentDone && String(recentDone.id || '').trim() && !mine && !openJobs.length) {
+                const pickupDone = String(recentDone?.pickup?.name || 'Retrait');
+                const dropDone = String(recentDone?.dropoff?.address || 'Client');
+                const donePrice = Number(recentDone.price || 0);
+                const doneProof = String(((recentDone.proof || {}).photoDataUrl) || '').trim();
+                reqContainer.innerHTML = `
+                    <div style="background:linear-gradient(180deg, rgba(34,197,94,0.05), rgba(249,115,22,0.04) 42%, #fff 100%); border-radius:24px; padding:16px; border:1px solid rgba(39,174,96,0.16); border-left:5px solid #27ae60; box-shadow:0 14px 34px rgba(0,0,0,0.10); overflow:hidden; position:relative;">
+                        <div style="position:absolute; top:-10px; right:-8px; width:110px; height:110px; border-radius:999px; background:radial-gradient(circle, rgba(34,197,94,0.22) 0%, rgba(34,197,94,0.08) 42%, rgba(34,197,94,0) 70%);"></div>
+                        <div style="position:absolute; top:18px; left:18px; width:12px; height:12px; border-radius:999px; background:#f59e0b; box-shadow:28px 12px 0 rgba(34,197,94,0.85), 56px -2px 0 rgba(14,165,233,0.65), 82px 14px 0 rgba(249,115,22,0.72);"></div>
+                        <div style="position:relative; z-index:1; display:grid; gap:12px;">
+                            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <div style="width:52px; height:52px; border-radius:18px; background:linear-gradient(135deg, #f59e0b, #22c55e); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.6rem; box-shadow:0 14px 28px rgba(34,197,94,0.22);">🎉</div>
+                                    <div>
+                                        <div style="font-weight:950; color:#27ae60; font-size:1rem;">Livraison validée ✅</div>
+                                        <div style="font-size:0.86rem; color:#4b5563; font-weight:850;">Mission terminée avec succès</div>
+                                    </div>
+                                </div>
+                                <div style="background:rgba(39,174,96,0.10); color:#27ae60; border:1px solid rgba(39,174,96,0.18); border-radius:999px; padding:10px 12px; font-weight:950; white-space:nowrap;">
+                                    + ${donePrice.toLocaleString('fr-FR')} FCFA
+                                </div>
+                            </div>
+                            ${lpDeliveryRenderStepRail('delivered', true)}
+                            <div style="background:linear-gradient(135deg, #f59e0b 0%, #22c55e 100%); color:#fff; border-radius:22px; padding:20px 16px 18px; text-align:center; box-shadow:0 16px 32px rgba(34,197,94,0.18);">
+                                <div style="font-size:2.4rem; line-height:1; margin-bottom:8px;">🥭</div>
+                                <div style="font-weight:950; font-size:1.14rem; margin-bottom:4px;">Bravo ! Course terminée</div>
+                                <div style="font-size:0.94rem; font-weight:900; opacity:0.98;">Le gain est ajouté au solde du jour</div>
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px;">
+                                    <div style="background:rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.20); border-radius:16px; padding:10px;">
+                                        <div style="font-size:0.74rem; font-weight:900; opacity:0.92;">STATUT</div>
+                                        <div style="font-size:0.96rem; font-weight:950; margin-top:2px;">Réussi</div>
+                                    </div>
+                                    <div style="background:rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.20); border-radius:16px; padding:10px;">
+                                        <div style="font-size:0.74rem; font-weight:900; opacity:0.92;">GAIN</div>
+                                        <div style="font-size:0.96rem; font-weight:950; margin-top:2px;">${donePrice.toLocaleString('fr-FR')} FCFA</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display:grid; gap:8px;">
+                                <div style="background:#fff3e0; padding:12px; border-radius:14px; font-weight:900; border:1px solid rgba(245,158,11,0.12);">🏪 Retrait: <b>${lpEscapeHtml(pickupDone)}</b></div>
+                                <div style="background:#eaf6ff; padding:12px; border-radius:14px; font-weight:900; border:1px solid rgba(14,165,233,0.12);">👤 Livraison: <b>${lpEscapeHtml(dropDone)}</b></div>
+                            </div>
+                            ${doneProof ? `
+                                <div style="background:#ffffff; border:1px solid rgba(0,0,0,0.06); border-radius:18px; padding:10px; box-shadow:0 8px 18px rgba(0,0,0,0.06);">
+                                    <div style="font-size:0.82rem; font-weight:950; color:#27ae60; margin-bottom:8px;">📷 Preuve remise au client</div>
+                                    <div style="display:flex; align-items:center; justify-content:center;">
+                                        <img src="${lpEscapeHtml(doneProof)}" alt="preuve livraison" style="width:100%; max-height:190px; object-fit:cover; border-radius:14px; border:1px solid rgba(0,0,0,0.08);">
+                                    </div>
+                                </div>
+                            ` : `
+                                <div style="background:#f7fff7; border:1px dashed rgba(39,174,96,0.35); color:#27ae60; border-radius:16px; padding:12px; text-align:center; font-weight:900;">
+                                    ✅ Livraison bien enregistrée
+                                </div>
+                            `}
+                            <div style="display:grid; gap:10px;">
+                                <button type="button" data-delivery-action="speak-phase" data-job-id="${lpEscapeHtml(String(recentDone.id || ''))}" data-phase="delivered" style="width:100%; padding:12px; background:#f7f8fb; color:#2d3436; border:1px solid rgba(0,0,0,0.06); border-radius:16px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">🔊 Réécouter</button>
+                                <button type="button" data-delivery-action="done-clear" data-job-id="${lpEscapeHtml(String(recentDone.id || ''))}" style="width:100%; padding:16px; background:linear-gradient(90deg, #27ae60, #16a34a); color:white; border:none; border-radius:18px; font-weight:950; font-size:1rem; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation; box-shadow:0 14px 30px rgba(39,174,96,0.22);">📦 Prochaine course</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                lpDeliveryMaybeSpeakPhase('delivered', String(recentDone.id || 'done'));
+                return;
+            }
             if (!openJobs.length) {
                 try {
                     const now = Date.now();
@@ -23568,6 +23888,41 @@
                 assignedAt: 0,
                 track: { lat: null, lng: null, updatedAt: 0 }
             }
+            // #region debug-point A:create-delivery-job
+            try {
+                fetch('http://192.168.1.18:7777/event', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    keepalive: true,
+                    body: JSON.stringify({
+                        sessionId: 'driver-job-missing',
+                        runId: 'pre-fix',
+                        hypothesisId: 'A',
+                        location: 'mangoo-local.html:lpDeliveryCreateJobFromOrder',
+                        msg: '[DEBUG] local delivery job created from order',
+                        data: {
+                            id: String(job?.id || ''),
+                            orderId: String(job?.sourceOrderId || ''),
+                            roomId: String(job?.roomId || ''),
+                            shopSlug: String(job?.shopSlug || ''),
+                            mode: String(job?.mode || ''),
+                            status: String(job?.status || ''),
+                            phase: String(job?.phase || ''),
+                            pickup: {
+                                lat: Number(job?.pickup?.lat),
+                                lng: Number(job?.pickup?.lng)
+                            },
+                            dropoff: {
+                                lat: Number(job?.dropoff?.lat),
+                                lng: Number(job?.dropoff?.lng)
+                            }
+                        },
+                        ts: Date.now()
+                    })
+                }).catch(() => {})
+            } catch {
+            }
+            // #endregion
             try { lpDeliveryWrite('mangoo_delivery_job:' + String(job.id || ''), job) } catch {}
             try { lpDeliveryEmit('job_created', { id: job.id, orderId: job.sourceOrderId }) } catch {}
             try { await lpDeliveryPushJobRemote(job, 'job_created') } catch {}
@@ -23601,6 +23956,7 @@
             try {
                 const job = await lpDeliveryCreateJobFromOrder(orderLabel, mode)
                 try { document.getElementById('deliveryOverlay').remove() } catch {}
+                try { lpSetDeliveryConfirmButtonState(btnEl, false, '✅ Demander un livreur') } catch {}
                 try { lpToast(`Livraison ${mode.toLowerCase()} demandée.`, 'success') } catch {}
                 try {
                     lpSpeakMangooAlert(`Livraison ${mode.toLowerCase()} demandée. Mangoo appelle un livreur.`, {
