@@ -403,11 +403,11 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
     if (kind === 'vendor') {
       onLogin({
         id: 2,
-        name: 'Commerçant Demo',
+        name: 'Vendeur Mangoo',
         role: 'vendor',
         roles: ['vendor', 'client', 'prestataire'],
         email: 'vendor@example.com',
-        shopName: 'Boutique Demo',
+        shopName: 'Boutique Mangoo',
         avatar: '👨‍🎨',
         password: 'vendor123'
       });
@@ -416,7 +416,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
     if (kind === 'livreur') {
       onLogin({
         id: 4,
-        name: 'Livreur Demo',
+        name: 'Livreur Mangoo',
         role: 'livreur',
         roles: ['livreur', 'client'],
         email: 'livreur@exemple.com',
@@ -427,7 +427,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
     }
     onLogin({
       id: 3,
-      name: 'Client Demo',
+      name: 'Client Mangoo',
       role: 'client',
       roles: ['client'],
       email: 'client@example.com',
@@ -851,16 +851,16 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
       },
       'vendor@example.com': { 
         id: 2, 
-        name: 'Commerçant Demo', 
+        name: 'Vendeur Mangoo', 
         role: 'vendor', 
         roles: ['vendor', 'client', 'prestataire'],
         email: 'vendor@example.com',
-        shopName: 'Boutique Demo',
+        shopName: 'Boutique Mangoo',
         avatar: '👨‍🎨'
       },
       'client@example.com': { 
         id: 3, 
-        name: 'Client Demo', 
+        name: 'Client Mangoo', 
         role: 'client', 
         roles: ['client'],
         email: 'client@example.com',
@@ -868,20 +868,20 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
       },
       'vendeur@exemple.com': { 
         id: 2, 
-        name: 'Commerçant Demo', 
+        name: 'Vendeur Mangoo', 
         role: 'vendor', 
         roles: ['vendor', 'client', 'prestataire'],
         email: 'vendor@example.com',
-        shopName: 'Boutique Demo',
+        shopName: 'Boutique Mangoo',
         avatar: '👨‍🎨'
       },
       'vendeur@example.com': { 
         id: 2, 
-        name: 'Commerçant Demo', 
+        name: 'Vendeur Mangoo', 
         role: 'vendor', 
         roles: ['vendor', 'client', 'prestataire'],
         email: 'vendor@example.com',
-        shopName: 'Boutique Demo',
+        shopName: 'Boutique Mangoo',
         avatar: '👨‍🎨'
       },
       'pc1@exemple.com': {
@@ -1281,9 +1281,9 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         </form>
 
         <div className="mt-4">
-          {!hasSupabaseAuth && (
+          {!hasSupabaseAuth && Boolean(import.meta.env.DEV) && (
             <details className="mt-3">
-              <summary className={`cursor-pointer select-none text-xs font-bold ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Connexion rapide (démo)</summary>
+              <summary className={`cursor-pointer select-none text-xs font-bold ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Connexion rapide</summary>
               <div className="mt-2 grid grid-cols-1 gap-2">
                 <button
                   type="button"
@@ -1363,9 +1363,9 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
           </button>
         </div>
 
-        {!hasSupabaseAuth && (
+        {!hasSupabaseAuth && Boolean(import.meta.env.DEV) && (
           <details className={`mt-4 text-xs transition-colors duration-300 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            <summary className="cursor-pointer select-none font-semibold">Comptes de démonstration</summary>
+            <summary className="cursor-pointer select-none font-semibold">Accès dev</summary>
             <div className="mt-2 space-y-1">
               <p><span className="font-mono">admin@mangoo.tech</span> / admin123</p>
               <p><span className="font-mono">vendor@example.com</span> / vendor123</p>
@@ -2927,17 +2927,17 @@ const VendorDashboard = ({ user }) => {
 
   const supplyRegionMeta = useMemo(() => ({
     china: {
-      subtitle: 'Gros & import express (démo)',
+      subtitle: 'Gros & import express',
       bullets: ['Commande en gros', 'Expédition internationale', 'Dédouanement', 'Livraison locale'],
       eta: 'J+10 à J+14'
     },
     turkey: {
-      subtitle: 'Mode & accessoires (démo)',
+      subtitle: 'Mode & accessoires',
       bullets: ['Choix des tailles', 'Contrôle qualité', 'Expédition Turquie → Cameroun', 'Livraison'],
       eta: 'J+7 à J+12'
     },
     local: {
-      subtitle: 'Marchés & grossistes (démo)',
+      subtitle: 'Marchés & grossistes',
       bullets: ['Stock local', 'Paiement à la livraison', 'Livraison le jour même', 'Facture simple'],
       eta: 'Aujourd’hui'
     }
@@ -4390,7 +4390,7 @@ const VendorDashboard = ({ user }) => {
       }
       case 'communication': {
         const contacts = [
-          { id: 'customer_3', name: 'Client Demo', avatar: '🧑‍💻', hint: 'client@example.com' },
+          { id: 'customer_3', name: 'Client Mangoo', avatar: '🧑‍💻', hint: 'client@example.com' },
           { id: 'customer_guest@mangoo.tech', name: 'Client invité', avatar: '👤', hint: 'guest@mangoo.tech' }
         ];
 
@@ -4587,7 +4587,7 @@ const VendorDashboard = ({ user }) => {
                           }}
                           className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-3 py-2 rounded-lg transition-colors"
                         >
-                          Ouvrir client (test)
+                          Ouvrir client
                         </button>
                         <button
                           type="button"
@@ -4662,30 +4662,32 @@ const VendorDashboard = ({ user }) => {
                       )
                     }).filter(Boolean)}
 
-                    <div className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-2xl p-4`}>
-                      <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>Démo</div>
-                      <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-xs`}>Room de test (live-demo-123)</div>
-                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            window.location.href = `/live-shopping?role=vendor&roomId=live-demo-123&ui=simple`
-                          }}
-                          className="rounded-2xl px-4 py-4 font-semibold bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 text-white"
-                        >
-                          Ouvrir Vendeur (démo)
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            window.open(`${window.location.origin}/live-shopping?role=client&roomId=live-demo-123&ui=simple`, '_blank', 'noopener,noreferrer')
-                          }}
-                          className={`${isDark ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-900'} rounded-2xl px-4 py-4 font-semibold`}
-                        >
-                          Ouvrir Client (démo)
-                        </button>
+                    {Boolean(import.meta.env.DEV) && (
+                      <div className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-2xl p-4`}>
+                        <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>Salle exemple</div>
+                        <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-xs`}>RoomId: live-room-123</div>
+                        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              window.location.href = `/live-shopping?role=vendor&roomId=live-room-123&ui=simple`
+                            }}
+                            className="rounded-2xl px-4 py-4 font-semibold bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 text-white"
+                          >
+                            Ouvrir Vendeur
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              window.open(`${window.location.origin}/live-shopping?role=client&roomId=live-room-123&ui=simple`, '_blank', 'noopener,noreferrer')
+                            }}
+                            className={`${isDark ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-900'} rounded-2xl px-4 py-4 font-semibold`}
+                          >
+                            Ouvrir Client
+                          </button>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -5110,7 +5112,7 @@ const VendorDashboard = ({ user }) => {
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                 <div>
                   <div className={`${isDark ? 'text-white' : 'text-gray-900'} text-lg font-semibold`}>Mangoo Supply Chain</div>
-                  <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Réapprovisionnement (mode démo) : Chine, Turquie, local.</div>
+                  <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Réapprovisionnement : Chine, Turquie, local.</div>
                 </div>
                 <button
                   type="button"
@@ -6771,14 +6773,14 @@ const ShopsDirectory = () => {
 
   const directory = useMemo(() => {
     const base = [{
-      id: 'boutique-demo',
-      name: 'Boutique Demo',
-      slug: 'boutique-demo',
+      id: 'boutique-mangoo',
+      name: 'Boutique Mangoo',
+      slug: 'boutique-mangoo',
       category: 'general',
       primaryColor: '#F97316',
       secondaryColor: '#10B981',
       logoDataUrl: '',
-      source: 'demo'
+      source: 'seed'
     }];
 
     const normalizeVendorCategory = (raw) => {
@@ -6791,7 +6793,7 @@ const ShopsDirectory = () => {
       const rawKind = String(v?.kind || 'shop').trim().toLowerCase()
       const vendorKind = rawKind === 'provider' || rawKind === 'service' ? 'provider' : 'shop'
       const vendorId = String(v?.id ?? '').trim()
-      const slug = String(v?.slug || '').trim() || 'boutique-demo'
+      const slug = String(v?.slug || '').trim() || 'boutique-mangoo'
       return {
         id: `vendor-${v.id}`,
         name: v.name,
@@ -7204,7 +7206,7 @@ const ShopsDirectory = () => {
 
       {debugBoosts && (boostFlags.vitrine || boostFlags.promo) && (
         <div className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-4 mb-6`}>
-          <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-black`}>Tester Boosts</div>
+          <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-black`}>Boosts</div>
           <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm mt-1`}>Active des boosts sur la 1ère boutique visible.</div>
           <div className="mt-3 flex flex-col sm:flex-row gap-3">
             <button
@@ -8195,7 +8197,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                 type="button"
                 onClick={() => goToPackCheckout(activePackInfo.packId || 'pack_decouverte')}
                 className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-orange-600 hover:to-green-700 transition-all"
-                title="Ouvrir la page de test d’achat/changement de pack"
+                title="Gérer l’achat / changement de pack"
               >
                 Gérer mon pack
               </button>
@@ -8208,7 +8210,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
               onClick={() => goToPackCheckout(nextUpgradePack?.id)}
               disabled={!nextUpgradePack}
               className={`${isDark ? 'bg-emerald-900/30 border border-emerald-700 text-emerald-200 hover:bg-emerald-900/40' : 'bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100'} px-3 py-2 rounded-xl text-sm font-bold transition-colors disabled:opacity-60`}
-              title="Test : passer au pack supérieur via paiement"
+              title="Passer au pack supérieur via paiement"
             >
               Passer au pack supérieur{nextUpgradePack ? ` (${nextUpgradePack.name})` : ''}
             </button>
@@ -8217,7 +8219,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
               onClick={() => goToPackCheckout(nextDowngradePack?.id)}
               disabled={!nextDowngradePack}
               className={`${isDark ? 'bg-blue-900/20 border border-blue-700 text-blue-200 hover:bg-blue-900/30' : 'bg-blue-50 border border-blue-200 text-blue-800 hover:bg-blue-100'} px-3 py-2 rounded-xl text-sm font-bold transition-colors disabled:opacity-60`}
-              title="Test : rétrograder via paiement"
+              title="Rétrograder via paiement"
             >
               Rétrograder{nextDowngradePack ? ` (${nextDowngradePack.name})` : ''}
             </button>
@@ -8422,7 +8424,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                       className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'}`}
                     />
                     <div className={`mt-2 text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Mode démo : le paiement par carte est simulé (pas de redirection).
+                      Paiement par carte : redirection désactivée pour le moment.
                     </div>
                   </div>
                 )}
@@ -8836,7 +8838,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                                 type="button"
                                 onClick={() => {
                                   setCommunicationMode('call');
-                                  toast.info(`Appel (démo) vers ${t.name}`);
+                                  toast.info(`Appel vers ${t.name}`);
                                 }}
                                 className={`${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-900'} text-xs font-semibold px-3 py-2 rounded-lg transition-colors`}
                               >
@@ -8904,7 +8906,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                                 }}
                                 className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-3 py-2 rounded-lg transition-colors"
                               >
-                                Ouvrir vendeur (test)
+                                Ouvrir vendeur
                               </button>
                               <button
                                 type="button"
@@ -9165,7 +9167,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                         className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'}`}
                       />
                       <div className={`mt-2 text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                        Mode démo : le paiement par carte est simulé (pas de redirection).
+                        Paiement par carte : redirection désactivée pour le moment.
                       </div>
                     </div>
                   )}
@@ -10151,7 +10153,7 @@ function AppShell() {
       }));
     }
 
-    seedDemoData();
+    if (Boolean(import.meta.env.DEV)) seedDemoData();
     if (nextUser?.role === 'admin') {
       setSpaceChooserOpen(true);
       return;
@@ -10278,6 +10280,7 @@ function AppShell() {
 
   useEffect(() => {
     if (!user) return;
+    if (!Boolean(import.meta.env.DEV)) return;
     if (user.role === 'client' || user.role === 'vendor' || user.role === 'admin') {
       seedDemoData();
     }

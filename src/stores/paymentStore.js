@@ -266,7 +266,7 @@ export const usePaymentStore = create((set, get) => ({
         ...override,
       };
       get().addTransaction(transaction);
-      set({ isProcessing: false, paymentStatus: { success: true, transaction, message: 'Paiement effectué (mode démo)' } });
+      set({ isProcessing: false, paymentStatus: { success: true, transaction, message: 'Paiement validé (hors ligne)' } });
       await maybeActivateDemoPack(transaction.id);
       return transaction;
     };

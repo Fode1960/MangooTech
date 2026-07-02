@@ -2453,7 +2453,7 @@ const LiveShoppingUltraSimple: React.FC<{
 const LiveShoppingJoinPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const roleParam = String(searchParams.get('role') || '').toLowerCase()
-  const roomId = String(searchParams.get('roomId') || 'live-demo-123')
+  const roomId = String(searchParams.get('roomId') || 'live-room-123')
   const role: Role = roleParam === 'client' ? 'client' : 'vendor'
   const uiParam = String(searchParams.get('ui') || '').toLowerCase()
   const ui: UI = uiParam === 'simple' ? 'simple' : 'full'
@@ -2463,7 +2463,7 @@ const LiveShoppingJoinPage: React.FC = () => {
 
   const userId = useMemo(() => {
     if (forcedUserId) return forcedUserId
-    const rid = String(roomId || '').trim() || 'live-demo-123'
+    const rid = String(roomId || '').trim() || 'live-room-123'
     const key = `mangoo_live_user_id_v1:${role}:${rid}`
     try {
       const existing = String(localStorage.getItem(key) || '').trim()

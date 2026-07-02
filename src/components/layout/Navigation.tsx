@@ -1,19 +1,24 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Film, Settings, Users, ShoppingBag, TestTube } from 'lucide-react';
+import { Film, ShoppingBag } from 'lucide-react';
 
 const Navigation = () => {
   const location = useLocation();
   
   const isActive = (path: string) => location.pathname === path;
+  const isDev = Boolean(import.meta.env.DEV);
 
   const navItems = [
     { path: '/', label: 'Accueil', icon: '🏠' },
-    { path: '/webrtc-test', label: 'Test WebRTC', icon: '🎧' },
-    { path: '/test-room-management', label: 'Rooms', icon: '🏢' },
     { path: '/enhanced-live-shopping', label: 'Live Shopping+', icon: Film },
-    { path: '/test-admin-setup', label: 'Admin Setup', icon: Settings },
     { path: '/marketplace', label: 'Marketplace', icon: ShoppingBag },
+    ...(isDev
+      ? [
+          { path: '/webrtc-test', label: 'WebRTC', icon: '🎧' },
+          { path: '/test-room-management', label: 'Rooms', icon: '🏢' },
+          { path: '/test-admin-setup', label: 'Admin', icon: '⚙️' },
+        ]
+      : []),
   ];
 
   return (

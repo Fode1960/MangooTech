@@ -675,7 +675,7 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
       </div>
 
       <div class="muted" style="margin-top:14px;font-size:12px;">
-        Cette facture est générée automatiquement par MangooTech (mode démo).
+        Cette facture est générée automatiquement par MangooTech.
       </div>
     </div>
   </body>

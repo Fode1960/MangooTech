@@ -8,6 +8,7 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, signInDemo, signInLocal, user } = useAuth();
+  const isDev = Boolean(import.meta.env.DEV);
 
   if (user) {
     return <Navigate to="/dashboard" replace />;
@@ -167,147 +168,111 @@ const Login: React.FC = () => {
             </Link>
           </div>
 
-          {/* Mode Test Rapide */}
-          <div className="mt-8 pt-8 border-t border-gray-200">
-            <p className="text-sm text-gray-600 text-center mb-4">Mode Test Rapide:</p>
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={() => {
-                  // Connexion Admin
-                  const adminUser = {
-                    id: 'admin-user-id',
-                    email: 'admin@mangoo.tech',
-                    role: 'admin',
-                    user_metadata: { role: 'admin', full_name: 'Administrateur' }
-                  };
-                  localStorage.setItem('user', JSON.stringify(adminUser));
-                  localStorage.setItem('token', 'fake-admin-token');
-                  localStorage.setItem('currentRole', 'admin');
-                  window.location.href = '/admin/dashboard';
-                }}
-                className="w-full p-4 bg-gradient-to-r from-gray-800 to-black hover:from-gray-700 hover:to-gray-900 text-white rounded-lg transition-all duration-200 font-bold flex items-center justify-center space-x-2 shadow-lg"
-              >
-                <Shield className="w-5 h-5" />
-                <span>🔒 ACCÈS ADMIN (DASHBOARD)</span>
-              </button>
+          {isDev && (
+            <div className="mt-8 pt-8 border-t border-gray-200">
+              <p className="text-sm text-gray-600 text-center mb-4">Accès rapide (dev)</p>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const adminUser = {
+                      id: 'admin-user-id',
+                      email: 'admin@mangoo.tech',
+                      role: 'admin',
+                      user_metadata: { role: 'admin', full_name: 'Administrateur' }
+                    };
+                    localStorage.setItem('user', JSON.stringify(adminUser));
+                    localStorage.setItem('token', 'fake-admin-token');
+                    localStorage.setItem('currentRole', 'admin');
+                    window.location.href = '/admin/dashboard';
+                  }}
+                  className="w-full p-4 bg-gradient-to-r from-gray-800 to-black hover:from-gray-700 hover:to-gray-900 text-white rounded-lg transition-all duration-200 font-bold flex items-center justify-center space-x-2 shadow-lg"
+                >
+                  <Shield className="w-5 h-5" />
+                  <span>🔒 Accès admin</span>
+                </button>
 
-              {/* Connexion locale instantanée - SOLUTION ULTRA SIMPLE */}
-              <button
-                type="button"
-                onClick={handleLocalMode}
-                className="w-full p-4 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg transition-all duration-200 font-bold flex items-center justify-center space-x-2 shadow-lg"
-              >
-                <Zap className="w-5 h-5" />
-                <span>⚡ MODE LOCAL SIMPLIFIÉ</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={handleLocalMode}
+                  className="w-full p-4 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg transition-all duration-200 font-bold flex items-center justify-center space-x-2 shadow-lg"
+                >
+                  <Zap className="w-5 h-5" />
+                  <span>⚡ Mode local</span>
+                </button>
 
-              {/* Connexion de démonstration pour contourner les problèmes */}
-              <button
-                type="button"
-                onClick={() => {
-                  // Connexion automatique avec le compte demo
-                  const demoUser = {
-                    id: '550e8400-e29b-41d4-a716-446655440001',
-                    email: 'demo@vendeur.com',
-                    name: 'Démo Vendeur',
-                    role: 'vendor',
-                    user_metadata: {
-                      role: 'vendor',
-                      full_name: 'Démo Vendeur',
-                      phone: '+221771234567'
+                <button
+                  type="button"
+                  onClick={handleResetTest}
+                  className="w-full p-4 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-lg transition-all duration-200 font-bold flex items-center justify-center space-x-2 shadow-lg"
+                >
+                  <Zap className="w-5 h-5" />
+                  <span>🔄 Réinitialiser</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleInstantTest}
+                  className="w-full p-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg transition-all duration-200 font-bold flex items-center justify-center space-x-2 shadow-lg"
+                >
+                  <Zap className="w-5 h-5" />
+                  <span>🚀 Accès immédiat</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleTestMode}
+                  className="w-full p-3 bg-green-100 hover:bg-green-200 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                >
+                  <Zap className="w-4 h-4 text-green-600" />
+                  <div className="font-medium text-green-900">⚡ Mode vendeur</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setIsLoading(true);
+                    try {
+                      await signInDemo();
+                    } catch (error) {
+                      console.error('Erreur connexion rapide:', error);
+                      alert("Erreur d'accès rapide");
+                    } finally {
+                      setIsLoading(false);
                     }
-                  };
-                  
-                  // Stocker dans localStorage pour simuler une connexion réelle
-                  localStorage.setItem('demo_user', JSON.stringify(demoUser));
-                  localStorage.setItem('demo_mode', 'true');
-                  
-                  // Recharger la page pour appliquer
-                  window.location.href = '/dashboard';
-                }}
-                className="w-full p-3 bg-blue-100 hover:bg-blue-200 rounded-lg transition-colors flex items-center justify-center space-x-2"
-              >
-                <span className="font-medium text-blue-900">🚀 Connexion Auto Démo</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleResetTest}
-                className="w-full p-4 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-lg transition-all duration-200 font-bold flex items-center justify-center space-x-2 shadow-lg"
-              >
-                <Zap className="w-5 h-5" />
-                <span>🔄 RÉINITIALISER TEST</span>
-              </button>
-              
-              <button
-                type="button"
-                onClick={handleInstantTest}
-                className="w-full p-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg transition-all duration-200 font-bold flex items-center justify-center space-x-2 shadow-lg"
-              >
-                <Zap className="w-5 h-5" />
-                <span>🚀 ACCÈS IMMÉDIAT TEST</span>
-              </button>
-              
-              <button
-                type="button"
-                onClick={handleTestMode}
-                className="w-full p-3 bg-green-100 hover:bg-green-200 rounded-lg transition-colors flex items-center justify-center space-x-2"
-              >
-                <Zap className="w-4 h-4 text-green-600" />
-                <div className="font-medium text-green-900">⚡ Mode Test Vendeur</div>
-              </button>
-              
-              <button
-                type="button"
-                onClick={async () => {
-                  setIsLoading(true);
-                  try {
-                    await signInDemo();
-                  } catch (error) {
-                    console.error('Erreur mode démo:', error);
-                    alert('Erreur du mode démo');
-                  } finally {
-                    setIsLoading(false);
-                  }
-                }}
-                className="w-full p-3 bg-orange-100 hover:bg-orange-200 rounded-lg transition-colors flex items-center justify-center space-x-2"
-                disabled={isLoading}
-              >
-                <div className="font-medium text-orange-900">🎯 Mode Démo Vendeur</div>
-              </button>
-              
-              {/* Connexion ultra-simplifiée pour contourner tous les problèmes */}
-              <button
-                type="button"
-                onClick={() => {
-                  // Connexion directe sans authentification
-                  const fakeUser = {
-                    id: '550e8400-e29b-41d4-a716-446655440002',
-                    email: 'fake@vendeur.com',
-                    name: 'Fake Vendeur',
-                    role: 'vendor',
-                    user_metadata: {
+                  }}
+                  className="w-full p-3 bg-orange-100 hover:bg-orange-200 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                  disabled={isLoading}
+                >
+                  <div className="font-medium text-orange-900">🎯 Mode vendeur (bypass)</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const fakeUser = {
+                      id: '550e8400-e29b-41d4-a716-446655440002',
+                      email: 'fake@vendeur.com',
+                      name: 'Fake Vendeur',
                       role: 'vendor',
-                      full_name: 'Fake Vendeur',
-                      phone: '+221771234567'
-                    }
-                  };
-                  
-                  // Stocker et rediriger
-                  localStorage.setItem('fake_user', JSON.stringify(fakeUser));
-                  localStorage.setItem('fake_mode', 'true');
-                  window.location.href = '/dashboard';
-                }}
-                className="w-full p-3 bg-purple-100 hover:bg-purple-200 rounded-lg transition-colors flex items-center justify-center space-x-2"
-              >
-                <div className="font-medium text-purple-900">⚡ Connexion Directe</div>
-              </button>
+                      user_metadata: {
+                        role: 'vendor',
+                        full_name: 'Fake Vendeur',
+                        phone: '+221771234567'
+                      }
+                    };
+
+                    localStorage.setItem('fake_user', JSON.stringify(fakeUser));
+                    localStorage.setItem('fake_mode', 'true');
+                    window.location.href = '/dashboard';
+                  }}
+                  className="w-full p-3 bg-purple-100 hover:bg-purple-200 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                >
+                  <div className="font-medium text-purple-900">⚡ Connexion directe</div>
+                </button>
+              </div>
             </div>
-            
-            <p className="text-xs text-gray-500 text-center mt-2">
-              Le mode test contourne complètement l'authentification - Cliquez sur ACCÈS IMMÉDIAT TEST
-            </p>
-          </div>
+          )}
         </div>
       </div>
     </div>

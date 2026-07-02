@@ -5736,7 +5736,7 @@
             } catch {
             }
             
-            let url = `test-webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}`;
+            let url = `webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}`;
             if (type === 'video') {
                 url += '&mode=video';
             }
@@ -10059,7 +10059,7 @@
                                 if (v) activeVendor = v;
                                 const vendorName = String(activeVendor?.name || '').trim() || 'le vendeur';
                                 const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-                                const url = `test-webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}`;
+                                const url = `webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}`;
                                 window.location.href = url;
                             } catch {
                             }
@@ -11724,7 +11724,7 @@
                                 if (v) activeVendor = v;
                                 const vendorName = String(activeVendor?.name || '').trim() || 'le vendeur';
                                 const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-                                const url = `test-webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}`;
+                                const url = `webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}`;
                                 window.location.href = url;
                             } catch {
                             }
@@ -13031,7 +13031,7 @@
 
             const vendorId = String(vendor?.id || currentUser?.vendorId || '').trim();
             const shopName = String(vendor?.name || currentUser?.name || '').trim() || 'Boutique';
-            const roomId = String(vendor?.liveRoomId || vendor?.roomId || shopSlug || shopName || vendorId || '').trim() || 'live-demo-123';
+            const roomId = String(vendor?.liveRoomId || vendor?.roomId || shopSlug || shopName || vendorId || '').trim() || 'live-room-123';
 
             return { vendor, vendorId, shopSlug, shopName, roomId };
         }
@@ -13065,7 +13065,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        roomId: String(draft.roomId || '').trim() || 'live-demo-123',
+                        roomId: String(draft.roomId || '').trim() || 'live-room-123',
                         shopSlug: String(draft.shopSlug || '').trim() || undefined,
                         shopName: String(draft.shopName || draft.vendorName || '').trim() || undefined,
                         buyerId: String(draft.buyerId || '').trim() || undefined,
@@ -13256,7 +13256,7 @@
                 shopName: safeVendorName,
                 vendorId: String(vendorContext.vendorId || '').trim(),
                 shopSlug: String(vendorContext.shopSlug || '').trim(),
-                roomId: String(vendorContext.roomId || safeVendorName).trim() || 'live-demo-123',
+                roomId: String(vendorContext.roomId || safeVendorName).trim() || 'live-room-123',
                 qty: 1,
                 amountCfa: cleanPrice,
                 buyerId: String(user?.id || user?.email || '').trim(),
@@ -13819,7 +13819,7 @@
             try {
                 const vendorName = String(activeVendor?.name || 'Support Mangoo').trim() || 'Support Mangoo'
                 const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light'
-                const url = `test-webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}&mode=audio`
+                const url = `webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}&mode=audio`
                 try {
                     const w = window.open(url, '_blank')
                     if (w) return
@@ -13835,7 +13835,7 @@
             try {
                 const vendorName = String(activeVendor?.name || 'Support Mangoo').trim() || 'Support Mangoo'
                 const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light'
-                const url = `test-webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}&mode=video`
+                const url = `webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}&mode=video`
                 try {
                     const w = window.open(url, '_blank')
                     if (w) return
@@ -15115,7 +15115,7 @@
 
                         const vendorName = String(activeVendor?.name || '').trim() || 'le vendeur';
                         const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-                        const url = `test-webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}`;
+                        const url = `webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}`;
 
                         try {
                             const w = window.open(url, '_blank');
@@ -15131,7 +15131,7 @@
                 try {
                     const vendorName = String(activeVendor?.name || '').trim() || 'le vendeur';
                     const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-                    const url = `test-webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}`;
+                    const url = `webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}`;
                     const w = window.open(url, '_blank');
                     if (w) return;
                 } catch {
@@ -17035,7 +17035,7 @@
                 }
                 if (t === 'job_created') {
                     try {
-                        lpSpeakMangooAlert("Nouvelle course. Appuie sur accepter si tu es disponible.", {
+                        lpSpeakMangooAlert("Mangoo Express. Nouvelle course. Appuie sur accepter si tu es disponible.", {
                             ...lpGetVoicePrefs(),
                             repeats: 3,
                             intervalMs: 1700,
@@ -17331,7 +17331,7 @@
                 //#endregion debug-point driver-job-sync.remote-sync
                 if (announce && newestOpenId && lpDeliveryIsOnline()) {
                     try {
-                        lpSpeakMangooAlert("Nouvelle course Mangoo. Ouvre la mission et accepte si tu es disponible.", {
+                        lpSpeakMangooAlert("Mangoo Express. Nouvelle course. Appuie sur accepter si tu es disponible.", {
                             ...lpGetVoicePrefs(),
                             repeats: 3,
                             intervalMs: 1800,
@@ -17373,7 +17373,7 @@
                     try { localStorage.removeItem(k); } catch {}
                 });
                 try { lpDeliveryStopTracking(); } catch {}
-                try { showLocalToast('Course test réinitialisée', 'success'); } catch {}
+                try { showLocalToast('Course réinitialisée', 'success'); } catch {}
             } catch {
             }
         }
@@ -17908,7 +17908,7 @@
             }
             const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
             const callee = p ? (name + ' • ' + p) : name;
-            const url = `test-webrtc-audio.html?callee=${encodeURIComponent(callee)}&theme=${isDark}&mode=audio`;
+            const url = `webrtc-audio.html?callee=${encodeURIComponent(callee)}&theme=${isDark}&mode=audio`;
             callFrame.src = url;
             callOverlay.style.display = 'flex';
             try {
@@ -18738,7 +18738,7 @@
                     state.nearAt = now;
                     try { showLocalToast('🛵 Livreur proche', 'info'); } catch {}
                     try {
-                        lpSpeakMangooAlert(targetLabel === 'vous' ? 'Notification Mangoo. Le livreur est proche de vous.' : `Notification Mangoo. Le livreur est proche du ${targetLabel}.`, {
+                        lpSpeakMangooAlert(targetLabel === 'vous' ? 'Mangoo Express. Le livreur est proche de vous.' : `Mangoo Express. Le livreur est proche du ${targetLabel}.`, {
                             ...lpGetVoicePrefs(),
                             rate: 1.0,
                             pitch: 1.0,
@@ -18761,7 +18761,7 @@
                     state.arrivedAt = now;
                     try { showLocalToast('📍 Livreur arrivé', 'success'); } catch {}
                     try {
-                        lpSpeakMangooAlert(targetLabel === 'vous' ? 'Notification Mangoo. Le livreur est arrive chez vous.' : `Notification Mangoo. Le livreur est arrive au ${targetLabel}.`, {
+                        lpSpeakMangooAlert(targetLabel === 'vous' ? 'Mangoo Express. Le livreur est arrivé chez vous.' : `Mangoo Express. Le livreur est arrivé au ${targetLabel}.`, {
                             ...lpGetVoicePrefs(),
                             rate: 1.0,
                             pitch: 1.0,
@@ -20073,7 +20073,7 @@
                 
                 // Show Modal
                 openProductModal();
-                alert(`✏️ Mode édition pour : ${product.name}\n(Sauvegarde non implémentée dans cette démo)`);
+                alert(`✏️ Mode édition pour : ${product.name}\n(Sauvegarde bientôt disponible)`);
             }
         }
 
@@ -20090,7 +20090,7 @@
             if (activeVendor && activeVendor.live) {
                 try {
                     const vendor = activeVendor;
-                    const roomId = String(vendor?.liveRoomId || vendor?.roomId || vendor?.name || '').trim() || 'live-demo-123';
+                    const roomId = String(vendor?.liveRoomId || vendor?.roomId || vendor?.name || '').trim() || 'live-room-123';
                     const shopSlug = (typeof lpGetShopSlugForVendor === 'function' ? lpGetShopSlugForVendor(vendor) : '') || '';
 
                     let userName = '';
@@ -20107,7 +20107,7 @@
                     if (typeof lpNavigate === 'function') lpNavigate(url);
                     else window.location.href = url;
                 } catch {
-                    window.location.href = `${window.location.origin}/live-shopping?role=client&ui=simple&roomId=${encodeURIComponent(String(activeVendor?.name || 'live-demo-123'))}`;
+                    window.location.href = `${window.location.origin}/live-shopping?role=client&ui=simple&roomId=${encodeURIComponent(String(activeVendor?.name || 'live-room-123'))}`;
                 }
             }
         }

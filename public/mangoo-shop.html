@@ -427,7 +427,7 @@
 
         const btnLive = document.getElementById('btnLive');
         if (live) {
-            const roomId = String((shopSlug || name || 'live-demo-123')).trim() || 'live-demo-123';
+            const roomId = String((shopSlug || name || 'live-room-123')).trim() || 'live-room-123';
             const qs = new URLSearchParams();
             qs.set('role', 'client');
             qs.set('ui', 'simple');
@@ -455,7 +455,7 @@
 
         // === AUDIO CALL ===
         function startAudioCall() {
-            const url = `test-webrtc-audio.html?role=caller&callee=${encodeURIComponent(name)}`;
+            const url = `webrtc-audio.html?role=caller&callee=${encodeURIComponent(name)}`;
             window.open(url, '_blank');
         }
 
