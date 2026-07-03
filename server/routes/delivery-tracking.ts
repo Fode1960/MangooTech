@@ -93,6 +93,48 @@ function normalizeNumber(value: unknown): number | null {
   return Number.isFinite(n) ? n : null
 }
 
+function isActiveDeliveryJob(job: Record<string, unknown> | null | undefined): boolean {
+  const status = String(job?.status || '').trim().toLowerCase()
+  const phase = String(job?.phase || '').trim().toLowerCase()
+  const id = String(job?.id || '').trim()
+  if (!id) return false
+  if (status === 'done' || status === 'delivered' || status === 'cancelled') return false
+  if (phase === 'delivered') return false
+  return true
+}
+
+function jobsShareShopScope(a: Record<string, unknown> | null | undefined, b: Record<string, unknown> | null | undefined): boolean {
+  const aShopSlug = String(a?.shopSlug || '').trim()
+  const bShopSlug = String(b?.shopSlug || '').trim()
+  if (aShopSlug && bShopSlug && aShopSlug === bShopSlug) return true
+  const aRoomId = String(a?.roomId || '').trim()
+  const bRoomId = String(b?.roomId || '').trim()
+  if (aRoomId && bRoomId && aRoomId === bRoomId) return true
+  const aVendorId = String((a?.pickup as any)?.vendorId || '').trim()
+  const bVendorId = String((b?.pickup as any)?.vendorId || '').trim()
+  if (aVendorId && bVendorId && aVendorId === bVendorId) return true
+  return false
+}
+
+async function reportDebugEvent(hypothesisId: string, location: string, msg: string, data: Record<string, unknown>) {
+  try {
+    await fetch('http://127.0.0.1:7777/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: 'driver-job-missing',
+        runId: 'pre-fix',
+        hypothesisId,
+        location,
+        msg,
+        data,
+        ts: Date.now(),
+      }),
+    })
+  } catch {
+  }
+}
+
 const router = Router()
 
 router.get('/jobs/recent', async (req, res) => {
@@ -119,6 +161,27 @@ router.get('/jobs/recent', async (req, res) => {
       const bTs = normalizeNumber(b?.remoteUpdatedAt) || normalizeNumber(b?.assignedAt) || normalizeNumber(b?.createdAt) || 0
       return bTs - aTs
     })
+
+  // #region debug-point E:jobs-recent-response
+  void reportDebugEvent(
+    'E',
+    'delivery-tracking.ts:GET /jobs/recent',
+    '[DEBUG] jobs/recent response built',
+    {
+      totalStoredJobs: Object.keys(all || {}).length,
+      returnedJobs: jobs.length,
+      statusFilter,
+      sample: jobs.slice(0, 5).map((job) => ({
+        id: String(job?.id || ''),
+        status: String(job?.status || ''),
+        phase: String(job?.phase || ''),
+        roomId: String(job?.roomId || ''),
+        shopSlug: String(job?.shopSlug || ''),
+        remoteUpdatedAt: normalizeNumber(job?.remoteUpdatedAt) || 0,
+      })),
+    },
+  )
+  // #endregion
 
   return res.status(200).json({ success: true, jobs })
 })
@@ -170,6 +233,35 @@ router.post('/job/:jobId', async (req, res) => {
     remoteUpdatedAt: normalizeNumber((rawJob as Record<string, unknown>).remoteUpdatedAt) || Date.now(),
   }
 
+  const allBefore = await readAllJobs()
+  const blockingJob = Object.values(allBefore).find((job) => {
+    const currentId = String(job?.id || '').trim()
+    if (!currentId || currentId === jobId) return false
+    if (!isActiveDeliveryJob(job)) return false
+    if (!isActiveDeliveryJob(next)) return false
+    return jobsShareShopScope(job, next)
+  }) || null
+  if (blockingJob) {
+    void reportDebugEvent(
+      'G',
+      'delivery-tracking.ts:POST /job/:jobId conflict',
+      '[DEBUG] delivery job rejected because another active shop mission exists',
+      {
+        jobId,
+        shopSlug: String(next?.shopSlug || ''),
+        roomId: String(next?.roomId || ''),
+        blockingJobId: String(blockingJob?.id || ''),
+        blockingOrderId: String((blockingJob as any)?.sourceOrderId || ''),
+      },
+    )
+    return res.status(409).json({
+      success: false,
+      error: 'active_shop_delivery_exists',
+      blockingJobId: String(blockingJob?.id || '').trim(),
+      blockingOrderId: String((blockingJob as any)?.sourceOrderId || '').trim(),
+    })
+  }
+
   await queueWrite(async () => {
     const all = await readAllJobs()
     const prev = all[jobId]
@@ -179,6 +271,23 @@ router.post('/job/:jobId', async (req, res) => {
     all[jobId] = next
     await writeAllJobs(all)
   })
+
+  // #region debug-point F:job-write
+  void reportDebugEvent(
+    'F',
+    'delivery-tracking.ts:POST /job/:jobId',
+    '[DEBUG] delivery job persisted remotely',
+    {
+      jobId,
+      status: String(next?.status || ''),
+      phase: String(next?.phase || ''),
+      roomId: String(next?.roomId || ''),
+      shopSlug: String(next?.shopSlug || ''),
+      remoteUpdatedAt: normalizeNumber(next?.remoteUpdatedAt) || 0,
+      assignedAt: normalizeNumber(next?.assignedAt) || 0,
+    },
+  )
+  // #endregion
 
   return res.status(200).json({ success: true, job: next })
 })

@@ -56,6 +56,7 @@ router.get('/by-room/:roomId', async (req, res) => {
     const roomId = safeString(req.params.roomId)
     if (!roomId) return res.status(400).json({ success: false, error: 'missing_roomId' })
     const orders = await listLiveOrdersByRoom(roomId)
+
     res.json({ success: true, orders })
   } catch (e: any) {
     res.status(500).json({ success: false, error: 'internal_error', details: e?.message })

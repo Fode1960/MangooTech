@@ -314,6 +314,86 @@
             }
         }
 
+        async function syncLocalPlusShopsFromServer() {
+            try {
+                const res = await fetch('/api/local-sync/shops');
+                const data = await res.json().catch(() => ({}));
+                const list = Array.isArray(data?.shops) ? data.shops : [];
+                if (!list.length) return;
+
+                const existingBySlug = new Map();
+                try {
+                    [...(Array.isArray(VENDORS) ? VENDORS : []), ...getStoredCustomVendors()].forEach((vendor) => {
+                        const slug = String(vendor?.shopSlug || vendor?.shop_slug || vendor?.slug || '').trim().toLowerCase();
+                        if (slug) existingBySlug.set(slug, vendor);
+                    });
+                } catch {
+                }
+
+                const normalized = list.map((shop, index) => {
+                    const slug = String(shop?.slug || '').trim();
+                    const key = slug.toLowerCase();
+                    const existing = existingBySlug.get(key) || null;
+                    const existingLat = Number(existing?.lat);
+                    const existingLng = Number(existing?.lng);
+                    const categoryRaw = String(shop?.category || existing?.category || '').trim();
+                    const approvalRaw = String(shop?.status || existing?.approvalStatus || 'approved').trim().toLowerCase();
+                    return {
+                        ...(existing || {}),
+                        id: String(existing?.id || shop?.id || `shop_sync_${index}`),
+                        name: String(shop?.name || existing?.name || 'Boutique').trim() || 'Boutique',
+                        kind: 'shop',
+                        slug,
+                        shopSlug: slug,
+                        category: categoryRaw || '🛒 Boutique',
+                        approvalStatus: approvalRaw === 'approved' || approvalRaw === 'rejected' ? approvalRaw : 'pending',
+                        status: approvalRaw === 'rejected' ? 'closed' : String(existing?.status || 'open').trim() || 'open',
+                        ownerEmail: String(shop?.ownerEmail || existing?.ownerEmail || '').trim().toLowerCase(),
+                        ownerName: String(shop?.ownerName || existing?.ownerName || '').trim(),
+                        userId: String(shop?.userId || existing?.userId || existing?.user_id || '').trim(),
+                        lat: Number.isFinite(existingLat) ? existingLat : undefined,
+                        lng: Number.isFinite(existingLng) ? existingLng : undefined,
+                        avatar: String(existing?.avatar || '').trim() || `https://ui-avatars.com/api/?name=${encodeURIComponent(String(shop?.name || 'Boutique'))}&background=1a5f3f&color=fff`,
+                        updatedAt: String(shop?.updatedAt || existing?.updatedAt || new Date().toISOString()),
+                    };
+                });
+
+                try {
+                    if (typeof upsertCustomVendorsBulk === 'function') upsertCustomVendorsBulk(normalized);
+                    else normalized.forEach((v) => { try { upsertCustomVendor(v); } catch {} });
+                } catch {
+                }
+
+                try { hydrateVendorsFromStorage(); } catch {}
+                try { applyBoostConfigToVendors(); } catch {}
+                try {
+                    if (typeof relocateVendorsNearUser === 'function') relocateVendorsNearUser();
+                    if (typeof filterVendors === 'function') filterVendors();
+                } catch {
+                }
+            } catch {
+            }
+        }
+
+        let lpShopCatalogSyncPromise = null;
+        let lpLastShopCatalogSyncAt = 0;
+        function lpEnsureShopCatalogSync(reason) {
+            try {
+                const now = Date.now();
+                if (lpShopCatalogSyncPromise) return lpShopCatalogSyncPromise;
+                if (now - lpLastShopCatalogSyncAt < 4000) return Promise.resolve(null);
+                lpLastShopCatalogSyncAt = now;
+                lpShopCatalogSyncPromise = Promise.resolve(syncLocalPlusShopsFromServer())
+                    .catch(() => null)
+                    .finally(() => {
+                        lpShopCatalogSyncPromise = null;
+                    });
+                return lpShopCatalogSyncPromise;
+            } catch {
+                return Promise.resolve(null);
+            }
+        }
+
         function applyCapturedShopLocation(lat, lng, accuracy, source) {
             const btn = document.getElementById('btnCaptureGPS');
             const submitBtn = document.getElementById('btnSubmitShop');
@@ -6526,6 +6606,7 @@
             hideMetiersBar();
             setKindMode('shop');
             switchView('list', document.querySelectorAll('.nav-item')[1]);
+            try { lpEnsureShopCatalogSync('open-shops-list'); } catch {}
         }
 
         let lpOnboardState = null;
@@ -7630,9 +7711,6 @@
                 if (!vendor || lpGetVendorKind(vendor) !== 'shop') return false;
                 const vendorId = String(vendor?.id || '').trim();
                 if (!vendorId) return false;
-
-                const currentId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
-                if (currentId && currentId === vendorId) return true;
 
                 const storedIds = lpGetStoredShopIdsForCurrentUser();
                 if (storedIds.some((id) => id === vendorId)) return true;
@@ -8769,6 +8847,11 @@
                         if (isPhoneFirstProvider && !hasDetailedLocation) return true;
                     } catch {
                     }
+                    try {
+                        const isShop = lpGetVendorKind(v) === 'shop';
+                        if (isShop && currentView === 'list') return true;
+                    } catch {
+                    }
                     if (!(typeof v.lat === 'number' && typeof v.lng === 'number')) return false;
                     const d = distanceKm(USER_POS[0], USER_POS[1], v.lat, v.lng);
                     return Number.isFinite(d) && d <= maxKm;
@@ -9537,10 +9620,25 @@
                         Promise.resolve(lpBackfillStoredProvidersToServer())
                             .catch(() => false)
                             .finally(() => {
-                                try { return syncLocalPlusFromServer(); } catch { return null; }
+                                try {
+                                    return Promise.resolve(syncLocalPlusFromServer())
+                                        .catch(() => null)
+                                        .finally(() => {
+                                            try { return syncLocalPlusShopsFromServer(); } catch { return null; }
+                                        });
+                                } catch {
+                                    try { return syncLocalPlusShopsFromServer(); } catch { return null; }
+                                }
                             });
                     } catch {
-                        try { void syncLocalPlusFromServer(); } catch {}
+                        try {
+                            Promise.resolve(syncLocalPlusFromServer())
+                                .catch(() => null)
+                                .finally(() => {
+                                    try { void syncLocalPlusShopsFromServer(); } catch {}
+                                });
+                        } catch {
+                        }
                     }
                 };
                 if (window.__lpLiteStartup) lpDeferNonCriticalTask(runProviderSync, 240);
@@ -10319,20 +10417,23 @@
             try {
                 const activeId = String(activeVendor?.id || '').trim();
                 const activeKind = activeId ? lpGetVendorKind(activeVendor) : '';
-                if (activeId && activeKind === 'shop') return activeId;
+                if (activeId && activeKind === 'shop' && lpIsOwnedShopVendor(activeVendor)) return activeId;
             } catch {
             }
             try {
                 const openId = String(localStorage.getItem('mangoo-open-vendor-id') || '').trim();
                 if (openId) {
                     const openVendor = VENDORS.find((x) => String(x?.id) === openId) || null;
-                    if (openVendor && lpGetVendorKind(openVendor) === 'shop') return openId;
+                    if (openVendor && lpGetVendorKind(openVendor) === 'shop' && lpIsOwnedShopVendor(openVendor)) return openId;
                 }
             } catch {
             }
             try {
                 const myShopId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
-                if (myShopId) return myShopId;
+                if (myShopId) {
+                    const myShop = (Array.isArray(VENDORS) ? VENDORS.find((x) => String(x?.id || '').trim() === myShopId) : null) || null;
+                    if (myShop && lpIsOwnedShopVendor(myShop)) return myShopId;
+                }
             } catch {
             }
             try {
@@ -12035,6 +12136,10 @@
                 if(topSection) topSection.style.display = 'flex'; // Show Filters & Stories
                 setTimeout(() => map.invalidateSize(), 100);
                 try { lpRefreshMapMarkersNow(); } catch {}
+                try {
+                    if (currentKindMode !== 'service') lpEnsureShopCatalogSync(`switch:${view}`);
+                } catch {
+                }
             } else if (view === 'espace') {
                 if (espaceDiv) espaceDiv.style.display = 'block';
                 if(topSection) topSection.style.display = 'none';
@@ -12044,6 +12149,10 @@
                 listDiv.style.display = 'block';
                 if(topSection) topSection.style.display = 'none'; // Hide Filters & Stories in List View
                 filterVendors(); 
+                try {
+                    if (currentKindMode !== 'service') lpEnsureShopCatalogSync(`switch:${view}`);
+                } catch {
+                }
             } else if (view === 'fav') {
                 listDiv.style.display = 'block';
                 renderFavorites();
@@ -12371,11 +12480,15 @@
                         try { localStorage.removeItem(k) } catch {}
                         return
                     }
-                    if (k === 'mangoo_my_shop_id' || k === 'mangoo_my_provider_id') {
+                    if (k === 'mangoo_my_shop_id' || k === 'mangoo_my_provider_id' || k === 'mangoo-open-vendor-id') {
                         try { localStorage.removeItem(k) } catch {}
                         return
                     }
                     if (k.startsWith('mangoo_my_shop_ids:') || k.startsWith('mangoo_my_provider_ids:')) {
+                        try { localStorage.removeItem(k) } catch {}
+                        return
+                    }
+                    if (k === 'supabase.auth.token' || /^sb-.*-auth-token$/i.test(k) || k.startsWith('mangoo-active-role:')) {
                         try { localStorage.removeItem(k) } catch {}
                         return
                     }
@@ -12386,21 +12499,23 @@
                 try { localStorage.removeItem('mangoo_local_profile') } catch {}
                 try { localStorage.removeItem('mangoo_my_shop_id') } catch {}
                 try { localStorage.removeItem('mangoo_my_provider_id') } catch {}
+                try { localStorage.removeItem('mangoo-open-vendor-id') } catch {}
+                try { localStorage.removeItem('supabase.auth.token') } catch {}
             }
-            try { applyLpHeaderUser() } catch {}
-            try { closeLpIdentityModal() } catch {}
             try {
-                switchView('account')
-                switchAccountTab('orders')
+                activeVendor = null
+            } catch {
+            }
+            try { sessionStorage.setItem('mangoo_force_logged_out', '1') } catch {}
+            try {
+                closeLpIdentityModal()
             } catch {
             }
             try {
-                openLpIdentityModal()
+                const cleanUrl = `${window.location.origin}${window.location.pathname}`
+                window.location.replace(cleanUrl)
             } catch {
-            }
-            try {
-                alert('✅ Déconnexion effectuée. Touchez votre compte pour revenir.')
-            } catch {
+                try { window.location.reload() } catch {}
             }
         }
 
@@ -13005,6 +13120,24 @@
         function lpResolveShopVendorContext(preferredVendor) {
             let vendor = preferredVendor && lpGetVendorKind(preferredVendor) === 'shop' ? preferredVendor : null;
             const currentUser = getLpCurrentUser ? getLpCurrentUser() : null;
+            const currentUserEmail = String(currentUser?.email || '').trim().toLowerCase();
+            const currentUserShopSlug = String(currentUser?.shopSlug || '').trim();
+            try {
+                if (!vendor && currentUserShopSlug) {
+                    vendor = (Array.isArray(VENDORS)
+                        ? VENDORS.find((x) => lpGetVendorKind(x) === 'shop' && String(x?.shopSlug || x?.shop_slug || x?.slug || '').trim() === currentUserShopSlug)
+                        : null) || null;
+                }
+            } catch {
+            }
+            try {
+                if (!vendor && currentUserEmail) {
+                    vendor = (Array.isArray(VENDORS)
+                        ? VENDORS.find((x) => lpGetVendorKind(x) === 'shop' && String(x?.ownerEmail || '').trim().toLowerCase() === currentUserEmail)
+                        : null) || null;
+                }
+            } catch {
+            }
             try {
                 if (!vendor && activeVendor && lpGetVendorKind(activeVendor) === 'shop') vendor = activeVendor;
             } catch {
@@ -13031,7 +13164,7 @@
 
             const vendorId = String(vendor?.id || currentUser?.vendorId || '').trim();
             const shopName = String(vendor?.name || currentUser?.name || '').trim() || 'Boutique';
-            const roomId = String(vendor?.liveRoomId || vendor?.roomId || shopSlug || shopName || vendorId || '').trim() || 'live-room-123';
+            const roomId = String(shopSlug || currentUserShopSlug || vendor?.liveRoomId || vendor?.roomId || shopName || vendorId || '').trim() || 'live-room-123';
 
             return { vendor, vendorId, shopSlug, shopName, roomId };
         }
@@ -13132,26 +13265,84 @@
         async function lpFetchVendorLiveOrders() {
             const ctx = lpResolveShopVendorContext();
             if (!ctx.roomId) return { ctx, orders: [] };
-            const response = await fetch(`/api/live-orders/by-room/${encodeURIComponent(String(ctx.roomId || '').trim())}`, { method: 'GET' });
-            const payload = await response.json().catch(() => ({}));
-            if (!response.ok || !payload?.success) {
-                throw new Error(String(payload?.error || 'vendor_orders_fetch_failed'));
+            const roomCandidates = Array.from(new Set(
+                [
+                    String(ctx.roomId || '').trim(),
+                    String(ctx.shopSlug || '').trim(),
+                    String(ctx.vendor?.liveRoomId || '').trim(),
+                    String(ctx.vendor?.roomId || '').trim(),
+                ].filter(Boolean)
+            ));
+            if (!roomCandidates.length) return { ctx, orders: [] };
+            let orders = [];
+            let payload = {};
+            let lastError = '';
+            for (const roomCandidate of roomCandidates) {
+                const response = await fetch(`/api/live-orders/by-room/${encodeURIComponent(roomCandidate)}`, { method: 'GET' });
+                payload = await response.json().catch(() => ({}));
+                if (!response.ok || !payload?.success) {
+                    lastError = String(payload?.error || 'vendor_orders_fetch_failed');
+                    continue;
+                }
+                orders = Array.isArray(payload?.orders) ? payload.orders : [];
+                if (orders.length) {
+                    ctx.roomId = roomCandidate;
+                    break;
+                }
+                if (!orders.length && roomCandidate === String(ctx.shopSlug || '').trim()) {
+                    ctx.roomId = roomCandidate;
+                }
             }
-            let orders = Array.isArray(payload?.orders) ? payload.orders : [];
+            if (!Array.isArray(orders)) orders = [];
+            if (!orders.length && lastError && !String(ctx.shopSlug || '').trim()) {
+                throw new Error(lastError);
+            }
             if (ctx.shopSlug) {
                 orders = orders.filter((order) => {
                     const orderSlug = String(order?.shopSlug || '').trim();
                     return !orderSlug || orderSlug === ctx.shopSlug;
                 });
             }
+            try {
+                orders = orders.slice().sort((a, b) => lpVendorOrderTimestamp(b) - lpVendorOrderTimestamp(a));
+            } catch {
+            }
             return { ctx, orders };
+        }
+
+        function lpVendorOrderTimestamp(orderLike) {
+            const order = orderLike && typeof orderLike === 'object' ? orderLike : null;
+            const iso = String(order?.createdAt || order?.updatedAt || '').trim();
+            const ts = iso ? Date.parse(iso) : NaN;
+            if (Number.isFinite(ts)) return ts;
+            const fallback = Number(order?.createdAt || order?.updatedAt || 0);
+            return Number.isFinite(fallback) ? fallback : 0;
+        }
+
+        function lpResolveVendorPriorityOrderId(ordersLike, ctxLike) {
+            const orders = Array.isArray(ordersLike) ? ordersLike.slice() : [];
+            const ctx = ctxLike && typeof ctxLike === 'object' ? ctxLike : null;
+            if (!orders.length) return '';
+            const activeJob = lpDeliveryFindActiveJobForShop({ ctx });
+            const activeOrderId = String(activeJob?.sourceOrderId || '').trim();
+            if (activeOrderId && orders.some((order) => String(order?.id || '').trim() === activeOrderId)) {
+                return activeOrderId;
+            }
+            orders.sort((a, b) => lpVendorOrderTimestamp(b) - lpVendorOrderTimestamp(a));
+            const first = orders.find((order) => String(order?.id || '').trim()) || null;
+            return String(first?.id || '').trim();
         }
 
         function lpRenderVendorOrdersPane(orders, ctx, errorText) {
             const pane = document.getElementById('lp-vendor-orders');
             if (!pane) return;
 
-            const list = Array.isArray(orders) ? orders : [];
+            const list = Array.isArray(orders) ? orders.slice() : [];
+            try {
+                list.sort((a, b) => lpVendorOrderTimestamp(b) - lpVendorOrderTimestamp(a));
+            } catch {
+            }
+            const priorityOrderId = lpResolveVendorPriorityOrderId(list, ctx);
             const statusUi = {
                 created: { label: 'Nouvelle', fg: '#2563eb', bg: 'rgba(37,99,235,0.10)', border: 'rgba(37,99,235,0.20)' },
                 payment_pending: { label: 'Paiement en attente', fg: '#d97706', bg: 'rgba(217,119,6,0.10)', border: 'rgba(217,119,6,0.20)' },
@@ -13173,6 +13364,25 @@
                 const paymentLabel = String(order?.payment?.status || '').trim() === 'succeeded' ? 'Paiement confirme' : 'Paiement non confirme';
                 const orderId = String(order?.id || '').trim();
                 const safeOrderId = lpEscapeInlineArg(orderId);
+                const existingJob = orderId ? lpDeliveryFindJobByOrder(orderId) : null;
+                const blockingJob = lpDeliveryFindActiveJobForShop({ order, ctx, excludeOrderId: orderId });
+                const priorityLocked = !!priorityOrderId && orderId !== priorityOrderId;
+                const isDeliveryLocked = !!existingJob || !!blockingJob || priorityLocked;
+                const deliveryBtnLabel = existingJob
+                    ? '🚚 Livraison deja demandee'
+                    : (blockingJob
+                        ? '⏳ Mission active en cours'
+                        : (priorityLocked ? '⏳ Commande non prioritaire' : '🚚 Demander livraison'));
+                const deliveryBtnHtml = isDeliveryLocked
+                    ? `<button type="button" class="lp-btn lp-btn-secondary" disabled style="opacity:0.72; cursor:not-allowed;">${lpEscapeHtml(deliveryBtnLabel)}</button>`
+                    : `<button type="button" class="lp-btn lp-btn-primary" onclick="lpRequestDelivery('${safeOrderId}')">${lpEscapeHtml(deliveryBtnLabel)}</button>`;
+                const deliveryLockNote = existingJob
+                    ? `<div style="margin-top:8px; color:var(--ml-muted); font-size:0.83rem;">La livraison est deja en cours pour cette commande.</div>`
+                    : (blockingJob
+                        ? `<div style="margin-top:8px; color:var(--ml-muted); font-size:0.83rem;">Terminez d'abord la mission active de la boutique avant une nouvelle demande.</div>`
+                        : (priorityLocked
+                            ? `<div style="margin-top:8px; color:var(--ml-muted); font-size:0.83rem;">Une seule commande reste active a la fois. Traitez d'abord la commande la plus recente.</div>`
+                            : ''));
                 return `
                     <div style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:16px; margin-top:12px;">
                         <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
@@ -13192,9 +13402,10 @@
                             <div>${paymentLabel}</div>
                         </div>
                         <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
-                            <button type="button" class="lp-btn lp-btn-primary" onclick="lpRequestDelivery('${safeOrderId}')">🚚 Demander livraison</button>
+                            ${deliveryBtnHtml}
                             <button type="button" class="lp-btn lp-btn-secondary" onclick="lpOpenInvoice('${lpEscapeInlineArg(productTitle)}', ${total})">🧾 Facture</button>
                         </div>
+                        ${deliveryLockNote}
                     </div>
                 `;
             }).join('');
@@ -13222,12 +13433,13 @@
         async function lpRefreshVendorOrders() {
             const pane = document.getElementById('lp-vendor-orders');
             if (!pane) return;
-            lpRenderVendorOrdersPane([], lpResolveShopVendorContext(), '');
+            const ctx = lpResolveShopVendorContext();
+            lpRenderVendorOrdersPane([], ctx, '');
             try {
-                const { ctx, orders } = await lpFetchVendorLiveOrders();
-                lpRenderVendorOrdersPane(orders, ctx, '');
+                const result = await lpFetchVendorLiveOrders();
+                lpRenderVendorOrdersPane(result?.orders || [], result?.ctx || ctx, '');
             } catch (error) {
-                lpRenderVendorOrdersPane([], lpResolveShopVendorContext(), "Impossible de charger les commandes synchronisees.");
+                lpRenderVendorOrdersPane([], ctx, "Impossible de charger les commandes synchronisees.");
                 console.error('Vendor live orders refresh failed:', error);
             }
         }
@@ -23287,6 +23499,11 @@
 
         function getLpCurrentUser() {
             try {
+                const forcedLoggedOut = String(sessionStorage.getItem('mangoo_force_logged_out') || '').trim();
+                if (forcedLoggedOut === '1') return null;
+            } catch {
+            }
+            try {
                 const raw = localStorage.getItem('mangoo-current-user') || localStorage.getItem('user')
                 if (raw) {
                     const parsed = JSON.parse(raw)
@@ -23658,6 +23875,8 @@
             const role = String(identity.role || 'client').trim().toLowerCase() === 'vendor' ? 'vendor' : 'client'
             const name = String(identity.name || email.split('@')[0] || 'Utilisateur').trim() || 'Utilisateur'
             const phone = String(identity.phone || '').trim()
+            const previousUser = getLpCurrentUser() || {}
+            const previousEmail = String(previousUser?.email || '').trim().toLowerCase()
             const nextUser = {
                 ...(getLpCurrentUser() || {}),
                 email,
@@ -23674,6 +23893,16 @@
             localStorage.setItem('mangoo-current-user', JSON.stringify(nextUser))
             localStorage.setItem('user', JSON.stringify(nextUser))
             try { localStorage.setItem(`mangoo-active-role:${email}`, role) } catch {}
+            try { sessionStorage.removeItem('mangoo_force_logged_out') } catch {}
+            try {
+                if (previousEmail && previousEmail !== email) {
+                    localStorage.removeItem('mangoo_my_shop_id')
+                    localStorage.removeItem('mangoo_my_provider_id')
+                    localStorage.removeItem('mangoo-open-vendor-id')
+                    try { activeVendor = null } catch {}
+                }
+            } catch {
+            }
             try {
                 const profileKey = `mangoo_local_profile:${email}`
                 const raw = localStorage.getItem(profileKey) || localStorage.getItem('mangoo_local_profile')
@@ -23687,12 +23916,19 @@
                 const vendorId = String(identity.vendorId || '').trim()
                 const vendorKind = String(identity.vendorKind || '').trim().toLowerCase()
                 if (vendorKind === 'service' && vendorId) {
+                    try { localStorage.removeItem('mangoo_my_shop_id') } catch {}
                     localStorage.setItem('mangoo_my_provider_id', vendorId)
                     try { lpPersistMyProviderIds([vendorId]) } catch {}
                 } else if (vendorId) {
+                    try { localStorage.removeItem('mangoo_my_provider_id') } catch {}
                     localStorage.setItem('mangoo_my_shop_id', vendorId)
                     const key = `mangoo_my_shop_ids:${email}`
                     localStorage.setItem(key, JSON.stringify([vendorId]))
+                    try { localStorage.setItem('mangoo-open-vendor-id', vendorId) } catch {}
+                } else {
+                    try { localStorage.removeItem('mangoo_my_shop_id') } catch {}
+                    try { localStorage.removeItem('mangoo_my_provider_id') } catch {}
+                    try { localStorage.removeItem('mangoo-open-vendor-id') } catch {}
                 }
             } catch {
             }
@@ -23703,7 +23939,9 @@
         }
 
         async function lpResolveIdentityFromModal() {
+            let submitBtn = null
             try {
+                submitBtn = document.getElementById('lpIdentityEntrySubmit')
                 const mode = String(document.getElementById('lpIdentityEntryMode')?.value || 'email').trim().toLowerCase()
                 const value = String(document.getElementById('lpIdentityEntryValue')?.value || '').trim()
                 const role = String(document.getElementById('lpIdentityEntryRole')?.value || 'client').trim().toLowerCase()
@@ -23711,12 +23949,24 @@
                     lpSetIdentityEntryStatus(mode === 'pin' ? 'Entrez le PIN.' : mode === 'phone' ? 'Entrez le telephone.' : 'Entrez l e-mail.', 'error')
                     return
                 }
+                if (submitBtn) {
+                    submitBtn.disabled = true
+                    submitBtn.style.opacity = '0.7'
+                    submitBtn.textContent = 'Verification...'
+                }
                 lpSetIdentityEntryStatus('Verification du compte...', 'info')
+                const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null
+                const timer = ctrl ? setTimeout(() => {
+                    try { ctrl.abort() } catch {
+                    }
+                }, 7000) : null
                 const response = await fetch('/api/local-sync/localplus/identity/resolve', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mode, value, role })
+                    body: JSON.stringify({ mode, value, role }),
+                    signal: ctrl ? ctrl.signal : undefined
                 })
+                if (timer) clearTimeout(timer)
                 const payload = await response.json().catch(() => null)
                 if (!response.ok || !payload?.success) {
                     throw new Error(String(payload?.error || 'Connexion impossible pour le moment.'))
@@ -23737,8 +23987,19 @@
                 try { loadLpProfile(true) } catch {}
                 try { lpToast(`Connecte en tant que ${String(nextUser?.name || 'Utilisateur')}.`, 'ok') } catch {}
             } catch (e) {
-                const msg = e?.message ? String(e.message) : 'Connexion impossible.'
+                const msg = e?.name === 'AbortError'
+                    ? 'Verification trop longue. Reessayez.'
+                    : (e?.message ? String(e.message) : 'Connexion impossible.')
                 lpSetIdentityEntryStatus(msg, 'error')
+            } finally {
+                try {
+                    if (submitBtn) {
+                        submitBtn.disabled = false
+                        submitBtn.style.opacity = '1'
+                        submitBtn.textContent = 'Entrer'
+                    }
+                } catch {
+                }
             }
         }
 
@@ -23973,6 +24234,38 @@
             }) || null
         }
 
+        function lpDeliveryIsActiveJob(jobLike) {
+            const job = jobLike && typeof jobLike === 'object' ? jobLike : null
+            if (!job) return false
+            const status = String(job?.status || '').trim().toLowerCase()
+            const phase = String(job?.phase || '').trim().toLowerCase()
+            if (!String(job?.id || '').trim()) return false
+            if (status === 'done' || status === 'delivered' || status === 'cancelled') return false
+            if (phase === 'delivered') return false
+            return true
+        }
+
+        function lpDeliveryFindActiveJobForShop(scopeLike) {
+            const scope = scopeLike && typeof scopeLike === 'object' ? scopeLike : {}
+            const order = scope?.order && typeof scope.order === 'object' ? scope.order : null
+            const ctx = scope?.ctx && typeof scope.ctx === 'object' ? scope.ctx : null
+            const excludeOrderId = String(scope?.excludeOrderId || '').trim()
+            const targetShopSlug = String(order?.shopSlug || ctx?.shopSlug || '').trim()
+            const targetRoomId = String(order?.roomId || ctx?.roomId || '').trim()
+            const targetVendorId = String(order?.vendorId || ctx?.vendorId || '').trim()
+            return lpDeliveryListJobs().find((job) => {
+                if (!lpDeliveryIsActiveJob(job)) return false
+                if (excludeOrderId && String(job?.sourceOrderId || '').trim() === excludeOrderId) return false
+                const jobShopSlug = String(job?.shopSlug || '').trim()
+                const jobRoomId = String(job?.roomId || '').trim()
+                const jobVendorId = String(job?.pickup?.vendorId || '').trim()
+                if (targetShopSlug && jobShopSlug && targetShopSlug === jobShopSlug) return true
+                if (targetRoomId && jobRoomId && targetRoomId === jobRoomId) return true
+                if (targetVendorId && jobVendorId && targetVendorId === jobVendorId) return true
+                return false
+            }) || null
+        }
+
         async function lpDeliveryFetchOrderDetails(orderId) {
             const id = String(orderId || '').trim()
             if (!id) return null
@@ -24035,6 +24328,19 @@
             if (!order) throw new Error('Commande introuvable pour la livraison.')
             const existing = lpDeliveryFindJobByOrder(orderId)
             if (existing) return existing
+            const ctx = lpResolveShopVendorContext ? lpResolveShopVendorContext() : null
+            const blockingJob = lpDeliveryFindActiveJobForShop({ order, ctx, excludeOrderId: orderId })
+            if (blockingJob) throw new Error('Une mission active existe deja pour cette boutique.')
+            try {
+                const vendorOrders = await lpFetchVendorLiveOrders()
+                const priorityOrderId = lpResolveVendorPriorityOrderId(vendorOrders?.orders || [], vendorOrders?.ctx || ctx)
+                if (priorityOrderId && priorityOrderId !== String(orderId || '').trim()) {
+                    throw new Error('Une autre commande plus recente doit etre traitee en premier pour cette boutique.')
+                }
+            } catch (error) {
+                const msg = String(error?.message || error || '').trim()
+                if (msg) throw error
+            }
             const vendor = lpDeliveryFindVendorForOrder(order)
             const profile = lpDeliveryReadCurrentProfile()
             const currentUser = getLpCurrentUser ? getLpCurrentUser() : null
@@ -24271,7 +24577,7 @@
                             </select>
                             <div id="lpIdentityEntryHint" style="font-size:0.90rem; color:var(--ml-muted);">Entrez l e-mail Local+ du compte.</div>
                             <div id="lpIdentityEntryStatus" style="display:none; padding:10px 12px; border-radius:12px; border:1px solid transparent; font-weight:800;"></div>
-                            <button type="button" class="lp-btn lp-btn-primary" style="width:100%; padding:14px 16px; border-radius:16px; font-weight:950;" onclick="lpResolveIdentityFromModal()">Entrer</button>
+                            <button type="button" id="lpIdentityEntrySubmit" class="lp-btn lp-btn-primary" style="width:100%; padding:14px 16px; border-radius:16px; font-weight:950;" onclick="lpResolveIdentityFromModal()">Entrer</button>
                         </div>
                     </div>
                     ${savedUsersHtml}
