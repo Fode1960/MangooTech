@@ -97,9 +97,22 @@ function isActiveDeliveryJob(job: Record<string, unknown> | null | undefined): b
   const status = String(job?.status || '').trim().toLowerCase()
   const phase = String(job?.phase || '').trim().toLowerCase()
   const id = String(job?.id || '').trim()
+  const updatedAt =
+    normalizeNumber(job?.remoteUpdatedAt) ||
+    normalizeNumber((job as any)?.phaseUpdatedAt) ||
+    normalizeNumber(job?.assignedAt) ||
+    normalizeNumber(job?.createdAt) ||
+    0
   if (!id) return false
   if (status === 'done' || status === 'delivered' || status === 'cancelled') return false
   if (phase === 'delivered') return false
+  if (updatedAt > 0) {
+    const ageMs = Date.now() - updatedAt
+    const maxAgeMs = phase === 'proof'
+      ? 45 * 60 * 1000
+      : (status === 'open' ? 30 * 60 * 1000 : 2 * 60 * 60 * 1000)
+    if (ageMs > maxAgeMs) return false
+  }
   return true
 }
 
