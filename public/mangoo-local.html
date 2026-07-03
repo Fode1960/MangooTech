@@ -17121,9 +17121,11 @@
         function lpDeliveryPickDriverActiveJob(list, driverId) {
             const me = String(driverId || lpDeliveryDriverId() || '').trim();
             if (!me || !Array.isArray(list)) return null;
+            const ignored = lpDeliveryIgnoredJobIds();
             const jobs = list.filter((job) =>
                 String(job?.assignedDriverId || '').trim() === me &&
-                String(job?.status || '').trim() !== 'done'
+                String(job?.status || '').trim() !== 'done' &&
+                !(Array.isArray(ignored) && ignored.includes(String(job?.id || '').trim()))
             );
             if (!jobs.length) return null;
             jobs.sort((a, b) => {
@@ -17139,6 +17141,14 @@
             try {
                 const t = String(msg?.t || '').trim();
                 if (!t) return;
+                if (t === 'track_update') {
+                    try {
+                        const mine = lpDeliveryPickDriverActiveJob(lpDeliveryListJobs(), lpDeliveryDriverId());
+                        const phase = String(mine?.phase || '').trim();
+                        if (phase === 'proof' || phase === 'delivered') return;
+                    } catch {
+                    }
+                }
                 if (t === 'job_created' || t === 'job_updated' || t === 'track_update') {
                     try { lpDeliveryRenderDriverRequests(); } catch {}
                 }
@@ -17334,6 +17344,30 @@
             } catch {
             }
             try { showLocalToast('♻️ Réinitialisation…', 'info'); } catch {}
+            // #region debug-point DVR-A:reset-demo-ui
+            try {
+                fetch('http://192.168.1.18:7777/event', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    keepalive: true,
+                    body: JSON.stringify({
+                        sessionId: 'delivery-v20260617-regression',
+                        runId: 'pre-fix',
+                        hypothesisId: 'A',
+                        location: 'mangoo-local.html:lpDeliveryResetDemoUI',
+                        msg: '[DEBUG] reset demo ui requested',
+                        data: {
+                            buttonText: String(btnEl?.innerText || ''),
+                            totalJobsBefore: lpDeliveryListJobs().length,
+                            activeJobIdBefore: String(lpDeliveryPickDriverActiveJob(lpDeliveryListJobs(), lpDeliveryDriverId())?.id || ''),
+                            trackingJobIdBefore: String(window.__lpDeliveryTrackingJobId || '')
+                        },
+                        ts: Date.now()
+                    })
+                }).catch(() => {});
+            } catch {
+            }
+            // #endregion
             try { lpDeliveryResetDemoState(); } catch {}
             try {
                 await lpDeliveryHoldButtonResult(btnEl, '♻️ OK', '♻️ Réinitialiser', 'success', 700);
@@ -17477,6 +17511,8 @@
 
         function lpDeliveryResetDemoState() {
             try {
+                const allJobsBefore = lpDeliveryListJobs();
+                const activeJob = lpDeliveryPickDriverActiveJob(allJobsBefore, lpDeliveryDriverId());
                 const keys = [];
                 for (let i = 0; i < localStorage.length; i++) {
                     const k = localStorage.key(i);
@@ -17488,10 +17524,68 @@
                         || String(k).startsWith('mangoo_delivery_ignored:')
                     ) keys.push(k);
                 }
+                // #region debug-point DVR-B:reset-demo-state-before
+                try {
+                    fetch('http://192.168.1.18:7777/event', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        keepalive: true,
+                        body: JSON.stringify({
+                            sessionId: 'delivery-v20260617-regression',
+                            runId: 'pre-fix',
+                            hypothesisId: 'B',
+                            location: 'mangoo-local.html:lpDeliveryResetDemoState',
+                            msg: '[DEBUG] reset demo state before clear',
+                            data: {
+                                keysToRemove: keys.slice(0, 25),
+                                keysCount: keys.length,
+                                activeJobIdBefore: String(lpDeliveryPickDriverActiveJob(lpDeliveryListJobs(), lpDeliveryDriverId())?.id || ''),
+                                trackingJobIdBefore: String(window.__lpDeliveryTrackingJobId || '')
+                            },
+                            ts: Date.now()
+                        })
+                    }).catch(() => {});
+                } catch {
+                }
+                // #endregion
                 keys.forEach((k) => {
                     try { localStorage.removeItem(k); } catch {}
                 });
+                try {
+                    allJobsBefore.forEach((job) => {
+                        try {
+                            const id = String(job?.id || '').trim();
+                            if (id) lpDeliveryRememberIgnoredJob(id);
+                        } catch {
+                        }
+                    });
+                    if (activeJob && activeJob.id) lpDeliveryRememberIgnoredJob(String(activeJob.id || ''));
+                } catch {
+                }
                 try { lpDeliveryStopTracking(); } catch {}
+                // #region debug-point DVR-C:reset-demo-state-after
+                try {
+                    fetch('http://192.168.1.18:7777/event', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        keepalive: true,
+                        body: JSON.stringify({
+                            sessionId: 'delivery-v20260617-regression',
+                            runId: 'pre-fix',
+                            hypothesisId: 'B',
+                            location: 'mangoo-local.html:lpDeliveryResetDemoState',
+                            msg: '[DEBUG] reset demo state after clear',
+                            data: {
+                                remainingJobs: lpDeliveryListJobs().length,
+                                activeJobIdAfter: String(lpDeliveryPickDriverActiveJob(lpDeliveryListJobs(), lpDeliveryDriverId())?.id || ''),
+                                trackingJobIdAfter: String(window.__lpDeliveryTrackingJobId || '')
+                            },
+                            ts: Date.now()
+                        })
+                    }).catch(() => {});
+                } catch {
+                }
+                // #endregion
                 try { showLocalToast('Course réinitialisée', 'success'); } catch {}
             } catch {
             }
@@ -17634,7 +17728,7 @@
             return lpDeliveryRead('mangoo_delivery_ignored:' + id, []);
         }
 
-        function lpDeliveryIgnoreJob(jobId) {
+        function lpDeliveryRememberIgnoredJob(jobId) {
             const id = lpDeliveryDriverId();
             const list = lpDeliveryIgnoredJobIds();
             const j = String(jobId || '').trim();
@@ -17642,6 +17736,10 @@
             if (!Array.isArray(list)) return;
             if (!list.includes(j)) list.push(j);
             lpDeliveryWrite('mangoo_delivery_ignored:' + id, list.slice(-50));
+        }
+
+        function lpDeliveryIgnoreJob(jobId) {
+            lpDeliveryRememberIgnoredJob(jobId);
             lpDeliveryRenderDriverRequests();
         }
 
@@ -17931,6 +18029,29 @@
             } catch {
             }
             try { showLocalToast('♻️ Réinitialisation…', 'info'); } catch {}
+            // #region debug-point DVR-D:reset-tracking-ui
+            try {
+                fetch('http://192.168.1.18:7777/event', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    keepalive: true,
+                    body: JSON.stringify({
+                        sessionId: 'delivery-v20260617-regression',
+                        runId: 'pre-fix',
+                        hypothesisId: 'C',
+                        location: 'mangoo-local.html:lpDeliveryResetTrackingUI',
+                        msg: '[DEBUG] reset tracking ui requested',
+                        data: {
+                            buttonText: String(btnEl?.innerText || ''),
+                            activeJobIdBefore: String(lpDeliveryPickDriverActiveJob(lpDeliveryListJobs(), lpDeliveryDriverId())?.id || ''),
+                            trackingJobIdBefore: String(window.__lpDeliveryTrackingJobId || '')
+                        },
+                        ts: Date.now()
+                    })
+                }).catch(() => {});
+            } catch {
+            }
+            // #endregion
             try { lpDeliveryResetDemoState(); } catch {}
             try { await lpDeliveryHoldButtonResult(btnEl, '♻️ OK', '♻️ Réinitialiser', 'success', 550); } catch {}
             try { lpCloseDeliveryTracking(false); } catch {}
@@ -18493,6 +18614,31 @@
             const el = inputEl || null;
             if (!id || !el || !(el.files && el.files[0])) return;
             const file = el.files[0];
+            // #region debug-point DVR-E:proof-file-change
+            try {
+                fetch('http://192.168.1.18:7777/event', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    keepalive: true,
+                    body: JSON.stringify({
+                        sessionId: 'delivery-v20260617-regression',
+                        runId: 'pre-fix',
+                        hypothesisId: 'D',
+                        location: 'mangoo-local.html:lpDeliveryOnProofFileChange',
+                        msg: '[DEBUG] proof file change entered for current regression session',
+                        data: {
+                            jobId: id,
+                            fileName: String(file?.name || ''),
+                            fileType: String(file?.type || ''),
+                            fileSize: Number(file?.size || 0),
+                            inputConnected: !!el?.isConnected
+                        },
+                        ts: Date.now()
+                    })
+                }).catch(() => {});
+            } catch {
+            }
+            // #endregion
             // #region debug-point PPB-C:proof-file-selected
             try {
                 fetch('http://192.168.1.18:7777/event', {
@@ -19766,12 +19912,42 @@
             const me = lpDeliveryDriverId();
             const jobs = lpDeliveryListJobs();
             const mine = lpDeliveryPickDriverActiveJob(jobs, me);
+            // #region debug-point DVR-F:render-driver-requests
+            try {
+                fetch('http://192.168.1.18:7777/event', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    keepalive: true,
+                    body: JSON.stringify({
+                        sessionId: 'delivery-v20260617-regression',
+                        runId: 'pre-fix',
+                        hypothesisId: 'E',
+                        location: 'mangoo-local.html:lpDeliveryRenderDriverRequests',
+                        msg: '[DEBUG] driver requests rendered',
+                        data: {
+                            jobsCount: jobs.length,
+                            recentDoneId: String(recentDone?.id || ''),
+                            activeJobId: String(mine?.id || ''),
+                            activeJobStatus: String(mine?.status || ''),
+                            activeJobPhase: String(mine?.phase || ''),
+                            trackingJobId: String(window.__lpDeliveryTrackingJobId || '')
+                        },
+                        ts: Date.now()
+                    })
+                }).catch(() => {});
+            } catch {
+            }
+            // #endregion
             if (mine) {
                 try {
+                    const currentPhase = String(mine.phase || '').trim();
+                    if (currentPhase === 'proof' || currentPhase === 'delivered') {
+                        lpDeliveryStopTracking();
+                    }
                     const activeTrackingId = String(window.__lpDeliveryTrackingJobId || '').trim();
                     const lastTrack = lpDeliveryGetLastTrack(mine);
                     const lastTrackAge = Date.now() - Number(lastTrack?.updatedAt || 0);
-                    if (activeTrackingId !== String(mine.id || '').trim() || !Number.isFinite(lastTrackAge) || lastTrackAge > 7000) {
+                    if (currentPhase !== 'proof' && currentPhase !== 'delivered' && (activeTrackingId !== String(mine.id || '').trim() || !Number.isFinite(lastTrackAge) || lastTrackAge > 7000)) {
                         setTimeout(() => {
                             try {
                                 const currentMine = lpDeliveryPickDriverActiveJob(lpDeliveryListJobs(), lpDeliveryDriverId());
@@ -19803,6 +19979,30 @@
                 const proofPlaceholderId = 'lpDeliveryProofPlaceholder-' + lpDeliverySafeDomId(mine.id);
                 const hasProof = lpDeliveryHasProof(mine);
                 if (phase === 'proof') {
+                    // #region debug-point DVR-G:proof-phase-render
+                    try {
+                        fetch('http://192.168.1.18:7777/event', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            keepalive: true,
+                            body: JSON.stringify({
+                                sessionId: 'delivery-v20260617-regression',
+                                runId: 'pre-fix',
+                                hypothesisId: 'D',
+                                location: 'mangoo-local.html:lpDeliveryRenderDriverRequests',
+                                msg: '[DEBUG] proof phase rendered for regression session',
+                                data: {
+                                    jobId: String(mine.id || ''),
+                                    hasProof,
+                                    proofInputId,
+                                    proofUiVersion: 'proof-license-logic-1'
+                                },
+                                ts: Date.now()
+                            })
+                        }).catch(() => {});
+                    } catch {
+                    }
+                    // #endregion
                     // #region debug-point V:proof-ui-version
                     try {
                         fetch('http://192.168.1.18:7777/event', {
@@ -19855,22 +20055,14 @@
                     ? `
                         <div style="margin:10px 0;">
                             <div style="font-weight:950; color:#27ae60; margin-bottom:8px;">Étape 3 sur 4 : photo du colis remis</div>
-                            <div style="background:#f8fafc; border:1px solid rgba(0,0,0,0.06); border-radius:16px; padding:12px;">
-                                <div style="font-weight:950; color:#111827;">Photo du produit</div>
-                                <div style="font-size:0.86rem; font-weight:800; color:#6b7280; margin-top:2px;">Une photo claire suffit.</div>
-                                <div style="display:flex; align-items:center; gap:12px; margin-top:10px;">
-                                    <div style="width:72px; height:72px; border-radius:16px; background:${hasProof ? '#e8f5e9' : '#f3f4f6'}; border:2px solid ${hasProof ? '#27ae60' : '#e5e7eb'}; overflow:hidden; display:flex; align-items:center; justify-content:center; flex:0 0 auto;">
-                                        <img id="${proofPreviewId}" src="${hasProof ? lpEscapeHtml(String((mine.proof || {}).photoDataUrl || '')) : ''}" alt="preuve" style="display:${hasProof ? 'block' : 'none'}; width:100%; height:100%; object-fit:cover;">
-                                        <div id="${proofPlaceholderId}" style="display:${hasProof ? 'none' : 'flex'}; align-items:center; justify-content:center; font-weight:950; color:#9ca3af;">📷</div>
-                                    </div>
-                                    <div style="flex:1; min-width:0;">
-                                        <input id="${proofInputId}" data-delivery-proof-input="1" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" type="file" accept="image/*" capture="environment" onchange="try{lpDeliveryOnProofFileChange(${JSON.stringify(String(mine.id || ''))}, this)}catch{}" style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;">
-                                        ${hasProof
-                                            ? `<button type="button" data-delivery-action="proof-open" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" data-proof-input-id="${lpEscapeHtml(proofInputId)}" style="width:100%; padding:14px; background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:white; border:none; border-radius:999px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">✅ Photo ajoutée</button>`
-                                            : `<label for="${lpEscapeHtml(proofInputId)}" onclick="try{fetch('http://192.168.1.18:7777/event',{method:'POST',headers:{'Content-Type':'application/json'},keepalive:true,body:JSON.stringify({sessionId:'product-photo-blocked',runId:'pre-fix',hypothesisId:'D',location:'mangoo-local.html:proof-label',msg:'[DEBUG] proof label clicked',data:{jobId:${JSON.stringify(String(mine.id || ''))},proofInputId:${JSON.stringify(proofInputId)}},ts:Date.now()})}).catch(()=>{})}catch{}" style="display:inline-flex; align-items:center; justify-content:center; width:100%; padding:14px; background:#f3f4f6; color:#111827; border:1px solid rgba(0,0,0,0.08); border-radius:999px; font-weight:950; cursor:pointer; box-sizing:border-box;">📷 Ajouter photo</label>`}
-                                    </div>
-                                </div>
-                            </div>
+                            <input id="${proofInputId}" data-delivery-proof-input="1" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" type="file" accept="image/*" capture="environment" style="display:none">
+                            <label for="${lpEscapeHtml(proofInputId)}" style="display:block; width:100%; padding:14px; background:${hasProof ? '#e8f5e9' : '#f1f2f6'}; border:2px dashed ${hasProof ? '#27ae60' : '#ccc'}; border-radius:12px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation; box-sizing:border-box; text-align:center;">
+                                ${hasProof ? '✅ Photo preuve enregistrée' : '📷 Photo preuve'}
+                            </label>
+                            ${hasProof ? `<div style="margin-top:10px; display:flex; align-items:center; justify-content:center;">
+                                <img id="${proofPreviewId}" src="${lpEscapeHtml(String((mine.proof || {}).photoDataUrl || ''))}" alt="preuve" style="max-width:100%; max-height:140px; border-radius:12px; border:1px solid rgba(0,0,0,0.08);">
+                                <div id="${proofPlaceholderId}" style="display:none;"></div>
+                            </div>` : ``}
                         </div>
                     `
                     : '';
