@@ -5,7 +5,7 @@ interface DeliveryPartner {
   id: string;
   name: string;
   phone: string;
-  vehicleType: 'moto' | 'car' | 'van';
+  vehicleType: 'moto' | 'car' | 'van' | 'truck';
   status: 'available' | 'busy' | 'offline';
   currentLocation: { lat: number; lng: number };
 }

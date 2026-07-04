@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Cloud, Sun, CloudRain, Wind, Thermometer, Droplets, Eye, AlertTriangle } from 'lucide-react';
+import { Cloud, Sun, CloudRain, Wind, Thermometer, Droplets, Eye, AlertTriangle, TrendingUp, MapPin, Leaf, Clock } from 'lucide-react';
 
 interface WeatherData {
   location: string;
@@ -184,7 +184,7 @@ const AfricanAgriculturalWeather: React.FC = () => {
   ]);
 
   const [selectedLocation, setSelectedLocation] = useState<WeatherData>(weatherData[0]);
-  const [selectedTab, setSelectedTab] = useState<'weather' | 'crops' | 'advice'>('weather');
+  const [activeTab, setActiveTab] = useState<'weather' | 'crops' | 'advice'>('weather');
   const [selectedCrop, setSelectedCrop] = useState<CropData | null>(null);
 
   const getWeatherIcon = (icon: string) => {

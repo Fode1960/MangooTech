@@ -167,7 +167,7 @@ const VoIPManagerSimple: React.FC<VoIPManagerSimpleProps> = ({
             console.log('✅ Enregistré sur le serveur VoIP');
             break;
 
-          case 'incoming-call':
+          case 'incoming-call': {
             console.log(`📞 Appel entrant de ${data.from}`);
             setIncomingCall(true);
             setCallFrom(data.from);
@@ -180,6 +180,7 @@ const VoIPManagerSimple: React.FC<VoIPManagerSimpleProps> = ({
               window.ringtoneInterval = ringtone.patternInterval;
             }
             break;
+          }
 
           case 'call-accepted':
             console.log('✅ Appel accepté');

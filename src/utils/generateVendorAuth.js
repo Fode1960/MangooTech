@@ -80,7 +80,7 @@ async function applyAuthToExistingShops() {
         console.log(`   🌐 URL: ${shopUrl}`);
 
         // Créer l'enregistrement d'authentification
-        const { data: authData, error: authError } = await supabase
+        const { error: authError } = await supabase
           .from('shop_auth')
           .insert({
             shop_id: shop.id,
@@ -93,7 +93,7 @@ async function applyAuthToExistingShops() {
           .single();
 
         if (authError) {
-          console.error(`   ❌ Erreur lors de la création de l\'authentification:`, authError);
+          console.error(`   ❌ Erreur lors de la création de l'authentification:`, authError);
           continue;
         }
 

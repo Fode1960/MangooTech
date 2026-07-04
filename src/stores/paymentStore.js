@@ -454,9 +454,6 @@ export const usePaymentStore = create((set, get) => ({
     }
   },
 
-  // Réinitialiser le statut de paiement
-  resetPaymentStatus: () => set({ paymentStatus: null }),
-
   // Mettre à jour le statut d'une transaction après confirmation backend
   updateTransactionStatus: (transactionId, status, message) => set((state) => ({
     transactionHistory: state.transactionHistory.map(transaction =>

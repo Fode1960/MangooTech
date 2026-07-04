@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Phone, PhoneOff, Hash, Star, User, Clock, Plus, Minus, RotateCcw } from 'lucide-react';
+import { Phone, PhoneOff, Hash, Star, User, Clock, Plus, Minus, RotateCcw, Volume2, VolumeX, Pause } from 'lucide-react';
 
 interface DialPadProps {
   onCall: (number: string) => void;

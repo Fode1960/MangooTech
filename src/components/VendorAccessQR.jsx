@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Copy, RefreshCw, Eye, EyeOff, QrCode, Volume2 } from 'lucide-react';
+import { Copy, RefreshCw, Eye, EyeOff, Volume2 } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
+import { toast } from 'sonner';
 import { supabase } from '../config/supabase';
 
 const STORAGE_KEY = 'demo_shops';
@@ -82,7 +83,7 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
       const ownerEmail = String(shopOwnerEmail || '').trim();
       if (!ownerEmail) {
         setAuthData(null);
-        setError("Cette boutique n'a pas d'email vendeur (ownerEmail)");
+        setError("Cette boutique n'a pas encore d'email vendeur configuré");
         return;
       }
 
@@ -311,7 +312,7 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
                 </button>
               </div>
               {copiedField === 'login' && (
-                <p className="text-sm text-green-600 mt-1">Copié!</p>
+                <p className="text-sm text-green-600 mt-1">Copie effectuée.</p>
               )}
             </div>
 
@@ -343,7 +344,7 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
                 </button>
               </div>
               {copiedField === 'password' && (
-                <p className="text-sm text-green-600 mt-1">Copié!</p>
+                <p className="text-sm text-green-600 mt-1">Copie effectuée.</p>
               )}
             </div>
 
@@ -380,7 +381,7 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
                 </button>
               </div>
               {copiedField === 'url' && (
-                <p className="text-sm text-green-600 mt-1">Copié!</p>
+                <p className="text-sm text-green-600 mt-1">Copie effectuée.</p>
               )}
             </div>
             <a
@@ -397,7 +398,7 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
             <div className="flex items-start justify-between gap-3 mb-4">
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">PIN de la boutique</h3>
-                <p className="text-sm text-gray-600">Acces rapide client sans compte</p>
+                <p className="text-sm text-gray-600">Accès rapide client sans compte</p>
               </div>
               <button
                 type="button"
@@ -445,7 +446,7 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
             </div>
 
             {copiedField === 'pin' && (
-              <p className="text-sm text-green-600 mt-2">Copie!</p>
+              <p className="text-sm text-green-600 mt-2">PIN copié.</p>
             )}
             {pinError && (
               <p className="text-sm text-red-600 mt-2">{pinError}</p>
@@ -478,6 +479,10 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
                 // Créer un canvas pour générer une image
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                  toast.error('Impossible de générer le QR code');
+                  return;
+                }
                 
                 canvas.width = 400;
                 canvas.height = 400;
@@ -518,8 +523,8 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
                 link.download = `qr-${shopSlug}.png`;
                 link.href = canvas.toDataURL();
                 link.click();
-                
-                logToConsole('QR Code téléchargé avec succès', 'success');
+
+                toast.success('QR code téléchargé');
               }}
               className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
             >

@@ -33,7 +33,12 @@ export interface ChatConversation {
   productName?: string;
   productImage?: string;
   messages: ChatMessage[];
-  participants: string[];
+  participants: Array<{
+    id: string;
+    name: string;
+    avatar?: string;
+    isOnline?: boolean;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -206,10 +211,36 @@ const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
 interface ChatContextType {
   state: ChatState;
   dispatch: React.Dispatch<ChatAction>;
-  sendMessage: (conversationId: string, content: string, type?: ChatMessage['type']) => void;
+  conversations: Array<ChatConversation & {
+    participants: Array<{
+      id: string;
+      name: string;
+      avatar?: string;
+      isOnline?: boolean;
+      timestamp?: Date;
+      content?: string;
+    }>;
+  }>;
+  activeConversation: (ChatConversation & {
+    participants: Array<{
+      id: string;
+      name: string;
+      avatar?: string;
+      isOnline?: boolean;
+      timestamp?: Date;
+      content?: string;
+    }>;
+  }) | null;
+  messages: ChatMessage[];
+  isConnected: boolean;
+  isTyping: boolean;
+  typingUsers: string[];
+  sendMessage: (conversationId: string, content?: string, type?: ChatMessage['type']) => void;
   startConversation: (customerId: string, customerName: string, customerAvatar: string, initialMessage?: string) => void;
-  markAsRead: (conversationId: string, messageId: string) => void;
+  markAsRead: (conversationId: string, messageId?: string) => void;
   setTyping: (conversationId: string, isTyping: boolean) => void;
+  startTyping: (conversationId: string) => void;
+  stopTyping: (conversationId: string) => void;
   archiveConversation: (conversationId: string) => void;
   blockConversation: (conversationId: string) => void;
   deleteConversation: (conversationId: string) => void;
@@ -304,13 +335,15 @@ export const ChatProvider: React.FC<{ children: ReactNode; initialUserId?: strin
     }
   };
 
-  const sendMessage = (conversationId: string, content: string, type: ChatMessage['type'] = 'text') => {
+  const sendMessage = (conversationId: string, content?: string, type: ChatMessage['type'] = 'text') => {
+    const resolvedConversationId = content === undefined ? state.activeConversation?.id || conversationId : conversationId;
+    const resolvedContent = content === undefined ? conversationId : content;
     const message: ChatMessage = {
       id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      conversationId,
+      conversationId: resolvedConversationId,
       senderId: state.currentUserId,
       senderName: state.currentUserRole === 'customer' ? 'Vous' : 'Vendeur',
-      content,
+      content: resolvedContent,
       timestamp: new Date(),
       isRead: true,
       type
@@ -318,7 +351,7 @@ export const ChatProvider: React.FC<{ children: ReactNode; initialUserId?: strin
 
     dispatch({
       type: 'ADD_MESSAGE',
-      payload: { conversationId, message }
+      payload: { conversationId: resolvedConversationId, message }
     });
   };
 
@@ -343,7 +376,19 @@ export const ChatProvider: React.FC<{ children: ReactNode; initialUserId?: strin
       status: 'active',
       isTyping: false,
       messages: [],
-      participants: [state.currentUserId, customerId],
+      participants: [
+        {
+          id: state.currentUserId,
+          name: state.currentUserRole === 'customer' ? 'Vous' : 'Vendeur',
+          isOnline: true,
+        },
+        {
+          id: customerId,
+          name: customerName,
+          avatar: customerAvatar,
+          isOnline: Math.random() > 0.5,
+        },
+      ],
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -356,12 +401,26 @@ export const ChatProvider: React.FC<{ children: ReactNode; initialUserId?: strin
     }
   };
 
-  const markAsRead = (conversationId: string, messageId: string) => {
-    dispatch({ type: 'MARK_AS_READ', payload: { conversationId, messageId } });
+  const markAsRead = (conversationId: string, messageId?: string) => {
+    const targetConversation = state.conversations.find((conv) => conv.id === conversationId);
+    const ids = messageId
+      ? [messageId]
+      : (targetConversation?.messages || []).filter((msg) => !msg.isRead).map((msg) => msg.id);
+    ids.forEach((id) => {
+      dispatch({ type: 'MARK_AS_READ', payload: { conversationId, messageId: id } });
+    });
   };
 
   const setTyping = (conversationId: string, isTyping: boolean) => {
     dispatch({ type: 'SET_TYPING', payload: { conversationId, isTyping } });
+  };
+
+  const startTyping = (conversationId: string) => {
+    setTyping(conversationId, true);
+  };
+
+  const stopTyping = (conversationId: string) => {
+    setTyping(conversationId, false);
   };
 
   const archiveConversation = (conversationId: string) => {
@@ -415,13 +474,35 @@ export const ChatProvider: React.FC<{ children: ReactNode; initialUserId?: strin
     return () => clearInterval(interval);
   }, [state.conversations]);
 
+  const conversations = state.conversations.map((conversation) => ({
+    ...conversation,
+    participants: (conversation.participants || []).map((participant) => {
+      return {
+        ...participant,
+        timestamp: conversation.lastMessageTime,
+        content: conversation.lastMessage,
+      };
+    }),
+  }));
+
+  const activeConversation = conversations.find((conversation) => conversation.id === state.activeConversation?.id) || null;
+  const messages = activeConversation?.messages || [];
+
   const value: ChatContextType = {
     state,
     dispatch,
+    conversations,
+    activeConversation,
+    messages,
+    isConnected: state.isConnected,
+    isTyping: state.isTyping,
+    typingUsers: [],
     sendMessage,
     startConversation,
     markAsRead,
     setTyping,
+    startTyping,
+    stopTyping,
     archiveConversation,
     blockConversation,
     deleteConversation,

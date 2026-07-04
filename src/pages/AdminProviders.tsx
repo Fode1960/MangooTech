@@ -51,7 +51,11 @@ const statusToBadge = (s: ProviderStatus) => {
   return 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-200'
 }
 
-export default function AdminProviders() {
+type AdminProvidersProps = {
+  embedded?: boolean;
+};
+
+export default function AdminProviders({ embedded = false }: AdminProvidersProps) {
   const { isAdmin } = useAuth()
   const [providers, setProviders] = useState<Provider[]>([])
   const [loading, setLoading] = useState(true)
@@ -259,7 +263,7 @@ export default function AdminProviders() {
             : 'pending'
         const id = `localplus-${String(v?.id)}`
         const name = String(v?.name || '').trim() || 'Prestataire'
-        const slug = String(v?.slug || '').trim() || String(name).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '').slice(0, 64) || id
+        const slug = String(v?.slug || '').trim() || String(name).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 64) || id
         const email = String(v?.ownerEmail || '').trim() || null
         const phone = String(v?.phone || '').trim() || null
         const city = String(v?.city || '').trim() || null
@@ -364,14 +368,14 @@ export default function AdminProviders() {
               return
             }
             loadProvidersFromLocalPlus()
-            setNotice('Serveur indisponible pour le moment. Affichage des donnees disponibles.')
+            setNotice('Serveur indisponible pour le moment. Affichage des données disponibles.')
             setIsLocalMode(true)
             return
           }
         } catch {
           if (seq !== loadSeqRef.current) return
           loadProvidersFromLocalPlus()
-          setNotice('Serveur indisponible pour le moment. Affichage des donnees disponibles.')
+          setNotice('Serveur indisponible pour le moment. Affichage des données disponibles.')
           setIsLocalMode(true)
           return
         }
@@ -380,7 +384,7 @@ export default function AdminProviders() {
       const token = await getAdminToken()
       if (!token) {
         loadProvidersFromLocalPlus()
-        setNotice('Serveur indisponible pour le moment. Affichage des donnees disponibles.')
+        setNotice('Serveur indisponible pour le moment. Affichage des données disponibles.')
         setIsLocalMode(true)
         return
       }
@@ -425,16 +429,16 @@ export default function AdminProviders() {
               setNotice(null)
               return
             }
-            setNotice('Aucune donnee distante disponible pour le moment. Affichage des donnees disponibles.')
+            setNotice('Aucune donnée distante disponible pour le moment. Affichage des données disponibles.')
             setIsLocalMode(true)
             return
           }
 
-          setNotice('Serveur indisponible pour le moment. Affichage des donnees disponibles.')
+          setNotice('Serveur indisponible pour le moment. Affichage des données disponibles.')
           setIsLocalMode(true)
         } catch {
           if (seq !== loadSeqRef.current) return
-          setNotice('Serveur indisponible pour le moment. Affichage des donnees disponibles.')
+          setNotice('Serveur indisponible pour le moment. Affichage des données disponibles.')
           setIsLocalMode(true)
         }
       })()
@@ -442,7 +446,7 @@ export default function AdminProviders() {
       try {
         loadProvidersFromLocalPlus()
         setIsLocalMode(true)
-        setNotice('Serveur indisponible pour le moment. Affichage des donnees disponibles.')
+        setNotice('Serveur indisponible pour le moment. Affichage des données disponibles.')
         setError(null)
       } catch {
         const msg = e?.message || 'Erreur lors du chargement'
@@ -601,7 +605,8 @@ export default function AdminProviders() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      {!embedded && (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <div className="text-xl font-black text-gray-900 dark:text-white">Prestataires</div>
           <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -629,7 +634,7 @@ export default function AdminProviders() {
             type="button"
             onClick={loadProviders}
             disabled={loading || isProcessing}
-            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold"
+            className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-bold"
           >
             Rafraîchir
           </button>
@@ -646,11 +651,58 @@ export default function AdminProviders() {
               disabled={loading || isProcessing}
               className="px-4 py-2 rounded-lg bg-gray-900 hover:bg-gray-800 disabled:opacity-60 text-white font-bold"
             >
-              Réinitialiser les donnees locales
+              Réinitialiser les données locales
             </button>
           )}
         </div>
       </div>
+      )}
+
+      {embedded && (
+        <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Prestataires</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Suivi des prestataires du secteur informel avec leurs statuts et visibilités.</p>
+            </div>
+            <div className="inline-flex items-center rounded-full bg-fuchsia-50 px-3 py-1 text-xs font-semibold text-fuchsia-900 dark:bg-fuchsia-900/30 dark:text-fuchsia-200">
+              Secteur informel
+            </div>
+          </div>
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher (nom, slug, email, telephone...)"
+              className="w-full sm:w-72 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            />
+            <button
+              type="button"
+              onClick={loadProviders}
+              disabled={loading || isProcessing}
+              className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-bold"
+            >
+              Rafraîchir
+            </button>
+            {isLocalMode && (
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    localStorage.removeItem(LOCAL_PROVIDERS_KEY)
+                  } catch {
+                  }
+                  loadProvidersFromLocalPlus()
+                }}
+                disabled={loading || isProcessing}
+                className="px-4 py-2 rounded-lg bg-gray-900 hover:bg-gray-800 disabled:opacity-60 text-white font-bold"
+              >
+                Réinitialiser les données locales
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-2 flex-wrap">
         <button
@@ -764,9 +816,9 @@ export default function AdminProviders() {
                         type="button"
                         onClick={() => window.open(`/provider/dashboard?vendorId=${encodeURIComponent(String(p.id))}`, '_blank', 'noopener,noreferrer')}
                         disabled={isProcessing}
-                        className="px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 disabled:opacity-60 text-white font-bold"
+                        className="px-3 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-bold"
                       >
-                        Dashboard
+                        Ouvrir
                       </button>
                       <button
                         type="button"

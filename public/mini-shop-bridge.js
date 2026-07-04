@@ -34,7 +34,7 @@
             console.log('✅ Utilisateur récupéré depuis Supabase localStorage');
             return sessionData.user;
           }
-        } catch (e) {
+        } catch {
           console.warn('Erreur lors du parsing du Supabase localStorage');
         }
       }
@@ -48,7 +48,7 @@
             console.log('✅ Utilisateur récupéré depuis localStorage personnalisé');
             return parsed.user;
           }
-        } catch (e) {
+        } catch {
           console.warn('Erreur lors du parsing du localStorage auth');
         }
       }
@@ -62,7 +62,7 @@
             console.log('✅ Utilisateur récupéré depuis sessionStorage');
             return parsed.user;
           }
-        } catch (e) {
+        } catch {
           console.warn('Erreur lors du parsing du sessionStorage');
         }
       }

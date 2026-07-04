@@ -1,10 +1,51 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { webRTCService, CallOptions, LiveShoppingOptions } from '../services/WebRTCService';
 import { useAuth } from '../contexts/AuthContext';
-import { Button } from './ui/Button';
-import { Card } from './ui/Card';
-import { Badge } from './ui/Badge';
 import { Mic, MicOff, Video, VideoOff, Phone, PhoneOff, Monitor, MonitorOff, Users, ShoppingBag, Settings, Maximize2, Minimize2 } from 'lucide-react';
+
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: 'default' | 'outline' | 'destructive' | 'ghost';
+  size?: 'sm' | 'default' | 'lg' | 'icon';
+};
+
+const Button: React.FC<ButtonProps> = ({ variant = 'default', className = '', children, ...props }) => {
+  const variantClass =
+    variant === 'outline'
+      ? 'border border-gray-300 bg-white text-gray-900 hover:bg-gray-50'
+      : variant === 'destructive'
+        ? 'bg-red-600 text-white hover:bg-red-700'
+        : variant === 'ghost'
+          ? 'bg-transparent text-gray-700 hover:bg-gray-100'
+        : 'bg-orange-600 text-white hover:bg-orange-700';
+  return (
+    <button
+      {...props}
+      className={`inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${variantClass} ${className}`}
+    >
+      {children}
+    </button>
+  );
+};
+
+const Card: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ className = '', children, ...props }) => (
+  <div {...props} className={`rounded-xl border border-gray-200 bg-white shadow-sm ${className}`}>
+    {children}
+  </div>
+);
+
+const Badge: React.FC<React.HTMLAttributes<HTMLSpanElement> & { variant?: 'default' | 'destructive' }> = ({
+  variant = 'default',
+  className = '',
+  children,
+  ...props
+}) => {
+  const variantClass = variant === 'destructive' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700';
+  return (
+    <span {...props} className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${variantClass} ${className}`}>
+      {children}
+    </span>
+  );
+};
 
 interface RealVideoCallProps {
   roomId?: string;

@@ -12,7 +12,7 @@ const isProd = safeLower(process.env.NODE_ENV) === 'production'
 const normalizeSlug = (v: any) => safeLower(v)
 const safeCode = (v: any) => safeString(v)
 
-type Issued = {
+type _Issued = {
   storage: 'supabase' | 'local'
   shopSlug: string
   pin: string
@@ -44,7 +44,7 @@ const buildUrl = (origin: string, token: string) => {
   return o ? `${o}${path}` : path
 }
 
-const withTimeout = async <T>(p: Promise<T>, timeoutMs: number): Promise<T> => {
+const withTimeout = async <T>(p: PromiseLike<T>, timeoutMs: number): Promise<T> => {
   const ms = Math.max(0, Math.floor(Number(timeoutMs || 0)))
   if (!ms) return await p
   return await Promise.race([

@@ -1,191 +1,270 @@
-import { useState, useEffect } from 'react';
-import { useTheme } from '../hooks/useTheme';
-import { 
-  Package, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
-  Truck,
-  DollarSign,
-  User,
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
   Calendar,
-  Filter,
-  Search,
+  CheckCircle,
+  Clock,
+  DollarSign,
   Eye,
-  Download,
-  RefreshCw,
+  MapPin,
+  Package,
+  Search,
   Star,
-  MessageCircle,
-  MapPin
+  Truck,
+  User,
 } from 'lucide-react';
+import { useTheme } from '../hooks/useTheme';
 import VendorClientInvoiceModal, { type VendorOrder } from './invoice/VendorClientInvoiceModal';
+
+interface OrderItem {
+  name: string;
+  qty?: number;
+  quantity?: number;
+  unitPriceCents?: number;
+  total?: number;
+  price?: number;
+}
 
 interface Order {
   id: string;
+  sourceOrderId?: string;
+  customerId?: string | null;
   customerName: string;
-  customerPhone: string;
-  customerAddress: string;
-  items: {
-    name: string;
-    quantity: number;
-    price: number;
-    total: number;
-  }[];
-  totalAmount: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  orderDate: string;
-  estimatedDelivery: string;
-  paymentMethod: string;
-  notes?: string;
-  rating?: number;
+  customerEmail?: string | null;
+  customerPhone?: string | null;
+  customerAddress?: string | null;
+  items: OrderItem[];
+  totalCents?: number;
+  currency?: string;
+  status: string;
+  createdAt: string;
+  payment?: { provider?: string } | null;
+  vendorId?: string | null;
+  vendorKind?: string | null;
+  vendorName?: string | null;
+  vendorOwnerEmail?: string | null;
+  shopSlug?: string | null;
 }
 
 interface VendorOrderHistoryProps {
   vendorId: string;
 }
 
+const VENDOR_ORDERS_KEY = 'mangoo_vendor_orders_v1';
+
+function readJson(key: string): any {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeText(value: unknown): string {
+  return String(value || '').trim();
+}
+
+function normalizeSlug(value: unknown): string {
+  return normalizeText(value).toLowerCase();
+}
+
+function normalizeVendorId(value: unknown): string {
+  return normalizeText(value).replace(/^shop:/i, '').replace(/^provider:/i, '').replace(/^shop-/i, '');
+}
+
+function readVendorOrdersMap(): Record<string, Order[]> {
+  const data = readJson(VENDOR_ORDERS_KEY);
+  return data && typeof data === 'object' ? data : {};
+}
+
+function readShopDirectory(): any[] {
+  const demo = readJson('demo_shops');
+  const cache = readJson('mangoo_shops_directory_cache_v1');
+  return [
+    ...(Array.isArray(demo) ? demo : []),
+    ...(Array.isArray(cache?.shops) ? cache.shops : []),
+  ].filter((entry) => entry && typeof entry === 'object');
+}
+
+function readVendorDirectory(): any[] {
+  const legacy = readJson('mangoo_vendors');
+  const custom = readJson('mangoo_custom_vendors');
+  return [
+    ...(Array.isArray(legacy) ? legacy : []),
+    ...(Array.isArray(custom) ? custom : []),
+  ].filter((entry) => entry && typeof entry === 'object');
+}
+
+function resolveOwnedVendorKeys(vendorIdProp: string): string[] {
+  const keys = new Set<string>();
+  const normalizedVendorId = normalizeVendorId(vendorIdProp);
+  const currentUser = readJson('mangoo-current-user') || readJson('user') || null;
+  const email = normalizeText(currentUser?.email).toLowerCase();
+  const editShopSlug = normalizeSlug(localStorage.getItem('mangoo-vendor-edit-shop-slug') || '');
+
+  if (normalizedVendorId && normalizedVendorId !== 'vendor-demo') keys.add(`vendor:${normalizedVendorId}`);
+  if (editShopSlug) keys.add(`shop:${editShopSlug}`);
+  if (email) keys.add(`email:${email}`);
+
+  const shops = readShopDirectory();
+  shops.forEach((shop) => {
+    const ownerEmail = normalizeText(shop?.ownerEmail || shop?.owner_email || shop?.email).toLowerCase();
+    if (!email || ownerEmail !== email) return;
+    const slug = normalizeSlug(shop?.slug);
+    const sourceVendorId = normalizeVendorId(shop?.sourceVendorId || shop?.source_vendor_id || shop?.vendorId || shop?.vendor_id || shop?.id);
+    if (slug) keys.add(`shop:${slug}`);
+    if (sourceVendorId) keys.add(`vendor:${sourceVendorId}`);
+  });
+
+  const vendors = readVendorDirectory();
+  vendors.forEach((vendor) => {
+    const ownerEmail = normalizeText(vendor?.ownerEmail || vendor?.owner_email || vendor?.email).toLowerCase();
+    if (!email || ownerEmail !== email) return;
+    const id = normalizeVendorId(vendor?.id || vendor?.vendorId || vendor?.vendor_id);
+    if (id) keys.add(`vendor:${id}`);
+  });
+
+  return Array.from(keys);
+}
+
+function orderAmount(order: Order): number {
+  const cents = Number(order?.totalCents || 0) || 0;
+  if (cents > 0) return Math.round(cents / 100);
+  return (Array.isArray(order?.items) ? order.items : []).reduce((sum, item) => {
+    const qty = Number(item?.qty || item?.quantity || 0) || 0;
+    const centsValue = Number(item?.unitPriceCents || 0) || 0;
+    const total = Number(item?.total || 0) || 0;
+    const price = Number(item?.price || 0) || 0;
+    if (centsValue > 0 && qty > 0) return sum + Math.round((centsValue * qty) / 100);
+    if (total > 0) return sum + total;
+    if (price > 0 && qty > 0) return sum + price * qty;
+    return sum;
+  }, 0);
+}
+
+function buildInvoiceOrder(order: Order): VendorOrder {
+  return {
+    id: order.id,
+    customerName: order.customerName,
+    customerPhone: String(order.customerPhone || ''),
+    customerAddress: String(order.customerAddress || ''),
+    items: (Array.isArray(order.items) ? order.items : []).map((item) => {
+      const quantity = Number(item?.qty || item?.quantity || 0) || 0;
+      const total = Number(item?.total || 0) || 0;
+      const unit = Number(item?.unitPriceCents || 0) > 0
+        ? Math.round((Number(item?.unitPriceCents || 0) || 0) / 100)
+        : (Number(item?.price || 0) || 0);
+      return {
+        name: String(item?.name || 'Article'),
+        quantity,
+        price: unit,
+        total: total > 0 ? total : unit * quantity,
+      };
+    }),
+    totalAmount: orderAmount(order),
+    status: order.status,
+    orderDate: order.createdAt,
+    paymentMethod: String(order?.payment?.provider || 'Paiement confirmé'),
+    notes: order.vendorName ? `Boutique: ${order.vendorName}` : undefined,
+  };
+}
+
 export default function VendorOrderHistory({ vendorId }: VendorOrderHistoryProps) {
   const { isDark } = useTheme();
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [dateFilter, setDateFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [invoiceOrder, setInvoiceOrder] = useState<VendorOrder | null>(null);
 
-  // DonnÃ©es de dÃ©monstration
-  const generateDemoOrders = (): Order[] => [
-    {
-      id: 'ORD-001',
-      customerName: 'Marie KonatÃ©',
-      customerPhone: '+225 07 07 07 07',
-      customerAddress: 'Cocody, Rue 12, Abidjan',
-      items: [
-        { name: 'Cocomm DT740', quantity: 1, price: 150000, total: 150000 },
-        { name: 'Coque de protection', quantity: 1, price: 5000, total: 5000 }
-      ],
-      totalAmount: 155000,
-      status: 'delivered',
-      orderDate: '2024-01-15',
-      estimatedDelivery: '2024-01-17',
-      paymentMethod: 'MTN Money',
-      notes: 'Client demande livraison rapide',
-      rating: 5
-    },
-    {
-      id: 'ORD-002',
-      customerName: 'Jean Yao',
-      customerPhone: '+225 05 05 05 05',
-      customerAddress: 'Yopougon, MarchÃ© principal, Abidjan',
-      items: [
-        { name: 'Pagne Traditionnel Wax', quantity: 2, price: 25000, total: 50000 }
-      ],
-      totalAmount: 50000,
-      status: 'processing',
-      orderDate: '2024-01-16',
-      estimatedDelivery: '2024-01-18',
-      paymentMethod: 'Orange Money',
-      notes: 'Cadeau pour mariage'
-    },
-    {
-      id: 'ORD-003',
-      customerName: 'Aminata Diallo',
-      customerPhone: '+225 01 01 01 01',
-      customerAddress: 'Marcory, Boulevard ValÃ©ry Giscard d\'Estaing, Abidjan',
-      items: [
-        { name: 'MafÃ© Maison SpÃ©cial', quantity: 3, price: 3500, total: 10500 },
-        { name: 'AttiÃ©kÃ© Premium', quantity: 2, price: 2000, total: 4000 }
-      ],
-      totalAmount: 14500,
-      status: 'shipped',
-      orderDate: '2024-01-16',
-      estimatedDelivery: '2024-01-17',
-      paymentMethod: 'EspÃ¨ces'
-    },
-    {
-      id: 'ORD-004',
-      customerName: 'Kouassi KouamÃ©',
-      customerPhone: '+225 07 07 08 08',
-      customerAddress: 'Treichville, Avenue 13, Abidjan',
-      items: [
-        { name: 'Bijou Artisanal Perles', quantity: 1, price: 15000, total: 15000 }
-      ],
-      totalAmount: 15000,
-      status: 'pending',
-      orderDate: '2024-01-17',
-      estimatedDelivery: '2024-01-19',
-      paymentMethod: 'Carte Bancaire'
-    },
-    {
-      id: 'ORD-005',
-      customerName: 'Fatou Camara',
-      customerPhone: '+225 05 06 07 08',
-      customerAddress: 'AdjamÃ©, MarchÃ©, Abidjan',
-      items: [
-        { name: 'Tissu Wax Premium', quantity: 5, price: 30000, total: 150000 }
-      ],
-      totalAmount: 150000,
-      status: 'cancelled',
-      orderDate: '2024-01-14',
-      estimatedDelivery: '2024-01-16',
-      paymentMethod: 'Moov Money',
-      notes: 'Annulation client - changement d\'avis'
-    }
-  ];
-
   useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      const demoOrders = generateDemoOrders();
-      setOrders(demoOrders);
-      setFilteredOrders(demoOrders);
-      setLoading(false);
-    }, 1000);
+    const load = () => {
+      setLoading(true);
+      try {
+        const keys = resolveOwnedVendorKeys(vendorId);
+        const map = readVendorOrdersMap();
+        const merged = new Map<string, Order>();
+        keys.forEach((key) => {
+          const list = Array.isArray(map[key]) ? map[key] : [];
+          list.forEach((order) => {
+            const id = String(order?.id || '').trim();
+            if (!id) return;
+            merged.set(id, order);
+          });
+        });
+        const list = Array.from(merged.values()).sort((a, b) => Date.parse(String(b?.createdAt || '')) - Date.parse(String(a?.createdAt || '')));
+        setOrders(list);
+      } catch {
+        setOrders([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+    const onStorage = () => load();
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('focus', onStorage);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('focus', onStorage);
+    };
   }, [vendorId]);
 
-  useEffect(() => {
-    let filtered = orders;
+  const deliveryMap = useMemo(() => {
+    const data = readJson('mangoo-delivery-by-order');
+    return data && typeof data === 'object' ? data : {};
+  }, [orders]);
 
-    if (searchTerm) {
-      filtered = filtered.filter(order =>
-        order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.items.some(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
+  const filteredOrders = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return orders;
+    return orders.filter((order) => {
+      const hay = [
+        order.id,
+        order.customerName,
+        order.customerAddress,
+        order.vendorName,
+        ...(Array.isArray(order.items) ? order.items.map((item) => String(item?.name || '')) : []),
+      ].join(' ').toLowerCase();
+      return hay.includes(term);
+    });
+  }, [orders, searchTerm]);
+
+  const totalRevenue = useMemo(() => filteredOrders.reduce((sum, order) => sum + orderAmount(order), 0), [filteredOrders]);
+
+  const handleLaunchDelivery = (order: Order) => {
+    const sourceOrderId = String(order?.sourceOrderId || order?.id || '').trim();
+    if (!sourceOrderId) return;
+    const payload = {
+      createdAt: new Date().toISOString(),
+      triggeredBy: 'vendor-formel',
+      order: {
+        ...order,
+        id: sourceOrderId,
+      },
+      user: {
+        id: String(order?.customerId || order?.customerEmail || `client_${sourceOrderId}`),
+        email: String(order?.customerEmail || ''),
+        name: String(order?.customerName || 'Client'),
+        phone: String(order?.customerPhone || ''),
+        address: String(order?.customerAddress || ''),
+        role: 'client',
+      },
+    };
+    try {
+      localStorage.setItem('mangoo-delivery-source-order', JSON.stringify(payload));
+    } catch {
     }
-
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(order => order.status === statusFilter);
-    }
-
-    if (dateFilter !== 'all') {
-      const today = new Date();
-      const filterDate = new Date();
-      
-      switch (dateFilter) {
-        case 'today':
-          filtered = filtered.filter(order => order.orderDate === today.toISOString().split('T')[0]);
-          break;
-        case 'week':
-          filterDate.setDate(today.getDate() - 7);
-          filtered = filtered.filter(order => new Date(order.orderDate) >= filterDate);
-          break;
-        case 'month':
-          filterDate.setMonth(today.getMonth() - 1);
-          filtered = filtered.filter(order => new Date(order.orderDate) >= filterDate);
-          break;
-      }
-    }
-
-    setFilteredOrders(filtered);
-  }, [orders, searchTerm, statusFilter, dateFilter]);
+    navigate(`/checkout/livraison?src=vendor_formel&orderId=${encodeURIComponent(sourceOrderId)}`);
+  };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    switch (String(status || '').toLowerCase()) {
+      case 'paid':
+        return 'bg-emerald-100 text-emerald-800 border-emerald-200';
       case 'processing':
         return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'shipped':
@@ -200,9 +279,9 @@ export default function VendorOrderHistory({ vendorId }: VendorOrderHistoryProps
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Clock className="h-4 w-4" />;
+    switch (String(status || '').toLowerCase()) {
+      case 'paid':
+        return <DollarSign className="h-4 w-4" />;
       case 'processing':
         return <Package className="h-4 w-4" />;
       case 'shipped':
@@ -210,295 +289,208 @@ export default function VendorOrderHistory({ vendorId }: VendorOrderHistoryProps
       case 'delivered':
         return <CheckCircle className="h-4 w-4" />;
       case 'cancelled':
-        return <XCircle className="h-4 w-4" />;
+        return <Clock className="h-4 w-4" />;
       default:
-        return null;
+        return <Package className="h-4 w-4" />;
     }
-  };
-
-  const updateOrderStatus = (orderId: string, newStatus: Order['status']) => {
-    setOrders(prev => prev.map(order => 
-      order.id === orderId ? { ...order, status: newStatus } : order
-    ));
   };
 
   if (loading) {
     return (
       <div className={`p-6 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded mb-4 w-1/3"></div>
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className={`h-20 ${isDark ? 'bg-gray-700' : 'bg-gray-200'} rounded`}></div>
-            ))}
-          </div>
+        <div className="animate-pulse space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className={`h-20 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+          ))}
         </div>
       </div>
     );
   }
 
-  const totalRevenue = orders
-    .filter(order => order.status === 'delivered')
-    .reduce((sum, order) => sum + order.totalAmount, 0);
-
-  const pendingOrders = orders.filter(order => order.status === 'pending').length;
-
   return (
     <div className={`space-y-6 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      {/* Header avec statistiques */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            Historique des Commandes
-          </h2>
+          <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Commandes clients</h2>
           <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mt-1`}>
-            {filteredOrders.length} commandes â€¢ {totalRevenue.toLocaleString()} FCFA de revenus
+            {filteredOrders.length} commande(s) • {totalRevenue.toLocaleString('fr-FR')} FCFA
           </p>
         </div>
-        <div className="flex items-center space-x-2 text-sm">
-          <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${isDark ? 'bg-yellow-900/20 text-yellow-400' : 'bg-yellow-100 text-yellow-800'}`}>
-            <Clock className="h-4 w-4" />
-            <span>{pendingOrders} En attente</span>
-          </div>
+        <div className={`px-3 py-2 rounded-lg text-sm font-black ${isDark ? 'bg-emerald-900/20 text-emerald-400' : 'bg-emerald-100 text-emerald-800'}`}>
+          Secteur formel : le vendeur lance la livraison
         </div>
       </div>
 
-      {/* Filtres */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
-          <input
-            type="text"
-            placeholder="Rechercher une commande..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={`w-full pl-10 pr-4 py-2 rounded-lg border ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
-          />
-        </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className={`px-4 py-2 rounded-lg border ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
-        >
-          <option value="all">Tous les statuts</option>
-          <option value="pending">En attente</option>
-          <option value="processing">En traitement</option>
-          <option value="shipped">ExpÃ©diÃ©</option>
-          <option value="delivered">LivrÃ©</option>
-          <option value="cancelled">AnnulÃ©</option>
-        </select>
-        <select
-          value={dateFilter}
-          onChange={(e) => setDateFilter(e.target.value)}
-          className={`px-4 py-2 rounded-lg border ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
-        >
-          <option value="all">Toutes les dates</option>
-          <option value="today">Aujourd'hui</option>
-          <option value="week">Cette semaine</option>
-          <option value="month">Ce mois</option>
-        </select>
+      <div className="relative">
+        <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+        <input
+          type="text"
+          placeholder="Rechercher une commande client..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className={`w-full pl-10 pr-4 py-2 rounded-lg border ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
+        />
       </div>
 
-      {/* Liste des commandes */}
       <div className="space-y-4">
-        {filteredOrders.map((order) => (
-          <div key={order.id} className={`rounded-xl shadow-lg p-6 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-3">
-                    <span className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      {order.id}
+        {filteredOrders.map((order) => {
+          const sourceOrderId = String(order?.sourceOrderId || order?.id || '');
+          const deliveryEntry = deliveryMap?.[sourceOrderId] || null;
+          const deliveryLaunched = Boolean(deliveryEntry?.courierOrderId);
+          return (
+            <div key={order.id} className={`rounded-xl shadow-lg p-6 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2 gap-4">
+                    <div className="flex items-center space-x-3 flex-wrap">
+                      <span className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{order.id}</span>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(order.status)}`}>
+                        {getStatusIcon(order.status)}
+                        <span className="ml-1 capitalize">{String(order.status || '').replace('_', ' ')}</span>
+                      </span>
+                      {deliveryLaunched && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-black bg-orange-100 text-orange-800 border border-orange-200">
+                          ?? Livraison lancée
+                        </span>
+                      )}
+                    </div>
+                    <span className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                      {orderAmount(order).toLocaleString('fr-FR')} FCFA
                     </span>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(order.status)}`}>
-                      {getStatusIcon(order.status)}
-                      <span className="ml-1 capitalize">{order.status.replace('_', ' ')}</span>
-                    </span>
-                    {order.rating && (
-                      <div className="flex items-center space-x-1">
-                        {[...Array(order.rating)].map((_, i) => (
-                          <Star key={i} className="h-3 w-3 text-yellow-400 fill-current" />
-                        ))}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                    <div>
+                      <div className="flex items-center space-x-2 mb-1">
+                        <User className={`h-4 w-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                        <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{order.customerName}</span>
                       </div>
-                    )}
-                  </div>
-                  <span className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    {order.totalAmount.toLocaleString()} FCFA
-                  </span>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                  <div>
-                    <div className="flex items-center space-x-2 mb-1">
-                      <User className={`h-4 w-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
-                      <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                        {order.customerName}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2 mb-1">
-                      <MapPin className={`h-4 w-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
-                      <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                        {order.customerAddress}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <DollarSign className={`h-4 w-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
-                      <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                        {order.paymentMethod}
-                      </span>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center space-x-2 mb-1">
-                      <Calendar className={`h-4 w-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
-                      <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                        CommandÃ©: {new Date(order.orderDate).toLocaleDateString('fr-FR')}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Truck className={`h-4 w-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
-                      <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Livraison: {new Date(order.estimatedDelivery).toLocaleDateString('fr-FR')}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <p className={`text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Articles:
-                  </p>
-                  <div className="space-y-1">
-                    {order.items.map((item, index) => (
-                      <div key={index} className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                        {item.quantity}x {item.name} - {item.price.toLocaleString()} FCFA
+                      <div className="flex items-center space-x-2 mb-1">
+                        <MapPin className={`h-4 w-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                        <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{order.customerAddress || 'Adresse client à compléter'}</span>
                       </div>
-                    ))}
+                      <div className="flex items-center space-x-2">
+                        <DollarSign className={`h-4 w-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                        <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{String(order?.payment?.provider || 'Paiement confirmé')}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center space-x-2 mb-1">
+                        <Calendar className={`h-4 w-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                        <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Commande : {new Date(order.createdAt).toLocaleString('fr-FR')}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Package className={`h-4 w-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                        <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{order.items.length} article(s)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <p className={`text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Articles :</p>
+                    <div className="space-y-1">
+                      {order.items.map((item, index) => {
+                        const quantity = Number(item?.qty || item?.quantity || 0) || 0;
+                        const unit = Number(item?.unitPriceCents || 0) > 0 ? Math.round((Number(item?.unitPriceCents || 0) || 0) / 100) : (Number(item?.price || 0) || 0);
+                        return (
+                          <div key={`${order.id}-${index}`} className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                            {quantity}x {String(item?.name || 'Article')} - {unit.toLocaleString('fr-FR')} FCFA
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
 
-                {order.notes && (
-                  <div className={`p-2 rounded text-sm ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'}`}>
-                    <strong>Notes:</strong> {order.notes}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-end space-y-2 sm:space-y-0 sm:space-x-2">
-                <button
-                  onClick={() => setSelectedOrder(order)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm ${isDark ? 'bg-blue-900/20 text-blue-400 hover:bg-blue-900/30' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
-                >
-                  <Eye className="h-4 w-4" />
-                  <span>DÃ©tails</span>
-                </button>
-                
-                {order.status === 'pending' && (
+                <div className="flex flex-col sm:flex-row items-end gap-2">
                   <button
-                    onClick={() => updateOrderStatus(order.id, 'processing')}
-                    className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm bg-orange-500 text-white hover:bg-orange-600"
+                    onClick={() => setSelectedOrder(order)}
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm ${isDark ? 'bg-blue-900/20 text-blue-400 hover:bg-blue-900/30' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
                   >
-                    <Package className="h-4 w-4" />
-                    <span>Traiter</span>
+                    <Eye className="h-4 w-4" />
+                    <span>Détails</span>
                   </button>
-                )}
-                
-                {order.status === 'processing' && (
                   <button
-                    onClick={() => updateOrderStatus(order.id, 'shipped')}
-                    className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm bg-blue-500 text-white hover:bg-blue-600"
+                    onClick={() => setInvoiceOrder(buildInvoiceOrder(order))}
+                    className={`${isDark ? 'bg-white/5 border border-white/10 hover:bg-white/10 text-white' : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-900'} px-4 py-2 rounded-xl font-black transition-colors`}
                   >
-                    <Truck className="h-4 w-4" />
-                    <span>ExpÃ©dier</span>
+                    ?? Facture
                   </button>
-                )}
-                
-                {order.status === 'shipped' && (
                   <button
-                    onClick={() => updateOrderStatus(order.id, 'delivered')}
-                    className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm bg-green-500 text-white hover:bg-green-600"
+                    onClick={() => handleLaunchDelivery(order)}
+                    disabled={deliveryLaunched}
+                    className={deliveryLaunched
+                      ? `${isDark ? 'bg-white/5 border border-white/10 text-gray-400' : 'bg-white border border-gray-200 text-gray-400'} px-4 py-2 rounded-xl font-black opacity-70 cursor-not-allowed`
+                      : 'px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-green-600 text-white font-black hover:from-orange-600 hover:to-green-700 transition-all'
+                    }
+                    title={deliveryLaunched ? 'La livraison a déjà été lancée pour cette commande' : 'Déclencher la livraison une fois le colis prêt'}
                   >
-                    <CheckCircle className="h-4 w-4" />
-                    <span>Livrer</span>
+                    {deliveryLaunched ? '? Livraison lancée' : '?? Colis prêt -> Lancer la livraison'}
                   </button>
-                )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-        
+          );
+        })}
+
         {filteredOrders.length === 0 && (
           <div className={`text-center py-8 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
             <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Aucune commande trouvÃ©e</p>
+            <p>Aucune commande vendeur trouvée</p>
+            <p className="text-sm mt-2">Les commandes payées apparaissent ici pour lancer la livraison côté vendeur.</p>
           </div>
         )}
       </div>
 
-      {/* Modal de dÃ©tails */}
       {selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className={`rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
-                <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  DÃ©tails de la commande {selectedOrder.id}
-                </h3>
+                <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Détails de la commande {selectedOrder.id}</h3>
                 <button
                   onClick={() => setSelectedOrder(null)}
                   className={`text-2xl ${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-600 hover:text-gray-800'}`}
                 >
-                  âœ•
+                  ?
                 </button>
               </div>
-              
+
               <div className="space-y-4">
                 <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
                   <h4 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Informations client</h4>
-                  <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Nom:</strong> {selectedOrder.customerName}</p>
-                  <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>TÃ©lÃ©phone:</strong> {selectedOrder.customerPhone}</p>
-                  <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Adresse:</strong> {selectedOrder.customerAddress}</p>
+                  <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Nom :</strong> {selectedOrder.customerName}</p>
+                  <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Téléphone :</strong> {selectedOrder.customerPhone || '—'}</p>
+                  <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Adresse :</strong> {selectedOrder.customerAddress || '—'}</p>
                 </div>
-                
                 <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                  <h4 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>DÃ©tails de la commande</h4>
-                  <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Date:</strong> {new Date(selectedOrder.orderDate).toLocaleDateString('fr-FR')}</p>
-                  <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Statut:</strong> {selectedOrder.status}</p>
-                  <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Paiement:</strong> {selectedOrder.paymentMethod}</p>
-                  <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Total:</strong> {selectedOrder.totalAmount.toLocaleString()} FCFA</p>
+                  <h4 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Détails</h4>
+                  <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Date :</strong> {new Date(selectedOrder.createdAt).toLocaleString('fr-FR')}</p>
+                  <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Statut :</strong> {selectedOrder.status}</p>
+                  <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Paiement :</strong> {String(selectedOrder?.payment?.provider || 'Paiement confirmé')}</p>
+                  <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Total :</strong> {orderAmount(selectedOrder).toLocaleString('fr-FR')} FCFA</p>
                 </div>
-                
                 <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
                   <h4 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Articles</h4>
-                  {selectedOrder.items.map((item, index) => (
-                    <div key={index} className={`flex justify-between items-center py-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                      <span>{item.quantity}x {item.name}</span>
-                      <span>{item.total.toLocaleString()} FCFA</span>
-                    </div>
-                  ))}
+                  {selectedOrder.items.map((item, index) => {
+                    const quantity = Number(item?.qty || item?.quantity || 0) || 0;
+                    const unit = Number(item?.unitPriceCents || 0) > 0 ? Math.round((Number(item?.unitPriceCents || 0) || 0) / 100) : (Number(item?.price || 0) || 0);
+                    return (
+                      <div key={index} className={`flex justify-between items-center py-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                        <span>{quantity}x {String(item?.name || 'Article')}</span>
+                        <span>{(unit * quantity).toLocaleString('fr-FR')} FCFA</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-              
-              <div className="mt-6 flex justify-end">
+
+              <div className="mt-6 flex justify-end gap-2">
                 <button
-                  onClick={() => {
-                    const o = selectedOrder;
-                    setInvoiceOrder({
-                      id: o.id,
-                      customerName: o.customerName,
-                      customerPhone: o.customerPhone,
-                      customerAddress: o.customerAddress,
-                      items: o.items,
-                      totalAmount: o.totalAmount,
-                      status: o.status,
-                      orderDate: o.orderDate,
-                      paymentMethod: o.paymentMethod,
-                      notes: o.notes
-                    });
-                  }}
-                  className={`mr-2 px-4 py-2 rounded-lg font-semibold ${isDark ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}
+                  onClick={() => setInvoiceOrder(buildInvoiceOrder(selectedOrder))}
+                  className="px-4 py-2 rounded-lg font-semibold bg-emerald-600 text-white hover:bg-emerald-700"
                 >
-                  ðŸ§¾ Ã‰mettre facture
+                  ?? Émettre facture
                 </button>
                 <button
                   onClick={() => setSelectedOrder(null)}

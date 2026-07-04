@@ -1,19 +1,29 @@
 import React from 'react';
 import AdminShopsFinalFix from './AdminShopsFinalFix';
 
+type AdminShopsErrorBoundaryProps = {
+  children?: React.ReactNode;
+};
+
+type AdminShopsErrorBoundaryState = {
+  hasError: boolean;
+  error: Error | null;
+  errorInfo: React.ErrorInfo | null;
+};
+
 // Error Boundary spécifique pour la gestion des boutiques
-class AdminShopsErrorBoundary extends React.Component {
-  constructor(props) {
+class AdminShopsErrorBoundary extends React.Component<AdminShopsErrorBoundaryProps, AdminShopsErrorBoundaryState> {
+  constructor(props: AdminShopsErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null, errorInfo: null };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(_error: Error): Partial<AdminShopsErrorBoundaryState> {
     // Mettre à jour l'état pour afficher l'UI de secours
     return { hasError: true };
   }
 
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Log l'erreur pour le débogage
     console.error('❌ ERREUR CRITIQUE dans AdminShops:', error);
     console.error('📋 Détails de l\'erreur:', errorInfo);

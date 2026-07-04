@@ -529,7 +529,7 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
                   <div className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Actif</div>
                   <button
                     type="button"
-                    onClick={() => setCreateDraft((prev) => ({ ...prev, active: !Boolean(prev.active) }))}
+                    onClick={() => setCreateDraft((prev) => ({ ...prev, active: !prev.active }))}
                     className={`w-full px-3 py-2 rounded-lg text-xs font-bold ${
                       createDraft.active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
                     }`}

@@ -195,7 +195,7 @@ app.get('*', (req: Request, res: Response, next: NextFunction) => {
  */
 app.use(
   '/api/health',
-  (req: Request, res: Response, next: NextFunction): void => {
+  (_req: Request, res: Response): void => {
     res.status(200).json({
       success: true,
       message: 'ok',
@@ -206,7 +206,7 @@ app.use(
 /**
  * error handler middleware
  */
-app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((error: Error, _req: Request, res: Response, _next: NextFunction) => {
   try {
     console.log(error)
   } catch {

@@ -55,7 +55,7 @@ export const defaultDeliveryConfig: DeliveryFeeConfig = {
 };
 
 // Points de référence pour les distances (coordonnées approximatives)
-const referencePoints = {
+const _referencePoints = {
   cocody: { lat: 5.3600, lng: -4.0083, name: 'Cocody' },
   plateau: { lat: 5.3200, lng: -4.0300, name: 'Plateau' },
   marcory: { lat: 5.2900, lng: -4.0100, name: 'Marcory' },
@@ -79,7 +79,7 @@ function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
 /**
  * Détermine le district à partir des coordonnées GPS
  */
-function getDistrictFromCoordinates(lat: number, lng: number): string {
+function _getDistrictFromCoordinates(lat: number, lng: number): string {
   // Cette fonction utilise des approximations basées sur les coordonnées
   // Dans une application réelle, cela nécessiterait une API de géocodage
   

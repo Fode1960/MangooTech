@@ -120,7 +120,9 @@ interface QuickAction {
   title: string;
   description: string;
   icon: any;
-  action: () => void;
+  action?: () => void;
+  path?: string;
+  external?: boolean;
   color: string;
 }
 
@@ -177,8 +179,8 @@ export default function AdminDashboard() {
     const { demoStats, demoTimeSeries, demoCountries, demoTopShops } = generateDemoData();
     setStats(demoStats);
     setPaymentMethods([
-      { name: 'Mobile Money', value: demoStats.payments.mobile_money_breakdown.orange + demoStats.payments.mobile_money_breakdown.mtn + demoStats.payments.mobile_money_breakdown.moov, color: '#3B82F6' },
-      { name: 'Carte Bancaire', value: demoStats.payments.methods_distribution.card || 267, color: '#EF4444' },
+      { name: 'Mobile Money', value: demoStats.payments.mobile_money_breakdown.orange + demoStats.payments.mobile_money_breakdown.mtn + demoStats.payments.mobile_money_breakdown.moov, color: '#F97316' },
+      { name: 'Carte Bancaire', value: demoStats.payments.methods_distribution.card || 267, color: '#16A34A' },
       { name: 'Espèces', value: demoStats.payments.methods_distribution.cash || 157, color: '#F59E0B' }
     ]);
     setTopShops(demoTopShops);
@@ -448,17 +450,17 @@ export default function AdminDashboard() {
       action: () => {
         navigate('/admin/shops');
       },
-      color: 'blue'
+      color: 'orange'
     },
     {
       id: 'mangoo-wallet',
-      title: 'Mangoo Wallet',
+      title: 'Portefeuille',
       description: 'Gérer la trésorerie et les crédits BNPL',
       icon: Wallet,
       action: () => {
         navigate('/admin/wallet');
       },
-      color: 'blue'
+      color: 'orange'
     },
     {
       id: 'mangoo-local',
@@ -492,7 +494,7 @@ export default function AdminDashboard() {
       description: 'Télécharger les rapports en CSV/PDF',
       icon: Download,
       action: () => exportDashboardData(),
-      color: 'purple'
+      color: 'amber'
     }
   ];
 
@@ -500,8 +502,8 @@ export default function AdminDashboard() {
     return (
       <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} p-6 flex items-center justify-center`}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>Chargement du dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>Chargement du tableau de bord...</p>
         </div>
       </div>
     );
@@ -525,8 +527,8 @@ export default function AdminDashboard() {
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Tableau de Bord Admin</h1>
-              <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} mt-1`}>Vue d'ensemble de la plateforme MangooTech</p>
+              <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Tableau de bord</h1>
+              <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} mt-1`}>Vue d'ensemble de la plateforme Mangoo Tech</p>
               <div className="flex items-center space-x-2 mt-2">
                 <div className={`flex items-center text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                   <Clock className="h-4 w-4 mr-1" />
@@ -549,7 +551,7 @@ export default function AdminDashboard() {
               <select
                 value={period}
                 onChange={(e) => setPeriod(Number(e.target.value))}
-                className={`px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
                   isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
                 }`}
               >
@@ -575,8 +577,8 @@ export default function AdminDashboard() {
                   {stats.shops.new_this_period} nouvelles ({period}j)
                 </p>
               </div>
-              <div className={`p-3 rounded-lg ${isDark ? 'bg-blue-900/20' : 'bg-blue-100'}`}>
-                <Store className={`h-6 w-6 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+              <div className={`p-3 rounded-lg ${isDark ? 'bg-orange-900/20' : 'bg-orange-100'}`}>
+                <Store className={`h-6 w-6 ${isDark ? 'text-orange-400' : 'text-orange-600'}`} />
               </div>
             </div>
             <div className={`mt-4 pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
@@ -634,13 +636,13 @@ export default function AdminDashboard() {
                     stats.payments.mobile_money_breakdown.moov
                   )}
                 </p>
-                <p className={`text-sm mt-1 ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                <p className={`text-sm mt-1 ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
                   <Smartphone className="inline h-4 w-4 mr-1" />
                   Paiements mobiles
                 </p>
               </div>
-              <div className={`p-3 rounded-lg ${isDark ? 'bg-purple-900/20' : 'bg-purple-100'}`}>
-                <Smartphone className={`h-6 w-6 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+              <div className={`p-3 rounded-lg ${isDark ? 'bg-amber-900/20' : 'bg-amber-100'}`}>
+                <Smartphone className={`h-6 w-6 ${isDark ? 'text-amber-300' : 'text-amber-600'}`} />
               </div>
             </div>
             <div className={`mt-4 pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
@@ -697,7 +699,7 @@ export default function AdminDashboard() {
                     labelLine={false}
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                     outerRadius={80}
-                    fill="#8884d8"
+                    fill="#F97316"
                     dataKey="value"
                   >
                     {paymentMethods.map((entry, index) => (
@@ -759,7 +761,7 @@ export default function AdminDashboard() {
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip formatter={(value) => [formatNumber(Number(value)), 'Transactions']} />
-                  <Bar dataKey="value" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="value" fill="#F97316" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -786,7 +788,7 @@ export default function AdminDashboard() {
             <div className="flex justify-between items-center mb-4">
               <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Évolution des Revenus</h3>
               <div className="flex space-x-2">
-                <button className={`px-3 py-1 text-sm ${isDark ? 'bg-blue-900/20 text-blue-400' : 'bg-blue-100 text-blue-700'} rounded-lg`}>Revenus</button>
+                <button className={`px-3 py-1 text-sm ${isDark ? 'bg-orange-900/20 text-orange-300' : 'bg-orange-100 text-orange-700'} rounded-lg`}>Revenus</button>
                 <button className={`px-3 py-1 text-sm ${isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-100'} rounded-lg`}>Commandes</button>
                 <button className={`px-3 py-1 text-sm ${isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-100'} rounded-lg`}>Taux de conversion</button>
               </div>
@@ -806,8 +808,8 @@ export default function AdminDashboard() {
                   <Area 
                     type="monotone" 
                     dataKey="revenue" 
-                    stroke="#3B82F6" 
-                    fill="#3B82F6" 
+                    stroke="#F97316" 
+                    fill="#F97316" 
                     fillOpacity={0.3}
                     strokeWidth={2}
                   />
@@ -829,10 +831,10 @@ export default function AdminDashboard() {
           {quickActions.map((action) => {
             const IconComponent = action.icon;
             const colorClasses = {
-              blue: 'bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700',
+              orange: 'bg-orange-50 hover:bg-orange-100 border-orange-200 text-orange-700',
               green: 'bg-green-50 hover:bg-green-100 border-green-200 text-green-700',
               yellow: 'bg-yellow-50 hover:bg-yellow-100 border-yellow-200 text-yellow-700',
-              purple: 'bg-purple-50 hover:bg-purple-100 border-purple-200 text-purple-700'
+              amber: 'bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-700'
             };
             
             const cardContent = (
@@ -941,7 +943,7 @@ export default function AdminDashboard() {
               <select
                 value={selectedMetric}
                 onChange={(e) => setSelectedMetric(e.target.value as any)}
-                className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
                   isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
                 }`}
               >
@@ -957,7 +959,7 @@ export default function AdminDashboard() {
                 <div key={shop.id} className={`flex items-center justify-between p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
                   <div className="flex items-center space-x-4">
                     <div className="flex-shrink-0">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'bg-blue-900/20 text-blue-400' : 'bg-blue-100 text-blue-600'}`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'bg-orange-900/20 text-orange-300' : 'bg-orange-100 text-orange-600'}`}>
                         <span className="font-semibold">{index + 1}</span>
                       </div>
                     </div>

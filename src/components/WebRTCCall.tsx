@@ -53,6 +53,29 @@ const WebRTCCall: React.FC<WebRTCCallProps> = ({
     };
   }, []);
 
+  const cleanup = () => {
+    try {
+      wsRef.current?.close();
+    } catch {
+    }
+    try {
+      pcRef.current?.close();
+    } catch {
+    }
+    try {
+      localStreamRef.current?.getTracks().forEach((track) => track.stop());
+    } catch {
+    }
+    try {
+      remoteStreamRef.current?.getTracks().forEach((track) => track.stop());
+    } catch {
+    }
+    wsRef.current = null;
+    pcRef.current = null;
+    localStreamRef.current = null;
+    remoteStreamRef.current = null;
+  };
+
   const initializeWebSocket = () => {
     try {
       const wsUrl = getWsUrl(3008);

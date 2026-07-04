@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Phone, PhoneOff, Mic, MicOff, Volume2, VolumeX, Settings, Transfer, Voicemail, User, Clock, AlertCircle } from 'lucide-react';
+import { Phone, PhoneOff, Mic, MicOff, Volume2, VolumeX, Settings, Voicemail, User, Clock, AlertCircle, ArrowRightLeft } from 'lucide-react';
 import { getWsUrl } from '../utils/realtimeUrls';
 
 interface VoIPCredentials {
@@ -772,7 +772,7 @@ const VoIPIntegration: React.FC = () => {
                         onClick={() => setShowTransfer(true)}
                         className="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full transition-colors duration-200"
                       >
-                        <Transfer className="w-5 h-5" />
+                        <ArrowRightLeft className="w-5 h-5" />
                       </button>
                       
                       <button

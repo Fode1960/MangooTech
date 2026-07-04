@@ -177,14 +177,16 @@ const WebRTCManagerSimple: React.FC<WebRTCManagerSimpleProps> = ({
 
         case 'chat-message':
           console.log('Message chat reçu:', data.message);
-          const newMsg: ChatMessage = {
-            id: Date.now().toString(),
-            user: data.from === 'vendor' ? 'Vendeur' : 'Client',
-            message: data.message,
-            timestamp: new Date(data.timestamp),
-            role: data.from
-          };
-          setMessages(prev => [...prev, newMsg]);
+          {
+            const newMsg: ChatMessage = {
+              id: Date.now().toString(),
+              user: data.from === 'vendor' ? 'Vendeur' : 'Client',
+              message: data.message,
+              timestamp: new Date(data.timestamp),
+              role: data.from
+            };
+            setMessages(prev => [...prev, newMsg]);
+          }
           break;
       }
     };

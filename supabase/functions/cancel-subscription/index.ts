@@ -93,7 +93,7 @@ serve(async (req) => {
     let refundAmount = 0
     let creditAmount = 0
     let accessUntil: string | undefined
-    let subscriptionCancelled = false
+    const _subscriptionCancelled = true
 
     // 2. Calculer les remboursements/crédits si applicable
     if (currentUserPack.started_at && currentPack.price > 0) {
@@ -124,9 +124,6 @@ serve(async (req) => {
     // 3. Annuler l'abonnement Stripe si existant
     // Note: stripe_subscription_id n'existe pas dans user_packs, logique à implémenter via metadata
     console.log(`\n🔄 Annulation abonnement Stripe (à implémenter)`)
-    
-    // Pour l'instant, on simule l'annulation
-    subscriptionCancelled = true
     
     if (!cancelImmediately) {
       // Calculer la date de fin de période
@@ -299,14 +296,14 @@ serve(async (req) => {
 })
 
 // Fonction utilitaire pour calculer les jours d'utilisation
-function calculateUsageDays(startDate: string): number {
+function _calculateUsageDays(startDate: string): number {
   const start = new Date(startDate)
   const now = new Date()
   return Math.ceil((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
 }
 
 // Fonction utilitaire pour calculer le remboursement proportionnel
-function calculateProportionalRefund(price: number, startDate: string): { refundAmount: number, daysRemaining: number } {
+function _calculateProportionalRefund(price: number, startDate: string): { refundAmount: number, daysRemaining: number } {
   const start = new Date(startDate)
   const now = new Date()
   const nextBilling = new Date(start)

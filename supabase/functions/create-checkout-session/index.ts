@@ -167,7 +167,5 @@ serve(async (req) => {
     }
     
     return createErrorResponse(error.message, 500)
-   }
- })
   }
 })

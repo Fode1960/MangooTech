@@ -1187,7 +1187,7 @@ const LiveShoppingManager: React.FC<LiveShoppingManagerProps> = ({
         </div>
       )}
       
-      <style jsx>{`
+      <style>{`
         @keyframes float {
           0% {
             transform: translateY(0px) scale(1);

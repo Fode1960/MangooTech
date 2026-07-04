@@ -145,7 +145,7 @@ const LiveShoppingStream: React.FC<LiveShoppingStreamProps> = ({
         id: `msg_${Date.now()}_${Math.random()}`,
         ...randomMessage,
         timestamp: new Date(),
-        type: 'message'
+        type: 'message' as const
       }].slice(-50)); // Garder les 50 derniers messages
     }, 3000);
 

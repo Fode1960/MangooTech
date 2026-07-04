@@ -57,7 +57,7 @@ const Login: React.FC = () => {
       email: 'test@vendeur.com',
       user_metadata: {
         role: 'vendor',
-        full_name: 'Test Vendeur',
+        full_name: 'Vendeur rapide',
         phone: '+221771234567'
       }
     };
@@ -88,7 +88,7 @@ const Login: React.FC = () => {
       email: 'test@vendeur.com',
       user_metadata: {
         role: 'vendor',
-        full_name: 'Test Vendeur',
+        full_name: 'Vendeur rapide',
         phone: '+221771234567'
       }
     };

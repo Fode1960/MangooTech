@@ -103,7 +103,7 @@ export default function ARProductViewer() {
       setIsARSupported(hasWebXR && hasWebRTC && hasWebGL);
       
       if (hasWebXR) {
-        // @ts-ignore
+        // @ts-expect-error browser XR fallback
         navigator.xr?.isSessionSupported('immersive-ar').then((supported: boolean) => {
           if (supported) {
             setArMode('markerless');

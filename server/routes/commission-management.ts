@@ -230,7 +230,7 @@ router.post('/calculate',
   authenticateAdmin,
   async (req: express.Request, res: express.Response) => {
     try {
-      const { amount, payment_method, currency = 'XOF' } = req.body;
+      const { amount, payment_method } = req.body;
 
       if (!amount || !payment_method) {
         return res.status(400).json({ 

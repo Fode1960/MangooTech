@@ -137,6 +137,8 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
   }, [vendorId]);
 
   const addNewDemoOrder = () => {
+    const paymentStatuses: Array<Order['paymentStatus']> = ['paid', 'pending'];
+    const paymentMethods: Array<Order['paymentMethod']> = ['stripe', 'mtn', 'moov', 'card'];
     const newOrder: Order = {
       id: `order-${Date.now()}`,
       orderNumber: `CMD-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`,
@@ -155,7 +157,8 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
       ],
       totalAmount: [25000, 18000, 15000, 8000][Math.floor(Math.random() * 4)],
       status: 'pending',
-      paymentStatus: ['paid', 'pending'][Math.floor(Math.random() * 2)],
+      paymentStatus: paymentStatuses[Math.floor(Math.random() * paymentStatuses.length)],
+      paymentMethod: paymentMethods[Math.floor(Math.random() * paymentMethods.length)],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };

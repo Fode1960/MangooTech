@@ -386,15 +386,15 @@ const ShopPage = () => {
     return `${local[0]}${'*'.repeat(Math.min(6, local.length - 2))}${local[local.length - 1]}@${domain}`;
   };
 
-  // Données de démonstration pour la boutique
+  // Valeurs de secours pour garder la page lisible si aucune donnée n'est disponible
   const demoShop = {
     id: '1',
-    name: 'Boutique Demo',
+    name: 'Boutique Mangoo',
     slug: 'boutique-demo',
     description: 'Bienvenue ! Découvrez nos produits.',
     business_type: 'individual',
     status: 'approved',
-    contact_email: 'demo@example.com',
+    contact_email: 'contact@mangoo.tech',
     address: { city: 'Paris', country: 'France' },
     openTime: '',
     closeTime: '',
@@ -412,7 +412,7 @@ const ShopPage = () => {
     }
   };
 
-  // Données de démonstration pour les produits
+  // Produits de secours
   const demoProducts = [
     {
       id: '1',
@@ -950,7 +950,7 @@ const ShopPage = () => {
     const owner = String(shopOwnerEmail || '').trim().toLowerCase();
     const provided = String(vendorEmail || '').trim().toLowerCase();
     if (!owner) {
-      toast.error('Cette boutique n’est pas associée à un compte vendeur (démo).');
+      toast.error('Cette boutique n’est pas encore associée à un compte vendeur.');
       return;
     }
     if (!provided) {
@@ -992,9 +992,9 @@ const ShopPage = () => {
       window.dispatchEvent(new Event('demo-shops-updated'));
       setShopOwnerEmail(provided);
       setPendingMismatch(false);
-      toast.success('Boutique associée à cet email (démo)');
+      toast.success('Boutique associée à cet email');
     } catch {
-      toast.error('Impossible de modifier la boutique (démo).');
+      toast.error('Impossible de modifier la boutique.');
     }
   };
 
@@ -1746,7 +1746,7 @@ const ShopPage = () => {
                   </div>
                   {shopOwnerEmail && (
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      Email associé à cette boutique (démo): {maskEmail(shopOwnerEmail)}
+                      Email actuellement associé à cette boutique: {maskEmail(shopOwnerEmail)}
                     </div>
                   )}
                   <div>
@@ -1762,14 +1762,14 @@ const ShopPage = () => {
                   {pendingMismatch && (
                     <div className="rounded-xl border border-orange-200 bg-orange-50 text-orange-800 p-3 text-sm">
                       <div className="font-semibold">Vous n’avez pas le bon email ?</div>
-                      <div className="text-xs mt-1">Mode démo: vous pouvez associer cette boutique à l’email saisi.</div>
+                      <div className="text-xs mt-1">Si nécessaire, vous pouvez associer cette boutique à l’email saisi.</div>
                       <div className="mt-3 flex justify-end">
                         <button
                           type="button"
                           onClick={claimShopForEmail}
                           className="px-4 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-orange-500 to-green-600 text-white"
                         >
-                          Associer à cet email (démo)
+                          Associer à cet email
                         </button>
                       </div>
                     </div>

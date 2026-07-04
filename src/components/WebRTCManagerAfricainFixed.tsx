@@ -182,7 +182,7 @@ const WebRTCManagerAfricainFixed: React.FC<WebRTCManagerAfricainFixedProps> = ({
           await handleIceCandidate(data.data);
           break;
 
-        case 'chat-message':
+        case 'chat-message': {
           const newMsg: ChatMessage = {
             id: Date.now().toString(),
             user: data.from === 'vendor' ? 'Vendeur' : 'Client',
@@ -192,6 +192,7 @@ const WebRTCManagerAfricainFixed: React.FC<WebRTCManagerAfricainFixedProps> = ({
           };
           setMessages(prev => [...prev, newMsg]);
           break;
+        }
 
         case 'incoming-call':
           // Recevoir une notification d'appel entrant

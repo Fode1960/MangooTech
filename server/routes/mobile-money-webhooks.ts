@@ -74,7 +74,6 @@ const processSuccessfulPayment = async (paymentData: any) => {
       transaction_id,
       amount,
       currency,
-      phone_number,
       operator,
       status,
       reference,

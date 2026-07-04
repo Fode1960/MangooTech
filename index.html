@@ -137,9 +137,10 @@
           const src = String(moduleScript?.getAttribute('src') || '').trim()
           if (src.includes('/assets/')) return { mode: 'static', scriptSrc: src }
           if (src.includes('/src/main.tsx')) return { mode: 'vite', scriptSrc: src }
+          if (getIsDevHost()) return { mode: 'vite', scriptSrc: '/src/main.tsx' }
           return { mode: 'unknown', scriptSrc: src }
         } catch {
-          return { mode: 'unknown', scriptSrc: '' }
+          return getIsDevHost() ? { mode: 'vite', scriptSrc: '/src/main.tsx' } : { mode: 'unknown', scriptSrc: '' }
         }
       }
 
@@ -149,7 +150,7 @@
       // If the app doesn't mount, show actionable diagnostics (bundle not loaded, cache, blocked script, etc.)
       setTimeout(async () => {
         try {
-          if (window.__mangoo_main_loaded) return;
+          if (window.__mangoo_main_loaded || window.__mangootech_main_started__ || window.__mangootech_app_rendered__) return;
         } catch {
         }
 

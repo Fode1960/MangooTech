@@ -151,8 +151,6 @@ export const fetchActiveBoostRows = async ({ timeoutMs = 6000 } = {}) => {
   } finally {
     window.clearTimeout(t)
   }
-
-  return []
   }
 
   inFlightBoostRowsPromise = doFetch()

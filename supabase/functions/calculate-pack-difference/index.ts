@@ -258,17 +258,17 @@ function calculatePackDifference(
 }
 
 // Fonction utilitaire pour calculer les économies annuelles
-function calculateAnnualSavings(monthlyDifference: number): number {
+function _calculateAnnualSavings(monthlyDifference: number): number {
   return Math.abs(monthlyDifference) * 12
 }
 
 // Fonction utilitaire pour formater les prix
-function formatPrice(amount: number, currency: string = 'XOF'): string {
+function _formatPrice(amount: number, currency: string = 'XOF'): string {
   return `${amount.toLocaleString()} ${currency}`
 }
 
 // Fonction utilitaire pour calculer le pourcentage d'économie
-function calculateSavingsPercentage(currentPrice: number, newPrice: number): number {
+function _calculateSavingsPercentage(currentPrice: number, newPrice: number): number {
   if (currentPrice === 0) return 0
   return Math.round(((currentPrice - newPrice) / currentPrice) * 100)
 }

@@ -80,21 +80,23 @@ function videoCallReducer(state: VideoCallState, action: VideoCallAction): Video
         localStream: action.payload
       };
     
-    case 'REMOTE_STREAM_ADDED':
+    case 'REMOTE_STREAM_ADDED': {
       const newStreams = new Map(state.remoteStreams);
       newStreams.set(action.payload.participantId, action.payload.stream);
       return {
         ...state,
         remoteStreams: newStreams
       };
+    }
     
-    case 'REMOTE_STREAM_REMOVED':
+    case 'REMOTE_STREAM_REMOVED': {
       const updatedStreams = new Map(state.remoteStreams);
       updatedStreams.delete(action.payload);
       return {
         ...state,
         remoteStreams: updatedStreams
       };
+    }
     
     case 'TOGGLE_MUTE':
       return {

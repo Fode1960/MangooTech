@@ -93,8 +93,6 @@ const phoneMatchMeta = (a: any, b: any) => {
   if (i >= 10) return { score: 2, suffixLen: i }
   return { score: 1, suffixLen: i }
 }
-const phonesMatch = (a: any, b: any) => phoneMatchMeta(a, b).score > 0
-
 const findLocalUserByEmail = (users: any[], email: string) => {
   const target = normalizeEmail(email)
   if (!target) return null

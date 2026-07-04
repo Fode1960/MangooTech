@@ -50,12 +50,16 @@ const CustomerChat: React.FC<CustomerChatProps> = ({
   // Trouver ou créer la conversation avec le vendeur
   useEffect(() => {
     const conversation = conversations.find(conv => 
-      conv.participants.some(p => p === vendorId)
+      conv.participants.some(p => p.id === vendorId)
     );
     
     if (conversation) {
       setCurrentConversation(conversation.id);
-      markAsRead(conversation.id);
+      conversation.messages
+        .filter((msg) => !msg.isRead)
+        .forEach((msg) => {
+          markAsRead(conversation.id, msg.id);
+        });
     } else {
       // Créer une nouvelle conversation
       startConversation(vendorId, vendorName, vendorAvatar);

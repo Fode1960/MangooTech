@@ -1,3 +1,5 @@
+import { useEffect, useMemo } from 'react';
+
 // Service d'optimisation des performances
 class PerformanceOptimizer {
   constructor() {

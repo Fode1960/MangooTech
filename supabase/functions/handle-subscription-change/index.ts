@@ -382,7 +382,7 @@ async function updateUserPackInDatabase(
   supabaseClient: any,
   userId: string,
   newPack: any,
-  subscriptionId: string
+  _subscriptionId: string
 ) {
   console.log(`\n💾 Mise à jour base de données`)
 

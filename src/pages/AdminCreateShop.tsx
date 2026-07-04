@@ -188,7 +188,23 @@ export default function AdminCreateShop() {
       }
 
       // Créer la boutique avec le logo
-      const shopData = {
+      const shopData: {
+        user_id: string;
+        name: string;
+        slug: string;
+        description: string;
+        address: { street: string; city: string; country: string };
+        city: string;
+        phone: string;
+        email: string;
+        website_url: string;
+        category: string;
+        status: string;
+        is_verified: boolean;
+        created_at: string;
+        updated_at: string;
+        logo_url?: string;
+      } = {
         user_id: userId,
         name: formData.name.trim(),
         slug: formData.slug.trim(),

@@ -38,11 +38,8 @@ const mockAnalyticsData = {
 router.get('/stats', async (req, res) => {
   try {
     const { 
-      startDate, 
-      endDate, 
       currency = 'all', 
       paymentMethod = 'all',
-      userId,
       range = '30d'
     } = req.query;
 
@@ -70,8 +67,6 @@ router.get('/stats', async (req, res) => {
  */
 router.get('/trends', async (req, res) => {
   try {
-    const { period = '7d' } = req.query;
-    
     // Données mock pour les tendances
     const mockTrends = [
       { date: '2024-01-01', payments: 45, amount: 1250 },

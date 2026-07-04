@@ -82,10 +82,10 @@ export default function ProviderApply() {
   const normalizedSlug = useMemo(() => {
     const base = slug.trim().toLowerCase()
     return base
-      .replace(/[^a-z0-9\-\s]/g, '')
+      .replace(/[^a-z0-9-\s]/g, '')
       .replace(/\s+/g, '-')
-      .replace(/\-+/g, '-')
-      .replace(/^\-+|\-+$/g, '')
+      .replace(/-+/g, '-')
+      .replace(/^-+|-+$/g, '')
   }, [slug])
 
   const submit = useCallback(async () => {

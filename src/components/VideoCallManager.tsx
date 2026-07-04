@@ -52,6 +52,9 @@ const VideoCallManager: React.FC = () => {
   useEffect(() => {
     if (!user) return;
 
+    const displayName = user.user_metadata?.full_name || user.email;
+    const userRole = 'customer';
+
     const newSocket = io('http://localhost:3001', {
       transports: ['websocket']
     });
@@ -63,8 +66,8 @@ const VideoCallManager: React.FC = () => {
       // S'enregistrer
       newSocket.emit('register', {
         userId: user.id,
-        name: user.name,
-        role: user.role
+        name: displayName,
+        role: userRole
       });
     });
 
@@ -76,10 +79,10 @@ const VideoCallManager: React.FC = () => {
     // Gestion des appels entrants
     newSocket.on('incomingCall', (callData) => {
       addNotification({
-        id: `incoming_call_${Date.now()}`,
         type: 'info',
         title: 'Appel entrant',
         message: `${callData.caller.name} vous appelle`,
+        priority: 'high',
         duration: 10000,
         actions: [
           {
@@ -113,7 +116,7 @@ const VideoCallManager: React.FC = () => {
     return () => {
       newSocket.close();
     };
-  }, [user]);
+  }, [addNotification, user]);
 
   const handleConnectVoIP = async () => {
     try {
@@ -123,19 +126,19 @@ const VideoCallManager: React.FC = () => {
       });
       
       addNotification({
-        id: 'voip_connected',
         type: 'success',
         title: 'VoIP Connecté',
-        message: 'Connexion au serveur VoIP établie'
+        message: 'Connexion au serveur VoIP établie',
+        priority: 'low',
       });
       
       setShowVoipConfig(false);
     } catch (error) {
       addNotification({
-        id: 'voip_error',
         type: 'error',
         title: 'Erreur VoIP',
-        message: 'Impossible de se connecter au serveur VoIP'
+        message: 'Impossible de se connecter au serveur VoIP',
+        priority: 'high',
       });
     }
   };
@@ -169,7 +172,7 @@ const VideoCallManager: React.FC = () => {
     const newStream = {
       id: `stream_${Date.now()}`,
       ...streamData,
-      streamer: { id: user.id, name: user.name },
+      streamer: { id: user.id, name: user.user_metadata?.full_name || user.email },
       viewers: 0,
       status: 'live' as const,
       startTime: new Date()
@@ -178,10 +181,10 @@ const VideoCallManager: React.FC = () => {
     setMyStreams(prev => [...prev, newStream]);
     
     addNotification({
-      id: 'stream_started',
       type: 'success',
       title: 'Stream Démaré',
-      message: 'Votre live shopping est en ligne'
+      message: 'Votre live shopping est en ligne',
+      priority: 'low',
     });
   };
 

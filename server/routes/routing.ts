@@ -45,11 +45,11 @@ async function readRouteCacheFromSupabase(key: string, now: number) {
 function writeRouteCacheToSupabase(key: string, response: any, expiresAt: number) {
   const supabase = getSupabase()
   if (!supabase) return
-  supabase
-    .from('route_cache')
-    .upsert({ key, response, expires_at: new Date(expiresAt).toISOString() })
-    .then(() => {})
-    .catch(() => {})
+  void Promise.resolve(
+    (supabase as any)
+      .from('route_cache')
+      .upsert({ key, response, expires_at: new Date(expiresAt).toISOString() }),
+  ).catch(() => {})
 }
 
 function cleanupCache(now: number) {

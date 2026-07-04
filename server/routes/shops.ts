@@ -180,8 +180,8 @@ const toUiProduct = (row: any) => {
   const images = imagesRaw
     .slice()
     .sort((a: any, b: any) => {
-      const ap = Boolean(a?.is_primary) ? 1 : 0
-      const bp = Boolean(b?.is_primary) ? 1 : 0
+      const ap = a?.is_primary ? 1 : 0
+      const bp = b?.is_primary ? 1 : 0
       if (ap !== bp) return bp - ap
       return (Number(a?.position || 0) - Number(b?.position || 0))
     })
@@ -851,7 +851,7 @@ router.post('/logo-upload', async (req, res) => {
       if (allowLocalSync && slug && dataUrl) {
         const parsed = parseDataUrl(dataUrl)
         if (parsed?.buffer?.length && parsed.buffer.length <= 5 * 1024 * 1024) {
-          const updated = localSyncStore.updateShopLogoBySlug(slug, dataUrl)
+          localSyncStore.updateShopLogoBySlug(slug, dataUrl)
           res.json({ success: true, logo_url: dataUrl })
           return
         }
@@ -1134,7 +1134,7 @@ router.post('/sync-local', async (req, res) => {
 
       let r: any = await supabase.from('shops').insert(insertBase).select('id,slug').single()
       if (r?.error) {
-        let payload = { ...insertBase }
+        const payload = { ...insertBase }
         for (let i = 0; i < 6; i++) {
           const missing = parseMissingColumn(String(r?.error?.message || ''))
           if (!missing) break

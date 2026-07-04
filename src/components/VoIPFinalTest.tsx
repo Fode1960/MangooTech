@@ -226,7 +226,6 @@ const VoIPFinalTest: React.FC = () => {
       }
       
       if (targetDevice && 'setSinkId' in audioElement) {
-        // @ts-ignore - setSinkId n'est pas encore standard mais fonctionne dans Chrome/Edge
         await audioElement.setSinkId(targetDevice.deviceId);
         addTestResult(`✅ Audio routé vers: ${targetDevice.label || targetDevice.deviceId}`);
       } else {
@@ -258,12 +257,10 @@ const VoIPFinalTest: React.FC = () => {
       
       // Vérifier les permissions
       if ('permissions' in navigator) {
-        // @ts-ignore
         const microphonePermission = await navigator.permissions.query({ name: 'microphone' });
         addTestResult(`🎤 Permission microphone: ${microphonePermission.state}`);
         
-        // @ts-ignore
-        const audioOutputPermission = await navigator.permissions.query({ name: 'speaker-selection' });
+        const audioOutputPermission = await navigator.permissions.query({ name: 'speaker-selection' } as unknown as PermissionDescriptor);
         addTestResult(`🔊 Permission sortie audio: ${audioOutputPermission.state}`);
       }
       

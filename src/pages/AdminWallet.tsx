@@ -34,7 +34,7 @@ export default function AdminWallet() {
     { id: 1, type: 'credit_repayment', user: 'Maman Paul', amount: 15000, date: '2026-02-28 14:30', status: 'completed' },
     { id: 2, type: 'tontine_deposit', user: 'Groupe Tontine A', amount: 75000, date: '2026-02-28 12:15', status: 'completed' },
     { id: 3, type: 'bnpl_disbursement', user: 'Jean Mecano', amount: -25000, date: '2026-02-28 10:00', status: 'completed' },
-    { id: 4, type: 'wallet_topup', user: 'Utilisateur Demo', amount: 5000, date: '2026-02-28 09:45', status: 'completed' },
+    { id: 4, type: 'wallet_topup', user: 'Utilisateur Mangoo', amount: 5000, date: '2026-02-28 09:45', status: 'completed' },
     { id: 5, type: 'commission', user: 'Boutique Chez Sarah', amount: 1250, date: '2026-02-28 08:30', status: 'completed' },
     { id: 6, type: 'commission', user: 'Tech Store CI', amount: 3500, date: '2026-02-27 18:45', status: 'completed' },
     { id: 7, type: 'payment', user: 'Client A', amount: 12000, date: '2026-02-27 16:20', status: 'completed' },
@@ -45,7 +45,7 @@ export default function AdminWallet() {
     switch(view) {
       case 'payments': return 'Historique des Paiements';
       case 'commissions': return 'Gestion des Commissions';
-      default: return 'Mangoo Wallet Admin';
+      default: return 'Portefeuille Mangoo Tech';
     }
   };
 
@@ -91,7 +91,7 @@ export default function AdminWallet() {
               <Filter className="h-4 w-4" />
               <span>Filtrer</span>
             </button>
-            <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <button className="flex items-center space-x-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors">
               <Download className="h-4 w-4" />
               <span>Exporter Rapport</span>
             </button>
@@ -102,19 +102,19 @@ export default function AdminWallet() {
         <div className="flex space-x-1 bg-gray-200 dark:bg-gray-700 p-1 rounded-xl mb-6 w-fit">
           <button 
             onClick={() => navigate('/admin/wallet?view=overview')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${view === 'overview' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'}`}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${view === 'overview' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'}`}
           >
             Vue d'ensemble
           </button>
           <button 
              onClick={() => navigate('/admin/wallet?view=payments')}
-             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${view === 'payments' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'}`}
+             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${view === 'payments' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'}`}
           >
             Paiements
           </button>
           <button 
              onClick={() => navigate('/admin/wallet?view=commissions')}
-             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${view === 'commissions' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'}`}
+             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${view === 'commissions' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'}`}
           >
             Commissions
           </button>
@@ -124,14 +124,14 @@ export default function AdminWallet() {
         {(view === 'overview' || view === 'commissions') && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* Total Balance */}
-          <div className={`rounded-xl p-6 ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg border-l-4 border-blue-500`}>
+          <div className={`rounded-xl p-6 ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg border-l-4 border-orange-500`}>
             <div className="flex justify-between items-start">
               <div>
                 <p className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Solde Total (Pool)</p>
                 <h3 className={`text-3xl font-bold mt-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatCurrency(balance)}</h3>
               </div>
-              <div className="p-3 bg-blue-100 rounded-full">
-                <Wallet className="h-6 w-6 text-blue-600" />
+              <div className="p-3 bg-orange-100 rounded-full">
+                <Wallet className="h-6 w-6 text-orange-600" />
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm text-green-500">
@@ -180,17 +180,17 @@ export default function AdminWallet() {
 
           {/* Tontine Reserve - Hide for commissions */}
           {view !== 'commissions' && (
-          <div className={`rounded-xl p-6 ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg border-l-4 border-purple-500`}>
+          <div className={`rounded-xl p-6 ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg border-l-4 border-amber-500`}>
             <div className="flex justify-between items-start">
               <div>
                 <p className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Réserve Tontines</p>
                 <h3 className={`text-3xl font-bold mt-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatCurrency(890000)}</h3>
               </div>
-              <div className="p-3 bg-purple-100 rounded-full">
-                <Users className="h-6 w-6 text-purple-600" />
+              <div className="p-3 bg-amber-100 rounded-full">
+                <Users className="h-6 w-6 text-amber-600" />
               </div>
             </div>
-            <div className="mt-4 flex items-center text-sm text-purple-500">
+            <div className="mt-4 flex items-center text-sm text-amber-600">
               <ArrowUpRight className="h-4 w-4 mr-1" />
               <span>8 groupes actifs</span>
             </div>

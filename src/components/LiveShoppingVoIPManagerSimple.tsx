@@ -77,8 +77,10 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
   const [newMessage, setNewMessage] = useState('');
   const [showChat, setShowChat] = useState(true);
   const [showProductPanel, setShowProductPanel] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [streamDuration, setStreamDuration] = useState(0);
   const [totalSales, setTotalSales] = useState(Math.floor(Math.random() * 1000) + 500);
   const [currentProductSales, setCurrentProductSales] = useState(0);

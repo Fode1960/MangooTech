@@ -283,7 +283,6 @@ const VoIPAudioTest: React.FC = () => {
       }
       
       if (targetDevice && 'setSinkId' in audioElement) {
-        // @ts-ignore
         await audioElement.setSinkId(targetDevice.deviceId);
         console.log(`✅ Audio routé vers: ${targetDevice.label || targetDevice.deviceId}`);
       } else {

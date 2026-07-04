@@ -102,7 +102,7 @@ serve(async (req) => {
       .eq('status', 'active')
 
     let previousPack = null
-    let subscriptionCancelled = false
+    const subscriptionCancelled = false
     let creditApplied = 0
 
     // 3. Désactiver tous les packs actuels
@@ -272,9 +272,9 @@ serve(async (req) => {
 })
 
 // Fonction utilitaire pour créer une table user_credits si elle n'existe pas
-async function ensureUserCreditsTable(supabaseClient: any) {
+async function _ensureUserCreditsTable(supabaseClient: any) {
   try {
-    const { data, error } = await supabaseClient
+    const { error } = await supabaseClient
       .from('user_credits')
       .select('id')
       .limit(1)

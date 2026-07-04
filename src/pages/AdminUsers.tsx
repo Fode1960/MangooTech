@@ -41,8 +41,8 @@ const seedDemoUsersIfMissing = () => {
     const now = new Date().toISOString();
     const seed = {
       'admin@mangoo.tech': { id: 1, name: 'Administrateur', role: 'admin', email: 'admin@mangoo.tech', avatar: '👨‍💼', createdAt: now, lastLogin: now, status: 'active' },
-      'vendor@example.com': { id: 2, name: 'Commerçant Demo', role: 'vendor', email: 'vendor@example.com', avatar: '🏪', shopName: 'Boutique Demo', createdAt: now, lastLogin: now, status: 'active' },
-      'client@example.com': { id: 3, name: 'Client Demo', role: 'client', email: 'client@example.com', avatar: '🧑‍💻', createdAt: now, lastLogin: now, status: 'active' }
+      'vendor@example.com': { id: 2, name: 'Commerçant Mangoo', role: 'vendor', email: 'vendor@example.com', avatar: '🏪', shopName: 'Boutique Mangoo', createdAt: now, lastLogin: now, status: 'active' },
+      'client@example.com': { id: 3, name: 'Client Mangoo', role: 'client', email: 'client@example.com', avatar: '🧑‍💻', createdAt: now, lastLogin: now, status: 'active' }
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
   } catch {
@@ -50,8 +50,13 @@ const seedDemoUsersIfMissing = () => {
   }
 };
 
-export default function AdminUsers() {
-  const { user, isAdmin } = useAuth();
+type AdminUsersProps = {
+  embedded?: boolean;
+  scope?: 'all' | 'admin';
+};
+
+export default function AdminUsers({ embedded = false, scope = 'all' }: AdminUsersProps) {
+  useAuth();
   const { isDark } = useTheme();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,6 +69,7 @@ export default function AdminUsers() {
   const [formRole, setFormRole] = useState('client');
   const [formStatus, setFormStatus] = useState<'active' | 'inactive'>('active');
   const [formError, setFormError] = useState('');
+
 
   useEffect(() => {
     seedDemoUsersIfMissing();
@@ -216,7 +222,12 @@ export default function AdminUsers() {
     }
   }, []);
 
-  const filteredUsers = users.filter(user => {
+  const scopedUsers = users.filter((user) => {
+    if (scope !== 'admin') return true;
+    return user.role === 'admin' || user.role === 'moderator' || user.role === 'super_admin';
+  });
+
+  const filteredUsers = scopedUsers.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = !selectedRole || user.role === selectedRole;
@@ -225,9 +236,9 @@ export default function AdminUsers() {
 
   const availableRoles = useMemo(() => {
     const roles = new Set<string>();
-    users.forEach((u) => roles.add(u.role));
+    scopedUsers.forEach((u) => roles.add(u.role));
     return Array.from(roles).sort();
-  }, [users]);
+  }, [scopedUsers]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -240,7 +251,7 @@ export default function AdminUsers() {
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'super_admin': return isDark ? 'bg-purple-900/20 text-purple-400' : 'bg-purple-100 text-purple-800';
-      case 'admin': return isDark ? 'bg-blue-900/20 text-blue-400' : 'bg-blue-100 text-blue-800';
+      case 'admin': return isDark ? 'bg-orange-900/20 text-orange-300' : 'bg-orange-100 text-orange-800';
       case 'moderator': return isDark ? 'bg-orange-900/20 text-orange-400' : 'bg-orange-100 text-orange-800';
       case 'vendor': return isDark ? 'bg-emerald-900/20 text-emerald-300' : 'bg-emerald-100 text-emerald-800';
       case 'client': return isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-800';
@@ -250,60 +261,36 @@ export default function AdminUsers() {
 
   if (loading) {
     return (
-      <div className={`p-8 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className={`${embedded ? '' : `p-8 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}`}>
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
         </div>
       </div>
     );
   }
 
-  if (!isAdmin) {
-    // Vérifier si c'est le compte admin de démo
-    const demoUser = localStorage.getItem('admin-demo-user');
-    if (demoUser) {
-      const userData = JSON.parse(demoUser);
-      if (userData.email === 'admin@mangoo.tech') {
-        console.log('🎯 Compte admin démo détecté - accès autorisé aux utilisateurs');
-        // Continuer normalement pour le compte admin démo
-      } else {
-        return (
-          <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} p-6`}>
-            <div className="max-w-4xl mx-auto text-center">
-              <div className={`rounded-lg shadow-sm p-8 ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-                <div className="text-red-600 mb-4">
-                  <User className="h-16 w-16 mx-auto" />
-                </div>
-                <h1 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Accès Refusé</h1>
-                <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>Vous n'avez pas les permissions nécessaires pour accéder à cette section.</p>
-              </div>
+  return (
+    <div className={`${embedded ? 'space-y-6' : `p-8 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}`}>
+      {!embedded && (
+        <div className="mb-8">
+          <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Gestion des Utilisateurs</h1>
+          <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>Gérez les utilisateurs administrateurs et leurs permissions</p>
+        </div>
+      )}
+
+      {embedded && (
+        <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-2xl border p-5`}>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Administrateurs</h2>
+              <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>Comptes d'administration, support et modération visibles dans l'espace admin.</p>
             </div>
-          </div>
-        );
-      }
-    } else {
-      return (
-        <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} p-6`}>
-          <div className="max-w-4xl mx-auto text-center">
-            <div className={`rounded-lg shadow-sm p-8 ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-              <div className="text-red-600 mb-4">
-                <User className="h-16 w-16 mx-auto" />
-              </div>
-              <h1 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Accès Refusé</h1>
-              <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>Vous n'avez pas les permissions nécessaires pour accéder à cette section.</p>
+            <div className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${isDark ? 'bg-orange-900/30 text-orange-200' : 'bg-orange-50 text-orange-700'}`}>
+              Vue locale de gestion
             </div>
           </div>
         </div>
-      );
-    }
-  }
-
-  return (
-    <div className={`p-8 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      <div className="mb-8">
-        <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Gestion des Utilisateurs</h1>
-        <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>Gérez les utilisateurs administrateurs et leurs permissions</p>
-      </div>
+      )}
 
       <div className={`rounded-lg shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
         <div className={`p-6 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
@@ -315,7 +302,7 @@ export default function AdminUsers() {
                 placeholder="Rechercher un utilisateur..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
                   isDark 
                     ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                     : 'bg-white border-gray-300 text-gray-900'
@@ -327,7 +314,7 @@ export default function AdminUsers() {
               <select
                 value={selectedRole}
                 onChange={(e) => setSelectedRole(e.target.value)}
-                className={`pl-10 pr-8 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`pl-10 pr-8 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
                   isDark 
                     ? 'bg-gray-700 border-gray-600 text-white' 
                     : 'bg-white border-gray-300 text-gray-900'
@@ -341,11 +328,11 @@ export default function AdminUsers() {
             </div>
             <button onClick={openCreate} className={`px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 ${
               isDark 
-                ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                : 'bg-blue-600 text-white hover:bg-blue-700'
+                ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                : 'bg-orange-500 text-white hover:bg-orange-600'
             }`}>
               <UserPlus className="h-5 w-5" />
-              <span>Nouvel utilisateur</span>
+              <span>{scope === 'admin' ? 'Nouveau compte' : 'Nouvel utilisateur'}</span>
             </button>
           </div>
         </div>
@@ -385,7 +372,7 @@ export default function AdminUsers() {
               {filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={5} className={`px-6 py-10 text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Aucun utilisateur
+                    {scope === 'admin' ? 'Aucun compte admin' : 'Aucun utilisateur'}
                   </td>
                 </tr>
               ) : filteredUsers.map((user) => (
@@ -419,7 +406,7 @@ export default function AdminUsers() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <button onClick={() => openEdit(user)} className={`${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-900'}`}>
+                      <button onClick={() => openEdit(user)} className={`${isDark ? 'text-orange-300 hover:text-orange-200' : 'text-orange-600 hover:text-orange-800'}`}>
                         <Edit className="h-4 w-4" />
                       </button>
                       <button onClick={() => handleDelete(user)} className={`${isDark ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-900'}`}>
@@ -439,7 +426,7 @@ export default function AdminUsers() {
           <div className={`w-full max-w-lg rounded-2xl shadow-2xl border ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'}`}>
             <div className={`px-5 py-4 border-b flex items-center justify-between ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
               <div className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                {editTarget ? 'Modifier utilisateur' : 'Nouvel utilisateur'}
+                {editTarget ? 'Modifier le compte' : (scope === 'admin' ? 'Nouveau compte admin' : 'Nouvel utilisateur')}
               </div>
               <button onClick={closeModal} className={`${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>
                 <X className="h-5 w-5" />
@@ -481,11 +468,11 @@ export default function AdminUsers() {
                     onChange={(e) => setFormRole(e.target.value)}
                     className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                   >
-                    <option value="client">client</option>
-                    <option value="vendor">vendor</option>
                     <option value="admin">admin</option>
                     <option value="moderator">moderator</option>
                     <option value="super_admin">super_admin</option>
+                    {scope !== 'admin' && <option value="vendor">vendor</option>}
+                    {scope !== 'admin' && <option value="client">client</option>}
                   </select>
                 </div>
                 <div>
@@ -511,7 +498,7 @@ export default function AdminUsers() {
               </button>
               <button
                 onClick={handleSave}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-semibold"
               >
                 Enregistrer
               </button>

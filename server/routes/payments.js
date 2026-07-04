@@ -295,8 +295,7 @@ router.post('/process-mobile-money', async (req, res) => {
       amount, 
       currency = 'XOF', 
       phoneNumber, 
-      provider, 
-      description 
+      provider
     } = req.body;
 
     // Validation

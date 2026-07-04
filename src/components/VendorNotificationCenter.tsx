@@ -3,14 +3,23 @@ import { Bell, X, Package, MessageCircle, TrendingUp, Clock, AlertCircle, CheckC
 
 export interface Notification {
   id: string;
-  type: 'order' | 'review' | 'alert' | 'success';
+  type: 'order' | 'review' | 'alert' | 'success' | 'info' | 'warning' | 'error';
   title: string;
   message: string;
   timestamp: Date;
   read: boolean;
-  priority: 'low' | 'medium' | 'high';
+  priority?: 'low' | 'medium' | 'high';
   actionUrl?: string;
   sound?: boolean;
+  duration?: number;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+  actions?: Array<{
+    label: string;
+    onClick: () => void;
+  }>;
 }
 
 interface VendorNotificationCenterProps {
@@ -33,7 +42,10 @@ const VendorNotificationCenter: React.FC<VendorNotificationCenterProps> = ({
     order: '🔔',
     review: '⭐',
     alert: '⚠️',
-    success: '✅'
+    success: '✅',
+    info: 'ℹ️',
+    warning: '⚠️',
+    error: '❌'
   };
 
   // Demander la permission pour les notifications push
@@ -62,7 +74,10 @@ const VendorNotificationCenter: React.FC<VendorNotificationCenterProps> = ({
         order: 800,
         review: 600,
         alert: 400,
-        success: 1000
+        success: 1000,
+        info: 700,
+        warning: 450,
+        error: 300
       };
       
       oscillator.frequency.setValueAtTime(frequencies[type], audioContext.currentTime);

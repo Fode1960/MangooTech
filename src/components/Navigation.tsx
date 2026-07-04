@@ -96,7 +96,7 @@ const Navigation: React.FC = () => {
                 <User className="w-4 h-4 text-gray-600" />
               </div>
               <span className="text-sm font-medium text-gray-700">
-                {isTestMode ? 'Mode Test' : user?.name || 'Utilisateur'}
+                {isTestMode ? 'Mode Test' : user?.user_metadata?.full_name || user?.email || 'Utilisateur'}
               </span>
             </div>
             <button

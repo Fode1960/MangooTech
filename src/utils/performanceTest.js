@@ -124,6 +124,7 @@ const performanceTest = {
       id: i,
       data: new Array(100).fill(Math.random())
     }));
+    void largeArray;
     
     // Forcer garbage collection si disponible
     if (window.gc) {

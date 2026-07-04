@@ -348,13 +348,7 @@ const VoIPManager: React.FC<VoIPManagerProps> = ({
   // Créer la connexion WebRTC simplifiée pour VoIP
   const createPeerConnection = async (stream: MediaStream, targetId?: string) => {
     try {
-      const pc = new RTCPeerConnection({ 
-        iceServers,
-        // Configuration anti-écho
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true
-      });
+      const pc = new RTCPeerConnection({ iceServers });
       peerConnectionRef.current = pc;
 
       // Configuration anti-écho avancée

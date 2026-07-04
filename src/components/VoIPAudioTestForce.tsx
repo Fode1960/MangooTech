@@ -148,7 +148,6 @@ const VoIPAudioTestForce: React.FC = () => {
         }
         
         if (targetDevice) {
-          // @ts-ignore
           await audioElement.setSinkId(targetDevice.deviceId);
           console.log(`✅ Audio FORCÉ vers: ${targetDevice.label || targetDevice.deviceId}`);
         }

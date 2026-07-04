@@ -153,8 +153,8 @@ const VendorAccessQRPage = () => {
     <div className="min-h-full">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
-          <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Accès & QR des Vendeurs</h1>
-          <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mt-2`}>Générez les identifiants, le lien, le QR et le PIN pour l’accès vendeur.</p>
+          <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Accès vendeur : lien, QR et PIN</h1>
+          <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mt-2`}>Préparez les identifiants, le lien, le QR code et le PIN pour un accès simple à la boutique.</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <div className={`${isDark ? 'bg-gray-800 border-gray-700 text-gray-200' : 'bg-white border-gray-200 text-gray-800'} border rounded-lg px-3 py-2 text-sm font-semibold`}>Total: {shops.length}</div>
             <div className={`${isDark ? 'bg-emerald-900/30 border-emerald-700 text-emerald-200' : 'bg-emerald-50 border-emerald-200 text-emerald-800'} border rounded-lg px-3 py-2 text-sm font-semibold`}>Approuvées: {approvedCount}</div>
@@ -195,7 +195,7 @@ const VendorAccessQRPage = () => {
                 ))}
                 {filteredShops.length === 0 && (
                   <div className={`px-3 py-6 text-sm text-center rounded-lg border ${isDark ? 'bg-gray-900 border-gray-700 text-gray-400' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
-                    Aucune boutique ne correspond a la recherche.
+                    Aucune boutique ne correspond à la recherche.
                   </div>
                 )}
               </div>

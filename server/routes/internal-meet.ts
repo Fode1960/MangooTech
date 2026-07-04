@@ -22,7 +22,7 @@ const getLiveKitConfig = () => {
   return { livekitUrl, apiKey, apiSecret, configured }
 }
 
-const isEnabled = (req: Request) => {
+const isEnabled = (_req: Request) => {
   const flag = safeString(process.env.INTERNAL_MEET_ENABLED).toLowerCase()
   if (flag === '1' || flag === 'true' || flag === 'yes') return true
   if (isProd()) return false

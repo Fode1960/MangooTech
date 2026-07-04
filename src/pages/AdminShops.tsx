@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 
 type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'suspended';
 type SectorFilter = 'all' | 'formal' | 'informal';
+type BillingCountry = 'sn' | 'ci' | 'cm';
 
 type DemoShop = {
   id?: string;
@@ -27,7 +28,7 @@ type DemoShop = {
   rejectedBy?: string;
   suspendedAt?: string;
   suspendedBy?: string;
-  billingCountry?: 'sn' | 'ci' | 'cm';
+  billingCountry?: BillingCountry;
   billingLegalName?: string;
   billingRegistrationId?: string;
   billingTaxId?: string;
@@ -174,7 +175,14 @@ export default function AdminShops() {
 
   const [billingOpen, setBillingOpen] = useState(false);
   const [billingSlug, setBillingSlug] = useState<string | null>(null);
-  const [billingForm, setBillingForm] = useState({
+  const [billingForm, setBillingForm] = useState<{
+    billingCountry: BillingCountry;
+    billingLegalName: string;
+    billingRegistrationId: string;
+    billingTaxId: string;
+    billingAddress: string;
+    billingPhone: string;
+  }>({
     billingCountry: 'ci',
     billingLegalName: '',
     billingRegistrationId: '',
@@ -267,7 +275,7 @@ export default function AdminShops() {
     const current = readDemoShops();
     const mockBoutiques = readMockBoutiques();
     let didMigrate = false;
-    const migrated = current.map((s) => {
+    const migrated: DemoShop[] = current.map((s): DemoShop => {
       if (!s?.slug) return s;
       if (s.approvalStatus) return s;
       didMigrate = true;
@@ -284,7 +292,7 @@ export default function AdminShops() {
       if (sid !== undefined && sid !== null) bySourceId.set(String(sid), s);
     });
 
-    let merged = migrated.slice();
+    let merged: DemoShop[] = migrated.slice();
     let didMerge = false;
 
     if (mockBoutiques.length) {
@@ -297,9 +305,9 @@ export default function AdminShops() {
         const slug = String(m?.slug || '').trim();
         if (!slug) return;
         const statusRaw = String(m?.status || m?.approvalStatus || 'pending').trim().toLowerCase();
-        const approvalStatus: ApprovalStatus = (statusRaw === 'approved' || statusRaw === 'rejected' || statusRaw === 'suspended') ? (statusRaw as any) : 'approved';
+        const approvalStatus: ApprovalStatus = (statusRaw === 'approved' || statusRaw === 'rejected' || statusRaw === 'suspended') ? (statusRaw as ApprovalStatus) : 'approved';
         const nextShop: DemoShop = {
-          ...(bySlug.get(slug) || {}),
+          ...((bySlug.get(slug) || {}) as Partial<DemoShop>),
           id: String(m?.id || slug),
           name: String(m?.name || 'Boutique'),
           slug,
@@ -376,14 +384,14 @@ export default function AdminShops() {
             const slug = String(s?.slug || '').trim()
             if (!slug) return
             const statusRaw = String(s?.status || 'pending').trim().toLowerCase()
-            const prev = bySlug.get(slug) || {}
-            const previousStatus = normalizeApprovalStatus((prev as any)?.approvalStatus)
+            const prev = bySlug.get(slug)
+            const previousStatus = normalizeApprovalStatus(prev?.approvalStatus)
             const approvalStatus: ApprovalStatus =
               statusRaw === 'approved' || statusRaw === 'rejected' || statusRaw === 'suspended'
-                ? (statusRaw as any)
+                ? (statusRaw as ApprovalStatus)
                 : (previousStatus === 'suspended' ? 'suspended' : 'pending')
             const nextShop: DemoShop = {
-              ...prev,
+              ...((prev || {}) as Partial<DemoShop>),
               id: String(s?.id || slug),
               name: String(s?.name || 'Boutique'),
               slug,
@@ -413,8 +421,8 @@ export default function AdminShops() {
       supabaseMapped.forEach((s) => {
         const slug = String(s?.slug || '').trim()
         if (!slug) return
-        const prev = bySlug.get(slug) || {}
-        bySlug.set(slug, { ...prev, ...s, source: 'supabase' })
+        const prev = bySlug.get(slug)
+        bySlug.set(slug, { ...((prev || {}) as Partial<DemoShop>), ...s, source: 'supabase' })
       })
       merged = Array.from(bySlug.values())
       didMerge = true
@@ -567,7 +575,7 @@ export default function AdminShops() {
     const current = readDemoShops();
     const target = current.find((s) => String(s?.slug || '') === slug) as any;
     const sourceVendorId = target?.sourceVendorId;
-    const next = current.map((s) => {
+      const next: DemoShop[] = current.map((s): DemoShop => {
       if (s?.slug !== slug) return s;
       if (status === 'approved') {
         return { ...s, approvalStatus: 'approved', approvedAt: now, approvedBy: ADMIN_EMAIL };
@@ -652,7 +660,7 @@ export default function AdminShops() {
     if (!billingSlug) return;
     const now = new Date().toISOString();
     const current = readDemoShops();
-    const next = current.map((s) => {
+    const next: DemoShop[] = current.map((s): DemoShop => {
       if (String(s?.slug || '') !== billingSlug) return s;
       return {
         ...s,
@@ -836,9 +844,9 @@ export default function AdminShops() {
                         <button
                           type="button"
                           onClick={() => window.open(`/?lp_role=vendor&lp_view=account&lp_vendor_tab=settings&lp_vendor_edit_shop=${encodeURIComponent(String(s.slug))}`, '_blank', 'noopener,noreferrer')}
-                          className="touch-manipulation px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm inline-flex items-center gap-2"
+                          className="touch-manipulation px-3 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm inline-flex items-center gap-2"
                         >
-                          Dashboard
+                          Espace vendeur
                         </button>
                         <button
                           type="button"
@@ -931,10 +939,10 @@ export default function AdminShops() {
                             <button
                               type="button"
                               onClick={() => window.open(`/?lp_role=vendor&lp_view=account&lp_vendor_tab=settings&lp_vendor_edit_shop=${encodeURIComponent(String(s.slug))}`, '_blank', 'noopener,noreferrer')}
-                              className="px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs"
-                              title="Ouvrir le dashboard vendeur"
+                              className="px-3 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs"
+                              title="Ouvrir l'espace vendeur"
                             >
-                              Dashboard
+                              Espace vendeur
                             </button>
                             <button
                               type="button"
@@ -1012,7 +1020,7 @@ export default function AdminShops() {
                     <div className={`text-xs font-black ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Pays</div>
                     <select
                       value={billingForm.billingCountry}
-                      onChange={(e) => setBillingForm((p) => ({ ...p, billingCountry: e.target.value }))}
+                      onChange={(e) => setBillingForm((p) => ({ ...p, billingCountry: e.target.value as BillingCountry }))}
                       className={`mt-2 w-full px-3 py-2 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
                     >
                       <option value="sn">Sénégal</option>

@@ -7,6 +7,7 @@ type LocalUser = {
   email: string
   passwordHash: string
   name: string
+  phone?: string | null
   createdAt: string
 }
 
@@ -179,10 +180,11 @@ const verifyPassword = (password: string, stored: string) => {
 export const localSyncStore = {
   normalizeEmail,
 
-  registerUser: (input: { email: string; password: string; name?: string }) => {
+  registerUser: (input: { email: string; password: string; name?: string; phone?: string | null }) => {
     const email = normalizeEmail(input.email)
     const password = String(input.password || '')
     const name = String(input.name || '').trim() || email.split('@')[0] || 'Utilisateur'
+    const phone = String(input.phone || '').trim()
     if (!email || !password) throw new Error('Email et mot de passe requis')
 
     const db = safeRead()
@@ -194,6 +196,7 @@ export const localSyncStore = {
       email,
       passwordHash: hashPassword(password),
       name,
+      phone: phone || null,
       createdAt: nowIso(),
     }
 

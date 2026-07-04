@@ -60,8 +60,14 @@ function buildFromOrders(): InvoiceRecord[] {
       const createdAt = String(o?.createdAt || new Date().toISOString())
       const totalTtcFcfa = Math.round(Number(o?.totalCents || 0) / 100) || 0
       const vatIncludedFcfa = calcVatIncluded(totalTtcFcfa, 0.18)
-      const vendors = Array.from(new Set((Array.isArray(o?.items) ? o.items : []).map((it: any) => String(it?.vendorName || it?.shopSlug || '').trim()).filter(Boolean)))
-        .map((name) => ({ name }))
+      const vendorNames = Array.from(
+        new Set(
+          (Array.isArray(o?.items) ? o.items : [])
+            .map((it: any) => String(it?.vendorName || it?.shopSlug || '').trim())
+            .filter(Boolean),
+        ),
+      ) as string[]
+      const vendors = vendorNames.map((name) => ({ name }))
       out.push({
         id: `inv_${orderId}`,
         createdAt,

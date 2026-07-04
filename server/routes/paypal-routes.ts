@@ -22,7 +22,7 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'YOUR_SUPABASE_SERV
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Types
-interface PayPalPaymentRequest {
+interface _PayPalPaymentRequest {
   userId: string;
   amount: number;
   currency: string;
@@ -583,7 +583,7 @@ async function handleOrderCancelled(event: PayPalWebhookEvent) {
 /**
  * Activer un pack pour un utilisateur
  */
-async function activateUserPackLegacy(userId: string, packId: string) {
+async function _activateUserPackLegacy(userId: string, packId: string) {
   try {
     // Vérifier si l'utilisateur a déjà ce pack actif
     const { data: existingPack } = await supabase
@@ -707,7 +707,7 @@ async function sendPayPalConfirmationEmail(payment: any) {
   }
 }
 
-async function sendPayPalFailureEmail(payment: any, errorMessage?: string) {
+async function sendPayPalFailureEmail(payment: any, _errorMessage?: string) {
   try {
     const emailData = {
       userId: payment.user_id,
@@ -745,7 +745,7 @@ router.get('/config-check', async (req, res) => {
     // Tester l'authentification PayPal
     let authStatus = 'error';
     try {
-      const accessToken = await getPayPalAccessToken();
+      await getPayPalAccessToken();
       authStatus = 'ok';
     } catch (error) {
       console.error('Erreur lors du test d\'authentification PayPal:', error);

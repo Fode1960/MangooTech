@@ -148,12 +148,13 @@ const VendorRefundManagement: React.FC<VendorRefundManagementProps> = ({ vendorI
 
   const confirmProcessRefund = () => {
     if (!selectedRefund) return;
+    const nextStatus: Refund['status'] = processAction === 'approve' ? 'approved' : 'rejected';
 
     const updatedRefunds = refunds.map(refund => {
       if (refund.id === selectedRefund.id) {
         return {
           ...refund,
-          status: processAction === 'approve' ? 'approved' : 'rejected',
+          status: nextStatus,
           processedAt: new Date(),
           notes: processNotes
         };

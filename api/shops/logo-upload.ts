@@ -136,7 +136,7 @@ export default async function handler(req: any, res: any) {
     }
 
     const now = new Date().toISOString()
-    let payload: any = { logo_url: publicUrl, updated_at: now }
+    const payload: any = { logo_url: publicUrl, updated_at: now }
     let cols = Object.keys(payload)
     let lastError: any = null
     for (let i = 0; i < 6; i++) {

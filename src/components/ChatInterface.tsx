@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, Smile, Phone, Video, Info, Search, MoreVertical, Circle, CheckCheck, Clock, Users } from 'lucide-react';
+import { Send, Paperclip, Smile, Phone, Video, Info, Search, MoreVertical, Circle, CheckCheck, Clock, Users, MessageCircle } from 'lucide-react';
 import { useChat, ChatConversation, ChatMessage } from '../contexts/ChatContext';
 
 interface ChatInterfaceProps {
@@ -199,14 +199,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '', compact =
             </h4>
             {conversation.lastMessage && (
               <span className="text-xs text-gray-500">
-                {formatTime(conversation.lastMessage.timestamp)}
+                {formatTime(conversation.lastMessageTime)}
               </span>
             )}
           </div>
           
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-600 truncate">
-              {conversation.lastMessage?.content || 'Aucun message'}
+              {conversation.lastMessage || 'Aucun message'}
             </p>
             {unreadCount > 0 && (
               <span className="bg-blue-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">

@@ -394,7 +394,7 @@ const WebRTCManagerFinal: React.FC<WebRTCManagerFinalProps> = ({
             await handleIceCandidate(data.data);
             break;
 
-          case 'chat-message':
+          case 'chat-message': {
             // CRITIQUE: Éviter les doublons en vérifiant si le message existe déjà
             const existingMessage = chatMessages.find(msg => 
               msg.message === data.message && 
@@ -418,6 +418,7 @@ const WebRTCManagerFinal: React.FC<WebRTCManagerFinalProps> = ({
               playMessageSound();
             }
             break;
+          }
 
           case 'call-ended':
             console.log('📞 Appel terminé par:', data.from);
@@ -519,23 +520,7 @@ const WebRTCManagerFinal: React.FC<WebRTCManagerFinalProps> = ({
       peerConnectionRef.current.close();
     }
     
-    const pc = new RTCPeerConnection({ 
-      iceServers,
-      // Configuration audio ULTRA-ANTI-ECHO
-      audio: {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-        sampleRate: 48000,
-        channelCount: 1, // MONO pour éviter l'écho stéréo
-        // Configuration supplémentaire anti-écho
-        googEchoCancellation: true,
-        googNoiseSuppression: true,
-        googAutoGainControl: true,
-        googHighpassFilter: true,
-        googTypingNoiseDetection: true
-      }
-    });
+    const pc = new RTCPeerConnection({ iceServers });
     peerConnectionRef.current = pc;
     
     console.log('✅ Nouvelle connexion WebRTC créée, état initial:', pc.signalingState);

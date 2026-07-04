@@ -189,8 +189,8 @@ router.get('/payments/stats',
             pending_transactions: pendingTransactions,
             total_revenue: totalRevenue,
             stripe_revenue: stripeRevenue,
-            success_rate: parseFloat(successRate),
-            failure_rate: parseFloat(failureRate)
+            success_rate: Number(successRate),
+            failure_rate: Number(failureRate)
           },
           payment_methods: paymentMethods,
           currencies: currencies,
@@ -295,7 +295,6 @@ router.get('/payments/methods',
 
       // Calculer les pourcentages
       const totalPayments = totals.orange_money + totals.mtn_money + totals.moov_money + totals.card + totals.cash;
-      const totalMobileMoney = totals.orange_money + totals.mtn_money + totals.moov_money;
 
       const percentages = {
         orange_money: totalPayments > 0 ? ((totals.orange_money / totalPayments) * 100).toFixed(2) : 0,
@@ -667,7 +666,7 @@ router.get('/payments/commissions',
           period_days: parseInt(period),
           totals: {
             ...totals,
-            avg_commission_rate: parseFloat(avgCommissionRate)
+            avg_commission_rate: Number(avgCommissionRate)
           },
           commissions_by_method: commissionsByMethod
         }

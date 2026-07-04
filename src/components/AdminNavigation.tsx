@@ -28,14 +28,13 @@ export default function AdminNavigation() {
     { name: "Boutiques", href: "/admin/shops", icon: Store },
     { name: "Prestataires", href: "/admin/providers", icon: Briefcase },
     { name: "Boost Carte", href: "/admin/boosts", icon: MapPin },
-    { name: "Accès & QR", href: "/admin/vendor-access-qr", icon: QrCode },
+    { name: "Accès vendeur", href: "/admin/vendor-access-qr", icon: QrCode },
     { name: "Commissions", href: "/admin/commissions", icon: Calculator },
-    { name: "Tarification", href: "/admin/pricing", icon: Calculator },
-    { name: "Utilisateurs", href: "/admin/users", icon: Users },
-    { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
+    { name: "Comptes", href: "/admin/users", icon: Users },
+    { name: "Pilotage", href: "/admin/analytics", icon: BarChart3 },
     { name: "Paiements", href: "/admin/payments", icon: CreditCard },
     { name: "Factures", href: "/admin/invoices", icon: FileText },
-    { name: "Mangoo Wallet", href: "/admin/wallet", icon: CreditCard },
+    { name: "Portefeuille", href: "/admin/wallet", icon: CreditCard },
     { name: "Paramètres", href: "/admin/settings", icon: Settings },
   ];
 
@@ -45,10 +44,10 @@ export default function AdminNavigation() {
 
   return (
     <div className="h-full w-64 bg-white dark:bg-gray-900 shadow-lg border-r border-gray-200 dark:border-gray-700 flex-shrink-0 flex flex-col overflow-hidden">
-      <div className="flex items-center justify-center h-16 bg-gradient-to-r from-blue-600 to-purple-600">
+      <div className="flex items-center justify-center h-16 bg-gradient-to-r from-orange-500 to-amber-500">
         <div className="flex items-center space-x-2">
           <Shield className="h-8 w-8 text-white" />
-          <span className="text-xl font-bold text-white">Admin Mangootech</span>
+          <span className="text-xl font-bold text-white">Admin Mangoo Tech</span>
         </div>
       </div>
       
@@ -82,7 +81,7 @@ export default function AdminNavigation() {
                   }}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all text-left cursor-pointer active:scale-95 ${
                     isActive(item.href)
-                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-l-4 border-blue-700 dark:border-blue-500"
+                      ? "bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border-l-4 border-orange-600 dark:border-orange-500"
                       : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white hover:translate-x-1"
                   }`}
                 >
@@ -102,7 +101,7 @@ export default function AdminNavigation() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 dark:text-white truncate">Administrateur</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">admin@mangootech.com</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">admin@mangoo.tech</p>
           </div>
         </div>
         

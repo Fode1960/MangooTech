@@ -450,7 +450,7 @@ export default function AdminPinAccess({ embedded = false }: AdminPinAccessProps
                   </div>
                   <div className={`truncate text-base font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{resolveDisplayName(item)}</div>
                   <div className={`truncate text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                    {formatType(item)} · {formatAccessRole(item.access_role)}
+                    {formatType(item.account_type)} · {formatAccessRole(item.access_role)}
                   </div>
                   <div className={`truncate text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                     Proprietaire / contact: {resolveOwnerName(item)}

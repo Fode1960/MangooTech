@@ -1112,7 +1112,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
       }
     }
 
-    const allowFallbackLocal = Boolean(import.meta.env.DEV) || !Boolean(String(import.meta.env.VITE_SUPABASE_URL || '').trim())
+    const allowFallbackLocal = import.meta.env.DEV || !String(import.meta.env.VITE_SUPABASE_URL || '').trim()
     if (!hasSupabaseAuth && allowFallbackLocal && !fromStored && !demoUsers[normalizedEmail] && normalizedEmail && passwordNormalized) {
       const newUser = {
         id: `local_${Date.now()}`,
@@ -1518,7 +1518,7 @@ const Register = ({ onRegister, onBack }) => {
           } catch {
           }
           try {
-            onLogin(nextUser)
+            onRegister(nextUser)
           } catch {
           }
           const shopResp = await localSync.createShop({ name: shopName, category: shopCategory })
@@ -5805,32 +5805,6 @@ const ClientMarketplace = ({ user }) => {
     }
   }, [boostFlags.promo, boostFlags.vitrine])
 
-  useEffect(() => {
-    if (!boostFlags.vitrine && !boostFlags.promo) return
-    let cancelled = false
-    const refresh = async () => {
-      try {
-        const rows = await fetchActiveBoostRows({ timeoutMs: 6500 })
-        if (cancelled) return
-        const mapped = indexActiveBoosts(rows)
-        setBoostIndex((prev) => {
-          if (!mapped.size) return prev
-          const next = new Map(prev)
-          mapped.forEach((v, k) => next.set(k, v))
-          return next
-        })
-      } catch {
-      }
-    }
-    void refresh()
-    const onUpdated = () => void refresh()
-    window.addEventListener('mangoo-boosts-updated', onUpdated)
-    return () => {
-      cancelled = true
-      window.removeEventListener('mangoo-boosts-updated', onUpdated)
-    }
-  }, [boostFlags.promo, boostFlags.vitrine])
-
   const categories = useMemo(() => [
     { id: 'all', name: 'Tous', icon: '🛍️' },
     { id: 'electronics', name: 'Électronique', icon: '📱' },
@@ -6533,7 +6507,7 @@ const ShopsDirectory = () => {
     const cacheTtlMs = 30 * 60 * 1000
     try {
       const raw = localStorage.getItem(cacheKey)
-      if (raw && raw.length > 1_500_000) {
+      if (raw && raw.length > 1500000) {
         localStorage.removeItem(cacheKey)
         throw new Error('shops cache too large')
       }
@@ -9521,6 +9495,7 @@ function AppShell() {
   const [user, setUser] = useState(initialState.user);
   const [loading, setLoading] = useState(false); // DISABLED LOADING DELAY
   const [currentView, setCurrentView] = useState(initialState.view);
+  const safeCurrentView = String(currentView || 'landing');
   const [authReturn, setAuthReturn] = useState(null);
   const [spaceChooserOpen, setSpaceChooserOpen] = useState(false);
   const [clientActionsOpen, setClientActionsOpen] = useState(false);
@@ -9969,15 +9944,15 @@ function AppShell() {
             name: 'Tech Africa',
             slug: 'tech-africa',
             category: 'tech',
-            ownerName: 'Commerçant Demo',
-            ownerEmail: 'vendeur@demo.mangoo.tech',
+            ownerName: 'Vendeur Mangoo',
+            ownerEmail: 'vendeur@mangoo.tech',
             approvalStatus: 'approved',
             createdAt: now,
             updatedAt: now,
             billingCountry: 'ci',
             billingLegalName: 'Tech Africa SARL',
             billingRegistrationId: 'RCCM CI-ABJ-2026-B-00001',
-            billingTaxId: 'NINEA/NIU: DEMO-CI-0001',
+            billingTaxId: 'NINEA/NIU: CI-0001',
             billingAddress: 'Abidjan, Côte d’Ivoire',
             billingPhone: '+225 00 00 00 00'
           },
@@ -9986,15 +9961,15 @@ function AppShell() {
             name: 'Boutique Tradition',
             slug: 'boutique-tradition',
             category: 'fashion',
-            ownerName: 'Commerçant Demo',
-            ownerEmail: 'vendeur@demo.mangoo.tech',
+            ownerName: 'Vendeur Mangoo',
+            ownerEmail: 'vendeur@mangoo.tech',
             approvalStatus: 'approved',
             createdAt: now,
             updatedAt: now,
             billingCountry: 'sn',
             billingLegalName: 'Boutique Tradition',
             billingRegistrationId: 'RCCM SN-DKR-2026-A-00001',
-            billingTaxId: 'NINEA: DEMO-SN-0001',
+            billingTaxId: 'NINEA: SN-0001',
             billingAddress: 'Dakar, Sénégal',
             billingPhone: '+221 77 000 00 00'
           },
@@ -10003,15 +9978,15 @@ function AppShell() {
             name: 'Saveurs du Terroir',
             slug: 'saveurs-du-terroir',
             category: 'food',
-            ownerName: 'Commerçant Demo',
-            ownerEmail: 'vendeur@demo.mangoo.tech',
+            ownerName: 'Vendeur Mangoo',
+            ownerEmail: 'vendeur@mangoo.tech',
             approvalStatus: 'approved',
             createdAt: now,
             updatedAt: now,
             billingCountry: 'cm',
             billingLegalName: 'Saveurs du Terroir',
             billingRegistrationId: 'RCCM CM-DLA-2026-A-00001',
-            billingTaxId: 'NIU: DEMO-CM-0001',
+            billingTaxId: 'NIU: CM-0001',
             billingAddress: 'Douala, Cameroun',
             billingPhone: '+237 6 00 00 00 00'
           },
@@ -10020,15 +9995,15 @@ function AppShell() {
             name: 'Artisanat Africa',
             slug: 'artisanat-africa',
             category: 'handicraft',
-            ownerName: 'Commerçant Demo',
-            ownerEmail: 'vendeur@demo.mangoo.tech',
+            ownerName: 'Vendeur Mangoo',
+            ownerEmail: 'vendeur@mangoo.tech',
             approvalStatus: 'approved',
             createdAt: now,
             updatedAt: now,
             billingCountry: 'ci',
             billingLegalName: 'Artisanat Africa',
             billingRegistrationId: 'RCCM CI-ABJ-2026-B-00002',
-            billingTaxId: 'NINEA/NIU: DEMO-CI-0002',
+            billingTaxId: 'NINEA/NIU: CI-0002',
             billingAddress: 'Abidjan, Côte d’Ivoire',
             billingPhone: '+225 00 00 00 01'
           }
@@ -10153,7 +10128,7 @@ function AppShell() {
       }));
     }
 
-    if (Boolean(import.meta.env.DEV)) seedDemoData();
+    if (import.meta.env.DEV) seedDemoData();
     if (nextUser?.role === 'admin') {
       setSpaceChooserOpen(true);
       return;
@@ -10215,12 +10190,12 @@ function AppShell() {
         if (import.meta?.env?.DEV) {
           const nextUser = {
             id: 'demo-vendor-1',
-            name: 'Commerçant Demo',
+            name: 'Vendeur Mangoo',
             role: 'vendor',
             roles: ['vendor', 'client'],
-            email: 'vendeur@demo.mangoo.tech',
+            email: 'vendeur@mangoo.tech',
             avatar: '👨‍🎨',
-            shopName: 'Boutique Demo',
+            shopName: 'Boutique Mangoo',
           };
           setUser(nextUser);
           persistUserToDemoUsers(nextUser);
@@ -10280,7 +10255,7 @@ function AppShell() {
 
   useEffect(() => {
     if (!user) return;
-    if (!Boolean(import.meta.env.DEV)) return;
+    if (!import.meta.env.DEV) return;
     if (user.role === 'client' || user.role === 'vendor' || user.role === 'admin') {
       seedDemoData();
     }
@@ -10386,14 +10361,6 @@ function AppShell() {
   // Auto-login effect for marketplace view REMOVED to prevent loops
   // User state is now handled directly in navigation logic
   
-  if (loading) {
-    // Should be unreachable if loading starts at false
-    return <div>Loading forced...</div>;
-  }
-
-  // Ensure currentView is never undefined or null
-  const safeCurrentView = currentView || 'landing';
-
   useEffect(() => {
     try {
       if (window?.history && 'scrollRestoration' in window.history) {
@@ -10422,7 +10389,12 @@ function AppShell() {
       try { window.cancelAnimationFrame(raf); } catch {}
       try { window.clearTimeout(timer); } catch {}
     };
-  }, [location?.pathname, location?.search, safeCurrentView]);
+  }, [location?.pathname, location?.search]);
+
+  if (loading) {
+    // Should be unreachable if loading starts at false
+    return <div>Loading forced...</div>;
+  }
 
   if (location.pathname === '/boosts') {
     const returnTo = String(boostsParams.get('return') || '')

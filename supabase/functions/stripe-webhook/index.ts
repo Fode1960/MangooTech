@@ -183,7 +183,7 @@ serve(async (req) => {
           console.log('Réactivation du pack ID:', existingPack.id)
           
           // Calculer next_billing_date pour les packs payants lors de la réactivation
-          const { data: packInfo, error: packInfoError } = await supabaseClient
+          const { data: packInfo, error: _packInfoError } = await supabaseClient
             .from('packs')
             .select('price')
             .eq('id', packId)
@@ -236,7 +236,7 @@ serve(async (req) => {
           console.log('\n=== ➕ CRÉATION NOUVEAU PACK ===')
           
           // Calculer next_billing_date pour les packs payants
-          const { data: packInfo, error: packInfoError } = await supabaseClient
+          const { data: packInfo, error: _packInfoError } = await supabaseClient
             .from('packs')
             .select('price')
             .eq('id', packId)

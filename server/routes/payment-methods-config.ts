@@ -209,7 +209,7 @@ router.put('/config/:method',
         .limit(1)
         .single();
 
-      let currentConfig = currentConfigData?.config || DEFAULT_PAYMENT_METHODS;
+      const currentConfig = currentConfigData?.config || DEFAULT_PAYMENT_METHODS;
 
       // Vérifier si la méthode existe
       if (!currentConfig[method]) {
@@ -238,7 +238,7 @@ router.put('/config/:method',
       };
 
       // Sauvegarder la nouvelle configuration
-      const { data: newConfig, error } = await supabase
+      const { error } = await supabase
         .from('payment_methods_config')
         .insert({
           config: updatedConfig,
@@ -376,17 +376,17 @@ router.get('/status',
         .limit(1)
         .single();
 
-      const currentConfig = configData?.config || DEFAULT_PAYMENT_METHODS;
+      const currentConfig = (configData as any)?.config || DEFAULT_PAYMENT_METHODS;
 
       // Obtenir les statistiques d'utilisation
-      const { data: usageStats } = await supabase
+      const usageStats = await supabase
         .from('transactions')
         .select('payment_method, status, count')
         .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
         .then(result => {
           // Transformer les données en statistiques par méthode
-          const stats = {};
-          result.data?.forEach(row => {
+          const stats: Record<string, { total: number; successful: number; failed: number; success_rate: number }> = {};
+          result.data?.forEach((row: any) => {
             if (!stats[row.payment_method]) {
               stats[row.payment_method] = {
                 total: 0,
@@ -395,11 +395,12 @@ router.get('/status',
                 success_rate: 0
               };
             }
-            stats[row.payment_method].total += parseInt(row.count) || 1;
+            const count = parseInt(String(row.count || 1), 10) || 1;
+            stats[row.payment_method].total += count;
             if (row.status === 'succeeded') {
-              stats[row.payment_method].successful += parseInt(row.count) || 1;
+              stats[row.payment_method].successful += count;
             } else if (row.status === 'failed') {
-              stats[row.payment_method].failed += parseInt(row.count) || 1;
+              stats[row.payment_method].failed += count;
             }
           });
 
@@ -407,14 +408,14 @@ router.get('/status',
           Object.keys(stats).forEach(method => {
             const stat = stats[method];
             stat.success_rate = stat.total > 0 ? 
-              ((stat.successful / stat.total) * 100).toFixed(2) : 0;
+              Number(((stat.successful / stat.total) * 100).toFixed(2)) : 0;
           });
 
           return stats;
         });
 
       // Combiner la configuration avec les statistiques
-      const statusData = {};
+      const statusData: Record<string, any> = {};
       Object.keys(currentConfig).forEach(method => {
         statusData[method] = {
           ...currentConfig[method],
@@ -456,7 +457,7 @@ router.post('/toggle/:method',
         .limit(1)
         .single();
 
-      let currentConfig = configData?.config || DEFAULT_PAYMENT_METHODS;
+      const currentConfig = configData?.config || DEFAULT_PAYMENT_METHODS;
 
       if (!currentConfig[method]) {
         return res.status(404).json({ 
@@ -469,7 +470,7 @@ router.post('/toggle/:method',
       currentConfig[method].enabled = !currentConfig[method].enabled;
 
       // Sauvegarder la nouvelle configuration
-      const { data: newConfig, error } = await supabase
+      const { error } = await supabase
         .from('payment_methods_config')
         .insert({
           config: currentConfig,

@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { BoostCarteAdmin } from '../components/admin/BoostCarteAdmin'
 import { BoostCreditsAdmin } from '../components/admin/BoostCreditsAdmin'
@@ -8,8 +7,7 @@ import { BoostPricingAdmin } from '../components/admin/BoostPricingAdmin'
 type TabId = 'carte' | 'pricing' | 'credits'
 
 export default function AdminBoosts() {
-  const { isAdmin, loading, error: authError, adminRole } = useAuth()
-  const navigate = useNavigate()
+  const { loading, adminRole } = useAuth()
   const [tab, setTab] = useState<TabId>('carte')
 
   const tabs = useMemo(
@@ -26,47 +24,6 @@ export default function AdminBoosts() {
       <div className="max-w-5xl mx-auto">
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-6">
           <div className="text-gray-700 dark:text-gray-200 font-semibold">Chargement…</div>
-        </div>
-      </div>
-    )
-  }
-
-  if (!isAdmin) {
-    const msg = String(authError || '').trim()
-    const isNetwork = msg.includes('Réseau instable') || msg.includes('signal is aborted') || msg.includes('aborted')
-    const isMissingConfig = msg.includes('Configuration Supabase manquante')
-    const isSessionMissing = msg.includes('Session manquante')
-    const isApiHtml = msg.includes('réponse HTML') || msg.includes('API non disponible') || msg === 'HTTP 200'
-    const showConnIssue = Boolean(msg) && (isNetwork || isMissingConfig || isSessionMissing || isApiHtml)
-
-    return (
-      <div className="max-w-5xl mx-auto">
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-6">
-          <div className="text-gray-900 dark:text-white font-bold text-lg">{showConnIssue ? 'Connexion impossible' : 'Accès refusé'}</div>
-          <div className="text-gray-600 dark:text-gray-300 mt-2">
-            {showConnIssue
-              ? 'Impossible de vérifier votre session admin pour le moment.'
-              : 'Cette page est réservée à l’administrateur.'}
-          </div>
-          {authError && <div className="mt-3 text-sm text-red-600 dark:text-red-400">{authError}</div>}
-          {showConnIssue && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 rounded-xl text-sm font-semibold bg-orange-600 text-white hover:bg-orange-700"
-              >
-                Recharger
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate('/connexion')}
-                className="px-4 py-2 rounded-xl text-sm font-semibold bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-              >
-                Se reconnecter
-              </button>
-            </div>
-          )}
         </div>
       </div>
     )
@@ -103,9 +60,9 @@ export default function AdminBoosts() {
         </div>
       </div>
 
-      {tab === 'carte' && <BoostCarteAdmin isEnabled={isAdmin} />}
-      {tab === 'pricing' && <BoostPricingAdmin isEnabled={isAdmin} />}
-      {tab === 'credits' && <BoostCreditsAdmin isEnabled={isAdmin} />}
+      {tab === 'carte' && <BoostCarteAdmin isEnabled={true} />}
+      {tab === 'pricing' && <BoostPricingAdmin isEnabled={true} />}
+      {tab === 'credits' && <BoostCreditsAdmin isEnabled={true} />}
     </div>
   )
 }

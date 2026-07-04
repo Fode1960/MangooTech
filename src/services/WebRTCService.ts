@@ -19,6 +19,29 @@ export interface CallOptions {
   quality: 'low' | 'medium' | 'high' | 'ultra';
 }
 
+export interface CallConfig {
+  iceServers: RTCIceServer[];
+  voipServer?: {
+    host: string;
+    port: number;
+    protocol: string;
+  };
+}
+
+export interface CallParticipant {
+  id: string;
+  name?: string;
+  stream?: MediaStream;
+}
+
+export interface CallSession {
+  id: string;
+  roomId: string;
+  startedAt: Date;
+  type: 'audio' | 'video' | 'live-shopping';
+  status: 'connecting' | 'active' | 'ended';
+}
+
 export interface LiveShoppingOptions {
   title: string;
   description: string;
@@ -38,6 +61,8 @@ export interface PeerConnection {
   isInitiator: boolean;
 }
 
+type WebRTCEventListener = (data?: unknown) => void;
+
 class WebRTCService {
   private signalingSocket: WebSocket | null = null;
   private peerConnections: Map<string, PeerConnection> = new Map();
@@ -52,15 +77,23 @@ class WebRTCService {
   private rtcConfig: WebRTCConfig | null = null;
   
   // Événements
-  private eventListeners: Map<string, Function[]> = new Map();
+  private eventListeners: Map<string, WebRTCEventListener[]> = new Map();
   
   // État
   private isConnected = false;
   private isInCall = false;
   private isLiveShopping = false;
   
-  constructor() {
+  constructor(config?: CallConfig) {
     this.initializeEventListeners();
+    if (config?.iceServers?.length) {
+      this.rtcConfig = {
+        iceServers: config.iceServers,
+        iceTransportPolicy: 'all',
+        bundlePolicy: 'max-bundle',
+        rtcpMuxPolicy: 'require',
+      };
+    }
   }
 
   /**
@@ -319,16 +352,25 @@ class WebRTCService {
   /**
    * Démarre un appel vidéo/audio
    */
-  async startCall(roomId: string, options: CallOptions): Promise<void> {
+  async startCall(roomId: string, options: CallOptions | 'video' | 'audio'): Promise<void> {
+    const normalizedOptions: CallOptions =
+      typeof options === 'string'
+        ? {
+            video: options === 'video',
+            audio: true,
+            screenShare: false,
+            quality: 'high',
+          }
+        : options;
     try {
       // Obtenir le flux local
-      await this.getUserMedia(options);
+      await this.getUserMedia(normalizedOptions);
       
       // Rejoindre la room
       this.currentRoomId = roomId;
       this.sendSignalingMessage('join-room', {
         roomId: roomId,
-        roomType: options.video ? 'video-call' : 'audio-call',
+        roomType: normalizedOptions.video ? 'video-call' : 'audio-call',
         maxParticipants: 10
       });
       
@@ -471,6 +513,56 @@ class WebRTCService {
       console.error('[WebRTC] Erreur lors du partage d\'écran:', error);
       throw error;
     }
+  }
+
+  async answerCall(_participantId: string, _offer: RTCSessionDescriptionInit): Promise<void> {
+    this.isInCall = true;
+    if (!this.currentRoomId) {
+      this.currentRoomId = `room_${Date.now()}`;
+    }
+    this.emit('callStarted', {
+      session: {
+        id: `session_${Date.now()}`,
+        roomId: this.currentRoomId,
+        startedAt: new Date(),
+        type: 'video',
+        status: 'active',
+      } as CallSession,
+    });
+  }
+
+  toggleMute(): boolean {
+    if (!this.localStream) return false;
+    const shouldMute = this.localStream.getAudioTracks().some((track) => track.enabled);
+    this.localStream.getAudioTracks().forEach((track) => {
+      track.enabled = !shouldMute;
+    });
+    return shouldMute;
+  }
+
+  toggleVideo(): boolean {
+    if (!this.localStream) return false;
+    const shouldDisable = this.localStream.getVideoTracks().some((track) => track.enabled);
+    this.localStream.getVideoTracks().forEach((track) => {
+      track.enabled = !shouldDisable;
+    });
+    return shouldDisable;
+  }
+
+  async shareScreen(): Promise<void> {
+    await this.startScreenShare();
+  }
+
+  async integrateWithVoIP(_credentials: { username: string; password: string }): Promise<void> {
+    return;
+  }
+
+  async getCallStats(): Promise<{ isInCall: boolean; currentRoom: string | null; peerCount: number }> {
+    return {
+      isInCall: this.isInCall,
+      currentRoom: this.currentRoomId,
+      peerCount: this.peerConnections.size,
+    };
   }
   
   /**
@@ -672,14 +764,14 @@ class WebRTCService {
   /**
    * Système d'événements
    */
-  on(event: string, callback: Function): void {
+  on(event: string, callback: WebRTCEventListener): void {
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, []);
     }
     this.eventListeners.get(event)!.push(callback);
   }
   
-  off(event: string, callback: Function): void {
+  off(event: string, callback: WebRTCEventListener): void {
     if (this.eventListeners.has(event)) {
       const callbacks = this.eventListeners.get(event)!;
       const index = callbacks.indexOf(callback);
@@ -689,7 +781,7 @@ class WebRTCService {
     }
   }
   
-  private emit(event: string, data?: any): void {
+  private emit(event: string, data?: unknown): void {
     if (this.eventListeners.has(event)) {
       this.eventListeners.get(event)!.forEach(callback => {
         callback(data);

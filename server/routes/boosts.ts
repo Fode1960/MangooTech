@@ -592,7 +592,7 @@ const repairBadgesHandler = async (req: any, res: any) => {
       const localPlus = localSyncStore.listLocalPlusVendors()
       const vendors = Array.isArray(localPlus) ? localPlus : []
       const localMatch = vendors.find((v: any) => String(v?.id || '').trim() === rawVendorId && String(v?.kind || '').trim().toLowerCase() === 'shop') || null
-      const ownerEmail = String(localMatch?.ownerEmail || localMatch?.owner_email || '').trim().toLowerCase()
+      const ownerEmail = String(localMatch?.ownerEmail || '').trim().toLowerCase()
       if (ownerEmail && ownerEmail.includes('@')) {
         orderVendorIds.add(`local-${ownerEmail}`)
         const aliases = ownerEmail.endsWith('@exemple.com')
@@ -1697,8 +1697,6 @@ router.post('/purchase-with-credits', async (req, res) => {
       userEmail: auth.user?.email,
     })
 
-    const env = String(process.env.NODE_ENV || '').trim().toLowerCase()
-    const isDev = env !== 'production'
     if (isLocalBoostPricingMode()) {
       const email = String(auth.user?.email || '').trim().toLowerCase()
       const result = await purchaseWithLocalCredits({

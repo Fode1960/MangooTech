@@ -98,7 +98,7 @@ export default function AIChatAssistant() {
       'pricing': ['Quels sont vos tarifs groupés?', 'Avez-vous des remises?', 'Puis-je avoir un devis personnalisé?'],
       'shipping': ['Quels sont les délais de livraison?', 'Livrez-vous à l\'international?', 'Puis-je suivre ma commande?'],
       'quality': ['Produits bio certifiés?', 'Contrôle qualité?', 'Garantie satisfait ou remboursé?'],
-      'returns': ['Procédure de retour?', 'Délai de remboursement?', 'Conditions d\échange?'],
+      'returns': ['Procédure de retour?', 'Délai de remboursement?', 'Conditions d\'échange?'],
       'availability': ['Produits en stock?', 'Réapprovisionnement?', 'Disponibilité saisonnière?']
     };
 

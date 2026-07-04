@@ -285,7 +285,7 @@ export function useAuth() {
     }
   };
 
-  const hasPermission = (permission: string): boolean => {
+  const hasPermission = (_permission: string): boolean => {
     if (!authState.isAdmin || !authState.user) return false;
     
     // Pour l'instant, retourner true si admin

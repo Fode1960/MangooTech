@@ -3,7 +3,6 @@ import { createClient } from '@supabase/supabase-js';
 import { 
   getCommissionStats, 
   calculateCommissions,
-  processPaymentCommissions,
   DEFAULT_COMMISSION_RATES 
 } from '../services/commissionService.js';
 

@@ -96,7 +96,7 @@ const authenticateAdmin = async (req: express.Request, res: express.Response, ne
 
 // Configuration du transporteur email
 const createEmailTransporter = () => {
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     ...NOTIFICATION_CONFIG.email.smtp,
     tls: {
       rejectUnauthorized: false
@@ -245,8 +245,9 @@ export const sendPaymentNotification = async (userId: string, paymentData: any) 
 
     // Envoyer l'email si l'utilisateur l'a activé
     const preferences = user.notification_preferences || {};
+    let emailResult: Awaited<ReturnType<typeof sendEmail>> | null = null;
     if (preferences.email !== false) {
-      const emailResult = await sendEmail(user.email, subject, html);
+      emailResult = await sendEmail(user.email, subject, html);
       
       // Mettre à jour la notification avec le résultat de l'email
       if (notification) {
@@ -333,8 +334,9 @@ export const sendCommissionNotification = async (shopId: string, commissionData:
 
     // Envoyer l'email
     const preferences = owner.notification_preferences || {};
+    let emailResult: Awaited<ReturnType<typeof sendEmail>> | null = null;
     if (preferences.email !== false) {
-      const emailResult = await sendEmail(owner.email, subject, html);
+      emailResult = await sendEmail(owner.email, subject, html);
       
       if (notification) {
         await supabase
@@ -541,9 +543,11 @@ router.put('/read-all/:userId',
         throw error;
       }
 
+      const updatedCount = Array.isArray(data) ? (data as unknown[]).length : 0;
+
       res.json({
         success: true,
-        data: { updated_count: data?.length || 0 },
+        data: { updated_count: updatedCount },
         message: 'Toutes les notifications ont été marquées comme lues'
       });
     } catch (error) {

@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 
 // Étendre l'interface Request d'Express pour inclure nos propriétés personnalisées
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       user?: any;

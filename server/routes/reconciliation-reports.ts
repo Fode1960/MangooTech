@@ -402,10 +402,24 @@ router.post('/financial',
         .lte('created_at', endDate.toISOString());
 
       // Grouper les données
-      let financialData = [];
+      let financialData: Array<{
+        date: string;
+        revenue: number;
+        commissions: number;
+        platform_revenue: number;
+        transaction_count: number;
+        successful_transactions: number;
+      }> = [];
       
       if (group_by === 'day') {
-        const dailyData = {};
+        const dailyData: Record<string, {
+          date: string;
+          revenue: number;
+          commissions: number;
+          platform_revenue: number;
+          transaction_count: number;
+          successful_transactions: number;
+        }> = {};
         
         // Traiter les transactions
         transactions?.forEach(transaction => {
@@ -516,7 +530,7 @@ router.get('/export/:reportId',
         });
       }
 
-      const data = report.data;
+      const data: any = report.data;
 
       if (format === 'csv') {
         // Générer CSV
@@ -530,7 +544,7 @@ router.get('/export/:reportId',
             `Totaux,Revenu net,${data.summary.net_revenue},${data.totals.successful_transactions}`,
             '',
             'Méthode,Montant total,Montant réussi,Nombre total,Nombre réussi,Taux réussite',
-            ...Object.entries(data.totals_by_method).map(([method, stats]) => 
+            ...Object.entries(data.totals_by_method as Record<string, any>).map(([method, stats]) => 
               `${method},${stats.total_amount},${stats.successful_amount},${stats.transaction_count},${stats.successful_count},${((stats.successful_count / stats.transaction_count) * 100).toFixed(2)}%`
             )
           ].join('\n');
@@ -649,7 +663,7 @@ router.get('/dashboard',
             total_revenue: totalRevenue,
             total_commissions: totalCommissions,
             net_revenue: totalRevenue - totalCommissions,
-            success_rate: parseFloat(successRate),
+            success_rate: Number(successRate),
             total_transactions: transactions?.length || 0,
             pending_transactions: transactions?.filter(t => t.status === 'pending').length || 0
           },

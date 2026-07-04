@@ -9,6 +9,8 @@ const App = lazy(() => import('./App'))
 try {
   // eslint-disable-next-line no-undef
   window.__mangoo_main_loaded = true
+  // eslint-disable-next-line no-undef
+  window.__mangootech_main_started__ = Date.now()
 } catch {
 }
 
@@ -23,6 +25,12 @@ syncAppHeight()
 window.addEventListener('resize', syncAppHeight)
 window.addEventListener('orientationchange', syncAppHeight)
 
+try {
+  const fallback = document.getElementById('boot-fallback')
+  if (fallback) fallback.remove()
+} catch {
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
@@ -34,3 +42,10 @@ createRoot(document.getElementById('root')!).render(
     </ErrorBoundary>
   </StrictMode>,
 )
+
+requestAnimationFrame(() => {
+  try {
+    window.__mangootech_app_rendered__ = Date.now()
+  } catch {
+  }
+})

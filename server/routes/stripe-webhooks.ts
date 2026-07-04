@@ -410,7 +410,7 @@ async function sendPaymentConfirmationEmail(payment: any) {
   }
 }
 
-async function sendPaymentFailureEmail(payment: any, errorMessage?: string) {
+async function sendPaymentFailureEmail(payment: any, _errorMessage?: string) {
   try {
     const emailData = {
       userId: payment.user_id,
@@ -504,7 +504,7 @@ async function deactivateUserPack(userId: string, packId: string) {
   }
 }
 
-function calculatePackExpiry(packId: string): string {
+function calculatePackExpiry(_packId: string): string {
   // Logique pour calculer la date d'expiration basée sur le type de pack
   const now = new Date();
   
@@ -545,7 +545,7 @@ async function sendSubscriptionConfirmationEmail(transaction: any) {
   }
 }
 
-async function sendSubscriptionFailureEmail(transaction: any, errorMessage?: string) {
+async function sendSubscriptionFailureEmail(transaction: any, _errorMessage?: string) {
   try {
     // Récupérer les détails du pack pour l'email
     const { data: pack } = await supabase

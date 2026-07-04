@@ -32,11 +32,13 @@ export interface BoutiqueCommunicationConfig {
   voicemailEnabled: boolean;
 }
 
+type UnifiedEventListener = (data?: unknown) => void;
+
 class UnifiedCommunicationService {
   private currentUser: any = null;
   private boutiqueConfigs: Map<string, BoutiqueCommunicationConfig> = new Map();
   private activeCalls: Map<string, any> = new Map();
-  private eventListeners: Map<string, Function[]> = new Map();
+  private eventListeners: Map<string, UnifiedEventListener[]> = new Map();
   private gatewayConnection: WebSocket | null = null;
   private isGatewayConnected = false;
   
@@ -57,6 +59,7 @@ class UnifiedCommunicationService {
     this.eventListeners.set('incomingCall', []);
     this.eventListeners.set('gatewayReady', []);
     this.eventListeners.set('gatewayDisconnected', []);
+    this.eventListeners.set('statusChanged', []);
   }
 
   /**
@@ -79,6 +82,19 @@ class UnifiedCommunicationService {
     } catch (error) {
       console.error('[UNIFIED] Erreur d\'initialisation:', error);
       throw error;
+    }
+  }
+
+  private async loadBoutiqueConfigurations(): Promise<void> {
+    if (!this.currentUser?.id) return;
+    const boutiqueId = String(this.currentUser.id);
+    if (!this.boutiqueConfigs.has(boutiqueId)) {
+      this.boutiqueConfigs.set(boutiqueId, {
+        boutiqueId,
+        webrtcRoom: `boutique_${boutiqueId}`,
+        maxConcurrentCalls: 3,
+        voicemailEnabled: true,
+      });
     }
   }
 
@@ -203,18 +219,25 @@ class UnifiedCommunicationService {
   /**
    * Effectuer un appel unifié
    */
-  async makeCall(options: UnifiedCallOptions): Promise<string> {
+  async makeCall(options: UnifiedCallOptions | string, type?: 'audio' | 'video' | 'phone'): Promise<string> {
+    const normalizedOptions: UnifiedCallOptions =
+      typeof options === 'string'
+        ? {
+            target: options,
+            type: type || 'audio',
+          }
+        : options;
     const callId = `call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    console.log(`[UNIFIED] Appel unifié: ${this.currentUser.id} → ${options.target} (${options.type})`);
+    console.log(`[UNIFIED] Appel unifié: ${this.currentUser.id} → ${normalizedOptions.target} (${normalizedOptions.type})`);
     
     try {
-      if (options.type === 'phone') {
+      if (normalizedOptions.type === 'phone') {
         // Appel téléphonique via SIP
-        return await this.makeSIPCall(callId, options);
+        return await this.makeSIPCall(callId, normalizedOptions);
       } else {
         // Appel WebRTC
-        return await this.makeWebRTCCall(callId, options);
+        return await this.makeWebRTCCall(callId, normalizedOptions);
       }
     } catch (error) {
       console.error('[UNIFIED] Erreur lors de l\'appel:', error);
@@ -310,7 +333,7 @@ class UnifiedCommunicationService {
     
     call.status = 'ended';
     call.endTime = new Date();
-    call.duration = call.endTime - call.startTime;
+    call.duration = call.endTime.getTime() - new Date(call.startTime).getTime();
     
     this.emit('callEnded', { callId, reason, duration: call.duration });
     
@@ -328,7 +351,7 @@ class UnifiedCommunicationService {
     if (call) {
       call.status = 'ended';
       call.endTime = new Date();
-      call.duration = callData.duration || (call.endTime - call.startTime);
+      call.duration = callData.duration || (call.endTime.getTime() - new Date(call.startTime).getTime());
       
       this.emit('callEnded', {
         callId: callData.callId,
@@ -374,7 +397,7 @@ class UnifiedCommunicationService {
       type: call.type,
       target: call.target,
       status: call.status,
-      duration: call.duration || (call.endTime ? call.endTime - call.startTime : new Date() - call.startTime)
+      duration: call.duration || (call.endTime ? new Date(call.endTime).getTime() - new Date(call.startTime).getTime() : Date.now() - new Date(call.startTime).getTime())
     }));
     
     return {
@@ -386,17 +409,115 @@ class UnifiedCommunicationService {
     };
   }
 
+  async answerCall(callId: string): Promise<void> {
+    const call = this.activeCalls.get(callId);
+    if (call) {
+      call.status = 'active';
+    }
+    this.emit('statusChanged', {
+      connectionState: this.isGatewayConnected ? 'connected' : 'disconnected',
+      currentCall: call || null,
+    });
+  }
+
+  async getPhoneNumbers(_vendorId?: string): Promise<Array<{
+    id: string;
+    number: string;
+    extension: string;
+    status: 'active' | 'inactive' | 'busy';
+    assignedTo: string;
+    type: 'main' | 'department' | 'mobile';
+    voicemailEnabled: boolean;
+  }>> {
+    return Array.from(this.boutiqueConfigs.values()).map((config) => ({
+      id: config.boutiqueId,
+      number: config.sipNumber || this.generateSipNumber(config.boutiqueId),
+      extension: String(config.sipNumber || this.generateSipNumber(config.boutiqueId)).slice(-3),
+      status: 'active',
+      assignedTo: config.boutiqueId,
+      type: 'main',
+      voicemailEnabled: config.voicemailEnabled,
+    }));
+  }
+
+  async getCallHistory(_vendorId?: string): Promise<any[]> {
+    return Array.from(this.activeCalls.values());
+  }
+
+  async assignPhoneNumber(
+    boutiqueIdOrPayload: string | { vendorId: string; extension: string; type: 'main' | 'department' | 'mobile' },
+    sipNumber?: string,
+  ): Promise<void> {
+    const boutiqueId = typeof boutiqueIdOrPayload === 'string' ? boutiqueIdOrPayload : boutiqueIdOrPayload.vendorId;
+    const resolvedSipNumber =
+      typeof boutiqueIdOrPayload === 'string'
+        ? (sipNumber || this.generateSipNumber(boutiqueId))
+        : `${this.generateSipNumber(boutiqueId)}${boutiqueIdOrPayload.extension || ''}`;
+    const existing = this.boutiqueConfigs.get(boutiqueId);
+    this.boutiqueConfigs.set(boutiqueId, {
+      boutiqueId,
+      webrtcRoom: existing?.webrtcRoom || `boutique_${boutiqueId}`,
+      maxConcurrentCalls: existing?.maxConcurrentCalls || 3,
+      voicemailEnabled: existing?.voicemailEnabled ?? true,
+      ...existing,
+      sipNumber: resolvedSipNumber,
+    });
+  }
+
+  async updatePhoneNumber(boutiqueId: string, next: string | { status?: string; sipNumber?: string }): Promise<void> {
+    const existing = this.boutiqueConfigs.get(boutiqueId);
+    await this.assignPhoneNumber(
+      boutiqueId,
+      typeof next === 'string' ? next : (next.sipNumber || existing?.sipNumber || this.generateSipNumber(boutiqueId)),
+    );
+  }
+
+  async setAudioMuted(muted: boolean): Promise<void> {
+    if (!webRTCService.localMediaStream) return;
+    webRTCService.localMediaStream.getAudioTracks().forEach((track) => {
+      track.enabled = !muted;
+    });
+  }
+
+  async stopVideo(): Promise<void> {
+    webRTCService.localMediaStream?.getVideoTracks().forEach((track) => {
+      track.enabled = false;
+    });
+  }
+
+  async startVideo(): Promise<void> {
+    webRTCService.localMediaStream?.getVideoTracks().forEach((track) => {
+      track.enabled = true;
+    });
+  }
+
+  async shareScreen(): Promise<void> {
+    await webRTCService.shareScreen();
+  }
+
+  async startLiveShopping(title: string): Promise<void> {
+    await webRTCService.startLiveShopping({
+      title,
+      description: title,
+      products: [],
+    });
+  }
+
+  async stopLiveShopping(): Promise<void> {
+    webRTCService.endCall();
+  }
+
   /**
    * Système d'événements
    */
-  on(event: string, callback: Function): void {
+  on(event: string, callback: UnifiedEventListener): void {
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, []);
     }
     this.eventListeners.get(event)!.push(callback);
   }
 
-  off(event: string, callback: Function): void {
+  off(event: string, callback: UnifiedEventListener): void {
     if (this.eventListeners.has(event)) {
       const callbacks = this.eventListeners.get(event)!;
       const index = callbacks.indexOf(callback);
@@ -406,7 +527,7 @@ class UnifiedCommunicationService {
     }
   }
 
-  private emit(event: string, data?: any): void {
+  private emit(event: string, data?: unknown): void {
     if (this.eventListeners.has(event)) {
       this.eventListeners.get(event)!.forEach(callback => {
         callback(data);

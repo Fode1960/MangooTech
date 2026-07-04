@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+/* eslint-disable no-useless-escape */
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { useThemeStore } from '../stores/themeStore';
 import { TrendingUp, TrendingDown, DollarSign, Users, Package, Activity } from 'lucide-react';
@@ -428,7 +429,7 @@ export const PaymentAnalyticsDashboard = () => {
       <div className={`analytics-dashboard min-h-screen p-6 transition-colors duration-300 ${
         isDarkMode ? 'bg-gray-950' : 'bg-gray-50'
       }`}>
-      <style jsx global>{`
+      <style>{`
         /* Styles globaux pour forcer l'uniformité du mode nuit - ULTRA PRIORITAIRES */
         body.dark-mode .min-h-screen {
           background-color: #0f172a !important;
@@ -622,7 +623,7 @@ export const PaymentAnalyticsDashboard = () => {
               <option value="1y">1 an</option>
             </select>
             
-            <style jsx>{`
+            <style>{`
               select {
                 background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
                 background-position: right 0.5rem center;
@@ -655,7 +656,7 @@ export const PaymentAnalyticsDashboard = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <style jsx>{`
+          <style>{`
             @keyframes pulse {
               0%, 100% {
                 opacity: 1;
@@ -895,8 +896,8 @@ export const PaymentAnalyticsDashboard = () => {
           </div>
         </div>
       </div>
+      </div>
       </AnalyticsDarkModeWrapper>
-    </div>
   );
 };
 
