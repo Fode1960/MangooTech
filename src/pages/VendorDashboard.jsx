@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Store, Package, Users, DollarSign, TrendingUp, Settings, LogOut, QrCode, Link, Eye } from 'lucide-react';
 import { supabase } from '../config/supabase';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -16,13 +16,7 @@ const VendorDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
-  useEffect(() => {
-    if (shopId) {
-      loadShopData();
-    }
-  }, [shopId]);
-
-  const loadShopData = async () => {
+  const loadShopData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -53,7 +47,13 @@ const VendorDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate, shopId]);
+
+  useEffect(() => {
+    if (shopId) {
+      void loadShopData();
+    }
+  }, [loadShopData, shopId]);
 
   const loadShopStats = async (shopId) => {
     try {

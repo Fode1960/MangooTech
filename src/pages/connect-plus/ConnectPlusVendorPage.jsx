@@ -121,7 +121,7 @@ export default function ConnectPlusVendorPage({ shops = [], user }) {
     }
     const first = String(shops?.[0]?.slug || '').trim()
     if (!selectedShopSlug && first) setSelectedShopSlug(first)
-  }, [selectedShopSlug, shops, pin, storageKey, url])
+  }, [selectedShopSlug, shops, pin, storageKey, url, user?.email])
 
   const selectedShop = useMemo(() => {
     const slug = String(selectedShopSlug || '').trim()

@@ -2,6 +2,15 @@ import React, { useState, useCallback } from 'react';
 import { Plus, Edit, Trash2, Package, DollarSign, Star, Upload } from 'lucide-react';
 import ImageUpload from './ImageUpload';
 
+const PRODUCT_CATEGORIES = [
+  { id: 'electronics', name: 'Ã‰lectronique', icon: 'ðŸ“±' },
+  { id: 'fashion', name: 'Mode', icon: 'ðŸ‘•' },
+  { id: 'food', name: 'Alimentation', icon: 'ðŸ²' },
+  { id: 'handicraft', name: 'Artisanat', icon: 'ðŸŽ¨' },
+  { id: 'beauty', name: 'BeautÃ©', icon: 'ðŸ’„' },
+  { id: 'home', name: 'Maison', icon: 'ðŸ ' }
+];
+
 const ProductManager = ({ vendorId }) => {
   const [products, setProducts] = useState([
     {
@@ -33,15 +42,6 @@ const ProductManager = ({ vendorId }) => {
     images: []
   });
 
-  const categories = [
-    { id: 'electronics', name: 'Électronique', icon: '📱' },
-    { id: 'fashion', name: 'Mode', icon: '👕' },
-    { id: 'food', name: 'Alimentation', icon: '🍲' },
-    { id: 'handicraft', name: 'Artisanat', icon: '🎨' },
-    { id: 'beauty', name: 'Beauté', icon: '💄' },
-    { id: 'home', name: 'Maison', icon: '🏠' }
-  ];
-
   const handleImagesChange = useCallback((newImages) => {
     setFormData(prev => ({ ...prev, images: newImages }));
   }, []);
@@ -54,7 +54,7 @@ const ProductManager = ({ vendorId }) => {
       id: editingProduct ? editingProduct.id : Date.now(),
       rating: editingProduct ? editingProduct.rating : Math.floor(Math.random() * 5) + 1,
       reviews: editingProduct ? editingProduct.reviews : Math.floor(Math.random() * 50) + 10,
-      icon: categories.find(cat => cat.id === formData.category)?.icon || '📦'
+      icon: PRODUCT_CATEGORIES.find(cat => cat.id === formData.category)?.icon || '📦'
     };
 
     if (editingProduct) {
@@ -211,7 +211,7 @@ const ProductManager = ({ vendorId }) => {
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
                         required
                       >
-                        {categories.map(cat => (
+                        {PRODUCT_CATEGORIES.map(cat => (
                           <option key={cat.id} value={cat.id}>
                             {cat.icon} {cat.name}
                           </option>

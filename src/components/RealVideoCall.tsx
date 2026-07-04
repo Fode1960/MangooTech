@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { webRTCService, CallOptions, LiveShoppingOptions } from '../services/WebRTCService';
 import { useAuth } from '../contexts/AuthContext';
 import { Mic, MicOff, Video, VideoOff, Phone, PhoneOff, Monitor, MonitorOff, Users, ShoppingBag, Settings, Maximize2, Minimize2 } from 'lucide-react';
@@ -103,6 +103,24 @@ const RealVideoCall: React.FC<RealVideoCallProps> = ({
       { id: '3', name: 'Google Pixel 7', price: 599, image: 'https://via.placeholder.com/150' }
     ]
   };
+
+  const endCall = useCallback(() => {
+    webRTCService.endCall();
+    setIsCallActive(false);
+    setIsConnecting(false);
+    setConnectionState('disconnected');
+    setParticipants([]);
+    setCallDuration(0);
+    
+    if (callDurationRef.current) {
+      clearInterval(callDurationRef.current);
+      callDurationRef.current = null;
+    }
+    
+    if (onCallEnd) {
+      onCallEnd();
+    }
+  }, [onCallEnd]);
 
   useEffect(() => {
     // Initialiser le service WebRTC
@@ -222,7 +240,7 @@ const RealVideoCall: React.FC<RealVideoCallProps> = ({
       webRTCService.off('viewerJoined', handleViewerJoined);
       webRTCService.off('callEnded', handleCallEnded);
     };
-  }, []);
+  }, [endCall]);
 
   // Mettre à jour les vidéos distantes quand les participants changent
   useEffect(() => {
@@ -276,24 +294,6 @@ const RealVideoCall: React.FC<RealVideoCallProps> = ({
       console.error('Failed to join call:', error);
       setIsConnecting(false);
       setConnectionState('failed');
-    }
-  };
-
-  const endCall = () => {
-    webRTCService.endCall();
-    setIsCallActive(false);
-    setIsConnecting(false);
-    setConnectionState('disconnected');
-    setParticipants([]);
-    setCallDuration(0);
-    
-    if (callDurationRef.current) {
-      clearInterval(callDurationRef.current);
-      callDurationRef.current = null;
-    }
-    
-    if (onCallEnd) {
-      onCallEnd();
     }
   };
 

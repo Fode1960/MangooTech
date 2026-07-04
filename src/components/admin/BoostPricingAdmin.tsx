@@ -149,7 +149,7 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
     } finally {
       setLoading(false)
     }
-  }, [fetchJsonOnce, getAdminToken, isEnabled])
+  }, [fetchJsonOnce, getAdminToken, isDev, isEnabled])
 
   const seedDefaults = useCallback(async () => {
     if (!isEnabled) return
@@ -197,7 +197,7 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
     } finally {
       setSeeding(false)
     }
-  }, [fetchJsonOnce, getAdminToken, isEnabled, seeding])
+  }, [fetchJsonOnce, getAdminToken, isDev, isEnabled, seeding])
 
   useEffect(() => {
     load()
@@ -272,7 +272,7 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
     } finally {
       setSavingId(null)
     }
-  }, [editing, fetchJsonOnce, getAdminToken, isEnabled, resetDraft, savingId])
+  }, [editing, fetchJsonOnce, getAdminToken, isDev, isEnabled, resetDraft, savingId])
 
   const openCreate = useCallback((kind: BoostKind) => {
     setCreatingKind(kind)

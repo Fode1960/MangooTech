@@ -16,25 +16,12 @@ const NOTIFICATION_CONFIG = {
     smtp: {
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: false,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
       }
     },
     from: process.env.EMAIL_FROM || 'noreply@mangootech.com'
-  },
-  sms: {
-    enabled: false,
-    provider: 'africastalking',
-    api_key: process.env.SMS_API_KEY,
-    username: process.env.SMS_USERNAME
-  },
-  push: {
-    enabled: true,
-    provider: 'onesignal',
-    app_id: process.env.ONESIGNAL_APP_ID,
-    api_key: process.env.ONESIGNAL_API_KEY
   }
 };
 
@@ -43,10 +30,12 @@ const NOTIFICATION_TYPES = {
   PAYMENT_SUCCESS: 'payment_success',
   PAYMENT_FAILED: 'payment_failed',
   PAYMENT_PENDING: 'payment_pending',
-  COMMISSION_PAID: 'commission_paid',
-  SHOP_PAYMENT: 'shop_payment',
-  WITHDRAWAL_REQUEST: 'withdrawal_request',
-  WITHDRAWAL_COMPLETED: 'withdrawal_completed'
+  COMMISSION_PAID: 'commission_paid'
+};
+
+const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error && error.message) return error.message;
+  return String(error || 'Erreur inconnue');
 };
 
 // Middleware d'authentification
@@ -96,8 +85,23 @@ const authenticateAdmin = async (req: express.Request, res: express.Response, ne
 
 // Configuration du transporteur email
 const createEmailTransporter = () => {
+  const smtpUser = String(NOTIFICATION_CONFIG.email.smtp.auth.user || '').trim();
+  const smtpPass = String(NOTIFICATION_CONFIG.email.smtp.auth.pass || '').trim();
+  const smtpHost = String(NOTIFICATION_CONFIG.email.smtp.host || '').trim();
+  const smtpPort = Number(NOTIFICATION_CONFIG.email.smtp.port || 0) || 587;
+
+  if (!smtpHost || !smtpUser || !smtpPass) {
+    throw new Error('Configuration SMTP incomplète: SMTP_HOST, SMTP_USER et SMTP_PASS sont requis.');
+  }
+
   return nodemailer.createTransport({
     ...NOTIFICATION_CONFIG.email.smtp,
+    port: smtpPort,
+    secure: smtpPort === 465,
+    auth: {
+      user: smtpUser,
+      pass: smtpPass
+    },
     tls: {
       rejectUnauthorized: false
     }
@@ -128,7 +132,7 @@ const sendEmail = async (to: string, subject: string, html: string, text?: strin
     return { success: true, messageId: result.messageId };
   } catch (error) {
     console.error('Erreur envoi email:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: getErrorMessage(error) };
   }
 };
 
@@ -138,7 +142,7 @@ export const sendPaymentNotification = async (userId: string, paymentData: any) 
     // Récupérer les informations de l'utilisateur
     const { data: user } = await supabase
       .from('users')
-      .select('email, full_name, phone, notification_preferences')
+      .select('email, full_name, notification_preferences')
       .eq('id', userId)
       .single();
 
@@ -269,7 +273,7 @@ export const sendPaymentNotification = async (userId: string, paymentData: any) 
     };
   } catch (error) {
     console.error('Erreur notification paiement:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: getErrorMessage(error) };
   }
 };
 
@@ -357,7 +361,7 @@ export const sendCommissionNotification = async (shopId: string, commissionData:
     };
   } catch (error) {
     console.error('Erreur notification commission:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: getErrorMessage(error) };
   }
 };
 

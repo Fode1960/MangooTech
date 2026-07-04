@@ -119,7 +119,7 @@ export function BoostCreditsAdmin({ isEnabled }: { isEnabled: boolean }) {
     } finally {
       setLoading(false)
     }
-  }, [fetchJsonOnce, getAdminToken, isEnabled, search, selectedUserId])
+  }, [fetchJsonOnce, getAdminToken, isDev, isEnabled, search, selectedUserId])
 
   const loadBalance = useCallback(async (userId: string) => {
     if (!isEnabled) return
@@ -138,7 +138,7 @@ export function BoostCreditsAdmin({ isEnabled }: { isEnabled: boolean }) {
     } catch {
       setBalanceXof(null)
     }
-  }, [fetchJsonOnce, getAdminToken, isEnabled])
+  }, [fetchJsonOnce, getAdminToken, isDev, isEnabled])
 
   useEffect(() => {
     loadUsers()
@@ -184,7 +184,7 @@ export function BoostCreditsAdmin({ isEnabled }: { isEnabled: boolean }) {
     } catch (e: any) {
       setError(e?.message || 'Erreur ajout crédit')
     }
-  }, [amountXof, description, fetchJsonOnce, getAdminToken, isEnabled, loadBalance, selectedUserId])
+  }, [amountXof, description, fetchJsonOnce, getAdminToken, isDev, isEnabled, loadBalance, selectedUserId])
 
   return (
     <div className="space-y-4">

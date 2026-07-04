@@ -40,7 +40,7 @@ const WebRTCJoinPage: React.FC = () => {
   const returnFromLabel = String(searchParams.get('returnFromLabel') || '').trim()
   const forceOffline = String(searchParams.get('forceOffline') || '').trim() === '1';
   const autoCall = autoCallParam;
-  const startCallSignal = useMemo(() => (autoCall ? Date.now() : 0), [autoCall, roomId, userId, role]);
+  const startCallSignal = useMemo(() => (autoCall ? Date.now() : 0), [autoCall]);
 
   React.useEffect(() => {
     const rid = String(rawRoomId || '').trim()

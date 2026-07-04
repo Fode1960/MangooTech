@@ -67,13 +67,45 @@ const MiniBoutiqueTestSimple: React.FC = () => {
   ];
 
   useEffect(() => {
-    // Récupérer l'utilisateur courant
-    const user = getCurrentUser();
+    const storageEntries = [
+      ['local_mode', 'local_user'],
+      ['test_mode', 'test_user'],
+      ['demo_mode', 'demo_user'],
+      ['fake_mode', 'fake_user'],
+    ] as const;
+
+    const user = storageEntries.reduce<any>((found, [modeKey, userKey]) => {
+      if (found) return found;
+      const mode = localStorage.getItem(modeKey);
+      const rawUser = localStorage.getItem(userKey);
+      if (mode === 'true' && rawUser) {
+        try {
+          return JSON.parse(rawUser);
+        } catch {
+          return null;
+        }
+      }
+      return null;
+    }, null);
+
     setCurrentUser(user);
-    
+
     if (user) {
-      // Charger les boutiques depuis le localStorage
-      loadShops(user.id);
+      const shopsKey = getShopsKey(user.id);
+      const savedShops = localStorage.getItem(shopsKey);
+      if (savedShops) {
+        try {
+          const parsedShops = JSON.parse(savedShops);
+          setShops(parsedShops);
+          console.log(`Boutiques chargÃ©es pour l'utilisateur ${user.id}:`, parsedShops.length);
+        } catch (error) {
+          console.error('Erreur lors du chargement des boutiques:', error);
+          setShops([]);
+        }
+      } else {
+        console.log(`Aucune boutique trouvÃ©e pour l'utilisateur ${user.id}`);
+        setShops([]);
+      }
     }
   }, []);
 

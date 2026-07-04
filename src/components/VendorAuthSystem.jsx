@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Key, QrCode, Link, Eye, EyeOff, Copy, Check, RefreshCw } from 'lucide-react';
 import { supabase } from '../config/supabase';
 import QRCode from 'qrcode';
@@ -10,42 +10,32 @@ const VendorAuthSystem = ({ boutique }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    if (boutique?.id) {
-      loadAuthSettings();
+  const generateSecurePassword = useCallback(() => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-  }, [boutique]);
+    return password;
+  }, []);
 
-  const loadAuthSettings = async () => {
+  const generateQRCode = useCallback(async (url) => {
     try {
-      setLoading(true);
-      
-      // Vérifier si des paramètres d'authentification existent
-      const { data, error } = await supabase
-        .from('shop_auth')
-        .select('*')
-        .eq('shop_id', boutique.id)
-        .single();
-
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-        console.error('Erreur lors du chargement:', error);
-      }
-
-      if (data) {
-        setAuthSettings(data);
-        generateQRCode(data.shop_url);
-      } else {
-        // Créer les paramètres d'authentification par défaut
-        await createDefaultAuthSettings();
-      }
+      const qrCodeDataUrl = await QRCode.toDataURL(url, {
+        width: 200,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      });
+      setQrCodeUrl(qrCodeDataUrl);
     } catch (error) {
-      console.error('Erreur:', error);
-    } finally {
-      setLoading(false);
+      console.error('Erreur gÃ©nÃ©ration QR:', error);
     }
-  };
+  }, []);
 
-  const createDefaultAuthSettings = async () => {
+  const createDefaultAuthSettings = useCallback(async () => {
     try {
       const shopUrl = `https://mangootech.com/shop/${boutique.slug || boutique.id}`;
       const vendorLogin = `vendor_${boutique.id.slice(0, 8)}`;
@@ -82,32 +72,40 @@ const VendorAuthSystem = ({ boutique }) => {
     } catch (error) {
       console.error('Erreur création paramètres:', error);
     }
-  };
+  }, [boutique, generateQRCode, generateSecurePassword]);
 
-  const generateSecurePassword = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
-    let password = '';
-    for (let i = 0; i < 12; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return password;
-  };
+  useEffect(() => {
+    if (!boutique?.id) return;
 
-  const generateQRCode = async (url) => {
-    try {
-      const qrCodeDataUrl = await QRCode.toDataURL(url, {
-        width: 200,
-        margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
+    const run = async () => {
+      try {
+        setLoading(true);
+        
+        const { data, error } = await supabase
+          .from('shop_auth')
+          .select('*')
+          .eq('shop_id', boutique.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Erreur lors du chargement:', error);
         }
-      });
-      setQrCodeUrl(qrCodeDataUrl);
-    } catch (error) {
-      console.error('Erreur génération QR:', error);
-    }
-  };
+
+        if (data) {
+          setAuthSettings(data);
+          generateQRCode(data.shop_url);
+        } else {
+          await createDefaultAuthSettings();
+        }
+      } catch (error) {
+        console.error('Erreur:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void run();
+  }, [boutique?.id, createDefaultAuthSettings, generateQRCode]);
 
   const regeneratePassword = async () => {
     if (!confirm('Êtes-vous sûr de vouloir regénérer le mot de passe ? Le mot de passe actuel sera définitivement perdu.')) return;

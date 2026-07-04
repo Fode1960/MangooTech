@@ -228,8 +228,8 @@ export default function BoostReturn({ mode }: { mode: 'success' | 'cancel' }) {
     return () => window.clearInterval(id)
   }, [])
 
-  const sessionId = useMemo(() => String(params.get('session_id') || '').trim(), [params, tick])
-  const orderId = useMemo(() => String(params.get('order_id') || '').trim(), [params, tick])
+  const sessionId = useMemo(() => String(params.get('session_id') || '').trim(), [params])
+  const orderId = useMemo(() => String(params.get('order_id') || '').trim(), [params])
 
   useEffect(() => {
     try {

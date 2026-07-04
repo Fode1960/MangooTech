@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../config/supabase';
 import { useThemeStore } from '../stores/themeStore';
 import { 
@@ -99,16 +99,7 @@ export default function AdminPaymentsDashboard() {
     mobile_money: '#10B981'
   };
 
-  useEffect(() => {
-    fetchPaymentsData();
-    const timer = setInterval(() => {
-      setLastUpdated(new Date());
-    }, 60000); // Mise à jour toutes les minutes
-
-    return () => clearInterval(timer);
-  }, [period, selectedMethod, selectedStatus]);
-
-  const fetchPaymentsData = async () => {
+  const fetchPaymentsData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -154,7 +145,16 @@ export default function AdminPaymentsDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [period, selectedMethod, selectedStatus]);
+
+  useEffect(() => {
+    void fetchPaymentsData();
+    const timer = setInterval(() => {
+      setLastUpdated(new Date());
+    }, 60000); // Mise a jour toutes les minutes
+
+    return () => clearInterval(timer);
+  }, [fetchPaymentsData]);
 
   const generateDemoData = () => {
     // Données de démonstration

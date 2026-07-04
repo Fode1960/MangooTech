@@ -25,7 +25,7 @@ const LiveShopping: React.FC = () => {
   // Définir le rôle du client - MODIFIÉ TEMPORAIREMENT POUR TEST
   useEffect(() => {
     setUserRole('vendor');
-  }, []);
+  }, [setUserRole]);
 
   const liveSessions: LiveSession[] = [
     {

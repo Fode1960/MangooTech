@@ -1149,7 +1149,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
 
     setError('Identifiants incorrects');
     setSubmitting(false)
-  }, [email, navigate, onLogin, password, submitting]);
+  }, [email, hasSupabaseAuth, navigate, onLogin, password, submitting]);
 
   return (
     <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 ${
@@ -1795,7 +1795,7 @@ const Register = ({ onRegister, onBack }) => {
     } catch {
       // ignore
     }
-  }, [email, ensureUniqueSlug, logoDataUrl, name, password, persistCreatedShop, primaryColor, secondaryColor, shopCategory, shopName, slugify]);
+  }, [email, ensureUniqueSlug, logoDataUrl, name, onRegister, password, persistCreatedShop, primaryColor, secondaryColor, shopCategory, shopName, slugify]);
 
   const finalizeRegister = useCallback(() => {
     const newUser = {
@@ -3516,7 +3516,7 @@ const VendorDashboard = ({ user }) => {
     } catch {
       setVendorShops([]);
     }
-  }, [finalizeTimeInput, importLocalPlusShopsForCurrentUser, mapVendorCategoryToShopCategory, normalizeEmail, user?.email, user?.name]);
+  }, [finalizeTimeInput, importLocalPlusShopsForCurrentUser, mapVendorCategoryToShopCategory, normalizeEmail, user?.email, user?.id, user?.name]);
 
   const loadShopForSettings = useCallback(async (slug) => {
     const targetSlug = String(slug || '').trim();
@@ -3696,7 +3696,7 @@ const VendorDashboard = ({ user }) => {
       timezone: '',
       phone: '',
     };
-  }, [finalizeTimeInput, mapVendorCategoryToShopCategory, supabaseConfig?.hasAnonKey, supabaseConfig?.hasUrl, user?.email, user?.name]);
+  }, [finalizeTimeInput, mapVendorCategoryToShopCategory, user?.email, user?.name]);
 
   const syncShopToLocalStorage = useCallback((shop) => {
     const slug = String(shop?.slug || '').trim();
@@ -5852,7 +5852,7 @@ const ClientMarketplace = ({ user }) => {
       const price = parseFloat(item.price.replace(/[^\d]/g, ''));
       return total + (price * item.quantity);
     }, 0);
-  }, [cart, parsePrice]);
+  }, [cart]);
 
   // Filtrage et tri optimisés
   const filteredProducts = useMemo(() => {
@@ -5970,7 +5970,7 @@ const ClientMarketplace = ({ user }) => {
     toast.success('Paiement réussi');
     useStore.getState().setCart([]);
     setShowPayment(false);
-  }, [cart, cartTotal, email, user?.address, user?.email, user?.id, user?.name, user?.phone]);
+  }, [cart, cartTotal, email, user?.address, user?.id, user?.name, user?.phone]);
 
   const handlePaymentError = useCallback((error) => {
     alert(`Erreur de paiement: ${error.message}`);
@@ -6628,7 +6628,7 @@ const ShopsDirectory = () => {
     } finally {
       setSupabaseShopsLoading(false)
     }
-  }, [])
+  }, [normalizeCategoryFromLocalPlus])
 
   const loadLocalSyncShops = useCallback(async () => {
     if (!isLocalSyncEnabled()) {
@@ -7086,7 +7086,7 @@ const ShopsDirectory = () => {
     if (next.toString() !== current.toString()) {
       setSearchParams(next, { replace: true });
     }
-  }, [location.search, searchTerm, selectedCategory, setSearchParams]);
+  }, [searchTerm, selectedCategory, setSearchParams]);
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 pt-6 pb-16">
@@ -7922,7 +7922,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
     setWalletTopupAmount('');
     setWalletTopupReference('');
     setWalletPhoneNumber('');
-  }, [user?.address, user?.name, user?.phone]);
+  }, [user?.address, user?.email, user?.name, user?.phone]);
 
   const walletKey = useMemo(() => getWalletKeyFromUser(user), [user]);
 
@@ -9603,7 +9603,7 @@ function AppShell() {
     return () => {
       cancelled = true
     }
-  }, [user?.email, user?.role])
+  }, [user])
 
   useEffect(() => {
     const lpView = searchParams.get('lp_view');
@@ -10356,7 +10356,7 @@ function AppShell() {
       } catch {
       }
     }
-  }, [boostsEmail, boostsParams, location.pathname])
+  }, [boostsEmail, boostsParams, location.pathname, location.search, navigate])
 
   // Auto-login effect for marketplace view REMOVED to prevent loops
   // User state is now handled directly in navigation logic

@@ -61,7 +61,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     unreadMessages.forEach(msg => {
       markAsRead(conversation.id, msg.id);
     });
-  }, [conversation]);
+  }, [conversation, markAsRead]);
 
   const formatTime = (date: Date) => {
     const now = new Date();

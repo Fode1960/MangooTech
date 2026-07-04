@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 /* eslint-disable no-useless-escape */
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { useThemeStore } from '../stores/themeStore';
@@ -272,7 +272,7 @@ export const PaymentAnalyticsDashboard = () => {
         existingStyle.remove();
       }
     };
-  }, [dateRange, currency, isDarkMode]);
+  }, [fetchAnalyticsData, isDarkMode]);
 
   // Forcer les styles sur tous les éléments après le rendu
   useEffect(() => {
@@ -336,7 +336,7 @@ export const PaymentAnalyticsDashboard = () => {
     }
   }, [isDarkMode, loading]); // Re-exécuter quand isDarkMode ou loading change
 
-  const fetchAnalyticsData = async () => {
+  const fetchAnalyticsData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`http://localhost:3009/api/analytics/stats?range=${dateRange}&currency=${currency}`);
@@ -402,7 +402,7 @@ export const PaymentAnalyticsDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currency, dateRange]);
 
   if (loading) {
     return (

@@ -165,7 +165,7 @@ function buildInvoiceOrder(order: Order): VendorOrder {
     totalAmount: orderAmount(order),
     status: order.status,
     orderDate: order.createdAt,
-    paymentMethod: String(order?.payment?.provider || 'Paiement confirmé'),
+    paymentMethod: String(order?.payment?.provider || 'Paiement confirmï¿½'),
     notes: order.vendorName ? `Boutique: ${order.vendorName}` : undefined,
   };
 }
@@ -216,7 +216,7 @@ export default function VendorOrderHistory({ vendorId }: VendorOrderHistoryProps
   const deliveryMap = useMemo(() => {
     const data = readJson('mangoo-delivery-by-order');
     return data && typeof data === 'object' ? data : {};
-  }, [orders]);
+  }, []);
 
   const filteredOrders = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -313,7 +313,7 @@ export default function VendorOrderHistory({ vendorId }: VendorOrderHistoryProps
         <div>
           <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Commandes clients</h2>
           <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mt-1`}>
-            {filteredOrders.length} commande(s) • {totalRevenue.toLocaleString('fr-FR')} FCFA
+            {filteredOrders.length} commande(s) ï¿½ {totalRevenue.toLocaleString('fr-FR')} FCFA
           </p>
         </div>
         <div className={`px-3 py-2 rounded-lg text-sm font-black ${isDark ? 'bg-emerald-900/20 text-emerald-400' : 'bg-emerald-100 text-emerald-800'}`}>
@@ -350,7 +350,7 @@ export default function VendorOrderHistory({ vendorId }: VendorOrderHistoryProps
                       </span>
                       {deliveryLaunched && (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-black bg-orange-100 text-orange-800 border border-orange-200">
-                          ?? Livraison lancée
+                          ?? Livraison lancï¿½e
                         </span>
                       )}
                     </div>
@@ -367,11 +367,11 @@ export default function VendorOrderHistory({ vendorId }: VendorOrderHistoryProps
                       </div>
                       <div className="flex items-center space-x-2 mb-1">
                         <MapPin className={`h-4 w-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
-                        <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{order.customerAddress || 'Adresse client à compléter'}</span>
+                        <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{order.customerAddress || 'Adresse client ï¿½ complï¿½ter'}</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <DollarSign className={`h-4 w-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
-                        <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{String(order?.payment?.provider || 'Paiement confirmé')}</span>
+                        <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{String(order?.payment?.provider || 'Paiement confirmï¿½')}</span>
                       </div>
                     </div>
                     <div>
@@ -408,7 +408,7 @@ export default function VendorOrderHistory({ vendorId }: VendorOrderHistoryProps
                     className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm ${isDark ? 'bg-blue-900/20 text-blue-400 hover:bg-blue-900/30' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
                   >
                     <Eye className="h-4 w-4" />
-                    <span>Détails</span>
+                    <span>Dï¿½tails</span>
                   </button>
                   <button
                     onClick={() => setInvoiceOrder(buildInvoiceOrder(order))}
@@ -423,9 +423,9 @@ export default function VendorOrderHistory({ vendorId }: VendorOrderHistoryProps
                       ? `${isDark ? 'bg-white/5 border border-white/10 text-gray-400' : 'bg-white border border-gray-200 text-gray-400'} px-4 py-2 rounded-xl font-black opacity-70 cursor-not-allowed`
                       : 'px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-green-600 text-white font-black hover:from-orange-600 hover:to-green-700 transition-all'
                     }
-                    title={deliveryLaunched ? 'La livraison a déjà été lancée pour cette commande' : 'Déclencher la livraison une fois le colis prêt'}
+                    title={deliveryLaunched ? 'La livraison a dï¿½jï¿½ ï¿½tï¿½ lancï¿½e pour cette commande' : 'Dï¿½clencher la livraison une fois le colis prï¿½t'}
                   >
-                    {deliveryLaunched ? '? Livraison lancée' : '?? Colis prêt -> Lancer la livraison'}
+                    {deliveryLaunched ? '? Livraison lancï¿½e' : '?? Colis prï¿½t -> Lancer la livraison'}
                   </button>
                 </div>
               </div>
@@ -436,8 +436,8 @@ export default function VendorOrderHistory({ vendorId }: VendorOrderHistoryProps
         {filteredOrders.length === 0 && (
           <div className={`text-center py-8 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
             <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Aucune commande vendeur trouvée</p>
-            <p className="text-sm mt-2">Les commandes payées apparaissent ici pour lancer la livraison côté vendeur.</p>
+            <p>Aucune commande vendeur trouvï¿½e</p>
+            <p className="text-sm mt-2">Les commandes payï¿½es apparaissent ici pour lancer la livraison cï¿½tï¿½ vendeur.</p>
           </div>
         )}
       </div>
@@ -447,7 +447,7 @@ export default function VendorOrderHistory({ vendorId }: VendorOrderHistoryProps
           <div className={`rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
-                <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Détails de la commande {selectedOrder.id}</h3>
+                <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Dï¿½tails de la commande {selectedOrder.id}</h3>
                 <button
                   onClick={() => setSelectedOrder(null)}
                   className={`text-2xl ${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-600 hover:text-gray-800'}`}
@@ -460,14 +460,14 @@ export default function VendorOrderHistory({ vendorId }: VendorOrderHistoryProps
                 <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
                   <h4 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Informations client</h4>
                   <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Nom :</strong> {selectedOrder.customerName}</p>
-                  <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Téléphone :</strong> {selectedOrder.customerPhone || '—'}</p>
-                  <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Adresse :</strong> {selectedOrder.customerAddress || '—'}</p>
+                  <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Tï¿½lï¿½phone :</strong> {selectedOrder.customerPhone || 'ï¿½'}</p>
+                  <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Adresse :</strong> {selectedOrder.customerAddress || 'ï¿½'}</p>
                 </div>
                 <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                  <h4 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Détails</h4>
+                  <h4 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Dï¿½tails</h4>
                   <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Date :</strong> {new Date(selectedOrder.createdAt).toLocaleString('fr-FR')}</p>
                   <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Statut :</strong> {selectedOrder.status}</p>
-                  <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Paiement :</strong> {String(selectedOrder?.payment?.provider || 'Paiement confirmé')}</p>
+                  <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Paiement :</strong> {String(selectedOrder?.payment?.provider || 'Paiement confirmï¿½')}</p>
                   <p className={isDark ? 'text-gray-300' : 'text-gray-700'}><strong>Total :</strong> {orderAmount(selectedOrder).toLocaleString('fr-FR')} FCFA</p>
                 </div>
                 <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
@@ -490,7 +490,7 @@ export default function VendorOrderHistory({ vendorId }: VendorOrderHistoryProps
                   onClick={() => setInvoiceOrder(buildInvoiceOrder(selectedOrder))}
                   className="px-4 py-2 rounded-lg font-semibold bg-emerald-600 text-white hover:bg-emerald-700"
                 >
-                  ?? Émettre facture
+                  ?? ï¿½mettre facture
                 </button>
                 <button
                   onClick={() => setSelectedOrder(null)}

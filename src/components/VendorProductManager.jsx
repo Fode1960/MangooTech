@@ -196,7 +196,7 @@ const VendorProductManager = ({ shops = [], defaultShopSlug = '' }) => {
     } catch {
       return 0;
     }
-  }, [selectedShopSlug, products.length]);
+  }, [selectedShopSlug]);
 
   const refreshSession = useCallback(async () => {
     const { isDevHost } = getHostMeta();

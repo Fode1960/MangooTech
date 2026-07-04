@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { useThemeStore } from '../stores/themeStore';
 import { TrendingUp, TrendingDown, DollarSign, Users, Package, Activity } from 'lucide-react';
@@ -14,11 +14,7 @@ export const PaymentAnalyticsDashboard = () => {
   const [dateRange, setDateRange] = useState('30d');
   const [currency, setCurrency] = useState('all');
 
-  useEffect(() => {
-    fetchAnalyticsData();
-  }, [dateRange, currency]);
-
-  const fetchAnalyticsData = async () => {
+  const fetchAnalyticsData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`http://localhost:3009/api/analytics/stats?range=${dateRange}&currency=${currency}`);
@@ -83,7 +79,11 @@ export const PaymentAnalyticsDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currency, dateRange]);
+
+  useEffect(() => {
+    fetchAnalyticsData();
+  }, [fetchAnalyticsData]);
 
   if (loading) {
     return (

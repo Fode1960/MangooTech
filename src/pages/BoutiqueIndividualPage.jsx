@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../config/supabase';
 import { Store, Phone, Mail, MapPin, Star, Share2, Heart, ShoppingBag } from 'lucide-react';
@@ -10,11 +10,7 @@ const BoutiqueIndividualPage = () => {
   const [error, setError] = useState(null);
   const [products, setProducts] = useState([]);
 
-  useEffect(() => {
-    loadBoutique();
-  }, [boutiqueSlug]);
-
-  const loadBoutique = async () => {
+  const loadBoutique = useCallback(async () => {
     try {
       setLoading(true);
       console.log(`🏪 [BOUTIQUE] Chargement boutique: ${boutiqueSlug}`);
@@ -49,7 +45,11 @@ const BoutiqueIndividualPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [boutiqueSlug]);
+
+  useEffect(() => {
+    void loadBoutique();
+  }, [loadBoutique]);
 
   const shareBoutique = () => {
     if (navigator.share) {

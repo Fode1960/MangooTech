@@ -7,9 +7,7 @@ import './index.css'
 const App = lazy(() => import('./App'))
 
 try {
-  // eslint-disable-next-line no-undef
   window.__mangoo_main_loaded = true
-  // eslint-disable-next-line no-undef
   window.__mangootech_main_started__ = Date.now()
 } catch {
 }

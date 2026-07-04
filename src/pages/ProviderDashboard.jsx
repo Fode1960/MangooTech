@@ -309,7 +309,7 @@ export default function ProviderDashboard() {
       if (score(p) > score(prev)) byId.set(p.id, p);
     });
     return Array.from(byId.values());
-  }, [email, isAdmin, localVersion, remoteProviders, vendorIdFromQuery]);
+  }, [email, isAdmin, remoteProviders, vendorIdFromQuery]);
 
   useEffect(() => {
     if (isAdmin) return;
@@ -469,7 +469,7 @@ export default function ProviderDashboard() {
   const requestMeta = useMemo(() => {
     const raw = safeParseJson(localStorage.getItem('mangoo_service_request_meta'), {});
     return raw && typeof raw === 'object' ? raw : {};
-  }, [requestMetaVersion]);
+  }, []);
 
   const setRequestMeta = useCallback((requestId, patch) => {
     try {
@@ -719,7 +719,7 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
     } catch {
     }
     window.location.href = rawTarget;
-  }, [returnTo, selectedProvider?.raw?.id, selectedProviderId]);
+  }, [returnTo, selectedProviderId]);
 
   const switchAccount = useCallback(async () => {
     try {

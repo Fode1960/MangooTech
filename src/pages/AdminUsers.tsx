@@ -69,23 +69,6 @@ export default function AdminUsers({ embedded = false, scope = 'all' }: AdminUse
   const [formRole, setFormRole] = useState('client');
   const [formStatus, setFormStatus] = useState<'active' | 'inactive'>('active');
   const [formError, setFormError] = useState('');
-
-
-  useEffect(() => {
-    seedDemoUsersIfMissing();
-    refreshUsers();
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY) refreshUsers();
-    };
-    const onCustom = () => refreshUsers();
-    window.addEventListener('storage', onStorage);
-    window.addEventListener('demo-users-updated', onCustom);
-    return () => {
-      window.removeEventListener('storage', onStorage);
-      window.removeEventListener('demo-users-updated', onCustom);
-    };
-  }, []);
-
   const refreshUsers = useCallback(() => {
     try {
       setLoading(true);
@@ -119,6 +102,21 @@ export default function AdminUsers({ embedded = false, scope = 'all' }: AdminUse
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    seedDemoUsersIfMissing();
+    refreshUsers();
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY) refreshUsers();
+    };
+    const onCustom = () => refreshUsers();
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('demo-users-updated', onCustom);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('demo-users-updated', onCustom);
+    };
+  }, [refreshUsers]);
 
   const openCreate = useCallback(() => {
     setFormError('');

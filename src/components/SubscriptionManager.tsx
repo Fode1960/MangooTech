@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { useAuth } from '../contexts/AuthContext';
 import { useThemeStore } from '../stores/themeStore';
@@ -68,13 +68,8 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
   const displayPacks = packs.length > 0 ? packs : defaultPacks;
 
   // Charger les abonnements de l'utilisateur
-  useEffect(() => {
-    if (user) {
-      loadUserSubscriptions();
-    }
-  }, [user]);
-
-  const loadUserSubscriptions = async () => {
+  const loadUserSubscriptions = useCallback(async () => {
+    if (!user) return;
     try {
       setLoadingSubscriptions(true);
       const response = await fetch(`/api/stripe-subscriptions/user-subscriptions/${user.id}`);
@@ -90,7 +85,13 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
     } finally {
       setLoadingSubscriptions(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      void loadUserSubscriptions();
+    }
+  }, [loadUserSubscriptions, user]);
 
   const handleSubscribe = async (pack: Pack) => {
     if (!user) {

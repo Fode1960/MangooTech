@@ -262,12 +262,14 @@ export default function ARProductViewer() {
 
   // Nettoyage
   useEffect(() => {
+    const videoElement = videoRef.current;
+
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
-      if (videoRef.current?.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
+      if (videoElement?.srcObject) {
+        const stream = videoElement.srcObject as MediaStream;
         stream.getTracks().forEach(track => track.stop());
       }
     };
