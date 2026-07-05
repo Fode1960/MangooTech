@@ -39,9 +39,10 @@ const VoIPSIPManager: React.FC<VoIPSIPManagerProps> = ({
   const currentCallId = useRef<string>('');
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
+  const connectToVoIPServerRef = useRef<() => Promise<void>>(async () => {});
 
   useEffect(() => {
-    connectToVoIPServer();
+    void connectToVoIPServerRef.current();
     return () => {
       cleanup();
     };
@@ -173,6 +174,8 @@ const VoIPSIPManager: React.FC<VoIPSIPManagerProps> = ({
       setConnectionError('Erreur lors de la connexion');
     }
   };
+
+  connectToVoIPServerRef.current = connectToVoIPServer;
 
   const setupAudio = async () => {
     try {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Play, Pause, ShoppingCart, Heart, MessageCircle, Share2, Settings, 
   Users, Eye, Star, Timer, TrendingUp, Gift, X, Send, Smile,
@@ -155,7 +155,7 @@ const LiveShoppingManager: React.FC<LiveShoppingManagerProps> = ({
   };
 
   // Créer un flux vidéo simulé avec animation MangooTech
-  const createSimulatedVideoStream = () => {
+  const createSimulatedVideoStream = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -272,7 +272,7 @@ const LiveShoppingManager: React.FC<LiveShoppingManagerProps> = ({
     }
 
     return stream;
-  };
+  }, [isLive]);
 
   // Effet pour initialiser le flux vidéo
   useEffect(() => {
@@ -282,7 +282,7 @@ const LiveShoppingManager: React.FC<LiveShoppingManagerProps> = ({
         videoRef.current.srcObject = stream;
       }
     }
-  }, [mode, isLive]);
+  }, [createSimulatedVideoStream, mode]);
 
   // PAS d'initialisation automatique - comme VoIPFinalTest, attendre le clic utilisateur
 

@@ -78,6 +78,7 @@ const VoIPIntegration: React.FC = () => {
   const wsConnectionRef = useRef<WebSocket | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const connectToVoIPServerRef = useRef<() => Promise<void>>(async () => {});
 
   // Configuration WebRTC
   const iceServers = [
@@ -88,7 +89,7 @@ const VoIPIntegration: React.FC = () => {
   // Effet pour la connexion WebSocket
   useEffect(() => {
     if (credentials.username && credentials.password) {
-      connectToVoIPServer();
+      void connectToVoIPServerRef.current();
     }
     
     return () => {
@@ -163,6 +164,8 @@ const VoIPIntegration: React.FC = () => {
       setIsConnected(false);
     }
   };
+
+  connectToVoIPServerRef.current = connectToVoIPServer;
 
   // Déconnexion du serveur VoIP
   const disconnectFromVoIPServer = () => {

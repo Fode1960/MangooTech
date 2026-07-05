@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Play, Pause, ShoppingCart, Heart, MessageCircle, Share2, Settings, 
   Users, Eye, Star, Timer, TrendingUp, Gift, X, Send, Smile,
@@ -183,7 +183,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
   ];
 
   // WebSocket connection for VoIP
-  const connectWebSocket = () => {
+  const connectWebSocket = useCallback(() => {
     try {
       const ws = new WebSocket('ws://localhost:3040');
       wsRef.current = ws;
@@ -256,7 +256,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
       console.error('❌ Erreur connexion WebSocket:', error);
       setCallStatus('Erreur de connexion');
     }
-  };
+  }, [mode, roomId, sipNumber]);
 
   // Initialize WebSocket
   useEffect(() => {
@@ -267,7 +267,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
         wsRef.current.close();
       }
     };
-  }, [sipNumber, sipPassword]);
+  }, [connectWebSocket]);
 
   // Start call from modal
   const startCall = () => {
@@ -400,8 +400,41 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
     setCallStatus('Appel terminé');
   };
 
+  // Start audio level monitoring
+  const startAudioLevelMonitoring = useCallback(() => {
+    if (!localAudioAnalyserRef.current) return;
+    
+    const updateAudioLevels = () => {
+      // Local audio level (microphone)
+      if (localAudioAnalyserRef.current) {
+        const localDataArray = new Uint8Array(localAudioAnalyserRef.current.frequencyBinCount);
+        localAudioAnalyserRef.current.getByteFrequencyData(localDataArray);
+        
+        const localAverage = localDataArray.reduce((sum, value) => sum + value, 0) / localDataArray.length;
+        const localLevel = Math.round((localAverage / 255) * 100);
+        
+        setLocalAudioLevel(localLevel);
+      }
+      
+      // Remote audio level (call participant)
+      if (remoteAudioAnalyserRef.current) {
+        const remoteDataArray = new Uint8Array(remoteAudioAnalyserRef.current.frequencyBinCount);
+        remoteAudioAnalyserRef.current.getByteFrequencyData(remoteDataArray);
+        
+        const remoteAverage = remoteDataArray.reduce((sum, value) => sum + value, 0) / remoteDataArray.length;
+        const remoteLevel = Math.round((remoteAverage / 255) * 100);
+        
+        setRemoteAudioLevel(remoteLevel);
+      }
+      
+      requestAnimationFrame(updateAudioLevels);
+    };
+    
+    updateAudioLevels();
+  }, []);
+
   // Audio initialization (same as working VoIPFinalTest)
-  const initializeAudio = async () => {
+  const initializeAudio = useCallback(async () => {
     try {
       console.log('🎧 Initialisation audio VoIP...');
       
@@ -464,43 +497,10 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
       console.error('❌ Erreur initialisation audio:', error);
       setIsAudioConnected(false);
     }
-  };
-
-  // Start audio level monitoring
-  const startAudioLevelMonitoring = () => {
-    if (!localAudioAnalyserRef.current) return;
-    
-    const updateAudioLevels = () => {
-      // Local audio level (microphone)
-      if (localAudioAnalyserRef.current) {
-        const localDataArray = new Uint8Array(localAudioAnalyserRef.current.frequencyBinCount);
-        localAudioAnalyserRef.current.getByteFrequencyData(localDataArray);
-        
-        const localAverage = localDataArray.reduce((sum, value) => sum + value, 0) / localDataArray.length;
-        const localLevel = Math.round((localAverage / 255) * 100);
-        
-        setLocalAudioLevel(localLevel);
-      }
-      
-      // Remote audio level (call participant)
-      if (remoteAudioAnalyserRef.current) {
-        const remoteDataArray = new Uint8Array(remoteAudioAnalyserRef.current.frequencyBinCount);
-        remoteAudioAnalyserRef.current.getByteFrequencyData(remoteDataArray);
-        
-        const remoteAverage = remoteDataArray.reduce((sum, value) => sum + value, 0) / remoteDataArray.length;
-        const remoteLevel = Math.round((remoteAverage / 255) * 100);
-        
-        setRemoteAudioLevel(remoteLevel);
-      }
-      
-      requestAnimationFrame(updateAudioLevels);
-    };
-    
-    updateAudioLevels();
-  };
+  }, [startAudioLevelMonitoring]);
 
   // Create simulated video stream
-  const createSimulatedVideoStream = () => {
+  const createSimulatedVideoStream = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -593,7 +593,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
 
     animate();
     return canvas.captureStream(30);
-  };
+  }, [isLive]);
 
   // Initialize video stream
   useEffect(() => {
@@ -603,7 +603,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
         videoRef.current.srcObject = stream;
       }
     }
-  }, [mode, isLive]);
+  }, [createSimulatedVideoStream, isLive, mode]);
 
   // Initialize audio on user interaction
   useEffect(() => {
@@ -626,7 +626,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
         audioContextRef.current.close();
       }
     };
-  }, [isLive]);
+  }, [initializeAudio, isAudioConnected, isLive]);
 
   // Stream duration counter
   useEffect(() => {

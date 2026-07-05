@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppStore } from '../../stores/appStore';
 import { useThemeStore } from '../../stores/themeStore';
@@ -30,49 +30,7 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
 
-  useEffect(() => {
-    // Charger le produit depuis Supabase ou API
-    loadProductFromSupabase();
-  }, [productSlug]);
-
-  if (!product) {
-    return (
-      <div className={`min-h-screen flex items-center justify-center ${
-        isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'
-      }`}>
-        <div className="text-center">
-          <div className="text-6xl mb-4">🔍</div>
-          <h2 className="text-2xl font-bold mb-2">Produit non trouvé</h2>
-          <p className="text-gray-500 mb-4">Le produit que vous cherchez n'existe pas.</p>
-          <button
-            onClick={() => navigate('/marketplace')}
-            className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-6 py-3 rounded-lg hover:from-orange-600 hover:to-green-700 transition-all"
-          >
-            Retour au marché
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const handleAddToCart = () => {
-    for (let i = 0; i < quantity; i++) {
-      addToCart(product);
-    }
-    // Notification de succès
-    const event = new CustomEvent('cartUpdated', { 
-      detail: { message: `${product.name} ajouté au panier !` } 
-    });
-    window.dispatchEvent(event);
-  };
-
-  const handleChatClick = () => {
-    setShowChat(true);
-  };
-
-  const isInWishlist = false; // Temporairement désactivé
-
-  const loadProductFromSupabase = async () => {
+  const loadProductFromSupabase = useCallback(async () => {
     try {
       // Simulation de chargement depuis Supabase
       // Dans une implémentation réelle, ceci appellerait l'API Supabase
@@ -106,7 +64,49 @@ const ProductDetail = () => {
     } catch (error) {
       console.error('Erreur lors du chargement du produit:', error);
     }
+  }, [productSlug]);
+
+  useEffect(() => {
+    // Charger le produit depuis Supabase ou API
+    loadProductFromSupabase();
+  }, [loadProductFromSupabase]);
+
+  if (!product) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${
+        isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'
+      }`}>
+        <div className="text-center">
+          <div className="text-6xl mb-4">ðŸ”</div>
+          <h2 className="text-2xl font-bold mb-2">Produit non trouvÃ©</h2>
+          <p className="text-gray-500 mb-4">Le produit que vous cherchez n'existe pas.</p>
+          <button
+            onClick={() => navigate('/marketplace')}
+            className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-6 py-3 rounded-lg hover:from-orange-600 hover:to-green-700 transition-all"
+          >
+            Retour au marchÃ©
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const handleAddToCart = () => {
+    for (let i = 0; i < quantity; i++) {
+      addToCart(product);
+    }
+    // Notification de succÃ¨s
+    const event = new CustomEvent('cartUpdated', { 
+      detail: { message: `${product.name} ajoutÃ© au panier !` } 
+    });
+    window.dispatchEvent(event);
   };
+
+  const handleChatClick = () => {
+    setShowChat(true);
+  };
+
+  const isInWishlist = false; // Temporairement dÃ©sactivÃ©
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${

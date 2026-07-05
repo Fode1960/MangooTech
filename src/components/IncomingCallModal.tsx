@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Phone, PhoneCall, PhoneOff, User, Clock, MessageCircle, Video } from 'lucide-react';
 import { unifiedCommunicationService } from '../services/UnifiedCommunicationService';
 
@@ -26,34 +26,6 @@ export const IncomingCallModal: React.FC<IncomingCallModalProps> = ({
   const [ringing, setRinging] = useState(false);
   const [callTimer, setCallTimer] = useState(0);
 
-  const communicationService = unifiedCommunicationService;
-
-  useEffect(() => {
-    const handleIncomingCall = (call: IncomingCall) => {
-      setIncomingCall(call);
-      setRinging(true);
-      setCallTimer(0);
-      
-      // Jouer la sonnerie
-      playRingtone();
-    };
-
-    const handleCallEnded = () => {
-      setIncomingCall(null);
-      setRinging(false);
-      stopRingtone();
-    };
-
-    communicationService.on('incomingCall', handleIncomingCall);
-    communicationService.on('callEnded', handleCallEnded);
-
-    return () => {
-      communicationService.off('incomingCall', handleIncomingCall);
-      communicationService.off('callEnded', handleCallEnded);
-      stopRingtone();
-    };
-  }, []);
-
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (ringing) {
@@ -64,7 +36,7 @@ export const IncomingCallModal: React.FC<IncomingCallModalProps> = ({
     return () => clearInterval(interval);
   }, [ringing]);
 
-  const playRingtone = () => {
+  const playRingtone = useCallback(() => {
     // Créer un son de sonnerie simple
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
@@ -104,12 +76,39 @@ export const IncomingCallModal: React.FC<IncomingCallModalProps> = ({
     };
     
     playPattern();
-  };
+  }, [ringing]);
 
-  const stopRingtone = () => {
+  const stopRingtone = useCallback(() => {
     setRinging(false);
-    // Le context audio sera nettoyé automatiquement
-  };
+    // Le context audio sera nettoyÃ© automatiquement
+  }, []);
+
+
+  useEffect(() => {
+    const handleIncomingCall = (call: IncomingCall) => {
+      setIncomingCall(call);
+      setRinging(true);
+      setCallTimer(0);
+
+      // Jouer la sonnerie
+      playRingtone();
+    };
+
+    const handleCallEnded = () => {
+      setIncomingCall(null);
+      setRinging(false);
+      stopRingtone();
+    };
+
+    unifiedCommunicationService.on('incomingCall', handleIncomingCall);
+    unifiedCommunicationService.on('callEnded', handleCallEnded);
+
+    return () => {
+      unifiedCommunicationService.off('incomingCall', handleIncomingCall);
+      unifiedCommunicationService.off('callEnded', handleCallEnded);
+      stopRingtone();
+    };
+  }, [playRingtone, stopRingtone]);
 
   const handleAccept = (type: 'audio' | 'video') => {
     if (incomingCall) {

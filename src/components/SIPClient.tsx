@@ -39,6 +39,11 @@ const SIPClient: React.FC<SIPClientProps> = ({ userId, sipCredentials }) => {
   const [remoteAudioLevel, setRemoteAudioLevel] = useState(0);
   const audioMonitorRef = useRef<any>(null);
   const remoteAudioMonitorRef = useRef<any>(null);
+  const callStatusRef = useRef<CallSession['status']>('idle');
+  const cleanupMediaRef = useRef<() => void>(() => {});
+  const handleIncomingCallRef = useRef<(data: any) => void | Promise<void>>(() => {});
+  const handleCallAnsweredRef = useRef<(data: any) => void | Promise<void>>(() => {});
+  const handleCallEndedRef = useRef<(data: any) => void>(() => {});
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -94,21 +99,21 @@ const SIPClient: React.FC<SIPClientProps> = ({ userId, sipCredentials }) => {
     });
 
     socketConnection.on('incoming-call', (data) => {
-      handleIncomingCall(data);
+      void handleIncomingCallRef.current(data);
     });
 
     socketConnection.on('call-answered', (data) => {
-      handleCallAnswered(data);
+      void handleCallAnsweredRef.current(data);
     });
 
     socketConnection.on('call-ended', (data) => {
-      handleCallEnded(data);
+      handleCallEndedRef.current(data);
     });
 
     socketConnection.on('call-initiated', (data) => {
       console.log('Appel initié:', data);
       // Synchroniser le startTime du serveur pour l'appelant
-      if (data.startTime && callSession.status === 'calling') {
+      if (data.startTime && callStatusRef.current === 'calling') {
         setCallSession(prev => ({
           ...prev,
           startTime: new Date(data.startTime)
@@ -130,9 +135,13 @@ const SIPClient: React.FC<SIPClientProps> = ({ userId, sipCredentials }) => {
 
     return () => {
       socketConnection.disconnect();
-      cleanupMedia();
+      cleanupMediaRef.current();
     };
   }, [userId, sipCredentials]); // Ajouter les dépendances pour reconnexion si changement d'utilisateur
+
+  useEffect(() => {
+    callStatusRef.current = callSession.status;
+  }, [callSession.status]);
 
   // Mettre à jour les flux vidéo
   useEffect(() => {
@@ -475,6 +484,11 @@ const SIPClient: React.FC<SIPClientProps> = ({ userId, sipCredentials }) => {
         });
     }
   };
+
+  cleanupMediaRef.current = cleanupMedia;
+  handleIncomingCallRef.current = handleIncomingCall;
+  handleCallAnsweredRef.current = handleCallAnswered;
+  handleCallEndedRef.current = handleCallEnded;
 
   const endCall = () => {
     if (socket && callSession.id) {

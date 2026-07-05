@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Phone, PhoneCall, PhoneOff, Video, VideoOff, Mic, MicOff, Settings, Users, Activity } from 'lucide-react';
 import { useUnifiedCommunication } from '../hooks/useUnifiedCommunication';
 
@@ -53,18 +53,7 @@ export const CommunicationDashboard: React.FC<CommunicationDashboardProps> = ({
     currentCall
   } = useUnifiedCommunication();
 
-  useEffect(() => {
-    // Initialiser le service de communication
-    initialize(boutiqueId);
-    
-    // Charger la configuration SIP
-    loadSipConfiguration();
-    
-    // Simuler des appels entrants pour la démo
-    simulateIncomingCalls();
-  }, [boutiqueId]);
-
-  const loadSipConfiguration = async () => {
+  const loadSipConfiguration = useCallback(async () => {
     try {
       const response = await fetch(`/api/boutiques/${boutiqueId}/sip-config`);
       const config = await response.json();
@@ -82,11 +71,11 @@ export const CommunicationDashboard: React.FC<CommunicationDashboardProps> = ({
         status: 'connected'
       });
     }
-  };
+  }, [boutiqueId]);
 
-  const simulateIncomingCalls = () => {
+  const simulateIncomingCalls = useCallback(() => {
     // Simuler un appel entrant après 10 secondes
-    setTimeout(() => {
+    return window.setTimeout(() => {
       const incomingCall: Call = {
         id: 'call-001',
         type: 'incoming',
@@ -96,7 +85,22 @@ export const CommunicationDashboard: React.FC<CommunicationDashboardProps> = ({
       };
       setActiveCalls(prev => [...prev, incomingCall]);
     }, 10000);
-  };
+  }, [sipConfig.number]);
+
+  useEffect(() => {
+    // Initialiser le service de communication
+    initialize(boutiqueId);
+
+    // Charger la configuration SIP
+    void loadSipConfiguration();
+
+    // Simuler des appels entrants pour la dÃ©mo
+    const timeoutId = simulateIncomingCalls();
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [boutiqueId, initialize, loadSipConfiguration, simulateIncomingCalls]);
 
   const handleMakeCall = async () => {
     if (!dialNumber) return;

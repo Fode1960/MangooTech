@@ -293,7 +293,7 @@ export default function ProviderApply() {
     } finally {
       setIsSaving(false)
     }
-  }, [avatarDataUrl, city, country, isSaving, name, normalizedSlug, phone, services, user?.email, user?.id])
+  }, [avatarDataUrl, city, country, isSaving, name, navigate, normalizedSlug, phone, services, user])
 
   const onPickAvatar = useCallback((file: File | null) => {
     setError(null)

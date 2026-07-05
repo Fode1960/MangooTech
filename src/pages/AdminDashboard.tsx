@@ -48,6 +48,8 @@ import {
   Search
 } from 'lucide-react';
 
+const CHART_COLORS = ['#3B82F6', '#EF4444', '#F59E0B', '#10B981', '#8B5CF6'];
+
 interface DashboardStats {
   period_days: number;
   shops: {
@@ -141,18 +143,6 @@ export default function AdminDashboard() {
   const [selectedMetric, setSelectedMetric] = useState<'revenue' | 'orders' | 'conversion_rate'>('revenue');
   const requestRef = useRef<AbortController | null>(null);
 
-  const COLORS = ['#3B82F6', '#EF4444', '#F59E0B', '#10B981', '#8B5CF6'];
-
-  useEffect(() => {
-    fetchDashboardData();
-    // Ajouter un timer pour mettre à jour l'heure
-    const timer = setInterval(() => {
-      setLastUpdated(new Date());
-    }, 60000); // Mise à jour toutes les minutes
-
-    return () => clearInterval(timer);
-  }, [period, selectedMetric]);
-
   const fetchWithTimeout = useCallback(async (url: string, signal: AbortSignal, timeoutMs = 2500) => {
     const timeoutController = new AbortController();
     const timeout = setTimeout(() => timeoutController.abort(), timeoutMs);
@@ -175,6 +165,144 @@ export default function AdminDashboard() {
     }
   }, []);
 
+  const generateDemoData = useCallback(() => {
+    const demoStats: DashboardStats = {
+      period_days: period,
+      shops: {
+        total: 247,
+        active: 198,
+        verified: 156,
+        new_this_period: 23,
+        approval_rate: 89.5
+      },
+      payments: {
+        total: 1847,
+        successful: 1723,
+        success_rate: 93.3,
+        total_revenue: 15678000,
+        methods_distribution: {
+          mobile_money: 1423,
+          card: 267,
+          cash: 157
+        },
+        mobile_money_breakdown: {
+          orange: 578,
+          mtn: 521,
+          moov: 324
+        }
+      },
+      users: {
+        new_this_period: 89
+      },
+      shop_metrics: {
+        total_revenue: 15678000,
+        total_orders: 1847
+      }
+    };
+
+    const demoTimeSeries: TimeSeriesData[] = [];
+    const days = Math.min(period, 30); // Limiter l'affichage a 30 jours
+    
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      
+      demoTimeSeries.push({
+        date: date.toISOString().split('T')[0],
+        revenue: Math.floor(Math.random() * 500000) + 200000,
+        orders: Math.floor(Math.random() * 80) + 20,
+        conversion_rate: Math.random() * 5 + 2
+      });
+    }
+
+    const demoCountries: CountryData[] = [
+      { country: 'CÃ´te d\'Ivoire', revenue: 8234000, orders: 923, shops: 89, flag: 'ðŸ‡¨ðŸ‡®' },
+      { country: 'SÃ©nÃ©gal', revenue: 3421000, orders: 412, shops: 45, flag: 'ðŸ‡¸ðŸ‡³' },
+      { country: 'Mali', revenue: 2187000, orders: 267, shops: 32, flag: 'ðŸ‡²ðŸ‡±' },
+      { country: 'Burkina Faso', revenue: 1845000, orders: 245, shops: 28, flag: 'ðŸ‡§ðŸ‡«' }
+    ];
+
+    const demoTopShops: TopShop[] = [
+      {
+        id: '1',
+        name: 'Boutique Ã‰lÃ©gance Africaine',
+        slug: 'elegance-africaine',
+        status: 'approved',
+        is_verified: true,
+        rating: 4.8,
+        review_count: 127,
+        metrics: {
+          total_revenue: 2345000,
+          total_orders: 89,
+          successful_payments: 84,
+          avg_conversion_rate: 4.2
+        }
+      },
+      {
+        id: '2',
+        name: 'Tech Store CI',
+        slug: 'tech-store-ci',
+        status: 'approved',
+        is_verified: true,
+        rating: 4.6,
+        review_count: 203,
+        metrics: {
+          total_revenue: 1892000,
+          total_orders: 156,
+          successful_payments: 148,
+          avg_conversion_rate: 3.8
+        }
+      },
+      {
+        id: '3',
+        name: 'Mode & Tradition',
+        slug: 'mode-tradition',
+        status: 'approved',
+        is_verified: false,
+        rating: 4.3,
+        review_count: 89,
+        metrics: {
+          total_revenue: 1567000,
+          total_orders: 67,
+          successful_payments: 63,
+          avg_conversion_rate: 3.5
+        }
+      },
+      {
+        id: '4',
+        name: 'Artisanat du SÃ©nÃ©gal',
+        slug: 'artisanat-senegal',
+        status: 'approved',
+        is_verified: true,
+        rating: 4.7,
+        review_count: 94,
+        metrics: {
+          total_revenue: 1234000,
+          total_orders: 45,
+          successful_payments: 43,
+          avg_conversion_rate: 4.1
+        }
+      },
+      {
+        id: '5',
+        name: 'Ã‰picerie Bio Mali',
+        slug: 'epicerie-bio-mali',
+        status: 'pending',
+        is_verified: false,
+        rating: 4.1,
+        review_count: 56,
+        metrics: {
+          total_revenue: 987000,
+          total_orders: 38,
+          successful_payments: 35,
+          avg_conversion_rate: 3.2
+        }
+      }
+    ];
+
+    return { demoStats, demoTimeSeries, demoCountries, demoTopShops };
+  }, [period]);
+
   const applyDemoData = useCallback(() => {
     const { demoStats, demoTimeSeries, demoCountries, demoTopShops } = generateDemoData();
     setStats(demoStats);
@@ -186,7 +314,7 @@ export default function AdminDashboard() {
     setTopShops(demoTopShops);
     setTimeSeriesData(demoTimeSeries);
     setCountryData(demoCountries);
-  }, [period]);
+  }, [generateDemoData]);
 
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -218,7 +346,7 @@ export default function AdminDashboard() {
           .map(([name, value], index) => ({
             name: name === 'mobile_money' ? 'Mobile Money' : name === 'card' ? 'Carte Bancaire' : name === 'cash' ? 'Espèces' : name,
             value: Number(value || 0),
-            color: COLORS[index % COLORS.length]
+            color: CHART_COLORS[index % CHART_COLORS.length]
           }));
         if (methodsData.length > 0) setPaymentMethods(methodsData);
       }
@@ -241,6 +369,16 @@ export default function AdminDashboard() {
       setLoading(false);
     }
   }, [applyDemoData, fetchWithTimeout, period, selectedMetric]);
+
+  useEffect(() => {
+    fetchDashboardData();
+    // Ajouter un timer pour mettre a jour l'heure
+    const timer = setInterval(() => {
+      setLastUpdated(new Date());
+    }, 60000); // Mise a jour toutes les minutes
+
+    return () => clearInterval(timer);
+  }, [fetchDashboardData]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -303,7 +441,7 @@ export default function AdminDashboard() {
   };
 
   // Fonction pour générer des données de démonstration
-  const generateDemoData = () => {
+  const legacyGenerateDemoData = () => {
     const demoStats: DashboardStats = {
       period_days: period,
       shops: {

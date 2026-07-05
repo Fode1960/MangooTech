@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Store, MapPin, Star, Package, Calendar, Shield, Truck, Heart, Share2, Users, ShoppingCart, Clock, Phone, X } from 'lucide-react';
@@ -197,6 +197,9 @@ const ShopPage = () => {
   const [hoursClose, setHoursClose] = useState('')
   const [hoursTimezone, setHoursTimezone] = useState('')
   const [hoursSaving, setHoursSaving] = useState(false)
+  const shopOpenTime = String(shop?.openTime || shop?.open_time || '').trim()
+  const shopCloseTime = String(shop?.closeTime || shop?.close_time || '').trim()
+  const shopTimezone = String(shop?.timezone || '').trim()
 
   useEffect(() => {
     const id = window.setInterval(() => setNowMs(Date.now()), 30000)
@@ -262,10 +265,10 @@ const ShopPage = () => {
 
   useEffect(() => {
     if (!shop?.slug) return
-    setHoursOpen(String(shop?.openTime || shop?.open_time || '').trim())
-    setHoursClose(String(shop?.closeTime || shop?.close_time || '').trim())
-    setHoursTimezone(String(shop?.timezone || '').trim())
-  }, [shop?.slug])
+    setHoursOpen(shopOpenTime)
+    setHoursClose(shopCloseTime)
+    setHoursTimezone(shopTimezone)
+  }, [shop?.slug, shopCloseTime, shopOpenTime, shopTimezone])
 
   const openConnectPlusCall = (role) => {
     const slug = String(shopSlug || '').trim()
@@ -387,7 +390,7 @@ const ShopPage = () => {
   };
 
   // Valeurs de secours pour garder la page lisible si aucune donnée n'est disponible
-  const demoShop = {
+  const demoShop = useMemo(() => ({
     id: '1',
     name: 'Boutique Mangoo',
     slug: 'boutique-demo',
@@ -410,10 +413,10 @@ const ShopPage = () => {
       returns: 'Retours acceptés sous 30 jours',
       warranty: 'Garantie 2 ans sur tous les produits'
     }
-  };
+  }), []);
 
   // Produits de secours
-  const demoProducts = [
+  const demoProducts = useMemo(() => ([
     {
       id: '1',
       name: 'Smartphone Premium',
@@ -478,21 +481,9 @@ const ShopPage = () => {
       sales_count: 89,
       variants: [{ inventory_quantity: 25 }]
     }
-  ];
+  ]), []);
 
-  useEffect(() => {
-    loadShopData();
-  }, [shopSlug]);
-
-  useEffect(() => {
-    const onUpdated = () => {
-      if (shop?.id && shopOwnerEmail) void loadBoostStatus(String(shop.id), String(shopOwnerEmail))
-    }
-    window.addEventListener('mangoo-boosts-updated', onUpdated)
-    return () => window.removeEventListener('mangoo-boosts-updated', onUpdated)
-  }, [shop?.id, shopOwnerEmail])
-
-  const loadBoostStatus = async (shopId, email) => {
+  const loadBoostStatus = useCallback(async (shopId, email) => {
     try {
       const controller = new AbortController()
       const t = window.setTimeout(() => controller.abort(), 6500)
@@ -521,7 +512,15 @@ const ShopPage = () => {
     } catch {
       setBoostStatus({ sponsored: false, promo: false, neu: false })
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    const onUpdated = () => {
+      if (shop?.id && shopOwnerEmail) void loadBoostStatus(String(shop.id), String(shopOwnerEmail))
+    }
+    window.addEventListener('mangoo-boosts-updated', onUpdated)
+    return () => window.removeEventListener('mangoo-boosts-updated', onUpdated)
+  }, [loadBoostStatus, shop?.id, shopOwnerEmail])
 
   useEffect(() => {
     try {
@@ -535,7 +534,7 @@ const ShopPage = () => {
     }
   }, [shopSlug]);
 
-  const loadShopData = async () => {
+  const loadShopData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -944,7 +943,11 @@ const ShopPage = () => {
       setError(err.message || 'Erreur lors du chargement de la boutique');
       setLoading(false);
     }
-  };
+  }, [demoProducts, demoShop, forceClientView, loadBoostStatus, shopSlug]);
+
+  useEffect(() => {
+    void loadShopData();
+  }, [loadShopData]);
 
   const activateVendorMode = () => {
     const owner = String(shopOwnerEmail || '').trim().toLowerCase();
