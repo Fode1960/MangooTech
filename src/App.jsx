@@ -7,6 +7,7 @@ import LandingPage from './components/LandingPage';
 import { Routes, Route, Navigate, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import Footer from './components/layout/Footer';
 import LoadingFallback from './components/ui/LoadingFallback';
+import { ArrowLeft, Bell, Bike, CheckCircle2, Factory, Heart, LayoutDashboard, Link2, Megaphone, MessageCircle, Package, Phone, Plus, Radio, Receipt, Search, Settings, ShoppingCart, Store, UserRound, Users, Volume2, Wrench } from 'lucide-react';
 import { isLocalSyncEnabled, localSync, setLocalSyncToken } from './utils/localSyncClient';
 import { fetchActiveBoostRows, getBoostDiscoveryFlags, indexActiveBoosts, readBoostActiveCacheRows, readBoostConfigCacheRows } from './utils/boostDiscovery';
 import { Toaster, toast } from 'sonner';
@@ -245,10 +246,10 @@ const ROLE_LABELS = {
 };
 
 const ROLE_ICONS = {
-  client: '🛒',
-  vendor: '🏪',
-  prestataire: '🧰',
-  livreur: '🛵'
+  client: ShoppingCart,
+  vendor: Store,
+  prestataire: Wrench,
+  livreur: Bike
 };
 
 const normalizeRoles = (user) => {
@@ -261,6 +262,18 @@ const normalizeRoles = (user) => {
   if (role === 'livreur') return ['livreur', 'client'];
   if (role === 'admin') return ['admin'];
   return [role];
+};
+
+const getUserInitials = (user) => {
+  const source = String(user?.name || user?.shopName || user?.email || '').trim();
+  if (!source) return 'M';
+  const parts = source
+    .split(/\s+/)
+    .map((part) => part.replace(/[^A-Za-zÀ-ÿ0-9]/g, ''))
+    .filter(Boolean);
+  if (parts.length === 0) return source.slice(0, 1).toUpperCase();
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
 };
 
 const persistUserToDemoUsers = (user) => {
@@ -315,7 +328,9 @@ const SpaceChooser = ({ isDark, open, user, onChoose, onClose }) => {
               <div className="text-lg font-black">Choisir mon espace</div>
               <div className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Appuyez sur un bouton</div>
             </div>
-            <button type="button" className={`${isDark ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'} px-3 py-2 rounded-xl font-black`} onClick={() => speakFR("Choisissez : Acheter, Vendre, Livrer, ou Services.")}>🔊</button>
+            <button type="button" className={`${isDark ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'} px-3 py-2 rounded-xl font-black`} onClick={() => speakFR("Choisissez : Acheter, Vendre, Livrer, ou Services.")}>
+              <Volume2 className="h-4 w-4" aria-hidden="true" />
+            </button>
           </div>
 
           <div className="mt-4 grid gap-3">
@@ -337,7 +352,9 @@ const SpaceChooser = ({ isDark, open, user, onChoose, onClose }) => {
                   onClick={() => onChoose(t.id)}
                 >
                   <div className="flex items-center gap-4">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}>{t.icon}</div>
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? 'bg-gray-900 text-[#ecf7e7]' : 'bg-[#eef6ea] text-[#1b5e20]'}`}>
+                      <t.icon className="h-7 w-7" aria-hidden="true" />
+                    </div>
                     <div className="min-w-0">
                       <div className="text-xl font-black leading-tight">{t.title}</div>
                       <div className={`text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{t.subtitle}</div>
@@ -400,7 +417,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         role: 'admin',
         roles: ['admin'],
         email: 'admin@mangoo.tech',
-        avatar: '👨‍💼',
+        avatar: 'AD',
         password: 'admin123'
       });
       return;
@@ -413,7 +430,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         roles: ['vendor', 'client', 'prestataire'],
         email: 'vendor@example.com',
         shopName: 'Boutique Mangoo',
-        avatar: '👨‍🎨',
+        avatar: 'VM',
         password: 'vendor123'
       });
       return;
@@ -425,7 +442,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         role: 'livreur',
         roles: ['livreur', 'client'],
         email: 'livreur@exemple.com',
-        avatar: '🛵',
+        avatar: 'LM',
         password: 'livreur123'
       });
       return;
@@ -436,7 +453,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
       role: 'client',
       roles: ['client'],
       email: 'client@example.com',
-      avatar: '🧑‍💻',
+      avatar: 'CM',
       password: 'client123'
     });
   }, [onLogin]);
@@ -552,7 +569,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         role: 'vendor',
         roles: ['vendor', 'client'],
         shopName: shop?.name || 'Boutique',
-        avatar: '🏪',
+        avatar: 'BT',
         password
       };
 
@@ -618,7 +635,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         role: 'admin',
         roles: ['admin'],
         email: 'admin@mangoo.tech',
-        avatar: '👨‍💼',
+        avatar: 'AD',
       }
       try {
         localStorage.setItem('admin-demo-user', JSON.stringify({ id: 'demo-admin', email: 'admin@mangoo.tech', role: 'admin' }))
@@ -678,7 +695,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
           let roles = ['client']
           let role = 'client'
           const displayName = String(data.user.user_metadata?.full_name || data.user.user_metadata?.name || '').trim() || (normalizedEmail.split('@')[0] || 'Utilisateur')
-          const avatar = '👤'
+          const avatar = 'CL'
 
           try {
             const accessToken = data?.session?.access_token || null
@@ -852,7 +869,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         role: 'admin', 
         roles: ['admin'],
         email: 'admin@mangoo.tech',
-        avatar: '👨‍💼'
+        avatar: 'AD'
       },
       'vendor@example.com': { 
         id: 2, 
@@ -861,7 +878,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         roles: ['vendor', 'client', 'prestataire'],
         email: 'vendor@example.com',
         shopName: 'Boutique Mangoo',
-        avatar: '👨‍🎨'
+        avatar: 'VM'
       },
       'client@example.com': { 
         id: 3, 
@@ -869,7 +886,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         role: 'client', 
         roles: ['client'],
         email: 'client@example.com',
-        avatar: '🧑‍💻'
+        avatar: 'CM'
       },
       'vendeur@exemple.com': { 
         id: 2, 
@@ -878,7 +895,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         roles: ['vendor', 'client', 'prestataire'],
         email: 'vendor@example.com',
         shopName: 'Boutique Mangoo',
-        avatar: '👨‍🎨'
+        avatar: 'VM'
       },
       'vendeur@example.com': { 
         id: 2, 
@@ -887,7 +904,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         roles: ['vendor', 'client', 'prestataire'],
         email: 'vendor@example.com',
         shopName: 'Boutique Mangoo',
-        avatar: '👨‍🎨'
+        avatar: 'VM'
       },
       'pc1@exemple.com': {
         id: 101,
@@ -896,7 +913,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         roles: ['vendor', 'client'],
         email: 'pc1@exemple.com',
         shopName: 'PC Boutique 1',
-        avatar: '🏪'
+        avatar: 'PB1'
       },
       'pc2@exemple.com': {
         id: 102,
@@ -905,7 +922,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         roles: ['vendor', 'client'],
         email: 'pc2@exemple.com',
         shopName: 'PC Boutique 2',
-        avatar: '🏪'
+        avatar: 'PB2'
       },
       'pc3@exemple.com': {
         id: 103,
@@ -914,7 +931,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         roles: ['vendor', 'client'],
         email: 'pc3@exemple.com',
         shopName: 'PC Boutique 3',
-        avatar: '🏪'
+        avatar: 'PB3'
       },
       'pc4@exemple.com': {
         id: 104,
@@ -923,7 +940,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         roles: ['vendor', 'client'],
         email: 'pc4@exemple.com',
         shopName: 'PC Boutique 4',
-        avatar: '🏪'
+        avatar: 'PB4'
       }
     };
 
@@ -938,7 +955,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
           role: 'client',
           roles: ['client'],
           email: e,
-          avatar: '🧑‍💻'
+          avatar: 'CL'
         }
       }
     }
@@ -1039,7 +1056,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         role: 'vendor',
         roles: ['vendor', 'client'],
         shopName: String(shopAuthMatch?.name || shopAuthMatch?.shopName || 'Boutique'),
-        avatar: '🏪',
+        avatar: 'BT',
         password,
       };
       try {
@@ -1070,7 +1087,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
                 email: e,
                 role: 'vendor',
                 roles: ['vendor', 'client'],
-                avatar: '🏪',
+                avatar: 'BT',
               }
               try {
                 localStorage.setItem('mangoo-current-user', JSON.stringify(nextUser))
@@ -1099,7 +1116,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
                   email: primary,
                   role: 'vendor',
                   roles: ['vendor', 'client'],
-                  avatar: '🏪',
+                  avatar: 'BT',
                 }
                 try {
                   localStorage.setItem('mangoo-current-user', JSON.stringify(nextUser))
@@ -1125,7 +1142,7 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
         email: normalizedEmail,
         role: 'client',
         roles: ['client'],
-        avatar: '🧑‍💻'
+        avatar: 'CL'
       };
       try {
         localStorage.setItem('mangoo-current-user', JSON.stringify(newUser));
@@ -1158,23 +1175,24 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
 
   return (
     <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 ${
-      isDark 
-        ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
-        : 'bg-gradient-to-br from-orange-50 to-green-50'
+      isDark ? 'bg-[#102814]' : 'bg-[#f6faf3]'
     }`}>
-      <div className="card w-full max-w-md shadow-2xl max-h-[calc(100vh-2rem)] overflow-y-auto">
-        <div className="h-2 w-full bg-gradient-to-r from-orange-500 to-green-600" />
+      <div className={`card w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto border shadow-2xl ${
+        isDark ? 'border-[#2e5d34] bg-[#16381a]' : 'border-[#d7e4d1] bg-white'
+      }`}>
+        <div className={`h-1.5 w-full ${isDark ? 'bg-[#66bb6a]' : 'bg-[#1b5e20]'}`} />
         <div className="card-body">
           <div className="flex items-center justify-between gap-3">
             {onBack !== false ? (
               <button
                 type="button"
                 onClick={handleBack}
-                className={`inline-flex items-center gap-2 text-sm font-semibold transition-colors hover:text-orange-600 ${
-                  isDark ? 'text-gray-300' : 'text-gray-700'
+                className={`inline-flex items-center gap-2 text-sm font-semibold transition-colors hover:text-[#ff9800] ${
+                  isDark ? 'text-[#cfe7c8]' : 'text-[#2f4f34]'
                 }`}
               >
-                ← Retour
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                <span>Retour</span>
               </button>
             ) : (
               <div />
@@ -1187,10 +1205,10 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
           <div className="mt-5 flex items-center gap-3">
             <img src={mangooLogo} alt="Mangoo Tech" className="w-12 h-12 rounded-2xl" />
             <div className="min-w-0">
-              <h1 className="text-2xl font-extrabold tracking-tight">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-green-600">MangooTech</span>
+              <h1 className={`text-2xl font-extrabold tracking-tight ${isDark ? 'text-[#ecf7e7]' : 'text-[#16381a]'}`}>
+                MangooTech
               </h1>
-              <p className={`text-sm mt-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+              <p className={`text-sm mt-1 ${isDark ? 'text-[#cfe7c8]' : 'text-[#46604a]'}`}>
                 Connectez-vous pour accéder à la plateforme
               </p>
             </div>
@@ -1209,7 +1227,10 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
             isDark ? 'bg-gray-900 text-white hover:bg-gray-700 border border-gray-700' : 'bg-white text-gray-900 hover:bg-gray-50 border border-gray-200'
           }`}
         >
-          🔊 Écouter l’aide
+          <span className="inline-flex items-center gap-2">
+            <Volume2 className="h-4 w-4" aria-hidden="true" />
+            <span>Écouter l’aide</span>
+          </span>
         </button>
 
         {selectedPlan && (
@@ -1293,32 +1314,44 @@ const Login = ({ onLogin, onBack, onCreateClient, onCreateVendor }) => {
                 <button
                   type="button"
                   onClick={() => fastLogin('vendor')}
-                  className="w-full bg-blue-600 text-white px-4 py-3 rounded-xl font-black hover:bg-blue-700 transition-colors"
+                  className="w-full px-4 py-3 rounded-xl font-black transition-colors bg-[#1b5e20] text-white hover:bg-[#16381a]"
                 >
-                  🏪 Entrer : Vendre / Services
+                  <span className="inline-flex items-center gap-2">
+                    <Store className="h-4 w-4" aria-hidden="true" />
+                    <span>Entrer : Vendre / Services</span>
+                  </span>
                 </button>
                 <button
                   type="button"
                   onClick={() => fastLogin('livreur')}
-                  className="w-full bg-slate-900 text-white px-4 py-3 rounded-xl font-black hover:bg-slate-800 transition-colors"
+                  className="w-full px-4 py-3 rounded-xl font-black transition-colors bg-[#ffa726] text-[#16381a] hover:bg-[#ff9800]"
                 >
-                  🛵 Entrer : Livrer
+                  <span className="inline-flex items-center gap-2">
+                    <Bike className="h-4 w-4" aria-hidden="true" />
+                    <span>Entrer : Livrer</span>
+                  </span>
                 </button>
                 <button
                   type="button"
                   onClick={() => fastLogin('client')}
-                  className="w-full bg-emerald-600 text-white px-4 py-3 rounded-xl font-black hover:bg-emerald-700 transition-colors"
+                  className="w-full px-4 py-3 rounded-xl font-black transition-colors bg-[#66bb6a] text-[#16381a] hover:bg-[#57aa5b]"
                 >
-                  🛒 Entrer : Acheter
+                  <span className="inline-flex items-center gap-2">
+                    <ShoppingCart className="h-4 w-4" aria-hidden="true" />
+                    <span>Entrer : Acheter</span>
+                  </span>
                 </button>
                 <button
                   type="button"
                   onClick={() => fastLogin('admin')}
                   className={`w-full px-4 py-3 rounded-xl font-black transition-colors ${
-                    isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                    isDark ? 'bg-[#244729] text-white hover:bg-[#2e5d34]' : 'bg-[#eef6ea] text-[#16381a] hover:bg-[#dcebd5]'
                   }`}
                 >
-                  👨‍💼 Admin
+                  <span className="inline-flex items-center gap-2">
+                    <LayoutDashboard className="h-4 w-4" aria-hidden="true" />
+                    <span>Entrer : Administration</span>
+                  </span>
                 </button>
               </div>
             </details>
@@ -1516,7 +1549,7 @@ const Register = ({ onRegister, onBack }) => {
             email: normalizedEmail,
             role: 'vendor',
             roles: ['vendor', 'client'],
-            avatar: '🏪',
+            avatar: 'BT',
           }
           try {
             localStorage.setItem('mangoo-current-user', JSON.stringify(nextUser))
@@ -1553,7 +1586,7 @@ const Register = ({ onRegister, onBack }) => {
               role: 'vendor',
               roles: ['vendor', 'client'],
               shopName,
-              avatar: '🏪',
+              avatar: 'BT',
               password
             };
             localStorage.setItem('demo_users', JSON.stringify(map));
@@ -1785,7 +1818,7 @@ const Register = ({ onRegister, onBack }) => {
           role: 'vendor',
           roles: ['vendor', 'client'],
           shopName,
-          avatar: '🏪',
+          avatar: 'BT',
           password
         };
         localStorage.setItem('demo_users', JSON.stringify(map));
@@ -1810,7 +1843,7 @@ const Register = ({ onRegister, onBack }) => {
       role: 'vendor',
       roles: ['vendor', 'client'],
       shopName,
-      avatar: '🏪',
+      avatar: 'BT',
       password
     };
 
@@ -1829,22 +1862,22 @@ const Register = ({ onRegister, onBack }) => {
   if (createdShop) {
     return (
       <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 ${
-        isDark 
-          ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
-          : 'bg-gradient-to-br from-orange-50 to-green-50'
+        isDark ? 'bg-[#102814]' : 'bg-[#f6faf3]'
       }`}>
-        <div className={`max-w-2xl w-full rounded-2xl shadow-2xl p-6 transition-colors duration-300 ${
-          isDark 
-            ? 'bg-gray-800 border border-gray-700' 
-            : 'bg-white'
+        <div className={`max-w-2xl w-full rounded-2xl border shadow-2xl p-6 transition-colors duration-300 ${
+          isDark ? 'border-[#2e5d34] bg-[#16381a]' : 'border-[#d7e4d1] bg-white'
         }`}>
           <div className="text-center mb-6">
-            <div className="text-5xl mb-3">✅</div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-green-600 bg-clip-text text-transparent">
+            <div className={`mx-auto mb-3 inline-flex h-14 w-14 items-center justify-center rounded-2xl ${
+              isDark ? 'bg-[#244729] text-[#ffd166]' : 'bg-[#eef6ea] text-[#1b5e20]'
+            }`}>
+              <CheckCircle2 className="h-7 w-7" aria-hidden="true" />
+            </div>
+            <h1 className={`text-2xl font-bold ${isDark ? 'text-[#ecf7e7]' : 'text-[#16381a]'}`}>
               Boutique créée
             </h1>
             <p className={`text-sm mt-2 transition-colors duration-300 ${
-              isDark ? 'text-gray-400' : 'text-gray-600'
+              isDark ? 'text-[#cfe7c8]' : 'text-[#46604a]'
             }`}>
               Votre lien et votre QR Code sont prêts.
             </p>
@@ -1890,7 +1923,7 @@ const Register = ({ onRegister, onBack }) => {
                     href={createdShop.shopUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex-1 bg-gradient-to-r from-orange-500 to-green-600 text-white py-2 px-4 rounded-lg font-medium text-center hover:from-orange-600 hover:to-green-700 transition-all duration-300"
+                    className="flex-1 rounded-lg bg-[#1b5e20] px-4 py-2 text-center font-medium text-white transition-colors duration-300 hover:bg-[#16381a]"
                   >
                     Ouvrir la boutique
                   </a>
@@ -1945,32 +1978,33 @@ const Register = ({ onRegister, onBack }) => {
 
   return (
     <div className={`min-h-screen flex items-center justify-center p-4 overflow-x-hidden overscroll-x-none touch-pan-y transition-colors duration-300 ${
-      isDark 
-        ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
-        : 'bg-gradient-to-br from-orange-50 to-green-50'
+      isDark ? 'bg-[#102814]' : 'bg-[#f6faf3]'
     }`}>
-      <div className={`max-w-4xl w-full overflow-hidden rounded-2xl shadow-2xl p-6 transition-colors duration-300 ${
-        isDark 
-          ? 'bg-gray-800 border border-gray-700' 
-          : 'bg-white'
+      <div className={`max-w-4xl w-full overflow-hidden rounded-2xl border shadow-2xl p-6 transition-colors duration-300 ${
+        isDark ? 'border-[#2e5d34] bg-[#16381a]' : 'border-[#d7e4d1] bg-white'
       }`}>
         {onBack && (
           <button 
             onClick={onBack}
-            className={`mb-3 flex items-center gap-2 text-sm font-medium transition-colors duration-300 hover:text-orange-500 ${
-              isDark ? 'text-gray-400' : 'text-gray-600'
+            className={`mb-3 flex items-center gap-2 text-sm font-medium transition-colors duration-300 hover:text-[#ff9800] ${
+              isDark ? 'text-[#cfe7c8]' : 'text-[#46604a]'
             }`}
           >
-            ← Retour
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            <span>Retour</span>
           </button>
         )}
         <div className="text-center mb-4">
-          <div className="text-4xl mb-2 animate-bounce">🏪</div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-green-600 bg-clip-text text-transparent">
+          <div className={`mx-auto mb-2 inline-flex h-14 w-14 items-center justify-center rounded-2xl ${
+            isDark ? 'bg-[#244729] text-[#ffd166]' : 'bg-[#eef6ea] text-[#1b5e20]'
+          }`}>
+            <Store className="h-7 w-7" aria-hidden="true" />
+          </div>
+          <h1 className={`text-2xl font-bold ${isDark ? 'text-[#ecf7e7]' : 'text-[#16381a]'}`}>
             Créer ma boutique
           </h1>
           <p className={`text-xs mt-1 transition-colors duration-300 ${
-            isDark ? 'text-gray-400' : 'text-gray-600'
+            isDark ? 'text-[#cfe7c8]' : 'text-[#46604a]'
           }`}>
             Logo, couleurs, lien et QR Code inclus
           </p>
@@ -1981,10 +2015,13 @@ const Register = ({ onRegister, onBack }) => {
             type="button"
             onClick={speakHelp}
             className={`w-full px-4 py-3 rounded-xl text-sm font-black transition-colors ${
-              isDark ? 'bg-gray-900 text-white hover:bg-gray-700 border border-gray-700' : 'bg-white text-gray-900 hover:bg-gray-50 border border-gray-200'
+              isDark ? 'border border-[#2e5d34] bg-[#102814] text-white hover:bg-[#244729]' : 'border border-[#d7e4d1] bg-white text-[#16381a] hover:bg-[#f6faf3]'
             }`}
           >
-            🔊 Écouter l’aide
+            <span className="inline-flex items-center gap-2">
+              <Volume2 className="h-4 w-4" aria-hidden="true" />
+              <span>Ecouter l'aide</span>
+            </span>
           </button>
         </div>
 
@@ -2239,7 +2276,7 @@ const Register = ({ onRegister, onBack }) => {
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-orange-500 to-green-600 text-white py-2 px-4 rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-colors duration-300"
+              className="w-full rounded-lg bg-[#1b5e20] px-4 py-2 font-medium text-white transition-colors duration-300 hover:bg-[#16381a]"
             >
               Créer ma boutique
             </button>
@@ -2396,7 +2433,7 @@ const ClientRegister = ({ onRegister, onBack }) => {
       email: normalizedEmail,
       role: 'client',
       roles: ['client'],
-      avatar: '🧑‍💻',
+      avatar: 'CL',
       password,
       phone,
       address,
@@ -2447,30 +2484,31 @@ const ClientRegister = ({ onRegister, onBack }) => {
 
   return (
     <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 ${
-      isDark
-        ? 'bg-gradient-to-br from-gray-900 to-gray-800'
-        : 'bg-gradient-to-br from-orange-50 to-green-50'
+      isDark ? 'bg-[#102814]' : 'bg-[#f6faf3]'
     }`}>
-      <div className={`max-w-md w-full rounded-2xl shadow-2xl p-6 transition-colors duration-300 max-h-[calc(100vh-2rem)] overflow-y-auto ${
-        isDark
-          ? 'bg-gray-800 border border-gray-700'
-          : 'bg-white'
+      <div className={`max-w-md w-full rounded-2xl border shadow-2xl p-6 transition-colors duration-300 max-h-[calc(100vh-2rem)] overflow-y-auto ${
+        isDark ? 'border-[#2e5d34] bg-[#16381a]' : 'border-[#d7e4d1] bg-white'
       }`}>
         {onBack && (
           <button
             onClick={onBack}
-            className={`mb-6 flex items-center gap-2 text-sm font-medium transition-colors duration-300 hover:text-orange-500 ${
-              isDark ? 'text-gray-400' : 'text-gray-600'
+            className={`mb-6 flex items-center gap-2 text-sm font-medium transition-colors duration-300 hover:text-[#ff9800] ${
+              isDark ? 'text-[#cfe7c8]' : 'text-[#46604a]'
             }`}
           >
-            ← Retour
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            <span>Retour</span>
           </button>
         )}
 
         <div className="text-center mb-6">
-          <div className="text-6xl mb-4">🧑‍💻</div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-green-600 bg-clip-text text-transparent">MangooTech</h1>
-          <p className={`text-sm mt-2 transition-colors duration-300 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+          <div className={`mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-3xl ${
+            isDark ? 'bg-[#244729] text-[#ffd166]' : 'bg-[#eef6ea] text-[#1b5e20]'
+          }`}>
+            <ShoppingCart className="h-8 w-8" aria-hidden="true" />
+          </div>
+          <h1 className={`text-3xl font-bold ${isDark ? 'text-[#ecf7e7]' : 'text-[#16381a]'}`}>MangooTech</h1>
+          <p className={`text-sm mt-2 transition-colors duration-300 ${isDark ? 'text-[#cfe7c8]' : 'text-[#46604a]'}`}>
             Créez votre compte client
           </p>
         </div>
@@ -2600,7 +2638,7 @@ const ClientRegister = ({ onRegister, onBack }) => {
           <button
             type="submit"
             disabled={geoLoading}
-            className={`w-full bg-gradient-to-r from-orange-500 to-green-600 text-white py-3 px-4 rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105 ${geoLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
+            className={`w-full rounded-lg bg-[#1b5e20] px-4 py-3 font-medium text-white transition-colors duration-300 hover:bg-[#16381a] ${geoLoading ? 'cursor-not-allowed opacity-60' : ''}`}
           >
             {geoLoading ? 'Obtention de la position...' : 'Créer mon compte'}
           </button>
@@ -2927,9 +2965,9 @@ const VendorDashboard = ({ user }) => {
   }, [])
 
   const supplyRegions = useMemo(() => ([
-    { id: 'china', label: '🇨🇳 Chine Direct', hint: 'Dropshipping & gros', accent: 'from-sky-500 to-blue-600' },
-    { id: 'turkey', label: '🇹🇷 Turquie Mode', hint: 'Textile & accessoires', accent: 'from-orange-500 to-amber-500' },
-    { id: 'local', label: '🌍 Local & Gros', hint: 'Appro local / marchés', accent: 'from-emerald-500 to-green-600' }
+    { id: 'china', label: 'Chine Direct', hint: 'Dropshipping & gros' },
+    { id: 'turkey', label: 'Turquie Mode', hint: 'Textile & accessoires' },
+    { id: 'local', label: 'Local & Gros', hint: 'Appro local / marchés' }
   ]), []);
 
   const supplyRegionMeta = useMemo(() => ({
@@ -4174,19 +4212,19 @@ const VendorDashboard = ({ user }) => {
   const connectPlusAutoOnlineEnabled = connectPlusEnabled && String(import.meta.env.VITE_CONNECT_PLUS_AUTO_ONLINE || '').trim() === '1'
 
   const tabs = [
-    { id: 'overview', name: 'Vue d\'ensemble', icon: '📊' },
+    { id: 'overview', name: 'Vue d\'ensemble', icon: LayoutDashboard },
     ...(connectPlusEnabled
-      ? [{ id: 'connectplus', name: 'Connect+', icon: '🔗' }]
+      ? [{ id: 'connectplus', name: 'Connect+', icon: Link2 }]
       : []),
-    { id: 'boosts', name: 'Booster', icon: '🚀' },
-    { id: 'stock', name: 'Gestion Stock', icon: '📦' },
-    { id: 'products', name: 'Produits', icon: '🧾' },
-    { id: 'orders', name: 'Commandes', icon: '🛒' },
-    { id: 'notifications', name: 'Notifications', icon: '🔔' },
-    { id: 'communication', name: 'Communication', icon: '📞' },
-    { id: 'shops', name: 'Mes boutiques', icon: '🏪' },
-    { id: 'settings', name: 'Réglages', icon: '⚙️' },
-    { id: 'supply', name: 'Approvisionnement', icon: '🏭' }
+    { id: 'boosts', name: 'Booster', icon: Megaphone },
+    { id: 'stock', name: 'Gestion Stock', icon: Package },
+    { id: 'products', name: 'Produits', icon: Receipt },
+    { id: 'orders', name: 'Commandes', icon: ShoppingCart },
+    { id: 'notifications', name: 'Notifications', icon: Bell },
+    { id: 'communication', name: 'Communication', icon: Phone },
+    { id: 'shops', name: 'Mes boutiques', icon: Store },
+    { id: 'settings', name: 'Réglages', icon: Settings },
+    { id: 'supply', name: 'Approvisionnement', icon: Factory }
   ];
 
   useEffect(() => {
@@ -4275,17 +4313,17 @@ const VendorDashboard = ({ user }) => {
                 <div className="flex items-center gap-2 flex-wrap">
                   <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>{s.name}</div>
                   {isSponsored && (
-                    <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-amber-500/15 text-amber-200 border-amber-400/30' : 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-amber-50 text-amber-700 border-amber-200'}>
+                    <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border border-[#8f5b10] bg-[#ffa726]/20 text-[#fff4d6]' : 'text-[10px] px-2 py-0.5 rounded-full font-black border border-[#f2d39b] bg-[#fff4d6] text-[#8a5200]'}>
                       Sponsorisé
                     </span>
                   )}
                   {isPromo && (
-                    <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-fuchsia-500/15 text-fuchsia-200 border-fuchsia-400/30' : 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200'}>
+                    <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border border-[#b46a04] bg-[#ff9800]/20 text-[#fff4d6]' : 'text-[10px] px-2 py-0.5 rounded-full font-black border border-[#ffc97a] bg-[#fff1dc] text-[#9f5c00]'}>
                       Promo
                     </span>
                   )}
                   {isNew && (
-                    <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-emerald-500/15 text-emerald-200 border-emerald-400/30' : 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-emerald-50 text-emerald-700 border-emerald-200'}>
+                    <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border border-[#2e5d34] bg-[#1b5e20]/25 text-[#ecf7e7]' : 'text-[10px] px-2 py-0.5 rounded-full font-black border border-[#cfe0c8] bg-[#eef6ea] text-[#1b5e20]'}>
                       Nouveau
                     </span>
                   )}
@@ -4311,7 +4349,7 @@ const VendorDashboard = ({ user }) => {
                     }
                     setActiveTab('connectplus');
                   }}
-                  className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:from-orange-600 hover:to-green-700 transition-all"
+                  className="rounded-lg bg-[#1b5e20] px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-[#16381a]"
                 >
                   QR+PIN
                 </button>
@@ -4327,7 +4365,7 @@ const VendorDashboard = ({ user }) => {
                 href={url}
                 target="_blank"
                 rel="noreferrer"
-                className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:from-orange-600 hover:to-green-700 transition-all"
+                className="rounded-lg bg-[#1b5e20] px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-[#16381a]"
               >
                 Ouvrir
               </a>
@@ -4403,8 +4441,8 @@ const VendorDashboard = ({ user }) => {
       }
       case 'communication': {
         const contacts = [
-          { id: 'customer_3', name: 'Client Mangoo', avatar: '🧑‍💻', hint: 'client@example.com' },
-          { id: 'customer_guest@mangoo.tech', name: 'Client invité', avatar: '👤', hint: 'guest@mangoo.tech' }
+          { id: 'customer_3', name: 'Client Mangoo', avatar: 'CM', hint: 'client@example.com' },
+          { id: 'customer_guest@mangoo.tech', name: 'Client invité', avatar: 'CI', hint: 'guest@mangoo.tech' }
         ];
 
         return (
@@ -4427,11 +4465,11 @@ const VendorDashboard = ({ user }) => {
                     onClick={() => setCommunicationMode('messages')}
                     className={`px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors inline-flex items-center gap-2 leading-none ${
                       communicationMode === 'messages'
-                        ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                        ? 'bg-[#1b5e20] text-white'
                         : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
                     }`}
                   >
-                    <span className="text-base leading-none">💬</span>
+                    <MessageCircle className="h-4 w-4" aria-hidden="true" />
                     <span className="leading-none">Messages</span>
                   </button>
                   <button
@@ -4439,11 +4477,11 @@ const VendorDashboard = ({ user }) => {
                     onClick={() => setCommunicationMode('contacts')}
                     className={`px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors inline-flex items-center gap-2 leading-none ${
                       communicationMode === 'contacts'
-                        ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                        ? 'bg-[#1b5e20] text-white'
                         : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
                     }`}
                   >
-                    <span className="text-base leading-none">👥</span>
+                    <Users className="h-4 w-4" aria-hidden="true" />
                     <span className="leading-none">Contacts</span>
                   </button>
                   <button
@@ -4451,11 +4489,11 @@ const VendorDashboard = ({ user }) => {
                     onClick={() => setCommunicationMode('call')}
                     className={`px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors inline-flex items-center gap-2 leading-none ${
                       communicationMode === 'call'
-                        ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                        ? 'bg-[#1b5e20] text-white'
                         : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
                     }`}
                   >
-                    <span className="text-base leading-none">📹</span>
+                    <Phone className="h-4 w-4" aria-hidden="true" />
                     <span className="leading-none">Appel</span>
                   </button>
                   <button
@@ -4463,11 +4501,11 @@ const VendorDashboard = ({ user }) => {
                     onClick={() => setCommunicationMode('live')}
                     className={`px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors inline-flex items-center gap-2 leading-none ${
                       communicationMode === 'live'
-                        ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                        ? 'bg-[#1b5e20] text-white'
                         : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
                     }`}
                   >
-                    <span className="text-base leading-none">🔴</span>
+                    <Radio className="h-4 w-4" aria-hidden="true" />
                     <span className="leading-none">Live</span>
                   </button>
                 </div>
@@ -4502,8 +4540,10 @@ const VendorDashboard = ({ user }) => {
                       className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-3 flex items-center justify-between gap-3`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-gradient-to-r from-orange-500 to-green-600 text-white">
-                          {t.avatar}
+                        <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl text-sm font-black ${
+                          isDark ? 'bg-[#244729] text-[#ecf7e7]' : 'bg-[#eef6ea] text-[#1b5e20]'
+                        }`}>
+                          {getUserInitials(t)}
                         </div>
                         <div>
                           <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold text-sm`}>{t.name}</div>
@@ -4514,7 +4554,7 @@ const VendorDashboard = ({ user }) => {
                         <button
                           type="button"
                           onClick={() => setCommunicationMode('messages')}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+                          className="rounded-lg bg-[#1b5e20] px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#16381a]"
                         >
                           Chat
                         </button>
@@ -4551,15 +4591,17 @@ const VendorDashboard = ({ user }) => {
                           className={`${isDark ? 'bg-gray-900 hover:bg-gray-800 border-gray-700 text-white' : 'bg-gray-50 hover:bg-white border-gray-200 text-gray-900'} border rounded-xl p-3 flex items-center justify-between gap-3 transition-colors`}
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-gradient-to-r from-orange-500 to-green-600 text-white">
-                              {t.avatar}
+                            <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl text-sm font-black ${
+                              isDark ? 'bg-[#244729] text-[#ecf7e7]' : 'bg-[#eef6ea] text-[#1b5e20]'
+                            }`}>
+                              {getUserInitials(t)}
                             </div>
                             <div className="text-left">
                               <div className="font-semibold text-sm">{t.name}</div>
                               <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-xs`}>Démarrer</div>
                             </div>
                           </div>
-                          <div className="text-sm font-semibold">📹</div>
+                          <Phone className="h-4 w-4" aria-hidden="true" />
                         </button>
                       ))}
                     </div>
@@ -4578,7 +4620,7 @@ const VendorDashboard = ({ user }) => {
                           if (!rid) return;
                           setCallRoomId(rid);
                         }}
-                        className="bg-gradient-to-r from-orange-500 to-green-600 text-white py-2 px-3 rounded-lg font-semibold hover:from-orange-600 hover:to-green-700 transition-all"
+                        className="rounded-lg bg-[#1b5e20] px-3 py-2 font-semibold text-white transition-colors hover:bg-[#16381a]"
                       >
                         Rejoindre
                       </button>
@@ -4598,7 +4640,7 @@ const VendorDashboard = ({ user }) => {
                             const url = `${window.location.origin}/webrtc?role=client&roomId=${encodeURIComponent(callRoomId)}`;
                             window.open(url, '_blank', 'noopener,noreferrer');
                           }}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-3 py-2 rounded-lg transition-colors"
+                          className="rounded-lg bg-[#1b5e20] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#16381a]"
                         >
                           Ouvrir client
                         </button>
@@ -4657,7 +4699,7 @@ const VendorDashboard = ({ user }) => {
                               onClick={() => {
                                 window.location.href = vendorUrl
                               }}
-                              className="rounded-2xl px-4 py-4 font-semibold bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 text-white"
+                              className="rounded-2xl bg-[#1b5e20] px-4 py-4 font-semibold text-white transition-colors hover:bg-[#16381a]"
                             >
                               Ouvrir Vendeur
                             </button>
@@ -4685,7 +4727,7 @@ const VendorDashboard = ({ user }) => {
                             onClick={() => {
                               window.location.href = `/live-shopping?role=vendor&roomId=live-room-123&ui=simple`
                             }}
-                            className="rounded-2xl px-4 py-4 font-semibold bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 text-white"
+                            className="rounded-2xl bg-[#1b5e20] px-4 py-4 font-semibold text-white transition-colors hover:bg-[#16381a]"
                           >
                             Ouvrir Vendeur
                           </button>
@@ -4721,9 +4763,10 @@ const VendorDashboard = ({ user }) => {
                 <button
                   type="button"
                   onClick={() => setActiveTab('supply')}
-                  className="bg-gradient-to-r from-sky-500 to-blue-600 text-white py-2 px-4 rounded-xl font-semibold hover:from-sky-600 hover:to-blue-700 transition-all"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#1b5e20] px-4 py-2 font-semibold text-white transition-colors hover:bg-[#16381a]"
                 >
-                  🏭 S'approvisionner
+                  <Factory className="h-4 w-4" aria-hidden="true" />
+                  <span>S'approvisionner</span>
                 </button>
               </div>
             </div>
@@ -4743,7 +4786,11 @@ const VendorDashboard = ({ user }) => {
 
             {vendorShops.length === 0 ? (
               <div className={`${isDark ? 'bg-gray-800 border-gray-700 text-gray-300' : 'bg-white border-gray-200 text-gray-700'} border rounded-xl p-6 text-center`}>
-                <div className="text-4xl mb-2">🏪</div>
+                <div className={`mx-auto mb-2 inline-flex h-14 w-14 items-center justify-center rounded-2xl ${
+                  isDark ? 'bg-[#244729] text-[#ffd166]' : 'bg-[#eef6ea] text-[#1b5e20]'
+                }`}>
+                  <Store className="h-7 w-7" aria-hidden="true" />
+                </div>
                 <div className="font-semibold">Aucune boutique trouvée</div>
                 <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Créez une boutique depuis « Créer ma boutique » sur l’accueil.</div>
               </div>
@@ -4932,7 +4979,7 @@ const VendorDashboard = ({ user }) => {
                     <button
                       type="button"
                       onClick={saveShopEdits}
-                      className="px-4 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-orange-500 to-green-600 text-white"
+                      className="rounded-xl bg-[#1b5e20] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#16381a]"
                     >
                       Enregistrer
                     </button>
@@ -4959,7 +5006,7 @@ const VendorDashboard = ({ user }) => {
                       href={shopUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-4 py-2 rounded-xl font-semibold hover:from-orange-600 hover:to-green-700 transition-all"
+                      className="rounded-xl bg-[#1b5e20] px-4 py-2 font-semibold text-white transition-colors hover:bg-[#16381a]"
                     >
                       Ouvrir la boutique
                     </a>
@@ -4968,7 +5015,7 @@ const VendorDashboard = ({ user }) => {
                     type="button"
                     onClick={saveShopSettings}
                     disabled={!slug}
-                    className="bg-sky-600 hover:bg-sky-700 disabled:opacity-60 text-white px-4 py-2 rounded-xl font-semibold transition-colors"
+                    className="rounded-xl bg-[#1b5e20] px-4 py-2 font-semibold text-white transition-colors hover:bg-[#16381a] disabled:opacity-60"
                   >
                     Enregistrer
                   </button>
@@ -5149,7 +5196,7 @@ const VendorDashboard = ({ user }) => {
                   }}
                   className={`${isDark ? 'bg-gray-900 border-gray-700 text-gray-200 hover:bg-gray-800' : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'} px-4 py-2 rounded-xl font-semibold transition-colors`}
                 >
-                  📦 Suivi logistique
+                  Suivi logistique
                 </button>
               </div>
 
@@ -5173,12 +5220,12 @@ const VendorDashboard = ({ user }) => {
                     aria-pressed={supplyRegion === r.id}
                     className={
                       supplyRegion === r.id
-                        ? `px-3 py-2 rounded-xl text-sm font-semibold text-white bg-gradient-to-r ${r.accent}`
+                        ? 'px-3 py-2 rounded-xl text-sm font-semibold text-white bg-[#1b5e20]'
                         : `${isDark ? 'bg-gray-900 border-gray-700 text-gray-200 hover:bg-gray-800' : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-xl text-sm font-semibold transition-colors`
                     }
                     title={r.hint}
                   >
-                    {supplyRegion === r.id ? `✅ ${r.label}` : r.label}
+                    {r.label}
                   </button>
                 ))}
               </div>
@@ -5211,7 +5258,7 @@ const VendorDashboard = ({ user }) => {
                       }}
                       className={`${
                         (Array.isArray(supplyFilters) && supplyFilters.includes(b))
-                          ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white border-transparent'
+                          ? 'bg-[#1b5e20] text-white border-transparent'
                           : (isDark ? 'bg-gray-800 text-gray-200 border-gray-700 hover:bg-gray-700' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50')
                       } border px-3 py-1 rounded-full text-xs font-semibold transition-colors`}
                     >
@@ -5224,7 +5271,7 @@ const VendorDashboard = ({ user }) => {
                       onClick={() => setSupplyFilters([])}
                       className={`${isDark ? 'bg-gray-900 text-gray-200 border-gray-700 hover:bg-gray-800' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'} border px-3 py-1 rounded-full text-xs font-semibold transition-colors`}
                     >
-                      ✖ Effacer
+                      Effacer filtres
                     </button>
                   )}
                 </div>
@@ -5257,7 +5304,7 @@ const VendorDashboard = ({ user }) => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-emerald-400 font-bold">{it.price}</div>
+                        <div className={`font-bold ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`}>{it.price}</div>
                         <div className={`${isDark ? 'text-gray-500' : 'text-gray-500'} text-xs mt-1`}>{it.sku}</div>
                       </div>
                     </div>
@@ -5265,23 +5312,23 @@ const VendorDashboard = ({ user }) => {
                       <button
                         type="button"
                         onClick={() => toast.success(`Ajouté à votre liste d’import: ${it.name}`)}
-                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-green-600 text-white font-black hover:from-orange-600 hover:to-green-700 transition-all"
+                        className="px-4 py-2 rounded-xl bg-[#1b5e20] text-white font-black transition-colors hover:bg-[#16381a]"
                       >
-                        ➕ Importer
+                        Importer
                       </button>
                       <button
                         type="button"
                         onClick={() => toast.info('Devis fournisseur : bientôt disponible')}
                         className={`${isDark ? 'bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'} px-4 py-2 rounded-xl font-black transition-colors`}
                       >
-                        🧾 Devis
+                        Devis
                       </button>
                       <button
                         type="button"
                         onClick={() => setActiveTab('shops')}
                         className={`${isDark ? 'bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'} px-4 py-2 rounded-xl font-black transition-colors`}
                       >
-                        🏪 Mes boutiques
+                        Mes boutiques
                       </button>
                     </div>
                   </div>
@@ -5315,7 +5362,10 @@ const VendorDashboard = ({ user }) => {
                       <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm font-semibold`}>{Math.round(Number(trackingShipment?.pct || 0))}%</div>
                     </div>
                     <div className={`${isDark ? 'bg-gray-800' : 'bg-gray-100'} mt-2 h-3 rounded-full overflow-hidden`}>
-                      <div className="h-full bg-gradient-to-r from-orange-500 to-green-600" style={{ width: `${Math.max(0, Math.min(100, Number(trackingShipment?.pct || 0)))}%` }} />
+                      <div
+                        className={`h-full ${isDark ? 'bg-[#66bb6a]' : 'bg-[#1b5e20]'}`}
+                        style={{ width: `${Math.max(0, Math.min(100, Number(trackingShipment?.pct || 0)))}%` }}
+                      />
                     </div>
 
                     <div className="mt-4 space-y-3">
@@ -5324,11 +5374,20 @@ const VendorDashboard = ({ user }) => {
                         const done = pct <= Number(trackingShipment?.pct || 0)
                         return (
                           <div key={`${idx}_${s.label}`} className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-3 flex items-start justify-between gap-3`}>
-                            <div>
-                              <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-bold`}>{done ? '✅' : '⏳'} {s.label}</div>
-                              <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>{s.hint}</div>
+                            <div className="flex items-start gap-3">
+                              <div className={`mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                                done
+                                  ? (isDark ? 'bg-[#244729] text-[#66bb6a]' : 'bg-[#e8f3e5] text-[#1b5e20]')
+                                  : (isDark ? 'bg-gray-700 text-gray-300' : 'bg-white text-gray-500 border border-gray-200')
+                              }`}>
+                                <span className="h-2.5 w-2.5 rounded-full bg-current" aria-hidden="true" />
+                              </div>
+                              <div>
+                                <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-bold`}>{s.label}</div>
+                                <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>{s.hint}</div>
+                              </div>
                             </div>
-                            <div className={`${done ? 'text-emerald-400' : (isDark ? 'text-gray-400' : 'text-gray-500')} text-sm font-bold`}>{pct}%</div>
+                            <div className={`${done ? (isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]') : (isDark ? 'text-gray-400' : 'text-gray-500')} text-sm font-bold`}>{pct}%</div>
                           </div>
                         )
                       })}
@@ -5341,7 +5400,7 @@ const VendorDashboard = ({ user }) => {
                           const bumped = Math.min(100, Number(trackingShipment?.pct || 0) + 10)
                           setTrackingShipment((prev) => (prev ? { ...prev, pct: bumped } : prev))
                         }}
-                        className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-4 py-2 rounded-xl text-sm font-black hover:from-orange-600 hover:to-green-700 transition-all"
+                        className="rounded-xl bg-[#1b5e20] px-4 py-2 text-sm font-black text-white transition-colors hover:bg-[#16381a]"
                       >
                         Simuler avancée
                       </button>
@@ -5374,9 +5433,9 @@ const VendorDashboard = ({ user }) => {
                 onClick={() => {
                   setVendorSimpleScreen('home')
                 }}
-                className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-4 py-2 rounded-2xl text-sm font-black hover:from-orange-600 hover:to-green-700 transition-all"
+                className="rounded-2xl bg-[#1b5e20] px-4 py-2 text-sm font-black text-white transition-colors hover:bg-[#16381a]"
               >
-                🏠 Accueil
+                Accueil
               </button>
               {vendorSimpleScreen === 'module' && (
                 <button
@@ -5384,7 +5443,7 @@ const VendorDashboard = ({ user }) => {
                   onClick={() => setVendorSimpleScreen('plus')}
                   className={isDark ? 'bg-gray-800 text-gray-100 px-4 py-2 rounded-2xl text-sm font-black hover:bg-gray-700 transition-colors' : 'bg-white border border-gray-200 text-gray-900 px-4 py-2 rounded-2xl text-sm font-black hover:bg-gray-50 transition-colors'}
                 >
-                  ➕ Plus
+                  Plus
                 </button>
               )}
               {vendorSimpleScreen === 'plus' && (
@@ -5394,7 +5453,7 @@ const VendorDashboard = ({ user }) => {
                     onClick={() => setVendorSimpleScreen('module')}
                     className={isDark ? 'bg-gray-800 text-gray-100 px-4 py-2 rounded-2xl text-sm font-black hover:bg-gray-700 transition-colors' : 'bg-white border border-gray-200 text-gray-900 px-4 py-2 rounded-2xl text-sm font-black hover:bg-gray-50 transition-colors'}
                   >
-                    ↩ Retour
+                    Retour
                   </button>
                   <button
                     type="button"
@@ -5402,7 +5461,7 @@ const VendorDashboard = ({ user }) => {
                     className={isDark ? 'bg-gray-800 text-gray-100 px-4 py-2 rounded-2xl text-sm font-black hover:bg-gray-700 transition-colors' : 'bg-white border border-gray-200 text-gray-900 px-4 py-2 rounded-2xl text-sm font-black hover:bg-gray-50 transition-colors'}
                     title={vendorPlusMode === 'grid' ? 'Revenir à la version onglets' : 'Revenir à la version grille'}
                   >
-                    {vendorPlusMode === 'grid' ? '📑 Onglets' : '🔳 Grille'}
+                    {vendorPlusMode === 'grid' ? 'Onglets' : 'Grille'}
                   </button>
                 </>
               )}
@@ -5411,7 +5470,7 @@ const VendorDashboard = ({ user }) => {
         </div>
         
         {(!isSimpleUi || (isSimpleUi && vendorSimpleScreen === 'plus' && vendorPlusMode === 'tabs')) && (
-          <div className="bg-gray-100 dark:bg-gray-800 p-1 rounded-lg overflow-x-auto">
+          <div className="overflow-x-auto rounded-lg bg-[#eef6ea] p-1 dark:bg-[#17331c]">
             <div className="flex gap-1 min-w-max px-1">
               {tabs.map((tab) => (
                 <button
@@ -5425,11 +5484,11 @@ const VendorDashboard = ({ user }) => {
                   }}
                   className={`shrink-0 flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-all whitespace-nowrap ${
                     activeTab === tab.id
-                      ? 'bg-orange-500 text-white shadow-md'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                      ? 'bg-[#1b5e20] text-white shadow-md dark:bg-[#ffa726] dark:text-[#16381a]'
+                      : 'text-[#4d6551] dark:text-[#d7ecd8] hover:bg-[#dfeedd] dark:hover:bg-[#204927]'
                   }`}
                 >
-                  <span>{tab.icon}</span>
+                  <tab.icon className="h-4 w-4" aria-hidden="true" />
                   <span>{tab.name}</span>
                 </button>
               ))}
@@ -5445,11 +5504,11 @@ const VendorDashboard = ({ user }) => {
                 setActiveTab('orders')
                 setVendorSimpleScreen('module')
               }}
-              className={`${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'} border rounded-3xl p-5 text-left shadow-lg hover:shadow-xl transition-all`}
+              className={`${isDark ? 'bg-[#17331c] border-[#2e5d34] text-white' : 'bg-white border-[#d7e4d1] text-[#16381a]'} border rounded-3xl p-5 text-left shadow-lg hover:shadow-xl transition-all`}
             >
-              <div className="text-4xl">🛒</div>
+              <ShoppingCart className="h-10 w-10" aria-hidden="true" />
               <div className="mt-3 text-lg font-black">Vendre</div>
-              <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm font-semibold mt-1`}>Commandes</div>
+              <div className={`${isDark ? 'text-[#d7ecd8]' : 'text-[#4d6551]'} text-sm font-semibold mt-1`}>Commandes</div>
             </button>
 
             <button
@@ -5458,11 +5517,11 @@ const VendorDashboard = ({ user }) => {
                 setActiveTab('stock')
                 setVendorSimpleScreen('module')
               }}
-              className={`${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'} border rounded-3xl p-5 text-left shadow-lg hover:shadow-xl transition-all`}
+              className={`${isDark ? 'bg-[#17331c] border-[#2e5d34] text-white' : 'bg-white border-[#d7e4d1] text-[#16381a]'} border rounded-3xl p-5 text-left shadow-lg hover:shadow-xl transition-all`}
             >
-              <div className="text-4xl">📦</div>
+              <Package className="h-10 w-10" aria-hidden="true" />
               <div className="mt-3 text-lg font-black">Stock</div>
-              <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm font-semibold mt-1`}>Quantités</div>
+              <div className={`${isDark ? 'text-[#d7ecd8]' : 'text-[#4d6551]'} text-sm font-semibold mt-1`}>Quantités</div>
             </button>
 
             <button
@@ -5471,11 +5530,11 @@ const VendorDashboard = ({ user }) => {
                 setActiveTab(connectPlusEnabled ? 'connectplus' : 'communication')
                 setVendorSimpleScreen('module')
               }}
-              className={`${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'} border rounded-3xl p-5 text-left shadow-lg hover:shadow-xl transition-all`}
+              className={`${isDark ? 'bg-[#17331c] border-[#2e5d34] text-white' : 'bg-white border-[#d7e4d1] text-[#16381a]'} border rounded-3xl p-5 text-left shadow-lg hover:shadow-xl transition-all`}
             >
-              <div className="text-4xl">📞</div>
+              <Phone className="h-10 w-10" aria-hidden="true" />
               <div className="mt-3 text-lg font-black">Appeler</div>
-              <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm font-semibold mt-1`}>Connect+</div>
+              <div className={`${isDark ? 'text-[#d7ecd8]' : 'text-[#4d6551]'} text-sm font-semibold mt-1`}>Connect+</div>
             </button>
 
             <button
@@ -5484,11 +5543,11 @@ const VendorDashboard = ({ user }) => {
                 setActiveTab('boosts')
                 setVendorSimpleScreen('module')
               }}
-              className={`${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'} border rounded-3xl p-5 text-left shadow-lg hover:shadow-xl transition-all`}
+              className={`${isDark ? 'bg-[#17331c] border-[#2e5d34] text-white' : 'bg-white border-[#d7e4d1] text-[#16381a]'} border rounded-3xl p-5 text-left shadow-lg hover:shadow-xl transition-all`}
             >
-              <div className="text-4xl">🚀</div>
+              <Megaphone className="h-10 w-10" aria-hidden="true" />
               <div className="mt-3 text-lg font-black">Booster</div>
-              <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm font-semibold mt-1`}>Visibilité</div>
+              <div className={`${isDark ? 'text-[#d7ecd8]' : 'text-[#4d6551]'} text-sm font-semibold mt-1`}>Visibilité</div>
             </button>
 
             <button
@@ -5497,11 +5556,11 @@ const VendorDashboard = ({ user }) => {
                 setActiveTab('shops')
                 setVendorSimpleScreen('module')
               }}
-              className={`${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'} border rounded-3xl p-5 text-left shadow-lg hover:shadow-xl transition-all`}
+              className={`${isDark ? 'bg-[#17331c] border-[#2e5d34] text-white' : 'bg-white border-[#d7e4d1] text-[#16381a]'} border rounded-3xl p-5 text-left shadow-lg hover:shadow-xl transition-all`}
             >
-              <div className="text-4xl">🏪</div>
+              <Store className="h-10 w-10" aria-hidden="true" />
               <div className="mt-3 text-lg font-black">Boutique</div>
-              <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm font-semibold mt-1`}>QR / PIN</div>
+              <div className={`${isDark ? 'text-[#d7ecd8]' : 'text-[#4d6551]'} text-sm font-semibold mt-1`}>QR / PIN</div>
             </button>
 
             <button
@@ -5509,11 +5568,11 @@ const VendorDashboard = ({ user }) => {
               onClick={() => {
                 setVendorSimpleScreen('plus')
               }}
-              className={`${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'} border rounded-3xl p-5 text-left shadow-lg hover:shadow-xl transition-all`}
+              className={`${isDark ? 'bg-[#17331c] border-[#2e5d34] text-white' : 'bg-white border-[#d7e4d1] text-[#16381a]'} border rounded-3xl p-5 text-left shadow-lg hover:shadow-xl transition-all`}
             >
-              <div className="text-4xl">➕</div>
+              <Plus className="h-10 w-10" aria-hidden="true" />
               <div className="mt-3 text-lg font-black">Plus</div>
-              <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm font-semibold mt-1`}>Avancé</div>
+              <div className={`${isDark ? 'text-[#d7ecd8]' : 'text-[#4d6551]'} text-sm font-semibold mt-1`}>Avancé</div>
             </button>
           </div>
         )}
@@ -5528,11 +5587,11 @@ const VendorDashboard = ({ user }) => {
                   setActiveTab(tab.id)
                   setVendorSimpleScreen('module')
                 }}
-                className={`${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'} border rounded-3xl p-5 text-left shadow-lg hover:shadow-xl transition-all`}
+                className={`${isDark ? 'bg-[#17331c] border-[#2e5d34] text-white' : 'bg-white border-[#d7e4d1] text-[#16381a]'} border rounded-3xl p-5 text-left shadow-lg hover:shadow-xl transition-all`}
               >
-                <div className="text-4xl">{tab.icon}</div>
+                <tab.icon className="h-10 w-10" aria-hidden="true" />
                 <div className="mt-3 text-lg font-black">{tab.name}</div>
-                <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm font-semibold mt-1`}>Ouvrir</div>
+                <div className={`${isDark ? 'text-[#d7ecd8]' : 'text-[#4d6551]'} text-sm font-semibold mt-1`}>Ouvrir</div>
               </button>
             ))}
           </div>
@@ -6006,22 +6065,26 @@ const ClientMarketplace = ({ user }) => {
       {/* En-tête avec panier */}
       <div className="flex justify-between items-center mb-8">
         <div className="text-center flex-1">
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-orange-500 to-green-600 bg-clip-text text-transparent">
+          <h1 className={`text-4xl font-bold mb-4 ${isDark ? 'text-[#ecf7e7]' : 'text-[#16381a]'}`}>
             Marketplace MangooTech
           </h1>
           <p className={`text-lg transition-colors duration-300 ${
-            isDark ? 'text-gray-300' : 'text-gray-600'
+            isDark ? 'text-[#cfe7c8]' : 'text-[#46604a]'
           }`}>
             Découvrez les meilleurs produits des commerçants africains
           </p>
         </div>
         
         {/* Panier */}
-        <div className={`relative rounded-xl shadow-lg p-4 transition-colors duration-300 ${
-          isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white'
+        <div className={`relative rounded-xl border shadow-lg p-4 transition-colors duration-300 ${
+          isDark ? 'border-[#2e5d34] bg-[#16381a]' : 'border-[#d7e4d1] bg-white'
         }`}>
           <div className="flex items-center space-x-2">
-            <span className="text-2xl">🛒</span>
+            <span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl ${
+              isDark ? 'bg-[#244729] text-[#ffd166]' : 'bg-[#eef6ea] text-[#1b5e20]'
+            }`}>
+              <ShoppingCart className="h-5 w-5" aria-hidden="true" />
+            </span>
             <div>
               <p className={`font-medium transition-colors duration-300 ${
                 isDark ? 'text-white' : 'text-gray-900'
@@ -6038,7 +6101,7 @@ const ClientMarketplace = ({ user }) => {
               </p>
               <button
                 onClick={() => setShowPayment(true)}
-                className="w-full mt-2 bg-gradient-to-r from-orange-500 to-green-600 text-white py-2 px-4 rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all text-sm"
+                className="mt-2 w-full rounded-lg bg-[#1b5e20] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#16381a]"
               >
                 Payer maintenant
               </button>
@@ -6063,7 +6126,7 @@ const ClientMarketplace = ({ user }) => {
               <button
                 type="button"
                 onClick={() => navigate(buildBoostLink('/shops'))}
-                className="mt-4 w-full bg-gradient-to-r from-orange-500 to-green-600 text-white py-2.5 px-4 rounded-xl font-black hover:from-orange-600 hover:to-green-700 transition-all"
+                className="mt-4 w-full rounded-xl bg-[#1b5e20] px-4 py-2.5 font-black text-white transition-colors hover:bg-[#16381a]"
               >
                 Voir les boutiques
               </button>
@@ -6077,7 +6140,7 @@ const ClientMarketplace = ({ user }) => {
                   <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-black`}>Promotions</div>
                   <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm mt-1`}>Offres mises en avant pour déclencher l’achat.</div>
                 </div>
-                <div className={`${isDark ? 'bg-fuchsia-500/15 text-fuchsia-200 border-fuchsia-400/30' : 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200'} border text-xs font-black px-2 py-1 rounded-full`}>
+                <div className={`${isDark ? 'border-[#b46a04] bg-[#ff9800]/20 text-[#fff4d6]' : 'border-[#ffc97a] bg-[#fff1dc] text-[#9f5c00]'} border text-xs font-black px-2 py-1 rounded-full`}>
                   {boostSummary.promo}
                 </div>
               </div>
@@ -6098,7 +6161,7 @@ const ClientMarketplace = ({ user }) => {
                   <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-black`}>Nouveautés</div>
                   <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm mt-1`}>Nouvelles boutiques mises en lumière.</div>
                 </div>
-                <div className={`${isDark ? 'bg-sky-500/15 text-sky-200 border-sky-400/30' : 'bg-sky-50 text-sky-700 border-sky-200'} border text-xs font-black px-2 py-1 rounded-full`}>
+                <div className={`${isDark ? 'border-[#2e5d34] bg-[#1b5e20]/25 text-[#ecf7e7]' : 'border-[#cfe0c8] bg-[#eef6ea] text-[#1b5e20]'} border text-xs font-black px-2 py-1 rounded-full`}>
                   {boostSummary.new}
                 </div>
               </div>
@@ -6271,10 +6334,14 @@ const ClientMarketplace = ({ user }) => {
               <div className="grid md:grid-cols-2 gap-6">
                 <div className={`h-64 flex items-center justify-center rounded-lg ${
                   isDark 
-                    ? 'bg-gradient-to-br from-gray-700 to-gray-600' 
-                    : 'bg-gradient-to-br from-orange-100 to-green-100'
+                    ? 'bg-[#17331c] border border-[#2e5d34]' 
+                    : 'bg-[#eef6ea] border border-[#d7e4d1]'
                 }`}>
-                  <span className="text-8xl">{selectedProduct.icon}</span>
+                  <div className={`inline-flex h-28 w-28 items-center justify-center rounded-3xl text-4xl font-black ${
+                    isDark ? 'bg-[#244729] text-[#ecf7e7]' : 'bg-white text-[#1b5e20]'
+                  }`}>
+                    {String(selectedProduct?.name || 'M').trim().slice(0, 1).toUpperCase()}
+                  </div>
                 </div>
                 
                 <div>
@@ -6307,7 +6374,7 @@ const ClientMarketplace = ({ user }) => {
                         addToCart(selectedProduct);
                         setSelectedProduct(null);
                       }}
-                      className="flex-1 bg-gradient-to-r from-orange-500 to-green-600 text-white py-3 px-6 rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all"
+                      className="flex-1 rounded-lg bg-[#1b5e20] px-6 py-3 font-medium text-white transition-colors hover:bg-[#16381a]"
                     >
                       Ajouter au panier
                     </button>
@@ -7119,9 +7186,10 @@ const ShopsDirectory = () => {
             <button
               type="button"
               onClick={() => navigate(safeReturn)}
-              className={isDark ? 'px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 font-bold text-white' : 'px-4 py-2 rounded-xl bg-white hover:bg-gray-100 font-bold border border-gray-200'}
+              className={isDark ? 'inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 font-bold text-white' : 'inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-gray-100 font-bold border border-gray-200'}
             >
-              ← Retour
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              <span>Retour</span>
             </button>
             <div className={isDark ? 'text-sm text-gray-300' : 'text-sm text-gray-600'}>Boutiques</div>
             <div className="w-[92px]" />
@@ -7130,11 +7198,11 @@ const ShopsDirectory = () => {
       })()}
 
       <div className="mb-6 text-center">
-        <h1 className="text-3xl sm:text-4xl font-bold mb-3 bg-gradient-to-r from-orange-500 to-green-600 bg-clip-text text-transparent">
+        <h1 className={`text-3xl sm:text-4xl font-bold mb-3 ${isDark ? 'text-[#ecf7e7]' : 'text-[#16381a]'}`}>
           Boutiques MangooTech
         </h1>
         <p className={`text-lg transition-colors duration-300 ${
-          isDark ? 'text-gray-300' : 'text-gray-600'
+          isDark ? 'text-[#cfe7c8]' : 'text-[#46604a]'
         }`}>
           Découvrez et suivez vos boutiques préférées
         </p>
@@ -7146,9 +7214,9 @@ const ShopsDirectory = () => {
 
       <div className="max-w-2xl mx-auto mb-4">
         <div className={`flex items-center gap-2 px-4 py-3 rounded-2xl border shadow-sm transition-colors ${
-          isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+          isDark ? 'border-[#2e5d34] bg-[#16381a]' : 'border-[#d7e4d1] bg-white'
         }`}>
-          <span className={`${isDark ? 'text-gray-300' : 'text-gray-500'}`}>🔎</span>
+          <Search className={`h-4 w-4 ${isDark ? 'text-[#cfe7c8]' : 'text-[#46604a]'}`} aria-hidden="true" />
           <input
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -7183,7 +7251,7 @@ const ShopsDirectory = () => {
               }}
               className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-semibold transition-colors ${
                 active
-                  ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                  ? 'bg-[#1b5e20] text-white'
                   : (isDark ? 'bg-gray-800 text-gray-200 border border-gray-700 hover:bg-gray-700' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50')
               }`}
             >
@@ -7224,7 +7292,7 @@ const ShopsDirectory = () => {
                 } catch {
                 }
               }}
-              className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-4 py-2 rounded-xl font-black"
+              className="rounded-xl bg-[#1b5e20] px-4 py-2 font-black text-white transition-colors hover:bg-[#16381a]"
             >
               Sponsoring (12h)
             </button>
@@ -7294,7 +7362,7 @@ const ShopsDirectory = () => {
         <div ref={listRef} className="text-center py-12">
           {supabaseShopsLoading ? (
             <>
-              <div className="text-6xl mb-4">⏳</div>
+              <img src={mangooLogo} alt="Mangoo Tech" className="mx-auto mb-4 h-14 w-14 rounded-2xl" />
               <h3 className={`text-xl font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 Chargement des boutiques…
               </h3>
@@ -7315,7 +7383,11 @@ const ShopsDirectory = () => {
             </>
           ) : (
             <>
-              <div className="text-6xl mb-4">🏪</div>
+              <div className={`mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-3xl ${
+                isDark ? 'bg-[#244729] text-[#ffd166]' : 'bg-[#eef6ea] text-[#1b5e20]'
+              }`}>
+                <Store className="h-8 w-8" aria-hidden="true" />
+              </div>
               <h3 className={`text-xl font-semibold mb-2 ${
                 isDark ? 'text-gray-300' : 'text-gray-700'
               }`}>
@@ -7348,7 +7420,7 @@ const ShopsDirectory = () => {
                 <button
                   type="button"
                   onClick={() => requestCreateShop(selectedCategory === 'all' ? 'general' : selectedCategory)}
-                  className="px-4 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-orange-500 to-green-600 text-white hover:from-orange-600 hover:to-green-700 transition-colors"
+                  className="rounded-xl bg-[#1b5e20] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#16381a]"
                 >
                   Créer une boutique {selectedCategory === 'all' ? '' : categoryLabel(selectedCategory)}
                 </button>
@@ -7402,12 +7474,12 @@ const ShopsDirectory = () => {
                                 Sponsorisé
                               </span>
                               {isPromo && (
-                                <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-fuchsia-500/15 text-fuchsia-200 border-fuchsia-400/30' : 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200'}>
+                                <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border border-[#b46a04] bg-[#ff9800]/20 text-[#fff4d6]' : 'text-[10px] px-2 py-0.5 rounded-full font-black border border-[#ffc97a] bg-[#fff1dc] text-[#9f5c00]'}>
                                   Promo
                                 </span>
                               )}
                               {isNew && (
-                                <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-sky-500/15 text-sky-200 border-sky-400/30' : 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-sky-50 text-sky-700 border-sky-200'}>
+                                <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border border-[#2e5d34] bg-[#1b5e20]/25 text-[#ecf7e7]' : 'text-[10px] px-2 py-0.5 rounded-full font-black border border-[#cfe0c8] bg-[#eef6ea] text-[#1b5e20]'}>
                                   Nouveau
                                 </span>
                               )}
@@ -7516,12 +7588,12 @@ const ShopsDirectory = () => {
                         </span>
                       )}
                       {isPromo && (
-                        <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-fuchsia-500/15 text-fuchsia-200 border-fuchsia-400/30' : 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200'}>
+                        <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border border-[#b46a04] bg-[#ff9800]/20 text-[#fff4d6]' : 'text-[10px] px-2 py-0.5 rounded-full font-black border border-[#ffc97a] bg-[#fff1dc] text-[#9f5c00]'}>
                           Promo
                         </span>
                       )}
                       {isNew && (
-                        <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-sky-500/15 text-sky-200 border-sky-400/30' : 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-sky-50 text-sky-700 border-sky-200'}>
+                        <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border border-[#2e5d34] bg-[#1b5e20]/25 text-[#ecf7e7]' : 'text-[10px] px-2 py-0.5 rounded-full font-black border border-[#cfe0c8] bg-[#eef6ea] text-[#1b5e20]'}>
                           Nouveau
                         </span>
                       )}
@@ -7598,7 +7670,11 @@ function ClientWishlistSection() {
     <div>
       {wished.length === 0 ? (
         <div className={`${isDark ? 'bg-gray-900 border-gray-700 text-gray-300' : 'bg-gray-50 border-gray-200 text-gray-700'} border rounded-xl p-6 text-center`}>
-          <div className="text-4xl mb-2">❤️</div>
+          <div className={`mx-auto mb-2 inline-flex h-14 w-14 items-center justify-center rounded-2xl ${
+            isDark ? 'bg-[#244729] text-[#ffd166]' : 'bg-[#eef6ea] text-[#1b5e20]'
+          }`}>
+            <Heart className="h-7 w-7" aria-hidden="true" />
+          </div>
           <div className="font-semibold">Aucun favori</div>
           <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Ajoutez des produits en favoris depuis la marketplace.</div>
         </div>
@@ -7606,8 +7682,10 @@ function ClientWishlistSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {wished.map((p) => (
             <div key={p.id} className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-4 flex items-start gap-3`}>
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl bg-gradient-to-r from-orange-500 to-green-600 text-white">
-                {p.icon || '🛍️'}
+              <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                isDark ? 'bg-[#244729] text-[#ffd166]' : 'bg-[#eef6ea] text-[#1b5e20]'
+              }`}>
+                <Package className="h-5 w-5" aria-hidden="true" />
               </div>
               <div className="flex-1">
                 <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>{p.name}</div>
@@ -8185,7 +8263,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
               <button
                 type="button"
                 onClick={() => goToPackCheckout(activePackInfo.packId || 'pack_decouverte')}
-                className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-orange-600 hover:to-green-700 transition-all"
+                className="rounded-xl bg-[#1b5e20] px-3 py-2 font-semibold text-white transition-colors hover:bg-[#16381a]"
                 title="Gérer l’achat / changement de pack"
               >
                 Gérer mon pack
@@ -8280,7 +8358,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
               <button
                 type="button"
                 onClick={onOpenRegister}
-                className="flex-1 bg-gradient-to-r from-orange-500 to-green-600 text-white py-2 px-4 rounded-xl font-semibold hover:from-orange-600 hover:to-green-700 transition-all"
+                className="flex-1 rounded-xl bg-[#1b5e20] px-4 py-2 font-semibold text-white transition-colors hover:bg-[#16381a]"
               >
                 Créer un compte
               </button>
@@ -8307,7 +8385,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                     Actualiser
                   </button>
                 </div>
-                <div className="mt-2 text-2xl font-bold text-emerald-400">
+                <div className={`mt-2 text-2xl font-bold ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`}>
                   {(walletBalance ?? 0).toLocaleString('fr-FR')} XOF
                 </div>
 
@@ -8324,7 +8402,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                     }}
                     className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
                       walletTopupChannel === 'mobile_money'
-                        ? isDark ? 'bg-emerald-700 text-white' : 'bg-emerald-200 text-emerald-900'
+                        ? isDark ? 'bg-[#1b5e20] text-white' : 'bg-[#eef6ea] text-[#1b5e20] border border-[#cfe0c8]'
                         : isDark ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                     }`}
                   >
@@ -8342,7 +8420,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                     }}
                     className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
                       walletTopupChannel === 'card'
-                        ? isDark ? 'bg-emerald-700 text-white' : 'bg-emerald-200 text-emerald-900'
+                        ? isDark ? 'bg-[#1b5e20] text-white' : 'bg-[#eef6ea] text-[#1b5e20] border border-[#cfe0c8]'
                         : isDark ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                     }`}
                   >
@@ -8360,7 +8438,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                     }}
                     className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
                       walletTopupChannel === 'credit_transfer'
-                        ? isDark ? 'bg-emerald-700 text-white' : 'bg-emerald-200 text-emerald-900'
+                        ? isDark ? 'bg-[#1b5e20] text-white' : 'bg-[#eef6ea] text-[#1b5e20] border border-[#cfe0c8]'
                         : isDark ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                     }`}
                   >
@@ -8457,7 +8535,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                         ? isDark
                           ? 'bg-gray-700 text-gray-300 cursor-not-allowed'
                           : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                        : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                        : 'bg-[#1b5e20] hover:bg-[#16381a] text-white'
                     }`}
                   >
                     {isWalletBusy ? 'Rechargement…' : 'Recharger'}
@@ -8470,8 +8548,8 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
         ) : (
           <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-6 shadow-sm`}>
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-gradient-to-r from-orange-500 to-green-600 text-white">
-                {user?.avatar || '🧑‍💻'}
+              <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl text-sm font-black ${isDark ? 'bg-[#244729] text-[#ecf7e7]' : 'bg-[#eef6ea] text-[#1b5e20]'}`}>
+                {getUserInitials(user)}
               </div>
               <div className="flex-1">
                 <div className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{user?.name}</div>
@@ -8489,7 +8567,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                   onClick={() => setActiveSection('orders')}
                   className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
                     activeSection === 'orders'
-                      ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                      ? 'bg-[#1b5e20] text-white'
                       : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
                   }`}
                 >
@@ -8500,7 +8578,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                   onClick={() => setActiveSection('profile')}
                   className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
                     activeSection === 'profile'
-                      ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                      ? 'bg-[#1b5e20] text-white'
                       : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
                   }`}
                 >
@@ -8511,7 +8589,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                   onClick={() => setActiveSection('wishlist')}
                   className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
                     activeSection === 'wishlist'
-                      ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                      ? 'bg-[#1b5e20] text-white'
                       : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
                   }`}
                 >
@@ -8522,7 +8600,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                   onClick={() => setActiveSection('wallet')}
                   className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
                     activeSection === 'wallet'
-                      ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                      ? 'bg-[#1b5e20] text-white'
                       : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
                   }`}
                 >
@@ -8533,11 +8611,11 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                   onClick={() => setActiveSection('communication')}
                   className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors inline-flex items-center gap-2 leading-none ${
                     activeSection === 'communication'
-                      ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                      ? 'bg-[#1b5e20] text-white'
                       : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
                   }`}
                 >
-                  <span className="text-base leading-none">📞</span>
+                  <Phone className="h-4 w-4" aria-hidden="true" />
                   <span className="leading-none">Communication</span>
                 </button>
               </div>
@@ -8547,7 +8625,11 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
               <div>
                 {orders.length === 0 ? (
                   <div className={`${isDark ? 'bg-gray-900 border-gray-700 text-gray-300' : 'bg-gray-50 border-gray-200 text-gray-700'} border rounded-xl p-6 text-center`}>
-                    <div className="text-4xl mb-2">📦</div>
+                    <div className={`mx-auto mb-2 inline-flex h-14 w-14 items-center justify-center rounded-2xl ${
+                      isDark ? 'bg-[#244729] text-[#ffd166]' : 'bg-[#eef6ea] text-[#1b5e20]'
+                    }`}>
+                      <Package className="h-7 w-7" aria-hidden="true" />
+                    </div>
                     <div className="font-semibold">Aucune commande</div>
                     <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Vos commandes apparaîtront ici après un paiement.</div>
                     <div className="mt-4 flex flex-wrap justify-center gap-2">
@@ -8557,7 +8639,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                         className={`${isDark ? 'bg-white/5 border border-white/10 text-gray-400' : 'bg-white border border-gray-200 text-gray-400'} px-4 py-2 rounded-xl font-black opacity-60 cursor-not-allowed`}
                         title="Disponible après paiement"
                       >
-                        🚚 Demander livraison
+                        Demander livraison
                       </button>
                       <button
                         type="button"
@@ -8565,7 +8647,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                         className={`${isDark ? 'bg-white/5 border border-white/10 text-gray-400' : 'bg-white border border-gray-200 text-gray-400'} px-4 py-2 rounded-xl font-black opacity-60 cursor-not-allowed`}
                         title="Disponible après paiement"
                       >
-                        🧾 Facture
+                        Facture
                       </button>
                       <button
                         type="button"
@@ -8601,7 +8683,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                               className={`${isDark ? 'bg-white/5 border border-white/10 text-gray-400' : 'bg-white border border-gray-200 text-gray-500'} px-4 py-2 rounded-xl font-black opacity-80 cursor-not-allowed`}
                               title="Dans le secteur formel, le vendeur lance la livraison quand le colis est prêt"
                             >
-                              🏪 Le vendeur lance
+                              Le vendeur lance
                             </button>
                             <button
                               type="button"
@@ -8613,7 +8695,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                               }
                               title={String(o.status || '') === 'paid' ? 'Voir la facture' : 'Disponible après paiement'}
                             >
-                              🧾 Facture
+                              Facture
                             </button>
                             <button
                               type="button"
@@ -8680,7 +8762,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                   <button
                     type="button"
                     onClick={handleSave}
-                    className={`bg-gradient-to-r from-orange-500 to-green-600 text-white py-2 px-4 rounded-xl font-semibold hover:from-orange-600 hover:to-green-700 transition-all ${
+                    className={`rounded-xl bg-[#1b5e20] px-4 py-2 font-semibold text-white transition-colors hover:bg-[#16381a] ${
                       (!isDirty || saving) ? 'opacity-60 cursor-not-allowed' : ''
                     }`}
                   >
@@ -8699,44 +8781,56 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                       onClick={() => setCommunicationMode('chat')}
                       className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
                         communicationMode === 'chat'
-                          ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                          ? 'bg-[#1b5e20] text-white'
                           : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
                       }`}
                     >
-                      💬 Chat
+                      <span className="inline-flex items-center gap-2">
+                        <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                        <span>Chat</span>
+                      </span>
                     </button>
                   <button
                     type="button"
                     onClick={() => setCommunicationMode('contacts')}
                     className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
                       communicationMode === 'contacts'
-                        ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                        ? 'bg-[#1b5e20] text-white'
                         : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
                     }`}
                   >
-                    👥 Contacts
+                    <span className="inline-flex items-center gap-2">
+                      <Users className="h-4 w-4" aria-hidden="true" />
+                      <span>Contacts</span>
+                    </span>
                   </button>
                     <button
                       type="button"
                       onClick={() => setCommunicationMode('call')}
                       className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
                         communicationMode === 'call'
-                          ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                          ? 'bg-[#1b5e20] text-white'
                           : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
                       }`}
                     >
-                      📹 Appel
+                      <span className="inline-flex items-center gap-2">
+                        <Phone className="h-4 w-4" aria-hidden="true" />
+                        <span>Appel</span>
+                      </span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setCommunicationMode('live')}
                       className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
                         communicationMode === 'live'
-                          ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                          ? 'bg-[#1b5e20] text-white'
                           : (isDark ? 'text-gray-200 hover:bg-gray-800' : 'text-gray-700 hover:bg-white')
                       }`}
                     >
-                      🔴 Live
+                      <span className="inline-flex items-center gap-2">
+                        <Radio className="h-4 w-4" aria-hidden="true" />
+                        <span>Live</span>
+                      </span>
                     </button>
                   </div>
 
@@ -8747,21 +8841,23 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                         <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mt-1`}>Touchez un bouton, puis envoyez un message.</div>
                         <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
                           {[
-                            { id: 'support_mangoo', name: 'Support Mangoo', avatar: '🛟' },
-                            { id: 'vendeur_principal', name: 'Mon vendeur', avatar: '🏪' },
-                            { id: 'livreur', name: 'Livreur', avatar: '🛵' }
+                            { id: 'support_mangoo', name: 'Support Mangoo', avatar: 'SM' },
+                            { id: 'vendeur_principal', name: 'Mon vendeur', avatar: 'MV' },
+                            { id: 'livreur', name: 'Livreur', avatar: 'LM' }
                           ].map((t) => (
                             <button
                               key={t.id}
                               type="button"
                               onClick={() => {
-                                setChatTarget(t);
+                                setChatTarget({ ...t, avatar: getUserInitials(t) });
                                 setIsChatOpen(true);
                               }}
                               className={`${isDark ? 'bg-gray-800 hover:bg-gray-700 border-gray-700 text-white' : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-900'} border rounded-xl p-3 flex items-center gap-3 transition-colors`}
                             >
-                              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-gradient-to-r from-orange-500 to-green-600 text-white">
-                                {t.avatar}
+                              <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl text-sm font-black ${
+                                isDark ? 'bg-[#244729] text-[#ecf7e7]' : 'bg-[#eef6ea] text-[#1b5e20]'
+                              }`}>
+                                {getUserInitials(t)}
                               </div>
                               <div className="text-left">
                                 <div className="font-semibold text-sm">{t.name}</div>
@@ -8776,7 +8872,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                         <CustomerChat
                           vendorId={chatTarget.id}
                           vendorName={chatTarget.name}
-                          vendorAvatar={chatTarget.avatar}
+                          vendorAvatar={getUserInitials(chatTarget)}
                           onClose={() => {
                             setIsChatOpen(false);
                             setChatTarget(null);
@@ -8793,17 +8889,19 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
 
                       <div className="mt-3 grid grid-cols-1 gap-2">
                         {[
-                          { id: 'support_mangoo', name: 'Support Mangoo', avatar: '🛟', hint: 'Aide & assistance' },
-                          { id: 'vendeur_principal', name: 'Mon vendeur', avatar: '🏪', hint: 'Questions produits' },
-                          { id: 'livreur', name: 'Livreur', avatar: '🛵', hint: 'Livraison & suivi' }
+                          { id: 'support_mangoo', name: 'Support Mangoo', avatar: 'SM', hint: 'Aide & assistance' },
+                          { id: 'vendeur_principal', name: 'Mon vendeur', avatar: 'MV', hint: 'Questions produits' },
+                          { id: 'livreur', name: 'Livreur', avatar: 'LM', hint: 'Livraison & suivi' }
                         ].map((t) => (
                           <div
                             key={t.id}
                             className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl p-3 flex items-center justify-between gap-3`}
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-gradient-to-r from-orange-500 to-green-600 text-white">
-                                {t.avatar}
+                              <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl text-sm font-black ${
+                                isDark ? 'bg-[#244729] text-[#ecf7e7]' : 'bg-[#eef6ea] text-[#1b5e20]'
+                              }`}>
+                                {getUserInitials(t)}
                               </div>
                               <div>
                                 <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold text-sm`}>{t.name}</div>
@@ -8816,10 +8914,10 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                                 type="button"
                                 onClick={() => {
                                   setCommunicationMode('chat');
-                                  setChatTarget({ id: t.id, name: t.name, avatar: t.avatar });
+                                  setChatTarget({ id: t.id, name: t.name, avatar: getUserInitials(t) });
                                   setIsChatOpen(true);
                                 }}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+                                className="bg-[#1b5e20] hover:bg-[#16381a] text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
                               >
                                 Chat
                               </button>
@@ -8849,8 +8947,8 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
 
                           <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {[
-                              { id: 'vendor_2', name: 'Mon vendeur', avatar: '🏪' },
-                              { id: 'support_mangoo', name: 'Support Mangoo', avatar: '🛟' }
+                              { id: 'vendor_2', name: 'Mon vendeur', avatar: 'MV' },
+                              { id: 'support_mangoo', name: 'Support Mangoo', avatar: 'SM' }
                             ].map((t) => (
                               <button
                                 key={t.id}
@@ -8862,15 +8960,17 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                                 className={`${isDark ? 'bg-gray-800 hover:bg-gray-700 border-gray-700 text-white' : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-900'} border rounded-xl p-3 flex items-center justify-between gap-3 transition-colors`}
                               >
                                 <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-gradient-to-r from-orange-500 to-green-600 text-white">
-                                    {t.avatar}
+                                  <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl text-sm font-black ${
+                                    isDark ? 'bg-[#244729] text-[#ecf7e7]' : 'bg-[#eef6ea] text-[#1b5e20]'
+                                  }`}>
+                                    {getUserInitials(t)}
                                   </div>
                                   <div className="text-left">
                                     <div className="font-semibold text-sm">{t.name}</div>
                                     <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-xs`}>Démarrer un appel</div>
                                   </div>
                                 </div>
-                                <div className="text-sm font-semibold">📹</div>
+                                <Phone className="h-4 w-4" aria-hidden="true" />
                               </button>
                             ))}
                           </div>
@@ -8893,7 +8993,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                                   const url = `${window.location.origin}/webrtc?role=vendor&roomId=${encodeURIComponent(callRoomId)}`;
                                   window.open(url, '_blank', 'noopener,noreferrer');
                                 }}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-3 py-2 rounded-lg transition-colors"
+                                className="rounded-lg bg-[#1b5e20] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#16381a]"
                               >
                                 Ouvrir vendeur
                               </button>
@@ -8934,13 +9034,14 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                               onClick={() => {
                                 setIsLiveOpen(true);
                                 setLiveMessages([
-                                  { id: `m_${Date.now()}_1`, sender: '🏪 Vendeur', text: 'Bienvenue dans le live !' },
-                                  { id: `m_${Date.now()}_2`, sender: '🧑‍🤝‍🧑 Client', text: 'Bonjour 👋' }
+                                  { id: `m_${Date.now()}_1`, sender: 'Vendeur', text: 'Bienvenue dans le live.' },
+                                  { id: `m_${Date.now()}_2`, sender: 'Client', text: 'Bonjour' }
                                 ]);
                               }}
-                              className="bg-gradient-to-r from-orange-500 to-green-600 text-white py-2 px-4 rounded-xl font-semibold hover:from-orange-600 hover:to-green-700 transition-all"
+                              className="inline-flex items-center gap-2 rounded-xl bg-[#1b5e20] px-4 py-2 font-semibold text-white transition-colors hover:bg-[#16381a]"
                             >
-                              🔴 Rejoindre un live
+                              <Radio className="h-4 w-4" aria-hidden="true" />
+                              <span>Rejoindre un live</span>
                             </button>
                           </div>
                         </div>
@@ -8948,7 +9049,10 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                         <div className={`${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-xl p-4`}>
                           <div className="flex items-center justify-between gap-3">
                             <div>
-                              <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>🔴 Live en cours</div>
+                              <div className="inline-flex items-center gap-2">
+                                <Radio className={`h-4 w-4 ${isDark ? 'text-[#ffd166]' : 'text-[#1b5e20]'}`} aria-hidden="true" />
+                                <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>Live en cours</div>
+                              </div>
                               <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Touchez un produit pour le mettre en avant.</div>
                             </div>
                             <button
@@ -8966,9 +9070,9 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
 
                           <div className="mt-3 flex flex-wrap gap-2">
                             {[
-                              { key: 'phone', label: '📱 Téléphone' },
-                              { key: 'rice', label: '🌾 Riz' },
-                              { key: 'dress', label: '👗 Vêtement' }
+                              { key: 'phone', label: 'Téléphone' },
+                              { key: 'rice', label: 'Riz' },
+                              { key: 'dress', label: 'Vêtement' }
                             ].map((p) => (
                               <button
                                 key={p.key}
@@ -8976,7 +9080,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                                 onClick={() => setLiveSelectedProduct(p.key)}
                                 className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
                                   liveSelectedProduct === p.key
-                                    ? isDark ? 'bg-emerald-700 text-white' : 'bg-emerald-200 text-emerald-900'
+                                    ? isDark ? 'bg-[#1b5e20] text-white' : 'bg-[#eef6ea] text-[#1b5e20] border border-[#cfe0c8]'
                                     : isDark ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                                 }`}
                               >
@@ -8987,17 +9091,24 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
 
                           <div className="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
                             <div className={`${isDark ? 'bg-gray-950 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl overflow-hidden`}>
-                              <div className="aspect-video bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center">
+                              <div className={`aspect-video flex items-center justify-center ${isDark ? 'bg-[#102814]' : 'bg-[#eef6ea]'}`}>
                                 <div className="text-center">
-                                  <div className="text-5xl mb-2">🎥</div>
-                                  <div className="text-white font-bold">EN DIRECT</div>
-                                  <div className="text-gray-300 text-sm">{liveSelectedProduct === 'phone' ? '📱 Téléphone en promo' : liveSelectedProduct === 'rice' ? '🌾 Riz de qualité' : '👗 Nouveaux vêtements'}</div>
+                                  <div className={`mx-auto mb-2 inline-flex h-14 w-14 items-center justify-center rounded-2xl ${isDark ? 'bg-[#244729] text-[#ffd166]' : 'bg-white text-[#1b5e20] border border-[#d7e4d1]'}`}>
+                                    <Radio className="h-7 w-7" aria-hidden="true" />
+                                  </div>
+                                  <div className={`${isDark ? 'text-white' : 'text-[#16381a]'} font-bold`}>En direct</div>
+                                  <div className={`${isDark ? 'text-gray-300' : 'text-[#46604a]'} text-sm`}>
+                                    {liveSelectedProduct === 'phone' ? 'Téléphone en promo' : liveSelectedProduct === 'rice' ? 'Riz de qualité' : 'Nouveaux vêtements'}
+                                  </div>
                                 </div>
                               </div>
                             </div>
 
                             <div className={`${isDark ? 'bg-gray-950 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl p-3 flex flex-col`}>
-                              <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>💬 Chat du live</div>
+                              <div className="inline-flex items-center gap-2">
+                                <MessageCircle className={`h-4 w-4 ${isDark ? 'text-[#ffd166]' : 'text-[#1b5e20]'}`} aria-hidden="true" />
+                                <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>Chat du live</div>
+                              </div>
                               <div className="mt-2 flex-1 overflow-y-auto space-y-2 max-h-56">
                                 {liveMessages.map((m) => (
                                   <div key={m.id} className={`${isDark ? 'text-gray-200' : 'text-gray-800'} text-sm`}>
@@ -9017,10 +9128,10 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                                   onClick={() => {
                                     const text = String(liveMessage || '').trim();
                                     if (!text) return;
-                                    setLiveMessages((prev) => [...prev, { id: `m_${Date.now()}_${Math.random()}`, sender: '🧑‍💻 Vous', text }]);
+                                    setLiveMessages((prev) => [...prev, { id: `m_${Date.now()}_${Math.random()}`, sender: 'Vous', text }]);
                                     setLiveMessage('');
                                   }}
-                                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 rounded-lg transition-colors"
+                                  className="rounded-lg bg-[#1b5e20] px-4 font-semibold text-white transition-colors hover:bg-[#16381a]"
                                 >
                                   Envoyer
                                 </button>
@@ -9050,7 +9161,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                       Actualiser
                     </button>
                   </div>
-                  <div className="mt-2 text-2xl font-bold text-emerald-400">
+                  <div className={`mt-2 text-2xl font-bold ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`}>
                     {(walletBalance ?? 0).toLocaleString('fr-FR')} XOF
                   </div>
 
@@ -9067,7 +9178,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                       }}
                       className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
                         walletTopupChannel === 'mobile_money'
-                          ? isDark ? 'bg-emerald-700 text-white' : 'bg-emerald-200 text-emerald-900'
+                          ? isDark ? 'bg-[#1b5e20] text-white' : 'bg-[#eef6ea] text-[#1b5e20] border border-[#cfe0c8]'
                           : isDark ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                       }`}
                     >
@@ -9085,7 +9196,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                       }}
                       className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
                         walletTopupChannel === 'card'
-                          ? isDark ? 'bg-emerald-700 text-white' : 'bg-emerald-200 text-emerald-900'
+                          ? isDark ? 'bg-[#1b5e20] text-white' : 'bg-[#eef6ea] text-[#1b5e20] border border-[#cfe0c8]'
                           : isDark ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                       }`}
                     >
@@ -9103,7 +9214,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                       }}
                       className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
                         walletTopupChannel === 'credit_transfer'
-                          ? isDark ? 'bg-emerald-700 text-white' : 'bg-emerald-200 text-emerald-900'
+                          ? isDark ? 'bg-[#1b5e20] text-white' : 'bg-[#eef6ea] text-[#1b5e20] border border-[#cfe0c8]'
                           : isDark ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                       }`}
                     >
@@ -9199,7 +9310,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                           ? isDark
                             ? 'bg-gray-700 text-gray-300 cursor-not-allowed'
                             : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                          : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                          : 'bg-[#1b5e20] hover:bg-[#16381a] text-white'
                       }`}
                     >
                       {isWalletBusy ? 'Rechargement…' : 'Recharger'}
@@ -9243,9 +9354,7 @@ const AdminLayout = () => {
 
   return (
     <div className={`min-h-screen w-full overflow-x-hidden flex transition-colors duration-300 ${
-      isDark 
-        ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
-        : 'bg-gray-50'
+      isDark ? 'bg-[#102814]' : 'bg-[#f6faf3]'
     }`}>
       <div className="hidden md:block">
         <AdminNavigation />
@@ -9287,13 +9396,14 @@ const AdminLayout = () => {
               <button
                 type="button"
                 onClick={goBack}
-                className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
                   isDark
                     ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                ← Retour
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                <span>Retour</span>
               </button>
               <h1 className={`text-xl font-semibold transition-colors duration-300 ${
                 isDark ? 'text-white' : 'text-gray-900'
@@ -9500,7 +9610,7 @@ function AppShell() {
         // ignore
       }
       if (view === 'marketplace' || view === 'shops') {
-        return { role: 'client', name: 'Invité', avatar: '👤', email: 'guest@mangoo.tech' };
+        return { role: 'client', name: 'Invité', avatar: 'IN', email: 'guest@mangoo.tech' };
       }
       return null;
     })();
@@ -10209,7 +10319,7 @@ function AppShell() {
             role: 'vendor',
             roles: ['vendor', 'client'],
             email: 'vendeur@mangoo.tech',
-            avatar: '👨‍🎨',
+            avatar: 'VM',
             shopName: 'Boutique Mangoo',
           };
           setUser(nextUser);
@@ -10417,8 +10527,8 @@ function AppShell() {
       <div
         className={
           isDark
-            ? 'min-h-screen bg-gray-950 text-white'
-            : 'min-h-screen bg-gradient-to-br from-orange-50 via-white to-green-50 text-gray-900'
+            ? 'min-h-screen bg-slate-950 text-white'
+            : 'min-h-screen bg-slate-50 text-slate-900'
         }
       >
         <div className="p-4">
@@ -10441,17 +10551,18 @@ function AppShell() {
             }}
             className={
               isDark
-                ? 'px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 font-bold'
-                : 'px-4 py-2 rounded-xl bg-white/90 hover:bg-white font-bold border border-gray-200 backdrop-blur'
+                ? 'inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 font-bold border border-slate-800'
+                : 'inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-slate-50 font-bold border border-slate-200'
             }
           >
-            ← Retour
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            <span>Retour</span>
           </button>
           <div
             className={
               isDark
-                ? 'text-sm text-gray-300'
-                : 'text-sm text-gray-700 font-bold px-3 py-1 rounded-full border border-gray-200 bg-white/70 backdrop-blur'
+                ? 'text-sm text-slate-300'
+                : 'text-sm text-slate-700 font-bold px-3 py-1 rounded-full border border-slate-200 bg-white'
             }
           >
             Boost Carte
@@ -10501,7 +10612,7 @@ function AppShell() {
                   navigate(`${location.pathname}?${nextParams.toString()}`, { replace: true })
                 }}
                 disabled={!isProbablyEmail(boostsEmailDraft)}
-                className={isDark ? 'mt-4 w-full px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-black disabled:opacity-50 disabled:cursor-not-allowed' : 'mt-4 w-full px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black disabled:opacity-50 disabled:cursor-not-allowed'}
+                className={isDark ? 'mt-4 w-full px-4 py-3 rounded-xl bg-[#1b5e20] hover:bg-[#16381a] text-white font-black disabled:opacity-50 disabled:cursor-not-allowed' : 'mt-4 w-full px-4 py-3 rounded-xl bg-[#1b5e20] hover:bg-[#16381a] text-white font-black disabled:opacity-50 disabled:cursor-not-allowed'}
               >
                 Continuer
               </button>
@@ -10531,7 +10642,7 @@ function AppShell() {
     } catch {
     }
     if (!user) {
-      void handleLogin({ role: 'client', name: 'Invité', avatar: '👤', email: 'guest@mangoo.tech' })
+      void handleLogin({ role: 'client', name: 'Invité', avatar: 'IN', email: 'guest@mangoo.tech' })
     }
     try {
       sessionStorage.setItem('mangoo-open-cart', '1')
@@ -10545,7 +10656,7 @@ function AppShell() {
       <LandingPage 
         onNavigate={(view) => {
           if (view === 'marketplace' || view === 'shops') {
-            handleLogin({ role: 'client', name: 'Invité', avatar: '👤', email: 'guest@mangoo.tech' });
+            handleLogin({ role: 'client', name: 'Invité', avatar: 'IN', email: 'guest@mangoo.tech' });
             setCurrentView(view);
             return;
           }
@@ -10595,7 +10706,7 @@ function AppShell() {
         <LandingPage
           onNavigate={(view) => {
             if (view === 'marketplace' || view === 'shops') {
-              handleLogin({ role: 'client', name: 'Invité', avatar: '👤', email: 'guest@mangoo.tech' });
+              handleLogin({ role: 'client', name: 'Invité', avatar: 'IN', email: 'guest@mangoo.tech' });
               setCurrentView(view);
               return;
             }
@@ -10624,22 +10735,20 @@ function AppShell() {
     return (
       <div className={`min-h-screen transition-colors duration-300 ${
         isDark 
-          ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
-          : 'bg-gray-50'
+          ? 'bg-[#102814]' 
+          : 'bg-[#f6faf3]'
       }`}>
         {/* Navigation optimisée */}
-        <nav className={`shadow-lg border-b-4 border-orange-500 transition-colors duration-300 ${
+        <nav className={`border-b transition-colors duration-300 ${
           isDark 
-            ? 'bg-gray-800 border-gray-700' 
-            : 'bg-white'
+            ? 'border-[#2e5d34] bg-[#102814]/92' 
+            : 'border-[#d7e4d1] bg-white/92'
         }`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center items-stretch py-3 gap-3">
               <div className="flex items-center gap-4 cursor-pointer" onClick={() => { setCurrentView('landing'); setUser(null); }}>
-                <div className="text-2xl">🛍️</div>
-                <h1 className={`text-xl font-bold bg-gradient-to-r from-orange-500 to-green-600 bg-clip-text text-transparent`}>
-                  MangooTech
-                </h1>
+                <img src={mangooLogo} alt="Mangoo Tech" className="w-11 h-11 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5" />
+                <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>MangooTech</h1>
               </div>
               
               <div className="flex items-center justify-start sm:justify-end gap-2 flex-nowrap md:flex-wrap min-w-0 w-full sm:flex-1 overflow-x-auto md:overflow-visible overscroll-x-contain whitespace-nowrap [-webkit-overflow-scrolling:touch] no-scrollbar">
@@ -10653,27 +10762,27 @@ function AppShell() {
                         } catch {
                         }
                       }}
-                      className="flex-shrink-0 bg-gradient-to-r from-orange-500 to-green-600 text-white px-3 py-2 rounded-2xl text-sm font-black transition-colors leading-none"
+                      className="flex-shrink-0 bg-[#1b5e20] text-white px-3 py-2 rounded-2xl text-sm font-black transition-colors leading-none hover:bg-[#2e7d32] dark:bg-[#ffa726] dark:text-[#16381a] dark:hover:bg-[#ff6f00]"
                       title="Accueil"
                     >
-                      🏠 Accueil
+                      Accueil
                     </button>
                     <button
                       type="button"
                       onClick={() => switchUiMode('advanced')}
-                      className={isDark ? 'flex-shrink-0 bg-gray-700 text-gray-100 px-3 py-2 rounded-2xl text-sm font-black hover:bg-gray-600 transition-colors' : 'flex-shrink-0 bg-gray-100 text-gray-900 px-3 py-2 rounded-2xl text-sm font-black hover:bg-gray-200 transition-colors'}
+                      className={isDark ? 'flex-shrink-0 bg-[#17331c] text-[#ecf7e7] px-3 py-2 rounded-2xl text-sm font-black hover:bg-[#204927] transition-colors border border-[#2e5d34]' : 'flex-shrink-0 bg-white text-[#1b5e20] px-3 py-2 rounded-2xl text-sm font-black hover:bg-[#f2f8ef] transition-colors border border-[#d7e4d1]'}
                       title="Mode avancé"
                     >
-                      ➕ Avancé
+                      Mode avancé
                     </button>
                     {Array.isArray(user.roles) && user.roles.length > 1 && (
                       <button
                         type="button"
                         onClick={() => setSpaceChooserOpen(true)}
-                        className="flex-shrink-0 bg-blue-100 text-blue-800 px-3 py-2 rounded-2xl text-sm font-black hover:bg-blue-200 transition-colors"
+                        className="flex-shrink-0 bg-white text-[#1b5e20] px-3 py-2 rounded-2xl text-sm font-black hover:bg-[#f2f8ef] transition-colors border border-[#d7e4d1] dark:bg-[#17331c] dark:text-[#ecf7e7] dark:border-[#2e5d34] dark:hover:bg-[#204927]"
                         title="Changer d’espace"
                       >
-                        🔁 Espace
+                        Espaces
                       </button>
                     )}
                   </>
@@ -10683,54 +10792,54 @@ function AppShell() {
                     <button
                       type="button"
                       onClick={() => setCurrentView('marketplace')}
-                      className={`${currentView === 'marketplace' ? 'bg-orange-500 text-white' : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} flex-shrink-0 px-3 py-1 rounded-full text-xs sm:text-sm font-bold transition-colors`}
+                      className={`${currentView === 'marketplace' ? 'bg-[#1b5e20] text-white dark:bg-[#ffa726] dark:text-[#16381a]' : isDark ? 'bg-[#17331c] text-[#ecf7e7] hover:bg-[#204927] border border-[#2e5d34]' : 'bg-white text-[#1b5e20] hover:bg-[#f2f8ef] border border-[#d7e4d1]'} flex-shrink-0 px-3 py-1 rounded-full text-xs sm:text-sm font-bold transition-colors`}
                     >
                       Marketplace
                     </button>
                     <button
                       type="button"
                       onClick={() => setCurrentView('shops')}
-                      className={`${currentView === 'shops' ? 'bg-orange-500 text-white' : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} flex-shrink-0 px-3 py-1 rounded-full text-xs sm:text-sm font-bold transition-colors`}
+                      className={`${currentView === 'shops' ? 'bg-[#1b5e20] text-white dark:bg-[#ffa726] dark:text-[#16381a]' : isDark ? 'bg-[#17331c] text-[#ecf7e7] hover:bg-[#204927] border border-[#2e5d34]' : 'bg-white text-[#1b5e20] hover:bg-[#f2f8ef] border border-[#d7e4d1]'} flex-shrink-0 px-3 py-1 rounded-full text-xs sm:text-sm font-bold transition-colors`}
                     >
                       Boutiques
                     </button>
                     <button
                       type="button"
                       onClick={() => navigate('/checkout/livraison')}
-                      className={`${isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} flex-shrink-0 px-3 py-1 rounded-full text-xs sm:text-sm font-bold transition-colors whitespace-nowrap leading-none`}
+                      className={`${isDark ? 'bg-[#17331c] text-[#ecf7e7] hover:bg-[#204927] border border-[#2e5d34]' : 'bg-white text-[#1b5e20] hover:bg-[#f2f8ef] border border-[#d7e4d1]'} flex-shrink-0 px-3 py-1 rounded-full text-xs sm:text-sm font-bold transition-colors whitespace-nowrap leading-none`}
                       title="Demander une livraison"
                     >
-                      🚚 Livraison
+                      Livraison
                     </button>
                     <button
                       type="button"
                       onClick={() => setCurrentView('account')}
-                      className={`${currentView === 'account' ? 'bg-orange-500 text-white' : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} flex-shrink-0 px-3 py-1 rounded-full text-xs sm:text-sm font-black transition-colors whitespace-nowrap`}
+                      className={`${currentView === 'account' ? 'bg-[#1b5e20] text-white dark:bg-[#ffa726] dark:text-[#16381a]' : isDark ? 'bg-[#17331c] text-[#ecf7e7] hover:bg-[#204927] border border-[#2e5d34]' : 'bg-white text-[#1b5e20] hover:bg-[#f2f8ef] border border-[#d7e4d1]'} flex-shrink-0 px-3 py-1 rounded-full text-xs sm:text-sm font-black transition-colors whitespace-nowrap`}
                     >
                       Mon compte
                     </button>
                     <button
                       type="button"
                       onClick={() => navigate('/connect-plus')}
-                      className="flex-shrink-0 bg-gradient-to-r from-orange-500 to-green-600 text-white px-2 py-1 rounded-2xl text-[11px] sm:text-sm font-black transition-colors leading-[1.05] w-[112px] text-center"
+                      className="flex-shrink-0 bg-[#1b5e20] text-white px-2 py-1 rounded-2xl text-[11px] sm:text-sm font-black transition-colors leading-[1.05] w-[112px] text-center hover:bg-[#2e7d32] dark:bg-[#ffa726] dark:text-[#16381a] dark:hover:bg-[#ff6f00]"
                       title="Entrer le code PIN boutique"
                     >
-                      <span className="block">🔢 Entrer code</span>
+                      <span className="block">Entrer code</span>
                       <span className="block">PIN boutique</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => navigate('/connect-plus/me')}
-                      className="flex-shrink-0 bg-gray-100 text-gray-900 px-2 py-1 rounded-2xl text-[11px] sm:text-sm font-black hover:bg-gray-200 transition-colors leading-[1.05] w-[108px] text-center"
+                      className="flex-shrink-0 bg-white text-[#1b5e20] px-2 py-1 rounded-2xl text-[11px] sm:text-sm font-black hover:bg-[#f2f8ef] transition-colors leading-[1.05] w-[108px] text-center border border-[#d7e4d1] dark:bg-[#17331c] dark:text-[#ecf7e7] dark:border-[#2e5d34] dark:hover:bg-[#204927]"
                       title="Mon ID Connect+ (appels gratuits)"
                     >
-                      <span className="block">📞 Mon</span>
+                      <span className="block">Mon</span>
                       <span className="block">Connect+</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setSpaceChooserOpen(true)}
-                      className="bg-blue-100 text-blue-800 px-2 py-1 rounded-2xl text-[11px] font-black hover:bg-blue-200 transition-colors leading-[1.05] w-[92px] text-center"
+                      className="bg-white text-[#1b5e20] px-2 py-1 rounded-2xl text-[11px] font-black hover:bg-[#f2f8ef] transition-colors leading-[1.05] w-[92px] text-center border border-[#d7e4d1] dark:bg-[#17331c] dark:text-[#ecf7e7] dark:border-[#2e5d34] dark:hover:bg-[#204927]"
                       title="Changer d’espace"
                     >
                       <span className="block">Changer</span>
@@ -10739,7 +10848,7 @@ function AppShell() {
                     <button
                       type="button"
                       onClick={() => setCurrentView('innovation')}
-                      className="flex-shrink-0 bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold hover:bg-green-200 transition-colors"
+                      className="flex-shrink-0 bg-white text-[#1b5e20] px-3 py-1 rounded-full text-sm font-bold hover:bg-[#f2f8ef] transition-colors border border-[#d7e4d1] dark:bg-[#17331c] dark:text-[#ecf7e7] dark:border-[#2e5d34] dark:hover:bg-[#204927]"
                     >
                       Local+
                     </button>
@@ -10750,7 +10859,7 @@ function AppShell() {
                   <button
                     type="button"
                     onClick={() => setSpaceChooserOpen(true)}
-                    className="bg-blue-100 text-blue-800 px-2 py-1 rounded-2xl text-[11px] font-black hover:bg-blue-200 transition-colors leading-[1.05] w-[92px] text-center"
+                    className="bg-white text-[#1b5e20] px-2 py-1 rounded-2xl text-[11px] font-black hover:bg-[#f2f8ef] transition-colors leading-[1.05] w-[92px] text-center border border-[#d7e4d1] dark:bg-[#17331c] dark:text-[#ecf7e7] dark:border-[#2e5d34] dark:hover:bg-[#204927]"
                     title="Changer d’espace"
                   >
                     <span className="block">Changer</span>
@@ -10760,7 +10869,7 @@ function AppShell() {
                 {!isSimpleUi && user.role !== 'client' && (
                   <button
                     onClick={() => setCurrentView('innovation')}
-                    className="flex-shrink-0 bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold hover:bg-green-200 transition-colors"
+                    className="flex-shrink-0 bg-white text-[#1b5e20] px-3 py-1 rounded-full text-sm font-bold hover:bg-[#f2f8ef] transition-colors border border-[#d7e4d1] dark:bg-[#17331c] dark:text-[#ecf7e7] dark:border-[#2e5d34] dark:hover:bg-[#204927]"
                   >
                     Local+
                   </button>
@@ -10770,10 +10879,10 @@ function AppShell() {
                   <button
                     type="button"
                     onClick={() => navigate('/livreur')}
-                    className="bg-sky-100 text-sky-800 px-3 py-1 rounded-full text-sm font-bold hover:bg-sky-200 transition-colors"
+                    className="bg-white text-[#1b5e20] px-3 py-1 rounded-full text-sm font-bold hover:bg-[#f2f8ef] transition-colors border border-[#d7e4d1] dark:bg-[#17331c] dark:text-[#ecf7e7] dark:border-[#2e5d34] dark:hover:bg-[#204927]"
                     title="Écran livreur"
                   >
-                    Livreur 🚚
+                    Livreur
                   </button>
                 )}
 
@@ -10791,19 +10900,23 @@ function AppShell() {
                     }}
                     className={`flex-shrink-0 flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors duration-300 cursor-pointer ${
                       isDark 
-                        ? 'bg-gray-700 text-white hover:bg-gray-600' 
-                        : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                        ? 'bg-[#17331c] text-white hover:bg-[#204927] border border-[#2e5d34]' 
+                        : 'bg-white text-[#1b5e20] hover:bg-[#f2f8ef] border border-[#d7e4d1]'
                     }`}
                     title={user.role === 'client' ? 'Mon compte / Changer d’espace' : 'Changer d’espace'}
                   >
-                    <span className="text-lg">{user.avatar}</span>
+                    <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-black ${
+                      isDark ? 'bg-[#2e5d34] text-[#ecf7e7]' : 'bg-[#eef6ea] text-[#1b5e20]'
+                    }`}>
+                      {getUserInitials(user)}
+                    </span>
                     <span className="text-sm font-medium">{user.name}</span>
                     <span className={`text-xs px-2 py-1 rounded-full ${
                       user.role === 'admin' 
-                        ? 'bg-red-100 text-red-800' 
+                        ? 'bg-[#fff4d6] text-[#8f4b00]' 
                         : user.role === 'vendor'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-green-100 text-green-800'
+                        ? 'bg-[#e8f3e5] text-[#1b5e20]'
+                        : 'bg-[#eef6ea] text-[#2e7d32]'
                     }`}>
                       {ROLE_LABELS[user.role] || user.role}
                     </span>
@@ -10814,10 +10927,10 @@ function AppShell() {
                   <button
                     type="button"
                     onClick={() => switchUiMode('simple')}
-                    className="flex-shrink-0 bg-gradient-to-r from-orange-500 to-green-600 text-white px-3 py-2 rounded-2xl text-sm font-black transition-colors leading-none"
+                    className="flex-shrink-0 bg-[#ffa726] text-[#16381a] px-3 py-2 rounded-2xl text-sm font-black transition-colors leading-none hover:bg-[#ff6f00]"
                     title="Mode simple"
                   >
-                    📱 Simple
+                    Mode simple
                   </button>
                 )}
 
@@ -10834,12 +10947,12 @@ function AppShell() {
                   }}
                   className={`flex-shrink-0 flex items-center gap-2 text-sm font-semibold transition-colors px-3 py-2 rounded-lg ${
                     isDark
-                      ? 'text-gray-200 hover:text-white hover:bg-gray-700'
-                      : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+                      ? 'text-[#d7ecd8] hover:text-white hover:bg-[#17331c]'
+                      : 'text-[#4d6551] hover:text-[#1b5e20] hover:bg-[#f2f8ef]'
                   }`}
                   title="Se déconnecter et retourner à l'accueil"
                 >
-                  <span>← Retour</span>
+                  <span>Retour</span>
                 </button>
               </div>
           </div>
@@ -10863,7 +10976,7 @@ function AppShell() {
                 }}
                 className={`${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'} border rounded-3xl p-5 text-left shadow-lg hover:shadow-xl transition-all`}
               >
-                <div className="text-4xl">📞</div>
+                <Phone className="h-10 w-10" aria-hidden="true" />
                 <div className="mt-3 text-lg font-black">Appeler</div>
                 <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm font-semibold mt-1`}>Connect+</div>
               </button>
@@ -10876,7 +10989,7 @@ function AppShell() {
                 }}
                 className={`${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'} border rounded-3xl p-5 text-left shadow-lg hover:shadow-xl transition-all`}
               >
-                <div className="text-4xl">🔎</div>
+                <Search className="h-10 w-10" aria-hidden="true" />
                 <div className="mt-3 text-lg font-black">Explorer</div>
                 <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm font-semibold mt-1`}>Produits</div>
               </button>
@@ -10889,7 +11002,7 @@ function AppShell() {
                 }}
                 className={`${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'} border rounded-3xl p-5 text-left shadow-lg hover:shadow-xl transition-all`}
               >
-                <div className="text-4xl">🧺</div>
+                <ShoppingCart className="h-10 w-10" aria-hidden="true" />
                 <div className="mt-3 text-lg font-black">Panier</div>
                 <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm font-semibold mt-1`}>Payer</div>
               </button>
@@ -10906,7 +11019,7 @@ function AppShell() {
                 }}
                 className={`${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'} border rounded-3xl p-5 text-left shadow-lg hover:shadow-xl transition-all`}
               >
-                <div className="text-4xl">🧾</div>
+                <Receipt className="h-10 w-10" aria-hidden="true" />
                 <div className="mt-3 text-lg font-black">Commandes</div>
                 <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm font-semibold mt-1`}>Suivi</div>
               </button>
@@ -10923,7 +11036,7 @@ function AppShell() {
                 }}
                 className={`${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'} border rounded-3xl p-5 text-left shadow-lg hover:shadow-xl transition-all`}
               >
-                <div className="text-4xl">❤️</div>
+                <Heart className="h-10 w-10" aria-hidden="true" />
                 <div className="mt-3 text-lg font-black">Favoris</div>
                 <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm font-semibold mt-1`}>Liste</div>
               </button>
@@ -10940,7 +11053,7 @@ function AppShell() {
                 }}
                 className={`${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'} border rounded-3xl p-5 text-left shadow-lg hover:shadow-xl transition-all`}
               >
-                <div className="text-4xl">👤</div>
+                <UserRound className="h-10 w-10" aria-hidden="true" />
                 <div className="mt-3 text-lg font-black">Compte</div>
                 <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm font-semibold mt-1`}>Profil</div>
               </button>

@@ -32,24 +32,24 @@ export default function CourierLayout({ title, subtitle, children }: Props) {
   return (
     <div
       className={`min-h-screen overflow-x-hidden ${
-        isDark ? 'bg-gradient-to-br from-gray-900 to-gray-800 text-white' : 'bg-gradient-to-br from-orange-50 via-white to-emerald-50 text-gray-900'
+        isDark ? 'bg-gray-900 text-white' : 'bg-[#f6faf3] text-gray-900'
       }`}
     >
       <nav
-        className={`shadow-lg border-b-4 border-orange-500 transition-colors duration-300 ${
-          isDark ? 'bg-gray-800 border-gray-700' : 'bg-white/95 backdrop-blur'
+        className={`shadow-lg border-b transition-colors duration-300 ${
+          isDark ? 'border-gray-700 bg-gray-800' : 'border-[#d7e4d1] bg-white/95 backdrop-blur'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${isDark ? 'bg-gray-900' : 'bg-gradient-to-br from-orange-100 to-emerald-100 border border-orange-200 shadow-sm'}`}>
-                <Truck className={isDark ? 'text-emerald-300' : 'text-emerald-600'} />
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${isDark ? 'bg-gray-900' : 'bg-[#eef6ea] border border-[#d7e4d1] shadow-sm'}`}>
+                <Truck className={isDark ? 'text-[#ecf7e7]' : 'text-[#1b5e20]'} />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <div className="text-lg font-black truncate">{title}</div>
-                  <div className={`px-2 py-1 rounded-full text-xs font-black ${isDark ? 'bg-emerald-500/15 text-emerald-200 border border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
+                  <div className={`px-2 py-1 rounded-full text-xs font-black ${isDark ? 'border border-[#2e5d34] bg-[#1b5e20]/30 text-[#ecf7e7]' : 'border border-[#cfe0c8] bg-[#eef6ea] text-[#1b5e20]'}`}>
                     Livrer
                   </div>
                 </div>
@@ -62,7 +62,7 @@ export default function CourierLayout({ title, subtitle, children }: Props) {
                 type="button"
                 onClick={openBoussole}
                 className={`px-3 py-2 rounded-xl font-black text-sm inline-flex items-center gap-2 transition-colors ${
-                  isDark ? 'bg-gray-900 text-white hover:bg-gray-700 border border-gray-700' : 'bg-white text-gray-900 hover:bg-orange-50 border border-orange-200 shadow-sm'
+                  isDark ? 'bg-gray-900 text-white hover:bg-gray-700 border border-gray-700' : 'bg-white text-gray-900 hover:bg-[#f3f8ef] border border-[#d7e4d1] shadow-sm'
                 }`}
               >
                 <Compass className="w-4 h-4" />
@@ -72,7 +72,7 @@ export default function CourierLayout({ title, subtitle, children }: Props) {
                 type="button"
                 onClick={logout}
                 className={`px-3 py-2 rounded-xl font-black text-sm inline-flex items-center gap-2 transition-colors ${
-                  isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white text-gray-900 hover:bg-emerald-50 border border-gray-200 shadow-sm'
+                  isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white text-gray-900 hover:bg-[#f3f8ef] border border-[#d7e4d1] shadow-sm'
                 }`}
               >
                 <LogOut className="w-4 h-4" />

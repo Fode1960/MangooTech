@@ -45,27 +45,27 @@ function statusLabel(status: Order['status']): string {
 
 function statusClass(status: Order['status'], isDark: boolean): string {
   if (isDark) {
-    if (status === 'created') return 'bg-sky-500/15 text-sky-200 border border-sky-500/20'
-    if (status === 'assigned') return 'bg-amber-500/15 text-amber-200 border border-amber-500/20'
-    if (status === 'picked_up') return 'bg-orange-500/15 text-orange-200 border border-orange-500/20'
-    if (status === 'delivered') return 'bg-emerald-500/15 text-emerald-200 border border-emerald-500/20'
-    return 'bg-rose-500/15 text-rose-200 border border-rose-500/20'
+    if (status === 'created') return 'border border-[#2e5d34] bg-[#1b5e20]/25 text-[#ecf7e7]'
+    if (status === 'assigned') return 'border border-[#8f5b10] bg-[#ffa726]/20 text-[#fff4d6]'
+    if (status === 'picked_up') return 'border border-[#b46a04] bg-[#ff9800]/20 text-[#fff4d6]'
+    if (status === 'delivered') return 'border border-[#66bb6a]/30 bg-[#2e7d32]/25 text-[#ecf7e7]'
+    return 'border border-gray-600 bg-gray-800 text-gray-200'
   }
-  if (status === 'created') return 'bg-sky-50 text-sky-700 border border-sky-200'
-  if (status === 'assigned') return 'bg-amber-50 text-amber-700 border border-amber-200'
-  if (status === 'picked_up') return 'bg-orange-50 text-orange-700 border border-orange-200'
-  if (status === 'delivered') return 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-  return 'bg-rose-50 text-rose-700 border border-rose-200'
+  if (status === 'created') return 'border border-[#cfe0c8] bg-[#eef6ea] text-[#1b5e20]'
+  if (status === 'assigned') return 'border border-[#f2d39b] bg-[#fff4d6] text-[#8a5200]'
+  if (status === 'picked_up') return 'border border-[#ffc97a] bg-[#fff1dc] text-[#9f5c00]'
+  if (status === 'delivered') return 'border border-[#cfe0c8] bg-[#e8f3e3] text-[#1b5e20]'
+  return 'border border-gray-200 bg-gray-100 text-gray-700'
 }
 
 function trackingModeClass(isPremium: boolean, isDark: boolean): string {
   if (isDark) {
     return isPremium
-      ? 'bg-orange-500/15 text-orange-100 border border-orange-500/20'
+      ? 'border border-[#8f5b10] bg-[#ffa726]/20 text-[#fff4d6]'
       : 'bg-white/5 text-zinc-200 border border-white/10'
   }
   return isPremium
-    ? 'bg-orange-50 text-orange-700 border border-orange-200'
+    ? 'border border-[#f2d39b] bg-[#fff4d6] text-[#8a5200]'
     : 'bg-gray-50 text-gray-700 border border-gray-200'
 }
 
@@ -121,8 +121,8 @@ export default function OrdersPanel({ poolOrders, myOrders, historyOrders, selec
         onClick={() => onSelect(o.id)}
         className={`w-full text-left rounded-2xl px-4 py-3 transition-colors border ${
           isSelected
-            ? (isDark ? 'bg-white/10 border-white/20' : 'bg-gradient-to-r from-orange-50 to-emerald-50 border-orange-200 shadow-sm')
-            : (isDark ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-gray-200 hover:border-emerald-200 hover:bg-emerald-50/40 shadow-sm')
+            ? (isDark ? 'bg-white/10 border-white/20' : 'bg-[#f3f8ef] border-[#cfe0c8] shadow-sm')
+            : (isDark ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-[#d7e4d1] hover:border-[#cfe0c8] hover:bg-[#f7fbf4] shadow-sm')
         }`}
       >
         <div className="flex items-start justify-between gap-3">
@@ -161,7 +161,7 @@ export default function OrdersPanel({ poolOrders, myOrders, historyOrders, selec
               disabled={!canStartOrders}
               className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl font-black text-xs transition-colors ${
                 canStartOrders
-                  ? 'bg-emerald-500 text-emerald-950 hover:bg-emerald-400'
+                  ? 'bg-[#1b5e20] text-white hover:bg-[#16381a]'
                   : (isDark ? 'bg-zinc-300 text-zinc-600 cursor-not-allowed' : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed')
               }`}
               title={!canStartOrders ? 'Terminez votre livraison active avant d en prendre une nouvelle.' : 'Démarrer'}
@@ -177,7 +177,7 @@ export default function OrdersPanel({ poolOrders, myOrders, historyOrders, selec
                 e.stopPropagation()
                 onPickedUp(o.id)
               }}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-orange-500 text-orange-950 font-black text-xs hover:bg-orange-400 shadow-sm"
+              className="inline-flex items-center gap-2 rounded-xl border border-[#f2d39b] bg-[#fff4d6] px-3 py-2 text-xs font-black text-[#8a5200] transition-colors hover:bg-[#ffe7b3] shadow-sm"
             >
               <CheckCircle2 className="w-4 h-4" />
               Retrait OK
@@ -190,7 +190,7 @@ export default function OrdersPanel({ poolOrders, myOrders, historyOrders, selec
                 e.stopPropagation()
                 onDelivered(o.id)
               }}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-sky-500 text-sky-950 font-black text-xs hover:bg-sky-400 shadow-sm"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#1b5e20] px-3 py-2 text-xs font-black text-white transition-colors hover:bg-[#16381a] shadow-sm"
             >
               <CheckCircle2 className="w-4 h-4" />
               Livré
@@ -206,7 +206,7 @@ export default function OrdersPanel({ poolOrders, myOrders, historyOrders, selec
       isDark ? 'border border-white/10 bg-zinc-950/40' : 'border border-gray-200 bg-white/95 shadow-xl'
     }`}>
       <div className={`px-4 py-4 flex items-center justify-between gap-3 ${
-        isDark ? 'border-b border-white/10' : 'border-b border-orange-100 bg-gradient-to-r from-orange-50 to-emerald-50'
+        isDark ? 'border-b border-white/10' : 'border-b border-[#d7e4d1] bg-[#f3f8ef]'
       }`}>
         <div>
           <div className="text-base font-black">Livraisons</div>
@@ -216,7 +216,7 @@ export default function OrdersPanel({ poolOrders, myOrders, historyOrders, selec
           type="button"
           onClick={onRefresh}
           className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-black transition-colors ${
-            isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-orange-50 border border-orange-200 shadow-sm'
+            isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-[#f3f8ef] border border-[#d7e4d1] shadow-sm'
           }`}
           title="Rafraîchir"
         >
@@ -231,8 +231,8 @@ export default function OrdersPanel({ poolOrders, myOrders, historyOrders, selec
           onClick={() => setTab('pool')}
           className={`px-3 py-2 rounded-xl border text-xs font-black transition-colors ${
             tab === 'pool'
-              ? 'bg-emerald-500 text-emerald-950 border-emerald-400'
-              : (isDark ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-gray-200 hover:bg-emerald-50 hover:border-emerald-200')
+              ? 'bg-[#1b5e20] text-white border-[#1b5e20]'
+              : (isDark ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-[#d7e4d1] hover:bg-[#f3f8ef] hover:border-[#cfe0c8]')
           }`}
         >
           À prendre ({pool.length})
@@ -242,8 +242,8 @@ export default function OrdersPanel({ poolOrders, myOrders, historyOrders, selec
           onClick={() => setTab('mine')}
           className={`px-3 py-2 rounded-xl border text-xs font-black transition-colors ${
             tab === 'mine'
-              ? 'bg-sky-500 text-sky-950 border-sky-400'
-              : (isDark ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-gray-200 hover:bg-sky-50 hover:border-sky-200')
+              ? 'bg-[#fff4d6] text-[#8a5200] border-[#f2d39b]'
+              : (isDark ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-[#d7e4d1] hover:bg-[#fdf8ee] hover:border-[#f2d39b]')
           }`}
         >
           Mes livraisons ({mine.length})
@@ -253,7 +253,7 @@ export default function OrdersPanel({ poolOrders, myOrders, historyOrders, selec
       <div className="flex-1 overflow-auto p-3 space-y-3">
         {!canStartOrders && tab === 'pool' && pool.length > 0 && (
           <div className={`p-4 rounded-2xl text-sm ${
-            isDark ? 'bg-amber-500/15 border border-amber-500/20 text-amber-100' : 'bg-amber-50 border border-amber-200 text-amber-800'
+            isDark ? 'border border-[#8f5b10] bg-[#ffa726]/20 text-[#fff4d6]' : 'border border-[#f2d39b] bg-[#fff4d6] text-[#8a5200]'
           }`}>
             Une livraison est deja en cours. Terminez-la avant d en prendre une nouvelle.
           </div>

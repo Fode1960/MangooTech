@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { buildApiUrl } from '../../config/api'
 import { supabase } from '../../config/supabase'
+import { X } from 'lucide-react'
 import { toast } from 'sonner'
 
 type BoostKind = 'sponsored' | 'promo' | 'new'
@@ -2290,7 +2291,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
               className={`px-4 py-2 rounded-xl text-sm font-bold ${
                 loading
                   ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
-                  : 'bg-gradient-to-r from-orange-500 to-emerald-600 text-white hover:from-orange-600 hover:to-emerald-700'
+                  : 'bg-[#1b5e20] text-white hover:bg-[#16381a]'
               }`}
             >
               {loading ? 'Chargement…' : 'Rafraîchir'}
@@ -2310,7 +2311,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
           >
             {targets.map((t) => (
               <option key={`${t.vendorKind}:${t.vendorId}`} value={`${t.vendorKind}:${t.vendorId}`}>
-                {`${t.vendorKind === 'provider' ? '🛠️ Prestataire' : '🏪 Boutique'} • ${t.name}`}
+                {`${t.vendorKind === 'provider' ? 'Prestataire' : 'Boutique'} • ${t.name}`}
               </option>
             ))}
           </select>
@@ -2325,7 +2326,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <div>
               <div className="text-sm font-bold text-gray-900 dark:text-white">Crédits</div>
-              <div className="mt-2 text-2xl font-black text-emerald-600 dark:text-emerald-400">
+              <div className="mt-2 text-2xl font-black text-[#1b5e20] dark:text-[#66bb6a]">
                 {balanceStatus === 'loading'
                   ? 'Chargement…'
                   : balanceStatus === 'error'
@@ -2337,7 +2338,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
             <button
               type="button"
               onClick={() => setTopupOpen(true)}
-              className="w-full sm:w-auto px-4 py-3 sm:px-3 sm:py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-orange-500 to-emerald-600 text-white hover:from-orange-600 hover:to-emerald-700"
+              className="w-full rounded-xl bg-[#1b5e20] px-4 py-3 text-xs font-bold text-white transition-colors hover:bg-[#16381a] sm:w-auto sm:px-3 sm:py-2"
             >
               Recharger mes crédits
             </button>
@@ -2357,9 +2358,9 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
               <button
                 type="button"
                 onClick={() => setTopupOpen(false)}
-                className="px-3 py-2 rounded-xl text-sm font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                className="inline-flex items-center justify-center rounded-xl border border-[#d7e4d1] bg-white px-3 py-2 text-sm font-bold text-gray-700 transition-colors hover:bg-[#f3f8ef] dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
               >
-                ✕
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
 
@@ -2370,7 +2371,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                   onClick={() => setTopupMethod('mobile_money')}
                   className={`px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
                     topupMethod === 'mobile_money'
-                      ? 'bg-emerald-600 text-white'
+                      ? 'bg-[#1b5e20] text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
                   }`}
                 >
@@ -2381,7 +2382,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                   onClick={() => setTopupMethod('card')}
                   className={`px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
                     topupMethod === 'card'
-                      ? 'bg-emerald-600 text-white'
+                      ? 'bg-[#1b5e20] text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
                   }`}
                 >
@@ -2450,7 +2451,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                 onClick={() => void topup()}
                 disabled={topupBusy}
                 className={`px-4 py-3 rounded-xl text-sm font-bold transition-colors ${
-                  topupBusy ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400' : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                  topupBusy ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400' : 'bg-[#1b5e20] text-white hover:bg-[#16381a]'
                 }`}
               >
                 {topupBusy ? 'Recharge…' : topupMethod === 'mobile_money' ? 'Recharger (test Mobile Money)' : 'Recharger (test Carte)'}
@@ -2502,7 +2503,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                   onClick={() => setActiveKind(k)}
                   className={`px-4 py-2 rounded-2xl font-black transition-colors ${
                     activeKind === k
-                      ? 'bg-gradient-to-r from-orange-500 to-emerald-600 text-white'
+                      ? 'bg-[#1b5e20] text-white'
                       : 'bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
                   }`}
                 >
@@ -2524,7 +2525,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                       {p.description && <div className="text-xs text-gray-600 dark:text-gray-400 mt-2">{p.description}</div>}
                     </div>
                     <div className="text-right">
-                      <div className="text-emerald-600 dark:text-emerald-400 font-black">{formatXof(p.priceXof)} XOF</div>
+                      <div className="font-black text-[#1b5e20] dark:text-[#66bb6a]">{formatXof(p.priceXof)} XOF</div>
                     </div>
                   </div>
                   <div className="mt-4 grid grid-cols-1 sm:flex sm:flex-wrap gap-2">
@@ -2535,7 +2536,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                       className={`w-full sm:w-auto px-4 py-3 sm:py-2 rounded-xl text-xs font-bold ${
                         !selectedTarget || busy || p.active === false
                           ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
-                          : 'bg-gradient-to-r from-orange-500 to-emerald-600 text-white hover:from-orange-600 hover:to-emerald-700'
+                          : 'bg-[#1b5e20] text-white hover:bg-[#16381a]'
                       }`}
                     >
                       Payer par carte
@@ -2547,7 +2548,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                       className={`w-full sm:w-auto px-4 py-3 sm:py-2 rounded-xl text-xs font-bold ${
                         !selectedTarget || busy || !canCredits || p.active === false
                           ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
-                          : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                          : 'bg-[#1b5e20] text-white hover:bg-[#16381a]'
                       }`}
                     >
                       Payer par crédits
@@ -2577,7 +2578,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                     <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">{new Date(o.created_at).toLocaleString('fr-FR')}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-black text-emerald-600 dark:text-emerald-400">{formatXof(o.amount_xof)} {String(o.currency || 'XOF').toUpperCase()}</div>
+                    <div className="text-sm font-black text-[#1b5e20] dark:text-[#66bb6a]">{formatXof(o.amount_xof)} {String(o.currency || 'XOF').toUpperCase()}</div>
                     <div className="mt-2">
                       <span className={`px-2 py-1 rounded-lg text-xs font-bold ${
                         o.status === 'active'
