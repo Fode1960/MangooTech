@@ -37,6 +37,11 @@ const VideoCall: React.FC<VideoCallProps> = ({
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const callStateRef = useRef(callState);
+  const onCallEndRef = useRef(onCallEnd);
+
+  callStateRef.current = callState;
+  onCallEndRef.current = onCallEnd;
 
   // Met à jour les vidéos lorsque les streams changent
   useEffect(() => {
@@ -56,9 +61,9 @@ const VideoCall: React.FC<VideoCallProps> = ({
   useEffect(() => {
     if (isInCall && currentSession) {
       setCallState('connected');
-    } else if (callState === 'calling') {
+    } else if (callStateRef.current === 'calling') {
       setCallState('ended');
-      if (onCallEnd) onCallEnd();
+      onCallEndRef.current?.();
     }
   }, [isInCall, currentSession]);
 

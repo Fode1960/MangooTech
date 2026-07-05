@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Star, MessageCircle, Reply, ThumbsUp, User, Calendar, Filter, Search, TrendingUp, Award } from 'lucide-react';
 import { useNotification } from '../contexts/NotificationContext';
 
@@ -53,50 +53,7 @@ const VendorReviewsManagement = ({ vendorId }: { vendorId: string }) => {
   const [replyText, setReplyText] = useState('');
   const [showReplyModal, setShowReplyModal] = useState(false);
 
-  useEffect(() => {
-    loadReviews();
-    
-    // Simulation de nouveaux avis en mode démo
-    const interval = setInterval(() => {
-      if (Math.random() > 0.8) { // 20% de chance
-        const demoCustomers = ['Aminata Diallo', 'Ibrahim Touré', 'Fatou Sow', 'Mamadou Koné'];
-        const demoProducts = ['Robe wax', 'Chemise traditionnelle', 'Sac artisanal', 'Bijou fantaisie'];
-        const ratings = [4, 5];
-        
-        const newReview = {
-          id: `review-${Date.now()}`,
-          productId: 'product-demo',
-          productName: demoProducts[Math.floor(Math.random() * demoProducts.length)],
-          customerName: demoCustomers[Math.floor(Math.random() * demoCustomers.length)],
-          customerEmail: '',
-          rating: ratings[Math.floor(Math.random() * ratings.length)],
-          comment: ['Excellent produit !', 'Très satisfait', 'Conforme à la description'][Math.floor(Math.random() * 3)],
-          helpful: Math.floor(Math.random() * 5),
-          verified: true,
-          createdAt: new Date().toISOString()
-        };
-        
-        setReviews(prev => [newReview, ...prev]);
-        
-        // Notification du nouvel avis
-        addNotification({
-          type: 'review',
-          title: 'Nouvel avis',
-          message: `${newReview.customerName} a laissé ${newReview.rating}⭐ sur ${newReview.productName}`,
-          priority: 'medium',
-          sound: true
-        });
-      }
-    }, 20000); // Toutes les 20 secondes
-    
-    return () => clearInterval(interval);
-  }, [vendorId, addNotification]);
-
-  useEffect(() => {
-    filterReviews();
-  }, [reviews, searchTerm, ratingFilter, replyFilter]);
-
-  const loadReviews = () => {
+  const loadReviews = useCallback(() => {
     setLoading(true);
     
     setTimeout(() => {
@@ -170,7 +127,7 @@ const VendorReviewsManagement = ({ vendorId }: { vendorId: string }) => {
       calculateStats(demoReviews);
       setLoading(false);
     }, 1000);
-  };
+  }, []);
 
   const calculateStats = (reviewsList: Review[]) => {
     const totalReviews = reviewsList.length;
@@ -199,7 +156,7 @@ const VendorReviewsManagement = ({ vendorId }: { vendorId: string }) => {
     });
   };
 
-  const filterReviews = () => {
+  const filterReviews = useCallback(() => {
     let filtered = [...reviews];
 
     if (searchTerm) {
@@ -221,7 +178,50 @@ const VendorReviewsManagement = ({ vendorId }: { vendorId: string }) => {
     }
 
     setFilteredReviews(filtered);
-  };
+  }, [ratingFilter, replyFilter, reviews, searchTerm]);
+
+  useEffect(() => {
+    loadReviews();
+    
+    // Simulation de nouveaux avis en mode dÃ©mo
+    const interval = setInterval(() => {
+      if (Math.random() > 0.8) { // 20% de chance
+        const demoCustomers = ['Aminata Diallo', 'Ibrahim TourÃ©', 'Fatou Sow', 'Mamadou KonÃ©'];
+        const demoProducts = ['Robe wax', 'Chemise traditionnelle', 'Sac artisanal', 'Bijou fantaisie'];
+        const ratings = [4, 5];
+        
+        const newReview = {
+          id: `review-${Date.now()}`,
+          productId: 'product-demo',
+          productName: demoProducts[Math.floor(Math.random() * demoProducts.length)],
+          customerName: demoCustomers[Math.floor(Math.random() * demoCustomers.length)],
+          customerEmail: '',
+          rating: ratings[Math.floor(Math.random() * ratings.length)],
+          comment: ['Excellent produit !', 'TrÃ¨s satisfait', 'Conforme Ã  la description'][Math.floor(Math.random() * 3)],
+          helpful: Math.floor(Math.random() * 5),
+          verified: true,
+          createdAt: new Date().toISOString()
+        };
+        
+        setReviews(prev => [newReview, ...prev]);
+        
+        // Notification du nouvel avis
+        addNotification({
+          type: 'review',
+          title: 'Nouvel avis',
+          message: `${newReview.customerName} a laissÃ© ${newReview.rating}â­ sur ${newReview.productName}`,
+          priority: 'medium',
+          sound: true
+        });
+      }
+    }, 20000); // Toutes les 20 secondes
+    
+    return () => clearInterval(interval);
+  }, [addNotification, loadReviews]);
+
+  useEffect(() => {
+    filterReviews();
+  }, [filterReviews]);
 
   const handleReply = (review: Review) => {
     setSelectedReview(review);

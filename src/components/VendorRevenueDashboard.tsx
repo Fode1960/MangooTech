@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Users, Calendar, Download, Filter, Eye } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 
@@ -37,7 +37,7 @@ const VendorRevenueDashboard: React.FC<VendorRevenueDashboardProps> = ({ vendorI
   const [isLoading, setIsLoading] = useState(true);
 
   // Données de démonstration
-  const demoRevenueData: RevenueData[] = [
+  const demoRevenueData: RevenueData[] = useMemo(() => [
     { date: '2024-01-01', revenue: 450000, orders: 12, commission: 11250, netRevenue: 438750 },
     { date: '2024-01-02', revenue: 380000, orders: 8, commission: 9500, netRevenue: 370500 },
     { date: '2024-01-03', revenue: 520000, orders: 15, commission: 13000, netRevenue: 507000 },
@@ -45,32 +45,34 @@ const VendorRevenueDashboard: React.FC<VendorRevenueDashboardProps> = ({ vendorI
     { date: '2024-01-05', revenue: 670000, orders: 18, commission: 16750, netRevenue: 653250 },
     { date: '2024-01-06', revenue: 420000, orders: 11, commission: 10500, netRevenue: 409500 },
     { date: '2024-01-07', revenue: 580000, orders: 14, commission: 14500, netRevenue: 565500 }
-  ];
+  ], []);
 
-  const demoProductRevenue: ProductRevenue[] = [
+  const demoProductRevenue: ProductRevenue[] = useMemo(() => [
     { name: 'iPhone 14 Pro Max', revenue: 1250000, quantity: 25, color: '#3B82F6' },
     { name: 'Robe Wax Africain', revenue: 850000, quantity: 42, color: '#10B981' },
-    { name: 'Attiéké Traditionnel', revenue: 320000, quantity: 128, color: '#F59E0B' },
+    { name: 'AttiÃ©kÃ© Traditionnel', revenue: 320000, quantity: 128, color: '#F59E0B' },
     { name: 'Chaussures Nike', revenue: 680000, quantity: 34, color: '#EF4444' },
     { name: 'Montre Rolex', revenue: 2100000, quantity: 3, color: '#8B5CF6' }
-  ];
+  ], []);
 
-  const demoPaymentMethods: PaymentMethodRevenue[] = [
+  const demoPaymentMethods: PaymentMethodRevenue[] = useMemo(() => [
     { method: 'Carte Bancaire', revenue: 2340000, percentage: 45, color: '#3B82F6' },
     { method: 'Orange Money', revenue: 1560000, percentage: 30, color: '#F97316' },
     { method: 'MTN Money', revenue: 1040000, percentage: 20, color: '#EAB308' },
     { method: 'Moov Money', revenue: 260000, percentage: 5, color: '#8B5CF6' }
-  ];
+  ], []);
 
   useEffect(() => {
     // Simulation du chargement des données
-    setTimeout(() => {
+    const timeoutId = window.setTimeout(() => {
       setRevenueData(demoRevenueData);
       setProductRevenue(demoProductRevenue);
       setPaymentMethods(demoPaymentMethods);
       setIsLoading(false);
     }, 1000);
-  }, [selectedPeriod]);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [demoPaymentMethods, demoProductRevenue, demoRevenueData, selectedPeriod]);
 
   const calculateTotals = () => {
     const totalRevenue = revenueData.reduce((sum, day) => sum + day.revenue, 0);

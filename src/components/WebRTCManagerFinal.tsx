@@ -49,6 +49,11 @@ const WebRTCManagerFinal: React.FC<WebRTCManagerFinalProps> = ({
   const pendingIceCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
   const isInCallRef = useRef(false);
   const isCallingRef = useRef(false);
+  const chatMessagesRef = useRef<ChatMessage[]>([]);
+  const playRingtoneRef = useRef<() => void>(() => {});
+  const sendGlobalMessageRef = useRef(sendGlobalMessage);
+  const handleOfferRef = useRef<(offer: RTCSessionDescriptionInit) => Promise<void>>(async () => {});
+  const handleAnswerRef = useRef<(answer: RTCSessionDescriptionInit) => Promise<void>>(async () => {});
 
   // Configuration WebRTC
   const iceServers = [
@@ -121,6 +126,10 @@ const WebRTCManagerFinal: React.FC<WebRTCManagerFinalProps> = ({
       console.error('Erreur lecture sonnerie:', error);
     }
   };
+
+  chatMessagesRef.current = chatMessages;
+  playRingtoneRef.current = playRingtone;
+  sendGlobalMessageRef.current = sendGlobalMessage;
 
   // Arrêter la sonnerie - Méthode NUCLÉAIRE ABSOLUE
   const stopRingtone = () => {
@@ -367,13 +376,13 @@ const WebRTCManagerFinal: React.FC<WebRTCManagerFinalProps> = ({
             setIncomingCall(true);
             setCallFrom(data.from);
             setIsRinging(true);
-            playRingtone();
+            playRingtoneRef.current();
             break;
 
           case 'offer':
             console.log(`📄 Offre reçue de ${data.from}`);
             if (isInCallRef.current) {
-              await handleOffer(data.data);
+              await handleOfferRef.current(data.data);
               break;
             }
 
@@ -386,7 +395,7 @@ const WebRTCManagerFinal: React.FC<WebRTCManagerFinalProps> = ({
             console.log(`📄 Réponse reçue de ${data.from}`);
             stopRingtone();
             setIncomingCall(false);
-            await handleAnswer(data.data);
+            await handleAnswerRef.current(data.data);
             break;
 
           case 'ice-candidate':
@@ -396,7 +405,7 @@ const WebRTCManagerFinal: React.FC<WebRTCManagerFinalProps> = ({
 
           case 'chat-message': {
             // CRITIQUE: Éviter les doublons en vérifiant si le message existe déjà
-            const existingMessage = chatMessages.find(msg => 
+            const existingMessage = chatMessagesRef.current.find(msg => 
               msg.message === data.message && 
               msg.from === data.from && 
               Math.abs(new Date(data.timestamp).getTime() - msg.timestamp.getTime()) < 1000
@@ -413,7 +422,7 @@ const WebRTCManagerFinal: React.FC<WebRTCManagerFinalProps> = ({
               
               // Ajouter aussi au contexte global pour synchroniser avec le chat principal
               const displayName = data.from.includes('vendor') ? 'Vendeur' : 'Client';
-              sendGlobalMessage(data.message, displayName, roomId);
+              sendGlobalMessageRef.current(data.message, displayName, roomId);
               
               playMessageSound();
             }
@@ -1316,6 +1325,8 @@ const WebRTCManagerFinal: React.FC<WebRTCManagerFinalProps> = ({
     }
   };
 
+  handleOfferRef.current = handleOffer;
+
   // Gérer la réponse
   const handleAnswer = async (answer: RTCSessionDescriptionInit) => {
     try {
@@ -1404,6 +1415,8 @@ const WebRTCManagerFinal: React.FC<WebRTCManagerFinalProps> = ({
       }
     }
   };
+
+  handleAnswerRef.current = handleAnswer;
 
   // Gérer les candidats ICE
   const handleIceCandidate = async (candidate: RTCIceCandidateInit) => {

@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useContext, useReducer, useEffect, useRef, ReactNode } from 'react';
 import { useNotification } from './NotificationContext';
 
 export interface ChatMessage {
@@ -260,6 +261,7 @@ export const ChatProvider: React.FC<{ children: ReactNode; initialUserId?: strin
     undefined,
     () => createInitialState({ currentUserId: initialUserId, currentUserRole: initialUserRole })
   );
+  const simulateIncomingMessageRef = useRef<() => void>(() => {});
 
   const { addNotification } = useNotification();
 
@@ -334,6 +336,8 @@ export const ChatProvider: React.FC<{ children: ReactNode; initialUserId?: strin
       });
     }
   };
+
+  simulateIncomingMessageRef.current = simulateIncomingMessage;
 
   const sendMessage = (conversationId: string, content?: string, type: ChatMessage['type'] = 'text') => {
     const resolvedConversationId = content === undefined ? state.activeConversation?.id || conversationId : conversationId;
@@ -467,7 +471,7 @@ export const ChatProvider: React.FC<{ children: ReactNode; initialUserId?: strin
   useEffect(() => {
     const interval = setInterval(() => {
       if (Math.random() > 0.8) { // 20% de chance d'avoir un nouveau message
-        simulateIncomingMessage();
+        simulateIncomingMessageRef.current();
       }
     }, 45000); // Toutes les 45 secondes
 

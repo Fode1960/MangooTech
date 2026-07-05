@@ -456,7 +456,7 @@ export default function AdminProviders({ embedded = false }: AdminProvidersProps
     } finally {
       if (seq === loadSeqRef.current) setLoading(false)
     }
-  }, [getAdminToken, loadProvidersFromLocalPlus, search, status])
+  }, [fetchJsonOnce, getAdminToken, isAdmin, loadProvidersFromLocalPlus, search, status])
 
   useEffect(() => {
     loadProviders()
@@ -554,7 +554,7 @@ export default function AdminProviders({ embedded = false }: AdminProvidersProps
         setIsProcessing(false)
       }
     },
-    [getAdminToken, isAdmin, isProcessing]
+    [fetchJsonOnce, getAdminToken, isAdmin, isProcessing]
   )
 
   const approve = useCallback(

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Search, Send, Paperclip, MoreVertical, Phone, Video, UserPlus, Archive, Trash2, Clock, CheckCheck, Check, Smile, X } from 'lucide-react';
 import { useNotification } from '../contexts/NotificationContext';
 import { useThemeStore } from '../stores/themeStore';
@@ -53,7 +53,7 @@ const VendorMessagingCenter: React.FC<VendorMessagingCenterProps> = ({ vendorId,
   const emojis = useMemo(() => ['😀', '😁', '😂', '😊', '😍', '😎', '🤝', '👍', '🙏', '🎉', '🔥', '💯', '❤️'], []);
 
   // Données de démonstration
-  const demoConversations: Conversation[] = [
+  const demoConversations: Conversation[] = useMemo(() => [
     {
       id: 'conv-1',
       customerId: 'cust-1',
@@ -92,9 +92,9 @@ const VendorMessagingCenter: React.FC<VendorMessagingCenterProps> = ({ vendorId,
       orderId: 'order-125',
       orderNumber: 'CMD-2024-003'
     }
-  ];
+  ], []);
 
-  const demoMessages: { [key: string]: Message[] } = {
+  const demoMessages: { [key: string]: Message[] } = useMemo(() => ({
     'conv-1': [
       {
         id: 'msg-1',
@@ -144,34 +144,20 @@ const VendorMessagingCenter: React.FC<VendorMessagingCenterProps> = ({ vendorId,
         isOwn: true
       }
     ]
-  };
+  }), [vendorId]);
 
   useEffect(() => {
     setConversations(demoConversations);
-  }, []);
+  }, [demoConversations]);
 
   useEffect(() => {
     if (selectedConversation) {
       setMessages(demoMessages[selectedConversation.id] || []);
       scrollToBottom();
     }
-  }, [selectedConversation]);
+  }, [demoMessages, selectedConversation]);
 
-  useEffect(() => {
-    // Simuler de nouveaux messages en temps réel
-    const interval = setInterval(() => {
-      if (Math.random() > 0.8 && conversations.length > 0) {
-        const randomConv = conversations[Math.floor(Math.random() * conversations.length)];
-        if (randomConv.status === 'active') {
-          simulateNewMessage(randomConv.id);
-        }
-      }
-    }, 20000); // Toutes les 20 secondes
-
-    return () => clearInterval(interval);
-  }, [conversations]);
-
-  const simulateNewMessage = (conversationId: string) => {
+  const simulateNewMessage = useCallback((conversationId: string) => {
     const conversation = conversations.find(c => c.id === conversationId);
     if (!conversation) return;
 
@@ -205,7 +191,20 @@ const VendorMessagingCenter: React.FC<VendorMessagingCenterProps> = ({ vendorId,
         sound: true
       });
     }
-  };
+  }, [addNotification, conversations, selectedConversation?.id]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (Math.random() > 0.8 && conversations.length > 0) {
+        const randomConv = conversations[Math.floor(Math.random() * conversations.length)];
+        if (randomConv.status === 'active') {
+          simulateNewMessage(randomConv.id);
+        }
+      }
+    }, 20000);
+
+    return () => clearInterval(interval);
+  }, [conversations, simulateNewMessage]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

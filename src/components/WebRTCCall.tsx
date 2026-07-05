@@ -46,12 +46,15 @@ const WebRTCCall: React.FC<WebRTCCallProps> = ({
     ]
   };
 
+  /* eslint-disable react-hooks/exhaustive-deps */
+  // This effect intentionally initializes the signaling socket once for the mounted call surface.
   useEffect(() => {
     initializeWebSocket();
     return () => {
       cleanup();
     };
   }, []);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   const cleanup = () => {
     try {

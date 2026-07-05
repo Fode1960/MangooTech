@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Phone, Plus, Settings, PhoneCall, PhoneOff, User, Building } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { unifiedCommunicationService } from '../services/UnifiedCommunicationService';
@@ -36,13 +36,7 @@ export const VendorPhoneManager: React.FC = () => {
 
   const communicationService = unifiedCommunicationService;
 
-  useEffect(() => {
-    loadPhoneNumbers();
-    loadCallHistory();
-    setupCallListeners();
-  }, []);
-
-  const loadPhoneNumbers = async () => {
+  const loadPhoneNumbers = useCallback(async () => {
     try {
       const numbers = await communicationService.getPhoneNumbers(user?.id || '');
       setPhoneNumbers(numbers);
@@ -71,9 +65,9 @@ export const VendorPhoneManager: React.FC = () => {
       ]);
     }
     setLoading(false);
-  };
+  }, [communicationService, user?.id]);
 
-  const loadCallHistory = async () => {
+  const loadCallHistory = useCallback(async () => {
     try {
       const history = await communicationService.getCallHistory(user?.id || '');
       setCallHistory(history);
@@ -101,18 +95,34 @@ export const VendorPhoneManager: React.FC = () => {
         }
       ]);
     }
-  };
+  }, [communicationService, user?.id]);
 
-  const setupCallListeners = () => {
-    communicationService.on('incomingCall', (call) => {
+  const setupCallListeners = useCallback(() => {
+    const handleIncomingCall = (call: any) => {
       setActiveCall(call);
-    });
+    };
 
-    communicationService.on('callEnded', () => {
+    const handleCallEnded = () => {
       setActiveCall(null);
-      loadCallHistory();
-    });
-  };
+      void loadCallHistory();
+    };
+
+    communicationService.on('incomingCall', handleIncomingCall);
+    communicationService.on('callEnded', handleCallEnded);
+
+    return () => {
+      communicationService.off('incomingCall', handleIncomingCall);
+      communicationService.off('callEnded', handleCallEnded);
+    };
+  }, [communicationService, loadCallHistory]);
+
+  useEffect(() => {
+    void loadPhoneNumbers();
+    void loadCallHistory();
+    const cleanupListeners = setupCallListeners();
+
+    return cleanupListeners;
+  }, [loadCallHistory, loadPhoneNumbers, setupCallListeners]);
 
   const handleAddNumber = async () => {
     try {

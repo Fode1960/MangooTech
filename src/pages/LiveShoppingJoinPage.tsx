@@ -695,7 +695,7 @@ const LiveShoppingUltraSimple: React.FC<{
       } catch {
       }
     }
-  }, [showShopPicker])
+  }, [showShopPicker, shopsList.length])
 
   useEffect(() => {
     if (!showShopPicker) return
@@ -721,7 +721,8 @@ const LiveShoppingUltraSimple: React.FC<{
 
     let cancelled = false
     const ac = new AbortController()
-    missing.forEach((slug) => shopCountsInFlightRef.current.add(slug))
+    const inFlightSet = shopCountsInFlightRef.current
+    missing.forEach((slug) => inFlightSet.add(slug))
 
     const run = async () => {
       const out: Record<string, number> = {}
@@ -740,7 +741,7 @@ const LiveShoppingUltraSimple: React.FC<{
         )
       } catch {
       }
-      missing.forEach((slug) => shopCountsInFlightRef.current.delete(slug))
+      missing.forEach((slug) => inFlightSet.delete(slug))
       if (cancelled || ac.signal.aborted) return
       const keys = Object.keys(out)
       if (!keys.length) return
@@ -759,7 +760,7 @@ const LiveShoppingUltraSimple: React.FC<{
       const id = w.requestIdleCallback(() => void run(), { timeout: 1500 })
       return () => {
         cancelled = true
-        missing.forEach((slug) => shopCountsInFlightRef.current.delete(slug))
+        missing.forEach((slug) => inFlightSet.delete(slug))
         try {
           w.cancelIdleCallback?.(id)
         } catch {
@@ -774,7 +775,7 @@ const LiveShoppingUltraSimple: React.FC<{
     void run()
     return () => {
       cancelled = true
-      missing.forEach((slug) => shopCountsInFlightRef.current.delete(slug))
+      missing.forEach((slug) => inFlightSet.delete(slug))
       try {
         ac.abort()
       } catch {

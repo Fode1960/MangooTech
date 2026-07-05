@@ -178,6 +178,18 @@ export default function WebRTCManagerConnectPlus({
   const callHistoryCallIdRef = useRef('')
   const callHistoryEntryIdRef = useRef('')
   const callHistoryConnectedAtRef = useRef(0)
+  const closeOfflineUiRef = useRef<() => void>(() => {})
+  const loadCallHistoryRef = useRef<() => CallHistoryEntry[]>(() => [])
+  const saveCallHistoryRef = useRef<(next: CallHistoryEntry[]) => void>(() => {})
+  const loadLastTargetRef = useRef<() => string>(() => '')
+  const loadVendorMessagesRef = useRef<() => Promise<void>>(async () => {})
+  const loadVendorUnreadCountRef = useRef<() => Promise<void>>(async () => {})
+  const tryPlayRingtoneRef = useRef<() => Promise<void>>(async () => {})
+  const unlockAudioRef = useRef<() => Promise<void>>(async () => {})
+  const cleanupPeerRef = useRef<() => void>(() => {})
+  const startCallRef = useRef<() => Promise<void>>(async () => {})
+  const rejectCallRef = useRef<() => void>(() => {})
+  const endCallRef = useRef<() => void>(() => {})
   const lastIncomingHistoryCallIdRef = useRef('')
   const rosterReadyRef = useRef(false)
   const offlineHintRef = useRef(false)
@@ -277,7 +289,7 @@ export default function WebRTCManagerConnectPlus({
         }
       }
     }, 200)
-  }, [role, roomId, userId, ui, fromLabel, incomingCall, isCalling, isInCall, offlineMessageOpen, offlinePromptOpen, navigate])
+  }, [role, roomId, userId, returnRoomId, ui, fromLabel, incomingCall, isCalling, isInCall, offlineMessageOpen, offlinePromptOpen, navigate])
 
   const hasVendorOnline = useMemo(() => onlineUsers.some((u) => u.role === 'vendor'), [onlineUsers])
   const hasClientOnline = useMemo(() => onlineUsers.some((u) => u.role === 'client'), [onlineUsers])
@@ -396,6 +408,8 @@ export default function WebRTCManagerConnectPlus({
     }, 120)
   }
 
+  closeOfflineUiRef.current = closeOfflineUi
+
   const requestCallOrOffline = () => {
     const ridLow = String(roomId || '').trim().toLowerCase()
     const isIdentityRoom = ridLow.startsWith('shop:') || ridLow.startsWith('client:')
@@ -486,8 +500,8 @@ export default function WebRTCManagerConnectPlus({
     if (forceOffline) return
     if (!offlinePromptOpen && !offlineMessageOpen) return
     if (offlineNoAnswer) return
-    if (role === 'client' && hasVendorOnline) closeOfflineUi()
-    if (role === 'vendor' && hasClientOnline) closeOfflineUi()
+    if (role === 'client' && hasVendorOnline) closeOfflineUiRef.current()
+    if (role === 'vendor' && hasClientOnline) closeOfflineUiRef.current()
   }, [forceOffline, offlineMessageOpen, offlineNoAnswer, offlinePromptOpen, hasClientOnline, hasVendorOnline, role])
 
   const iceServers = useMemo(
@@ -554,6 +568,9 @@ export default function WebRTCManagerConnectPlus({
     }
   }
 
+  loadCallHistoryRef.current = loadCallHistory
+  saveCallHistoryRef.current = saveCallHistory
+
   const appendCallHistory = (entry: CallHistoryEntry) => {
     const prev = loadCallHistory()
     saveCallHistory([entry, ...prev].slice(0, 100))
@@ -611,7 +628,7 @@ export default function WebRTCManagerConnectPlus({
   }
 
   useEffect(() => {
-    saveCallHistory(loadCallHistory())
+    saveCallHistoryRef.current(loadCallHistoryRef.current())
   }, [role, roomId, userId])
 
   const clearIncomingTimeout = () => {
@@ -757,6 +774,8 @@ export default function WebRTCManagerConnectPlus({
     }
   }
 
+  loadLastTargetRef.current = loadLastTarget
+
   const saveLastTarget = (rid: string) => {
     const next = String(rid || '').trim()
     if (!next) return
@@ -768,7 +787,7 @@ export default function WebRTCManagerConnectPlus({
   }
 
   useEffect(() => {
-    setLastTargetRoomId(loadLastTarget())
+    setLastTargetRoomId(loadLastTargetRef.current())
   }, [role, userId])
 
   useEffect(() => {
@@ -1010,6 +1029,8 @@ export default function WebRTCManagerConnectPlus({
     return list
   }
 
+  loadVendorMessagesRef.current = loadVendorMessages
+
   const loadVendorUnreadCount = async () => {
     const qs = new URLSearchParams()
     qs.set('roomId', roomId)
@@ -1021,6 +1042,8 @@ export default function WebRTCManagerConnectPlus({
     setVendorUnreadCount(list.length)
     return list.length
   }
+
+  loadVendorUnreadCountRef.current = loadVendorUnreadCount
 
   const markMessageRead = async (id: string) => {
     const res = await fetch(`/api/voicemail/${encodeURIComponent(id)}/read`, { method: 'POST' })
@@ -1055,10 +1078,10 @@ export default function WebRTCManagerConnectPlus({
     if (role !== 'vendor' && role !== 'client') return
     if (!showVendorInbox && !showVendorContacts) return
     let cancelled = false
-    void loadVendorMessages().catch(() => {})
+    void loadVendorMessagesRef.current().catch(() => {})
     const id = window.setInterval(() => {
       if (cancelled) return
-      void loadVendorMessages().catch(() => {})
+      void loadVendorMessagesRef.current().catch(() => {})
     }, 5000)
     return () => {
       cancelled = true
@@ -1075,7 +1098,7 @@ export default function WebRTCManagerConnectPlus({
     let cancelled = false
     const run = async () => {
       if (cancelled) return
-      void loadVendorUnreadCount().catch(() => {})
+      void loadVendorUnreadCountRef.current().catch(() => {})
     }
     void run()
     const id = window.setInterval(run, 6000)
@@ -1199,6 +1222,8 @@ export default function WebRTCManagerConnectPlus({
     }
   }
 
+  unlockAudioRef.current = unlockAudio
+
   useEffect(() => {
     if (incomingCall || isInCall || isCalling) return
     try {
@@ -1306,11 +1331,13 @@ export default function WebRTCManagerConnectPlus({
     }
   }
 
+  tryPlayRingtoneRef.current = tryPlayRingtone
+
   useEffect(() => {
     const unlock = () => {
       if (audioUnlockedRef.current && !ringtoneBlockedRef.current) return
-      void unlockAudio().then(() => {
-        if (incomingCall && !isInCall && Date.now() >= (ringKillUntilRef.current || 0)) void tryPlayRingtone()
+      void unlockAudioRef.current().then(() => {
+        if (incomingCall && !isInCall && Date.now() >= (ringKillUntilRef.current || 0)) void tryPlayRingtoneRef.current()
       })
     }
     window.addEventListener('pointerdown', unlock)
@@ -1329,7 +1356,7 @@ export default function WebRTCManagerConnectPlus({
       return
     }
     startVibrate()
-    void tryPlayRingtone()
+    void tryPlayRingtoneRef.current()
     return () => {
       stopRingtone()
       stopVibrate()
@@ -1381,6 +1408,8 @@ export default function WebRTCManagerConnectPlus({
     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null
     if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null
   }
+
+  cleanupPeerRef.current = cleanupPeer
 
   const getLocalMediaStream = async () => {
     const isLocalhost =
@@ -1894,6 +1923,8 @@ export default function WebRTCManagerConnectPlus({
     }
   }
 
+  startCallRef.current = startCall
+
   const answerCall = async () => {
     clearIncomingTimeout()
     answerStartedAtRef.current = Date.now()
@@ -2003,6 +2034,8 @@ export default function WebRTCManagerConnectPlus({
     setStatus('Appel refusé')
   }
 
+  rejectCallRef.current = rejectCall
+
   const endCall = () => {
     const ridLow = String(roomId || '').trim().toLowerCase()
     const canDirectCall =
@@ -2076,16 +2109,18 @@ export default function WebRTCManagerConnectPlus({
     }
   }
 
+  endCallRef.current = endCall
+
   useEffect(() => {
     const s = Number(hangupSignal || 0)
     if (!Number.isFinite(s) || s <= 0) return
     if (s === hangupSignalRef.current) return
     hangupSignalRef.current = s
     if (incomingCall) {
-      rejectCall()
+      rejectCallRef.current()
       return
     }
-    if (isInCall || isCalling) endCall()
+    if (isInCall || isCalling) endCallRef.current()
   }, [hangupSignal, incomingCall, isInCall, isCalling])
 
   useEffect(() => {
@@ -2100,7 +2135,7 @@ export default function WebRTCManagerConnectPlus({
     }
     if (s === startCallSignalRef.current) return
     startCallSignalRef.current = s
-    void startCall()
+    void startCallRef.current()
   }, [startCallSignal, isConnected, incomingCall, isInCall, isCalling])
 
   useEffect(() => {
@@ -2132,7 +2167,7 @@ export default function WebRTCManagerConnectPlus({
       return
     }
     autoCallKeyRef.current = key
-    void startCall()
+    void startCallRef.current()
   }, [isConnected, incomingCall, isInCall, isCalling, role, roomId, userId])
 
   useEffect(() => {
@@ -2148,7 +2183,7 @@ export default function WebRTCManagerConnectPlus({
     callRetryCountRef.current += 1
     lastOfferSentAtRef.current = Date.now()
     setStatus('Relance appel...')
-    void startCall()
+    void startCallRef.current()
   }, [onlineUsers.length, isCalling, incomingCall, isInCall, isConnected])
 
   useEffect(() => {
@@ -2166,11 +2201,13 @@ export default function WebRTCManagerConnectPlus({
       else setStatus('Hors ligne')
       if (callIntentRef.current) setOfflinePromptOpen(true)
       setIsCalling(false)
-      cleanupPeer()
+      cleanupPeerRef.current()
     }, remaining)
     return () => window.clearTimeout(id)
   }, [isCalling, incomingCall, isInCall, role, roomId])
 
+  /* eslint-disable react-hooks/exhaustive-deps */
+  // This effect owns one WebSocket lifecycle per identity tuple; reactive helper deps would reconnect mid-call and break validated behavior.
   useEffect(() => {
     wsShouldReconnectRef.current = true
     wsReconnectAttemptRef.current = 0
@@ -2870,6 +2907,7 @@ export default function WebRTCManagerConnectPlus({
       cleanupPeer()
     }
   }, [roomId, role, userId])
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   return (
     <div ref={fullscreenTargetRef as any} className="flex flex-col h-full min-h-0 bg-gradient-to-b from-gray-950 to-gray-900 text-white">

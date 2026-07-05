@@ -35,6 +35,8 @@ export function useAuth() {
   });
 
   const retryRef = useRef({ user: 0, admin: 0 })
+  const checkUserRef = useRef<() => void | Promise<void>>(() => {})
+  const checkAdminStatusRef = useRef<(user: any, token: string) => void | Promise<void>>(() => {})
 
   const scheduleRetry = (kind: 'user' | 'admin', fn: () => void) => {
     const next = retryRef.current[kind] + 1
@@ -53,18 +55,18 @@ export function useAuth() {
 
   useEffect(() => {
     // Vérifier l'utilisateur actuel
-    checkUser();
+    void checkUserRef.current();
 
     // Écouter les changements d'authentification
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        await checkAdminStatus(session.user, session.access_token || '');
+        await checkAdminStatusRef.current(session.user, session.access_token || '');
       } else {
         // Vérifier si on a un utilisateur admin de démo
         const demoUser = localStorage.getItem('admin-demo-user');
         if (demoUser) {
           const userData = JSON.parse(demoUser);
-          await checkAdminStatus(userData, '');
+          await checkAdminStatusRef.current(userData, '');
         } else {
           setAuthState({
             user: null,
@@ -79,7 +81,7 @@ export function useAuth() {
 
     // Écouter les changements de localStorage (pour l'admin de démo)
     const handleStorageChange = () => {
-      checkUser();
+      void checkUserRef.current();
     };
 
     window.addEventListener('storage', handleStorageChange);
@@ -240,6 +242,9 @@ export function useAuth() {
       });
     }
   };
+
+  checkUserRef.current = checkUser
+  checkAdminStatusRef.current = checkAdminStatus
 
   const login = async (email: string, password: string) => {
     try {

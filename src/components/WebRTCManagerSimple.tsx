@@ -41,6 +41,8 @@ const WebRTCManagerSimple: React.FC<WebRTCManagerSimpleProps> = ({
   const wsRef = useRef<WebSocket | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const messageEndRef = useRef<HTMLDivElement>(null);
+  const isCallActiveRef = useRef(isCallActive);
+  const notifyIncomingCallRef = useRef<() => void>(() => {});
 
   // Configuration WebRTC
   const iceServers = [
@@ -103,6 +105,9 @@ const WebRTCManagerSimple: React.FC<WebRTCManagerSimpleProps> = ({
     }
   };
 
+  isCallActiveRef.current = isCallActive;
+  notifyIncomingCallRef.current = notifyIncomingCall;
+
   // Accepter l'appel
   const acceptIncomingCall = async () => {
     console.log('Acceptation de l\'appel');
@@ -160,8 +165,8 @@ const WebRTCManagerSimple: React.FC<WebRTCManagerSimpleProps> = ({
 
         case 'offer':
           console.log('Offre reçue du vendeur');
-          if (!isCallActive) {
-            notifyIncomingCall();
+          if (!isCallActiveRef.current) {
+            notifyIncomingCallRef.current();
           }
           await handleOffer(data.data, data.from);
           break;

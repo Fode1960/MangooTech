@@ -57,7 +57,7 @@ const VendorNotificationCenter: React.FC<VendorNotificationCenterProps> = ({
   };
 
   // Jouer un son de notification
-  const playNotificationSound = (type: Notification['type']) => {
+  const playNotificationSound = useCallback((type: Notification['type']) => {
     if (!soundEnabled) return;
     
     // Créer un son simple avec Web Audio API
@@ -91,10 +91,10 @@ const VendorNotificationCenter: React.FC<VendorNotificationCenterProps> = ({
     } catch (error) {
       console.log('Audio non supporté');
     }
-  };
+  }, [soundEnabled]);
 
   // Afficher une notification push
-  const showPushNotification = (notification: Notification) => {
+  const showPushNotification = useCallback((notification: Notification) => {
     if (!hasPermission || !('Notification' in window)) return;
     
     new Notification(notification.title, {
@@ -105,7 +105,7 @@ const VendorNotificationCenter: React.FC<VendorNotificationCenterProps> = ({
       requireInteraction: notification.priority === 'high',
       silent: !soundEnabled
     });
-  };
+  }, [hasPermission, soundEnabled]);
 
   // Ajouter une notification
   const addNotification = useCallback((notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
@@ -131,7 +131,7 @@ const VendorNotificationCenter: React.FC<VendorNotificationCenterProps> = ({
         bellElement.classList.remove('animate-bounce');
       }, 1000);
     }
-  }, [hasPermission, soundEnabled]);
+  }, [playNotificationSound, showPushNotification]);
 
   // Marquer comme lu
   const markAsRead = (notificationId: string) => {

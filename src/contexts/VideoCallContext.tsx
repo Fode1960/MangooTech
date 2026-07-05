@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useContext, useReducer, useEffect, useMemo, ReactNode } from 'react';
 import WebRTCService, { CallConfig, CallSession, CallParticipant } from '../services/WebRTCService';
 
 interface VideoCallState {
@@ -145,11 +146,11 @@ export const VideoCallProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [state, dispatch] = useReducer(videoCallReducer, initialState);
   
   // Configuration WebRTC avec serveurs ICE
-  const callConfig: CallConfig = {
+  const callConfig: CallConfig = useMemo(() => ({
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun1.l.google.com:19302' },
-      // Ajoutez vos serveurs TURN ici si nécessaire
+      // Ajoutez vos serveurs TURN ici si nÃ©cessaire
       // { urls: 'turn:your-turn-server.com:3478', username: 'user', credential: 'pass' }
     ],
     voipServer: {
@@ -157,9 +158,9 @@ export const VideoCallProvider: React.FC<{ children: ReactNode }> = ({ children 
       port: 5060, // Port UDP
       protocol: 'udp'
     }
-  };
+  }), []);
 
-  const webRTCService = new WebRTCService(callConfig);
+  const webRTCService = useMemo(() => new WebRTCService(callConfig), [callConfig]);
 
   // Timer pour la durée de l'appel
   useEffect(() => {

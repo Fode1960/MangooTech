@@ -58,6 +58,7 @@ const WebRTCManager: React.FC<WebRTCManagerProps> = ({
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const canvasAnimationRef = useRef<number | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const endCallRef = useRef<() => void>(() => {});
 
   // Configuration WebRTC
   const iceServers = [
@@ -82,7 +83,7 @@ const WebRTCManager: React.FC<WebRTCManagerProps> = ({
   useEffect(() => {
     return () => {
       // Cleanup on unmount
-      endCall();
+      endCallRef.current();
     };
   }, []);
 
@@ -298,6 +299,8 @@ const WebRTCManager: React.FC<WebRTCManagerProps> = ({
 
     onStreamEnd?.();
   };
+
+  endCallRef.current = endCall;
 
   const toggleVideo = () => {
     if (localStreamRef.current) {

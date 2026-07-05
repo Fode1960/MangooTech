@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { Film, ShoppingBag, Users, TrendingUp, Play, Phone, MessageCircle, Heart, Share2, ArrowLeft } from 'lucide-react';
 import WebRTCCall from '../components/WebRTCCall';
@@ -27,6 +27,13 @@ const LiveShoppingRoom: React.FC = () => {
   const [showCallInterface, setShowCallInterface] = useState(true);
   const [clientId] = useState('client-' + Math.random().toString(36).substr(2, 9));
   const [messageInput, setMessageInput] = useState('');
+  const connectToRoomRef = useRef(connectToRoom);
+  const disconnectFromRoomRef = useRef(disconnectFromRoom);
+  const setIsLiveRef = useRef(setIsLive);
+
+  connectToRoomRef.current = connectToRoom;
+  disconnectFromRoomRef.current = disconnectFromRoom;
+  setIsLiveRef.current = setIsLive;
 
   // Extraire les informations de la room depuis l'état de navigation
   const roomData = location.state as {
@@ -40,12 +47,12 @@ const LiveShoppingRoom: React.FC = () => {
   useEffect(() => {
     if (roomData && roomId) {
       console.log('Connexion à la room:', roomId);
-      connectToRoom(roomId, roomData.userId, roomData.role, roomData.title, roomData.vendor);
-      setIsLive(true);
+      connectToRoomRef.current(roomId, roomData.userId, roomData.role, roomData.title, roomData.vendor);
+      setIsLiveRef.current(true);
     }
 
     return () => {
-      disconnectFromRoom();
+      disconnectFromRoomRef.current();
     };
   }, [roomId, roomData]);
 

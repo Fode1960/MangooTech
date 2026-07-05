@@ -556,7 +556,7 @@ export default function ProviderPhoneAccess() {
     } finally {
       setLoading(false)
     }
-  }, [allowLocalFallback, buildDashboardUrl, checkPhoneExists, digits, navigate, normalizedPhone, persistLocalModeUser, persistPrestataireUser, resolved?.ownerEmail, resolved?.provider?.id, resolved?.provider?.name, secret, syncResolvedProviderOwner, tryLocalSyncLoginOrBootstrap, trySupabaseSignInOrBootstrap, verifyPinAgainstProvider])
+  }, [allowLocalFallback, buildDashboardUrl, buildLocalVendorUrl, checkPhoneExists, digits, navigate, normalizedPhone, persistLocalModeUser, persistPrestataireUser, resolved?.ownerEmail, resolved?.provider, secret, syncResolvedProviderOwner, tryLocalSyncLoginOrBootstrap, trySupabaseSignInOrBootstrap, verifyPinAgainstProvider])
 
   const createAccess = useCallback(async () => {
     const ownerEmail = hiddenEmailFromPhone(normalizedPhone)

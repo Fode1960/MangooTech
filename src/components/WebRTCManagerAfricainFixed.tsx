@@ -42,6 +42,7 @@ const WebRTCManagerAfricainFixed: React.FC<WebRTCManagerAfricainFixedProps> = ({
   const audioContextRef = useRef<AudioContext | null>(null);
   const ringtoneRef = useRef<OscillatorNode | null>(null);
   const messageEndRef = useRef<HTMLDivElement>(null);
+  const notifyIncomingCallRef = useRef<() => void>(() => {});
 
   // Configuration WebRTC
   const iceServers = [
@@ -114,6 +115,8 @@ const WebRTCManagerAfricainFixed: React.FC<WebRTCManagerAfricainFixedProps> = ({
     }
   };
 
+  notifyIncomingCallRef.current = notifyIncomingCall;
+
   // Accepter l'appel
   const acceptIncomingCall = async () => {
     setIncomingCall(false);
@@ -163,13 +166,13 @@ const WebRTCManagerAfricainFixed: React.FC<WebRTCManagerAfricainFixedProps> = ({
           // Ne pas notifier si c'est le vendeur qui rejoint (le vendeur initie l'appel)
           if (data.users.length > 0 && !isCallActive && userRole === 'customer') {
             // Le client reçoit une notification quand le vendeur rejoint
-            notifyIncomingCall();
+            notifyIncomingCallRef.current();
           }
           break;
 
         case 'offer':
           if (!isCallActive) {
-            notifyIncomingCall();
+            notifyIncomingCallRef.current();
           }
           await handleOffer(data.data, data.from);
           break;
@@ -196,7 +199,7 @@ const WebRTCManagerAfricainFixed: React.FC<WebRTCManagerAfricainFixedProps> = ({
 
         case 'incoming-call':
           // Recevoir une notification d'appel entrant
-          notifyIncomingCall();
+          notifyIncomingCallRef.current();
           break;
       }
     };

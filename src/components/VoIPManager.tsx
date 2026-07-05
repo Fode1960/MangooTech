@@ -41,6 +41,8 @@ const VoIPManager: React.FC<VoIPManagerProps> = ({
     { urls: 'stun:stun.l.google.com:19302' }
   ];
 
+  /* eslint-disable react-hooks/exhaustive-deps */
+  // This effect owns one WebSocket lifecycle per identity tuple; reactive handler deps would reconnect mid-call.
   useEffect(() => {
     console.log(`🔄 Initialisation VoIPManager - Role: ${role}, UserId: ${userId}`);
     
@@ -162,6 +164,7 @@ const VoIPManager: React.FC<VoIPManagerProps> = ({
       setIsConnected(false);
     };
   }, [role, roomId, userId]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   // 🔔 Sonnerie téléphone discontinue (1s ON, 2s OFF)
   const startRingtone = () => {

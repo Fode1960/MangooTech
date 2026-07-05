@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Truck, MapPin, Clock, CheckCircle, AlertCircle, Package, User, Phone, Navigation, DollarSign, Filter, Search, Calendar, Eye, Download, Map, Building, Star, TrendingUp, Car, Users } from 'lucide-react';
 import { useNotification } from '../contexts/NotificationContext';
 import DeliveryTrackingMap from './DeliveryTrackingMap';
@@ -75,7 +75,7 @@ const VendorDeliveryManagement: React.FC<VendorDeliveryManagementProps> = ({ ven
   const { addNotification } = useNotification();
 
   // Données de démonstration
-  const demoDeliveryPartners: DeliveryPartner[] = [
+  const demoDeliveryPartners: DeliveryPartner[] = useMemo(() => [
     {
       id: 'partner-1',
       name: 'Kouassi Jean',
@@ -106,9 +106,9 @@ const VendorDeliveryManagement: React.FC<VendorDeliveryManagementProps> = ({ ven
       rating: 4.7,
       completedDeliveries: 89
     }
-  ];
+  ], []);
 
-  const demoDeliveries: Delivery[] = [
+  const demoDeliveries: Delivery[] = useMemo(() => [
     {
       id: 'delivery-1',
       orderId: 'CMD-2024-001',
@@ -213,21 +213,14 @@ const VendorDeliveryManagement: React.FC<VendorDeliveryManagementProps> = ({ ven
       ],
       createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000)
     }
-  ];
+  ], [demoDeliveryPartners]);
 
   useEffect(() => {
     setDeliveries(demoDeliveries);
     setDeliveryPartners(demoDeliveryPartners);
+  }, [demoDeliveries, demoDeliveryPartners]);
 
-    // Simulation de mises à jour en temps réel
-    const interval = setInterval(() => {
-      simulateDeliveryUpdate();
-    }, 30000); // Toutes les 30 secondes
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const simulateDeliveryUpdate = () => {
+  const simulateDeliveryUpdate = useCallback(() => {
     const randomDelivery = deliveries[Math.floor(Math.random() * deliveries.length)];
     if (randomDelivery && randomDelivery.status === 'in-transit') {
       const updatedDelivery = {
@@ -258,7 +251,15 @@ const VendorDeliveryManagement: React.FC<VendorDeliveryManagementProps> = ({ ven
         sound: false
       });
     }
-  };
+  }, [addNotification, deliveries]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      simulateDeliveryUpdate();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [simulateDeliveryUpdate]);
 
   const getStatusColor = (status: Delivery['status']) => {
     switch (status) {

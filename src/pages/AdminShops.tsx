@@ -432,7 +432,7 @@ export default function AdminShops() {
     const next = merged.map(normalizeStatus).filter((s) => s.slug);
     setShops(next);
     })()
-  }, []);
+  }, [canTryLocalSync, canUseSupabase]);
 
   useEffect(() => {
     refresh();

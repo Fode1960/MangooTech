@@ -776,9 +776,9 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
     if (email) {
       try {
         const controller = new AbortController()
-        const t = window.setTimeout(() => controller.abort(), 2500)
+        const t = window.setTimeout(() => controller.abort(), 12000)
         try {
-          const res = await fetch('/api/local-sync/shops', { signal: controller.signal })
+          const res = await fetch(buildApiUrl('/api/local-sync/shops'), { signal: controller.signal })
           const json = await res.json().catch(() => null as any)
           const list = Array.isArray(json?.shops) ? json.shops : []
           for (const s of list as any[]) {
@@ -886,6 +886,8 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
     const remoteProviderTargets: VendorTarget[] = []
     if (email) {
       try {
+        const controller = new AbortController()
+        const timeoutId = window.setTimeout(() => controller.abort(), 12000)
         let authToken = ''
         let authUserId = ''
         try {
@@ -896,24 +898,29 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
           authToken = ''
           authUserId = ''
         }
-        const res = await fetch('/api/local-sync/localplus/vendors?kind=provider', {
-          headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
-        })
-        const parsed = await res.json().catch(() => null as any)
-        const list = Array.isArray(parsed?.vendors) ? parsed.vendors : []
-        for (const vendor of list as any[]) {
-          const ownerEmail = String(vendor?.ownerEmail || vendor?.owner_email || '').trim().toLowerCase()
-          const ownerUserId = String(vendor?.userId || vendor?.user_id || '').trim()
-          const isOwned = Boolean(
-            (ownerEmail && ownerEmail === email) ||
-            (authUserId && ownerUserId && ownerUserId === authUserId) ||
-            vendor?.isUserOwned === true
-          )
-          if (!isOwned) continue
-          const id = String(vendor?.id || '').trim()
-          if (!id) continue
-          const name = String(vendor?.name || `Prestataire ${id}`).trim() || `Prestataire ${id}`
-          remoteProviderTargets.push({ vendorId: id, vendorKind: 'provider', name })
+        try {
+          const res = await fetch(buildApiUrl('/api/local-sync/localplus/vendors?kind=provider'), {
+            headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
+            signal: controller.signal,
+          })
+          const parsed = await res.json().catch(() => null as any)
+          const list = Array.isArray(parsed?.vendors) ? parsed.vendors : []
+          for (const vendor of list as any[]) {
+            const ownerEmail = String(vendor?.ownerEmail || vendor?.owner_email || '').trim().toLowerCase()
+            const ownerUserId = String(vendor?.userId || vendor?.user_id || '').trim()
+            const isOwned = Boolean(
+              (ownerEmail && ownerEmail === email) ||
+              (authUserId && ownerUserId && ownerUserId === authUserId) ||
+              vendor?.isUserOwned === true
+            )
+            if (!isOwned) continue
+            const id = String(vendor?.id || '').trim()
+            if (!id) continue
+            const name = String(vendor?.name || `Prestataire ${id}`).trim() || `Prestataire ${id}`
+            remoteProviderTargets.push({ vendorId: id, vendorKind: 'provider', name })
+          }
+        } finally {
+          window.clearTimeout(timeoutId)
         }
       } catch {
       }
@@ -1203,7 +1210,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
     } catch {
     }
     return null
-  }, [selectedTarget?.slug, userEmail])
+  }, [fetchJsonOnce, selectedTarget?.slug, userEmail])
 
   const load = useCallback(async () => {
     if (loadLockRef.current) {
@@ -1785,7 +1792,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
     } finally {
       setTopupBusy(false)
     }
-  }, [fetchJsonOnce, load, topupAmount, topupBusy, userEmail])
+  }, [balanceXof, fetchJsonOnce, getToken, load, topupAmount, topupBusy, userEmail])
 
   const repairBadges = useCallback(async () => {
     if (repairBusy) return

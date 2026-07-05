@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useVideoCall } from '../contexts/VideoCallContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -47,6 +47,8 @@ const VideoCallManager: React.FC = () => {
   const [showVoipConfig, setShowVoipConfig] = useState(false);
   const [showVideoCall, setShowVideoCall] = useState(false);
   const [currentCallParticipant, setCurrentCallParticipant] = useState<string>('');
+  const handleAnswerCallRef = useRef<(callData: any) => void | Promise<void>>(() => {});
+  const handleRejectCallRef = useRef<(callId: string) => void>(() => {});
 
   // Connexion au serveur de signalisation
   useEffect(() => {
@@ -87,11 +89,11 @@ const VideoCallManager: React.FC = () => {
         actions: [
           {
             label: 'Répondre',
-            onClick: () => handleAnswerCall(callData)
+            onClick: () => void handleAnswerCallRef.current(callData)
           },
           {
             label: 'Refuser',
-            onClick: () => handleRejectCall(callData.callId)
+            onClick: () => handleRejectCallRef.current(callData.callId)
           }
         ]
       });
@@ -214,6 +216,9 @@ const VideoCallManager: React.FC = () => {
     
     socket.emit('rejectCall', { callId });
   };
+
+  handleAnswerCallRef.current = handleAnswerCall;
+  handleRejectCallRef.current = handleRejectCall;
 
   const handleStartCall = (participantId: string, type: 'video' | 'audio') => {
     setCurrentCallParticipant(participantId);

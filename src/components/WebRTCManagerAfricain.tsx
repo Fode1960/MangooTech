@@ -41,6 +41,7 @@ const WebRTCManagerAfricain: React.FC<WebRTCManagerAfricainProps> = ({
   const wsRef = useRef<WebSocket | null>(null);
   const dataChannelRef = useRef<RTCDataChannel | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const notifyIncomingCallRef = useRef<() => void>(() => {});
 
   // Configuration WebRTC avec serveurs TURN/STUN
   const iceServers = [
@@ -79,6 +80,8 @@ const WebRTCManagerAfricain: React.FC<WebRTCManagerAfricainProps> = ({
       });
     }
   };
+
+  notifyIncomingCallRef.current = notifyIncomingCall;
 
   // Accepter l'appel entrant
   const acceptIncomingCall = async () => {
@@ -127,13 +130,13 @@ const WebRTCManagerAfricain: React.FC<WebRTCManagerAfricainProps> = ({
 
         case 'other-users':
           if (data.users.length > 0 && !isCallActive) {
-            notifyIncomingCall();
+            notifyIncomingCallRef.current();
           }
           break;
 
         case 'offer':
           if (!isCallActive) {
-            notifyIncomingCall();
+            notifyIncomingCallRef.current();
           }
           await handleOffer(data.data, data.from);
           break;

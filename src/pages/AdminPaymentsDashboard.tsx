@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../config/supabase';
 import { useThemeStore } from '../stores/themeStore';
 import { 
@@ -87,6 +87,7 @@ export default function AdminPaymentsDashboard() {
   const [selectedMethod, setSelectedMethod] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const generateDemoDataRef = useRef<() => void>(() => {});
 
   const COLORS = {
     stripe: '#635BFF',
@@ -141,7 +142,7 @@ export default function AdminPaymentsDashboard() {
     } catch (error) {
       console.error('Erreur lors du chargement des données de paiement:', error);
       // Utiliser des données de démonstration en cas d'erreur
-      generateDemoData();
+      generateDemoDataRef.current();
     } finally {
       setLoading(false);
     }
@@ -289,6 +290,8 @@ export default function AdminPaymentsDashboard() {
       }
     ]);
   };
+
+  generateDemoDataRef.current = generateDemoData;
 
   const formatCurrency = (amount: number, currency: string = 'XOF') => {
     return new Intl.NumberFormat('fr-FR', {

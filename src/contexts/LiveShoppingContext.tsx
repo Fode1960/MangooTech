@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 
 interface ChatMessage {
   id: string;
@@ -52,6 +53,11 @@ export const LiveShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [viewers, setViewers] = useState(0);
   const [participantId, setParticipantId] = useState<string>('');
   const [currentRoomId, setCurrentRoomId] = useState<string>('');
+  const participantIdRef = useRef('');
+  const currentRoomIdRef = useRef('');
+
+  participantIdRef.current = participantId;
+  currentRoomIdRef.current = currentRoomId;
   
   // Produits partagés entre vendeur et client
   const products: Product[] = [
@@ -181,11 +187,11 @@ export const LiveShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ 
       ws.onopen = () => {
         console.log('Live Shopping WebSocket connecté');
         // Ne pas rejoindre automatiquement une room - attendre que l'utilisateur choisisse
-        if (currentRoomId) {
-          const userId = participantId || 'user-' + Math.random().toString(36).substr(2, 9);
+        if (currentRoomIdRef.current) {
+          const userId = participantIdRef.current || 'user-' + Math.random().toString(36).substr(2, 9);
           ws.send(JSON.stringify({ 
             type: 'join-live-shopping', 
-            roomId: currentRoomId,
+            roomId: currentRoomIdRef.current,
             userId: userId,
             role: 'client'
           }));
@@ -214,7 +220,7 @@ export const LiveShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ 
           if (data.type === 'live-chat-message') {
             const msg = data.data && data.data.message ? data.data.message : data.data;
             // Vérifier que le message appartient à la room actuelle
-            if (msg.roomId === currentRoomId) {
+            if (msg.roomId === currentRoomIdRef.current) {
               setMessages(prev => {
                 const messageExists = prev.some(m => m.id === msg.id);
                 if (messageExists) return prev;
@@ -231,7 +237,7 @@ export const LiveShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ 
               from: 'Système',
               message: `🛍️ Produit présenté: ${data.data.name} - ${data.data.price.toLocaleString()} FCFA`,
               timestamp: new Date(),
-              roomId: currentRoomId
+              roomId: currentRoomIdRef.current
             };
             setMessages(prev => [...prev, productMessage]);
             return;

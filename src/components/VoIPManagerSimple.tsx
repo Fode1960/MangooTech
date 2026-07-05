@@ -138,6 +138,8 @@ const VoIPManagerSimple: React.FC<VoIPManagerSimpleProps> = ({
     }
   };
 
+  /* eslint-disable react-hooks/exhaustive-deps */
+  // This effect owns one WebSocket lifecycle per identity tuple; reactive handler deps would reconnect mid-call.
   useEffect(() => {
     // Connexion WebSocket
     const ws = new WebSocket('ws://localhost:3010');
@@ -235,6 +237,7 @@ const VoIPManagerSimple: React.FC<VoIPManagerSimpleProps> = ({
       endCall();
     };
   }, [role, roomId, userId]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   // Commencer un appel
   const startCall = async () => {

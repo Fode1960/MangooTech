@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 
 interface ChatMessage {
   id: string;
@@ -69,6 +70,9 @@ export const LiveShoppingRoomProvider: React.FC<LiveShoppingRoomProviderProps> =
   const [roomInfo, setRoomInfo] = useState<RoomInfo | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [currentRoomId, setCurrentRoomId] = useState<string>('');
+  const currentRoomIdRef = useRef('');
+
+  currentRoomIdRef.current = currentRoomId;
   
   // Produits partagés entre vendeur et client
   const products: Product[] = [
@@ -220,7 +224,7 @@ export const LiveShoppingRoomProvider: React.FC<LiveShoppingRoomProviderProps> =
               from: 'Système',
               message: `🛍️ Produit présenté: ${data.data.name} - ${data.data.price.toLocaleString()} FCFA`,
               timestamp: new Date(),
-              roomId: currentRoomId
+              roomId: currentRoomIdRef.current
             };
             setMessages(prev => [...prev, productMessage]);
             return;
