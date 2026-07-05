@@ -2,14 +2,10 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { create } from 'zustand';
 import { useThemeStore } from './stores/themeStore';
 import { ThemeToggle } from './components/ThemeToggle';
-import { PaymentMethods } from './components/PaymentMethodsStable';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { PaymentAnalyticsDashboard } from './components/PaymentAnalyticsDashboardSimple';
 import { Routes, Route, Navigate, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
-import VendorAccessQRPage from './pages/VendorAccessQRPage';
 import Footer from './components/layout/Footer';
 import LoadingFallback from './components/ui/LoadingFallback';
-import { QRCodeCanvas } from 'qrcode.react';
 import { isLocalSyncEnabled, localSync, setLocalSyncToken } from './utils/localSyncClient';
 import { fetchActiveBoostRows, getBoostDiscoveryFlags, indexActiveBoosts, readBoostActiveCacheRows, readBoostConfigCacheRows } from './utils/boostDiscovery';
 import { Toaster, toast } from 'sonner';
@@ -20,9 +16,17 @@ import { LiveShoppingProvider } from './contexts/LiveShoppingContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { supabase, supabaseConfig } from './config/supabase';
 import { getWsUrl } from './utils/realtimeUrls';
-import { VendorBoosts } from './components/vendor/VendorBoosts'
 import mangooLogo from './assets/mangoo-logo.svg'
 
+const PaymentMethods = React.lazy(() =>
+  import('./components/PaymentMethodsStable').then((module) => ({ default: module.PaymentMethods }))
+);
+const QRCodeCanvas = React.lazy(() =>
+  import('qrcode.react').then((module) => ({ default: module.QRCodeCanvas }))
+);
+const VendorBoosts = React.lazy(() =>
+  import('./components/vendor/VendorBoosts').then((module) => ({ default: module.VendorBoosts }))
+);
 const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
 const AdminShops = React.lazy(() => import('./pages/AdminShops'));
 const AdminProviders = React.lazy(() => import('./pages/AdminProviders'));
@@ -66,6 +70,7 @@ const CourierScreen = React.lazy(() => import('./pages/CourierScreen'));
 const CourierRegister = React.lazy(() => import('./pages/CourierRegister'));
 const DeliveryCheckout = React.lazy(() => import('./pages/DeliveryCheckout'));
 const OrderStatus = React.lazy(() => import('./pages/OrderStatus'));
+const VendorAccessQRPage = React.lazy(() => import('./pages/VendorAccessQRPage'));
 
 const ConnectPlusEntryPage = React.lazy(() => import('./pages/connect-plus/ConnectPlusEntryPage'));
 const ConnectPlusRedirect = React.lazy(() => import('./pages/connect-plus/ConnectPlusRedirect'));
@@ -1903,7 +1908,9 @@ const Register = ({ onRegister, onBack }) => {
 
               <div className="w-full md:w-1/3 flex items-center justify-center">
                 <div className={`p-3 rounded-xl ${isDark ? 'bg-white' : 'bg-white'}`}>
-                  <QRCodeCanvas value={createdShop.shopUrl} size={160} includeMargin />
+                  <React.Suspense fallback={<div className="w-40 h-40 flex items-center justify-center text-xs text-gray-500">Chargement du QR…</div>}>
+                    <QRCodeCanvas value={createdShop.shopUrl} size={160} includeMargin />
+                  </React.Suspense>
                 </div>
               </div>
             </div>
@@ -4330,7 +4337,9 @@ const VendorDashboard = ({ user }) => {
           <div className="mt-3 flex items-center justify-between gap-3">
             <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm break-all`}>{url}</div>
             <div className="bg-white rounded-lg p-2">
-              <QRCodeCanvas value={url} size={72} includeMargin />
+              <React.Suspense fallback={<div className="w-[72px] h-[72px] flex items-center justify-center text-[10px] text-gray-500">QR…</div>}>
+                <QRCodeCanvas value={url} size={72} includeMargin />
+              </React.Suspense>
             </div>
           </div>
         </div>
@@ -4386,7 +4395,11 @@ const VendorDashboard = ({ user }) => {
         return <VendorNotifications vendorId="vendor-demo" />;
       case 'boosts': {
         const boostEmail = readBoostContextEmail({ explicitUserEmail: String(user?.email || '') })
-        return <VendorBoosts userEmail={boostEmail} />;
+        return (
+          <React.Suspense fallback={<div className={`${isDark ? 'bg-gray-800 text-gray-300 border-gray-700' : 'bg-white text-gray-600 border-gray-200'} border rounded-xl p-4`}>Chargement des boosts…</div>}>
+            <VendorBoosts userEmail={boostEmail} />
+          </React.Suspense>
+        );
       }
       case 'communication': {
         const contacts = [
@@ -6168,14 +6181,16 @@ const ClientMarketplace = ({ user }) => {
               
               {/* Méthodes de paiement */}
               <ErrorBoundary>
-                <PaymentMethods
-                  amount={cartTotal}
-                  currency="XOF"
-                  country="CI"
-                  userId={user?.id || user?.email || 'demo-user'}
-                  onPaymentSuccess={handlePaymentSuccess}
-                  onPaymentError={handlePaymentError}
-                />
+                <React.Suspense fallback={<div className={`${isDark ? 'bg-gray-800 border-gray-700 text-gray-300' : 'bg-white border-gray-200 text-gray-600'} border rounded-xl p-6 mt-4`}>Chargement des moyens de paiement…</div>}>
+                  <PaymentMethods
+                    amount={cartTotal}
+                    currency="XOF"
+                    country="CI"
+                    userId={user?.id || user?.email || 'demo-user'}
+                    onPaymentSuccess={handlePaymentSuccess}
+                    onPaymentError={handlePaymentError}
+                  />
+                </React.Suspense>
               </ErrorBoundary>
             </div>
           </div>
@@ -10446,7 +10461,9 @@ function AppShell() {
         <div className="px-4 pb-10">
           <div className="max-w-5xl mx-auto">
           {boostsEmail ? (
-            <VendorBoosts userEmail={boostsEmail} />
+            <React.Suspense fallback={<div className={isDark ? 'bg-gray-900 border border-gray-700 rounded-2xl p-5 text-gray-300' : 'bg-white border border-gray-200 rounded-2xl p-5 text-gray-600'}>Chargement des boosts…</div>}>
+              <VendorBoosts userEmail={boostsEmail} />
+            </React.Suspense>
           ) : (
             <div className={isDark ? 'bg-gray-900 border border-gray-700 rounded-2xl p-5' : 'bg-white border border-gray-200 rounded-2xl p-5'}>
               <div className="text-base font-bold">Email requis</div>
