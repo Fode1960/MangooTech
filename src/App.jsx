@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { useThemeStore } from './stores/themeStore';
 import { ThemeToggle } from './components/ThemeToggle';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import LandingPage from './components/LandingPage';
 import { Routes, Route, Navigate, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import Footer from './components/layout/Footer';
 import LoadingFallback from './components/ui/LoadingFallback';
@@ -44,7 +45,6 @@ const ProductCard = React.lazy(() => import('./components/OptimizedProductCard')
 const MarketplaceFilters = React.lazy(() => import('./components/MarketplaceFilters'));
 const PerformanceMonitor = React.lazy(() => import('./components/PerformanceMonitor'));
 const AfricanInnovationHub = React.lazy(() => import('./components/AfricanInnovationHub'));
-const LandingPage = React.lazy(() => import('./components/LandingPage'));
 const CustomerChat = React.lazy(() => import('./components/CustomerChat'));
 const VendorMessagingCenter = React.lazy(() => import('./components/VendorMessagingCenter'));
 const LiveShoppingManager = React.lazy(() => import('./components/LiveShoppingManager'));

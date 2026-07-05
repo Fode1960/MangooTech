@@ -1,6 +1,5 @@
 import React from 'react';
 import { useThemeStore } from '../stores/themeStore';
-import MarketplaceAIAssistant from './MarketplaceAIAssistant';
 import { 
   Store, 
   Moon, 
@@ -16,6 +15,8 @@ import {
   Twitter, 
   Instagram 
 } from 'lucide-react';
+
+const MarketplaceAIAssistant = React.lazy(() => import('./MarketplaceAIAssistant'));
 
 const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminDashboard, onAiAddToCart, onAiViewShop }) => {
   const { isDark, toggleTheme } = useThemeStore();
@@ -870,14 +871,18 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                 <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white opacity-10 rounded-full blur-3xl"></div>
                 <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-purple-400 opacity-20 rounded-full blur-3xl"></div>
             </div>
-            <MarketplaceAIAssistant
-              isDark={isDark}
-              open={aiOpen}
-              onOpenChange={setAiOpen}
-              hideLauncher
-              onViewShop={onAiViewShop}
-              onAddToCart={onAiAddToCart}
-            />
+            {aiOpen ? (
+              <React.Suspense fallback={null}>
+                <MarketplaceAIAssistant
+                  isDark={isDark}
+                  open={aiOpen}
+                  onOpenChange={setAiOpen}
+                  hideLauncher
+                  onViewShop={onAiViewShop}
+                  onAddToCart={onAiAddToCart}
+                />
+              </React.Suspense>
+            ) : null}
         </div>
 
         {/* CONTACT SECTION */}
