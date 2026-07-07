@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#ffa726">
+    <meta name="theme-color" content="#1b5e20">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -430,7 +430,7 @@
             btn.disabled = false;
 
             submitBtn.disabled = false;
-            submitBtn.style.background = 'linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to))';
+            submitBtn.style.background = '#1b5e20';
             submitBtn.style.cursor = 'pointer';
             submitBtn.style.opacity = '1';
 
@@ -486,7 +486,7 @@
                     submitBtn.disabled = false;
                     submitBtn.style.opacity = '1';
                     submitBtn.style.cursor = 'pointer';
-                    submitBtn.style.background = 'linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to))';
+                    submitBtn.style.background = '#1b5e20';
                 }
                 window.__mangooPickProviderLocation = false;
                 const modal = document.getElementById('providerModal');
@@ -517,7 +517,7 @@
                 return;
             }
             
-            btn.innerHTML = '<div class="spinner" style="width:15px; height:15px; border-width:2px; border-left-color:#ffa726; display:inline-block; margin-right:5px;"></div> Recherche Satellites...';
+            btn.innerHTML = '<div class="spinner" style="width:15px; height:15px; border-width:2px; border-left-color:#1b5e20; display:inline-block; margin-right:5px;"></div> Recherche Satellites...';
             btn.disabled = true;
 
             const fail = () => {
@@ -566,7 +566,7 @@
             overlay.innerHTML = `
                 <div style="background: var(--ml-panel); width: 100%; max-width: 420px; border-radius: var(--ml-radius-2xl); overflow: hidden; max-height: calc(100vh - 40px); display: flex; flex-direction: column; position: relative; border: 1px solid var(--ml-border); box-shadow: var(--ml-shadow-md);">
                     <!-- Cover & Header -->
-                    <div style="height: 100px; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); position: relative;">
+                    <div style="height: 100px; background: #1b5e20; position: relative;">
                         <button onclick="document.getElementById('vendorProfileOverlay').remove()" style="position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.18); color: white; border: 1px solid rgba(255,255,255,0.25); width: 34px; height: 34px; border-radius: 999px; cursor: pointer; font-weight: 900;">✕</button>
                     </div>
                     
@@ -669,13 +669,13 @@
         }
 
         :root {
-            --ml-bg: #f9fafb;
+            --ml-bg: #f6faf3;
             --ml-panel: #ffffff;
             --ml-card: #ffffff;
             --ml-text: #111827;
             --ml-muted: #6b7280;
-            --ml-border: #e5e7eb;
-            --ml-brand-from: #ffa726;
+            --ml-border: #cfe0c8;
+            --ml-brand-from: #1b5e20;
             --ml-brand-to: #1b5e20;
             --ml-radius-xl: 12px;
             --ml-radius-2xl: 16px;
@@ -757,7 +757,7 @@
         }
         html.dark .hub-card-icon { border-color: rgba(255,255,255,0.10); }
         .hub-card-icon--list { background: rgba(22,163,74,0.10); }
-        .hub-card-icon--fav { background: rgba(249,115,22,0.10); }
+        .hub-card-icon--fav { background: rgba(27,94,32,0.10); }
         .hub-card-icon--delivery { background: rgba(37,99,235,0.10); }
 
         .lp-modal-card {
@@ -776,7 +776,7 @@
         html.dark .lp-modal-card { background: var(--ml-panel); }
         .lp-modal-head {
             padding: 18px;
-            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
+            background: #1b5e20;
             color: #ffffff;
             position: relative;
         }
@@ -979,8 +979,8 @@
         }
         .payment-method-card:active { transform: scale(0.99); }
         .payment-method-card.is-featured {
-            border-color: rgba(249,115,22,0.40);
-            background: rgba(249,115,22,0.06);
+            border-color: rgba(27,94,32,0.40);
+            background: rgba(27,94,32,0.06);
         }
         .lp-pay-icon {
             width: 40px;
@@ -1039,7 +1039,7 @@
         }
         .lp-onboard-head {
             padding: 18px 18px 14px;
-            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
+            background: #1b5e20;
             color: #ffffff;
         }
         .lp-onboard-title { font-size: 1.05rem; font-weight: 950; margin: 0; }
@@ -1081,7 +1081,7 @@
         }
         .lp-onboard-btn.primary {
             color: #ffffff;
-            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
+            background: #1b5e20;
             box-shadow: var(--ml-shadow-sm);
         }
         .lp-onboard-btn.secondary {
@@ -1187,7 +1187,7 @@
             font-size: 1.6rem;
             letter-spacing: 0.14em;
             border: 1px solid var(--ml-border);
-            background: rgba(249,115,22,0.08);
+            background: rgba(27,94,32,0.08);
             color: var(--ml-text);
         }
         .lp-onboard-qr {
@@ -1232,7 +1232,7 @@
             white-space: nowrap;
         }
         .lp-tab.active {
-            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
+            background: #1b5e20;
             color: #ffffff;
             border-color: rgba(255,255,255,0.08);
         }
@@ -1257,7 +1257,7 @@
             white-space: nowrap;
         }
         .lp-btn-primary {
-            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
+            background: #1b5e20;
             color: #fff;
         }
         .lp-btn-secondary {
@@ -1306,7 +1306,7 @@
         /* === HEADER === */
         .header {
             flex: 0 0 auto;
-            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
+            background: #1b5e20;
             color: white;
             padding: 8px 10px 26px 10px;
             text-align: center;
@@ -1455,12 +1455,12 @@
             color: #f3f4f6;
         }
         .scope-btn.active {
-            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
+            background: #1b5e20;
             border-color: rgba(255,255,255,0.16);
             color: white;
         }
         .mic-active {
-            background: #ffa726 !important;
+            background: #1b5e20 !important;
             color: white;
             animation: pulse-mic 1s infinite;
         }
@@ -1560,13 +1560,13 @@
         }
 
         .kind-btn.active {
-            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
+            background: #1b5e20;
             border-color: rgba(255,255,255,0.16);
             color: white;
         }
 
         html.dark .kind-btn.active {
-            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
+            background: #1b5e20;
             border-color: rgba(255,255,255,0.16);
             color: white;
         }
@@ -1613,7 +1613,7 @@
         }
         .lp-simple-action:active { transform: scale(0.98); }
         .lp-simple-primary {
-            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
+            background: #1b5e20;
             color: white;
         }
         .lp-simple-secondary {
@@ -1708,7 +1708,7 @@
             border-radius: 999px;
             border: 1px solid rgba(0,0,0,0.10);
             background: rgba(255,255,255,0.96);
-            color: var(--ml-brand-from);
+            color: #1b5e20;
             font-weight: 950;
             font-size: 0.95rem;
             box-shadow: 0 10px 30px rgba(0,0,0,0.18);
@@ -1723,7 +1723,7 @@
         html.dark .lp-simple-reopen-btn {
             border-color: rgba(255,255,255,0.14);
             background: rgba(17, 24, 39, 0.88);
-            color: var(--ml-brand-from);
+            color: #1b5e20;
             box-shadow: 0 10px 30px rgba(0,0,0,0.40);
         }
 
@@ -1817,13 +1817,13 @@
         }
         
         .filter-option.active {
-            background: rgba(249,115,22,0.10);
-            color: var(--ml-brand-from);
+            background: rgba(27,94,32,0.10);
+            color: #1b5e20;
             font-weight: 900;
         }
         html.dark .filter-option.active {
-            background: rgba(249,115,22,0.14);
-            color: var(--ml-brand-from);
+            background: rgba(27,94,32,0.14);
+            color: #1b5e20;
         }
 
         .metiers-families {
@@ -1933,7 +1933,7 @@
             padding: 8px 10px;
             border-radius: 999px;
             border: 1px solid rgba(214, 48, 49, 0.3);
-            background: #ffa726;
+            background: #1b5e20;
             color: white;
             font-weight: 950;
             font-size: 0.8rem;
@@ -1950,9 +1950,9 @@
             flex: 0 0 auto;
             padding: 8px 10px;
             border-radius: 999px;
-            border: 1px solid rgba(0,0,0,0.08);
-            background: rgba(0,0,0,0.04);
-            color: #2d3436;
+            border: 1px solid #cfe0c8;
+            background: #eef6ea;
+            color: #1b5e20;
             font-weight: 950;
             font-size: 0.8rem;
             cursor: pointer;
@@ -1969,8 +1969,9 @@
         }
 
         #metiersListBtn.active {
-            border-color: rgba(26, 95, 63, 0.55);
-            background: rgba(26, 95, 63, 0.18);
+            border-color: #1b5e20;
+            background: #1b5e20;
+            color: white;
         }
         html.dark #metiersNewsBtn {
             border-color: rgba(255,255,255,0.14);
@@ -2093,7 +2094,7 @@
             color: #ffffff;
         }
         html.dark .metiers-family-chip.active {
-            color: #ffa726;
+            color: #1b5e20;
         }
 
         #metiersFilterModal {
@@ -2245,7 +2246,7 @@
             left: 15px;
             z-index: 1150;
             padding: 8px 12px;
-            background: #ffa726;
+            background: #1b5e20;
             color: white;
             border-radius: 20px;
             font-size: 0.8rem;
@@ -2478,14 +2479,14 @@
         .debt-item {
             display: flex; justify-content: space-between; align-items: center;
             padding: 12px; 
-            background: #ffa726; /* Default Light Mode Background */
+            background: #1b5e20; /* Default Light Mode Background */
             border-radius: 12px;
             border-left: 4px solid #d63031;
             transition: all 0.3s ease;
         }
         html.dark .debt-item { 
             background: #2d1b1b; /* Dark Mode Background (Dark Red) */
-            border-left: 4px solid #ffa726;
+            border-left: 4px solid #1b5e20;
         }
         
         .debt-client { font-size: 0.95rem; font-weight: bold; color: #2d3436; }
@@ -2511,13 +2512,7 @@
 
         /* === WALLET CARD === */
         .wallet-card {
-            background: linear-gradient(
-                    135deg,
-                    rgba(249,115,22,0.14) 0%,
-                    rgba(34,197,94,0.10) 55%,
-                    rgba(59,130,246,0.06) 100%
-                ),
-                var(--ml-panel);
+            background: #1b5e20;
             color: var(--ml-text);
             border-radius: var(--ml-radius-2xl);
             padding: 16px;
@@ -2528,13 +2523,7 @@
             overflow: hidden;
         }
         html.dark .wallet-card {
-            background: linear-gradient(
-                    135deg,
-                    rgba(249,115,22,0.12) 0%,
-                    rgba(34,197,94,0.08) 55%,
-                    rgba(59,130,246,0.06) 100%
-                ),
-                rgba(17,24,39,0.92);
+            background: #1b5e20;
             border-color: rgba(255,255,255,0.08);
             box-shadow: 0 12px 28px rgba(0,0,0,0.35);
         }
@@ -2548,7 +2537,7 @@
             pointer-events: none;
         }
         .wallet-label { font-size: 0.85rem; color: var(--ml-muted); font-weight: 850; margin-bottom: 6px; }
-        .wallet-balance { font-size: 2rem; font-weight: 950; margin-bottom: 14px; cursor: pointer; color: var(--ml-text); text-decoration: underline; text-decoration-style: dotted; text-decoration-color: rgba(249,115,22,0.55); }
+        .wallet-balance { font-size: 2rem; font-weight: 950; margin-bottom: 14px; cursor: pointer; color: var(--ml-text); text-decoration: underline; text-decoration-style: dotted; text-decoration-color: rgba(27,94,32,0.55); }
         /* === SELLER MODE CARD === */
         .seller-mode-card {
             background: white;
@@ -2574,7 +2563,7 @@
         
         .btn-sales-debts {
             display: inline-block;
-            background: #ffa726;
+            background: #1b5e20;
             color: white;
             padding: 5px 12px;
             border-radius: 15px;
@@ -2594,8 +2583,8 @@
         .wallet-actions { display: flex; gap: 10px; }
         .wallet-btn {
             flex: 1;
-            background: rgba(249,115,22,0.06);
-            border: 1px solid rgba(249,115,22,0.18);
+            background: rgba(27,94,32,0.06);
+            border: 1px solid rgba(27,94,32,0.18);
             padding: 11px 10px;
             border-radius: 14px;
             color: var(--ml-text);
@@ -2608,7 +2597,7 @@
             gap: 5px;
         }
         html.dark .wallet-btn {
-            background: rgba(249,115,22,0.08);
+            background: rgba(27,94,32,0.08);
             border-color: rgba(255,255,255,0.10);
             color: #f3f4f6;
         }
@@ -2650,7 +2639,7 @@
         
         .btn-sales-debts {
             display: inline-block;
-            background: #ffa726;
+            background: #1b5e20;
             color: white;
             padding: 5px 12px;
             border-radius: 15px;
@@ -2763,7 +2752,7 @@
         html.dark .arrow { color: #6b7280; }
 
         .btn-seller {
-            background: #ffa726;
+            background: #1b5e20;
             color: white;
             width: 100%;
             padding: 15px;
@@ -2998,14 +2987,14 @@
         }
         .lp-delivery-option .t { font-weight: 950; color: var(--ml-text); }
         .lp-delivery-option .s { font-size: 0.82rem; color: var(--ml-muted); font-weight: 700; margin-top: 2px; }
-        .lp-delivery-option .p { font-weight: 950; color: var(--ml-brand-from); margin-top: 4px; }
+        .lp-delivery-option .p { font-weight: 950; color: #1b5e20; margin-top: 4px; }
         .lp-delivery-option.selected {
-            border: 2px solid rgba(249,115,22,0.55);
-            background: rgba(249,115,22,0.08);
+            border: 2px solid rgba(27,94,32,0.55);
+            background: rgba(27,94,32,0.08);
         }
         html.dark .lp-delivery-option.selected {
-            border-color: rgba(249,115,22,0.55);
-            background: rgba(249,115,22,0.14);
+            border-color: rgba(27,94,32,0.55);
+            background: rgba(27,94,32,0.14);
         }
 
         .lp-delivery-cta {
@@ -3092,7 +3081,7 @@
         .status-closed { background: #f8d7da; color: #721c24; }
         html.dark .status-closed { background: #7f1d1d; color: #fca5a5; }
         .status-live { 
-            background: #ffa726; 
+            background: #1b5e20; 
             color: white; 
             animation: pulse 1.5s infinite;
         }
@@ -3134,7 +3123,7 @@
         .play-btn {
             width: 40px;
             height: 40px;
-            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
+            background: #1b5e20;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -3200,7 +3189,7 @@
             box-shadow: var(--ml-shadow-sm);
         }
         .btn:active { transform: scale(0.97); }
-        .btn-primary { background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color: white; }
+        .btn-primary { background: #1b5e20; color: white; }
         .btn-secondary { background: #ffffff; color: var(--ml-text); border: 1px solid var(--ml-border); }
         html.dark .btn-secondary { background: rgba(255,255,255,0.06); color: #f3f4f6; border-color: rgba(255,255,255,0.12); }
         .btn.dashed { border-style: dashed; }
@@ -3219,12 +3208,12 @@
         html.dark .sheet-tab { color: #6b7280; } /* Dark mode inactive */
         
         .sheet-tab.active {
-            color: var(--ml-brand-from);
-            border-bottom-color: var(--ml-brand-from);
+            color: #1b5e20;
+            border-bottom-color: #1b5e20;
         }
         html.dark .sheet-tab.active {
-            color: var(--ml-brand-from);
-            border-bottom-color: var(--ml-brand-from);
+            color: #1b5e20;
+            border-bottom-color: #1b5e20;
         }
 
         /* === NAVIGATION BAR === */
@@ -3265,7 +3254,7 @@
         }
         html.dark .nav-item { color: #6b7280; }
         .nav-item.active { 
-            color: var(--ml-brand-from);
+            color: #1b5e20;
             background: rgba(249, 115, 22, 0.12);
             transform: translateY(-5px);
         }
@@ -3325,7 +3314,7 @@
         .lp-list-bar {
             width: 54px;
             height: 4px;
-            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
+            background: #1b5e20;
             margin: 10px auto 6px;
             border-radius: 999px;
         }
@@ -3429,7 +3418,7 @@
         }
         html.dark .chat-overlay { background: #111827; }
         .chat-header {
-            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
+            background: #1b5e20;
             color: white;
             padding: 15px;
             display: flex;
@@ -3557,7 +3546,7 @@
             color: var(--ml-text);
         }
         .btn-send {
-            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
+            background: #1b5e20;
             color: white;
             width: 40px; height: 40px;
             border-radius: 50%;
@@ -3583,12 +3572,12 @@
         .spinner {
             width: 50px; height: 50px;
             border: 5px solid var(--ml-border);
-            border-top: 5px solid var(--ml-brand-from);
+            border-top: 5px solid #1b5e20;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
         .ml-spin { display: inline-block; animation: spin 1s linear infinite; }
-        html.dark .spinner { border-color: rgba(255,255,255,0.12); border-top-color: var(--ml-brand-from); }
+        html.dark .spinner { border-color: rgba(255,255,255,0.12); border-top-color: #1b5e20; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* === MODALS (Seller + Provider) === */
@@ -3625,10 +3614,10 @@
         @keyframes popIn { to { transform: scale(1); } }
         
         #sellerModal .modal-card {
-            background: linear-gradient(180deg, rgba(249,115,22,0.08), rgba(22,163,74,0.06)) , var(--ml-panel);
+            background: #1b5e20 , var(--ml-panel);
         }
         html.dark #sellerModal .modal-card {
-            background: linear-gradient(180deg, rgba(249,115,22,0.10), rgba(22,163,74,0.08)) , var(--ml-panel);
+            background: #1b5e20 , var(--ml-panel);
         }
         #sellerModal .modal-icon {
             width: 58px;
@@ -3639,7 +3628,7 @@
             margin: 0 auto 10px;
             font-size: 2rem;
             color: white;
-            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
+            background: #1b5e20;
             box-shadow: var(--ml-shadow-md);
         }
         #sellerModal .modal-title {
@@ -3675,8 +3664,8 @@
             color: var(--ml-text);
         }
         html.dark #sellerModal .input-field { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); color: var(--ml-text); }
-        #sellerModal .input-field:focus { box-shadow: 0 0 0 4px rgba(249,115,22,0.16); border-color: rgba(249,115,22,0.65); }
-        .btn-submit { background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color: white; width: 100%; min-height: 44px; padding: 12px 14px; border: none; border-radius: var(--ml-radius-xl); font-weight: 600; font-size: 0.95rem; cursor: pointer; box-shadow: var(--ml-shadow-sm); }
+        #sellerModal .input-field:focus { box-shadow: 0 0 0 4px rgba(27,94,32,0.16); border-color: rgba(27,94,32,0.65); }
+        .btn-submit { background: #1b5e20; color: white; width: 100%; min-height: 44px; padding: 12px 14px; border: none; border-radius: var(--ml-radius-xl); font-weight: 600; font-size: 0.95rem; cursor: pointer; box-shadow: var(--ml-shadow-sm); }
         #sellerModal label[for="shopLogoFile"] {
             background: rgba(17,24,39,0.06);
             color: var(--ml-text);
@@ -3741,7 +3730,7 @@
         right: 15px;
         z-index: 1100;
         background: white;
-        color: var(--ml-brand-from);
+        color: #1b5e20;
         border: 1px solid var(--ml-border);
         width: 50px;
         height: 50px;
@@ -3916,7 +3905,7 @@
             </div>
             <div class="hub-grid">
                 <div class="hub-card lp-hub-card" style="cursor:default;">
-                    <div class="hub-card-icon" style="background: rgba(249,115,22,0.10);">①</div>
+                    <div class="hub-card-icon" style="background: rgba(27,94,32,0.10);">①</div>
                     <div style="flex:1; min-width:0;">
                         <div class="hub-card-title" style="font-weight:950;">Rechercher un besoin</div>
                         <div class="hub-card-subtitle" style="font-size:0.9rem; line-height:1.45;">Tapez un métier (ex: Plombier, Tailleur) ou utilisez les filtres.</div>
@@ -3954,7 +3943,7 @@
                     ←
                 </button>
 
-                <button type="button" onclick="openLpIdentityModal()" style="position:absolute; top:16px; right:16px; border:2px solid #ffa726; background:var(--ml-panel); color:var(--ml-text); width:56px; height:56px; border-radius:999px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:950; font-size:1.35rem; line-height:1; box-shadow: 0 0 0 3px rgba(249,115,22,0.28), 0 10px 24px rgba(0,0,0,0.22); z-index: 5000;" title="Identité">🪪</button>
+                <button type="button" onclick="openLpIdentityModal()" style="position:absolute; top:16px; right:16px; border:2px solid #1b5e20; background:var(--ml-panel); color:var(--ml-text); width:56px; height:56px; border-radius:999px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:950; font-size:1.35rem; line-height:1; box-shadow: 0 0 0 3px rgba(27,94,32,0.28), 0 10px 24px rgba(0,0,0,0.22); z-index: 5000;" title="Identité">🪪</button>
                 
                 <div style="position:relative; display:inline-block;">
                     <img id="lpUserAvatar" src="https://ui-avatars.com/api/?name=Mon+compte&background=1a5f3f&color=fff" class="profile-pic" style="width:80px; height:80px; border-radius:50%; border:3px solid white; box-shadow:0 5px 15px rgba(0,0,0,0.1);">
@@ -3985,7 +3974,7 @@
                         
                         <div style="margin-bottom: 14px; font-size: 0.9rem; background: rgba(17,24,39,0.03); padding: 10px 12px; border-radius: 14px; display: flex; justify-content: space-between; border: 1px solid rgba(0,0,0,0.06); font-weight: 900; color: var(--ml-text);">
                             <span>⚡ Crédit Instantané</span>
-                            <span style="color: var(--ml-brand-from); font-weight: 950;">25 000 FCFA</span>
+                            <span style="color: #1b5e20; font-weight: 950;">25 000 FCFA</span>
                         </div>
                         
                         <button class="wallet-btn wide" style="margin-bottom:12px;" onclick="requestCredit()">
@@ -4080,7 +4069,7 @@
                                 </div>
 
                                 <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
-                                    <button onclick="setPromoBoost(24)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid rgba(146,64,14,0.18); background:#fff4d6; color:#ffa726; font-weight:950; cursor:pointer;">✨ Promo 24h</button>
+                                    <button onclick="setPromoBoost(24)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid rgba(146,64,14,0.18); background:#fff4d6; color:#1b5e20; font-weight:950; cursor:pointer;">✨ Promo 24h</button>
                                     <button onclick="clearPromoBoost()" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid var(--ml-border); background:var(--ml-panel); color:var(--ml-text); font-weight:950; cursor:pointer;">✖ Stop Promo</button>
                                     <button onclick="setNewBoost(24)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid rgba(55,48,163,0.16); background:#1b5e20; color:#ffffff; font-weight:950; cursor:pointer;">🆕 Nouveau 24h</button>
                                     <button onclick="clearNewBoost()" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid var(--ml-border); background:var(--ml-panel); color:var(--ml-text); font-weight:950; cursor:pointer;">✖ Stop Nouveau</button>
@@ -4446,7 +4435,7 @@
             <div id="ownerEditLink" style="text-align:center; margin-bottom:15px; display:none;">
                 <div style="display:flex; gap:10px; justify-content:center;">
                     <a href="#" onclick="openSellerModal()" style="color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px;">⚙️ Réglages</a>
-                    <a href="#" onclick="openProductModal()" style="color:#ffa726; font-size:0.85rem; text-decoration:none; border:1px solid #ffa726; padding:8px 15px; border-radius:20px; font-weight:bold;">📦 Nouveau</a>
+                    <a href="#" onclick="openProductModal()" style="color:#1b5e20; font-size:0.85rem; text-decoration:none; border:1px solid #1b5e20; padding:8px 15px; border-radius:20px; font-weight:bold;">📦 Nouveau</a>
                     <a href="#" onclick="openSupplyModal()" style="color:#1b5e20; font-size:0.85rem; text-decoration:none; border:1px solid #1b5e20; padding:8px 15px; border-radius:20px; font-weight:bold;">🏭 S'approvisionner</a>
                 </div>
             </div>
@@ -4831,7 +4820,7 @@
                     <div class="lp-section-desc">Parlez avec votre voix pour présenter le produit.</div>
 
                     <div style="display:flex; align-items:center; gap:12px;">
-                        <button id="btnRecordProdAudio" onclick="toggleProdAudioRecord()" style="width:60px; height:60px; border-radius:50%; border:none; background:#ffa726; color:white; font-size:1.8rem; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 15px rgba(225, 112, 85, 0.4); transition:all 0.2s;">🎙️</button>
+                        <button id="btnRecordProdAudio" onclick="toggleProdAudioRecord()" style="width:60px; height:60px; border-radius:50%; border:none; background:#1b5e20; color:white; font-size:1.8rem; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 15px rgba(225, 112, 85, 0.4); transition:all 0.2s;">🎙️</button>
 
                         <div id="prodAudioPreviewContainer" style="display:none; align-items:center; gap:10px; flex:1;">
                             <audio id="prodAudioPreview" controls style="height:40px; width:100%; border-radius:20px;"></audio>
@@ -4847,7 +4836,7 @@
             </div>
 
             <div class="lp-modal-foot">
-                <button class="btn-submit" onclick="submitProduct()" style="background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));">Publier le produit</button>
+                <button class="btn-submit" onclick="submitProduct()" style="background: #1b5e20;">Publier le produit</button>
             </div>
         </div>
     </div>
@@ -4899,7 +4888,7 @@
             <div style="display:flex; gap:5px; align-items:center;">
                 <button id="chat-requests-btn" onclick="toggleRequestsView()" style="background:none; border:none; color:white; cursor:pointer; font-size:1.2rem; padding:5px;" title="Mes demandes">📋</button>
                 <button id="chat-contacts-btn" onclick="toggleContactsView()" style="background:none; border:none; color:white; cursor:pointer; font-size:1.2rem; padding:5px;" title="Contacts">👥</button>
-                <button onclick="startAudioCall()" style="background:rgba(255,255,255,0.2); border:none; color:white; font-size:1.2rem; cursor:pointer; padding:8px; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center;">📞</button>
+                <button onclick="startAudioCall()" style="background:rgba(255,255,255,0.2); border:none; color:white; font-size:1.2rem; cursor:pointer; padding:8px; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 0111.19 18.85 19.5 19.5 0 015.19 12.85 19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg></button>
             </div>
         </div>
         
@@ -5086,12 +5075,12 @@
 
                     <!-- Orange Money -->
                     <div onclick="selectPaymentMethod('orange_money')" class="payment-method-card">
-                        <div class="lp-pay-icon" style="background:#ffa726;">OM</div>
+                        <div class="lp-pay-icon" style="background:#1b5e20;">OM</div>
                         <div class="lp-pay-meta">
                             <div class="lp-pay-name">Orange Money</div>
                             <div class="lp-pay-sub">CI, SN, ML, BF</div>
                         </div>
-                        <div class="lp-pay-fee" style="color:#ffa726;">1%</div>
+                        <div class="lp-pay-fee" style="color:#1b5e20;">1%</div>
                     </div>
 
                     <!-- MTN MoMo -->
@@ -5101,7 +5090,7 @@
                             <div class="lp-pay-name">MTN Mobile Money</div>
                             <div class="lp-pay-sub">CI, GH, UG, RW</div>
                         </div>
-                        <div class="lp-pay-fee" style="color:#ffa726;">1.5%</div>
+                        <div class="lp-pay-fee" style="color:#1b5e20;">1.5%</div>
                     </div>
                     
                     <!-- Free Money (New) -->
@@ -5199,7 +5188,7 @@
 
             <!-- VIEW: Demander à un tiers -->
             <div id="viewPayThird" style="display:none; flex-direction:column; flex:1;">
-                <div id="lpPayThirdHint" style="background:rgba(249,115,22,0.08); padding:15px; border-radius:14px; border:1px solid rgba(249,115,22,0.22); color:var(--ml-text); font-size:0.9rem; margin-bottom:18px;">
+                <div id="lpPayThirdHint" style="background:rgba(27,94,32,0.08); padding:15px; border-radius:14px; border:1px solid rgba(27,94,32,0.22); color:var(--ml-text); font-size:0.9rem; margin-bottom:18px;">
                     💡 <b>Astuce :</b> Envoyez le lien de paiement à un proche (Cameroun, France, USA...). Il pourra payer directement pour vous !
                 </div>
                 
@@ -5780,7 +5769,7 @@
                     <div style="margin-bottom: 10px; font-weight: bold;">${vendorName}</div>
                     
                     <button class="btn btn-primary" onclick="launchCall('audio')" style="width: 100%; margin-bottom: 10px;">
-                        📞 Appel Audio
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 0111.19 18.85 19.5 19.5 0 015.19 12.85 19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg> Appel Audio
                     </button>
                     
                     <button class="btn btn-secondary" onclick="launchCall('video')" style="width: 100%; margin-bottom: 15px;">
@@ -7627,7 +7616,7 @@
             overlay.style.cssText = 'position:fixed; inset:0; z-index:23000; background:rgba(15,23,42,0.6); display:flex; align-items:center; justify-content:center; padding:16px;';
             overlay.innerHTML = `
                 <div role="dialog" aria-modal="true" style="width:min(100%, 560px); background:var(--ml-panel, #ffffff); color:var(--ml-text, #111827); border-radius:24px; box-shadow:0 24px 64px rgba(0,0,0,0.28); overflow:hidden;">
-                    <div style="background:linear-gradient(90deg, var(--ml-brand-from, #ffa726), var(--ml-brand-to, #1b5e20)); color:white; padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                    <div style="background:#1b5e20; color:white; padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
                         <div style="font-weight:950; font-size:1.05rem;">🔗 ${lpEscapeHtml(String(title || 'Partager le lien'))}</div>
                         <button type="button" onclick="lpCloseShareSheet()" style="border:0; background:rgba(255,255,255,0.16); color:white; width:38px; height:38px; border-radius:999px; font-weight:900;">✕</button>
                     </div>
@@ -7635,13 +7624,13 @@
                         <div style="font-weight:800; color:#374151;">${lpEscapeHtml(String(helperText || 'Copiez ce lien puis ouvrez-le sur le PC vendeur et sur l’iPhone client.'))}</div>
                         <div style="display:grid; gap:8px;">
                             <div style="font-size:0.9rem; font-weight:900; color:#4b5563;">Lien du suivi</div>
-                            <input id="lpShareSheetUrl" type="text" readonly value="${lpEscapeInlineArg(u)}" style="width:100%; padding:14px 16px; border-radius:16px; border:1px solid rgba(0,0,0,0.12); background:#f8fafc; color:#111827; font-size:0.92rem; font-weight:700;" />
+                            <input id="lpShareSheetUrl" type="text" readonly value="${lpEscapeInlineArg(u)}" style="width:100%; padding:14px 16px; border-radius:16px; border:1px solid rgba(0,0,0,0.12); background:#f6faf3; color:#111827; font-size:0.92rem; font-weight:700;" />
                         </div>
                         <div style="display:grid; gap:10px; grid-template-columns:1fr 1fr;">
                             <button type="button" onclick="lpCopyText(document.getElementById('lpShareSheetUrl').value)" style="border:0; border-radius:16px; padding:14px 16px; font-weight:900; background:#111827; color:white;">📋 Copier le lien</button>
                             <button type="button" onclick="lpShareFromSheet()" style="border:1px solid rgba(0,0,0,0.1); border-radius:16px; padding:14px 16px; font-weight:900; background:#ffffff; color:#111827;">📲 Partager ici</button>
                         </div>
-                        <div style="background:rgba(249,115,22,0.08); color:#ffa726; border:1px solid rgba(249,115,22,0.16); border-radius:16px; padding:12px 14px; font-size:0.9rem; font-weight:800;">
+                        <div style="background:rgba(27,94,32,0.08); color:#1b5e20; border:1px solid rgba(27,94,32,0.16); border-radius:16px; padding:12px 14px; font-size:0.9rem; font-weight:800;">
                             Même si aucun contact n’apparaît ici, c’est normal : prenez ce lien et envoyez-le vous-même au vendeur PC et au client iPhone.
                         </div>
                     </div>
@@ -8395,7 +8384,7 @@
             if (btn.classList.contains('recording')) {
                 providerMediaRecorder.stop();
                 btn.classList.remove('recording');
-                btn.style.background = '#ffa726';
+                btn.style.background = '#1b5e20';
                 btn.innerHTML = '🎙️';
                 btn.style.animation = 'none';
                 clearInterval(providerAudioTimerInterval);
@@ -8483,8 +8472,8 @@
             pitchInput.placeholder = 'Écoute en cours... Parlez maintenant !';
 
             recognition.onstart = () => {
-                pitchInput.style.borderColor = '#ffa726';
-                pitchInput.style.background = '#ffa726';
+                pitchInput.style.borderColor = '#1b5e20';
+                pitchInput.style.background = '#1b5e20';
             };
 
             recognition.onend = () => {
@@ -8521,7 +8510,7 @@
                 return;
             }
 
-            btn.innerHTML = '<div class="spinner" style="width:15px; height:15px; border-width:2px; border-left-color:#ffa726; display:inline-block; margin-right:5px;"></div> Recherche Satellites...';
+            btn.innerHTML = '<div class="spinner" style="width:15px; height:15px; border-width:2px; border-left-color:#1b5e20; display:inline-block; margin-right:5px;"></div> Recherche Satellites...';
             btn.disabled = true;
 
             const done = (lat, lng, accuracy) => {
@@ -9344,7 +9333,7 @@
                             </div>
                         </div>
 
-                        <div style="margin-top:12px; background: rgba(249,115,22,0.06); border:1px solid rgba(249,115,22,0.18); padding:14px; border-radius:var(--ml-radius-2xl); color:var(--ml-text); font-weight:800; line-height:1.4;">
+                        <div style="margin-top:12px; background: rgba(27,94,32,0.06); border:1px solid rgba(27,94,32,0.18); padding:14px; border-radius:var(--ml-radius-2xl); color:var(--ml-text); font-weight:800; line-height:1.4;">
                             Le vendeur prépare la commande. Vous recevrez une notification dès l’expédition.
                         </div>
                     </div>
@@ -9839,7 +9828,7 @@
                 const lng = Number(vendor?.lng);
                 if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
                 // Determine style based on status
-                let borderColor = '#ffa726';
+                let borderColor = '#1b5e20';
                 let bgColor = '#fff';
                 let animation = '';
                 let badge = '';
@@ -9887,7 +9876,7 @@
 
                 if (vendor.live) {
                     borderColor = '#d63031'; // Red
-                    bgColor = '#ffa726';
+                    bgColor = '#1b5e20';
                     animation = 'animation: pulse-live 1.5s infinite;';
                     badge = '<span style="position:absolute; top:-8px; right:-8px; background:#d63031; color:white; font-size:9px; padding:2px 4px; border-radius:4px; font-weight:bold; z-index:10;">LIVE</span>';
                 } else {
@@ -10667,7 +10656,7 @@
                 <div style="background: var(--ml-panel); border-radius: var(--ml-radius-2xl); width: 100%; max-width: 420px; text-align: center; position: relative; animation: slideUp 0.3s; border: 1px solid var(--ml-border); box-shadow: var(--ml-shadow-md); max-height: calc(100vh - 40px); overflow: hidden; box-sizing: border-box; display:flex; flex-direction:column;">
                     <div style="flex:1; overflow-x:hidden; overflow-y:auto; padding: 20px; box-sizing: border-box;">
                         <div style="font-size: 3rem; margin-bottom: 10px;">🤝</div>
-                        <h2 style="margin-bottom: 5px; color: var(--ml-brand-from); font-weight: 900;">Nouveau Contrat</h2>
+                        <h2 style="margin-bottom: 5px; color: #1b5e20; font-weight: 900;">Nouveau Contrat</h2>
                         <div style="color: var(--ml-muted); font-size: 0.9rem; margin-bottom: 20px; font-weight: 700;">Choisissez votre formule</div>
                         
                         <div style="background: rgba(17,24,39,0.03); border-radius: var(--ml-radius-2xl); padding: 14px; text-align: left; margin-bottom: 16px; border: 1px solid rgba(0,0,0,0.06);">
@@ -10680,7 +10669,7 @@
                             <span style="font-weight:bold; color:#0f172a;">${priceVal.toLocaleString()} FCFA</span>
                         </div>
                         
-                        <div id="tontinePartsSelector" style="display:none; margin-top:10px; border-top:1px solid #e2e8f0; padding-top:10px;">
+                        <div id="tontinePartsSelector" style="display:none; margin-top:10px; border-top:1px solid #cfe0c8; padding-top:10px;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                                 <span style="color:#64748b; font-size:0.9rem;">Nombre de parts</span>
                                 <div style="display:flex; align-items:center; gap:10px;">
@@ -10699,9 +10688,9 @@
                     </div>
 
                     <div style="display:flex; gap:10px; margin-bottom:15px;">
-                        <button onclick="setTontineMode('solo', this)" class="mode-btn" style="flex:1; padding:10px; border:2px solid rgba(249,115,22,0.55); background:rgba(249,115,22,0.08); border-radius:var(--ml-radius-xl); cursor:pointer;">
+                        <button onclick="setTontineMode('solo', this)" class="mode-btn" style="flex:1; padding:10px; border:2px solid rgba(27,94,32,0.55); background:rgba(27,94,32,0.08); border-radius:var(--ml-radius-xl); cursor:pointer;">
                             <div style="font-size:1.5rem;">🐷</div>
-                            <div style="font-weight:900; color:var(--ml-brand-from); font-size:0.8rem;">Épargne</div>
+                            <div style="font-weight:900; color:#1b5e20; font-size:0.8rem;">Épargne</div>
                         </button>
                         <button onclick="setTontineMode('credit', this)" class="mode-btn" style="flex:1; padding:10px; border:1px solid rgba(0,0,0,0.10); background:var(--ml-panel); border-radius:var(--ml-radius-xl); cursor:pointer;">
                             <div style="font-size:1.5rem;">💸</div>
@@ -10713,7 +10702,7 @@
                         </button>
                     </div>
                     
-                    <div id="modeDescription" style="font-size: 0.8rem; color: var(--ml-text); background: rgba(249,115,22,0.06); padding: 10px; border-radius: var(--ml-radius-xl); margin-bottom: 20px; border: 1px solid rgba(249,115,22,0.18);">
+                    <div id="modeDescription" style="font-size: 0.8rem; color: var(--ml-text); background: rgba(27,94,32,0.06); padding: 10px; border-radius: var(--ml-radius-xl); margin-bottom: 20px; border: 1px solid rgba(27,94,32,0.18);">
                         ✅ <b>Épargne :</b> Payez à votre rythme. Livraison après paiement complet.
                     </div>
 
@@ -10762,13 +10751,13 @@
                     b.style.background = 'var(--ml-panel)';
                 });
                 // Set active
-                btn.style.border = '2px solid rgba(249,115,22,0.55)';
-                btn.style.background = 'rgba(249,115,22,0.08)';
+                btn.style.border = '2px solid rgba(27,94,32,0.55)';
+                btn.style.background = 'rgba(27,94,32,0.08)';
                 
                 // Specific Style for Tontine
                 if (mode === 'tontine') {
-                    btn.style.border = '2px solid rgba(249,115,22,0.55)';
-                    btn.style.background = 'rgba(249,115,22,0.08)';
+                    btn.style.border = '2px solid rgba(27,94,32,0.55)';
+                    btn.style.background = 'rgba(27,94,32,0.08)';
                 }
                 
                 const desc = document.getElementById('modeDescription');
@@ -10853,7 +10842,7 @@
 
             overlay.innerHTML = `
                 <div style="background: white; padding: 0; border-radius: 20px; width: 90%; max-width: 350px; overflow:hidden; animation: slideUp 0.3s; font-family: sans-serif;">
-                    <div style="background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:white; padding:20px; text-align:center;">
+                    <div style="background: #1b5e20; color:white; padding:20px; text-align:center;">
                         <div style="font-size:2rem;">✍️</div>
                         <h2 style="margin:5px 0 0 0;">Signature Numérique</h2>
                         <div style="font-size:0.8rem; opacity:0.8;">Contrat légal simplifié</div>
@@ -10863,12 +10852,12 @@
                         <div style="background:#f8f9fa; padding:15px; border-radius:10px; font-size:0.85rem; color:#2d3436; margin-bottom:20px; border:1px solid #e9ecef;">
                             <p style="margin:0 0 10px 0;">${contractText}</p>
                             <p style="margin:0;">${engagementText}</p>
-                            <div style="margin-top:10px; font-weight:900; color:var(--ml-brand-from);">Date : ${date}</div>
+                            <div style="margin-top:10px; font-weight:900; color:#1b5e20;">Date : ${date}</div>
                         </div>
                         
                         <label style="display:block; margin-bottom:10px; font-weight:bold; color:#636e72; font-size:0.9rem;">Votre Code PIN (Signature)</label>
                         <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
-                            <input type="password" value="1234" disabled style="width:100%; text-align:center; letter-spacing:10px; font-size:1.5rem; padding:10px; border:1px solid rgba(249,115,22,0.35); border-radius:var(--ml-radius-xl); background:rgba(249,115,22,0.06); color:var(--ml-brand-from); font-weight:900;">
+                            <input type="password" value="1234" disabled style="width:100%; text-align:center; letter-spacing:10px; font-size:1.5rem; padding:10px; border:1px solid rgba(27,94,32,0.35); border-radius:var(--ml-radius-xl); background:rgba(27,94,32,0.06); color:#1b5e20; font-weight:900;">
                         </div>
                         
                         <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px; font-size:0.8rem; color:#636e72;">
@@ -10876,7 +10865,7 @@
                             <span>J'accepte les <a href="cgu.html" target="_blank" rel="noopener" style="color:#1b5e20;">CGU Mangoo</a></span>
                         </div>
 
-                        <button onclick="confirmSignature('${name}', ${total}, ${share})" style="width:100%; padding:15px; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:white; border:none; border-radius:var(--ml-radius-xl); font-weight:900; font-size:1rem; cursor:pointer; box-shadow:var(--ml-shadow-md);">
+                        <button onclick="confirmSignature('${name}', ${total}, ${share})" style="width:100%; padding:15px; background: #1b5e20; color:white; border:none; border-radius:var(--ml-radius-xl); font-weight:900; font-size:1rem; cursor:pointer; box-shadow:var(--ml-shadow-md);">
                             ${btnText}
                         </button>
                     </div>
@@ -10928,15 +10917,15 @@
             
             overlay.innerHTML = `
                 <div style="background: var(--ml-panel); border: 1px solid var(--ml-border); padding: 0; border-radius: var(--ml-radius-2xl); width: 100%; max-width: 420px; text-align: center; font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial; animation: zoomIn 0.3s; box-shadow: var(--ml-shadow-md); overflow: hidden;">
-                    <div style="padding: 18px 18px 14px 18px; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color: #fff;">
+                    <div style="padding: 18px 18px 14px 18px; background: #1b5e20; color: #fff;">
                         <div style="font-size: 2rem; line-height: 1;">🐷</div>
                         <h2 style="margin: 8px 0 0 0; font-weight: 950;">Mode Épargne</h2>
                         <div style="opacity: 0.92; font-size: 0.9rem; font-weight: 800; margin-top: 4px;">Choisissez votre paiement</div>
                     </div>
 
                     <div style="padding: 16px 18px 18px 18px; display:flex; flex-direction:column; gap: 10px;">
-                        <button type="button" onclick="handleEpargneChoice('cash', ${total}, '${name}')" style="width:100%; padding:14px; background: rgba(249,115,22,0.08); border:1px solid rgba(249,115,22,0.35); border-radius: var(--ml-radius-2xl); display:flex; align-items:center; gap:12px; cursor:pointer; text-align:left;">
-                            <div style="width:44px; height:44px; border-radius: 14px; background: rgba(249,115,22,0.14); display:flex; align-items:center; justify-content:center; font-size: 1.35rem;">⚡</div>
+                        <button type="button" onclick="handleEpargneChoice('cash', ${total}, '${name}')" style="width:100%; padding:14px; background: rgba(27,94,32,0.08); border:1px solid rgba(27,94,32,0.35); border-radius: var(--ml-radius-2xl); display:flex; align-items:center; gap:12px; cursor:pointer; text-align:left;">
+                            <div style="width:44px; height:44px; border-radius: 14px; background: rgba(27,94,32,0.14); display:flex; align-items:center; justify-content:center; font-size: 1.35rem;">⚡</div>
                             <div style="flex:1;">
                                 <div style="font-weight: 950; color: var(--ml-text); font-size: 1rem;">Paiement comptant</div>
                                 <div style="font-size: 0.82rem; color: var(--ml-muted); font-weight: 800; margin-top: 2px;">Payer tout de suite</div>
@@ -11039,7 +11028,7 @@
             overlay.innerHTML = `
                 <div style="background: white; width: 100%; max-width: 350px; border-radius: 15px; overflow: hidden; position: relative; box-shadow: 0 10px 30px rgba(255,255,255,0.1); max-height: 90vh; display: flex; flex-direction: column;">
                     <!-- Header with pattern -->
-                    <div style="background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color: white; padding: 15px; text-align: center; position: relative; flex-shrink: 0;">
+                    <div style="background: #1b5e20; color: white; padding: 15px; text-align: center; position: relative; flex-shrink: 0;">
                         <div style="font-size: 1.5rem;">📜</div>
                         <h2 style="margin: 5px 0 0 0; font-size: 1.1rem;">Contrat Numérique</h2>
                         <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 5px;">Document légal simplifié</div>
@@ -11047,18 +11036,18 @@
 
                     <div style="padding: 15px; background: #f6faf3; overflow-y: auto; flex: 1;">
                         <!-- Identity Verification Badge (Clickable) -->
-                        <div onclick="showVerificationDetails()" style="background: rgba(249,115,22,0.06); border: 1px solid rgba(249,115,22,0.22); border-radius: var(--ml-radius-xl); padding: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.2s;">
+                        <div onclick="showVerificationDetails()" style="background: rgba(27,94,32,0.06); border: 1px solid rgba(27,94,32,0.22); border-radius: var(--ml-radius-xl); padding: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.2s;">
                             <div style="position: relative;">
                                 <span style="font-size: 1.5rem;">🪪</span>
-                                <div style="position: absolute; bottom: -2px; right: -2px; background: var(--ml-brand-from); color: white; border-radius: 50%; width: 12px; height: 12px; font-size: 8px; display: flex; align-items: center; justify-content: center;">✓</div>
+                                <div style="position: absolute; bottom: -2px; right: -2px; background: #1b5e20; color: white; border-radius: 50%; width: 12px; height: 12px; font-size: 8px; display: flex; align-items: center; justify-content: center;">✓</div>
                             </div>
                             <div style="flex: 1;">
-                                <div style="font-size: 0.8rem; color: var(--ml-brand-from); font-weight: 900;">Identité Certifiée par IA</div>
+                                <div style="font-size: 0.8rem; color: #1b5e20; font-weight: 900;">Identité Certifiée par IA</div>
                                 <div style="font-size: 0.7rem; color: var(--ml-muted); opacity: 0.9;">
                                     CNI N° 1123489... • <span style="text-decoration: underline;">Voir le rapport</span>
                                 </div>
                             </div>
-                            <span style="color: var(--ml-brand-from);">ᐳ</span>
+                            <span style="color: #1b5e20;">ᐳ</span>
                         </div>
 
                         <p style="font-size: 0.85rem; line-height: 1.4; color: #333; margin-bottom: 15px;">
@@ -11086,13 +11075,13 @@
 
                         <!-- Signature Area -->
                         <div style="text-align: center; margin-bottom: 5px;">
-                            <div style="font-size: 0.75rem; font-weight: 900; margin-bottom: 5px; color: var(--ml-brand-from);">CLIQUEZ POUR SIGNER</div>
+                            <div style="font-size: 0.75rem; font-weight: 900; margin-bottom: 5px; color: #1b5e20;">CLIQUEZ POUR SIGNER</div>
                             <button onclick="signContract('${productName}')" style="
-                                width: 70px; height: 70px; border-radius: 50%; border: 2px solid rgba(249,115,22,0.55);
+                                width: 70px; height: 70px; border-radius: 50%; border: 2px solid rgba(27,94,32,0.55);
                                 background: white; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
-                                font-size: 1.8rem; color: var(--ml-brand-from); transition: all 0.2s;
+                                font-size: 1.8rem; color: #1b5e20; transition: all 0.2s;
                                 box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-                            " onmousedown="this.style.transform='scale(0.9)'; this.style.background='linear-gradient(90deg, #ffa726, #1b5e20)'; this.style.color='white';" 
+                            " onmousedown="this.style.transform='scale(0.9)'; this.style.background='#1b5e20'; this.style.color='white';" 
                               onmouseup="this.style.transform='scale(1)';">
                                 ✍️
                             </button>
@@ -11110,7 +11099,7 @@
 
         function signContract(productName) {
             const btn = event.currentTarget;
-            btn.style.background = 'linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to))';
+            btn.style.background = '#1b5e20';
             btn.style.color = 'white';
             btn.innerHTML = '✅';
             
@@ -11167,38 +11156,38 @@
                                     </div>
                                     <div style="font-size: 0.7rem; color: #888; margin-top: 5px;">CNI</div>
                                 </div>
-                                <div style="font-size: 1.5rem; color: var(--ml-brand-from);">⚡</div>
+                                <div style="font-size: 1.5rem; color: #1b5e20;">⚡</div>
                                 <div style="text-align: center;">
-                                    <div style="width: 60px; height: 60px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(249,115,22,0.55); position: relative;">
+                                    <div style="width: 60px; height: 60px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(27,94,32,0.55); position: relative;">
                                         <img src="https://ui-avatars.com/api/?name=Client&background=random" style="width: 100%;">
                                         <div style="position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,255,0,0.1);"></div>
                                     </div>
-                                    <div style="font-size: 0.7rem; color: var(--ml-brand-from); margin-top: 5px;">Selfie 3D</div>
+                                    <div style="font-size: 0.7rem; color: #1b5e20; margin-top: 5px;">Selfie 3D</div>
                                 </div>
                             </div>
-                            <div style="text-align: center; margin-top: 10px; font-weight: 900; color: var(--ml-brand-from); font-size: 0.9rem;">
+                            <div style="text-align: center; margin-top: 10px; font-weight: 900; color: #1b5e20; font-size: 0.9rem;">
                                 Correspondance : 99.8% ✅
                             </div>
                         </div>
 
                         <!-- 3. SECURITY CHECKS -->
-                        <div style="background: #f8fafc; border-radius: 12px; padding: 15px;">
+                        <div style="background: #f6faf3; border-radius: 12px; padding: 15px;">
                             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                                <span style="color: var(--ml-brand-from);">✅</span>
+                                <span style="color: #1b5e20;">✅</span>
                                 <span style="font-size: 0.85rem;">Hologrammes Authentiques</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                                <span style="color: var(--ml-brand-from);">✅</span>
+                                <span style="color: #1b5e20;">✅</span>
                                 <span style="font-size: 0.85rem;">Preuve de Vie (Anti-Spoofing)</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <span style="color: var(--ml-brand-from);">✅</span>
+                                <span style="color: #1b5e20;">✅</span>
                                 <span style="font-size: 0.85rem;">Document non expiré (2026)</span>
                             </div>
                         </div>
                     </div>
                     
-                    <div style="padding: 15px; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color: white; text-align: center; font-size: 0.8rem;">
+                    <div style="padding: 15px; background: #1b5e20; color: white; text-align: center; font-size: 0.8rem;">
                         Sécurisé par Mangoo Verify™
                     </div>
                 </div>
@@ -11231,12 +11220,12 @@
                         <span style="font-size: 3rem;">🛡️</span>
                     </div>
                     
-                    <h2 style="color: var(--ml-brand-from); margin-bottom: 10px;">Paiement Sécurisé</h2>
+                    <h2 style="color: #1b5e20; margin-bottom: 10px;">Paiement Sécurisé</h2>
                     <p style="color: #666; font-size: 0.9rem; margin-bottom: 25px;">
                         Pour garantir la transaction, votre premier versement sera bloqué sur un <b>Compte Séquestre Mangoo</b>.
                     </p>
                     
-                    <div style="background: #f8fafc; border: 1px dashed #94a3b8; border-radius: 12px; padding: 15px; margin-bottom: 25px; text-align: left;">
+                    <div style="background: #f6faf3; border: 1px dashed #94a3b8; border-radius: 12px; padding: 15px; margin-bottom: 25px; text-align: left;">
                         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                             <span style="font-size: 1.2rem;">🔒</span>
                             <div style="font-size: 0.85rem; color: #333;"><b>Argent Bloqué</b></div>
@@ -11246,7 +11235,7 @@
                         </div>
                     </div>
                     
-                    <button onclick="processEscrow('${productName}')" style="width: 100%; padding: 16px; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color: white; border: none; border-radius: var(--ml-radius-xl); font-size: 1.1rem; font-weight: 900; cursor: pointer; box-shadow: var(--ml-shadow-md);">
+                    <button onclick="processEscrow('${productName}')" style="width: 100%; padding: 16px; background: #1b5e20; color: white; border: none; border-radius: var(--ml-radius-xl); font-size: 1.1rem; font-weight: 900; cursor: pointer; box-shadow: var(--ml-shadow-md);">
                         🔒 Séquestrer les fonds
                     </button>
                     
@@ -11270,7 +11259,7 @@
             // Step 2: Locking Funds (Simulation)
             setTimeout(() => {
                 btn.innerHTML = '🔐 Verrouillage des fonds...';
-                btn.style.background = '#ffa726'; // Orange for locking
+                btn.style.background = '#1b5e20'; // Orange for locking
             }, 3000); // Wait 3s
 
             // Step 3: Success
@@ -11475,13 +11464,13 @@
              overlay.innerHTML = `
                  <div style="background: white; width: 90%; max-width: 380px; border-radius: 20px; overflow: hidden; padding: 25px; text-align: center; position:relative;">
                      <div style="font-size: 3rem; margin-bottom: 10px;">👥</div>
-                     <h2 style="color: var(--ml-brand-from); margin-bottom: 5px;">Tontine de Groupe Créée !</h2>
+                     <h2 style="color: #1b5e20; margin-bottom: 5px;">Tontine de Groupe Créée !</h2>
                      <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">
                          Votre part de <b>${shareAmount.toLocaleString()} FCFA</b> a été validée.
                      </p>
                      
-                     <div style="background: rgba(249,115,22,0.06); border: 1px solid rgba(249,115,22,0.22); border-radius: var(--ml-radius-xl); padding: 15px; margin-bottom: 20px;">
-                         <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.85rem; color: var(--ml-brand-from); font-weight: 900;">
+                     <div style="background: rgba(27,94,32,0.06); border: 1px solid rgba(27,94,32,0.22); border-radius: var(--ml-radius-xl); padding: 15px; margin-bottom: 20px;">
+                         <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.85rem; color: #1b5e20; font-weight: 900;">
                              <span>Progression</span>
                              <span>1/${size} Participants</span>
                          </div>
@@ -11494,13 +11483,13 @@
                          <div style="font-size: 0.85rem; font-weight: bold; color: #333; margin-bottom: 8px;">Invitez les autres participants :</div>
                          <div style="display: flex; gap: 10px;">
                              <input type="text" value="${link}" readonly style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; color: #555;">
-                             <button onclick="copyToClip('${link}')" style="background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color: white; border: none; padding: 0 15px; border-radius: var(--ml-radius-xl); cursor: pointer; font-weight: 900;">Copier</button>
+                             <button onclick="copyToClip('${link}')" style="background: #1b5e20; color: white; border: none; padding: 0 15px; border-radius: var(--ml-radius-xl); cursor: pointer; font-weight: 900;">Copier</button>
                          </div>
                          <div style="font-size: 0.75rem; color: #888; margin-top: 5px;">
                              Chaque participant paiera sa part de ${shareAmount.toLocaleString()} FCFA via ce lien.
                          </div>
                          <div style="margin-top: 15px;">
-                             <button onclick="simulateThirdPartyPay(${shareAmount})" style="width: 100%; padding: 10px; background: #ffa726; color: #ffffff; border: 1px dashed #ffa726; border-radius: 8px; font-size: 0.85rem; font-weight: bold; cursor: pointer;">
+                             <button onclick="simulateThirdPartyPay(${shareAmount})" style="width: 100%; padding: 10px; background: #1b5e20; color: #ffffff; border: 1px dashed #1b5e20; border-radius: 8px; font-size: 0.85rem; font-weight: bold; cursor: pointer;">
                                  👁️ Ouvrir la vue participant
                              </button>
                          </div>
@@ -11557,7 +11546,7 @@
             overlay.id = 'scheduleOverlay';
             overlay.style.cssText = `
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: #f8fafc; z-index: 20000; overflow-y: auto;
+                background: #f6faf3; z-index: 20000; overflow-y: auto;
                 font-family: sans-serif;
             `;
             
@@ -11652,7 +11641,7 @@
                     }
                 </style>
                 
-                <div style="background: ${isCredit ? '#111827' : 'linear-gradient(90deg, #ffa726, #1b5e20)'}; padding: 20px; color: white; border-radius: 0 0 30px 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 100;">
+                <div style="background: ${isCredit ? '#111827' : '#1b5e20'}; padding: 20px; color: white; border-radius: 0 0 30px 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 100;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                         <button onclick="document.getElementById('scheduleOverlay').remove()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 10px; font-weight: bold; cursor: pointer;">✕ Fermer</button>
                         <h2 style="margin: 0; font-size: 1.2rem;">Parcours Tontine</h2>
@@ -11988,7 +11977,7 @@
                         ${
                             simple
                                 ? `<div class="lp-card-actions two">
-                                        <button type="button" class="btn btn-primary lg" data-lp-action="call" data-vendor-id="${vendorIdAttr}" onclick="try{event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpQuickCallVendorById('${safeVendorId}')">📞 Appeler</button>
+                                        <button type="button" class="btn btn-primary lg" data-lp-action="call" data-vendor-id="${vendorIdAttr}" onclick="try{event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpQuickCallVendorById('${safeVendorId}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 0111.19 18.85 19.5 19.5 0 015.19 12.85 19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg> Appeler</button>
                                         <button type="button" class="btn btn-secondary lg" data-lp-action="itinerary" data-vendor-id="${vendorIdAttr}" onclick="try{event&&event.stopPropagation&&event.stopPropagation()}catch{}; openItineraryByVendorId('${safeVendorId}')">🧭 Y aller</button>
                                     </div>`
                                 : `<div class="lp-card-actions three">
@@ -12043,7 +12032,7 @@
                     ${
                         simple
                             ? `<div class="lp-card-actions two">
-                                    <button type="button" class="btn btn-primary lg" data-lp-action="call" data-vendor-id="${String(vendor.id)}" onclick="try{event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpQuickCallVendorById('${lpEscapeInlineArg(vendor.id)}')">📞 Appeler</button>
+                                    <button type="button" class="btn btn-primary lg" data-lp-action="call" data-vendor-id="${String(vendor.id)}" onclick="try{event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpQuickCallVendorById('${lpEscapeInlineArg(vendor.id)}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 0111.19 18.85 19.5 19.5 0 015.19 12.85 19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg> Appeler</button>
                                     <button type="button" class="btn btn-secondary lg" data-lp-action="itinerary" data-vendor-id="${String(vendor.id)}" onclick="try{event&&event.stopPropagation&&event.stopPropagation()}catch{}; openItineraryByVendorId('${lpEscapeInlineArg(vendor.id)}')">🧭 Y aller</button>
                                 </div>`
                             : `<div class="lp-card-actions two">
@@ -13014,7 +13003,7 @@
                 <div style="background: var(--ml-panel); border-radius: var(--ml-radius-2xl); width: 100%; max-width: 420px; text-align: center; animation: slideUp 0.3s; border: 1px solid var(--ml-border); box-shadow: var(--ml-shadow-md); max-height: calc(100vh - 40px); overflow: hidden; box-sizing: border-box; display:flex; flex-direction:column;">
                     <div style="flex:1; overflow-x:hidden; overflow-y:auto; padding: 20px; box-sizing: border-box;">
                         <div style="font-size: 3rem; margin-bottom: 10px;">🤝</div>
-                        <h2 style="margin-bottom: 5px; color: var(--ml-brand-from); font-weight: 900;">Négociation</h2>
+                        <h2 style="margin-bottom: 5px; color: #1b5e20; font-weight: 900;">Négociation</h2>
                         <div style="color: var(--ml-muted); font-size: 0.9rem; margin-bottom: 20px; font-weight: 700;">
                             ${previousOffer ? 'Le vendeur a proposé ' + previousOffer.toLocaleString() + ' FCFA. <br>Faites une nouvelle offre.' : 'Proposez votre meilleur prix'}
                         </div>
@@ -13031,7 +13020,7 @@
                         ${previousOffer ? `
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
                             <span style="color:#64748b; font-size:0.9rem;">Dernière offre</span>
-                            <span style="font-weight:bold; color:#ffa726;">${previousOffer.toLocaleString()} FCFA</span>
+                            <span style="font-weight:bold; color:#1b5e20;">${previousOffer.toLocaleString()} FCFA</span>
                         </div>` : ''}
                     </div>
 
@@ -13345,7 +13334,7 @@
             const priorityOrderId = lpResolveVendorPriorityOrderId(list, ctx);
             const statusUi = {
                 created: { label: 'Nouvelle', fg: '#1b5e20', bg: 'rgba(37,99,235,0.10)', border: 'rgba(37,99,235,0.20)' },
-                payment_pending: { label: 'Paiement en attente', fg: '#ffa726', bg: 'rgba(217,119,6,0.10)', border: 'rgba(217,119,6,0.20)' },
+                payment_pending: { label: 'Paiement en attente', fg: '#1b5e20', bg: 'rgba(217,119,6,0.10)', border: 'rgba(217,119,6,0.20)' },
                 paid_escrow: { label: 'Payee', fg: '#1b5e20', bg: 'rgba(22,163,74,0.10)', border: 'rgba(22,163,74,0.22)' },
                 delivered: { label: 'Remise au livreur', fg: '#1b5e20', bg: 'rgba(124,58,237,0.10)', border: 'rgba(124,58,237,0.22)' },
                 received: { label: 'Recue', fg: '#1b5e20', bg: 'rgba(15,118,110,0.10)', border: 'rgba(15,118,110,0.22)' },
@@ -13393,7 +13382,7 @@
                                 <div style="margin-top:2px; color:var(--ml-muted); font-size:0.82rem;">${createdAt ? new Date(createdAt).toLocaleString('fr-FR') : ''}</div>
                             </div>
                             <div style="text-align:right;">
-                                <div style="font-weight:950; color:#ffa726;">${total.toLocaleString()} FCFA</div>
+                                <div style="font-weight:950; color:#1b5e20;">${total.toLocaleString()} FCFA</div>
                                 <div style="margin-top:6px; display:inline-flex; padding:4px 10px; border-radius:999px; font-size:0.75rem; font-weight:900; color:${status.fg}; background:${status.bg}; border:1px solid ${status.border};">${status.label}</div>
                             </div>
                         </div>
@@ -13533,14 +13522,14 @@
                     const counter = Math.ceil((originalPrice + offer) / 2 / 100) * 100; // Average rounded
                     resultTitle = "🔄 Contre-proposition";
                     resultMsg = `Le vendeur propose <b>${counter.toLocaleString()} FCFA</b>.`;
-                    resultColor = "var(--ml-brand-from)";
+                    resultColor = "#1b5e20";
                     actionBtn = `
                         <div style="display:flex; gap:10px;">
                             <button class="btn btn-primary" onclick="closeNegotiationAndPay('${productName}', ${counter})" style="flex:1; padding:14px 12px; font-weight:950;">✅ Accepter ${counter.toLocaleString()} F</button>
                             <button class="btn btn-secondary" onclick="document.getElementById('negotiationModal').remove()" style="flex:1; padding:14px 12px; font-weight:950;">Refuser</button>
                         </div>
                         <div style="margin-top:10px; text-align:center;">
-                            <button type="button" onclick="document.getElementById('negotiationModal').remove(); startBargain('${productName}', ${originalPrice}, ${counter})" style="background:transparent; border:none; color:var(--ml-brand-from); text-decoration:underline; cursor:pointer; font-size:0.9rem; font-weight:900;">Faire une nouvelle offre</button>
+                            <button type="button" onclick="document.getElementById('negotiationModal').remove(); startBargain('${productName}', ${originalPrice}, ${counter})" style="background:transparent; border:none; color:#1b5e20; text-decoration:underline; cursor:pointer; font-size:0.9rem; font-weight:900;">Faire une nouvelle offre</button>
                         </div>
                     `;
                 } else {
@@ -13586,7 +13575,7 @@
             
             overlay.innerHTML = `
                 <div style="background: var(--ml-panel); border-radius: var(--ml-radius-2xl); width: 100%; max-width: 420px; overflow:hidden; animation: slideUp 0.3s; border: 1px solid var(--ml-border); box-shadow: var(--ml-shadow-md); max-height: calc(100vh - 40px); display:flex; flex-direction:column;">
-                    <div style="background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#ffffff; padding:16px 18px; text-align:center;">
+                    <div style="background: #1b5e20; color:#ffffff; padding:16px 18px; text-align:center;">
                         <div style="font-size:2rem; line-height:1;">📜</div>
                         <h2 style="margin:6px 0 0 0; font-weight:950;">Contrat négocié</h2>
                         <div style="font-size:0.85rem; opacity:0.92; font-weight:800;">Accord commercial validé</div>
@@ -13598,7 +13587,7 @@
                             <div style="color: var(--ml-muted); font-weight:700; line-height:1.5;">
                                 Vente du produit <b style="color:var(--ml-text);">${name}</b> au prix négocié :
                             </div>
-                            <div style="font-size:1.55rem; font-weight:950; color: var(--ml-brand-from); text-align:center; margin:10px 0 8px 0;">${price.toLocaleString()} FCFA</div>
+                            <div style="font-size:1.55rem; font-weight:950; color: #1b5e20; text-align:center; margin:10px 0 8px 0;">${price.toLocaleString()} FCFA</div>
                             <div style="color: var(--ml-muted); font-weight:800;">Date : ${date}</div>
                         </div>
                         
@@ -13640,7 +13629,7 @@
             
             overlay.innerHTML = `
                 <div style="width:min(460px, 100%); max-height:calc(100vh - 36px); background:var(--ml-panel); border:1px solid var(--ml-border); border-radius:var(--ml-radius-2xl); box-shadow:var(--ml-shadow-md); overflow:hidden; display:flex; flex-direction:column; animation: slideUp 0.3s;">
-                    <div style="background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#ffffff; padding:16px 18px; text-align:center;">
+                    <div style="background:#1b5e20; color:#ffffff; padding:16px 18px; text-align:center;">
                         <div style="font-weight:950; font-size:1.1rem; letter-spacing:0.02em;">MANGOO PAY</div>
                         <div style="margin-top:2px; font-weight:900; font-size:0.85rem; opacity:0.95;">Reçu de paiement</div>
                         <div style="margin-top:2px; font-weight:800; font-size:0.78rem; opacity:0.92;">Facture acquittée</div>
@@ -13663,7 +13652,7 @@
                         <div style="margin-top:14px; padding:14px; border-radius:var(--ml-radius-2xl); border:1px solid rgba(0,0,0,0.06); background:rgba(17,24,39,0.03);">
                             <div style="display:flex; justify-content:space-between; gap:10px; font-weight:950; font-size:1.1rem; color:var(--ml-text);">
                                 <span>Total payé</span>
-                                <span style="color:var(--ml-brand-from);">${price.toLocaleString()} FCFA</span>
+                                <span style="color:#1b5e20;">${price.toLocaleString()} FCFA</span>
                             </div>
                             <div style="margin-top:6px; font-size:0.88rem; font-weight:850; color:var(--ml-muted); line-height:1.35;">
                                 ${String(productName || '').trim() ? `${productName} (prix négocié)` : 'Paiement'}
@@ -13750,7 +13739,7 @@
                     const icon = L.divIcon({
                         className: 'custom-pin',
                         html: `
-                            <div style="background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(0,0,0,0.2);">
+                            <div style="background:#1b5e20; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(0,0,0,0.2);">
                                 <img src="${activeVendor.avatar}" style="width:34px; height:34px; border-radius:50%;">
                             </div>`,
                         iconSize: [40, 40],
@@ -14083,7 +14072,7 @@
             const current = Number(userBalance || 0)
             overlay.innerHTML = `
                 <div style="width:min(520px,100%); max-height:calc(100vh - 32px); background:var(--ml-panel); border:1px solid var(--ml-border); border-radius:18px; box-shadow:0 20px 60px rgba(0,0,0,0.35); overflow:hidden; display:flex; flex-direction:column;">
-                    <div style="padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:10px; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#fff;">
+                    <div style="padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:10px; background: #1b5e20; color:#fff;">
                         <div style="font-weight:950;">📥 Recharger</div>
                         <button type="button" class="lp-btn lp-btn-secondary" onclick="document.getElementById('lpWalletOverlay')?.remove()" style="background: rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.22); color:#fff;">Fermer</button>
                     </div>
@@ -14103,7 +14092,7 @@
                             </div>
                         </div>
 
-                        <div style="padding:12px; border-radius:14px; background:rgba(249,115,22,0.06); border:1px solid rgba(249,115,22,0.18);">
+                        <div style="padding:12px; border-radius:14px; background:rgba(27,94,32,0.06); border:1px solid rgba(27,94,32,0.18);">
                             <div style="font-weight:950; color:var(--ml-text);">Paiement immédiat</div>
                             <div style="margin-top:6px; color:var(--ml-muted); font-weight:850; line-height:1.35;">Recharge immédiate.</div>
                         </div>
@@ -14152,7 +14141,7 @@
             const current = Number(userBalance || 0)
             overlay.innerHTML = `
                 <div style="width:min(520px,100%); max-height:calc(100vh - 32px); background:var(--ml-panel); border:1px solid var(--ml-border); border-radius:18px; box-shadow:0 20px 60px rgba(0,0,0,0.35); overflow:hidden; display:flex; flex-direction:column;">
-                    <div style="padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:10px; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#fff;">
+                    <div style="padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:10px; background: #1b5e20; color:#fff;">
                         <div style="font-weight:950;">📤 Retirer</div>
                         <button type="button" class="lp-btn lp-btn-secondary" onclick="document.getElementById('lpWalletOverlay')?.remove()" style="background: rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.22); color:#fff;">Fermer</button>
                     </div>
@@ -14270,7 +14259,7 @@
                     </div>
 
                     <div class="lp-modal-foot">
-                        <button class="btn-submit" onclick="publishProduct()" style="background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));">Publier</button>
+                        <button class="btn-submit" onclick="publishProduct()" style="background: #1b5e20;">Publier</button>
                         <button type="button" class="lp-btn lp-btn-secondary" onclick="document.getElementById('addProductOverlay')?.remove()" style="width:100%; margin-top:10px;">Annuler</button>
                     </div>
                 </div>
@@ -14750,7 +14739,7 @@
                                 <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpTryOpenBoostFromLocal('${safeVendorId}', 'shop');" style="flex:0 0 auto; white-space:nowrap; background:#ffe082; color:white; font-size:0.95rem; border:1px solid #ffe082; padding:10px 16px; border-radius:999px; font-weight:950; scroll-snap-align:start; cursor:pointer; pointer-events:auto;">🚀 Booster</button>
                             <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; openSellerModalForVendor('${safeVendorId}');" style="flex:0 0 auto; white-space:nowrap; color:#636e72; font-size:0.85rem; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px; background:transparent; font-weight:900; scroll-snap-align:start; cursor:pointer;">🏪 Ma fiche</button>
                             <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpOpenShopAccountFromSheet('${safeVendorId}');" style="flex:0 0 auto; white-space:nowrap; color:#ffe082; font-size:0.85rem; border:1px solid #ffe082; padding:8px 15px; border-radius:20px; background:transparent; font-weight:950; scroll-snap-align:start; cursor:pointer;">👤 Mon compte</button>
-                            <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpOpenProductModalForShop('${safeVendorId}');" style="flex:0 0 auto; white-space:nowrap; color:#ffa726; font-size:0.85rem; border:1px solid #ffa726; padding:8px 15px; border-radius:20px; background:transparent; font-weight:950; scroll-snap-align:start; cursor:pointer;">📦 Nouveau</button>
+                            <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpOpenProductModalForShop('${safeVendorId}');" style="flex:0 0 auto; white-space:nowrap; color:#1b5e20; font-size:0.85rem; border:1px solid #1b5e20; padding:8px 15px; border-radius:20px; background:transparent; font-weight:950; scroll-snap-align:start; cursor:pointer;">📦 Nouveau</button>
                             <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpOpenSupplyModalForShop('${safeVendorId}');" style="flex:0 0 auto; white-space:nowrap; color:#1b5e20; font-size:0.85rem; border:1px solid #1b5e20; padding:8px 15px; border-radius:20px; background:transparent; font-weight:950; scroll-snap-align:start; cursor:pointer;">🏭 S'approvisionner</button>
                             <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; try{lpDisconnectShop()}catch{}; try{closeSheet()}catch{}" style="flex:0 0 auto; white-space:nowrap; color:#d63031; font-size:0.85rem; border:1px solid #d63031; padding:8px 15px; border-radius:20px; background:transparent; font-weight:950; scroll-snap-align:start; cursor:pointer;">🚪 Quitter</button>
                         </div>
@@ -15687,7 +15676,7 @@
                     overlay.style.display = 'none';
                     overlay.innerHTML = `
                         <div style="position:absolute; inset:0; display:flex; flex-direction:column; background: rgba(255,255,255,0.98);">
-                            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-bottom: 1px solid rgba(0,0,0,0.08); background: linear-gradient(90deg, rgba(249,115,22,0.12), rgba(16,185,129,0.12));">
+                            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-bottom: 1px solid rgba(0,0,0,0.08); background: #1b5e20;">
                                 <button type="button" onclick="lpHandleBoostReturn()" style="border:0; background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.08); border-radius: 999px; padding: 10px 14px; font-weight: 900; cursor:pointer;">← Retour</button>
                                 <div style="font-weight: 950; color: #0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Boost (Informel)</div>
                                 <button type="button" onclick="lpHandleBoostReturn()" style="border:0; background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.08); border-radius: 999px; padding: 10px 14px; font-weight: 950; cursor:pointer;">✕</button>
@@ -16233,7 +16222,7 @@
                         <!-- Vehicle -->
                         <div id="deliveryBike" style="position:absolute; top:50%; left:10%; margin-top:-15px; font-size:2rem; transition:left 3s cubic-bezier(0.25, 1, 0.5, 1);">${vehicleIcon}</div>
                         <!-- Vendor Point -->
-                        <div style="position:absolute; top:50%; left:10%; width:10px; height:10px; background:var(--ml-brand-from); border-radius:50%; margin-top:-5px;"></div>
+                        <div style="position:absolute; top:50%; left:10%; width:10px; height:10px; background:#1b5e20; border-radius:50%; margin-top:-5px;"></div>
                         <!-- User Point -->
                         <div style="position:absolute; top:50%; right:10%; width:10px; height:10px; background:var(--ml-brand-to); border-radius:50%; margin-top:-5px;"></div>
                     </div>
@@ -16307,7 +16296,7 @@
             overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:var(--ml-bg); z-index:10000; display:flex; flex-direction:column; overflow-y:auto; color:var(--ml-text);";
             
             overlay.innerHTML = `
-                <div style="background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:white; padding:20px; display:flex; align-items:center; gap:15px;">
+                <div style="background: #1b5e20; color:white; padding:20px; display:flex; align-items:center; gap:15px;">
                     <button onclick="document.getElementById('driverOverlay').remove()" style="background:none; border:none; color:white; font-size:1.5rem;">←</button>
                     <h2 style="margin:0; flex:1;">Espace Livreur</h2>
                     <div style="font-weight:950; font-size:0.78rem; opacity:0.9;">v20260617</div>
@@ -16329,8 +16318,8 @@
                     <div id="driverMapArea" style="background: radial-gradient(120% 120% at 50% 30%, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 40%, rgba(0,0,0,0.12) 100%), linear-gradient(135deg, #1f2937, #111827); border-radius:15px; height:200px; margin-bottom:20px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;">
                         
                         <!-- Radar Pulse -->
-                        <div id="radarPulse" style="width:20px; height:20px; background:#ffa726; border-radius:50%; position:relative; z-index:2;">
-                            <div style="position:absolute; top:-20px; left:-20px; right:-20px; bottom:-20px; border:2px solid #ffa726; border-radius:50%; animation:pulse-radar 1.5s infinite;"></div>
+                        <div id="radarPulse" style="width:20px; height:20px; background:#1b5e20; border-radius:50%; position:relative; z-index:2;">
+                            <div style="position:absolute; top:-20px; left:-20px; right:-20px; bottom:-20px; border:2px solid #1b5e20; border-radius:50%; animation:pulse-radar 1.5s infinite;"></div>
                         </div>
                         <div id="radarText" style="position:absolute; bottom:15px; color:white; font-size:0.9rem; font-weight:bold; background:rgba(0,0,0,0.5); padding:5px 10px; border-radius:20px;">
                             Recherche de courses...
@@ -17021,7 +17010,7 @@
                 pill.dataset.assignedAt = String(assignedAt);
                 pill.style.cssText = 'position:fixed; right:16px; top:92px; z-index:23490; pointer-events:none; display:flex; justify-content:flex-end;';
                 pill.innerHTML = `
-                    <button type="button" data-lp-track-pill-open="1" style="pointer-events:auto; border:0; border-radius:999px; padding:12px 14px; font-weight:950; background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:white; box-shadow:0 16px 40px rgba(0,0,0,0.25); display:flex; align-items:center; gap:10px; max-width: min(520px, calc(100vw - 32px));">
+                    <button type="button" data-lp-track-pill-open="1" style="pointer-events:auto; border:0; border-radius:999px; padding:12px 14px; font-weight:950; background:#1b5e20; color:white; box-shadow:0 16px 40px rgba(0,0,0,0.25); display:flex; align-items:center; gap:10px; max-width: min(520px, calc(100vw - 32px));">
                         <span style="flex:0 0 auto;">🚚</span>
                         <span style="min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Suivi : ${lpEscapeHtml(pickupName)} → ${lpEscapeHtml(dropName)}</span>
                     </button>
@@ -17075,7 +17064,7 @@
                     : 'position:fixed; left:12px; right:12px; bottom:calc(14px + env(safe-area-inset-bottom)); z-index:23500; display:flex; justify-content:center; pointer-events:none;')
                 : 'position:fixed; left:16px; right:16px; top:16px; z-index:23500; display:flex; justify-content:center; pointer-events:none;';
             wrap.innerHTML = `
-                <div style="width:min(100%, ${isPhone ? '560px' : '680px'}); background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:white; border-radius:${isPhone ? '22px' : '24px'}; box-shadow:0 20px 50px rgba(0,0,0,0.28); padding:${isPhone ? '14px' : '18px 20px'}; pointer-events:auto; border:${isPhone ? '0' : '2px solid rgba(255,255,255,0.24)'};">
+                <div style="width:min(100%, ${isPhone ? '560px' : '680px'}); background:#1b5e20; color:white; border-radius:${isPhone ? '22px' : '24px'}; box-shadow:0 20px 50px rgba(0,0,0,0.28); padding:${isPhone ? '14px' : '18px 20px'}; pointer-events:auto; border:${isPhone ? '0' : '2px solid rgba(255,255,255,0.24)'};">
                     <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
                         <div style="min-width:0;">
                             <div style="font-weight:950; font-size:${isPhone ? '1rem' : '1.1rem'};">🔔 Livraison en cours</div>
@@ -18038,7 +18027,7 @@
                     btnEl.disabled = true;
                     btnEl.style.opacity = '0.92';
                     btnEl.style.transform = 'scale(0.98)';
-                    btnEl.style.background = 'linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to))';
+                    btnEl.style.background = '#1b5e20';
                     btnEl.innerText = 'Attribution...';
                 }
             } catch {
@@ -18484,12 +18473,12 @@
 
             overlay.innerHTML = `
                 <div style="width:min(420px, 100%); background: var(--ml-panel); border: 1px solid var(--ml-border); border-radius: var(--ml-radius-2xl); box-shadow: var(--ml-shadow-md); overflow:hidden;" onclick="event.stopPropagation()">
-                    <div style="padding:16px 16px 12px 16px; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#fff;">
+                    <div style="padding:16px 16px 12px 16px; background: #1b5e20; color:#fff;">
                         <div style="font-weight:950; font-size:1.05rem;">${title}</div>
                         <div style="opacity:0.92; font-weight:800; font-size:0.88rem; margin-top:3px;">Choisissez une personne</div>
                     </div>
                     <div style="padding:14px 16px 16px 16px; display:grid; gap:10px;">
-                        <button type="button" data-delivery-picker-action="contact" data-contact-mode="${lpEscapeHtml(m)}" data-job-id="${lpEscapeHtml(id)}" data-contact-role="vendor" style="width:100%; padding:14px; background: rgba(249,115,22,0.10); border:1px solid rgba(249,115,22,0.32); border-radius: var(--ml-radius-2xl); font-weight:950; color: var(--ml-text); cursor:pointer;">
+                        <button type="button" data-delivery-picker-action="contact" data-contact-mode="${lpEscapeHtml(m)}" data-job-id="${lpEscapeHtml(id)}" data-contact-role="vendor" style="width:100%; padding:14px; background: rgba(27,94,32,0.10); border:1px solid rgba(27,94,32,0.32); border-radius: var(--ml-radius-2xl); font-weight:950; color: var(--ml-text); cursor:pointer;">
                             🏪 ${lpEscapeHtml(v.label || 'Vendeur')}
                         </button>
                         <button type="button" data-delivery-picker-action="contact" data-contact-mode="${lpEscapeHtml(m)}" data-job-id="${lpEscapeHtml(id)}" data-contact-role="client" style="width:100%; padding:14px; background: rgba(59,130,246,0.10); border:1px solid rgba(59,130,246,0.30); border-radius: var(--ml-radius-2xl); font-weight:950; color: var(--ml-text); cursor:pointer;">
@@ -18591,7 +18580,7 @@
             }
             overlay.innerHTML = `
                 <div style="width:100%; height:100%; max-width:none; background:var(--ml-panel); border:none; border-radius:0; overflow:hidden; box-shadow:none; display:flex; flex-direction:column;">
-                    <div style="background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:white; padding:${isPhone ? 'calc(12px + env(safe-area-inset-top)) 12px 12px' : '14px 16px'}; display:flex; align-items:center; gap:10px;">
+                    <div style="background: #1b5e20; color:white; padding:${isPhone ? 'calc(12px + env(safe-area-inset-top)) 12px 12px' : '14px 16px'}; display:flex; align-items:center; gap:10px;">
                         <button type="button" onclick="lpCloseDeliveryRoute(true)" style="background:rgba(255,255,255,0.15); border:0; color:white; width:${isPhone ? '64px' : '38px'}; height:38px; border-radius:999px; font-weight:950; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 10px 24px rgba(0,0,0,0.18);">${isPhone ? '← Retour' : '←'}</button>
                         <div style="flex:1; min-width:0; font-weight:950;">📍 Itineraire livraison</div>
                     </div>
@@ -19769,7 +19758,7 @@
             const liveInfo = lpDeliveryLiveSummary(job, phase, initialTrack);
             overlay.innerHTML = `
                 <div style="${cardStyle}">
-                    <div style="background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:white; padding:${isPhone ? 'calc(12px + env(safe-area-inset-top)) 12px 12px' : '14px 16px'}; display:flex; align-items:center; gap:10px;">
+                    <div style="background: #1b5e20; color:white; padding:${isPhone ? 'calc(12px + env(safe-area-inset-top)) 12px 12px' : '14px 16px'}; display:flex; align-items:center; gap:10px;">
                         <button type="button" onclick="lpCloseDeliveryTracking(true)" style="background:rgba(255,255,255,0.15); border:0; color:white; width:${isPhone ? '64px' : '38px'}; height:38px; border-radius:999px; font-weight:950; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 10px 24px rgba(0,0,0,0.18);">${isPhone ? '← Retour' : '←'}</button>
                         <div style="flex:1; min-width:0; font-weight:950;">🚚 Suivi livraison</div>
                         <button id="lpDeliveryTrackShareBtn" type="button" style="background:rgba(255,255,255,0.15); border:0; color:white; padding:10px 12px; border-radius:999px; font-weight:950;">🔗 Partager</button>
@@ -20018,7 +20007,7 @@
                 short: 'Retrait',
                 helper: 'Va a la boutique.',
                 tone: '#ffe082',
-                bg: '#ffa726'
+                bg: '#1b5e20'
             };
         }
 
@@ -20097,7 +20086,7 @@
                         const stepNum = idx + 1;
                         const isDone = completeAll || stepNum < Number(meta.step || 1);
                         const isCurrent = !completeAll && stage.key === meta.key;
-                        const bg = isDone ? '#1b5e20' : (isCurrent ? 'linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to))' : '#edf1f7');
+                        const bg = isDone ? '#1b5e20' : (isCurrent ? '#1b5e20' : '#edf1f7');
                         const color = (isDone || isCurrent) ? '#fff' : '#6b7280';
                         const border = isCurrent ? '2px solid rgba(230,126,34,0.28)' : '1px solid rgba(0,0,0,0.06)';
                         const dot = isDone ? '✓' : String(stepNum);
@@ -20293,32 +20282,32 @@
                             <div style="font-size:0.92rem; font-weight:800; color:#4b5563;">${meta.helper}</div>
                         </div>
                         <div style="display:grid; gap:8px; margin-bottom:12px;">
-                            <div style="background:#ffa726; padding:10px; border-radius:12px; font-weight:900;">🏪 Retrait: <b>${lpEscapeHtml(pickupName)}</b></div>
+                            <div style="background:#1b5e20; padding:10px; border-radius:12px; font-weight:900;">🏪 Retrait: <b>${lpEscapeHtml(pickupName)}</b></div>
                             <div style="background:#1b5e20; padding:10px; border-radius:12px; font-weight:900;">👤 Livraison: <b>${lpEscapeHtml(dropAddr)}</b></div>
                         </div>
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
                             <button type="button" data-delivery-action="gps-refresh" onclick="lpDeliveryRefreshPositionUI(this)" style="padding:12px; background:rgba(14,165,233,0.10); border:1px solid rgba(14,165,233,0.28); border-radius:14px; color:#0f172a; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">🎯 Ma position</button>
-                            <button type="button" data-delivery-action="reset-demo" onclick="lpDeliveryResetDemoUI(this)" style="padding:12px; background:rgba(249,115,22,0.10); border:1px solid rgba(249,115,22,0.28); border-radius:14px; color:#0f172a; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">♻️ Réinitialiser</button>
+                            <button type="button" data-delivery-action="reset-demo" onclick="lpDeliveryResetDemoUI(this)" style="padding:12px; background:rgba(27,94,32,0.10); border:1px solid rgba(27,94,32,0.28); border-radius:14px; color:#0f172a; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">♻️ Réinitialiser</button>
                         </div>
                         <div style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:10px; margin-bottom:12px;">
-                            <button type="button" data-delivery-action="call" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" style="background:#f7f8fb; border:1px solid rgba(0,0,0,0.06); padding:10px 6px; border-radius:16px; min-height:68px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">
+                            <button type="button" data-delivery-action="call" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" style="background:#f6faf3; border:1px solid rgba(0,0,0,0.06); padding:10px 6px; border-radius:16px; min-height:68px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">
                                 <div style="font-size:1.1rem; margin-bottom:4px;">📞</div>
                                 <div style="font-size:0.76rem;">Appeler</div>
                             </button>
-                            <button type="button" data-delivery-action="chat" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" style="background:#f7f8fb; border:1px solid rgba(0,0,0,0.06); padding:10px 6px; border-radius:16px; min-height:68px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">
+                            <button type="button" data-delivery-action="chat" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" style="background:#f6faf3; border:1px solid rgba(0,0,0,0.06); padding:10px 6px; border-radius:16px; min-height:68px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">
                                 <div style="font-size:1.1rem; margin-bottom:4px;">💬</div>
                                 <div style="font-size:0.76rem;">Message</div>
                             </button>
-                            <button type="button" data-delivery-action="maps" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" style="background:#f7f8fb; border:1px solid rgba(0,0,0,0.06); padding:10px 6px; border-radius:16px; min-height:68px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">
+                            <button type="button" data-delivery-action="maps" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" style="background:#f6faf3; border:1px solid rgba(0,0,0,0.06); padding:10px 6px; border-radius:16px; min-height:68px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">
                                 <div style="font-size:1.1rem; margin-bottom:4px;">📍</div>
                                 <div style="font-size:0.76rem;">Itinéraire</div>
                             </button>
-                            <button type="button" data-delivery-action="track" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" style="background:#f7f8fb; border:1px solid rgba(0,0,0,0.06); padding:10px 6px; border-radius:16px; min-height:68px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">
+                            <button type="button" data-delivery-action="track" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" style="background:#f6faf3; border:1px solid rgba(0,0,0,0.06); padding:10px 6px; border-radius:16px; min-height:68px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">
                                 <div style="font-size:1.1rem; margin-bottom:4px;">🗺️</div>
                                 <div style="font-size:0.76rem;">Suivi</div>
                             </button>
                         </div>
-                        <button type="button" data-delivery-action="speak-phase" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" data-phase="${lpEscapeHtml(phase)}" style="width:100%; padding:12px; margin-bottom:12px; background:#f7f8fb; color:#2d3436; border:1px solid rgba(0,0,0,0.06); border-radius:14px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">🔊 Écouter l’étape</button>
+                        <button type="button" data-delivery-action="speak-phase" data-job-id="${lpEscapeHtml(String(mine.id || ''))}" data-phase="${lpEscapeHtml(phase)}" style="width:100%; padding:12px; margin-bottom:12px; background:#f6faf3; color:#2d3436; border:1px solid rgba(0,0,0,0.06); border-radius:14px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">🔊 Écouter l’étape</button>
                         ${proofBlock}
                         ${nextBtn}
                     </div>
@@ -20393,9 +20382,9 @@
                 const donePrice = Number(recentDone.price || 0);
                 const doneProof = String(((recentDone.proof || {}).photoDataUrl) || '').trim();
                 reqContainer.innerHTML = `
-                    <div style="background:linear-gradient(180deg, rgba(34,197,94,0.05), rgba(249,115,22,0.04) 42%, #fff 100%); border-radius:24px; padding:16px; border:1px solid rgba(39,174,96,0.16); border-left:5px solid #1b5e20; box-shadow:0 14px 34px rgba(0,0,0,0.10); overflow:hidden; position:relative;">
+                    <div style="background:linear-gradient(180deg, rgba(34,197,94,0.05), rgba(27,94,32,0.04) 42%, #fff 100%); border-radius:24px; padding:16px; border:1px solid rgba(39,174,96,0.16); border-left:5px solid #1b5e20; box-shadow:0 14px 34px rgba(0,0,0,0.10); overflow:hidden; position:relative;">
                         <div style="position:absolute; top:-10px; right:-8px; width:110px; height:110px; border-radius:999px; background:radial-gradient(circle, rgba(34,197,94,0.22) 0%, rgba(34,197,94,0.08) 42%, rgba(34,197,94,0) 70%);"></div>
-                        <div style="position:absolute; top:18px; left:18px; width:12px; height:12px; border-radius:999px; background:#ffe082; box-shadow:28px 12px 0 rgba(34,197,94,0.85), 56px -2px 0 rgba(14,165,233,0.65), 82px 14px 0 rgba(249,115,22,0.72);"></div>
+                        <div style="position:absolute; top:18px; left:18px; width:12px; height:12px; border-radius:999px; background:#ffe082; box-shadow:28px 12px 0 rgba(34,197,94,0.85), 56px -2px 0 rgba(14,165,233,0.65), 82px 14px 0 rgba(27,94,32,0.72);"></div>
                         <div style="position:relative; z-index:1; display:grid; gap:12px;">
                             <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
                                 <div style="display:flex; align-items:center; gap:10px;">
@@ -20426,7 +20415,7 @@
                                 </div>
                             </div>
                             <div style="display:grid; gap:8px;">
-                                <div style="background:#ffa726; padding:12px; border-radius:14px; font-weight:900; border:1px solid rgba(245,158,11,0.12);">🏪 Retrait: <b>${lpEscapeHtml(pickupDone)}</b></div>
+                                <div style="background:#1b5e20; padding:12px; border-radius:14px; font-weight:900; border:1px solid rgba(245,158,11,0.12);">🏪 Retrait: <b>${lpEscapeHtml(pickupDone)}</b></div>
                                 <div style="background:#1b5e20; padding:12px; border-radius:14px; font-weight:900; border:1px solid rgba(14,165,233,0.12);">👤 Livraison: <b>${lpEscapeHtml(dropDone)}</b></div>
                             </div>
                             ${doneProof ? `
@@ -20442,7 +20431,7 @@
                                 </div>
                             `}
                             <div style="display:grid; gap:10px;">
-                                <button type="button" data-delivery-action="speak-phase" data-job-id="${lpEscapeHtml(String(recentDone.id || ''))}" data-phase="delivered" style="width:100%; padding:12px; background:#f7f8fb; color:#2d3436; border:1px solid rgba(0,0,0,0.06); border-radius:16px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">🔊 Réécouter</button>
+                                <button type="button" data-delivery-action="speak-phase" data-job-id="${lpEscapeHtml(String(recentDone.id || ''))}" data-phase="delivered" style="width:100%; padding:12px; background:#f6faf3; color:#2d3436; border:1px solid rgba(0,0,0,0.06); border-radius:16px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">🔊 Réécouter</button>
                                 <button type="button" data-delivery-action="done-clear" data-job-id="${lpEscapeHtml(String(recentDone.id || ''))}" style="width:100%; padding:16px; background:#1b5e20; color:white; border:none; border-radius:18px; font-weight:950; font-size:1rem; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation; box-shadow:0 14px 30px rgba(39,174,96,0.22);">📦 Prochaine course</button>
                             </div>
                         </div>
@@ -20471,9 +20460,9 @@
                     <div style="background:white; border-radius:20px; padding:18px 16px; border:1px solid rgba(0,0,0,0.06); box-shadow:0 10px 24px rgba(0,0,0,0.06); text-align:center;">
                         <div style="font-weight:950; color:#2d3436; margin-bottom:6px;">En attente de commandes...</div>
                         <div style="color:#6b7280; font-weight:800; font-size:0.92rem; margin-bottom:12px;">${hasGps ? 'Lance une course pour continuer.' : 'Active ta position réelle avant de lancer une course.'}</div>
-                        <button type="button" onclick="lpDeliveryManualRefreshJobs(this)" style="width:100%; padding:14px; margin-bottom:10px; background:#f7f8fb; color:#2d3436; border:1px solid rgba(0,0,0,0.06); border-radius:14px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">🔄 Actualiser les courses</button>
+                        <button type="button" onclick="lpDeliveryManualRefreshJobs(this)" style="width:100%; padding:14px; margin-bottom:10px; background:#f6faf3; color:#2d3436; border:1px solid rgba(0,0,0,0.06); border-radius:14px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">🔄 Actualiser les courses</button>
                         ${hasGps
-                            ? `<button type="button" data-delivery-action="seed-job" data-job-id="seed-now" style="width:100%; padding:14px; background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#fff; border:none; border-radius:14px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">📦 Lancer une course</button>`
+                            ? `<button type="button" data-delivery-action="seed-job" data-job-id="seed-now" style="width:100%; padding:14px; background:#1b5e20; color:#fff; border:none; border-radius:14px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">📦 Lancer une course</button>`
                             : `<div style="display:grid; gap:10px;">
                                 <button type="button" data-delivery-action="gps-refresh" onclick="lpDeliveryRefreshPositionUI(this)" style="width:100%; padding:14px; background:#1b5e20; color:#fff; border:none; border-radius:14px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">🎯 Activer ma position</button>
                                 <div style="font-size:0.82rem; color:#6b7280; font-weight:800;">Si rien ne s’affiche, autorisez la localisation pour ce site dans Chrome.</div>
@@ -20487,20 +20476,20 @@
             const pick = String(j?.pickup?.name || 'Retrait');
             const drop = String(j?.dropoff?.address || 'Client');
             reqContainer.innerHTML = `
-                <div style="background:white; border-radius:20px; padding:16px; border:1px solid rgba(230,126,34,0.16); border-left:5px solid #ffa726; box-shadow:0 10px 24px rgba(0,0,0,0.08);">
+                <div style="background:white; border-radius:20px; padding:16px; border:1px solid rgba(230,126,34,0.16); border-left:5px solid #1b5e20; box-shadow:0 10px 24px rgba(0,0,0,0.08);">
                     <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                        <span style="font-weight:950; color:#ffa726;">Nouvelle Course 📦</span>
+                        <span style="font-weight:950; color:#1b5e20;">Nouvelle Course 📦</span>
                         <span style="font-weight:950;">${price.toLocaleString('fr-FR')} FCFA</span>
                     </div>
-                    <div style="background:#ffa726; color:#ffffff; border-radius:16px; padding:12px 14px; margin-bottom:12px;">
+                    <div style="background:#1b5e20; color:#ffffff; border-radius:16px; padding:12px 14px; margin-bottom:12px;">
                         <div style="font-weight:950; margin-bottom:4px;">Étape 1 : choisir</div>
                         <div style="font-size:0.92rem; font-weight:800;">Accepte pour démarrer la mission, ou refuse pour passer à une autre course.</div>
                     </div>
                     <div style="display:grid; gap:8px; margin-bottom:12px;">
-                        <div style="background:#ffa726; padding:10px; border-radius:12px; font-weight:900;">🏪 Retrait: <b>${lpEscapeHtml(pick)}</b></div>
+                        <div style="background:#1b5e20; padding:10px; border-radius:12px; font-weight:900;">🏪 Retrait: <b>${lpEscapeHtml(pick)}</b></div>
                         <div style="background:#1b5e20; padding:10px; border-radius:12px; font-weight:900;">👤 Livraison: <b>${lpEscapeHtml(drop)}</b></div>
                     </div>
-                    <button type="button" data-delivery-action="speak-phase" data-job-id="${lpEscapeHtml(String(j.id || ''))}" data-phase="pickup" style="width:100%; padding:12px; margin-bottom:12px; background:#f7f8fb; color:#2d3436; border:1px solid rgba(0,0,0,0.06); border-radius:14px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">🔊 Écouter l’étape</button>
+                    <button type="button" data-delivery-action="speak-phase" data-job-id="${lpEscapeHtml(String(j.id || ''))}" data-phase="pickup" style="width:100%; padding:12px; margin-bottom:12px; background:#f6faf3; color:#2d3436; border:1px solid rgba(0,0,0,0.06); border-radius:14px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">🔊 Écouter l’étape</button>
                     <div style="display:flex; gap:10px;">
                         <button type="button" data-delivery-action="accept" data-job-id="${lpEscapeHtml(String(j.id || ''))}" style="flex:1; min-height:52px; padding:14px; background:#2d3436; color:white; border:none; border-radius:12px; font-weight:950; cursor:pointer; transition:transform .12s ease, opacity .12s ease, background .18s ease; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">Accepter</button>
                         <button type="button" data-delivery-action="ignore" data-job-id="${lpEscapeHtml(String(j.id || ''))}" style="flex:1; min-height:52px; padding:14px; background:#f1f2f6; color:#d63031; border:none; border-radius:12px; font-weight:950; cursor:pointer; position:relative; z-index:6; pointer-events:auto; touch-action:manipulation;">Refuser</button>
@@ -20680,7 +20669,7 @@
 
                 prodMediaRecorder.start();
                 btn.classList.add('recording');
-                btn.style.background = "#ffa726";
+                btn.style.background = "#1b5e20";
                 btn.innerHTML = "⏹️";
                 btn.style.animation = "pulse-mic 1s infinite";
             }
@@ -20761,7 +20750,7 @@
                         <div style="display:flex; gap:5px;">
                             <button onclick="editProduct('${post.id}')" style="background:#dfe6e9; color:#636e72; border:none; width:35px; height:35px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">✏️</button>
                             ${post.audio ? `
-                            <button onclick="playProductAudio(this, '${audioSrc}')" style="background:#ffa726; color:white; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 3px 10px rgba(225, 112, 85, 0.3);">
+                            <button onclick="playProductAudio(this, '${audioSrc}')" style="background:#1b5e20; color:white; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 3px 10px rgba(225, 112, 85, 0.3);">
                                 🔊
                             </button>` : ''}
                         </div>
@@ -20773,10 +20762,10 @@
                 ` : `
                     <div style="display:flex; gap:5px; flex-direction:column; align-items:flex-end;">
                          ${post.audio ? `
-                        <button onclick="playProductAudio(this, '${audioSrc}')" style="background:#ffa726; color:white; border:none; width:35px; height:35px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-bottom:5px;">
+                        <button onclick="playProductAudio(this, '${audioSrc}')" style="background:#1b5e20; color:white; border:none; width:35px; height:35px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-bottom:5px;">
                             🔊
                         </button>` : ''}
-                        <button onclick="startDirectPurchase('${post.name}', '${post.price}', '${post.vendorName || 'Tech Mobile Pro'}')" style="width:100%; background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:white; border:none; padding:9px 12px; border-radius:10px; font-size:0.78rem; font-weight:900; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.12);">🛒 Acheter</button>
+                        <button onclick="startDirectPurchase('${post.name}', '${post.price}', '${post.vendorName || 'Tech Mobile Pro'}')" style="width:100%; background:#1b5e20; color:white; border:none; padding:9px 12px; border-radius:10px; font-size:0.78rem; font-weight:900; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.12);">🛒 Acheter</button>
                         <div style="display:flex; gap:5px;">
                             <button onclick="startTontine('${post.name}', '${post.price}')" style="background:#1b5e20; color:white; border:none; padding:8px 12px; border-radius:10px; font-size:0.75rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.1);">👥 Tontine</button>
                             <button onclick="startBargain('${post.name}', '${post.price}')" style="background:#ffe082; color:#2d3436; border:none; padding:8px 12px; border-radius:10px; font-size:0.75rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.1);">🤝 Marchander</button>
@@ -20850,7 +20839,7 @@
                 // STOP RECORDING
                 mediaRecorder.stop();
                 btn.classList.remove('recording');
-                btn.style.background = "#ffa726";
+                btn.style.background = "#1b5e20";
                 btn.innerHTML = "🎙️";
                 btn.style.animation = "none";
                 clearInterval(audioTimerInterval);
@@ -20937,8 +20926,8 @@
             pitchInput.placeholder = "Écoute en cours... Parlez maintenant !";
             
             recognition.onstart = () => {
-                pitchInput.style.borderColor = "#ffa726";
-                pitchInput.style.background = "#ffa726";
+                pitchInput.style.borderColor = "#1b5e20";
+                pitchInput.style.background = "#1b5e20";
             };
 
             recognition.onend = () => {
@@ -21500,7 +21489,7 @@
 
         function resetSellerButton(btn) {
             btn.innerHTML = "🚀 Devenir Vendeur";
-            btn.style.background = "#ffa726";
+            btn.style.background = "#1b5e20";
             btn.style.boxShadow = "0 8px 15px rgba(225, 112, 85, 0.3)";
         }
         
@@ -21562,7 +21551,7 @@
             if(region === 'china') {
                 html += `<div style="margin-top:10px; padding:10px; background:#1b5e20; color:#ffffff; font-size:0.8rem; border-radius:8px;">✈️ Livraison 7-10 jours via Mangoo Express</div>`;
             } else if(region === 'turkey') {
-                html += `<div style="margin-top:10px; padding:10px; background:#ffa726; color:#ffffff; font-size:0.8rem; border-radius:8px;">✈️ Cargo Istanbul-Abidjan (Mardi/Vendredi)</div>`;
+                html += `<div style="margin-top:10px; padding:10px; background:#1b5e20; color:#ffffff; font-size:0.8rem; border-radius:8px;">✈️ Cargo Istanbul-Abidjan (Mardi/Vendredi)</div>`;
             }
             
             container.innerHTML = html;
@@ -21989,7 +21978,7 @@
                     
                     <button onclick="document.getElementById('${reminderId}').style.display='none'" style="
                         position:absolute; top:-10px; right:-10px; width:24px; height:24px;
-                        background:#ffa726; color:white; border:none; border-radius:50%;
+                        background:#1b5e20; color:white; border:none; border-radius:50%;
                         font-weight:bold; font-size:0.8rem; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.1);
                     ">✕</button>
                 `;
@@ -22211,7 +22200,7 @@
                     <div style="margin-bottom:15px; text-align:left;">
                         <div style="font-size:0.8rem; font-weight:bold; color:#2d3436; margin-bottom:5px;">Moyens de paiement acceptés :</div>
                         <div style="display:flex; flex-wrap:wrap; gap:5px;">
-                            <span style="background:#ffa726; color:#ffffff; padding:4px 8px; border-radius:15px; font-size:0.75rem; border:1px solid #ffa726;">🌍 Mobile Money</span>
+                            <span style="background:#1b5e20; color:#ffffff; padding:4px 8px; border-radius:15px; font-size:0.75rem; border:1px solid #1b5e20;">🌍 Mobile Money</span>
                             <span style="background:#1b5e20; color:#ffffff; padding:4px 8px; border-radius:15px; font-size:0.75rem; border:1px solid #1b5e20;">💳 Visa/Mastercard</span>
                             <span style="background:#1b5e20; color:#ffffff; padding:4px 8px; border-radius:15px; font-size:0.75rem; border:1px solid #1b5e20;">💰 Solde Mangoo</span>
                             <span style="background:#1b5e20; color:#ffffff; padding:4px 8px; border-radius:15px; font-size:0.75rem; border:1px solid #1b5e20;">🅿️ PayPal</span>
@@ -22325,11 +22314,11 @@
                         @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
                         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
                         .tp-method { transition: all 0.2s ease-in-out; }
-                        .tp-method:hover { border-color: rgba(249,115,22,0.55) !important; background: rgba(249,115,22,0.06) !important; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+                        .tp-method:hover { border-color: rgba(27,94,32,0.55) !important; background: rgba(27,94,32,0.06) !important; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
                         .tp-method:active { transform: scale(0.98); }
                         
                         .momo-provider { transition: all 0.2s; }
-                        .momo-provider:hover { background: rgba(249,115,22,0.06) !important; border-color: rgba(249,115,22,0.55) !important; transform: scale(1.02); }
+                        .momo-provider:hover { background: rgba(27,94,32,0.06) !important; border-color: rgba(27,94,32,0.55) !important; transform: scale(1.02); }
                         .momo-provider:active { transform: scale(0.95); }
                         
                         #btnThirdPartyPay:not([disabled]):hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(0,0,0,0.16); filter: brightness(1.03); }
@@ -22339,12 +22328,12 @@
                         @keyframes spin { 100% { transform: rotate(360deg); } }
                         
                         .progress-bar { width: 100%; height: 10px; background: rgba(17,24,39,0.08); border-radius: 999px; overflow: hidden; margin-top: 10px; }
-                        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); width: ${(window.crowdfundingState.currentRaised / window.crowdfundingState.totalNeeded * 100)}%; transition: width 0.5s ease; }
+                        .progress-fill { height: 100%; background: #1b5e20; width: ${(window.crowdfundingState.currentRaised / window.crowdfundingState.totalNeeded * 100)}%; transition: width 0.5s ease; }
                     </style>
                     <div style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding:20px; display:flex; justify-content:center; align-items:flex-start;">
                     <div id="checkout-card" style="width:100%; max-width:520px; background:var(--ml-panel); padding:0; border-radius:var(--ml-radius-2xl); border:1px solid var(--ml-border); box-shadow: var(--ml-shadow-md); margin-top:0; animation: slideUp 0.4s ease-out; overflow:hidden; display:flex; flex-direction:column; max-height: calc(100vh - 40px); min-height:0;">
                         <!-- Header -->
-                        <div style="text-align:center; padding:18px 18px 14px 18px; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#fff;">
+                        <div style="text-align:center; padding:18px 18px 14px 18px; background: #1b5e20; color:#fff;">
                             <div style="font-size:1.85rem; line-height:1;">🥭</div>
                             <div style="font-size:1.15rem; font-weight:950; margin-top:6px;">Mangoo Pay</div>
                             <div style="font-size:0.9rem; opacity:0.92; font-weight:800; margin-top:2px;">Cagnotte participative</div>
@@ -22353,8 +22342,8 @@
 
                         <!-- Beneficiary Info -->
                         <div style="padding:16px 18px 0 18px;">
-                            <div style="background: rgba(249,115,22,0.06); padding:14px; border-radius:var(--ml-radius-2xl); margin-bottom:14px; display:flex; align-items:center; gap:12px; border:1px solid rgba(249,115,22,0.20);">
-                                <div style="width:46px; height:46px; background: rgba(249,115,22,0.14); border-radius: 999px; color: var(--ml-brand-from); display:flex; align-items:center; justify-content:center; font-size:1.35rem; font-weight:900;">👤</div>
+                            <div style="background: rgba(27,94,32,0.06); padding:14px; border-radius:var(--ml-radius-2xl); margin-bottom:14px; display:flex; align-items:center; gap:12px; border:1px solid rgba(27,94,32,0.20);">
+                                <div style="width:46px; height:46px; background: rgba(27,94,32,0.14); border-radius: 999px; color: #1b5e20; display:flex; align-items:center; justify-content:center; font-size:1.35rem; font-weight:900;">👤</div>
                                 <div style="text-align:left;">
                                     <div style="font-size:0.78rem; color:var(--ml-muted); font-weight:900;">Bénéficiaire</div>
                                     <div style="font-size:1.05rem; font-weight:950; color:var(--ml-text);">Maman Paul (Vendeur)</div>
@@ -22484,12 +22473,12 @@
                 });
                 
                 // Activate UI
-                el.style.borderColor = 'rgba(249,115,22,0.55)';
-                el.style.background = 'rgba(249,115,22,0.06)';
+                el.style.borderColor = 'rgba(27,94,32,0.55)';
+                el.style.background = 'rgba(27,94,32,0.06)';
                 const radio = el.querySelector('.tp-radio');
                 if(radio) {
-                    radio.style.background = 'var(--ml-brand-from)';
-                    radio.style.border = '2px solid rgba(249,115,22,0.55)';
+                    radio.style.background = '#1b5e20';
+                    radio.style.border = '2px solid rgba(27,94,32,0.55)';
                 }
 
                 // Handle Fields Visibility
@@ -22516,7 +22505,7 @@
                 const btn = document.getElementById('btnThirdPartyPay');
                 if(btn) {
                     btn.disabled = false;
-                    btn.style.background = 'linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to))';
+                    btn.style.background = '#1b5e20';
                     btn.style.cursor = 'pointer';
                     btn.style.boxShadow = 'var(--ml-shadow-md)';
                 }
@@ -22778,7 +22767,7 @@
                             if(!realIsComplete) {
                                  finalHtml = `
                                     <div style="background:var(--ml-panel); width:100%; max-width:420px; border-radius:var(--ml-radius-2xl); border:1px solid var(--ml-border); padding:0; position:relative; max-height:calc(100vh - 40px); overflow:hidden; box-shadow:var(--ml-shadow-md); display:flex; flex-direction:column; text-align:center; animation:fadeIn 0.5s;">
-                                        <div style="padding:18px 18px 14px 18px; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#fff;">
+                                        <div style="padding:18px 18px 14px 18px; background: #1b5e20; color:#fff;">
                                             <div style="font-size:2rem; line-height:1;">🎉</div>
                                             <h2 style="margin:8px 0 0 0; font-weight:950;">Paiement validé</h2>
                                             <div style="opacity:0.92; font-weight:800; font-size:0.9rem; margin-top:4px;">SMS envoyé au <b>${confirmPhone}</b></div>
@@ -22793,7 +22782,7 @@
                                                     <span style="color:var(--ml-danger);">${realRemaining.toLocaleString()} FCFA</span>
                                                 </div>
                                                 <div class="progress-bar" style="height:10px; background: rgba(17,24,39,0.08); border-radius:999px; overflow:hidden;">
-                                                    <div style="height:100%; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); width:${(window.crowdfundingState.currentRaised / window.crowdfundingState.totalNeeded * 100)}%;"></div>
+                                                    <div style="height:100%; background: #1b5e20; width:${(window.crowdfundingState.currentRaised / window.crowdfundingState.totalNeeded * 100)}%;"></div>
                                                 </div>
                                             </div>
                                         </div>
@@ -22811,7 +22800,7 @@
                             } else {
                                 finalHtml = `
                                     <div style="background:var(--ml-panel); width:100%; max-width:420px; border-radius:var(--ml-radius-2xl); border:1px solid var(--ml-border); padding:0; text-align:center; position:relative; animation:fadeIn 0.5s; box-shadow:var(--ml-shadow-md); overflow:hidden;">
-                                        <div style="padding:18px 18px 14px 18px; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#fff;">
+                                        <div style="padding:18px 18px 14px 18px; background: #1b5e20; color:#fff;">
                                             <div style="font-size:2rem; line-height:1;">🎉</div>
                                             <h2 style="margin:8px 0 0 0; font-weight:950;">Cagnotte terminée</h2>
                                             <div style="opacity:0.92; font-weight:800; font-size:0.9rem; margin-top:4px;">Montant collecté • Livraison programmée</div>
@@ -22889,7 +22878,7 @@
                         } else if(window.selectedMethod === 'mobile_money') {
                             gatewayContent = `
                                 <div style="height:100%; min-height:0; display:flex; flex-direction:column;">
-                                    <div style="text-align:center; padding:18px 18px 14px 18px; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#fff;">
+                                    <div style="text-align:center; padding:18px 18px 14px 18px; background: #1b5e20; color:#fff;">
                                         <div style="font-size:1.85rem; line-height:1;">📱</div>
                                         <div style="font-size:1.15rem; font-weight:950; margin-top:6px;">Paiement Mobile Money</div>
                                         <div style="font-size:0.9rem; opacity:0.92; font-weight:800; margin-top:2px;">Validez le push sur votre téléphone</div>
@@ -23021,7 +23010,7 @@
                     <div class="lp-modal-body">
                         <div style="padding:12px 14px; border-radius:14px; background:rgba(17,24,39,0.03); border:1px solid rgba(0,0,0,0.06); display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;">
                             <span style="color:var(--ml-muted); font-weight:900;">Votre solde actuel</span>
-                            <span style="font-weight:950; color:var(--ml-brand-from); font-size:1.05rem;">${Number(userBalance || 0).toLocaleString()} FCFA</span>
+                            <span style="font-weight:950; color:#1b5e20; font-size:1.05rem;">${Number(userBalance || 0).toLocaleString()} FCFA</span>
                         </div>
 
                         <div style="display:grid; gap:12px;">
@@ -23126,7 +23115,7 @@
                                     <div style="padding:12px 14px; border-radius:14px; background:rgba(17,24,39,0.03); border:1px solid rgba(0,0,0,0.06); color:var(--ml-text); font-weight:900; line-height:1.4;">
                                         Vous avez envoyé <b>${amount.toLocaleString()} FCFA</b> à <b>${receiver}</b>.
                                     </div>
-                                    <div style="margin-top:12px; padding:12px 14px; border-radius:14px; background:rgba(249,115,22,0.06); border:1px solid rgba(249,115,22,0.18); display:flex; justify-content:space-between; gap:12px;">
+                                    <div style="margin-top:12px; padding:12px 14px; border-radius:14px; background:rgba(27,94,32,0.06); border:1px solid rgba(27,94,32,0.18); display:flex; justify-content:space-between; gap:12px;">
                                         <span style="color:var(--ml-muted); font-weight:900;">Nouveau solde</span>
                                         <span style="color:var(--ml-text); font-weight:950;">${Number(userBalance || 0).toLocaleString()} FCFA</span>
                                     </div>
@@ -23230,25 +23219,25 @@
 
              overlay.innerHTML = `
                  <div style="background: white; width: 100%; max-width: 350px; border-radius: 15px; overflow: hidden; position: relative; box-shadow: 0 10px 30px rgba(255,255,255,0.1); max-height: 90vh; display: flex; flex-direction: column;">
-                    <div style="background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color: white; padding: 15px; text-align: center; position: relative; flex-shrink: 0;">
+                    <div style="background: #1b5e20; color: white; padding: 15px; text-align: center; position: relative; flex-shrink: 0;">
                          <div style="font-size: 1.5rem;">📜</div>
                          <h2 style="margin: 5px 0 0 0; font-size: 1.1rem;">Contrat Numérique</h2>
                          <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 5px;">Document légal simplifié</div>
                      </div>
 
                      <div style="padding: 15px; background: #f6faf3; overflow-y: auto; flex: 1;">
-                        <div onclick="showVerificationDetails()" style="background: rgba(249,115,22,0.06); border: 1px solid rgba(249,115,22,0.22); border-radius: var(--ml-radius-xl); padding: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.2s;">
+                        <div onclick="showVerificationDetails()" style="background: rgba(27,94,32,0.06); border: 1px solid rgba(27,94,32,0.22); border-radius: var(--ml-radius-xl); padding: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.2s;">
                              <div style="position: relative;">
                                  <span style="font-size: 1.5rem;">🪪</span>
-                                <div style="position: absolute; bottom: -2px; right: -2px; background: var(--ml-brand-from); color: white; border-radius: 50%; width: 12px; height: 12px; font-size: 8px; display: flex; align-items: center; justify-content: center;">✓</div>
+                                <div style="position: absolute; bottom: -2px; right: -2px; background: #1b5e20; color: white; border-radius: 50%; width: 12px; height: 12px; font-size: 8px; display: flex; align-items: center; justify-content: center;">✓</div>
                              </div>
                              <div style="flex: 1;">
-                                <div style="font-size: 0.8rem; color: var(--ml-brand-from); font-weight: 900;">Identité Certifiée par IA</div>
+                                <div style="font-size: 0.8rem; color: #1b5e20; font-weight: 900;">Identité Certifiée par IA</div>
                                 <div style="font-size: 0.7rem; color: var(--ml-muted); opacity: 0.9;">
                                      CNI N° 1123489... • <span style="text-decoration: underline;">Voir le rapport</span>
                                  </div>
                              </div>
-                            <span style="color: var(--ml-brand-from);">ᐳ</span>
+                            <span style="color: #1b5e20;">ᐳ</span>
                          </div>
 
                          <p style="font-size: 0.85rem; line-height: 1.4; color: #333; margin-bottom: 15px;">
@@ -23275,13 +23264,13 @@
                          </div>
 
                          <div style="text-align: center; margin-bottom: 5px;">
-                            <div style="font-size: 0.75rem; font-weight: 900; margin-bottom: 5px; color: var(--ml-brand-from);">CLIQUEZ POUR SIGNER</div>
+                            <div style="font-size: 0.75rem; font-weight: 900; margin-bottom: 5px; color: #1b5e20;">CLIQUEZ POUR SIGNER</div>
                              <button onclick="signPostCagnotteContract(this)" style="
-                                width: 70px; height: 70px; border-radius: 50%; border: 2px solid rgba(249,115,22,0.55);
+                                width: 70px; height: 70px; border-radius: 50%; border: 2px solid rgba(27,94,32,0.55);
                                  background: white; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
-                                font-size: 1.8rem; color: var(--ml-brand-from); transition: all 0.2s;
+                                font-size: 1.8rem; color: #1b5e20; transition: all 0.2s;
                                  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-                            " onmousedown="this.style.transform='scale(0.9)'; this.style.background='linear-gradient(90deg, #ffa726, #1b5e20)'; this.style.color='white';" 
+                            " onmousedown="this.style.transform='scale(0.9)'; this.style.background='#1b5e20'; this.style.color='white';" 
                                onmouseup="this.style.transform='scale(1)';">
                                  ✍️
                              </button>
@@ -23298,7 +23287,7 @@
         }
 
         function signPostCagnotteContract(btn) {
-            btn.style.background = 'linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to))';
+            btn.style.background = '#1b5e20';
             btn.style.color = 'white';
             btn.innerHTML = '✅';
             
@@ -23374,7 +23363,7 @@
                         <div style="flex:1; min-width:0;">
                             <div style="font-weight:950; color:var(--ml-text);">${order.product}</div>
                             <div style="font-size:0.82rem; color:var(--ml-muted); font-weight:800; margin-top:2px;">#${order.id} • ${order.date}</div>
-                            <div style="font-size:0.78rem; color:var(--ml-brand-from); margin-top:6px; font-weight:900;">${order.type}</div>
+                            <div style="font-size:0.78rem; color:#1b5e20; margin-top:6px; font-weight:900;">${order.type}</div>
                             ${statusIsDone
                                 ? `<div style="font-size:0.78rem; color:var(--ml-brand-to); margin-top:6px; font-weight:900;">📦 Livraison programmée</div>`
                                 : ''
@@ -23428,8 +23417,8 @@
             const activeBtn = document.getElementById('btn-dash-' + tabName);
             if(activeBtn) {
                 activeBtn.classList.add('active');
-                activeBtn.style.borderBottom = '3px solid var(--ml-brand-from)';
-                activeBtn.style.color = 'var(--ml-brand-from)';
+                activeBtn.style.borderBottom = '3px solid #1b5e20';
+                activeBtn.style.color = '#1b5e20';
             }
             
             // Show Content
@@ -23857,10 +23846,10 @@
                     const btn = document.getElementById(`lpIdentityModeBtn_${key}`)
                     if (!btn) return
                     const active = key === nextMode
-                    btn.style.background = active ? 'linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to))' : 'var(--ml-panel)'
+                    btn.style.background = active ? '#1b5e20' : 'var(--ml-panel)'
                     btn.style.color = active ? '#fff' : 'var(--ml-text)'
                     btn.style.borderColor = active ? 'transparent' : 'var(--ml-border)'
-                    btn.style.boxShadow = active ? '0 8px 18px rgba(249,115,22,0.20)' : 'none'
+                    btn.style.boxShadow = active ? '0 8px 18px rgba(27,94,32,0.20)' : 'none'
                 })
                 lpSetIdentityEntryStatus('', '')
                 try { lpSpeakIdentityEntryMode(nextMode) } catch {}
@@ -24595,7 +24584,7 @@
 
             const identityAdvanced = `
                 <div id="lpIdentityAdvanced" style="display:none;">
-                    <div style="padding:12px; border-radius:14px; background:rgba(249,115,22,0.10); border:1px solid rgba(249,115,22,0.35);">
+                    <div style="padding:12px; border-radius:14px; background:rgba(27,94,32,0.10); border:1px solid rgba(27,94,32,0.35);">
                         <div style="font-weight:950;">🪪 Nouveau compte</div>
                         <div style="display:grid; gap:10px; margin-top:12px;">
                             <input id="lpIdentityEmail" placeholder="Email" value="${email ? email.replace(/"/g, '&quot;') : ''}" style="width:100%; padding:12px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:800; pointer-events:auto;" />
@@ -24614,7 +24603,7 @@
 
             overlay.innerHTML = `
                 <div style="background:var(--ml-panel); color:var(--ml-text); width:100%; max-width:560px; border-radius:18px; border:1px solid var(--ml-border); box-shadow:0 20px 60px rgba(0,0,0,0.35); overflow:hidden; max-height: calc(100vh - 32px); display:flex; flex-direction:column;">
-                    <div style="padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:10px; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#fff;">
+                    <div style="padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:10px; background: #1b5e20; color:#fff;">
                         <div style="font-weight:950;">🪪 Identité Local+</div>
                         <button type="button" class="lp-btn lp-btn-secondary" onclick="closeLpIdentityModal()" style="background: rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.22); color:#fff;">Fermer</button>
                     </div>
@@ -24682,7 +24671,7 @@
 
             overlay.innerHTML = `
                 <div style="background:var(--ml-panel); color:var(--ml-text); width:100%; max-width:560px; border-radius:18px; border:1px solid var(--ml-border); box-shadow:0 20px 60px rgba(0,0,0,0.35); overflow:hidden; max-height: calc(100vh - 32px); display:flex; flex-direction:column;">
-                    <div style="padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:10px; background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:#fff;">
+                    <div style="padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:10px; background: #1b5e20; color:#fff;">
                         <div style="font-weight:950;">${String(title || '').replace(/</g, '&lt;')}</div>
                         <button type="button" class="lp-btn lp-btn-secondary" onclick="lpCloseModalShell()" style="background: rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.22); color:#fff;">Fermer</button>
                     </div>
@@ -24815,7 +24804,7 @@
                     const statusLabel = paymentSucceeded ? 'paye' : 'en attente';
                     const statusStyles = paymentSucceeded
                         ? 'background: rgba(34,197,94,0.14); color:#1b5e20; border:1px solid rgba(34,197,94,0.25);'
-                        : 'background: rgba(245,158,11,0.14); color:#ffa726; border:1px solid rgba(245,158,11,0.25);';
+                        : 'background: rgba(245,158,11,0.14); color:#1b5e20; border:1px solid rgba(245,158,11,0.25);';
                     ordersHtml += `
                         <div style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:16px; margin-bottom:12px;">
                             <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
@@ -24825,7 +24814,7 @@
                                     <div style="color:var(--ml-muted); font-size:0.85rem; margin-top:2px;">${qty} article(s)</div>
                                 </div>
                                 <div style="text-align:right;">
-                                    <div style="font-weight:950; color:#ffa726;">${totalFcfa.toLocaleString()} FCFA</div>
+                                    <div style="font-weight:950; color:#1b5e20;">${totalFcfa.toLocaleString()} FCFA</div>
                                     <div style="display:inline-flex; margin-top:6px; padding:3px 10px; border-radius:999px; font-weight:900; font-size:0.75rem; ${statusStyles}">${statusLabel}</div>
                                 </div>
                             </div>
@@ -24859,7 +24848,7 @@
                                     <div style="color:var(--ml-muted); font-size:0.85rem; margin-top:2px;">1 article(s)</div>
                                 </div>
                                 <div style="text-align:right;">
-                                    <div style="font-weight:950; color:#ffa726;">${totalFcfa.toLocaleString()} FCFA</div>
+                                    <div style="font-weight:950; color:#1b5e20;">${totalFcfa.toLocaleString()} FCFA</div>
                                     <div style="display:inline-flex; margin-top:6px; padding:3px 10px; border-radius:999px; font-weight:900; font-size:0.75rem; background: rgba(34,197,94,0.14); color:#1b5e20; border:1px solid rgba(34,197,94,0.25);">paye</div>
                                 </div>
                             </div>
@@ -24912,7 +24901,7 @@
     </script>
     <div id="lpBoostOverlay" style="display:none; position:fixed; inset:0; z-index: 999999; background: rgba(0,0,0,0.55);">
         <div style="position:absolute; inset:0; display:flex; flex-direction:column; background: rgba(255,255,255,0.98);">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-bottom: 1px solid rgba(0,0,0,0.08); background: linear-gradient(90deg, rgba(249,115,22,0.12), rgba(16,185,129,0.12));">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-bottom: 1px solid rgba(0,0,0,0.08); background: #1b5e20;">
                 <button type="button" onclick="lpHandleBoostReturn()" style="border:0; background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.08); border-radius: 999px; padding: 10px 14px; font-weight: 900; cursor:pointer;">← Retour</button>
                 <div style="font-weight: 950; color: #0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Boost (Informel)</div>
                 <button type="button" onclick="lpHandleBoostReturn()" style="border:0; background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.08); border-radius: 999px; padding: 10px 14px; font-weight: 950; cursor:pointer;">✕</button>

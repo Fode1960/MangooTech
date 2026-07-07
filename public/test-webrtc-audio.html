@@ -26,7 +26,7 @@
         .hidden { display: none !important; }
         .visualizer-bar {
             width: 6px;
-            background: #4ade80;
+            background: #66bb6a;
             border-radius: 99px;
             animation: sound 0s -0.4s linear infinite alternate;
         }
@@ -58,12 +58,12 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white h-screen flex flex-col items-center justify-between transition-colors duration-300">
+<body class="bg-[#f6faf3] dark:bg-[#102814] text-gray-800 dark:text-white h-screen flex flex-col items-center justify-between transition-colors duration-300">
 
     <!-- Header info -->
     <div class="mt-10 text-center px-6 w-full max-w-xl">
-        <div class="rounded-3xl shadow-xl overflow-hidden border border-black/5 dark:border-white/10">
-            <div class="bg-gradient-to-r from-orange-500 to-emerald-600 text-white px-6 py-5">
+        <div class="rounded-3xl shadow-xl overflow-hidden border border-[#cfe0c8] dark:border-[#2e5d34]">
+            <div class="bg-[#1b5e20] text-white px-6 py-5">
                 <div class="text-xs uppercase tracking-widest opacity-95 mb-1" id="callTypeLabel">Appel Audio Mangoo</div>
                 <h1 class="text-3xl font-extrabold" id="calleeName">Correspondant</h1>
                 <div class="mt-2 text-xl font-mono text-white/95" id="timer">Connexion...</div>
@@ -74,11 +74,11 @@
     <!-- Avatar & Visualizer -->
     <div class="relative flex flex-col items-center justify-center w-full flex-1">
         <!-- Pulse Rings -->
-        <div class="absolute w-64 h-64 bg-mangoo-500/20 rounded-full animate-ping-slow pointer-events-none"></div>
-        <div class="absolute w-48 h-48 bg-mangoo-500/30 rounded-full animate-pulse-slow pointer-events-none"></div>
+        <div class="absolute w-64 h-64 bg-[#1b5e20]/20 rounded-full animate-ping-slow pointer-events-none"></div>
+        <div class="absolute w-48 h-48 bg-[#1b5e20]/30 rounded-full animate-pulse-slow pointer-events-none"></div>
         
         <!-- Avatar -->
-        <div class="relative z-10 w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 shadow-2xl overflow-hidden bg-gray-300">
+        <div class="relative z-10 w-32 h-32 rounded-full border-4 border-[#eef6ea] dark:border-[#2e5d34] shadow-2xl overflow-hidden bg-gray-300">
             <img id="avatarImg" src="https://ui-avatars.com/api/?name=Mangoo&background=1a5f3f&color=fff" class="w-full h-full object-cover">
         </div>
 
@@ -90,20 +90,20 @@
             <div class="visualizer-bar"></div><div class="visualizer-bar"></div>
             <div class="visualizer-bar"></div><div class="visualizer-bar"></div>
         </div>
-        <div class="text-sm text-gray-500 mt-4" id="statusText">Sonnerie en cours...</div>
+        <div class="text-sm text-[#66bb6a] mt-4" id="statusText">Sonnerie en cours...</div>
     </div>
 
     <!-- Controls -->
     <div class="w-full max-w-sm px-8 pb-12">
-        <div class="bg-white/95 dark:bg-gray-800 rounded-3xl shadow-xl p-6 flex justify-between items-center border border-black/5 dark:border-white/10">
+        <div class="bg-white/95 dark:bg-[#17331c] rounded-3xl shadow-xl p-6 flex justify-between items-center border border-[#cfe0c8] dark:border-[#2e5d34]">
             
             <!-- Mute -->
-            <button class="p-4 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition" onclick="toggleMute(this)">
+            <button class="p-4 rounded-full bg-[#eef6ea] dark:bg-[#17331c] text-gray-600 dark:text-white hover:bg-[#cfe0c8] dark:hover:bg-[#2e5d34] transition" onclick="toggleMute(this)">
                 <i class="fas fa-microphone text-xl"></i>
             </button>
             
             <!-- Video Switch (Upgrading to Video allowed) -->
-            <button class="p-4 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition" id="audioPageVideoBtn" onclick="toggleVideo(this)" title="Voir produit (vidéo)">
+            <button class="p-4 rounded-full bg-[#eef6ea] dark:bg-[#17331c] text-gray-600 dark:text-white hover:bg-[#cfe0c8] dark:hover:bg-[#2e5d34] transition" id="audioPageVideoBtn" onclick="toggleVideo(this)" title="Voir produit (vidéo)">
                 <div class="flex flex-col items-center">
                     <i class="fas fa-video text-xl mb-1"></i>
                     <span class="text-[10px] font-bold">Voir produit</span>
@@ -116,7 +116,7 @@
             </button>
 
             <!-- Speaker -->
-            <button class="p-4 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition" onclick="toggleSpeaker(this)">
+            <button class="p-4 rounded-full bg-[#eef6ea] dark:bg-[#17331c] text-gray-600 dark:text-white hover:bg-[#cfe0c8] dark:hover:bg-[#2e5d34] transition" onclick="toggleSpeaker(this)">
                 <i class="fas fa-volume-up text-xl"></i>
             </button>
         </div>
@@ -135,7 +135,7 @@
             </div>
             
             <!-- Local Video (User) -->
-            <div class="absolute bottom-24 right-4 w-32 h-48 bg-gray-800 rounded-xl border-2 border-white overflow-hidden shadow-lg">
+            <div class="absolute bottom-24 right-4 w-32 h-48 bg-[#17331c] rounded-xl border-2 border-[#eef6ea] overflow-hidden shadow-lg">
                 <video id="localVideo" autoplay muted playsinline class="w-full h-full object-cover"></video>
                 <div class="absolute top-2 left-2 bg-black/50 text-white px-1.5 py-0.5 rounded text-[10px] backdrop-blur-sm">👤 Vous</div>
                 <div class="absolute inset-0 flex items-center justify-center text-white text-xs pointer-events-none" id="noCamIcon">
@@ -145,15 +145,14 @@
         </div>
         
         <!-- Video Controls -->
-        <div class="bg-gray-900 p-6 flex justify-center gap-6">
-             <button class="p-4 rounded-full bg-gray-700 text-white hover:bg-gray-600 transition" onclick="toggleMute(this)">
+        <div class="bg-[#102814] p-6 flex justify-center gap-6">
+             <button class="p-4 rounded-full bg-[#17331c] text-white hover:bg-[#2e5d34] transition" onclick="toggleMute(this)">
                 <i class="fas fa-microphone text-xl"></i>
             </button>
             <button class="w-16 h-16 rounded-full bg-red-500 text-white shadow-lg flex items-center justify-center hover:bg-red-600 transition" onclick="endCall()">
                 <i class="fas fa-phone-slash text-2xl"></i>
             </button>
-            <!-- Changed icon to camera to indicate 'Camera Control' -->
-            <button class="p-4 rounded-full bg-white text-gray-900 hover:bg-gray-200 transition" onclick="toggleVideo(this)">
+            <button class="p-4 rounded-full bg-white text-[#1b5e20] hover:bg-[#eef6ea] transition" onclick="toggleVideo(this)">
                 <i class="fas fa-video text-xl"></i>
             </button>
         </div>
@@ -246,9 +245,8 @@
             const icon = btn.querySelector('i');
             if (icon.classList.contains('fa-microphone')) {
                 icon.className = 'fas fa-microphone-slash text-xl';
-                // Check if we are in video modal (different bg)
-                if(btn.classList.contains('bg-gray-700')) {
-                    btn.classList.remove('bg-gray-700', 'text-white');
+                if(btn.classList.contains('bg-[#17331c]')) {
+                    btn.classList.remove('bg-[#17331c]', 'text-white');
                     btn.classList.add('bg-red-500', 'text-white');
                 } else {
                     btn.classList.add('text-red-500');
@@ -257,7 +255,7 @@
                 icon.className = 'fas fa-microphone text-xl';
                 if(btn.classList.contains('bg-red-500')) {
                     btn.classList.remove('bg-red-500', 'text-white');
-                    btn.classList.add('bg-gray-700', 'text-white');
+                    btn.classList.add('bg-[#17331c]', 'text-white');
                 } else {
                     btn.classList.remove('text-red-500');
                 }
@@ -265,9 +263,10 @@
         }
 
         function toggleSpeaker(btn) {
-            btn.classList.toggle('bg-blue-100');
-            btn.classList.toggle('dark:bg-blue-900');
-            btn.classList.toggle('text-blue-600');
+            btn.classList.toggle('bg-[#eef6ea]');
+            btn.classList.toggle('dark:bg-[#2e5d34]');
+            btn.classList.toggle('text-[#1b5e20]');
+            btn.classList.toggle('dark:text-white');
         }
 
         async function toggleVideo(btn) {
@@ -310,10 +309,10 @@
             if (primaryBtn) {
                 if (!primaryBtn.dataset.originalClass) primaryBtn.dataset.originalClass = primaryBtn.className;
                 primaryBtn.className = primaryBtn.dataset.originalClass
-                    .replace(/\bbg-gray-100\b/g, 'bg-mangoo-500')
-                    .replace(/\bdark:bg-gray-700\b/g, 'dark:bg-mangoo-600')
+                    .replace(/\bbg-\[#eef6ea\]\b/g, 'bg-[#1b5e20]')
+                    .replace(/\bdark:bg-\[#17331c\]\b/g, 'dark:bg-[#17331c]')
                     .replace(/\btext-gray-600\b/g, 'text-white')
-                    .replace(/\bdark:text-gray-300\b/g, 'dark:text-white');
+                    .replace(/\bdark:text-white\b/g, 'dark:text-white');
                 const icon = primaryBtn.querySelector('i');
                 if (icon) icon.className = 'fas fa-spinner fa-spin text-xl mb-1';
             }
