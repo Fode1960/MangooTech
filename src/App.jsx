@@ -359,7 +359,7 @@ const SpaceChooser = ({ isDark, open, user, onChoose, onClose }) => {
                       <div className="text-xl font-black leading-tight">{t.title}</div>
                       <div className={`text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{t.subtitle}</div>
                       {!enabled && t.id !== 'client' && (
-                        <div className={`mt-1 text-xs font-black ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>Activer lors de l’inscription</div>
+                        <div className={`mt-1 text-xs font-black ${isDark ? 'text-[#ffe082]' : 'text-[#8f4b00]'}`}>Activer lors de l’inscription</div>
                       )}
                     </div>
                   </div>
@@ -1433,8 +1433,8 @@ const Register = ({ onRegister, onBack }) => {
     }
   });
   const [logoDataUrl, setLogoDataUrl] = useState('');
-  const [primaryColor, setPrimaryColor] = useState('#F97316');
-  const [secondaryColor, setSecondaryColor] = useState('#FBBF24');
+  const [primaryColor, setPrimaryColor] = useState('#ffa726');
+  const [secondaryColor, setSecondaryColor] = useState('#ffe082');
   const [createdShop, setCreatedShop] = useState(null);
   const [paletteMode, setPaletteMode] = useState('both');
   const { isDark, setTheme } = useThemeStore();
@@ -1453,11 +1453,11 @@ const Register = ({ onRegister, onBack }) => {
   }, [speakHelp]);
 
   const colorPalettes = useMemo(() => [
-    { name: 'Orange Mangoo', primary: '#F97316', secondary: '#FBBF24' },
-    { name: 'Bleu Ciel', primary: '#0EA5E9', secondary: '#38BDF8' },
-    { name: 'Vert Nature', primary: '#10B981', secondary: '#34D399' },
-    { name: 'Rouge Passion', primary: '#EF4444', secondary: '#F87171' },
-    { name: 'Violet Royal', primary: '#8B5CF6', secondary: '#A78BFA' },
+    { name: 'Orange Mangoo', primary: '#ffa726', secondary: '#ffe082' },
+    { name: 'Bleu Ciel', primary: '#1b5e20', secondary: '#66bb6a' },
+    { name: 'Vert Nature', primary: '#1b5e20', secondary: '#66bb6a' },
+    { name: 'Rouge Passion', primary: '#ffa726', secondary: '#ffe082' },
+    { name: 'Violet Royal', primary: '#1b5e20', secondary: '#66bb6a' },
     { name: 'Rose Doux', primary: '#EC4899', secondary: '#F472B6' },
     { name: 'Marron Terre', primary: '#A16207', secondary: '#CA8A04' },
     { name: 'Gris Moderne', primary: '#6B7280', secondary: '#9CA3AF' }
@@ -2040,8 +2040,8 @@ const Register = ({ onRegister, onBack }) => {
                   onChange={(e) => setName(e.target.value)}
                   className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors duration-300 ${
                     isDark 
-                      ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500' 
-                      : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+                      ? 'bg-gray-700 border-gray-600 text-white focus:ring-[#1b5e20] focus:border-[#1b5e20]' 
+                      : 'bg-white border-gray-300 text-gray-900 focus:ring-[#1b5e20] focus:border-[#1b5e20]'
                   }`}
                   placeholder="Jean Dupont"
                   required
@@ -2060,8 +2060,8 @@ const Register = ({ onRegister, onBack }) => {
                   onChange={(e) => setShopName(e.target.value)}
                   className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors duration-300 ${
                     isDark 
-                      ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500' 
-                      : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+                      ? 'bg-gray-700 border-gray-600 text-white focus:ring-[#1b5e20] focus:border-[#1b5e20]' 
+                      : 'bg-white border-gray-300 text-gray-900 focus:ring-[#1b5e20] focus:border-[#1b5e20]'
                   }`}
                   placeholder="Ma Super Boutique"
                   required
@@ -2083,8 +2083,8 @@ const Register = ({ onRegister, onBack }) => {
                 onChange={(e) => setShopCategory(e.target.value)}
                 className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors duration-300 ${
                   isDark
-                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500'
-                    : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-[#1b5e20] focus:border-[#1b5e20]'
+                    : 'bg-white border-gray-300 text-gray-900 focus:ring-[#1b5e20] focus:border-[#1b5e20]'
                 }`}
               >
                 {shopCategories.map((c) => (
@@ -2105,8 +2105,8 @@ const Register = ({ onRegister, onBack }) => {
                 onChange={(e) => setEmail(e.target.value)}
                 className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors duration-300 ${
                   isDark 
-                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500' 
-                    : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-[#1b5e20] focus:border-[#1b5e20]' 
+                    : 'bg-white border-gray-300 text-gray-900 focus:ring-[#1b5e20] focus:border-[#1b5e20]'
                 }`}
                 placeholder="jean@example.com"
                 required
@@ -2129,8 +2129,8 @@ const Register = ({ onRegister, onBack }) => {
                   onChange={(e) => setPassword(e.target.value)}
                   className={`w-full px-3 py-2 pr-20 text-sm rounded-lg border transition-colors duration-300 ${
                     isDark 
-                      ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500' 
-                      : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+                      ? 'bg-gray-700 border-gray-600 text-white focus:ring-[#1b5e20] focus:border-[#1b5e20]' 
+                      : 'bg-white border-gray-300 text-gray-900 focus:ring-[#1b5e20] focus:border-[#1b5e20]'
                   }`}
                   placeholder="••••••••"
                   required
@@ -2530,8 +2530,8 @@ const ClientRegister = ({ onRegister, onBack }) => {
               onChange={(e) => setName(e.target.value)}
               className={`w-full px-4 py-3 rounded-lg border transition-colors duration-300 ${
                 isDark
-                  ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500'
-                  : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+                  ? 'bg-gray-700 border-gray-600 text-white focus:ring-[#1b5e20] focus:border-[#1b5e20]'
+                  : 'bg-white border-gray-300 text-gray-900 focus:ring-[#1b5e20] focus:border-[#1b5e20]'
               }`}
               placeholder="Votre nom"
               required
@@ -2548,8 +2548,8 @@ const ClientRegister = ({ onRegister, onBack }) => {
               onChange={(e) => setEmail(e.target.value)}
               className={`w-full px-4 py-3 rounded-lg border transition-colors duration-300 ${
                 isDark
-                  ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500'
-                  : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+                  ? 'bg-gray-700 border-gray-600 text-white focus:ring-[#1b5e20] focus:border-[#1b5e20]'
+                  : 'bg-white border-gray-300 text-gray-900 focus:ring-[#1b5e20] focus:border-[#1b5e20]'
               }`}
               placeholder="vous@exemple.com"
               required
@@ -2567,8 +2567,8 @@ const ClientRegister = ({ onRegister, onBack }) => {
                 onChange={(e) => setPassword(e.target.value)}
                 className={`w-full px-4 py-3 pr-12 rounded-lg border transition-colors duration-300 ${
                   isDark
-                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500'
-                    : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-[#1b5e20] focus:border-[#1b5e20]'
+                    : 'bg-white border-gray-300 text-gray-900 focus:ring-[#1b5e20] focus:border-[#1b5e20]'
                 }`}
                 placeholder="••••••••"
                 required
@@ -2596,8 +2596,8 @@ const ClientRegister = ({ onRegister, onBack }) => {
               onChange={(e) => setPhone(e.target.value)}
               className={`w-full px-4 py-3 rounded-lg border transition-colors duration-300 ${
                 isDark
-                  ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500'
-                  : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+                  ? 'bg-gray-700 border-gray-600 text-white focus:ring-[#1b5e20] focus:border-[#1b5e20]'
+                  : 'bg-white border-gray-300 text-gray-900 focus:ring-[#1b5e20] focus:border-[#1b5e20]'
               }`}
               placeholder="+33 6 12 34 56 78"
             />
@@ -2613,14 +2613,14 @@ const ClientRegister = ({ onRegister, onBack }) => {
               onChange={(e) => setAddress(e.target.value)}
               className={`w-full px-4 py-3 rounded-lg border transition-colors duration-300 ${
                 isDark
-                  ? 'bg-gray-700 border-gray-600 text-white focus:ring-orange-500 focus:border-orange-500'
-                  : 'bg-white border-gray-300 text-gray-900 focus:ring-orange-500 focus:border-orange-500'
+                  ? 'bg-gray-700 border-gray-600 text-white focus:ring-[#1b5e20] focus:border-[#1b5e20]'
+                  : 'bg-white border-gray-300 text-gray-900 focus:ring-[#1b5e20] focus:border-[#1b5e20]'
               }`}
               placeholder="Votre adresse"
             />
           </div>
 
-          <div className={`rounded-xl border p-3 ${isDark ? 'border-gray-700 bg-gray-900/40' : 'border-gray-200 bg-orange-50/50'}`}>
+          <div className={`rounded-xl border p-3 ${isDark ? 'border-gray-700 bg-gray-900/40' : 'border-gray-200 bg-[#eef6ea]/50'}`}>
             <label className="flex items-start gap-3">
               <input
                 type="checkbox"
@@ -2857,8 +2857,8 @@ const VendorDashboard = ({ user }) => {
   const [editOwnerEmail, setEditOwnerEmail] = useState('');
   const [editCategory, setEditCategory] = useState('general');
   const [editLogoDataUrl, setEditLogoDataUrl] = useState('');
-  const [editPrimaryColor, setEditPrimaryColor] = useState('#F97316');
-  const [editSecondaryColor, setEditSecondaryColor] = useState('#FBBF24');
+  const [editPrimaryColor, setEditPrimaryColor] = useState('#ffa726');
+  const [editSecondaryColor, setEditSecondaryColor] = useState('#ffe082');
   const [editOpenTime, setEditOpenTime] = useState('');
   const [editCloseTime, setEditCloseTime] = useState('');
   const [editTimezone, setEditTimezone] = useState('Africa/Douala');
@@ -3157,8 +3157,8 @@ const VendorDashboard = ({ user }) => {
         ownerName: String(user?.name || 'Vendeur'),
         ownerEmail: currentEmail,
         logoDataUrl: '',
-        primaryColor: '#0EA5E9',
-        secondaryColor: '#38BDF8',
+        primaryColor: '#1b5e20',
+        secondaryColor: '#66bb6a',
         shopUrl,
         approvalStatus: 'approved',
         source: 'localplus',
@@ -3359,8 +3359,8 @@ const VendorDashboard = ({ user }) => {
                 createdAt: String(s?.created_at || ''),
                 updatedAt: String(s?.updated_at || ''),
                 logoDataUrl,
-                primaryColor: String(s?.primary_color || '#0EA5E9'),
-                secondaryColor: String(s?.secondary_color || '#38BDF8'),
+                primaryColor: String(s?.primary_color || '#1b5e20'),
+                secondaryColor: String(s?.secondary_color || '#66bb6a'),
                 openTime,
                 closeTime,
                 timezone,
@@ -3451,8 +3451,8 @@ const VendorDashboard = ({ user }) => {
               logoDataUrl: String(s?.logo_url || s?.logoUrl || ''),
               createdAt: s?.createdAt,
               updatedAt: s?.updatedAt,
-              primaryColor: String(s?.primary_color || '#0EA5E9'),
-              secondaryColor: String(s?.secondary_color || '#38BDF8'),
+              primaryColor: String(s?.primary_color || '#1b5e20'),
+              secondaryColor: String(s?.secondary_color || '#66bb6a'),
               openTime: String(s?.open_time || ''),
               closeTime: String(s?.close_time || ''),
               timezone: String(s?.timezone || ''),
@@ -3538,8 +3538,8 @@ const VendorDashboard = ({ user }) => {
             shopUrl: `${window.location.origin}/shop/${slug}`,
             approvalStatus: 'approved',
             logoDataUrl: '',
-            primaryColor: '#0EA5E9',
-            secondaryColor: '#38BDF8',
+            primaryColor: '#1b5e20',
+            secondaryColor: '#66bb6a',
             openTime: '08:00',
             closeTime: '22:00',
             timezone: browserTz,
@@ -3628,8 +3628,8 @@ const VendorDashboard = ({ user }) => {
           ownerName: String(s?.owner_name || ''),
           shopUrl: String(s?.shop_url || `${window.location.origin}/shop/${targetSlug}`),
           logoDataUrl: mergedLogo,
-          primaryColor: String(s?.primary_color || '#0EA5E9'),
-          secondaryColor: String(s?.secondary_color || '#38BDF8'),
+          primaryColor: String(s?.primary_color || '#1b5e20'),
+          secondaryColor: String(s?.secondary_color || '#66bb6a'),
           openTime: mergedOpenTime,
           closeTime: mergedCloseTime,
           timezone: mergedTimezone,
@@ -3709,8 +3709,8 @@ const VendorDashboard = ({ user }) => {
             ownerName: String(data?.owner_name || ''),
             shopUrl: String(data?.shop_url || `${window.location.origin}/shop/${targetSlug}`),
             logoDataUrl: mergedLogo,
-            primaryColor: String(data?.primary_color || '#0EA5E9'),
-            secondaryColor: String(data?.secondary_color || '#38BDF8'),
+            primaryColor: String(data?.primary_color || '#1b5e20'),
+            secondaryColor: String(data?.secondary_color || '#66bb6a'),
             openTime: mergedOpenTime,
             closeTime: mergedCloseTime,
             timezone: mergedTimezone,
@@ -3734,8 +3734,8 @@ const VendorDashboard = ({ user }) => {
       shopUrl: `${window.location.origin}/shop/${targetSlug}`,
       logoDataUrl: '',
       source: 'fallback',
-      primaryColor: '#0EA5E9',
-      secondaryColor: '#38BDF8',
+      primaryColor: '#1b5e20',
+      secondaryColor: '#66bb6a',
       openTime: '',
       closeTime: '',
       timezone: '',
@@ -3878,8 +3878,8 @@ const VendorDashboard = ({ user }) => {
           const serverName = String(s?.shop_name || s?.name || '').trim()
           const serverCategory = mapVendorCategoryToShopCategory(s?.shop_category || s?.category) || nextLocal.category
           const serverLogo = String(s?.logo_url || '').trim()
-          const serverPrimary = String(s?.primary_color || nextLocal.primaryColor || '#0EA5E9')
-          const serverSecondary = String(s?.secondary_color || nextLocal.secondaryColor || '#38BDF8')
+          const serverPrimary = String(s?.primary_color || nextLocal.primaryColor || '#1b5e20')
+          const serverSecondary = String(s?.secondary_color || nextLocal.secondaryColor || '#66bb6a')
           const serverOpen = String(s?.open_time || '').trim()
           const serverClose = String(s?.close_time || '').trim()
           const serverTimezone = String(s?.timezone || '').trim()
@@ -3965,8 +3965,8 @@ const VendorDashboard = ({ user }) => {
           const serverName = String(s?.name || '').trim()
           const serverCategory = String(s?.category || '').trim()
           const serverLogo = String(s?.logo_url || '').trim()
-          const serverPrimary = String(s?.primary_color || nextLocal.primaryColor || '#0EA5E9')
-          const serverSecondary = String(s?.secondary_color || nextLocal.secondaryColor || '#38BDF8')
+          const serverPrimary = String(s?.primary_color || nextLocal.primaryColor || '#1b5e20')
+          const serverSecondary = String(s?.secondary_color || nextLocal.secondaryColor || '#66bb6a')
           const serverOpen = String(s?.open_time || '').trim()
           const serverClose = String(s?.close_time || '').trim()
           const serverTimezone = String(s?.timezone || '').trim()
@@ -4007,8 +4007,8 @@ const VendorDashboard = ({ user }) => {
     setEditOwnerEmail(shop?.ownerEmail || shop?.owner_email || user?.email || '');
     setEditCategory(shop?.category || 'general');
     setEditLogoDataUrl(shop?.logoDataUrl || '');
-    setEditPrimaryColor(shop?.primaryColor || '#F97316');
-    setEditSecondaryColor(shop?.secondaryColor || '#FBBF24');
+    setEditPrimaryColor(shop?.primaryColor || '#ffa726');
+    setEditSecondaryColor(shop?.secondaryColor || '#ffe082');
     setEditOpenTime(finalizeTimeInput(shop?.openTime || shop?.open_time || ''));
     setEditCloseTime(finalizeTimeInput(shop?.closeTime || shop?.close_time || ''));
     setEditTimezone(shop?.timezone || 'Africa/Douala');
@@ -4076,8 +4076,8 @@ const VendorDashboard = ({ user }) => {
         if (nextLogo) return nextLogo
         return prevLogo
       });
-      setEditPrimaryColor(String(shop?.primaryColor || '#0EA5E9'));
-      setEditSecondaryColor(String(shop?.secondaryColor || '#38BDF8'));
+      setEditPrimaryColor(String(shop?.primaryColor || '#1b5e20'));
+      setEditSecondaryColor(String(shop?.secondaryColor || '#66bb6a'));
       setEditOpenTime(nextOpen);
       setEditCloseTime(nextClose);
       setEditTimezone(nextTimezone || 'Africa/Douala');
@@ -4297,7 +4297,7 @@ const VendorDashboard = ({ user }) => {
           key={s.id || s.slug}
           className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl p-4`}
           style={{
-            background: `linear-gradient(135deg, ${s.primaryColor || '#F97316'}15, ${s.secondaryColor || '#FBBF24'}15)`
+            background: `linear-gradient(135deg, ${s.primaryColor || '#ffa726'}15, ${s.secondaryColor || '#ffe082'}15)`
           }}
         >
           <div className="flex items-center justify-between gap-3">
@@ -4305,7 +4305,7 @@ const VendorDashboard = ({ user }) => {
               {s.logoDataUrl ? (
                 <img src={s.logoDataUrl} alt="Logo" className="w-10 h-10 rounded-lg object-contain bg-white p-1 ring-1 ring-black/10" />
               ) : (
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold" style={{ backgroundColor: s.primaryColor || '#F97316' }}>
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold" style={{ backgroundColor: s.primaryColor || '#ffa726' }}>
                   {(s.name || 'B').charAt(0).toUpperCase()}
                 </div>
               )}
@@ -4398,8 +4398,8 @@ const VendorDashboard = ({ user }) => {
           setEditOwnerEmail(String(s?.ownerEmail || user?.email || ''));
           setEditCategory(String(s?.category || 'general'));
           setEditLogoDataUrl(String(s?.logoDataUrl || ''));
-          setEditPrimaryColor(String(s?.primaryColor || '#0EA5E9'));
-          setEditSecondaryColor(String(s?.secondaryColor || '#38BDF8'));
+          setEditPrimaryColor(String(s?.primaryColor || '#1b5e20'));
+          setEditSecondaryColor(String(s?.secondaryColor || '#66bb6a'));
           setEditOpenTime(finalizeTimeInput(s?.openTime || s?.open_time || ''));
           setEditCloseTime(finalizeTimeInput(s?.closeTime || s?.close_time || ''));
           setEditTimezone(String(s?.timezone || 'Africa/Douala'));
@@ -6096,7 +6096,7 @@ const ClientMarketplace = ({ user }) => {
           </div>
           {cart.length > 0 && (
             <div className="mt-2">
-              <p className={`text-lg font-bold text-orange-600`}>
+              <p className={`text-lg font-bold text-[#1b5e20]`}>
                 {cartTotal.toLocaleString()} FCFA
               </p>
               <button
@@ -6119,7 +6119,7 @@ const ClientMarketplace = ({ user }) => {
                   <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-black`}>Sponsorisé</div>
                   <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm mt-1`}>Plus de visibilité sur les écrans de découverte.</div>
                 </div>
-                <div className={`${isDark ? 'bg-amber-500/15 text-amber-200 border-amber-400/30' : 'bg-amber-50 text-amber-700 border-amber-200'} border text-xs font-black px-2 py-1 rounded-full`}>
+                <div className={`${isDark ? 'bg-amber-500/15 text-amber-200 border-amber-400/30' : 'bg-amber-50 text-[#8f4b00] border-amber-200'} border text-xs font-black px-2 py-1 rounded-full`}>
                   {boostSummary.sponsored}
                 </div>
               </div>
@@ -6217,7 +6217,7 @@ const ClientMarketplace = ({ user }) => {
                         }`}> × {item.quantity}</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="font-medium text-orange-600">
+                        <span className="font-medium text-[#1b5e20]">
                           {(parseFloat(item.price.replace(/[^\d]/g, '')) * item.quantity).toLocaleString()} FCFA
                         </span>
                         <button
@@ -6235,7 +6235,7 @@ const ClientMarketplace = ({ user }) => {
                     <span className={`font-bold transition-colors duration-300 ${
                       isDark ? 'text-white' : 'text-gray-900'
                     }`}>Total:</span>
-                    <span className="font-bold text-xl text-orange-600">
+                    <span className="font-bold text-xl text-[#1b5e20]">
                       {cartTotal.toLocaleString()} FCFA
                     </span>
                   </div>
@@ -6350,7 +6350,7 @@ const ClientMarketplace = ({ user }) => {
                   }`}>{selectedProduct.description}</p>
                   
                   <div className="flex items-center mb-4">
-                    <div className="flex text-yellow-400">
+                    <div className="flex text-[#ffa726]">
                       {'★'.repeat(selectedProduct.rating)}
                     </div>
                     <span className={`text-sm ml-2 transition-colors duration-300 ${
@@ -6359,7 +6359,7 @@ const ClientMarketplace = ({ user }) => {
                   </div>
                   
                   <div className="mb-4">
-                    <span className="text-3xl font-bold text-orange-600">{selectedProduct.price}</span>
+                    <span className="text-3xl font-bold text-[#1b5e20]">{selectedProduct.price}</span>
                   </div>
                   
                   <div className="mb-4">
@@ -6382,7 +6382,7 @@ const ClientMarketplace = ({ user }) => {
                       onClick={() => toggleWishlist(selectedProduct.id)}
                       className={`px-4 py-3 rounded-lg border transition-all ${
                         wishlist.includes(selectedProduct.id)
-                          ? 'bg-red-50 border-red-200 text-red-600'
+                          ? 'bg-[#eef6ea] border-[#cfe0c8] text-[#1b5e20]'
                           : isDark
                           ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
                           : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
@@ -6482,8 +6482,8 @@ const ShopsDirectory = () => {
             name,
             slug,
             category: normalizeCategoryFromLocalPlus(v?.category) || 'general',
-            primaryColor: '#0EA5E9',
-            secondaryColor: '#38BDF8',
+            primaryColor: '#1b5e20',
+            secondaryColor: '#66bb6a',
             logoDataUrl: '',
             vendorId: id,
             vendorKind: 'shop',
@@ -6519,8 +6519,8 @@ const ShopsDirectory = () => {
             name,
             slug,
             category: normalizeCategoryFromLocalPlus(v?.category) || 'general',
-            primaryColor: '#0EA5E9',
-            secondaryColor: '#38BDF8',
+            primaryColor: '#1b5e20',
+            secondaryColor: '#66bb6a',
             logoDataUrl: '',
             vendorId: id,
             vendorKind: 'shop',
@@ -6555,8 +6555,8 @@ const ShopsDirectory = () => {
             name: s.name || 'Boutique',
             slug: s.slug,
             category: s.category || (Array.isArray(s?.categories) ? s.categories[0] : '') || 'general',
-            primaryColor: s.primaryColor || s.primary_color || '#F97316',
-            secondaryColor: s.secondaryColor || s.secondary_color || '#FBBF24',
+            primaryColor: s.primaryColor || s.primary_color || '#ffa726',
+            secondaryColor: s.secondaryColor || s.secondary_color || '#ffe082',
             logoDataUrl: s.logoDataUrl || s.logo_url || '',
             vendorId: String(s?.sourceVendorId ?? s?.source_vendor_id ?? s?.vendorId ?? s?.vendor_id ?? s?.id ?? '').replace(/^shop-/, ''),
             ownerEmail: String(s?.ownerEmail || s?.owner_email || s?.email || '').trim().toLowerCase(),
@@ -6629,8 +6629,8 @@ const ShopsDirectory = () => {
               name,
               slug: s.slug,
               category,
-              primaryColor: String(s?.primary_color || '#0EA5E9'),
-              secondaryColor: String(s?.secondary_color || '#38BDF8'),
+              primaryColor: String(s?.primary_color || '#1b5e20'),
+              secondaryColor: String(s?.secondary_color || '#66bb6a'),
               logoDataUrl: sanitizeLogoUrl(s.logo_url),
               ownerEmail: String(s?.owner_email || s?.email || '').trim().toLowerCase(),
               vendorId: String(s.id),
@@ -6689,8 +6689,8 @@ const ShopsDirectory = () => {
             name,
             slug: s.slug,
             category,
-            primaryColor: String(s?.primary_color || '#0EA5E9'),
-            secondaryColor: String(s?.secondary_color || '#38BDF8'),
+            primaryColor: String(s?.primary_color || '#1b5e20'),
+            secondaryColor: String(s?.secondary_color || '#66bb6a'),
             logoDataUrl: sanitizeLogoUrl(s.logo_url),
             ownerEmail: String(s?.owner_email || s?.email || '').trim().toLowerCase(),
             vendorId: String(s.id),
@@ -6729,8 +6729,8 @@ const ShopsDirectory = () => {
         name: s?.name || 'Boutique',
         slug: s?.slug,
         category: s?.category || 'general',
-        primaryColor: '#0EA5E9',
-        secondaryColor: '#38BDF8',
+        primaryColor: '#1b5e20',
+        secondaryColor: '#66bb6a',
         logoDataUrl: String(s?.logo_url || s?.logoUrl || ''),
         ownerEmail: String(s?.ownerEmail || s?.owner_email || '').trim().toLowerCase(),
         ownerName: String(s?.ownerName || s?.owner_name || '').trim(),
@@ -6833,8 +6833,8 @@ const ShopsDirectory = () => {
       name: 'Boutique Mangoo',
       slug: 'boutique-mangoo',
       category: 'general',
-      primaryColor: '#F97316',
-      secondaryColor: '#10B981',
+      primaryColor: '#ffa726',
+      secondaryColor: '#1b5e20',
       logoDataUrl: '',
       source: 'seed'
     }];
@@ -6855,8 +6855,8 @@ const ShopsDirectory = () => {
         name: v.name,
         slug,
         category: normalizeVendorCategory(v.category) || 'general',
-        primaryColor: '#0EA5E9',
-        secondaryColor: '#38BDF8',
+        primaryColor: '#1b5e20',
+        secondaryColor: '#66bb6a',
         logoDataUrl: '',
         vendorId,
         vendorKind,
@@ -7453,7 +7453,7 @@ const ShopsDirectory = () => {
                           goToShop(shop.slug);
                         }
                       }}
-                      className={`text-left rounded-2xl border shadow-lg hover:shadow-xl transition-all overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500/60 ${
+                      className={`text-left rounded-2xl border shadow-lg hover:shadow-xl transition-all overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/40 ${
                         isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
                       }`}
                     >
@@ -7470,7 +7470,7 @@ const ShopsDirectory = () => {
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <div className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{shop.name}</div>
-                              <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-amber-500/15 text-amber-200 border-amber-400/30' : 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-amber-50 text-amber-700 border-amber-200'}>
+                              <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-amber-500/15 text-amber-200 border-amber-400/30' : 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-amber-50 text-[#8f4b00] border-amber-200'}>
                                 Sponsorisé
                               </span>
                               {isPromo && (
@@ -7562,7 +7562,7 @@ const ShopsDirectory = () => {
                   goToShop(shop.slug);
                 }
               }}
-              className={`text-left rounded-2xl border shadow-lg hover:shadow-xl transition-all overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500/60 ${
+              className={`text-left rounded-2xl border shadow-lg hover:shadow-xl transition-all overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/40 ${
                 isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
               }`}
             >
@@ -7583,7 +7583,7 @@ const ShopsDirectory = () => {
                     <div className="flex items-center gap-2">
                       <div className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{shop.name}</div>
                       {isSponsored && (
-                        <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-amber-500/15 text-amber-200 border-amber-400/30' : 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-amber-50 text-amber-700 border-amber-200'}>
+                        <span className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-amber-500/15 text-amber-200 border-amber-400/30' : 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-amber-50 text-[#8f4b00] border-amber-200'}>
                           Sponsorisé
                         </span>
                       )}
@@ -8670,7 +8670,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
                             <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm mt-1`}>{(o.items?.length || 0)} article(s)</div>
                           </div>
                           <div className="text-right">
-                            <div className="text-orange-500 font-bold">{Math.round((o.totalCents || 0) / 100).toLocaleString('fr-FR')} FCFA</div>
+                            <div className="text-[#1b5e20] font-bold">{Math.round((o.totalCents || 0) / 100).toLocaleString('fr-FR')} FCFA</div>
                             <div className={`${isDark ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-700'} inline-flex text-xs px-2 py-1 rounded-full font-semibold mt-1`}>{o.status}</div>
                           </div>
                         </div>

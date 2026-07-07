@@ -596,8 +596,8 @@ const ShopPage = () => {
             contact_phone: String(data?.contact_phone || data?.phone || localContacts?.phone || '').trim(),
             address: { city: String(data?.city || 'Douala'), country: String(data?.country || 'Cameroun') },
             created_at: String(data?.created_at || demoShop.created_at),
-            primaryColor: '#0EA5E9',
-            secondaryColor: '#38BDF8',
+            primaryColor: '#1b5e20',
+            secondaryColor: '#66bb6a',
             logoDataUrl: String(data?.logo_url || ''),
             openTime: String(data?.open_time || data?.openTime || localSchedule?.openTime || ''),
             closeTime: String(data?.close_time || data?.closeTime || localSchedule?.closeTime || ''),
@@ -667,8 +667,8 @@ const ShopPage = () => {
               contact_phone: String(data?.contact_phone || data?.phone || localContacts?.phone || '').trim(),
               address: { city: String(data?.city || 'Douala'), country: String(data?.country || 'Cameroun') },
               created_at: String(data?.created_at || demoShop.created_at),
-              primaryColor: '#0EA5E9',
-              secondaryColor: '#38BDF8',
+              primaryColor: '#1b5e20',
+              secondaryColor: '#66bb6a',
               logoDataUrl: String(data?.logo_url || ''),
               openTime: String(data?.open_time || data?.openTime || localSchedule?.openTime || ''),
               closeTime: String(data?.close_time || data?.closeTime || localSchedule?.closeTime || ''),
@@ -747,8 +747,8 @@ const ShopPage = () => {
               contact_phone: String(s?.contact_phone || s?.phone || '').trim(),
               address: { city: 'Paris', country: 'France' },
               created_at: String(s?.createdAt || s?.created_at || demoShop.created_at),
-              primaryColor: '#0EA5E9',
-              secondaryColor: '#38BDF8',
+              primaryColor: '#1b5e20',
+              secondaryColor: '#66bb6a',
               logoDataUrl: String(s?.logo_url || s?.logoUrl || ''),
               openTime: String(s?.open_time || s?.openTime || ''),
               closeTime: String(s?.close_time || s?.closeTime || ''),
@@ -825,8 +825,8 @@ const ShopPage = () => {
           }
         })();
 
-        const primary = localShop.primaryColor || '#F97316';
-        const secondary = localShop.secondaryColor || '#FBBF24';
+        const primary = localShop.primaryColor || '#ffa726';
+        const secondary = localShop.secondaryColor || '#ffe082';
 
         const ownerEmail = String(localShop?.ownerEmail || '').trim().toLowerCase();
         const currentEmail = String(currentUser?.email || '').trim().toLowerCase();
@@ -899,8 +899,8 @@ const ShopPage = () => {
           status: 'approved',
           contact_email: '',
           address: { city: 'Douala', country: 'Cameroun' },
-          primaryColor: '#0EA5E9',
-          secondaryColor: '#38BDF8',
+          primaryColor: '#1b5e20',
+          secondaryColor: '#66bb6a',
           review_count: 0,
           followers_count: 0,
           total_sales: 0,
@@ -1202,7 +1202,7 @@ const ShopPage = () => {
       <section
         className="relative overflow-hidden pt-24 pb-16 lg:pt-32 lg:pb-24"
         style={{
-          backgroundColor: '#0f172a'
+          backgroundColor: '#102814'
         }}
       >
         <div className="absolute top-6 left-6 z-20">
@@ -1240,7 +1240,7 @@ const ShopPage = () => {
                   </div>
                 )}
                 {liveRoom.live && (
-                  <div className="bg-red-100/20 text-red-50 px-3 py-1 rounded-full text-sm border border-red-200/30">
+                  <div className="bg-[#eef6ea]/20 text-[#ecf7e7] px-3 py-1 rounded-full text-sm border border-[#cfe0c8]/30">
                     LIVE
                   </div>
                 )}
@@ -1254,14 +1254,14 @@ const ShopPage = () => {
                       openMeta?.hasSchedule
                         ? (openMeta?.isOpen === true
                           ? 'bg-[#1b5e20]/30 text-[#ecf7e7] border-[#2e5d34]/40 hover:bg-[#1b5e20]/35'
-                          : 'bg-red-100/15 text-red-50 border-red-200/25 hover:bg-red-100/20')
+                          : 'bg-[#eef6ea]/15 text-[#ecf7e7] border-[#cfe0c8]/25 hover:bg-[#eef6ea]/20')
                         : 'bg-white/10 text-white/90 border-white/20 hover:bg-white/15'
                     }`}
                   >
                     <span
                       className={`w-3 h-3 rounded-full ${
                         openMeta?.hasSchedule
-                          ? (openMeta?.isOpen === true ? 'bg-[#66bb6a]' : 'bg-red-300')
+                          ? (openMeta?.isOpen === true ? 'bg-[#66bb6a]' : 'bg-[#eef6ea]')
                           : 'bg-white/60'
                       }`}
                     />
@@ -1279,7 +1279,7 @@ const ShopPage = () => {
                   </button>
                 )}
                 {boostStatus.sponsored && (
-                  <div className="bg-amber-100/20 text-amber-50 px-3 py-1 rounded-full text-sm border border-amber-200/30">
+                  <div className="bg-[#fff4d6]/20 text-[#8f4b00] px-3 py-1 rounded-full text-sm border border-[#ffe082]/30">
                     Sponsorisé
                   </div>
                 )}
@@ -1763,7 +1763,7 @@ const ShopPage = () => {
                     />
                   </div>
                   {pendingMismatch && (
-                    <div className="rounded-xl border border-orange-200 bg-orange-50 text-orange-800 p-3 text-sm">
+                    <div className="rounded-xl border border-[#cfe0c8] bg-[#eef6ea] text-[#1b5e20] p-3 text-sm">
                       <div className="font-semibold">Vous n’avez pas le bon email ?</div>
                       <div className="text-xs mt-1">Si nécessaire, vous pouvez associer cette boutique à l’email saisi.</div>
                       <div className="mt-3 flex justify-end">
@@ -1847,7 +1847,7 @@ const ShopPage = () => {
                           <Star
                             key={i}
                             className={`w-5 h-5 ${
-                              i < 4 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                              i < 4 ? 'fill-[#ffa726] text-[#ffa726]' : 'text-gray-300'
                             }`}
                           />
                         ))}
@@ -1881,7 +1881,7 @@ const ShopPage = () => {
                                 <Star
                                   key={i}
                                   className={`w-4 h-4 ${
-                                    i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                                    i < review.rating ? 'fill-[#ffa726] text-[#ffa726]' : 'text-gray-300'
                                   }`}
                                 />
                               ))}
@@ -2062,7 +2062,7 @@ const ProductCard = ({ product, shop }) => {
           onClick={toggleWishlist}
           className="absolute top-2 right-2 p-2 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-md hover:shadow-lg transition-shadow"
         >
-          <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
+          <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-[#1b5e20] text-[#1b5e20]' : 'text-gray-400'}`} />
         </button>
       </div>
 
@@ -2074,7 +2074,7 @@ const ProductCard = ({ product, shop }) => {
                 key={`${img.url}-${idx}`}
                 type="button"
                 onClick={() => setActiveImageIndex(idx)}
-                className={`shrink-0 rounded-xl border ${idx === activeImageIndex ? 'border-orange-400' : 'border-gray-200 dark:border-gray-700'} bg-white dark:bg-gray-900 p-1`}
+                className={`shrink-0 rounded-xl border ${idx === activeImageIndex ? 'border-[#cfe0c8]' : 'border-gray-200 dark:border-gray-700'} bg-white dark:bg-gray-900 p-1`}
                 aria-label={`Image ${idx + 1}`}
               >
                 <img src={img.url} alt={img.alt_text || product.name} className="w-14 h-14 rounded-lg object-cover" loading="lazy" />
@@ -2108,7 +2108,7 @@ const ProductCard = ({ product, shop }) => {
                 key={i}
                 className={`w-4 h-4 ${
                   i < Math.floor(averageRating)
-                    ? 'fill-yellow-400 text-yellow-400'
+                      ? 'fill-[#ffa726] text-[#ffa726]'
                     : 'text-gray-300'
                 }`}
               />
@@ -2137,7 +2137,7 @@ const ProductCard = ({ product, shop }) => {
           if (!Number.isFinite(qty)) return null
           if (qty > 5) return null
           return (
-          <div className="mt-2 text-xs text-orange-600 font-medium">
+          <div className="mt-2 text-xs text-[#1b5e20] font-medium">
             {qty} restants
           </div>
           )

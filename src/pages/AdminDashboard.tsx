@@ -48,7 +48,7 @@ import {
   Search
 } from 'lucide-react';
 
-const CHART_COLORS = ['#3B82F6', '#EF4444', '#F59E0B', '#10B981', '#8B5CF6'];
+const CHART_COLORS = ['#1b5e20', '#ffa726', '#ffe082', '#1b5e20', '#1b5e20'];
 
 interface DashboardStats {
   period_days: number;
@@ -307,9 +307,9 @@ export default function AdminDashboard() {
     const { demoStats, demoTimeSeries, demoCountries, demoTopShops } = generateDemoData();
     setStats(demoStats);
     setPaymentMethods([
-      { name: 'Mobile Money', value: demoStats.payments.mobile_money_breakdown.orange + demoStats.payments.mobile_money_breakdown.mtn + demoStats.payments.mobile_money_breakdown.moov, color: '#F97316' },
-      { name: 'Carte Bancaire', value: demoStats.payments.methods_distribution.card || 267, color: '#16A34A' },
-      { name: 'Espèces', value: demoStats.payments.methods_distribution.cash || 157, color: '#F59E0B' }
+      { name: 'Mobile Money', value: demoStats.payments.mobile_money_breakdown.orange + demoStats.payments.mobile_money_breakdown.mtn + demoStats.payments.mobile_money_breakdown.moov, color: '#ffa726' },
+      { name: 'Carte Bancaire', value: demoStats.payments.methods_distribution.card || 267, color: '#1b5e20' },
+      { name: 'Espèces', value: demoStats.payments.methods_distribution.cash || 157, color: '#ffe082' }
     ]);
     setTopShops(demoTopShops);
     setTimeSeriesData(demoTimeSeries);
@@ -433,9 +433,9 @@ export default function AdminDashboard() {
 
   const getOperatorColor = (operator: string) => {
     const colors: Record<string, string> = {
-      'orange': '#FF6B35',
-      'mtn': '#FFC107',
-      'moov': '#4CAF50'
+      'orange': '#ffa726',
+      'mtn': '#ffe082',
+      'moov': '#1b5e20'
     };
     return colors[operator] || '#6B7280';
   };
@@ -640,7 +640,7 @@ export default function AdminDashboard() {
     return (
       <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} p-6 flex items-center justify-center`}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1b5e20] mx-auto mb-4"></div>
           <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>Chargement du tableau de bord...</p>
         </div>
       </div>
@@ -683,13 +683,13 @@ export default function AdminDashboard() {
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <Activity className="h-5 w-5 text-green-500" />
+                <Activity className="h-5 w-5 text-[#1b5e20]" />
                 <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>En ligne</span>
               </div>
               <select
                 value={period}
                 onChange={(e) => setPeriod(Number(e.target.value))}
-                className={`px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                className={`px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent ${
                   isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
                 }`}
               >
@@ -710,13 +710,13 @@ export default function AdminDashboard() {
               <div>
                 <p className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Total Boutiques</p>
                 <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatNumber(stats.shops.total)}</p>
-                <p className={`text-sm mt-1 ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                <p className={`text-sm mt-1 ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`}>
                   <TrendingUp className="inline h-4 w-4 mr-1" />
                   {stats.shops.new_this_period} nouvelles ({period}j)
                 </p>
               </div>
-              <div className={`p-3 rounded-lg ${isDark ? 'bg-orange-900/20' : 'bg-orange-100'}`}>
-                <Store className={`h-6 w-6 ${isDark ? 'text-orange-400' : 'text-orange-600'}`} />
+              <div className={`p-3 rounded-lg ${isDark ? 'bg-[#ffa726]/15' : 'bg-[#eef6ea]'}`}>
+                <Store className={`h-6 w-6 ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`} />
               </div>
             </div>
             <div className={`mt-4 pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
@@ -741,13 +741,13 @@ export default function AdminDashboard() {
               <div>
                 <p className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Revenus Totaux</p>
                 <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatCurrency(stats.payments.total_revenue)}</p>
-                <p className={`text-sm mt-1 ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                <p className={`text-sm mt-1 ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`}>
                   <TrendingUp className="inline h-4 w-4 mr-1" />
                   {stats.payments.success_rate}% de réussite
                 </p>
               </div>
-              <div className={`p-3 rounded-lg ${isDark ? 'bg-green-900/20' : 'bg-green-100'}`}>
-                <DollarSign className={`h-6 w-6 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+              <div className={`p-3 rounded-lg ${isDark ? 'bg-[#1b5e20]/15' : 'bg-[#eef6ea]'}`}>
+                <DollarSign className={`h-6 w-6 ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`} />
               </div>
             </div>
             <div className={`mt-4 pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
@@ -774,13 +774,13 @@ export default function AdminDashboard() {
                     stats.payments.mobile_money_breakdown.moov
                   )}
                 </p>
-                <p className={`text-sm mt-1 ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
+                <p className={`text-sm mt-1 ${isDark ? 'text-[#ffe082]' : 'text-[#8f4b00]'}`}>
                   <Smartphone className="inline h-4 w-4 mr-1" />
                   Paiements mobiles
                 </p>
               </div>
-              <div className={`p-3 rounded-lg ${isDark ? 'bg-amber-900/20' : 'bg-amber-100'}`}>
-                <Smartphone className={`h-6 w-6 ${isDark ? 'text-amber-300' : 'text-amber-600'}`} />
+              <div className={`p-3 rounded-lg ${isDark ? 'bg-[#ffa726]/15' : 'bg-[#fff4d6]'}`}>
+                <Smartphone className={`h-6 w-6 ${isDark ? 'text-[#ffe082]' : 'text-[#8f4b00]'}`} />
               </div>
             </div>
             <div className={`mt-4 pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
@@ -810,8 +810,8 @@ export default function AdminDashboard() {
                   {period} derniers jours
                 </p>
               </div>
-              <div className={`p-3 rounded-lg ${isDark ? 'bg-orange-900/20' : 'bg-orange-100'}`}>
-                <Users className={`h-6 w-6 ${isDark ? 'text-orange-400' : 'text-orange-600'}`} />
+              <div className={`p-3 rounded-lg ${isDark ? 'bg-[#ffa726]/15' : 'bg-[#eef6ea]'}`}>
+                <Users className={`h-6 w-6 ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`} />
               </div>
             </div>
           </div>
@@ -837,7 +837,7 @@ export default function AdminDashboard() {
                     labelLine={false}
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                     outerRadius={80}
-                    fill="#F97316"
+                    fill="#ffa726"
                     dataKey="value"
                   >
                     {paymentMethods.map((entry, index) => (
@@ -878,20 +878,20 @@ export default function AdminDashboard() {
                     { 
                       name: 'Orange Money', 
                       value: stats.payments.mobile_money_breakdown.orange, 
-                      color: '#FF6B35',
-                      fill: '#FF6B35'
+                      color: '#ffa726',
+                      fill: '#ffa726'
                     },
                     { 
                       name: 'MTN Money', 
                       value: stats.payments.mobile_money_breakdown.mtn, 
-                      color: '#FFC107',
-                      fill: '#FFC107'
+                      color: '#ffe082',
+                      fill: '#ffe082'
                     },
                     { 
                       name: 'Moov Money', 
                       value: stats.payments.mobile_money_breakdown.moov, 
-                      color: '#4CAF50',
-                      fill: '#4CAF50'
+                      color: '#1b5e20',
+                      fill: '#1b5e20'
                     }
                   ]}
                 >
@@ -899,22 +899,22 @@ export default function AdminDashboard() {
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip formatter={(value) => [formatNumber(Number(value)), 'Transactions']} />
-                  <Bar dataKey="value" fill="#F97316" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="value" fill="#ffa726" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
             <div className="mt-4 grid grid-cols-3 gap-4 text-center">
-              <div className={`p-3 rounded-lg ${isDark ? 'bg-orange-900/20' : 'bg-orange-50'}`}>
-                <div className={`text-2xl font-bold ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>{formatNumber(stats.payments.mobile_money_breakdown.orange)}</div>
-                <div className={`text-xs ${isDark ? 'text-orange-300' : 'text-orange-700'}`}>Orange Money</div>
+              <div className={`p-3 rounded-lg ${isDark ? 'bg-[#ffa726]/15' : 'bg-[#eef6ea]'}`}>
+                <div className={`text-2xl font-bold ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`}>{formatNumber(stats.payments.mobile_money_breakdown.orange)}</div>
+                <div className={`text-xs ${isDark ? 'text-[#66bb6a]' : 'text-[#16381a]'}`}>Orange Money</div>
               </div>
-              <div className={`p-3 rounded-lg ${isDark ? 'bg-yellow-900/20' : 'bg-yellow-50'}`}>
-                <div className={`text-2xl font-bold ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>{formatNumber(stats.payments.mobile_money_breakdown.mtn)}</div>
-                <div className={`text-xs ${isDark ? 'text-yellow-300' : 'text-yellow-700'}`}>MTN Money</div>
+              <div className={`p-3 rounded-lg ${isDark ? 'bg-[#ffa726]/15' : 'bg-[#fff4d6]'}`}>
+                <div className={`text-2xl font-bold ${isDark ? 'text-[#ffa726]' : 'text-[#8f4b00]'}`}>{formatNumber(stats.payments.mobile_money_breakdown.mtn)}</div>
+                <div className={`text-xs ${isDark ? 'text-[#ffe082]' : 'text-[#8f4b00]'}`}>MTN Money</div>
               </div>
-              <div className={`p-3 rounded-lg ${isDark ? 'bg-green-900/20' : 'bg-green-50'}`}>
-                <div className={`text-2xl font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>{formatNumber(stats.payments.mobile_money_breakdown.moov)}</div>
-                <div className={`text-xs ${isDark ? 'text-green-300' : 'text-green-700'}`}>Moov Money</div>
+              <div className={`p-3 rounded-lg ${isDark ? 'bg-[#1b5e20]/15' : 'bg-[#eef6ea]'}`}>
+                <div className={`text-2xl font-bold ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`}>{formatNumber(stats.payments.mobile_money_breakdown.moov)}</div>
+                <div className={`text-xs ${isDark ? 'text-[#66bb6a]' : 'text-[#16381a]'}`}>Moov Money</div>
               </div>
             </div>
           </div>
@@ -926,7 +926,7 @@ export default function AdminDashboard() {
             <div className="flex justify-between items-center mb-4">
               <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Évolution des Revenus</h3>
               <div className="flex space-x-2">
-                <button className={`px-3 py-1 text-sm ${isDark ? 'bg-orange-900/20 text-orange-300' : 'bg-orange-100 text-orange-700'} rounded-lg`}>Revenus</button>
+                <button className={`px-3 py-1 text-sm ${isDark ? 'bg-[#ffa726]/15 text-[#66bb6a]' : 'bg-[#eef6ea] text-[#16381a]'} rounded-lg`}>Revenus</button>
                 <button className={`px-3 py-1 text-sm ${isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-100'} rounded-lg`}>Commandes</button>
                 <button className={`px-3 py-1 text-sm ${isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-100'} rounded-lg`}>Taux de conversion</button>
               </div>
@@ -946,15 +946,15 @@ export default function AdminDashboard() {
                   <Area 
                     type="monotone" 
                     dataKey="revenue" 
-                    stroke="#F97316" 
-                    fill="#F97316" 
+                    stroke="#ffa726" 
+                    fill="#ffa726" 
                     fillOpacity={0.3}
                     strokeWidth={2}
                   />
                   <Line 
                     type="monotone" 
                     dataKey="orders" 
-                    stroke="#EF4444" 
+                    stroke="#ffa726" 
                     strokeWidth={2}
                     dot={false}
                   />
@@ -969,10 +969,10 @@ export default function AdminDashboard() {
           {quickActions.map((action) => {
             const IconComponent = action.icon;
             const colorClasses = {
-              orange: 'bg-orange-50 hover:bg-orange-100 border-orange-200 text-orange-700',
-              green: 'bg-green-50 hover:bg-green-100 border-green-200 text-green-700',
-              yellow: 'bg-yellow-50 hover:bg-yellow-100 border-yellow-200 text-yellow-700',
-              amber: 'bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-700'
+              orange: 'bg-[#eef6ea] hover:bg-[#d7e4d1] border-[#cfe0c8] text-[#1b5e20]',
+              green: 'bg-[#eef6ea] hover:bg-[#d7e4d1] border-[#cfe0c8] text-[#1b5e20]',
+              yellow: 'bg-[#fff4d6] hover:bg-[#ffe082] border-[#ffe082] text-[#8f4b00]',
+              amber: 'bg-[#fff4d6] hover:bg-[#ffe082] border-[#ffe082] text-[#8f4b00]'
             };
             
             const cardContent = (
@@ -1062,7 +1062,7 @@ export default function AdminDashboard() {
                       <div className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                         {formatCurrency(country.revenue)}
                       </div>
-                      <div className={`text-sm ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                      <div className={`text-sm ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`}>
                         +{((country.revenue / countryData.reduce((sum, c) => sum + c.revenue, 0)) * 100).toFixed(1)}% du total
                       </div>
                     </div>
@@ -1081,7 +1081,7 @@ export default function AdminDashboard() {
               <select
                 value={selectedMetric}
                 onChange={(e) => setSelectedMetric(e.target.value as any)}
-                className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent ${
                   isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
                 }`}
               >
@@ -1097,7 +1097,7 @@ export default function AdminDashboard() {
                 <div key={shop.id} className={`flex items-center justify-between p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
                   <div className="flex items-center space-x-4">
                     <div className="flex-shrink-0">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'bg-orange-900/20 text-orange-300' : 'bg-orange-100 text-orange-600'}`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'bg-[#ffa726]/15 text-[#66bb6a]' : 'bg-[#eef6ea] text-[#1b5e20]'}`}>
                         <span className="font-semibold">{index + 1}</span>
                       </div>
                     </div>
@@ -1105,16 +1105,16 @@ export default function AdminDashboard() {
                       <h4 className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{shop.name}</h4>
                       <div className="flex items-center space-x-2 mt-1">
                         <div className="flex items-center">
-                          <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                          <Star className="h-4 w-4 text-[#ffe082] fill-current" />
                           <span className={`text-sm ml-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{shop.rating}</span>
                         </div>
                         {shop.is_verified && (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          <CheckCircle className="h-4 w-4 text-[#1b5e20]" />
                         )}
                         {shop.status === 'approved' ? (
-                          <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Approuvée</span>
+                          <span className="px-2 py-1 text-xs bg-[#eef6ea] text-[#16381a] rounded-full">Approuvée</span>
                         ) : (
-                          <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">En attente</span>
+                          <span className="px-2 py-1 text-xs bg-[#fff4d6] text-[#8f4b00] rounded-full">En attente</span>
                         )}
                       </div>
                     </div>
