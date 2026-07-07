@@ -149,7 +149,7 @@ const statusBadge = (status: ApprovalStatus, isDark: boolean) => {
   if (status === 'approved') return isDark ? 'bg-[#1b5e20]/20 text-[#ecf7e7] border-[#2e5d34]/30' : 'bg-[#eef6ea] text-[#1b5e20] border-[#cfe0c8]';
   if (status === 'rejected') return isDark ? 'bg-red-900/30 text-red-200 border border-red-700' : 'bg-red-50 text-red-800 border border-red-200';
   if (status === 'suspended') return isDark ? 'bg-gray-900/40 text-gray-200 border border-gray-700' : 'bg-gray-100 text-gray-800 border border-gray-300';
-  return isDark ? 'bg-amber-900/30 text-amber-200 border border-amber-700' : 'bg-amber-50 text-amber-800 border border-amber-200';
+  return isDark ? 'bg-[#8f4b00]/30 text-[#ffe082] border border-[#8f4b00]' : 'bg-[#ffe082]/50 text-[#8f4b00] border border-[#ffe082]';
 };
 
 const resolveSector = (shop: DemoShop): Exclude<SectorFilter, 'all'> => {
@@ -740,7 +740,7 @@ export default function AdminShops() {
             <button
               type="button"
               onClick={() => setFilterStatus('pending')}
-              className={`px-3 py-2 rounded-lg text-sm font-semibold border ${filterStatus === 'pending' ? (isDark ? 'bg-amber-900/30 text-amber-100 border-amber-700' : 'bg-amber-50 text-amber-900 border-amber-200') : (isDark ? 'bg-gray-900 text-gray-300 border-gray-700 hover:bg-gray-800' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white')}`}
+              className={`px-3 py-2 rounded-lg text-sm font-semibold border ${filterStatus === 'pending' ? (isDark ? 'bg-[#8f4b00]/30 text-[#ffe082] border-[#8f4b00]' : 'bg-[#ffe082]/50 text-[#8f4b00] border-[#ffe082]') : (isDark ? 'bg-gray-900 text-gray-300 border-gray-700 hover:bg-gray-800' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white')}`}
             >
               En attente
             </button>
@@ -860,7 +860,7 @@ export default function AdminShops() {
                           type="button"
                           onClick={() => void setApproval(String(s.slug), 'suspended')}
                           disabled={status === 'suspended'}
-                          className="touch-manipulation px-3 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white font-bold text-sm"
+                          className="touch-manipulation px-3 py-2 rounded-lg bg-[#8f4b00] hover:bg-[#704000] disabled:opacity-60 text-white font-bold text-sm"
                         >
                           Suspendre
                         </button>
@@ -975,7 +975,7 @@ export default function AdminShops() {
                               type="button"
                               onClick={() => void setApproval(String(s.slug), 'suspended')}
                               disabled={status === 'suspended'}
-                              className="px-3 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white font-bold text-xs"
+                              className="px-3 py-2 rounded-lg bg-[#8f4b00] hover:bg-[#704000] disabled:opacity-60 text-white font-bold text-xs"
                               title="Suspendre"
                             >
                               Suspendre

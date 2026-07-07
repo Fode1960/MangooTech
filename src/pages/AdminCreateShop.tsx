@@ -280,7 +280,7 @@ export default function AdminCreateShop() {
 
         {/* Messages de succès/erreur */}
         {success && (
-          <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex items-center">
+          <div className="mb-6 p-4 bg-[#eef6ea] border border-[#cfe0c8] text-[#1b5e20] rounded-lg flex items-center">
             <CheckCircle className="h-5 w-5 mr-2" />
             Boutique créée avec succès ! Redirection...
           </div>
@@ -335,7 +335,7 @@ export default function AdminCreateShop() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex items-center space-x-2 px-4 py-2 bg-[#1b5e20] text-white rounded-lg hover:bg-[#16381a] transition-colors"
                 >
                   <Upload className="h-4 w-4" />
                   <span>{logoPreview ? 'Changer le logo' : 'Uploader un logo'}</span>
@@ -363,7 +363,7 @@ export default function AdminCreateShop() {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/30 dark:bg-gray-700 dark:text-white"
                   placeholder="Nom de la boutique"
                   required
                 />
@@ -378,7 +378,7 @@ export default function AdminCreateShop() {
                   name="slug"
                   value={formData.slug}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/30 dark:bg-gray-700 dark:text-white"
                   placeholder="nom-de-la-boutique"
                   required
                 />
@@ -395,7 +395,7 @@ export default function AdminCreateShop() {
                   name="category"
                   value={formData.category}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/30 dark:bg-gray-700 dark:text-white"
                 >
                   {categories.map(cat => (
                     <option key={cat} value={cat}>
@@ -413,7 +413,7 @@ export default function AdminCreateShop() {
                   name="country"
                   value={formData.country}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/30 dark:bg-gray-700 dark:text-white"
                 >
                   {countries.map(country => (
                     <option key={country} value={country}>
@@ -433,7 +433,7 @@ export default function AdminCreateShop() {
                 value={formData.description}
                 onChange={handleInputChange}
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/30 dark:bg-gray-700 dark:text-white"
                 placeholder="Description détaillée de la boutique"
               />
             </div>
@@ -455,7 +455,7 @@ export default function AdminCreateShop() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/30 dark:bg-gray-700 dark:text-white"
                   placeholder="contact@boutique.com"
                   required
                 />
@@ -470,7 +470,7 @@ export default function AdminCreateShop() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/30 dark:bg-gray-700 dark:text-white"
                   placeholder="+225 01 23 45 67 89"
                   required
                 />
@@ -485,7 +485,7 @@ export default function AdminCreateShop() {
                   name="website"
                   value={formData.website}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/30 dark:bg-gray-700 dark:text-white"
                   placeholder="https://www.boutique.com"
                 />
               </div>
@@ -499,7 +499,7 @@ export default function AdminCreateShop() {
                   name="city"
                   value={formData.city}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/30 dark:bg-gray-700 dark:text-white"
                   placeholder="Abidjan"
                 />
               </div>
@@ -515,7 +515,7 @@ export default function AdminCreateShop() {
                 value={formData.address}
                 onChange={handleInputChange}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/30 dark:bg-gray-700 dark:text-white"
                 placeholder="Rue, immeuble, quartier..."
               />
             </div>
@@ -533,7 +533,7 @@ export default function AdminCreateShop() {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 transition-colors"
+              className="px-6 py-2 bg-[#1b5e20] text-white rounded-lg hover:bg-[#16381a] disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 transition-colors"
             >
               {loading ? (
                 <>

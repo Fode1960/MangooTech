@@ -73,7 +73,7 @@ const statusBadgeClass = (status: string | null | undefined, isDark: boolean) =>
   if (normalized === "approved" || normalized === "open") return isDark ? "bg-[#1b5e20]/30 text-[#8ccf8c]" : "bg-[#f6faf3] text-[#1b5e20]";
   if (normalized === "rejected") return isDark ? "bg-red-900/30 text-red-200" : "bg-red-50 text-red-700";
   if (normalized === "suspended" || normalized === "closed") return isDark ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-700";
-  return isDark ? "bg-amber-900/30 text-amber-200" : "bg-amber-50 text-amber-700";
+  return isDark ? "bg-[#8f4b00]/20 text-[#ffe082]" : "bg-[#fff4d6] text-[#8f4b00]";
 };
 
 const sectorBadgeClass = (sector: PinSector, isDark: boolean) => {
@@ -88,12 +88,12 @@ const sourceBadgeClass = (source: "supabase" | "local-sync", isDark: boolean) =>
 
 const accessBadgeClass = (role: "client" | "vendor", isDark: boolean) => {
   if (role === "client") return isDark ? "bg-[#1b5e20]/30 text-[#8ccf8c]" : "bg-[#f6faf3] text-[#1b5e20]";
-  return isDark ? "bg-orange-900/30 text-orange-200" : "bg-orange-50 text-orange-700";
+  return isDark ? "bg-[#1b5e20]/30 text-[#66bb6a]" : "bg-[#eef6ea] text-[#1b5e20]";
 };
 
 const pinModeBadgeClass = (expiresAt: string | null | undefined, isDark: boolean) => {
-  if (String(expiresAt || "").trim()) return isDark ? "bg-amber-900/30 text-amber-200" : "bg-amber-50 text-amber-700";
-  return isDark ? "bg-blue-900/30 text-blue-200" : "bg-blue-50 text-blue-700";
+  if (String(expiresAt || "").trim()) return isDark ? "bg-[#8f4b00]/20 text-[#ffe082]" : "bg-[#fff4d6] text-[#8f4b00]";
+  return isDark ? "bg-[#1b5e20]/30 text-[#66bb6a]" : "bg-[#eef6ea] text-[#1b5e20]";
 };
 
 const formatPinMode = (expiresAt: string | null | undefined) => {
@@ -294,7 +294,7 @@ export default function AdminPinAccess({ embedded = false }: AdminPinAccessProps
               <button
                 type="button"
                 onClick={() => setKind("all")}
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${kind === "all" ? "bg-orange-500 text-white" : isDark ? "bg-gray-900 text-gray-200" : "bg-gray-100 text-gray-700"}`}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${kind === "all" ? "bg-[#1b5e20] text-white" : isDark ? "bg-gray-900 text-gray-200" : "bg-gray-100 text-gray-700"}`}
               >
                 Tous
               </button>
@@ -344,7 +344,7 @@ export default function AdminPinAccess({ embedded = false }: AdminPinAccessProps
             <button
               type="button"
               onClick={applySearch}
-              className="rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600"
+              className="rounded-xl bg-[#1b5e20] px-4 py-2 text-sm font-semibold text-white hover:bg-[#16381a]"
             >
               Chercher
             </button>
@@ -398,7 +398,7 @@ export default function AdminPinAccess({ embedded = false }: AdminPinAccessProps
       )}
 
       {notice && !error && (
-        <div className={`rounded-xl border px-4 py-3 text-sm ${isDark ? "border-amber-800 bg-amber-900/20 text-amber-200" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
+        <div className={`rounded-xl border px-4 py-3 text-sm ${isDark ? "border-[#8f4b00]/40 bg-[#8f4b00]/20 text-[#ffe082]" : "border-[#ffa726] bg-[#fff4d6] text-[#8f4b00]"}`}>
           {notice}
           {(query || kind !== "all" || sector !== "all") && (
             <span className="ml-2">
@@ -431,7 +431,7 @@ export default function AdminPinAccess({ embedded = false }: AdminPinAccessProps
             {visiblePins.map((item) => (
               <div key={item.id} className="grid grid-cols-[160px_minmax(0,1.7fr)_120px_130px_120px_190px] gap-4 px-4 py-4">
                 <div className="flex flex-col gap-2">
-                  <div className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-black tracking-[0.25em] ${isDark ? "bg-gray-900 text-orange-200" : "bg-orange-50 text-orange-700"}`}>
+                  <div className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-black tracking-[0.25em] ${isDark ? "bg-gray-900 text-[#66bb6a]" : "bg-[#eef6ea] text-[#1b5e20]"}`}>
                     <KeyRound className="h-4 w-4 shrink-0" />
                     <span>{item.pin || "----"}</span>
                   </div>
@@ -445,7 +445,7 @@ export default function AdminPinAccess({ embedded = false }: AdminPinAccessProps
                   </button>
                 </div>
                 <div className="min-w-0">
-                  <div className={`text-[11px] font-semibold uppercase tracking-wide ${isDark ? "text-orange-200" : "text-orange-700"}`}>
+                  <div className={`text-[11px] font-semibold uppercase tracking-wide ${isDark ? "text-[#66bb6a]" : "text-[#1b5e20]"}`}>
                     {formatPinFamily(item)}
                   </div>
                   <div className={`truncate text-base font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{resolveDisplayName(item)}</div>
@@ -488,7 +488,7 @@ export default function AdminPinAccess({ embedded = false }: AdminPinAccessProps
                     <button
                       type="button"
                       onClick={() => window.open(item.target_path || "", "_blank", "noopener,noreferrer")}
-                      className={`inline-flex items-center justify-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold ${isDark ? "bg-gray-900 text-orange-200 hover:bg-gray-700" : "bg-orange-50 text-orange-700 hover:bg-orange-100"}`}
+                      className={`inline-flex items-center justify-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold ${isDark ? "bg-gray-900 text-[#66bb6a] hover:bg-gray-700" : "bg-[#eef6ea] text-[#1b5e20] hover:bg-[#f6faf3]"}`}
                     >
                       <ExternalLink className="h-4 w-4" />
                       Ouvrir

@@ -240,7 +240,7 @@ export default function AdminUsers({ embedded = false, scope = 'all' }: AdminUse
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return isDark ? 'bg-green-900/20 text-green-400' : 'bg-green-100 text-green-800';
+      case 'active': return isDark ? 'bg-[#102814]/20 text-[#66bb6a]' : 'bg-[#eef6ea] text-[#1b5e20]';
       case 'inactive': return isDark ? 'bg-red-900/20 text-red-400' : 'bg-red-100 text-red-800';
       default: return isDark ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-800';
     }
@@ -248,9 +248,9 @@ export default function AdminUsers({ embedded = false, scope = 'all' }: AdminUse
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'super_admin': return isDark ? 'bg-purple-900/20 text-purple-400' : 'bg-purple-100 text-purple-800';
-      case 'admin': return isDark ? 'bg-orange-900/20 text-orange-300' : 'bg-orange-100 text-orange-800';
-      case 'moderator': return isDark ? 'bg-orange-900/20 text-orange-400' : 'bg-orange-100 text-orange-800';
+      case 'super_admin': return isDark ? 'bg-[#102814]/20 text-[#66bb6a]' : 'bg-[#eef6ea] text-[#1b5e20]';
+      case 'admin': return isDark ? 'bg-[#17331c]/20 text-[#66bb6a]' : 'bg-[#eef6ea] text-[#1b5e20]';
+      case 'moderator': return isDark ? 'bg-[#17331c]/20 text-[#66bb6a]' : 'bg-[#eef6ea] text-[#1b5e20]';
       case 'vendor': return isDark ? 'bg-[#1b5e20]/30 text-[#8ccf8c]' : 'bg-[#f6faf3] text-[#1b5e20]';
       case 'client': return isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-800';
       default: return isDark ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-800';
@@ -261,7 +261,7 @@ export default function AdminUsers({ embedded = false, scope = 'all' }: AdminUse
     return (
       <div className={`${embedded ? '' : `p-8 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}`}>
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#cfe0c8]"></div>
         </div>
       </div>
     );
@@ -283,7 +283,7 @@ export default function AdminUsers({ embedded = false, scope = 'all' }: AdminUse
               <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Administrateurs</h2>
               <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>Comptes d'administration, support et modération visibles dans l'espace admin.</p>
             </div>
-            <div className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${isDark ? 'bg-orange-900/30 text-orange-200' : 'bg-orange-50 text-orange-700'}`}>
+            <div className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${isDark ? 'bg-[#17331c]/30 text-[#ecf7e7]' : 'bg-[#eef6ea] text-[#1b5e20]'}`}>
               Vue locale de gestion
             </div>
           </div>
@@ -300,7 +300,7 @@ export default function AdminUsers({ embedded = false, scope = 'all' }: AdminUse
                 placeholder="Rechercher un utilisateur..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent ${
                   isDark 
                     ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                     : 'bg-white border-gray-300 text-gray-900'
@@ -312,7 +312,7 @@ export default function AdminUsers({ embedded = false, scope = 'all' }: AdminUse
               <select
                 value={selectedRole}
                 onChange={(e) => setSelectedRole(e.target.value)}
-                className={`pl-10 pr-8 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                className={`pl-10 pr-8 py-2 border rounded-lg focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent ${
                   isDark 
                     ? 'bg-gray-700 border-gray-600 text-white' 
                     : 'bg-white border-gray-300 text-gray-900'
@@ -326,8 +326,8 @@ export default function AdminUsers({ embedded = false, scope = 'all' }: AdminUse
             </div>
             <button onClick={openCreate} className={`px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 ${
               isDark 
-                ? 'bg-orange-500 text-white hover:bg-orange-600' 
-                : 'bg-orange-500 text-white hover:bg-orange-600'
+                ? 'bg-[#1b5e20] text-white hover:bg-[#16381a]' 
+                : 'bg-[#1b5e20] text-white hover:bg-[#16381a]'
             }`}>
               <UserPlus className="h-5 w-5" />
               <span>{scope === 'admin' ? 'Nouveau compte' : 'Nouvel utilisateur'}</span>
@@ -404,7 +404,7 @@ export default function AdminUsers({ embedded = false, scope = 'all' }: AdminUse
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <button onClick={() => openEdit(user)} className={`${isDark ? 'text-orange-300 hover:text-orange-200' : 'text-orange-600 hover:text-orange-800'}`}>
+                      <button onClick={() => openEdit(user)} className={`${isDark ? 'text-[#66bb6a] hover:text-[#ecf7e7]' : 'text-[#1b5e20] hover:text-[#16381a]'}`}>
                         <Edit className="h-4 w-4" />
                       </button>
                       <button onClick={() => handleDelete(user)} className={`${isDark ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-900'}`}>
@@ -496,7 +496,7 @@ export default function AdminUsers({ embedded = false, scope = 'all' }: AdminUse
               </button>
               <button
                 onClick={handleSave}
-                className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-semibold"
+                className="bg-[#1b5e20] hover:bg-[#16381a] text-white px-4 py-2 rounded-lg text-sm font-semibold"
               >
                 Enregistrer
               </button>

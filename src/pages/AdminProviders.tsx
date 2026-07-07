@@ -45,7 +45,7 @@ const statusToLabel = (s: ProviderStatus) => {
 
 const statusToBadge = (s: ProviderStatus) => {
   if (s === 'approved') return 'bg-[#f6faf3] text-[#1b5e20] dark:bg-[#1b5e20]/30 dark:text-[#8ccf8c]'
-  if (s === 'pending') return 'bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-200'
+  if (s === 'pending') return 'bg-[#ffe082]/50 text-[#8f4b00] dark:bg-[#8f4b00]/30 dark:text-[#ffe082]'
   if (s === 'rejected') return 'bg-rose-100 text-rose-900 dark:bg-rose-900/30 dark:text-rose-200'
   if (s === 'suspended') return 'bg-gray-200 text-gray-900 dark:bg-gray-800 dark:text-gray-200'
   return 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-200'
@@ -634,7 +634,7 @@ export default function AdminProviders({ embedded = false }: AdminProvidersProps
             type="button"
             onClick={loadProviders}
             disabled={loading || isProcessing}
-            className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-bold"
+            className="px-4 py-2 rounded-lg bg-[#1b5e20] hover:bg-[#16381a] disabled:opacity-60 text-white font-bold"
           >
             Rafraîchir
           </button>
@@ -680,7 +680,7 @@ export default function AdminProviders({ embedded = false }: AdminProvidersProps
               type="button"
               onClick={loadProviders}
               disabled={loading || isProcessing}
-              className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-bold"
+              className="px-4 py-2 rounded-lg bg-[#1b5e20] hover:bg-[#16381a] disabled:opacity-60 text-white font-bold"
             >
               Rafraîchir
             </button>
@@ -715,7 +715,7 @@ export default function AdminProviders({ embedded = false }: AdminProvidersProps
         <button
           type="button"
           onClick={() => setStatus('pending')}
-          className={`px-3 py-2 rounded-lg text-sm font-semibold border ${status === 'pending' ? 'bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-900/30 dark:text-amber-100 dark:border-amber-700' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-800'}`}
+          className={`px-3 py-2 rounded-lg text-sm font-semibold border ${status === 'pending' ? 'bg-[#ffe082]/50 text-[#8f4b00] border-[#ffe082] dark:bg-[#8f4b00]/30 dark:text-[#ffe082] dark:border-[#8f4b00]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-800'}`}
         >
           En attente
         </button>
@@ -749,7 +749,7 @@ export default function AdminProviders({ embedded = false }: AdminProvidersProps
       )}
 
       {notice && !error && (
-        <div className="p-3 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200">
+        <div className="p-3 rounded-lg border border-[#ffe082] dark:border-[#8f4b00] bg-[#ffe082]/50 dark:bg-[#8f4b00]/20 text-[#8f4b00] dark:text-[#ffe082]">
           {notice}
         </div>
       )}
@@ -816,7 +816,7 @@ export default function AdminProviders({ embedded = false }: AdminProvidersProps
                         type="button"
                         onClick={() => window.open(`/provider/dashboard?vendorId=${encodeURIComponent(String(p.id))}`, '_blank', 'noopener,noreferrer')}
                         disabled={isProcessing}
-                        className="px-3 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-bold"
+                        className="px-3 py-2 rounded-lg bg-[#1b5e20] hover:bg-[#16381a] disabled:opacity-60 text-white font-bold"
                       >
                         Ouvrir
                       </button>
@@ -848,7 +848,7 @@ export default function AdminProviders({ embedded = false }: AdminProvidersProps
                         type="button"
                         onClick={() => suspend(p)}
                         disabled={isProcessing || p.status === 'suspended'}
-                        className="px-3 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white font-bold"
+                        className="px-3 py-2 rounded-lg bg-[#8f4b00] hover:bg-[#704000] disabled:opacity-60 text-white font-bold"
                       >
                         Suspendre
                       </button>

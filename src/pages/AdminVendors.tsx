@@ -54,7 +54,7 @@ const statusBadgeClass = (status: string | null | undefined, isDark: boolean) =>
   if (normalized === "approved") return isDark ? "bg-[#1b5e20]/30 text-[#8ccf8c]" : "bg-[#f6faf3] text-[#1b5e20]";
   if (normalized === "rejected") return isDark ? "bg-red-900/30 text-red-200" : "bg-red-50 text-red-700";
   if (normalized === "suspended") return isDark ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-700";
-  return isDark ? "bg-amber-900/30 text-amber-200" : "bg-amber-50 text-amber-700";
+  return isDark ? "bg-[#8f4b00]/30 text-[#ffe082]" : "bg-[#ffe082]/50 text-[#8f4b00]";
 };
 
 const sectorBadgeClass = (sector: VendorSector, isDark: boolean) => {
@@ -183,7 +183,7 @@ export default function AdminVendors({ embedded = false }: AdminVendorsProps) {
               <button
                 type="button"
                 onClick={() => applySectorFilter("all")}
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${sector === "all" ? "bg-orange-500 text-white" : isDark ? "bg-gray-900 text-gray-200" : "bg-gray-100 text-gray-700"}`}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${sector === "all" ? "bg-[#1b5e20] text-white" : isDark ? "bg-gray-900 text-gray-200" : "bg-gray-100 text-gray-700"}`}
               >
                 Tous
               </button>
@@ -234,7 +234,7 @@ export default function AdminVendors({ embedded = false }: AdminVendorsProps) {
             <button
               type="button"
               onClick={applySearch}
-              className="rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600"
+              className="rounded-xl bg-[#1b5e20] px-4 py-2 text-sm font-semibold text-white hover:bg-[#16381a]"
             >
               Chercher
             </button>
@@ -277,7 +277,7 @@ export default function AdminVendors({ embedded = false }: AdminVendorsProps) {
         </div>
         <div className={`rounded-xl border px-4 py-3 ${isDark ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"}`}>
           <div className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-500"}`}>En attente</div>
-          <div className="mt-1 text-lg font-bold text-amber-600">{counts.pending}</div>
+          <div className="mt-1 text-lg font-bold text-[#8f4b00]">{counts.pending}</div>
         </div>
       </div>
 
@@ -288,7 +288,7 @@ export default function AdminVendors({ embedded = false }: AdminVendorsProps) {
       )}
 
       {notice && !error && (
-        <div className={`rounded-xl border px-4 py-3 text-sm ${isDark ? "border-amber-800 bg-amber-900/20 text-amber-200" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
+        <div className={`rounded-xl border px-4 py-3 text-sm ${isDark ? "border-[#8f4b00] bg-[#8f4b00]/20 text-[#ffe082]" : "border-[#ffe082] bg-[#ffe082]/50 text-[#8f4b00]"}`}>
           {notice}
           {(query || sector !== "all" || status !== "all") && (
             <span className="ml-2">
@@ -321,7 +321,7 @@ export default function AdminVendors({ embedded = false }: AdminVendorsProps) {
             {visibleVendors.map((vendor) => (
               <div key={`${vendor.source}:${vendor.id}`} className="grid grid-cols-[minmax(0,1.2fr)_minmax(0,1.2fr)_130px_130px_120px_90px] gap-4 px-4 py-4">
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-full ${isDark ? "bg-gray-700 text-orange-200" : "bg-orange-50 text-orange-600"}`}>
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-full ${isDark ? "bg-gray-700 text-[#ecf7e7]" : "bg-[#eef6ea] text-[#1b5e20]"}`}>
                     <ShoppingBag className="h-5 w-5" />
                   </div>
                   <div className="min-w-0">
@@ -349,7 +349,7 @@ export default function AdminVendors({ embedded = false }: AdminVendorsProps) {
                     <button
                       type="button"
                       onClick={() => window.open(`/shop/${vendor.shop_slug}`, "_blank", "noopener,noreferrer")}
-                      className={`inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold ${isDark ? "bg-gray-900 text-orange-200 hover:bg-gray-700" : "bg-orange-50 text-orange-700 hover:bg-orange-100"}`}
+                      className={`inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold ${isDark ? "bg-gray-900 text-[#ecf7e7] hover:bg-gray-700" : "bg-[#eef6ea] text-[#1b5e20] hover:bg-[#d7e4d1]"}`}
                     >
                       <ExternalLink className="h-4 w-4" />
                       Ouvrir

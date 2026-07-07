@@ -238,7 +238,7 @@ const AdminCommissions: React.FC = () => {
     return (
       <div className={`p-8 ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1b5e20]"></div>
         </div>
       </div>
     );
@@ -261,13 +261,13 @@ const AdminCommissions: React.FC = () => {
                 <div>
                   <p className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Revenus Totaux</p>
                   <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatCurrency(stats.total_stats.total_revenue)}</p>
-                  <p className={`text-sm mt-1 ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                  <p className={`text-sm mt-1 ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`}>
                     <TrendingUp className="inline h-4 w-4 mr-1" />
                     30 derniers jours
                   </p>
                 </div>
-                <div className={`p-3 rounded-lg ${isDark ? 'bg-green-900/20' : 'bg-green-100'}`}>
-                  <DollarSign className={`h-6 w-6 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                <div className={`p-3 rounded-lg ${isDark ? 'bg-[#17331c]/20' : 'bg-[#eef6ea]'}`}>
+                  <DollarSign className={`h-6 w-6 ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`} />
                 </div>
               </div>
             </div>
@@ -277,13 +277,13 @@ const AdminCommissions: React.FC = () => {
                 <div>
                   <p className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Commissions Totales</p>
                   <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatCurrency(stats.total_stats.total_commission)}</p>
-                  <p className={`text-sm mt-1 ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                  <p className={`text-sm mt-1 ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`}>
                     <Calculator className="inline h-4 w-4 mr-1" />
                     30 derniers jours
                   </p>
                 </div>
-                <div className={`p-3 rounded-lg ${isDark ? 'bg-blue-900/20' : 'bg-blue-100'}`}>
-                  <Percent className={`h-6 w-6 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+                <div className={`p-3 rounded-lg ${isDark ? 'bg-[#17331c]/20' : 'bg-[#eef6ea]'}`}>
+                  <Percent className={`h-6 w-6 ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`} />
                 </div>
               </div>
             </div>
@@ -293,13 +293,13 @@ const AdminCommissions: React.FC = () => {
                 <div>
                   <p className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Commandes Totales</p>
                   <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatNumber(stats.total_stats.total_orders)}</p>
-                  <p className={`text-sm mt-1 ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
+                  <p className={`text-sm mt-1 ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`}>
                     <TrendingUp className="inline h-4 w-4 mr-1" />
                     30 derniers jours
                   </p>
                 </div>
-                <div className={`p-3 rounded-lg ${isDark ? 'bg-purple-900/20' : 'bg-purple-100'}`}>
-                  <Settings className={`h-6 w-6 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+                <div className={`p-3 rounded-lg ${isDark ? 'bg-[#17331c]/20' : 'bg-[#eef6ea]'}`}>
+                  <Settings className={`h-6 w-6 ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`} />
                 </div>
               </div>
             </div>
@@ -309,12 +309,12 @@ const AdminCommissions: React.FC = () => {
                 <div>
                   <p className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Boutiques Actives</p>
                   <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatNumber(stats.total_stats.shops_count)}</p>
-                  <p className={`text-sm mt-1 ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>
+                  <p className={`text-sm mt-1 ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`}>
                     Avec commissions
                   </p>
                 </div>
-                <div className={`p-3 rounded-lg ${isDark ? 'bg-orange-900/20' : 'bg-orange-100'}`}>
-                  <Settings className={`h-6 w-6 ${isDark ? 'text-orange-400' : 'text-orange-600'}`} />
+                <div className={`p-3 rounded-lg ${isDark ? 'bg-[#17331c]/20' : 'bg-[#eef6ea]'}`}>
+                  <Settings className={`h-6 w-6 ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`} />
                 </div>
               </div>
             </div>
@@ -333,8 +333,8 @@ const AdminCommissions: React.FC = () => {
                 onClick={openCreateModal}
                 className={`px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 ${
                   isDark 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-[#1b5e20] text-white hover:bg-[#16381a]' 
+                    : 'bg-[#1b5e20] text-white hover:bg-[#16381a]'
                 }`}
               >
                 <Plus className="h-4 w-4" />
@@ -368,7 +368,7 @@ const AdminCommissions: React.FC = () => {
                       )}
                       <span className={`px-2 py-1 rounded text-xs ${
                         rule.is_active 
-                          ? (isDark ? 'bg-green-900/20 text-green-400' : 'bg-green-100 text-green-800')
+                          ? (isDark ? 'bg-[#17331c]/20 text-[#66bb6a]' : 'bg-[#eef6ea] text-[#1b5e20]')
                           : (isDark ? 'bg-gray-600 text-gray-400' : 'bg-gray-100 text-gray-800')
                       }`}>
                         {rule.is_active ? 'Active' : 'Inactive'}
@@ -381,7 +381,7 @@ const AdminCommissions: React.FC = () => {
                       className={`px-3 py-1 rounded text-sm transition-colors ${
                         rule.is_active
                           ? (isDark ? 'bg-red-900/20 text-red-400 hover:bg-red-900/30' : 'bg-red-100 text-red-800 hover:bg-red-200')
-                          : (isDark ? 'bg-green-900/20 text-green-400 hover:bg-green-900/30' : 'bg-green-100 text-green-800 hover:bg-green-200')
+                          : (isDark ? 'bg-[#17331c]/20 text-[#66bb6a] hover:bg-[#17331c]/30' : 'bg-[#eef6ea] text-[#1b5e20] hover:bg-[#cfe0c8]')
                       }`}
                     >
                       {rule.is_active ? 'Désactiver' : 'Activer'}
@@ -390,8 +390,8 @@ const AdminCommissions: React.FC = () => {
                       onClick={() => openEditModal(rule)}
                       className={`p-2 transition-colors ${
                         isDark 
-                          ? 'text-gray-400 hover:text-blue-400' 
-                          : 'text-gray-400 hover:text-blue-600'
+                          ? 'text-gray-400 hover:text-[#66bb6a]' 
+                          : 'text-gray-400 hover:text-[#1b5e20]'
                       }`}
                       title="Modifier"
                     >
@@ -445,7 +445,7 @@ const AdminCommissions: React.FC = () => {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent ${
                       isDark 
                         ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                         : 'bg-white border-gray-300 text-gray-900'
@@ -461,7 +461,7 @@ const AdminCommissions: React.FC = () => {
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent ${
                       isDark 
                         ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                         : 'bg-white border-gray-300 text-gray-900'
@@ -480,7 +480,7 @@ const AdminCommissions: React.FC = () => {
                       required
                       value={formData.commission_type}
                       onChange={(e) => setFormData(prev => ({ ...prev, commission_type: e.target.value as 'percentage' | 'fixed' }))}
-                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent ${
                         isDark 
                           ? 'bg-gray-700 border-gray-600 text-white' 
                           : 'bg-white border-gray-300 text-gray-900'
@@ -502,7 +502,7 @@ const AdminCommissions: React.FC = () => {
                       step={formData.commission_type === 'percentage' ? '0.1' : '1'}
                       value={formData.commission_value}
                       onChange={(e) => setFormData(prev => ({ ...prev, commission_value: parseFloat(e.target.value) || 0 }))}
-                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent ${
                         isDark 
                           ? 'bg-gray-700 border-gray-600 text-white' 
                           : 'bg-white border-gray-300 text-gray-900'
@@ -522,7 +522,7 @@ const AdminCommissions: React.FC = () => {
                       min="0"
                       value={formData.min_amount}
                       onChange={(e) => setFormData(prev => ({ ...prev, min_amount: parseFloat(e.target.value) || 0 }))}
-                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent ${
                         isDark 
                           ? 'bg-gray-700 border-gray-600 text-white' 
                           : 'bg-white border-gray-300 text-gray-900'
@@ -540,7 +540,7 @@ const AdminCommissions: React.FC = () => {
                       min="0"
                       value={formData.max_amount}
                       onChange={(e) => setFormData(prev => ({ ...prev, max_amount: parseFloat(e.target.value) || 0 }))}
-                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent ${
                         isDark 
                           ? 'bg-gray-700 border-gray-600 text-white' 
                           : 'bg-white border-gray-300 text-gray-900'
@@ -556,7 +556,7 @@ const AdminCommissions: React.FC = () => {
                     id="is_active"
                     checked={formData.is_active}
                     onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-[#1b5e20] focus:ring-[#1b5e20] border-gray-300 rounded"
                   />
                   <label htmlFor="is_active" className={`ml-2 block text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                     Règle active
@@ -579,8 +579,8 @@ const AdminCommissions: React.FC = () => {
                     type="submit"
                     className={`px-4 py-2 rounded-lg transition-colors ${
                       isDark 
-                        ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                        ? 'bg-[#1b5e20] text-white hover:bg-[#16381a]' 
+                        : 'bg-[#1b5e20] text-white hover:bg-[#16381a]'
                     }`}
                   >
                     {editingRule ? 'Modifier' : 'Créer'}

@@ -67,7 +67,7 @@ export default function AdminAccounts() {
       <section className={`rounded-2xl border p-6 ${isDark ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"}`}>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-2">
-            <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${isDark ? "bg-orange-900/30 text-orange-200" : "bg-orange-50 text-orange-700"}`}>
+            <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${isDark ? "bg-[#17331c]/30 text-[#66bb6a]" : "bg-[#eef6ea] text-[#1b5e20]"}`}>
               Mangoo Tech
             </span>
             <div>
@@ -78,8 +78,8 @@ export default function AdminAccounts() {
             </div>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div className={`rounded-xl border px-4 py-3 ${isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-orange-50"}`}>
-              <div className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-orange-200" : "text-orange-700"}`}>Vue active</div>
+            <div className={`rounded-xl border px-4 py-3 ${isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-[#eef6ea]"}`}>
+              <div className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-[#66bb6a]" : "text-[#1b5e20]"}`}>Vue active</div>
               <div className={`mt-1 text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{activeTabConfig.label}</div>
             </div>
             <div className={`rounded-xl border px-4 py-3 ${isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-white"}`}>
@@ -107,8 +107,8 @@ export default function AdminAccounts() {
                 className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-left transition-colors ${
                   isActive
                     ? isDark
-                      ? "border-orange-500 bg-orange-900/30 text-orange-100"
-                      : "border-orange-300 bg-orange-50 text-orange-700"
+                      ? "border-[#1b5e20] bg-[#17331c]/30 text-[#66bb6a]"
+                      : "border-[#cfe0c8] bg-[#eef6ea] text-[#1b5e20]"
                     : isDark
                       ? "border-gray-700 bg-gray-900 text-gray-200 hover:border-gray-600"
                       : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
@@ -141,7 +141,7 @@ export default function AdminAccounts() {
             <p className={`${isDark ? "text-gray-300" : "text-gray-600"}`}>
               Cette vue sera branchee sur sa source reelle dans un prochain lot, apres validation du modele de donnees correspondant.
             </p>
-            <div className={`rounded-xl border px-4 py-3 text-sm ${isDark ? "border-amber-800 bg-amber-900/20 text-amber-200" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
+            <div className={`rounded-xl border px-4 py-3 text-sm ${isDark ? "border-[#8f4b00]/60 bg-[#8f4b00]/20 text-[#ffe082]" : "border-[#ffe082] bg-[#ffe082]/20 text-[#8f4b00]"}`}>
               Priorite actuelle: stabiliser les comptes d'administration et les prestataires sans casser les parcours deja valides.
             </div>
           </div>

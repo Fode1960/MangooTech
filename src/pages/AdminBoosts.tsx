@@ -49,7 +49,7 @@ export default function AdminBoosts() {
               onClick={() => setTab(t.id)}
               className={`px-4 py-2 rounded-xl text-sm font-bold border transition-colors ${
                 tab === t.id
-                  ? 'bg-blue-600 text-white border-blue-600'
+                  ? 'bg-[#1b5e20] text-white border-[#1b5e20]'
                   : 'bg-white text-gray-800 border-gray-200 hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800'
               }`}
             >

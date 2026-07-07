@@ -226,7 +226,7 @@ export default function AdminClients({ embedded = false }: AdminClientsProps) {
               <button
                 type="button"
                 onClick={() => setSector("all")}
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${sector === "all" ? "bg-orange-500 text-white" : isDark ? "bg-gray-900 text-gray-200" : "bg-gray-100 text-gray-700"}`}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${sector === "all" ? "bg-[#1b5e20] text-white" : isDark ? "bg-gray-900 text-gray-200" : "bg-gray-100 text-gray-700"}`}
               >
                 Tous
               </button>
@@ -263,7 +263,7 @@ export default function AdminClients({ embedded = false }: AdminClientsProps) {
             <button
               type="button"
               onClick={() => setQuery(search.trim())}
-              className="rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600"
+              className="rounded-xl bg-[#1b5e20] px-4 py-2 text-sm font-semibold text-white hover:bg-[#16381a]"
             >
               Chercher
             </button>
@@ -308,7 +308,7 @@ export default function AdminClients({ embedded = false }: AdminClientsProps) {
       )}
 
       {notice && !error && (
-        <div className={`rounded-xl border px-4 py-3 text-sm ${isDark ? "border-amber-800 bg-amber-900/20 text-amber-200" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
+        <div className={`rounded-xl border px-4 py-3 text-sm ${isDark ? "border-[#8f4b00]/60 bg-[#8f4b00]/20 text-[#ffe082]" : "border-[#ffe082] bg-[#ffe082]/20 text-[#8f4b00]"}`}>
           {notice}
         </div>
       )}
@@ -331,7 +331,7 @@ export default function AdminClients({ embedded = false }: AdminClientsProps) {
             {filteredClients.map((client) => (
               <div key={`${client.sector}:${client.email}:${client.id}`} className="grid grid-cols-[minmax(0,1.5fr)_minmax(0,1.1fr)_140px_160px_110px] gap-4 px-4 py-4">
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-full ${isDark ? "bg-gray-700 text-orange-200" : "bg-orange-50 text-orange-600"}`}>
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-full ${isDark ? "bg-gray-700 text-[#66bb6a]" : "bg-[#eef6ea] text-[#1b5e20]"}`}>
                     <UserRound className="h-5 w-5" />
                   </div>
                   <div className="min-w-0">
@@ -343,8 +343,8 @@ export default function AdminClients({ embedded = false }: AdminClientsProps) {
                 <div>
                   <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
                     client.sector === "formal"
-                      ? "bg-[#f6faf3] text-[#1b5e20] dark:bg-[#1b5e20]/30 dark:text-[#8ccf8c]"
-                      : "bg-[#f6faf3] text-[#1b5e20] dark:bg-[#1b5e20]/30 dark:text-[#8ccf8c]"
+                      ? "bg-[#f6faf3] text-[#1b5e20] dark:bg-[#1b5e20]/30 dark:text-[#66bb6a]"
+                      : "bg-[#f6faf3] text-[#1b5e20] dark:bg-[#1b5e20]/30 dark:text-[#66bb6a]"
                   }`}>
                     {client.sector === "formal" ? "Formel" : "Informel"}
                   </span>
