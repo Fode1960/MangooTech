@@ -2210,8 +2210,11 @@
 
         /* === MAP === */
         #map {
-            height: 100%;
+            position: absolute;
+            top: calc(var(--lp-top-ui, 140px) + 114px);
+            left: 0;
             width: 100%;
+            height: calc(100% - var(--lp-top-ui, 140px) - 114px);
             display: block;
         }
         
@@ -9585,6 +9588,10 @@
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
             }).addTo(map);
+
+            // Ajuster la zone visible pour tenir compte des overlays UI
+            setTimeout(() => { try { map.invalidateSize(); } catch {} }, 50);
+            setTimeout(() => { try { map.invalidateSize(); } catch {} }, 400);
 
             // User Marker
             updateUserMarker();
