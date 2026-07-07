@@ -51,15 +51,15 @@ const formatStatus = (value: string | null | undefined) => {
 
 const statusBadgeClass = (status: string | null | undefined, isDark: boolean) => {
   const normalized = String(status || "").trim().toLowerCase();
-  if (normalized === "approved") return isDark ? "bg-emerald-900/30 text-emerald-200" : "bg-emerald-50 text-emerald-700";
+  if (normalized === "approved") return isDark ? "bg-[#1b5e20]/30 text-[#8ccf8c]" : "bg-[#f6faf3] text-[#1b5e20]";
   if (normalized === "rejected") return isDark ? "bg-red-900/30 text-red-200" : "bg-red-50 text-red-700";
   if (normalized === "suspended") return isDark ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-700";
   return isDark ? "bg-amber-900/30 text-amber-200" : "bg-amber-50 text-amber-700";
 };
 
 const sectorBadgeClass = (sector: VendorSector, isDark: boolean) => {
-  if (sector === "informal") return isDark ? "bg-fuchsia-900/30 text-fuchsia-200" : "bg-fuchsia-50 text-fuchsia-700";
-  return isDark ? "bg-sky-900/30 text-sky-200" : "bg-sky-50 text-sky-700";
+  if (sector === "informal") return isDark ? "bg-[#1b5e20]/30 text-[#8ccf8c]" : "bg-[#f6faf3] text-[#1b5e20]";
+  return isDark ? "bg-[#1b5e20]/30 text-[#8ccf8c]" : "bg-[#f6faf3] text-[#1b5e20]";
 };
 
 export default function AdminVendors({ embedded = false }: AdminVendorsProps) {
@@ -190,14 +190,14 @@ export default function AdminVendors({ embedded = false }: AdminVendorsProps) {
               <button
                 type="button"
                 onClick={() => applySectorFilter("formal")}
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${sector === "formal" ? "bg-sky-600 text-white" : isDark ? "bg-gray-900 text-gray-200" : "bg-sky-50 text-sky-700"}`}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${sector === "formal" ? "bg-[#1b5e20] text-white" : isDark ? "bg-gray-900 text-gray-200" : "bg-[#f6faf3] text-[#1b5e20]"}`}
               >
                 Formel
               </button>
               <button
                 type="button"
                 onClick={() => applySectorFilter("informal")}
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${sector === "informal" ? "bg-fuchsia-600 text-white" : isDark ? "bg-gray-900 text-gray-200" : "bg-fuchsia-50 text-fuchsia-700"}`}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${sector === "informal" ? "bg-[#1b5e20] text-white" : isDark ? "bg-gray-900 text-gray-200" : "bg-[#f6faf3] text-[#1b5e20]"}`}
               >
                 Informel
               </button>
@@ -265,15 +265,15 @@ export default function AdminVendors({ embedded = false }: AdminVendorsProps) {
         </div>
         <div className={`rounded-xl border px-4 py-3 ${isDark ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"}`}>
           <div className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-500"}`}>Formel</div>
-          <div className="mt-1 text-lg font-bold text-sky-600">{counts.formal}</div>
+          <div className="mt-1 text-lg font-bold text-[#1b5e20]">{counts.formal}</div>
         </div>
         <div className={`rounded-xl border px-4 py-3 ${isDark ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"}`}>
           <div className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-500"}`}>Informel</div>
-          <div className="mt-1 text-lg font-bold text-fuchsia-600">{counts.informal}</div>
+          <div className="mt-1 text-lg font-bold text-[#1b5e20]">{counts.informal}</div>
         </div>
         <div className={`rounded-xl border px-4 py-3 ${isDark ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"}`}>
           <div className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-500"}`}>Approuves</div>
-          <div className="mt-1 text-lg font-bold text-emerald-600">{counts.approved}</div>
+          <div className="mt-1 text-lg font-bold text-[#1b5e20]">{counts.approved}</div>
         </div>
         <div className={`rounded-xl border px-4 py-3 ${isDark ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"}`}>
           <div className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-500"}`}>En attente</div>

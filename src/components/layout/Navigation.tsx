@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Film, ShoppingBag } from 'lucide-react';
+import { Building2, Film, Home, Settings, ShoppingBag, Store } from 'lucide-react';
+import mangooLogo from '../../assets/mangoo-logo.svg';
 
 const Navigation = () => {
   const location = useLocation();
@@ -9,14 +10,14 @@ const Navigation = () => {
   const isDev = Boolean(import.meta.env.DEV);
 
   const navItems = [
-    { path: '/', label: 'Accueil', icon: '🏠' },
+    { path: '/', label: 'Accueil', icon: Home },
     { path: '/enhanced-live-shopping', label: 'Live Shopping+', icon: Film },
     { path: '/marketplace', label: 'Marketplace', icon: ShoppingBag },
     ...(isDev
       ? [
-          { path: '/webrtc-test', label: 'WebRTC', icon: '🎧' },
-          { path: '/test-room-management', label: 'Rooms', icon: '🏢' },
-          { path: '/test-admin-setup', label: 'Admin', icon: '⚙️' },
+          { path: '/webrtc-test', label: 'WebRTC', icon: Store },
+          { path: '/test-room-management', label: 'Rooms', icon: Building2 },
+          { path: '/test-admin-setup', label: 'Admin', icon: Settings },
         ]
       : []),
   ];
@@ -26,7 +27,8 @@ const Navigation = () => {
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-2">
-            <div className="text-2xl font-bold text-green-600">🥭 MangooTech</div>
+            <img src={mangooLogo} alt="" className="h-9 w-9 rounded-full object-contain" />
+            <div className="text-2xl font-bold text-green-700">MangooTech</div>
           </div>
           
           <div className="flex space-x-1">
@@ -41,11 +43,7 @@ const Navigation = () => {
                 }`}
               >
                 <div className="flex items-center space-x-2">
-                  {typeof item.icon === 'string' ? (
-                    <span>{item.icon}</span>
-                  ) : (
-                    <item.icon className="w-4 h-4" />
-                  )}
+                  <item.icon className="w-4 h-4" />
                   <span>{item.label}</span>
                 </div>
               </Link>

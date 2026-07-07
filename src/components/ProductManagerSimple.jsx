@@ -63,7 +63,7 @@ const ProductManagerSimple = ({ vendorId }) => {
         </h2>
         <button
           onClick={() => setShowForm(true)}
-          className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-4 py-2 rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all flex items-center space-x-2"
+          className="bg-[#1b5e20] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#16381a] transition-all flex items-center space-x-2"
         >
           <Plus className="w-4 h-4" />
           <span>Ajouter un produit</span>
@@ -86,7 +86,7 @@ const ProductManagerSimple = ({ vendorId }) => {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-[#1b5e20] focus:border-[#1b5e20] dark:bg-gray-700 dark:text-white"
                   required
                 />
               </div>
@@ -99,7 +99,7 @@ const ProductManagerSimple = ({ vendorId }) => {
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-[#1b5e20] focus:border-[#1b5e20] dark:bg-gray-700 dark:text-white"
                   required
                 />
               </div>
@@ -113,7 +113,7 @@ const ProductManagerSimple = ({ vendorId }) => {
                     type="number"
                     value={formData.price}
                     onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-[#1b5e20] focus:border-[#1b5e20] dark:bg-gray-700 dark:text-white"
                     required
                   />
                 </div>
@@ -127,7 +127,7 @@ const ProductManagerSimple = ({ vendorId }) => {
                     value={formData.stock}
                     onChange={(e) => setFormData(prev => ({ ...prev, stock: e.target.value }))}
                     min="0"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-[#1b5e20] focus:border-[#1b5e20] dark:bg-gray-700 dark:text-white"
                     required
                   />
                 </div>
@@ -140,7 +140,7 @@ const ProductManagerSimple = ({ vendorId }) => {
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-[#1b5e20] focus:border-[#1b5e20] dark:bg-gray-700 dark:text-white"
                   required
                 >
                   {categories.map(cat => (
@@ -161,7 +161,7 @@ const ProductManagerSimple = ({ vendorId }) => {
                 </button>
                 <button
                   type="submit"
-                  className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-6 py-2 rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all"
+                  className="bg-[#1b5e20] text-white px-6 py-2 rounded-lg font-medium hover:bg-[#16381a] transition-all"
                 >
                   Ajouter le produit
                 </button>
@@ -181,7 +181,7 @@ const ProductManagerSimple = ({ vendorId }) => {
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => setShowForm(true)}
-                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                    className="text-[#1b5e20] hover:text-[#16381a] dark:text-[#66bb6a] dark:hover:text-[#81c784]"
                   >
                     <Edit className="w-4 h-4" />
                   </button>
@@ -204,7 +204,7 @@ const ProductManagerSimple = ({ vendorId }) => {
               
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold text-orange-600">
+                  <p className="text-2xl font-bold text-[#1b5e20]">
                     {product.price}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -234,7 +234,7 @@ const ProductManagerSimple = ({ vendorId }) => {
           </p>
           <button
             onClick={() => setShowForm(true)}
-            className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-4 py-2 rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all"
+            className="bg-[#1b5e20] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#16381a] transition-all"
           >
             Ajouter un produit
           </button>

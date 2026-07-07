@@ -397,10 +397,10 @@ const MiniBoutiqueTestSimple: React.FC = () => {
 
   if (!currentUser) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 p-6">
+      <div className="min-h-screen bg-[#f6faf3] p-6">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-            <Store className="w-16 h-16 text-orange-500 mx-auto mb-4" />
+            <Store className="w-16 h-16 text-[#1b5e20] mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Connexion Requise</h2>
             <p className="text-gray-600 mb-6">
               Vous devez être connecté pour accéder aux Mini-Boutiques.
@@ -408,7 +408,7 @@ const MiniBoutiqueTestSimple: React.FC = () => {
             <div className="space-y-3">
               <button
                 onClick={() => window.location.href = '/login'}
-                className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3 px-6 rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-200 font-medium"
+                className="w-full bg-[#1b5e20] text-white hover:bg-[#16381a] py-3 px-6 rounded-lg transition-all duration-200 font-medium"
               >
                 Se Connecter
               </button>
@@ -427,9 +427,9 @@ const MiniBoutiqueTestSimple: React.FC = () => {
                   localStorage.setItem('local_mode', 'true');
                   window.location.reload();
                 }}
-                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white py-3 px-6 rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-medium"
+                className="w-full bg-[#1b5e20] text-white hover:bg-[#16381a] py-3 px-6 rounded-lg transition-all duration-200 font-medium"
               >
-                ⚡ Mode Test Rapide
+                Mode Test Rapide
               </button>
             </div>
           </div>
@@ -439,7 +439,7 @@ const MiniBoutiqueTestSimple: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 p-6">
+    <div className="min-h-screen bg-[#f6faf3] p-6">
       <div className="max-w-6xl mx-auto">
         {/* En-tête */}
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
@@ -451,12 +451,12 @@ const MiniBoutiqueTestSimple: React.FC = () => {
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={exportData}
-                className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-2 rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 flex items-center space-x-2 font-medium text-sm"
+                className="bg-[#1b5e20] text-white hover:bg-[#16381a] px-4 py-2 rounded-lg transition-all duration-200 flex items-center space-x-2 font-medium text-sm"
               >
                 <Download className="w-4 h-4" />
                 <span>Exporter</span>
               </button>
-              <label className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center space-x-2 font-medium text-sm cursor-pointer">
+              <label className="bg-[#1b5e20] text-white hover:bg-[#16381a] px-4 py-2 rounded-lg transition-all duration-200 flex items-center space-x-2 font-medium text-sm cursor-pointer">
                 <Upload className="w-4 h-4" />
                 <span>Importer</span>
                 <input
@@ -468,7 +468,7 @@ const MiniBoutiqueTestSimple: React.FC = () => {
               </label>
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-200 flex items-center space-x-2 font-medium"
+                className="bg-[#1b5e20] text-white hover:bg-[#16381a] px-6 py-2 rounded-lg transition-all duration-200 flex items-center space-x-2 font-medium"
               >
                 <Plus className="w-5 h-5" />
                 <span>Créer une Boutique</span>
@@ -651,7 +651,7 @@ const MiniBoutiqueTestSimple: React.FC = () => {
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
                     required
                     placeholder="ex: Boutique Mamadou"
                   />
@@ -661,7 +661,7 @@ const MiniBoutiqueTestSimple: React.FC = () => {
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({...formData, category: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
                   >
                     {categories.map(cat => (
                       <option key={cat} value={cat}>
@@ -677,7 +677,7 @@ const MiniBoutiqueTestSimple: React.FC = () => {
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
                   rows={3}
                   required
                   placeholder="Décrivez votre boutique et ses produits..."
@@ -691,7 +691,7 @@ const MiniBoutiqueTestSimple: React.FC = () => {
                     type="text"
                     value={formData.address}
                     onChange={(e) => setFormData({...formData, address: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
                     required
                     placeholder="ex: Dakar, Sénégal"
                   />
@@ -702,7 +702,7 @@ const MiniBoutiqueTestSimple: React.FC = () => {
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
                     required
                     placeholder="ex: +221771234567"
                   />
@@ -716,7 +716,7 @@ const MiniBoutiqueTestSimple: React.FC = () => {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
                     required
                     placeholder="ex: contact@boutique.com"
                   />
@@ -727,7 +727,7 @@ const MiniBoutiqueTestSimple: React.FC = () => {
                     type="url"
                     value={formData.website}
                     onChange={(e) => setFormData({...formData, website: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
                     placeholder="ex: www.boutique.com"
                   />
                 </div>
@@ -737,7 +737,7 @@ const MiniBoutiqueTestSimple: React.FC = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-200 flex items-center space-x-2 disabled:opacity-50"
+                  className="bg-[#1b5e20] text-white hover:bg-[#16381a] px-6 py-2 rounded-lg transition-all duration-200 flex items-center space-x-2 disabled:opacity-50"
                 >
                   <Save className="w-4 h-4" />
                   <span>{loading ? 'Chargement...' : (editingShop ? 'Mettre à jour' : 'Créer')}</span>
@@ -766,7 +766,7 @@ const MiniBoutiqueTestSimple: React.FC = () => {
               <p className="text-gray-600 mb-4">Commencez par créer votre première boutique personnalisée</p>
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-200"
+                className="bg-[#1b5e20] text-white hover:bg-[#16381a] px-6 py-2 rounded-lg transition-all duration-200"
               >
                 Créer une Boutique
               </button>

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { Phone, Volume2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { QRCodeCanvas } from 'qrcode.react'
 import { supabase } from '../../config/supabase'
@@ -300,15 +301,16 @@ export default function ConnectPlusVendorPage({ shops = [], user }) {
             type="button"
             onClick={readPin}
             disabled={busy || !normalizePin(pin)}
-            className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-900 px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-50 disabled:opacity-60"
           >
-            🔊 Lire le PIN
+            <Volume2 className="h-4 w-4" aria-hidden="true" />
+            Lire le PIN
           </button>
           <button
             type="button"
             onClick={issue}
             disabled={!selectedShopSlug || busy}
-            className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-60"
+            className="rounded-lg bg-[#1b5e20] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#16381a] disabled:opacity-60"
           >
             {busy ? 'Chargement...' : 'Changer PIN'}
           </button>
@@ -316,9 +318,10 @@ export default function ConnectPlusVendorPage({ shops = [], user }) {
             type="button"
             onClick={openVendorCall}
             disabled={busy || !String(selectedShopSlug || shops?.[0]?.slug || '').trim()}
-            className={`${busy ? 'opacity-60' : ''} ${String(selectedShopSlug || shops?.[0]?.slug || '').trim() ? 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-900' : 'bg-white border border-gray-200 text-gray-500'} px-4 py-2 rounded-lg text-sm font-semibold transition-colors`}
+            className={`${busy ? 'opacity-60' : ''} ${String(selectedShopSlug || shops?.[0]?.slug || '').trim() ? 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-900' : 'bg-white border border-gray-200 text-gray-500'} inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors`}
           >
-            📞 Appeler (Connect+)
+            <Phone className="h-4 w-4" aria-hidden="true" />
+            Appeler (Connect+)
           </button>
         </div>
       </div>

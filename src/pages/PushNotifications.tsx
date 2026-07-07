@@ -90,11 +90,11 @@ const PushNotifications: React.FC = () => {
   const getIcon = (type: string) => {
     switch (type) {
       case 'order':
-        return <ShoppingBag className="w-5 h-5 text-blue-500" />;
+        return <ShoppingBag className="w-5 h-5 text-[#1b5e20]" />;
       case 'review':
         return <Star className="w-5 h-5 text-yellow-500" />;
       case 'inventory':
-        return <Zap className="w-5 h-5 text-orange-500" />;
+        return <Zap className="w-5 h-5 text-[#1b5e20]" />;
       default:
         return <Bell className="w-5 h-5 text-gray-500" />;
     }
@@ -116,21 +116,21 @@ const PushNotifications: React.FC = () => {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
+    <div className="min-h-screen bg-[#f6faf3]">
       <Toaster position="top-right" />
       {/* Header */}
-      <div className="bg-white shadow-lg border-b border-orange-200">
+      <div className="bg-white shadow-lg border-b border-[#c8e6c9]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-                <Bell className="w-8 h-8 text-orange-500 mr-3" />
+                <Bell className="w-8 h-8 text-[#1b5e20] mr-3" />
                 Notifications Push
               </h1>
               <p className="text-gray-600 mt-2">Gérez vos notifications et restez informé</p>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium">
+              <span className="bg-[#e8f5e9] text-[#16381a] px-3 py-1 rounded-full text-sm font-medium">
                 {unreadCount} non lues
               </span>
             </div>
@@ -146,7 +146,7 @@ const PushNotifications: React.FC = () => {
             <div>
               <p className="text-gray-600 mb-2">
                 Statut: <span className={`font-medium ${
-                  permission === 'granted' ? 'text-green-600' :
+                  permission === 'granted' ? 'text-[#1b5e20]' :
                   permission === 'denied' ? 'text-red-600' : 'text-yellow-600'
                 }`}>
                   {permission === 'granted' ? 'Activées' :
@@ -163,7 +163,7 @@ const PushNotifications: React.FC = () => {
               {permission !== 'granted' && (
                 <button
                   onClick={requestPermission}
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors"
+                  className="bg-[#1b5e20] hover:bg-[#16381a] text-white px-4 py-2 rounded-lg transition-colors"
                 >
                   Activer les notifications
                 </button>
@@ -171,7 +171,7 @@ const PushNotifications: React.FC = () => {
               {permission === 'granted' && (
                 <button
                   onClick={sendTestNotification}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                  className="bg-[#1b5e20] hover:bg-[#16381a] text-white px-4 py-2 rounded-lg transition-colors"
                 >
                   Tester les notifications
                 </button>
@@ -207,7 +207,7 @@ const PushNotifications: React.FC = () => {
             <div
               key={notification.id}
               className={`bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow ${
-                !notification.read ? 'border-l-4 border-orange-500' : ''
+                !notification.read ? 'border-l-4 border-[#1b5e20]' : ''
               }`}
             >
               <div className="flex items-start justify-between">
@@ -221,7 +221,7 @@ const PushNotifications: React.FC = () => {
                     <div className="flex items-center space-x-4 text-sm text-gray-500">
                       <span>{formatTime(notification.timestamp)}</span>
                       {!notification.read && (
-                        <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs font-medium">
+                        <span className="bg-[#e8f5e9] text-[#16381a] px-2 py-1 rounded-full text-xs font-medium">
                           Nouveau
                         </span>
                       )}
@@ -232,7 +232,7 @@ const PushNotifications: React.FC = () => {
                   {!notification.read && (
                     <button
                       onClick={() => markAsRead(notification.id)}
-                      className="text-blue-500 hover:text-blue-600 text-sm font-medium"
+                      className="text-[#1b5e20] hover:text-[#1b5e20] text-sm font-medium"
                     >
                       Marquer comme lu
                     </button>

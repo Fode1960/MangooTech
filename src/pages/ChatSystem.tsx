@@ -34,9 +34,9 @@ const ChatSystem: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const contacts = [
-    { id: 101, name: 'Support Mangoo', avatar: 'S', status: 'online', role: 'Support', color: 'bg-green-500' },
-    { id: 102, name: 'Vendeur Mode', avatar: 'V', status: 'offline', role: 'Vendeur', color: 'bg-orange-500' },
-    { id: 103, name: 'Livreur Express', avatar: 'L', status: 'online', role: 'Livreur', color: 'bg-blue-500' }
+    { id: 101, name: 'Support Mangoo', avatar: 'S', status: 'online', role: 'Support', color: 'bg-[#1b5e20]' },
+    { id: 102, name: 'Vendeur Mode', avatar: 'V', status: 'offline', role: 'Vendeur', color: 'bg-[#1b5e20]' },
+    { id: 103, name: 'Livreur Express', avatar: 'L', status: 'online', role: 'Livreur', color: 'bg-[#1b5e20]' }
   ];
 
   const chats = [
@@ -112,26 +112,26 @@ const ChatSystem: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
+    <div className="min-h-screen bg-[#f6faf3]">
       <Toaster position="top-right" />
       {/* Header */}
-      <div className="bg-white shadow-lg border-b border-orange-200">
+      <div className="bg-white shadow-lg border-b border-[#c8e6c9]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-                <MessageCircle className="w-8 h-8 text-orange-500 mr-3" />
+                <MessageCircle className="w-8 h-8 text-[#1b5e20] mr-3" />
                 Chat en Direct
               </h1>
               <p className="text-gray-600 mt-2">Discutez avec vos clients et vendeurs</p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-500">3</div>
+                <div className="text-2xl font-bold text-[#1b5e20]">3</div>
                 <div className="text-sm text-gray-500">En ligne</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-orange-500">3</div>
+                <div className="text-2xl font-bold text-[#1b5e20]">3</div>
                 <div className="text-sm text-gray-500">Non lus</div>
               </div>
             </div>
@@ -163,7 +163,7 @@ const ChatSystem: React.FC = () => {
                   placeholder={viewMode === 'conversations' ? "Rechercher une conversation..." : "Rechercher un contact..."}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
                 />
               </div>
               <div className="divide-y divide-gray-200 max-h-[500px] overflow-y-auto">
@@ -185,7 +185,7 @@ const ChatSystem: React.FC = () => {
                             <span className="text-white font-semibold">{contact.avatar}</span>
                           </div>
                           {contact.status === 'online' && (
-                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#1b5e20] border-2 border-white rounded-full"></div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -200,17 +200,17 @@ const ChatSystem: React.FC = () => {
                     <div
                       key={chat.id}
                       className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-                        selectedChat === chat.id ? 'bg-orange-50 border-r-2 border-orange-500' : ''
+                        selectedChat === chat.id ? 'bg-[#f6faf3] border-r-2 border-[#1b5e20]' : ''
                       }`}
                       onClick={() => setSelectedChat(chat.id)}
                     >
                       <div className="flex items-center space-x-3">
                         <div className="relative">
-                          <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full flex items-center justify-center">
+                          <div className="w-12 h-12 bg-[#1b5e20] rounded-full flex items-center justify-center">
                             <span className="text-white font-semibold">{chat.avatar}</span>
                           </div>
                           {chat.online && (
-                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#1b5e20] border-2 border-white rounded-full"></div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -221,7 +221,7 @@ const ChatSystem: React.FC = () => {
                           <p className="text-sm text-gray-600 truncate">{chat.lastMessage}</p>
                         </div>
                         {chat.unread > 0 && (
-                          <span className="bg-orange-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
+                          <span className="bg-[#1b5e20] text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
                             {chat.unread}
                           </span>
                         )}
@@ -238,12 +238,12 @@ const ChatSystem: React.FC = () => {
             <div className="bg-white rounded-2xl shadow-lg h-[600px] flex flex-col">
               {/* Chat Header */}
               <div className="p-4 border-b border-gray-200 flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-[#1b5e20] rounded-full flex items-center justify-center">
                   <span className="text-white font-semibold">AD</span>
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900">Aminata D.</h3>
-                  <p className="text-sm text-green-500">En ligne</p>
+                  <p className="text-sm text-[#1b5e20]">En ligne</p>
                 </div>
                 <div className="ml-auto flex items-center space-x-2">
                   <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
@@ -265,13 +265,13 @@ const ChatSystem: React.FC = () => {
                     <div
                       className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                         message.sender === 'me'
-                          ? 'bg-orange-500 text-white'
+                          ? 'bg-[#1b5e20] text-white'
                           : 'bg-gray-100 text-gray-900'
                       }`}
                     >
                       <p className="text-sm">{message.text}</p>
                       <div className={`flex items-center justify-between mt-1 text-xs ${
-                        message.sender === 'me' ? 'text-orange-100' : 'text-gray-500'
+                        message.sender === 'me' ? 'text-[#e8f5e9]' : 'text-gray-500'
                       }`}>
                         <span>{message.timestamp}</span>
                         {message.sender === 'me' && (
@@ -307,7 +307,7 @@ const ChatSystem: React.FC = () => {
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Écrire un message..."
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20] focus:border-[#1b5e20]"
                   />
                   <button 
                     onClick={handleEmojiClick}
@@ -318,7 +318,7 @@ const ChatSystem: React.FC = () => {
                   <button 
                     onClick={handleSendMessage}
                     disabled={!newMessage.trim()}
-                    className="bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white p-2 rounded-lg transition-colors"
+                    className="bg-[#1b5e20] hover:bg-[#16381a] disabled:bg-gray-300 disabled:cursor-not-allowed text-white p-2 rounded-lg transition-colors"
                   >
                     <Send className="w-5 h-5" />
                   </button>

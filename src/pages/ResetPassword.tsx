@@ -198,7 +198,7 @@ export default function ResetPassword() {
           </div>
 
           {error && <div className="text-sm text-red-600 dark:text-red-400">{error}</div>}
-          {notice && <div className="text-sm text-emerald-700 dark:text-emerald-400">{notice}</div>}
+          {notice && <div className="text-sm text-[#1b5e20] dark:text-[#66bb6a]">{notice}</div>}
 
           <button
             type="button"
@@ -207,13 +207,13 @@ export default function ResetPassword() {
             className={`w-full py-3 rounded-xl font-bold transition-colors ${
               !hasSession || busy
                 ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
-                : 'bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 text-white'
+                : 'bg-[#1b5e20] hover:bg-[#16381a] text-white'
             }`}
           >
             {busy ? 'Mise à jour…' : 'Mettre à jour le mot de passe'}
           </button>
 
-          <a href="/connexion" className="text-center text-sm font-semibold text-blue-600 hover:text-blue-700">
+          <a href="/connexion" className="text-center text-sm font-semibold text-[#1b5e20] hover:text-[#16381a]">
             Retour à la connexion
           </a>
         </div>

@@ -271,7 +271,7 @@ export default function AIChatAssistant() {
     // Message de bienvenue intelligent
     const welcomeMessage: Message = {
       id: 'welcome',
-      text: 'Bonjour! 👋 Je suis votre assistant IA intelligent. Je peux analyser vos besoins avant même que vous ne les exprimiez! Essayez de me poser une question sur nos produits.',
+      text: 'Bonjour! Je suis votre assistant IA intelligent. Je peux analyser vos besoins avant meme que vous ne les exprimiez! Essayez de me poser une question sur nos produits.',
       sender: 'ai',
       timestamp: new Date(),
       suggestedActions: ['Prix des mangues', 'Délai de livraison', 'Qualité des produits']
@@ -280,15 +280,15 @@ export default function AIChatAssistant() {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+    <div className="flex flex-col h-screen bg-[#f6faf3]">
       {/* Header avec insights en temps réel */}
-      <div className="bg-white shadow-lg border-b border-purple-200">
+      <div className="bg-white shadow-lg border-b border-[#cfe0c8]">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
               <div className="relative">
-                <Brain className="w-8 h-8 text-purple-600 animate-pulse" />
-                <Sparkles className="w-4 h-4 text-yellow-500 absolute -top-1 -right-1 animate-bounce" />
+                <Brain className="w-8 h-8 text-[#1b5e20] animate-pulse" />
+                <Sparkles className="w-4 h-4 text-[#1b5e20] absolute -top-1 -right-1 animate-bounce" />
               </div>
               <div>
                 <h2 className="text-xl font-bold text-gray-800">Assistant IA Intelligent</h2>
@@ -299,7 +299,7 @@ export default function AIChatAssistant() {
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
                 className={`p-2 rounded-lg transition-colors ${
-                  soundEnabled ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-400'
+                  soundEnabled ? 'bg-[#eef6ea] text-[#1b5e20]' : 'bg-gray-100 text-gray-400'
                 }`}
               >
                 {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
@@ -361,7 +361,7 @@ export default function AIChatAssistant() {
             <div
               className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                 message.sender === 'user'
-                  ? 'bg-purple-600 text-white'
+                  ? 'bg-[#1b5e20] text-white'
                   : 'bg-white text-gray-800 shadow-md border border-gray-200'
               }`}
             >
@@ -381,7 +381,7 @@ export default function AIChatAssistant() {
                     <button
                       key={index}
                       onClick={() => handleSuggestedAction(action)}
-                      className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs hover:bg-purple-200 transition-colors"
+                      className="px-3 py-1 bg-[#eef6ea] text-[#1b5e20] rounded-full text-xs hover:bg-[#d4e8cc] transition-colors"
                     >
                       {action}
                     </button>
@@ -396,9 +396,9 @@ export default function AIChatAssistant() {
           <div className="flex justify-start">
             <div className="bg-white text-gray-800 px-4 py-2 rounded-lg shadow-md border border-gray-200">
               <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                <div className="w-2 h-2 bg-[#1b5e20] rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-[#1b5e20] rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                <div className="w-2 h-2 bg-[#1b5e20] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
               </div>
             </div>
           </div>
@@ -435,7 +435,7 @@ export default function AIChatAssistant() {
               onChange={(e) => setInputText(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && sendMessage(inputText)}
               placeholder="Posez votre question... L'IA analyse vos besoins en temps réel"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent"
             />
           </div>
           <button
@@ -443,7 +443,7 @@ export default function AIChatAssistant() {
             className={`p-3 rounded-lg transition-colors ${
               isListening
                 ? 'bg-red-500 text-white animate-pulse'
-                : 'bg-purple-600 text-white hover:bg-purple-700'
+                : 'bg-[#1b5e20] text-white hover:bg-[#16381a]'
             }`}
           >
             {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
@@ -451,7 +451,7 @@ export default function AIChatAssistant() {
           <button
             onClick={() => sendMessage(inputText)}
             disabled={!inputText.trim()}
-            className="p-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            className="p-3 bg-[#1b5e20] text-white rounded-lg hover:bg-[#16381a] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
           >
             <Send className="w-5 h-5" />
           </button>

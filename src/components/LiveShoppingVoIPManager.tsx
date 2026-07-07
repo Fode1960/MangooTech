@@ -189,7 +189,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
       wsRef.current = ws;
 
       ws.onopen = () => {
-        console.log('✅ WebSocket connecté');
+        console.log('VoIP WebSocket connecté');
         setCallStatus('Connecté au serveur');
         
         // Register SIP
@@ -203,7 +203,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
 
       ws.onmessage = async (event) => {
         const data = JSON.parse(event.data);
-        console.log('📨 Message reçu:', data.type);
+        console.log('Message reçu:', data.type);
 
         switch (data.type) {
           case 'registered':
@@ -242,18 +242,18 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
       };
 
       ws.onclose = () => {
-        console.log('❌ WebSocket déconnecté');
+        console.log('VoIP WebSocket déconnecté');
         setIsRegistered(false);
         setCallStatus('Déconnecté');
       };
 
       ws.onerror = (error) => {
-        console.error('❌ Erreur WebSocket:', error);
+        console.error('VoIP Erreur WebSocket:', error);
         setCallStatus('Erreur de connexion');
       };
 
     } catch (error) {
-      console.error('❌ Erreur connexion WebSocket:', error);
+      console.error('VoIP Erreur connexion WebSocket:', error);
       setCallStatus('Erreur de connexion');
     }
   }, [mode, roomId, sipNumber]);
@@ -320,7 +320,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
       });
 
     } catch (error) {
-      console.error('❌ Erreur appel:', error);
+      console.error('VoIP Erreur appel:', error);
       setIsCalling(false);
       setCallStatus('Erreur appel');
     }
@@ -369,7 +369,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
       setCallStatus('Appel accepté');
 
     } catch (error) {
-      console.error('❌ Erreur réponse appel:', error);
+      console.error('VoIP Erreur réponse appel:', error);
       setCallStatus('Erreur réponse');
     }
   };
@@ -436,7 +436,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
   // Audio initialization (same as working VoIPFinalTest)
   const initializeAudio = useCallback(async () => {
     try {
-      console.log('🎧 Initialisation audio VoIP...');
+      console.log('Audio VoIP initialisation...');
       
       // Get microphone stream
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -451,7 +451,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
       });
       
       localStreamRef.current = stream;
-      console.log('✅ Microphone accessible');
+      console.log('Microphone accessible');
       
       // Create audio context
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -459,7 +459,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
       
       if (audioContext.state === 'suspended') {
         await audioContext.resume();
-        console.log('✅ Contexte audio repris');
+        console.log('Contexte audio repris');
       }
       
       // Create audio element for remote audio
@@ -491,10 +491,10 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
       setIsAudioConnected(true);
       startAudioLevelMonitoring();
       
-      console.log('✅ Audio VoIP initialisé avec succès');
+      console.log('Audio VoIP initialisé avec succès');
       
     } catch (error) {
-      console.error('❌ Erreur initialisation audio:', error);
+      console.error('VoIP Erreur initialisation audio:', error);
       setIsAudioConnected(false);
     }
   }, [startAudioLevelMonitoring]);
@@ -514,9 +514,9 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
     const animate = () => {
       // MangooTech gradient background
       const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-      gradient.addColorStop(0, '#FF8C42'); // Mango orange
-      gradient.addColorStop(0.5, '#FFD700'); // Gold
-      gradient.addColorStop(1, '#D2691E'); // Terracotta
+      gradient.addColorStop(0, '#1b5e20');
+      gradient.addColorStop(0.5, '#2e7d32');
+      gradient.addColorStop(1, '#1b5e20');
       
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -564,12 +564,12 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
       ctx.fill();
       
       // MangooTech text
-      ctx.fillStyle = '#FF8C42';
+      ctx.fillStyle = '#1b5e20';
       ctx.font = 'bold 48px Arial';
       ctx.textAlign = 'center';
       ctx.fillText('MangooTech', 0, 20);
       
-      ctx.fillStyle = '#D2691E';
+      ctx.fillStyle = '#eeeeee';
       ctx.font = '24px Arial';
       ctx.fillText('Live Shopping', 0, 60);
       
@@ -798,7 +798,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
     const salesMessage: ChatMessage = {
       id: `sale-${Date.now()}`,
       userId: 'system',
-      username: '🛒 Vente Confirmée',
+      username: 'Vente Confirmée',
       message: `${quantity}x ${product.name} vendu(s) - ${saleTotal.toLocaleString()} FCFA`,
       timestamp: new Date(),
       isHost: false,
@@ -874,40 +874,40 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
+    <div className="min-h-screen bg-[#f6faf3]">
       {/* Header with VoIP status */}
-      <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white p-4 shadow-lg">
+      <div className="bg-[#1b5e20] text-white p-4 shadow-lg">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-              <Film className="w-6 h-6 text-orange-500" />
+              <Film className="w-6 h-6 text-[#1b5e20]" />
             </div>
             <div>
               <h1 className="text-2xl font-bold">MangooTech Live Shopping</h1>
-              <p className="text-orange-100">Vente en direct • Appels VoIP • Expérience interactive</p>
+              <p className="opacity-80">Vente en direct ⋅ Appels VoIP ⋅ Expérience interactive</p>
             </div>
           </div>
           
           <div className="flex items-center space-x-6">
             {/* VoIP Status */}
             <div className="text-center">
-              <div className={`text-lg font-bold ${isRegistered ? 'text-green-300' : 'text-red-300'}`}>
-                {isRegistered ? '✅ VoIP' : '❌ VoIP'}
+              <div className={`text-lg font-bold ${isRegistered ? 'text-[#66bb6a]' : 'text-red-300'}`}>
+                {isRegistered ? 'VoIP' : 'VoIP'}
               </div>
-              <div className="text-sm text-orange-100">{callStatus}</div>
+              <div className="text-sm opacity-80">{callStatus}</div>
             </div>
             
             <div className="text-center">
               <div className="text-2xl font-bold">{viewers}</div>
-              <div className="text-sm text-orange-100">Spectateurs</div>
+              <div className="text-sm opacity-80">Spectateurs</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">{formatDuration(streamDuration)}</div>
-              <div className="text-sm text-orange-100">Durée</div>
+              <div className="text-sm opacity-80">Durée</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">{totalSales.toLocaleString()}</div>
-              <div className="text-sm text-orange-100">FCFA ventes</div>
+              <div className="text-sm opacity-80">FCFA ventes</div>
             </div>
           </div>
         </div>
@@ -1005,7 +1005,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
                             onClick={initializeAudio}
                             className="mt-1 bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded"
                           >
-                            ▶️ Démarrer Audio
+                            Démarrer Audio
                           </button>
                         )}
                       </div>
@@ -1191,7 +1191,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
                 
                 <div className="mt-2 text-sm text-gray-600">
                   Votre numéro: <span className="font-bold">{sipNumber}</span> 
-                  {isRegistered && <span className="text-green-600">✅ Enregistré</span>}
+                  {isRegistered && <span className="text-green-600">Enregistré</span>}
                 </div>
               </div>
             )}
@@ -1285,7 +1285,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
                         <span className="text-sm text-gray-500">Stock: {product.stock}</span>
                         <button
                           onClick={() => buyProduct(product, productQuantities[product.id] || 1)}
-                          className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-amber-600 transition-colors flex items-center space-x-2"
+                          className="bg-[#1b5e20] text-white hover:bg-[#16381a] px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
                         >
                           <ShoppingCart className="w-4 h-4" />
                           <span>Acheter</span>
@@ -1341,7 +1341,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
                       onChange={(e) => setNewMessage(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                       placeholder="Écrire un message..."
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
                     />
                     <button
                       onClick={sendMessage}
@@ -1479,7 +1479,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
                           setSelectedProduct(product);
                           buyProduct(product);
                         }}
-                        className="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3 rounded-lg hover:from-orange-600 hover:to-amber-600 transition-colors flex items-center justify-center space-x-2"
+                        className="flex-1 bg-[#1b5e20] text-white hover:bg-[#16381a] py-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
                       >
                         <ShoppingCart className="w-5 h-5" />
                         <span>Acheter Maintenant</span>
@@ -1517,7 +1517,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-gray-700">Notifications</span>
-                <button className="w-12 h-6 bg-orange-500 rounded-full relative">
+                <button className="w-12 h-6 bg-[#1b5e20] rounded-full relative">
                   <div className="w-5 h-5 bg-white rounded-full absolute right-0.5 top-0.5" />
                 </button>
               </div>
@@ -1531,7 +1531,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
               
               <div className="flex items-center justify-between">
                 <span className="text-gray-700">Réactions</span>
-                <button className="w-12 h-6 bg-orange-500 rounded-full relative">
+                <button className="w-12 h-6 bg-[#1b5e20] rounded-full relative">
                   <div className="w-5 h-5 bg-white rounded-full absolute right-0.5 top-0.5" />
                 </button>
               </div>
@@ -1572,43 +1572,43 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
             <div className="p-6 space-y-6">
               {/* Key Metrics */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl">
+                <div className="bg-[#f6faf3] p-4 rounded-xl">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-green-600 font-medium">Ventes Totales</p>
-                      <p className="text-2xl font-bold text-green-800">{totalSales.toLocaleString()} FCFA</p>
+                      <p className="text-sm text-gray-600 font-medium">Ventes Totales</p>
+                      <p className="text-2xl font-bold text-gray-800">{totalSales.toLocaleString()} FCFA</p>
                     </div>
-                    <DollarSign className="w-8 h-8 text-green-500" />
+                    <DollarSign className="w-8 h-8 text-[#1b5e20]" />
                   </div>
                 </div>
                 
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl">
+                <div className="bg-[#f6faf3] p-4 rounded-xl">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-blue-600 font-medium">Taux de Conversion</p>
-                      <p className="text-2xl font-bold text-blue-800">{conversionRate.toFixed(1)}%</p>
+                      <p className="text-sm text-gray-600 font-medium">Taux de Conversion</p>
+                      <p className="text-2xl font-bold text-gray-800">{conversionRate.toFixed(1)}%</p>
                     </div>
-                    <Target className="w-8 h-8 text-blue-500" />
+                    <Target className="w-8 h-8 text-[#1b5e20]" />
                   </div>
                 </div>
                 
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl">
+                <div className="bg-[#f6faf3] p-4 rounded-xl">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-purple-600 font-medium">Panier Moyen</p>
-                      <p className="text-2xl font-bold text-purple-800">{averageOrderValue.toFixed(0)} FCFA</p>
+                      <p className="text-sm text-gray-600 font-medium">Panier Moyen</p>
+                      <p className="text-2xl font-bold text-gray-800">{averageOrderValue.toFixed(0)} FCFA</p>
                     </div>
-                    <Activity className="w-8 h-8 text-purple-500" />
+                    <Activity className="w-8 h-8 text-[#1b5e20]" />
                   </div>
                 </div>
                 
-                <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-xl">
+                <div className="bg-[#f6faf3] p-4 rounded-xl">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-orange-600 font-medium">Boost Appel</p>
-                      <p className="text-2xl font-bold text-orange-800">{callSalesBoost.toFixed(0)} FCFA</p>
+                      <p className="text-sm text-gray-600 font-medium">Boost Appel</p>
+                      <p className="text-2xl font-bold text-gray-800">{callSalesBoost.toFixed(0)} FCFA</p>
                     </div>
-                    <PhoneCall className="w-8 h-8 text-orange-500" />
+                    <PhoneCall className="w-8 h-8 text-[#1b5e20]" />
                   </div>
                 </div>
               </div>
@@ -1634,7 +1634,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
                           />
                           <div>
                             <p className="font-medium text-gray-800">{sale.product.name}</p>
-                            <p className="text-sm text-gray-500">{sale.quantity} × {sale.product.price.toLocaleString()} FCFA</p>
+                            <p className="text-sm text-gray-500">{sale.quantity} x {sale.product.price.toLocaleString()} FCFA</p>
                           </div>
                         </div>
                         <div className="text-right">
@@ -1649,7 +1649,7 @@ const LiveShoppingVoIPManager: React.FC<LiveShoppingVoIPManagerProps> = ({
               
               {/* Flash Sale Controls */}
               {mode === 'host' && (
-                <div className="bg-gradient-to-r from-red-50 to-pink-50 rounded-xl p-4">
+                <div className="bg-[#f6faf3] rounded-xl p-4">
                   <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
                     <Zap className="w-5 h-5 text-red-500 mr-2" />
                     Vente Flash

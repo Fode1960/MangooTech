@@ -33,19 +33,19 @@ const ProductManagement: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
+    <div className="min-h-screen bg-[#f6faf3]">
       {/* Header */}
-      <div className="bg-white shadow-lg border-b border-orange-200">
+      <div className="bg-white shadow-lg border-b border-[#c8e6c9]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-                <Package className="w-8 h-8 text-orange-500 mr-3" />
+                <Package className="w-8 h-8 text-[#1b5e20] mr-3" />
                 Gestion des Produits
               </h1>
               <p className="text-gray-600 mt-2">Gérez votre catalogue de produits</p>
             </div>
-            <button className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-amber-600 transition-colors flex items-center space-x-2">
+            <button className="bg-[#1b5e20] text-white px-6 py-3 rounded-xl hover:bg-[#16381a] transition-colors flex items-center space-x-2">
               <Plus className="w-5 h-5" />
               <span>Nouveau Produit</span>
             </button>
@@ -58,7 +58,7 @@ const ProductManagement: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {products.map((product) => (
             <div key={product.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-              <div className="aspect-square bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center">
+              <div className="aspect-square bg-[#f6faf3] flex items-center justify-center">
                 <img
                   src={product.image}
                   alt={product.name}
@@ -75,9 +75,9 @@ const ProductManagement: React.FC = () => {
                     <h3 className="text-xl font-bold text-gray-900 mb-2">{product.name}</h3>
                     <p className="text-sm text-gray-600 mb-2">{product.category}</p>
                     <div className="flex items-center space-x-4">
-                      <span className="text-2xl font-bold text-orange-500">{product.price.toLocaleString()} FCFA</span>
+                      <span className="text-2xl font-bold text-[#1b5e20]">{product.price.toLocaleString()} FCFA</span>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        product.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        product.status === 'active' ? 'bg-[#e8f5e9] text-[#16381a]' : 'bg-red-100 text-red-800'
                       }`}>
                         {product.status === 'active' ? 'Actif' : 'Inactif'}
                       </span>
@@ -90,11 +90,11 @@ const ProductManagement: React.FC = () => {
                 </div>
                 
                 <div className="flex space-x-2">
-                  <button className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2">
+                  <button className="flex-1 bg-[#1b5e20] hover:bg-[#16381a] text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2">
                     <Eye className="w-4 h-4" />
                     <span>Voir</span>
                   </button>
-                  <button className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2">
+                  <button className="flex-1 bg-[#1b5e20] hover:bg-[#16381a] text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2">
                     <Edit className="w-4 h-4" />
                     <span>Modifier</span>
                   </button>

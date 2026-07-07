@@ -323,14 +323,14 @@ export default function ProviderApply() {
 
   if (loading) {
     return (
-      <div className="min-h-dvh bg-gradient-to-br from-orange-50 via-white to-green-50 text-gray-900 flex items-center justify-center p-6">
+      <div className="min-h-dvh bg-[#f6faf3] text-gray-900 flex items-center justify-center p-6">
         Chargement…
       </div>
     )
   }
 
   return (
-    <div className="min-h-dvh bg-gradient-to-br from-orange-50 via-white to-green-50 text-gray-900">
+    <div className="min-h-dvh bg-[#f6faf3] text-gray-900">
       <div className="max-w-2xl mx-auto p-4 sm:p-6 space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
@@ -355,7 +355,7 @@ export default function ProviderApply() {
           </div>
         )}
         {success && (
-          <div className="p-3 rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-800 font-semibold">
+          <div className="p-3 rounded-2xl border border-[#cfe0c8] bg-[#eef6ea] text-[#1b5e20] font-semibold">
             {success}
           </div>
         )}
@@ -447,7 +447,7 @@ export default function ProviderApply() {
             type="button"
             onClick={submit}
             disabled={isSaving}
-            className="w-full px-4 py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 disabled:opacity-60 text-white font-black"
+            className="w-full px-4 py-3 rounded-2xl bg-[#1b5e20] hover:bg-[#16381a] disabled:opacity-60 text-white font-black"
           >
             {isSaving ? 'Envoi…' : 'Soumettre pour validation'}
           </button>

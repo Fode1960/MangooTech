@@ -18,34 +18,34 @@ const VoIPSIPLogin: React.FC<VoIPSIPLoginProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#f6faf3] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-orange-500 to-amber-500 p-6 text-center">
+        <div className="bg-[#1b5e20] p-6 text-center">
           <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
-            <Phone className="w-8 h-8 text-orange-500" />
+            <Phone className="w-8 h-8 text-[#1b5e20]" />
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Live Shopping VoIP</h1>
-          <p className="text-orange-100">Connexion SIP pour vente en direct</p>
+          <p className="text-[#e8f5e9]">Connexion SIP pour vente en direct</p>
         </div>
 
         {/* Features */}
         <div className="p-6">
           <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="text-center p-3 bg-orange-50 rounded-lg">
-              <Play className="w-6 h-6 text-orange-500 mx-auto mb-2" />
+            <div className="text-center p-3 bg-[#f6faf3] rounded-lg">
+              <Play className="w-6 h-6 text-[#1b5e20] mx-auto mb-2" />
               <span className="text-sm font-medium text-gray-700">Live Streaming</span>
             </div>
-            <div className="text-center p-3 bg-amber-50 rounded-lg">
-              <Phone className="w-6 h-6 text-amber-500 mx-auto mb-2" />
+            <div className="text-center p-3 bg-[#f6faf3] rounded-lg">
+              <Phone className="w-6 h-6 text-[#1b5e20] mx-auto mb-2" />
               <span className="text-sm font-medium text-gray-700">Appels VoIP</span>
             </div>
-            <div className="text-center p-3 bg-orange-50 rounded-lg">
-              <ShoppingCart className="w-6 h-6 text-orange-500 mx-auto mb-2" />
+            <div className="text-center p-3 bg-[#f6faf3] rounded-lg">
+              <ShoppingCart className="w-6 h-6 text-[#1b5e20] mx-auto mb-2" />
               <span className="text-sm font-medium text-gray-700">Vente Directe</span>
             </div>
-            <div className="text-center p-3 bg-amber-50 rounded-lg">
-              <Users className="w-6 h-6 text-amber-500 mx-auto mb-2" />
+            <div className="text-center p-3 bg-[#f6faf3] rounded-lg">
+              <Users className="w-6 h-6 text-[#1b5e20] mx-auto mb-2" />
               <span className="text-sm font-medium text-gray-700">Audience Live</span>
             </div>
           </div>
@@ -63,7 +63,7 @@ const VoIPSIPLogin: React.FC<VoIPSIPLoginProps> = ({ onLogin }) => {
                   value={number}
                   onChange={(e) => setNumber(e.target.value)}
                   placeholder="8888 ou 8889"
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
                   required
                 />
               </div>
@@ -80,7 +80,7 @@ const VoIPSIPLogin: React.FC<VoIPSIPLoginProps> = ({ onLogin }) => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Mot de passe"
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
                   required
                 />
               </div>
@@ -96,12 +96,12 @@ const VoIPSIPLogin: React.FC<VoIPSIPLoginProps> = ({ onLogin }) => {
                   onClick={() => setMode('host')}
                   className={`p-3 rounded-lg border-2 transition-colors ${
                     mode === 'host'
-                      ? 'border-orange-500 bg-orange-50 text-orange-700'
-                      : 'border-gray-200 bg-white text-gray-600 hover:border-orange-300'
+                      ? 'border-[#1b5e20] bg-[#f6faf3] text-[#1b5e20]'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-[#1b5e20]/30'
                   }`}
                 >
                   <div className="text-center">
-                    <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <div className="w-8 h-8 bg-[#1b5e20] rounded-full flex items-center justify-center mx-auto mb-2">
                       <Play className="w-4 h-4 text-white" />
                     </div>
                     <span className="text-sm font-medium">Vendeur</span>
@@ -112,12 +112,12 @@ const VoIPSIPLogin: React.FC<VoIPSIPLoginProps> = ({ onLogin }) => {
                   onClick={() => setMode('viewer')}
                   className={`p-3 rounded-lg border-2 transition-colors ${
                     mode === 'viewer'
-                      ? 'border-amber-500 bg-amber-50 text-amber-700'
-                      : 'border-gray-200 bg-white text-gray-600 hover:border-amber-300'
+                      ? 'border-[#1b5e20] bg-[#f6faf3] text-[#1b5e20]'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-[#1b5e20]/30'
                   }`}
                 >
                   <div className="text-center">
-                    <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <div className="w-8 h-8 bg-[#1b5e20] rounded-full flex items-center justify-center mx-auto mb-2">
                       <Users className="w-4 h-4 text-white" />
                     </div>
                     <span className="text-sm font-medium">Client</span>
@@ -128,7 +128,7 @@ const VoIPSIPLogin: React.FC<VoIPSIPLoginProps> = ({ onLogin }) => {
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3 rounded-lg font-medium hover:from-orange-600 hover:to-amber-600 transition-colors flex items-center justify-center space-x-2"
+              className="w-full bg-[#1b5e20] text-white py-3 rounded-lg font-medium hover:bg-[#16381a] transition-colors flex items-center justify-center space-x-2"
             >
               <Phone className="w-5 h-5" />
               <span>Se connecter</span>
@@ -146,10 +146,10 @@ const VoIPSIPLogin: React.FC<VoIPSIPLoginProps> = ({ onLogin }) => {
                   setPassword('8888');
                   setMode('host');
                 }}
-                className="w-full text-left p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors"
+                className="w-full text-left p-3 bg-[#f6faf3] rounded-lg hover:bg-[#e8f5e9] transition-colors"
               >
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-[#1b5e20] rounded-full flex items-center justify-center">
                     <Play className="w-4 h-4 text-white" />
                   </div>
                   <div>
@@ -166,10 +166,10 @@ const VoIPSIPLogin: React.FC<VoIPSIPLoginProps> = ({ onLogin }) => {
                   setPassword('8889');
                   setMode('viewer');
                 }}
-                className="w-full text-left p-3 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors"
+                className="w-full text-left p-3 bg-[#f6faf3] rounded-lg hover:bg-[#e8f5e9] transition-colors"
               >
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-[#1b5e20] rounded-full flex items-center justify-center">
                     <Users className="w-4 h-4 text-white" />
                   </div>
                   <div>

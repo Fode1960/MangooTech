@@ -177,7 +177,7 @@ const DialPad: React.FC<DialPadProps> = ({
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden">
       {/* En-tête avec onglets */}
-      <div className="bg-gradient-to-r from-orange-500 to-yellow-500 p-4">
+      <div className="bg-[#f6faf3] p-4">
         <div className="flex space-x-1">
           <button
             onClick={() => setActiveTab('dial')}
@@ -358,7 +358,7 @@ const DialPad: React.FC<DialPadProps> = ({
             <button
               onClick={handleCallPress}
               disabled={!display.trim() || currentCall?.status === 'calling'}
-              className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 disabled:from-gray-300 disabled:to-gray-400 text-white py-4 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center space-x-2"
+              className="w-full bg-[#1b5e20] text-white hover:bg-[#16381a] disabled:bg-gray-300 py-4 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center space-x-2"
             >
               <Phone className="w-6 h-6" />
               <span>Appeler</span>
@@ -429,7 +429,7 @@ const DialPad: React.FC<DialPadProps> = ({
                   className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-orange-400 to-yellow-400 rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 bg-[#f6faf3] rounded-full flex items-center justify-center">
                       <User className="w-5 h-5 text-white" />
                     </div>
                     <div>

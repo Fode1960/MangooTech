@@ -338,7 +338,7 @@ export function BoostCarteAdmin({ isEnabled }: { isEnabled: boolean }) {
           </div>
         </div>
         {error && <div className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</div>}
-        {notice && <div className="mt-3 text-sm text-emerald-700 dark:text-emerald-400">{notice}</div>}
+        {notice && <div className="mt-3 text-sm text-[#1b5e20] dark:text-[#8ccf8c]">{notice}</div>}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -379,19 +379,19 @@ export function BoostCarteAdmin({ isEnabled }: { isEnabled: boolean }) {
           <div className="mt-3 space-y-2 text-sm">
             <div className="flex items-center justify-between">
               <span className="text-gray-700 dark:text-gray-300">Sponsorisé</span>
-              <span className={sponsorActive ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-gray-500 dark:text-gray-400'}>
+              <span className={sponsorActive ? 'text-[#1b5e20] dark:text-[#8ccf8c] font-semibold' : 'text-gray-500 dark:text-gray-400'}>
                 {sponsorActive ? formatRemaining(row?.sponsored_until || null, nowTick) : 'Inactif'}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-gray-700 dark:text-gray-300">Promo</span>
-              <span className={promoActive ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-gray-500 dark:text-gray-400'}>
+              <span className={promoActive ? 'text-[#1b5e20] dark:text-[#8ccf8c] font-semibold' : 'text-gray-500 dark:text-gray-400'}>
                 {promoActive ? formatRemaining(row?.promo_until || null, nowTick) : 'Inactif'}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-gray-700 dark:text-gray-300">Nouveau</span>
-              <span className={newActive ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-gray-500 dark:text-gray-400'}>
+              <span className={newActive ? 'text-[#1b5e20] dark:text-[#8ccf8c] font-semibold' : 'text-gray-500 dark:text-gray-400'}>
                 {newActive ? formatRemaining(row?.new_until || null, nowTick) : 'Inactif'}
               </span>
             </div>
@@ -403,7 +403,7 @@ export function BoostCarteAdmin({ isEnabled }: { isEnabled: boolean }) {
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
           <div className="flex items-center justify-between">
             <div className="text-base font-bold text-gray-900 dark:text-white">Sponsorisé</div>
-            <div className={`text-xs font-semibold px-2 py-1 rounded-lg ${sponsorActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}>
+            <div className={`text-xs font-semibold px-2 py-1 rounded-lg ${sponsorActive ? 'bg-[#f6faf3] text-[#1b5e20] dark:bg-[#1b5e20]/30 dark:text-[#8ccf8c]' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}>
               {sponsorActive ? 'Actif' : 'Inactif'}
             </div>
           </div>
@@ -432,7 +432,7 @@ export function BoostCarteAdmin({ isEnabled }: { isEnabled: boolean }) {
               className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
                 !isEnabled || ownerSaving
                   ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
-                  : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                  : 'bg-[#1b5e20] text-white hover:bg-[#16381a]'
               }`}
             >
               {ownerSaving ? 'Sauvegarde…' : 'Associer email'}
@@ -443,7 +443,7 @@ export function BoostCarteAdmin({ isEnabled }: { isEnabled: boolean }) {
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
           <div className="flex items-center justify-between">
             <div className="text-base font-bold text-gray-900 dark:text-white">Promo</div>
-            <div className={`text-xs font-semibold px-2 py-1 rounded-lg ${promoActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}>
+            <div className={`text-xs font-semibold px-2 py-1 rounded-lg ${promoActive ? 'bg-[#f6faf3] text-[#1b5e20] dark:bg-[#1b5e20]/30 dark:text-[#8ccf8c]' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}>
               {promoActive ? 'Actif' : 'Inactif'}
             </div>
           </div>
@@ -457,13 +457,13 @@ export function BoostCarteAdmin({ isEnabled }: { isEnabled: boolean }) {
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
           <div className="flex items-center justify-between">
             <div className="text-base font-bold text-gray-900 dark:text-white">Nouveau</div>
-            <div className={`text-xs font-semibold px-2 py-1 rounded-lg ${newActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}>
+            <div className={`text-xs font-semibold px-2 py-1 rounded-lg ${newActive ? 'bg-[#f6faf3] text-[#1b5e20] dark:bg-[#1b5e20]/30 dark:text-[#8ccf8c]' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}>
               {newActive ? 'Actif' : 'Inactif'}
             </div>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <button type="button" onClick={() => activate('new', 24)} disabled={!vendorId || loading} className="px-3 py-2 rounded-xl text-sm font-semibold bg-indigo-100 text-indigo-900 hover:bg-indigo-200 disabled:opacity-60 dark:bg-indigo-900/20 dark:text-indigo-200 dark:hover:bg-indigo-900/30">Activer 24h</button>
-            <button type="button" onClick={() => activate('new', 72)} disabled={!vendorId || loading} className="px-3 py-2 rounded-xl text-sm font-semibold bg-indigo-100 text-indigo-900 hover:bg-indigo-200 disabled:opacity-60 dark:bg-indigo-900/20 dark:text-indigo-200 dark:hover:bg-indigo-900/30">Activer 72h</button>
+            <button type="button" onClick={() => activate('new', 24)} disabled={!vendorId || loading} className="px-3 py-2 rounded-xl text-sm font-semibold bg-[#f6faf3] text-[#1b5e20] hover:bg-[#e0f0d8] disabled:opacity-60 dark:bg-[#1b5e20]/30 dark:text-[#8ccf8c] dark:hover:bg-[#1b5e20]/40">Activer 24h</button>
+            <button type="button" onClick={() => activate('new', 72)} disabled={!vendorId || loading} className="px-3 py-2 rounded-xl text-sm font-semibold bg-[#f6faf3] text-[#1b5e20] hover:bg-[#e0f0d8] disabled:opacity-60 dark:bg-[#1b5e20]/30 dark:text-[#8ccf8c] dark:hover:bg-[#1b5e20]/40">Activer 72h</button>
             <button type="button" onClick={() => stop('new')} disabled={!vendorId || loading || !newActive} className="col-span-2 px-3 py-2 rounded-xl text-sm font-semibold bg-gray-200 text-gray-600 disabled:opacity-60 dark:bg-gray-800 dark:text-gray-300">Stop</button>
           </div>
         </div>

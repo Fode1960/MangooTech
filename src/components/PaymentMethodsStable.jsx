@@ -384,7 +384,7 @@ export const PaymentMethods = ({
           <span className={`font-semibold transition-colors duration-300 ${
             isDark ? 'text-white' : 'text-gray-900'
           }`}>Total:</span>
-          <span className={`font-bold text-lg text-orange-600`}>
+          <span className={`font-bold text-lg text-[#1b5e20]`}>
             {totalAmount.toFixed(0)} {currentCurrency}
           </span>
         </div>
@@ -394,7 +394,7 @@ export const PaymentMethods = ({
           <button
             onClick={handleFinalizePayment}
             disabled={false} // Toujours actif pour permettre l'accès au formulaire
-            className={`w-full mt-4 py-3 px-4 rounded-lg font-medium transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 text-white shadow-lg`}
+            className={`w-full mt-4 py-3 px-4 rounded-lg font-medium transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] bg-[#1b5e20] hover:bg-[#16381a] text-white shadow-lg`}
           >
             Finaliser le paiement de ${totalAmount.toFixed(0)} ${currentCurrency}
           </button>
@@ -417,14 +417,14 @@ export const PaymentMethods = ({
                 onClick={() => handleMethodSelect(method)}
                 className={`w-full p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer transform hover:scale-[1.02] active:scale-[0.98] ${
                   selectedPaymentMethod?.id === method.id
-                    ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 shadow-lg'
+                    ? 'border-[#1b5e20] bg-[#f6faf3] dark:bg-[#1b5e20]/10 shadow-lg'
                     : method.currency !== currentCurrency
                     ? isDark
                       ? 'border-yellow-600 bg-yellow-900/20 opacity-75'
                       : 'border-yellow-300 bg-yellow-50 opacity-75'
                     : isDark
-                    ? 'border-gray-600 bg-gray-700 hover:bg-gray-600 hover:border-orange-400'
-                    : 'border-gray-200 bg-white hover:bg-gray-50 hover:border-orange-400 hover:shadow-md'
+                    ? 'border-gray-600 bg-gray-700 hover:bg-gray-600 hover:border-[#1b5e20]/50'
+                    : 'border-gray-200 bg-white hover:bg-gray-50 hover:border-[#1b5e20]/50 hover:shadow-md'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -464,7 +464,7 @@ export const PaymentMethods = ({
                       {(method.processingFee * 100).toFixed(1)}% frais
                     </div>
                     {selectedPaymentMethod?.id === method.id && (
-                      <div className="text-orange-500 text-lg">✓</div>
+                      <div className="text-[#1b5e20] text-lg">✓</div>
                     )}
                   </div>
                 </div>
@@ -490,14 +490,14 @@ export const PaymentMethods = ({
                 onClick={() => handleMethodSelect(method)}
                 className={`w-full p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer transform hover:scale-[1.02] active:scale-[0.98] ${
                   selectedPaymentMethod?.id === method.id
-                    ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 shadow-lg'
+                    ? 'border-[#1b5e20] bg-[#f6faf3] dark:bg-[#1b5e20]/10 shadow-lg'
                     : method.currency !== currentCurrency
                     ? isDark
                       ? 'border-yellow-600 bg-yellow-900/20 opacity-75'
                       : 'border-yellow-300 bg-yellow-50 opacity-75'
                     : isDark
-                    ? 'border-gray-600 bg-gray-700 hover:bg-gray-600 hover:border-orange-400'
-                    : 'border-gray-200 bg-white hover:bg-gray-50 hover:border-orange-400 hover:shadow-md'
+                    ? 'border-gray-600 bg-gray-700 hover:bg-gray-600 hover:border-[#1b5e20]/50'
+                    : 'border-gray-200 bg-white hover:bg-gray-50 hover:border-[#1b5e20]/50 hover:shadow-md'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -537,7 +537,7 @@ export const PaymentMethods = ({
                       {(method.processingFee * 100).toFixed(1)}% frais
                     </div>
                     {selectedPaymentMethod?.id === method.id && (
-                      <div className="text-orange-500 text-lg">✓</div>
+                      <div className="text-[#1b5e20] text-lg">✓</div>
                     )}
                   </div>
                 </div>
@@ -553,7 +553,7 @@ export const PaymentMethods = ({
           {/* Info de conversion */}
           {currentCurrency !== currency && (
             <div className={`p-3 rounded-lg text-sm ${
-              isDark ? 'bg-blue-900/20 border border-blue-700 text-blue-300' : 'bg-blue-50 border border-blue-200 text-blue-700'
+              isDark ? 'bg-[#1b5e20]/10 border border-[#1b5e20] text-[#a5d6a7]' : 'bg-[#f6faf3] border border-[#c8e6c9] text-[#1b5e20]'
             }`}>
               💱 Conversion: {amount} {currency} = {convertCurrency(amount, currency, currentCurrency)} {currentCurrency}
               <br />
@@ -575,7 +575,7 @@ export const PaymentMethods = ({
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 placeholder="+225 01 23 45 67 89"
                 required
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-300 ${
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-[#1b5e20] transition-colors duration-300 ${
                   isDark 
                     ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                     : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
@@ -586,7 +586,7 @@ export const PaymentMethods = ({
 
           {selectedPaymentMethod.id === 'mangoo_balance' && (
             <div className={`p-3 rounded-lg text-sm ${
-              isDark ? 'bg-emerald-900/20 border border-emerald-700 text-emerald-300' : 'bg-emerald-50 border border-emerald-200 text-emerald-700'
+              isDark ? 'bg-[#1b5e20]/10 border border-[#1b5e20] text-[#a5d6a7]' : 'bg-[#f6faf3] border border-[#c8e6c9] text-[#1b5e20]'
             }`}>
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -596,7 +596,7 @@ export const PaymentMethods = ({
                   type="button"
                   onClick={refreshWalletBalance}
                   className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                    isDark ? 'bg-emerald-800 hover:bg-emerald-700 text-emerald-100' : 'bg-emerald-200 hover:bg-emerald-300 text-emerald-900'
+                    isDark ? 'bg-[#1b5e20] hover:bg-[#16381a] text-[#e8f5e9]' : 'bg-[#c8e6c9] hover:bg-[#a5d6a7] text-[#16381a]'
                   }`}
                 >
                   Actualiser
@@ -616,8 +616,8 @@ export const PaymentMethods = ({
                   }}
                   className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
                     walletTopupChannel === 'mobile_money'
-                      ? isDark ? 'bg-emerald-700 text-white' : 'bg-emerald-300 text-emerald-900'
-                      : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-white text-gray-700 border border-emerald-200 hover:bg-emerald-50'
+                      ? isDark ? 'bg-[#1b5e20] text-white' : 'bg-[#a5d6a7] text-[#16381a]'
+                      : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-white text-gray-700 border border-[#c8e6c9] hover:bg-[#f6faf3]'
                   }`}
                 >
                   Mobile Money
@@ -634,8 +634,8 @@ export const PaymentMethods = ({
                   }}
                   className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
                     walletTopupChannel === 'card'
-                      ? isDark ? 'bg-emerald-700 text-white' : 'bg-emerald-300 text-emerald-900'
-                      : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-white text-gray-700 border border-emerald-200 hover:bg-emerald-50'
+                      ? isDark ? 'bg-[#1b5e20] text-white' : 'bg-[#a5d6a7] text-[#16381a]'
+                      : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-white text-gray-700 border border-[#c8e6c9] hover:bg-[#f6faf3]'
                   }`}
                 >
                   Carte bancaire
@@ -652,8 +652,8 @@ export const PaymentMethods = ({
                   }}
                   className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
                     walletTopupChannel === 'credit_transfer'
-                      ? isDark ? 'bg-emerald-700 text-white' : 'bg-emerald-300 text-emerald-900'
-                      : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-white text-gray-700 border border-emerald-200 hover:bg-emerald-50'
+                      ? isDark ? 'bg-[#1b5e20] text-white' : 'bg-[#a5d6a7] text-[#16381a]'
+                      : isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-white text-gray-700 border border-[#c8e6c9] hover:bg-[#f6faf3]'
                   }`}
                 >
                   Transfert de crédit
@@ -661,14 +661,14 @@ export const PaymentMethods = ({
               </div>
 
               {!walletTopupOpen && (
-                <div className={`${isDark ? 'text-emerald-200/80' : 'text-emerald-800/80'} mt-3 text-xs`}>
+                <div className={`${isDark ? 'text-[#a5d6a7]/80' : 'text-[#1b5e20]/80'} mt-3 text-xs`}>
                   Cliquez sur une méthode ci-dessus pour ouvrir le formulaire de rechargement.
                 </div>
               )}
 
               {walletTopupOpen && walletTopupChannel === 'mobile_money' && (
                 <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-2">
-                  <div className={`${isDark ? 'text-emerald-200/80' : 'text-emerald-800/80'} md:col-span-3 text-xs`}>
+                  <div className={`${isDark ? 'text-[#a5d6a7]/80' : 'text-[#1b5e20]/80'} md:col-span-3 text-xs`}>
                     Saisissez le numéro Mobile Money qui recevra la demande de paiement.
                   </div>
                   <select
@@ -716,7 +716,7 @@ export const PaymentMethods = ({
                         : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                     }`}
                   />
-                  <div className={`${isDark ? 'text-emerald-200/80' : 'text-emerald-800/80'} mt-2 text-xs`}>
+                  <div className={`${isDark ? 'text-[#a5d6a7]/80' : 'text-[#1b5e20]/80'} mt-2 text-xs`}>
                     Mode démo : le paiement par carte est simulé (pas de redirection).
                   </div>
                 </div>
@@ -724,7 +724,7 @@ export const PaymentMethods = ({
 
               {walletTopupOpen && walletTopupChannel === 'credit_transfer' && (
                 <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-2">
-                  <div className={`${isDark ? 'text-emerald-200/80' : 'text-emerald-800/80'} md:col-span-3 text-xs`}>
+                  <div className={`${isDark ? 'text-[#a5d6a7]/80' : 'text-[#1b5e20]/80'} md:col-span-3 text-xs`}>
                     Indiquez la référence reçue après votre transfert de crédit.
                   </div>
                   <input
@@ -776,7 +776,7 @@ export const PaymentMethods = ({
                         ? isDark
                           ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
                           : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                        : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                        : 'bg-[#1b5e20] hover:bg-[#16381a] text-white'
                     }`}
                   >
                     {isToppingUp ? 'Rechargement…' : 'Recharger'}
@@ -799,7 +799,7 @@ export const PaymentMethods = ({
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="votre@email.com"
                 required
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-300 ${
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-[#1b5e20] transition-colors duration-300 ${
                   isDark 
                     ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                     : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
@@ -822,7 +822,7 @@ export const PaymentMethods = ({
                 ? isDark
                   ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-orange-500 hover:bg-orange-600 text-white shadow-lg'
+                : 'bg-[#1b5e20] hover:bg-[#16381a] text-white shadow-lg'
             }`}
           >
             {isProcessing ? (
@@ -845,8 +845,8 @@ export const PaymentMethods = ({
         <div className={`mt-4 p-4 rounded-lg border transition-all duration-300 ${
           paymentStatus.success
             ? isDark
-              ? 'bg-green-900/20 border-green-700 text-green-300'
-              : 'bg-green-50 border-green-200 text-green-700'
+              ? 'bg-[#1b5e20]/10 border-[#1b5e20] text-[#a5d6a7]'
+              : 'bg-[#f6faf3] border-[#c8e6c9] text-[#1b5e20]'
             : isDark
             ? 'bg-red-900/20 border-red-700 text-red-300'
             : 'bg-red-50 border-red-200 text-red-700'
@@ -859,7 +859,7 @@ export const PaymentMethods = ({
           </div>
           {paymentStatus.success && paymentStatus.transaction && (
             <div className={`mt-2 text-sm transition-colors duration-300 ${
-              isDark ? 'text-green-400' : 'text-green-600'
+              isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'
             }`}>
               <p>ID de transaction: {paymentStatus.transaction.id}</p>
               <p>Montant total: {paymentStatus.transaction.totalAmount} {currentCurrency}</p>

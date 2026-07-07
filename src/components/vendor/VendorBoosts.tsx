@@ -2582,7 +2582,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                     <div className="mt-2">
                       <span className={`px-2 py-1 rounded-lg text-xs font-bold ${
                         o.status === 'active'
-                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
+                          ? 'bg-[#eef6ea] text-[#1b5e20] dark:bg-[#1b5e20]/30 dark:text-[#66bb6a]'
                           : o.status === 'paid'
                             ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
                             : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
@@ -2622,7 +2622,7 @@ export function VendorBoosts({ userEmail }: { userEmail: string }) {
                     <td className="py-3 pr-3">
                       <span className={`px-2 py-1 rounded-lg text-xs font-bold ${
                         o.status === 'active'
-                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
+                          ? 'bg-[#eef6ea] text-[#1b5e20] dark:bg-[#1b5e20]/30 dark:text-[#66bb6a]'
                           : o.status === 'paid'
                             ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
                             : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'

@@ -101,12 +101,12 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#f6faf3] flex items-center justify-center px-4">
       <div className="max-w-md w-full">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-[#d7e4d1] p-8">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Store className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 bg-[#eef6ea] rounded-2xl border border-[#d7e4d1] flex items-center justify-center mx-auto mb-4">
+              <Store className="w-8 h-8 text-[#1b5e20]" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">MangooTech</h1>
             <p className="text-gray-600">Connectez-vous à votre compte</p>
@@ -126,7 +126,7 @@ const Login: React.FC = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent"
                   placeholder="votre@email.com"
                   required
                 />
@@ -146,7 +146,7 @@ const Login: React.FC = () => {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent"
                   placeholder="••••••••"
                   required
                 />
@@ -156,14 +156,14 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-2 px-4 rounded-lg hover:from-orange-600 hover:to-amber-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
+              className="w-full bg-[#1b5e20] text-white py-2 px-4 rounded-lg hover:bg-[#16381a] focus:outline-none focus:ring-2 focus:ring-[#1b5e20] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
             >
               {isLoading ? 'Connexion...' : 'Se Connecter'}
             </button>
           </form>
 
           <div className="mt-6 text-center">
-            <Link to="/register" className="text-sm text-orange-600 hover:text-orange-700">
+            <Link to="/register" className="text-sm text-[#1b5e20] hover:text-[#16381a]">
               Pas encore de compte ? S'inscrire
             </Link>
           </div>
@@ -186,46 +186,46 @@ const Login: React.FC = () => {
                     localStorage.setItem('currentRole', 'admin');
                     window.location.href = '/admin/dashboard';
                   }}
-                  className="w-full p-4 bg-gradient-to-r from-gray-800 to-black hover:from-gray-700 hover:to-gray-900 text-white rounded-lg transition-all duration-200 font-bold flex items-center justify-center space-x-2 shadow-lg"
+                  className="w-full p-4 bg-[#1b5e20] hover:bg-[#16381a] text-white rounded-lg transition-all duration-200 font-bold flex items-center justify-center space-x-2 shadow-sm"
                 >
                   <Shield className="w-5 h-5" />
-                  <span>🔒 Accès admin</span>
+                  <span>Accès admin</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleLocalMode}
-                  className="w-full p-4 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg transition-all duration-200 font-bold flex items-center justify-center space-x-2 shadow-lg"
+                  className="w-full p-4 bg-[#1b5e20] hover:bg-[#16381a] text-white rounded-lg transition-all duration-200 font-bold flex items-center justify-center space-x-2 shadow-sm"
                 >
                   <Zap className="w-5 h-5" />
-                  <span>⚡ Mode local</span>
+                  <span>Mode local</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleResetTest}
-                  className="w-full p-4 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-lg transition-all duration-200 font-bold flex items-center justify-center space-x-2 shadow-lg"
+                  className="w-full p-4 bg-[#1b5e20] hover:bg-[#16381a] text-white rounded-lg transition-all duration-200 font-bold flex items-center justify-center space-x-2 shadow-sm"
                 >
                   <Zap className="w-5 h-5" />
-                  <span>🔄 Réinitialiser</span>
+                  <span>Réinitialiser</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleInstantTest}
-                  className="w-full p-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg transition-all duration-200 font-bold flex items-center justify-center space-x-2 shadow-lg"
+                  className="w-full p-4 bg-[#1b5e20] hover:bg-[#16381a] text-white rounded-lg transition-all duration-200 font-bold flex items-center justify-center space-x-2 shadow-sm"
                 >
                   <Zap className="w-5 h-5" />
-                  <span>🚀 Accès immédiat</span>
+                  <span>Accès immédiat</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleTestMode}
-                  className="w-full p-3 bg-green-100 hover:bg-green-200 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                  className="w-full p-3 bg-[#eef6ea] hover:bg-[#d7e4d1] rounded-lg transition-colors flex items-center justify-center space-x-2"
                 >
-                  <Zap className="w-4 h-4 text-green-600" />
-                  <div className="font-medium text-green-900">⚡ Mode vendeur</div>
+                  <Zap className="w-4 h-4 text-[#1b5e20]" />
+                  <div className="font-medium text-[#1b5e20]">Mode vendeur</div>
                 </button>
 
                 <button

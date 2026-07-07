@@ -94,14 +94,14 @@ export default function RoomManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-6">
+    <div className="min-h-screen bg-[#1b5e20] p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">
             🛍️ Live Shopping Rooms
           </h1>
-          <p className="text-purple-200">
+          <p className="text-white/70">
             Créez ou rejoignez des sessions de shopping en direct
           </p>
         </div>
@@ -110,7 +110,7 @@ export default function RoomManagement() {
         <div className="text-center mb-8">
           <button
             onClick={() => setShowCreateForm(true)}
-            className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center gap-2 mx-auto"
+            className="bg-[#1b5e20] hover:bg-[#16381a] text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center gap-2 mx-auto"
           >
             <Plus className="w-5 h-5" />
             Créer une Room
@@ -123,23 +123,23 @@ export default function RoomManagement() {
             <h2 className="text-2xl font-bold text-white mb-4">Créer une nouvelle room</h2>
             <div className="grid md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-purple-200 mb-2">Titre du live</label>
+                <label className="block text-white/70 mb-2">Titre du live</label>
                 <input
                   type="text"
                   value={newRoomTitle}
                   onChange={(e) => setNewRoomTitle(e.target.value)}
                   placeholder="Ex: Soldes d'hiver -50%"
-                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
                 />
               </div>
               <div>
-                <label className="block text-purple-200 mb-2">Nom du vendeur</label>
+                <label className="block text-white/70 mb-2">Nom du vendeur</label>
                 <input
                   type="text"
                   value={newRoomVendor}
                   onChange={(e) => setNewRoomVendor(e.target.value)}
                   placeholder="Ex: Marie Boutique"
-                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
                 />
               </div>
             </div>
@@ -171,8 +171,8 @@ export default function RoomManagement() {
           {activeRooms.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">🎬</div>
-              <p className="text-purple-200 text-lg">Aucune room active pour le moment</p>
-              <p className="text-purple-300 text-sm mt-2">Soyez le premier à créer une session de live shopping !</p>
+              <p className="text-white/70 text-lg">Aucune room active pour le moment</p>
+              <p className="text-white/50 text-sm mt-2">Soyez le premier à créer une session de live shopping !</p>
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -181,7 +181,7 @@ export default function RoomManagement() {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <h3 className="font-bold text-white text-lg mb-1">{room.title}</h3>
-                      <p className="text-purple-200 text-sm">par {room.vendor}</p>
+                      <p className="text-white/70 text-sm">par {room.vendor}</p>
                     </div>
                     <div className="flex items-center gap-2 text-green-400">
                       <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
@@ -189,7 +189,7 @@ export default function RoomManagement() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-sm text-purple-200 mb-4">
+                  <div className="flex items-center justify-between text-sm text-white/70 mb-4">
                     <div className="flex items-center gap-1">
                       <Users className="w-4 h-4" />
                       <span>{room.viewers} viewers</span>
@@ -201,11 +201,11 @@ export default function RoomManagement() {
                   </div>
 
                   {room.currentProduct && (
-                    <div className="bg-purple-500/20 rounded-lg p-2 mb-3">
+                    <div className="bg-white/10 rounded-lg p-2 mb-3">
                       <p className="text-white text-sm font-medium truncate">
-                        📦 {room.currentProduct.name}
+                        {room.currentProduct.name}
                       </p>
-                      <p className="text-purple-200 text-xs">
+                      <p className="text-white/70 text-xs">
                         {room.currentProduct.price}
                       </p>
                     </div>
@@ -213,7 +213,7 @@ export default function RoomManagement() {
 
                   <button
                     onClick={() => handleJoinRoom(room)}
-                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-105"
+                    className="w-full bg-[#1b5e20] hover:bg-[#16381a] text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-105"
                   >
                     Rejoindre
                   </button>
@@ -224,7 +224,7 @@ export default function RoomManagement() {
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-8 text-purple-200">
+        <div className="text-center mt-8 text-white/70">
           <p className="text-sm">
             💡 Les rooms se créent automatiquement quand un vendeur démarre un live
           </p>

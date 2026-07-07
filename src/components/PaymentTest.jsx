@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PayPalPayment } from './PayPalPayment';
 import { StripePayment } from './StripePayment';
+import { getPaymentPublicConfig } from '../services/paymentPublicConfig';
 
 export const PaymentTest = () => {
   const [testAmount] = useState(100); // 100 EUR pour les tests
@@ -20,15 +21,17 @@ export const PaymentTest = () => {
 
   const checkConfiguration = async () => {
     try {
+      const publicConfig = await getPaymentPublicConfig();
+
       // Vérifier PayPal
-      const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
+      const paypalClientId = publicConfig.paypalClientId;
       setConfigStatus(prev => ({
         ...prev,
         paypal: paypalClientId && paypalClientId !== 'YOUR_PAYPAL_CLIENT_ID' ? 'configured' : 'missing'
       }));
 
       // Vérifier Stripe
-      const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+      const stripePublishableKey = publicConfig.stripePublishableKey;
       setConfigStatus(prev => ({
         ...prev,
         stripe: stripePublishableKey && stripePublishableKey !== 'pk_test_your_stripe_publishable_key_here' ? 'configured' : 'missing'

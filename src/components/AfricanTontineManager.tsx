@@ -153,7 +153,7 @@ const AfricanTontineManager: React.FC = () => {
   const getStatusColor = (status: string): string => {
     switch (status) {
       case 'active': return 'text-green-600 bg-green-100';
-      case 'beneficiary': return 'text-blue-600 bg-blue-100';
+      case 'beneficiary': return 'text-[#1b5e20] bg-[#eef6ea]';
       case 'inactive': return 'text-red-600 bg-red-100';
       case 'confirmed': return 'text-green-600 bg-green-100';
       case 'pending': return 'text-yellow-600 bg-yellow-100';
@@ -185,7 +185,7 @@ const AfricanTontineManager: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-gradient-to-br from-purple-50 to-pink-50">
+    <div className="max-w-7xl mx-auto p-6 bg-[#f6faf3]">
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold text-gray-800 mb-4">Gestion des Tontines Africaines</h1>
         <p className="text-lg text-gray-600">Système moderne pour les groupes d\'épargne traditionnels</p>
@@ -198,8 +198,8 @@ const AfricanTontineManager: React.FC = () => {
             onClick={() => setActiveTab('groups')}
             className={`px-6 py-3 rounded-lg font-medium transition-all ${
               activeTab === 'groups'
-                ? 'bg-purple-600 text-white shadow-md'
-                : 'text-gray-600 hover:text-purple-600'
+                ? 'bg-[#1b5e20] text-white shadow-md'
+                : 'text-gray-600 hover:text-[#1b5e20]'
             }`}
           >
             <Users className="w-5 h-5 inline mr-2" />
@@ -209,8 +209,8 @@ const AfricanTontineManager: React.FC = () => {
             onClick={() => setActiveTab('members')}
             className={`px-6 py-3 rounded-lg font-medium transition-all ${
               activeTab === 'members'
-                ? 'bg-purple-600 text-white shadow-md'
-                : 'text-gray-600 hover:text-purple-600'
+                ? 'bg-[#1b5e20] text-white shadow-md'
+                : 'text-gray-600 hover:text-[#1b5e20]'
             }`}
           >
             <PiggyBank className="w-5 h-5 inline mr-2" />
@@ -220,8 +220,8 @@ const AfricanTontineManager: React.FC = () => {
             onClick={() => setActiveTab('analytics')}
             className={`px-6 py-3 rounded-lg font-medium transition-all ${
               activeTab === 'analytics'
-                ? 'bg-purple-600 text-white shadow-md'
-                : 'text-gray-600 hover:text-purple-600'
+                ? 'bg-[#1b5e20] text-white shadow-md'
+                : 'text-gray-600 hover:text-[#1b5e20]'
             }`}
           >
             <TrendingUp className="w-5 h-5 inline mr-2" />
@@ -259,7 +259,7 @@ const AfricanTontineManager: React.FC = () => {
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
                     <div 
-                      className="bg-purple-600 h-2 rounded-full"
+                      className="bg-[#1b5e20] h-2 rounded-full"
                       style={{ width: `${calculateGroupProgress(group)}%` }}
                     ></div>
                   </div>
@@ -288,11 +288,11 @@ const AfricanTontineManager: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-800">
+                <div className="mb-4 p-3 bg-[#eef6ea] rounded-lg">
+                  <p className="text-sm text-[#1b5e20]">
                     <strong>Bénéficiaire actuel:</strong> {group.currentBeneficiary}
                   </p>
-                  <p className="text-xs text-blue-600 mt-1">
+                  <p className="text-xs text-[#1b5e20] mt-1">
                     Prochain paiement: {group.nextPaymentDate.toLocaleDateString()}
                   </p>
                 </div>
@@ -300,7 +300,7 @@ const AfricanTontineManager: React.FC = () => {
                 <div className="flex gap-2">
                   <button 
                     onClick={() => selectNextBeneficiary(group.id)}
-                    className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700"
+                    className="flex-1 bg-[#1b5e20] text-white py-2 px-4 rounded-lg hover:bg-[#16381a]"
                   >
                     Choisir bénéficiaire
                   </button>
@@ -321,9 +321,9 @@ const AfricanTontineManager: React.FC = () => {
                 <div className="mb-6">
                   <h4 className="font-medium mb-2">Résumé financier</h4>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-purple-50 p-4 rounded-lg">
-                      <p className="text-sm text-purple-600">Montant par cycle</p>
-                      <p className="text-2xl font-bold text-purple-600">
+                    <div className="bg-[#eef6ea] p-4 rounded-lg">
+                      <p className="text-sm text-[#1b5e20]">Montant par cycle</p>
+                      <p className="text-2xl font-bold text-[#1b5e20]">
                         {formatCurrency(selectedGroup.totalAmount)}
                       </p>
                     </div>
@@ -382,8 +382,8 @@ const AfricanTontineManager: React.FC = () => {
             ).map((member) => (
               <div key={member.id} className="flex justify-between items-center p-4 border rounded-lg hover:bg-gray-50">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                    <Users className="w-6 h-6 text-purple-600" />
+                  <div className="w-12 h-12 bg-[#eef6ea] rounded-full flex items-center justify-center">
+                    <Users className="w-6 h-6 text-[#1b5e20]" />
                   </div>
                   <div>
                     <p className="font-medium text-lg">{member.name}</p>
@@ -417,9 +417,9 @@ const AfricanTontineManager: React.FC = () => {
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Total des Contributions</h3>
-              <PiggyBank className="w-8 h-8 text-purple-600" />
+              <PiggyBank className="w-8 h-8 text-[#1b5e20]" />
             </div>
-            <p className="text-3xl font-bold text-purple-600">
+            <p className="text-3xl font-bold text-[#1b5e20]">
               {formatCurrency(tontineGroups.reduce((sum, group) => sum + (group.totalAmount * group.cycleNumber), 0))}
             </p>
             <p className="text-sm text-gray-600 mt-2">Tous les groupes confondus</p>
@@ -428,9 +428,9 @@ const AfricanTontineManager: React.FC = () => {
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Membres Actifs</h3>
-              <Users className="w-8 h-8 text-blue-600" />
+              <Users className="w-8 h-8 text-[#1b5e20]" />
             </div>
-            <p className="text-3xl font-bold text-blue-600">
+            <p className="text-3xl font-bold text-[#1b5e20]">
               {tontineGroups.reduce((sum, group) => sum + group.members.length, 0)}
             </p>
             <p className="text-sm text-gray-600 mt-2">Dans {tontineGroups.length} groupes</p>

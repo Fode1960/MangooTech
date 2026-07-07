@@ -648,7 +648,7 @@ export default function ProviderPhoneAccess() {
       : 'Créer mon accès'
 
   return (
-    <div className="min-h-dvh bg-gradient-to-br from-orange-50 via-white to-green-50 text-gray-900">
+    <div className="min-h-dvh bg-[#f6faf3] text-gray-900">
       <div className="max-w-md mx-auto p-4 sm:p-6">
         <div className="rounded-[28px] border border-orange-100 bg-white shadow-sm p-5 sm:p-6">
           <div className="flex items-center gap-3">
@@ -670,7 +670,7 @@ export default function ProviderPhoneAccess() {
           ) : null}
 
           {info ? (
-            <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
+            <div className="mt-4 rounded-2xl border border-[#cfe0c8] bg-[#eef6ea] px-4 py-3 text-sm font-semibold text-[#1b5e20]">
               {info}
             </div>
           ) : null}
@@ -711,7 +711,7 @@ export default function ProviderPhoneAccess() {
             type="button"
             disabled={loading}
             onClick={onPrimary}
-            className="mt-5 w-full rounded-2xl bg-emerald-600 px-4 py-4 text-lg font-black text-white shadow-sm disabled:opacity-60"
+            className="mt-5 w-full rounded-2xl bg-[#1b5e20] px-4 py-4 text-lg font-black text-white shadow-sm disabled:opacity-60"
           >
             {loading ? 'Patientez…' : primaryLabel}
           </button>

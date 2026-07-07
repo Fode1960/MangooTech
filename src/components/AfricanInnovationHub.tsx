@@ -32,64 +32,64 @@ const AfricanInnovationHub: React.FC<{ initialFeature?: string }> = ({ initialFe
       name: 'Mangoo Local+ (Carte)',
       icon: MapPin,
       description: 'Trouvez les commerces autour de vous (Géolocalisation & Voix)',
-      color: 'bg-green-600',
-      gradient: 'from-green-500 to-teal-400'
+      color: 'bg-[#1b5e20]',
+      gradient: 'from-[#1b5e20] to-[#1b5e20]'
     },
     {
       id: 'payment',
       name: 'Paiement Mobile Africain',
       icon: Smartphone,
       description: 'M-Pesa, Orange Money, Wave, MTN Mobile Money',
-      color: 'bg-green-600',
-      gradient: 'from-green-400 to-blue-500'
+      color: 'bg-[#1b5e20]',
+      gradient: 'from-[#1b5e20] to-[#1b5e20]'
     },
     {
       id: 'microcredit',
       name: 'Microcrédit Intelligent',
       icon: Coins,
       description: 'Financement communautaire et évaluation de risque',
-      color: 'bg-blue-600',
-      gradient: 'from-blue-400 to-purple-500'
+      color: 'bg-[#1b5e20]',
+      gradient: 'from-[#1b5e20] to-[#1b5e20]'
     },
     {
       id: 'blockchain',
       name: 'Blockchain Agricole',
       icon: Leaf,
       description: 'Traçabilité complète de la ferme à l\'assiette',
-      color: 'bg-green-700',
-      gradient: 'from-green-500 to-teal-500'
+      color: 'bg-[#1b5e20]',
+      gradient: 'from-[#1b5e20] to-[#1b5e20]'
     },
     {
       id: 'tontine',
       name: 'Gestion des Tontines',
       icon: Users,
       description: 'Systèmes d\'épargne traditionnels modernisés',
-      color: 'bg-purple-600',
-      gradient: 'from-purple-400 to-pink-500'
+      color: 'bg-[#1b5e20]',
+      gradient: 'from-[#1b5e20] to-[#1b5e20]'
     },
     {
       id: 'marketplace',
       name: 'Marché Africain Intelligent',
       icon: ShoppingCart,
       description: 'Prix en temps réel et commerce transfrontalier',
-      color: 'bg-orange-600',
-      gradient: 'from-orange-400 to-red-500'
+      color: 'bg-[#1b5e20]',
+      gradient: 'from-[#1b5e20] to-[#1b5e20]'
     },
     {
       id: 'education',
       name: 'Éducation Numérique',
       icon: Book,
       description: 'Formation professionnelle et certification blockchain',
-      color: 'bg-indigo-600',
-      gradient: 'from-indigo-400 to-blue-500'
+      color: 'bg-[#1b5e20]',
+      gradient: 'from-[#1b5e20] to-[#1b5e20]'
     },
     {
       id: 'weather',
       name: 'Météo Agricole Intelligente',
       icon: Cloud,
       description: 'Prévisions et conseils agricoles personnalisés',
-      color: 'bg-cyan-600',
-      gradient: 'from-cyan-400 to-blue-500'
+      color: 'bg-[#1b5e20]',
+      gradient: 'from-[#1b5e20] to-[#1b5e20]'
     }
   ];
 
@@ -125,12 +125,12 @@ const AfricanInnovationHub: React.FC<{ initialFeature?: string }> = ({ initialFe
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-orange-50 to-red-50">
+    <div className="min-h-screen bg-[#f6faf3]">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-600 via-red-600 to-purple-600 text-white py-8">
+      <div className="bg-[#1b5e20] text-white py-8">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center">
-            <h1 className="text-5xl font-bold mb-4">🌍 Hub d'Innovation Africaine</h1>
+            <h1 className="text-5xl font-bold mb-4">Hub d'Innovation Africaine</h1>
             <p className="text-xl opacity-90">
               Technologies révolutionnaires adaptées aux besoins spécifiques du marché africain
             </p>
@@ -177,9 +177,7 @@ const AfricanInnovationHub: React.FC<{ initialFeature?: string }> = ({ initialFe
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="mb-8">
           <div className="text-center">
-            <div className={`inline-flex items-center gap-3 px-6 py-3 rounded-full bg-gradient-to-r ${
-              features.find(f => f.id === activeFeature)?.gradient || 'from-blue-400 to-purple-500'
-            } text-white mb-4`}>
+            <div className={`inline-flex items-center gap-3 px-6 py-3 rounded-full bg-[#1b5e20] text-white mb-4`}>
               {React.createElement(features.find(f => f.id === activeFeature)?.icon || Smartphone, { className: "w-6 h-6" })}
               <h2 className="text-2xl font-bold">
                 {features.find(f => f.id === activeFeature)?.name}
@@ -201,22 +199,22 @@ const AfricanInnovationHub: React.FC<{ initialFeature?: string }> = ({ initialFe
             <p className="text-gray-600">Transactions mobiles</p>
           </div>
           <div className="bg-white rounded-lg shadow-md p-6 text-center">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Users className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 bg-[#eef6ea] rounded-full flex items-center justify-center mx-auto mb-3">
+              <Users className="w-6 h-6 text-[#1b5e20]" />
             </div>
             <h3 className="text-2xl font-bold text-gray-800">2.5M+</h3>
             <p className="text-gray-600">Agriculteurs connectés</p>
           </div>
           <div className="bg-white rounded-lg shadow-md p-6 text-center">
-            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Award className="w-6 h-6 text-purple-600" />
+            <div className="w-12 h-12 bg-[#eef6ea] rounded-full flex items-center justify-center mx-auto mb-3">
+              <Award className="w-6 h-6 text-[#1b5e20]" />
             </div>
             <h3 className="text-2xl font-bold text-gray-800">50K+</h3>
             <p className="text-gray-600">Certifications délivrées</p>
           </div>
           <div className="bg-white rounded-lg shadow-md p-6 text-center">
-            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <TrendingUp className="w-6 h-6 text-orange-600" />
+            <div className="w-12 h-12 bg-[#eef6ea] rounded-full flex items-center justify-center mx-auto mb-3">
+              <TrendingUp className="w-6 h-6 text-[#1b5e20]" />
             </div>
             <h3 className="text-2xl font-bold text-gray-800">98%</h3>
             <p className="text-gray-600">Taux de satisfaction</p>
@@ -230,11 +228,11 @@ const AfricanInnovationHub: React.FC<{ initialFeature?: string }> = ({ initialFe
       </div>
 
       {/* Footer */}
-      <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-8 mt-12">
+      <div className="bg-gray-900 text-white py-8 mt-12">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="text-xl font-bold mb-4">🌍 MangooTech Afrique</h3>
+              <h3 className="text-xl font-bold mb-4">MangooTech Afrique</h3>
               <p className="text-gray-300">
                 Révolutionnons le commerce africain avec des technologies adaptées aux besoins locaux.
               </p>
@@ -260,7 +258,7 @@ const AfricanInnovationHub: React.FC<{ initialFeature?: string }> = ({ initialFe
           </div>
           <div className="border-t border-gray-700 mt-8 pt-8 text-center">
             <p className="text-gray-400">
-              © 2024 MangooTech. Construisons l'Afrique numérique de demain. 🚀
+              © 2024 MangooTech. Construisons l'Afrique numérique de demain.
             </p>
           </div>
         </div>

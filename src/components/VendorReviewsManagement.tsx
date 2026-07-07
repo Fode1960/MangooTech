@@ -296,7 +296,7 @@ const VendorReviewsManagement = ({ vendorId }: { vendorId: string }) => {
   return (
     <div className="space-y-6">
       {/* En-tête avec statistiques */}
-      <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl p-6 border border-orange-200">
+      <div className="bg-[#f6faf3] rounded-xl p-6 border border-[#cfe0c8]">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Star className="w-6 h-6 text-yellow-500" />
@@ -367,7 +367,7 @@ const VendorReviewsManagement = ({ vendorId }: { vendorId: string }) => {
               </div>
               <div className="flex-1 bg-gray-200 rounded-full h-2">
                 <div
-                  className="bg-gradient-to-r from-yellow-400 to-yellow-500 h-2 rounded-full transition-all duration-300"
+                  className="bg-[#1b5e20] h-2 rounded-full transition-all duration-300"
                   style={{ width: `${percentage}%` }}
                 />
               </div>
@@ -397,7 +397,7 @@ const VendorReviewsManagement = ({ vendorId }: { vendorId: string }) => {
             <select
               value={ratingFilter}
               onChange={(e) => setRatingFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20]"
             >
               <option value="all">Toutes les notes</option>
               <option value="5">5 étoiles</option>
@@ -410,7 +410,7 @@ const VendorReviewsManagement = ({ vendorId }: { vendorId: string }) => {
             <select
               value={replyFilter}
               onChange={(e) => setReplyFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20]"
             >
               <option value="all">Tous les avis</option>
               <option value="replied">Avec réponse</option>
@@ -494,7 +494,7 @@ const VendorReviewsManagement = ({ vendorId }: { vendorId: string }) => {
 
                 {review.vendorReply && (
                   <div className="text-sm text-green-600 flex items-center gap-1">
-                    ✅ Répondu
+                    Répondu
                   </div>
                 )}
               </div>

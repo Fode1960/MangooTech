@@ -563,13 +563,13 @@ const VoIPIntegration: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50 p-6">
+    <div className="min-h-screen bg-[#f6faf3] p-6">
       <div className="max-w-4xl mx-auto">
         {/* En-tête */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="bg-gradient-to-r from-orange-500 to-yellow-500 p-3 rounded-full">
+              <div className="bg-[#1b5e20] p-3 rounded-full">
                 <Phone className="w-8 h-8 text-white" />
               </div>
               <div>
@@ -603,7 +603,7 @@ const VoIPIntegration: React.FC = () => {
                   type="text"
                   value={credentials.username}
                   onChange={(e) => setCredentials(prev => ({ ...prev, username: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent"
                   placeholder="Ex: vendeur001"
                 />
               </div>
@@ -613,7 +613,7 @@ const VoIPIntegration: React.FC = () => {
                   type="password"
                   value={credentials.password}
                   onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent"
                   placeholder="Votre mot de passe SIP"
                 />
               </div>
@@ -623,7 +623,7 @@ const VoIPIntegration: React.FC = () => {
                   type="text"
                   value={credentials.domain}
                   onChange={(e) => setCredentials(prev => ({ ...prev, domain: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent"
                 />
               </div>
               <div>
@@ -632,7 +632,7 @@ const VoIPIntegration: React.FC = () => {
                   type="text"
                   value={credentials.server}
                   onChange={(e) => setCredentials(prev => ({ ...prev, server: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent"
                 />
               </div>
             </div>
@@ -640,7 +640,7 @@ const VoIPIntegration: React.FC = () => {
               <button
                 onClick={connectToVoIPServer}
                 disabled={!credentials.username || !credentials.password}
-                className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-6 py-2 rounded-lg font-medium hover:from-orange-600 hover:to-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                className="bg-[#1b5e20] text-white px-6 py-2 rounded-lg font-medium hover:bg-[#16381a] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
                 Se connecter
               </button>
@@ -697,7 +697,7 @@ const VoIPIntegration: React.FC = () => {
                         <p className="text-sm text-gray-600 mb-2">Audio Local</p>
                         <div className="w-full bg-gray-200 rounded-full h-3">
                           <div 
-                            className="bg-gradient-to-r from-green-400 to-green-600 h-3 rounded-full transition-all duration-100"
+                            className="bg-[#1b5e20] h-3 rounded-full transition-all duration-100"
                             style={{ width: `${audioLevel.local}%` }}
                           ></div>
                         </div>
@@ -707,7 +707,7 @@ const VoIPIntegration: React.FC = () => {
                         <p className="text-sm text-gray-600 mb-2">Audio Distant</p>
                         <div className="w-full bg-gray-200 rounded-full h-3">
                           <div 
-                            className="bg-gradient-to-r from-blue-400 to-blue-600 h-3 rounded-full transition-all duration-100"
+                            className="bg-[#1b5e20] h-3 rounded-full transition-all duration-100"
                             style={{ width: `${audioLevel.remote}%` }}
                           ></div>
                         </div>
@@ -805,7 +805,7 @@ const VoIPIntegration: React.FC = () => {
                 <h3 className="text-lg font-semibold text-gray-800">Messagerie Vocale</h3>
                 <button
                   onClick={() => setShowVoicemail(!showVoicemail)}
-                  className="text-orange-500 hover:text-orange-600"
+                  className="text-[#1b5e20] hover:text-[#16381a]"
                 >
                   <Voicemail className="w-5 h-5" />
                 </button>
@@ -851,7 +851,7 @@ const VoIPIntegration: React.FC = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Qualité audio</label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent">
                       <option>Haute qualité (HD)</option>
                       <option>Qualité standard</option>
                       <option>Économie de bande passante</option>
@@ -899,7 +899,7 @@ const VoIPIntegration: React.FC = () => {
                       type="text"
                       value={callTransfer.target}
                       onChange={(e) => setCallTransfer(prev => ({ ...prev, target: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent"
                       placeholder="Nom d'utilisateur ou numéro"
                     />
                   </div>
@@ -930,7 +930,7 @@ const VoIPIntegration: React.FC = () => {
           <div className="fixed bottom-6 right-6">
             <button
               onClick={() => setShowSettings(!showSettings)}
-              className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white p-3 rounded-full shadow-lg hover:from-orange-600 hover:to-yellow-600 transition-all duration-200"
+              className="bg-[#1b5e20] text-white p-3 rounded-full shadow-lg hover:bg-[#16381a] transition-all duration-200"
             >
               <Settings className="w-6 h-6" />
             </button>

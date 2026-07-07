@@ -14,7 +14,9 @@ import {
   Clock,
   Phone,
   Mail,
-  MapPin
+  MapPin,
+  Search,
+  Store
 } from 'lucide-react';
 import CustomerChat from '../../components/CustomerChat';
 
@@ -53,7 +55,7 @@ const ProductDetail = () => {
       setShop({
         id: mockProduct.vendorId,
         name: mockProduct.vendor,
-        avatar: '👨‍🎨',
+        avatar: 'VD',
         rating: 4.8,
         reviews: 124,
         location: 'Abidjan, Côte d\'Ivoire',
@@ -77,12 +79,16 @@ const ProductDetail = () => {
         isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'
       }`}>
         <div className="text-center">
-          <div className="text-6xl mb-4">ðŸ”</div>
+          <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl ${
+            isDark ? 'bg-gray-800 text-[#ecf7e7]' : 'bg-[#eef6ea] text-[#1b5e20]'
+          }`}>
+            <Search className="h-8 w-8" aria-hidden="true" />
+          </div>
           <h2 className="text-2xl font-bold mb-2">Produit non trouvÃ©</h2>
           <p className="text-gray-500 mb-4">Le produit que vous cherchez n'existe pas.</p>
           <button
             onClick={() => navigate('/marketplace')}
-            className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-6 py-3 rounded-lg hover:from-orange-600 hover:to-green-700 transition-all"
+            className="rounded-lg bg-[#1b5e20] px-6 py-3 text-white transition-colors hover:bg-[#16381a]"
           >
             Retour au marchÃ©
           </button>
@@ -128,7 +134,9 @@ const ProductDetail = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
             {/* Section images */}
             <div className="space-y-4">
-              <div className="aspect-square rounded-xl overflow-hidden bg-gradient-to-br from-orange-100 to-green-100 dark:from-gray-700 dark:to-gray-600">
+              <div className={`aspect-square overflow-hidden rounded-xl ${
+                isDark ? 'bg-gray-700' : 'bg-[#eef6ea]'
+              }`}>
                 {product.image ? (
                   <img 
                     src={product.image} 
@@ -137,7 +145,11 @@ const ProductDetail = () => {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-8xl">{product.icon}</span>
+                    <div className={`flex h-24 w-24 items-center justify-center rounded-3xl ${
+                      isDark ? 'bg-gray-800 text-[#ecf7e7]' : 'bg-white text-[#1b5e20]'
+                    }`}>
+                      <Store className="h-12 w-12" aria-hidden="true" />
+                    </div>
                   </div>
                 )}
               </div>
@@ -252,7 +264,7 @@ const ProductDetail = () => {
                     disabled={!product.inStock}
                     className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all ${
                       product.inStock
-                        ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white hover:from-orange-600 hover:to-green-700'
+                        ? 'bg-[#1b5e20] text-white hover:bg-[#16381a]'
                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }`}
                   >
@@ -286,7 +298,11 @@ const ProductDetail = () => {
                 }`}>
                   <h4 className="font-semibold mb-3">Vendeur</h4>
                   <div className="flex items-center space-x-3 mb-3">
-                    <div className="text-2xl">{shop.avatar}</div>
+                    <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl text-sm font-black ${
+                      isDark ? 'bg-gray-800 text-[#ecf7e7]' : 'bg-[#eef6ea] text-[#1b5e20]'
+                    }`}>
+                      {String(shop.avatar || shop.name || 'VD').slice(0, 2).toUpperCase()}
+                    </div>
                     <div>
                       <p className="font-medium">{shop.name}</p>
                       <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
@@ -309,7 +325,7 @@ const ProductDetail = () => {
                   
                   <button
                     onClick={handleChatClick}
-                    className="w-full bg-gradient-to-r from-green-500 to-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:from-green-600 hover:to-blue-700 transition-all flex items-center justify-center space-x-2"
+                    className="flex w-full items-center justify-center space-x-2 rounded-lg bg-[#1b5e20] px-4 py-2 font-medium text-white transition-colors hover:bg-[#16381a]"
                   >
                     <MessageCircle className="w-4 h-4" />
                     <span>Discuter avec le vendeur</span>

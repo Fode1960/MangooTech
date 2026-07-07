@@ -117,7 +117,7 @@ const BoutiqueIndividualPage = () => {
       <div className="relative">
         {/* Bannière */}
         <div 
-          className="h-64 bg-gradient-to-r from-orange-500 to-green-600 flex items-center justify-center text-white"
+          className="h-64 bg-[#f6faf3] flex items-center justify-center text-[#1b5e20]"
           style={{
             backgroundImage: boutique.banner_url ? `url(${boutique.banner_url})` : undefined,
             backgroundSize: 'cover',
@@ -134,7 +134,7 @@ const BoutiqueIndividualPage = () => {
         <div className="container mx-auto px-4 -mt-16 relative z-10">
           <div className="bg-white rounded-2xl shadow-xl p-6 flex flex-col md:flex-row items-center md:items-start gap-6">
             {/* Logo */}
-            <div className="w-32 h-32 rounded-2xl bg-gradient-to-r from-orange-500 to-green-600 flex items-center justify-center text-white text-4xl font-bold shadow-lg">
+            <div className="w-32 h-32 rounded-2xl bg-[#f6faf3] flex items-center justify-center text-[#1b5e20] text-4xl font-bold shadow-lg">
               {boutique.logo_url ? (
                 <img src={boutique.logo_url} alt={boutique.name} className="w-full h-full object-cover rounded-2xl" />
               ) : (

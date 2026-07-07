@@ -7484,7 +7484,7 @@ const ShopsDirectory = () => {
                                 </span>
                               )}
                               <span
-                                className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-indigo-500/15 text-indigo-200 border-indigo-400/30' : 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-indigo-50 text-indigo-700 border-indigo-200'}
+                                className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border border-[#2e5d34] bg-[#1b5e20]/25 text-[#ecf7e7]' : 'text-[10px] px-2 py-0.5 rounded-full font-black border border-[#cfe0c8] bg-[#eef6ea] text-[#1b5e20]'}
                                 title={`Source: ${sourceLabel}`}
                               >
                                 {sourceLabel}
@@ -7493,8 +7493,8 @@ const ShopsDirectory = () => {
                                 <span
                                   className={`text-[10px] px-2 py-0.5 rounded-full font-black border ${
                                     isDark
-                                      ? 'bg-emerald-500/15 text-emerald-200 border-emerald-400/30'
-                                      : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                      ? 'border-[#2e5d34] bg-[#1b5e20]/25 text-[#ecf7e7]'
+                                      : 'border-[#cfe0c8] bg-[#eef6ea] text-[#1b5e20]'
                                   }`}
                                   title="Boutique créée dans Mangoo Local+"
                                 >
@@ -7598,7 +7598,7 @@ const ShopsDirectory = () => {
                         </span>
                       )}
                       <span
-                        className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-indigo-500/15 text-indigo-200 border-indigo-400/30' : 'text-[10px] px-2 py-0.5 rounded-full font-black border bg-indigo-50 text-indigo-700 border-indigo-200'}
+                        className={isDark ? 'text-[10px] px-2 py-0.5 rounded-full font-black border border-[#2e5d34] bg-[#1b5e20]/25 text-[#ecf7e7]' : 'text-[10px] px-2 py-0.5 rounded-full font-black border border-[#cfe0c8] bg-[#eef6ea] text-[#1b5e20]'}
                         title={`Source: ${sourceLabel}`}
                       >
                         {sourceLabel}
@@ -7607,8 +7607,8 @@ const ShopsDirectory = () => {
                         <span
                           className={`text-[10px] px-2 py-0.5 rounded-full font-black border ${
                             isDark
-                              ? 'bg-emerald-500/15 text-emerald-200 border-emerald-400/30'
-                              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              ? 'border-[#2e5d34] bg-[#1b5e20]/25 text-[#ecf7e7]'
+                              : 'border-[#cfe0c8] bg-[#eef6ea] text-[#1b5e20]'
                           }`}
                           title="Boutique créée dans Mangoo Local+"
                         >
@@ -8276,7 +8276,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
               type="button"
               onClick={() => goToPackCheckout(nextUpgradePack?.id)}
               disabled={!nextUpgradePack}
-              className={`${isDark ? 'bg-emerald-900/30 border border-emerald-700 text-emerald-200 hover:bg-emerald-900/40' : 'bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100'} px-3 py-2 rounded-xl text-sm font-bold transition-colors disabled:opacity-60`}
+              className={`${isDark ? 'border border-[#8f5b10] bg-[#ffa726]/20 text-[#fff4d6] hover:bg-[#ff9800]/25' : 'border border-[#f2d39b] bg-[#fff4d6] text-[#8a5200] hover:bg-[#ffe7b3]'} px-3 py-2 rounded-xl text-sm font-bold transition-colors disabled:opacity-60`}
               title="Passer au pack supérieur via paiement"
             >
               Passer au pack supérieur{nextUpgradePack ? ` (${nextUpgradePack.name})` : ''}
@@ -8285,7 +8285,7 @@ const ClientAccount = ({ user, onOpenLogin, onOpenRegister, onSaveProfile }) => 
               type="button"
               onClick={() => goToPackCheckout(nextDowngradePack?.id)}
               disabled={!nextDowngradePack}
-              className={`${isDark ? 'bg-blue-900/20 border border-blue-700 text-blue-200 hover:bg-blue-900/30' : 'bg-blue-50 border border-blue-200 text-blue-800 hover:bg-blue-100'} px-3 py-2 rounded-xl text-sm font-bold transition-colors disabled:opacity-60`}
+              className={`${isDark ? 'border border-[#2e5d34] bg-[#17331c] text-[#ecf7e7] hover:bg-[#204927]' : 'border border-[#d7e4d1] bg-white text-[#1b5e20] hover:bg-[#f3f8ef]'} px-3 py-2 rounded-xl text-sm font-bold transition-colors disabled:opacity-60`}
               title="Rétrograder via paiement"
             >
               Rétrograder{nextDowngradePack ? ` (${nextDowngradePack.name})` : ''}

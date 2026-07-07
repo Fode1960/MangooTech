@@ -2994,7 +2994,7 @@ export default function WebRTCManagerConnectPlus({
           <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
             <img src={mangooLogoUrl} alt="Mangoo Tech" className="w-14 h-14 opacity-95" />
             <div className="mt-4 text-xs font-semibold tracking-wide uppercase text-gray-300">Mangoo Connect+</div>
-            <div className="mt-6 w-36 h-36 rounded-full bg-gradient-to-r from-orange-500 to-green-600 p-[4px] shadow-2xl">
+            <div className="mt-6 w-36 h-36 rounded-full bg-[#1b5e20] p-[4px] shadow-2xl">
               <div className="w-full h-full rounded-full bg-gray-950 flex items-center justify-center text-6xl font-black">
                 {role === 'vendor' ? 'V' : 'C'}
               </div>
@@ -3015,7 +3015,7 @@ export default function WebRTCManagerConnectPlus({
           <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
             <img src={mangooLogoUrl} alt="Mangoo Tech" className="w-12 h-12 opacity-95" />
             <div className="mt-3 text-xs font-semibold tracking-wide uppercase text-gray-300">Mangoo Connect+</div>
-            <div className="mt-5 w-28 h-28 rounded-full bg-gradient-to-r from-orange-500 to-green-600 p-[3px] shadow-2xl">
+            <div className="mt-5 w-28 h-28 rounded-full bg-[#1b5e20] p-[3px] shadow-2xl">
               <div className="w-full h-full rounded-full bg-gray-950 flex items-center justify-center text-4xl font-bold">
                 {role === 'vendor' ? 'V' : 'C'}
               </div>
@@ -3031,7 +3031,7 @@ export default function WebRTCManagerConnectPlus({
         {ui === 'ultra' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
             <img src={mangooLogoUrl} alt="Mangoo Tech" className="w-14 h-14 opacity-95" />
-            <div className="mt-4 w-36 h-36 rounded-full bg-gradient-to-r from-orange-500 to-green-600 p-[4px] shadow-2xl">
+            <div className="mt-4 w-36 h-36 rounded-full bg-[#1b5e20] p-[4px] shadow-2xl">
               <div className="w-full h-full rounded-full bg-gray-950 flex items-center justify-center text-6xl font-black">
                 {role === 'vendor' ? 'V' : 'C'}
               </div>
@@ -3053,7 +3053,7 @@ export default function WebRTCManagerConnectPlus({
               <img src={mangooLogoUrl} alt="Mangoo Tech" className="w-10 h-10 mx-auto opacity-95" />
               <div className="mt-3 text-xs font-semibold tracking-wide uppercase text-gray-300">Mangoo Connect+</div>
               <div className="mt-4 text-xl font-black">Appel entrant</div>
-              <div className="mt-4 w-24 h-24 rounded-full bg-gradient-to-r from-orange-500 to-green-600 p-[3px] shadow-2xl mx-auto">
+              <div className="mt-4 w-24 h-24 rounded-full bg-[#1b5e20] p-[3px] shadow-2xl mx-auto">
                 <div className="w-full h-full rounded-full bg-gray-950 flex items-center justify-center text-3xl font-black">
                   {String((callFromLabel || callFrom || 'I').trim()).slice(0, 1).toUpperCase()}
                 </div>
@@ -3072,7 +3072,7 @@ export default function WebRTCManagerConnectPlus({
               <div className="mt-5 flex space-x-4">
                 <button
                   onClick={answerCall}
-                  className="flex-1 bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 px-6 py-3 rounded-xl flex items-center justify-center space-x-2 font-semibold"
+                  className="flex-1 bg-[#1b5e20] hover:bg-[#16381a] px-6 py-3 rounded-xl flex items-center justify-center space-x-2 font-semibold"
                 >
                   <Phone className="w-5 h-5" />
                   <span>Répondre</span>
@@ -3092,7 +3092,7 @@ export default function WebRTCManagerConnectPlus({
         {isCalling && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10 pointer-events-none">
             <div className="text-center">
-              <div className="animate-pulse text-2xl mb-4">📞</div>
+              <div className="animate-pulse text-2xl mb-4"><Phone className="w-10 h-10 mx-auto text-[#1b5e20]" /></div>
               <div className="text-lg">Appel en cours...</div>
               <div className="text-sm text-gray-200 mt-2">Vous appelez : {callTargetLabel}</div>
             </div>
@@ -3109,7 +3109,7 @@ export default function WebRTCManagerConnectPlus({
               <div className="mt-6 space-y-3">
                 <button
                   onClick={openOfflineComposer}
-                  className="w-full bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 px-6 py-3 rounded-xl font-black text-lg"
+                  className="w-full bg-[#1b5e20] hover:bg-[#16381a] px-6 py-3 rounded-xl font-black text-lg"
                 >
                   Laisser un message
                 </button>
@@ -3153,7 +3153,7 @@ export default function WebRTCManagerConnectPlus({
                       className={`px-4 py-2 rounded-lg font-semibold ${
                         !voiceDataUrl || voiceStatus === 'sending' || voiceStatus === 'sent'
                           ? 'bg-white/10 opacity-50 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700'
+                          : 'bg-[#1b5e20] hover:bg-[#16381a]'
                       }`}
                     >
                       {voiceStatus === 'sending' ? 'Envoi...' : voiceStatus === 'sent' ? 'Envoyé' : 'Envoyer'}
@@ -3225,7 +3225,7 @@ export default function WebRTCManagerConnectPlus({
                         callbackStatus === 'sent' ||
                         (callbackPreferred === 'pstn' ? !String(callbackPhone || '').trim() : !String(callbackConnectPlusId || '').trim())
                           ? 'bg-white/10 opacity-50 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700'
+                          : 'bg-[#1b5e20] hover:bg-[#16381a]'
                       }`}
                     >
                       {callbackStatus === 'sending' ? 'Envoi...' : callbackStatus === 'sent' ? 'Envoyé' : 'Envoyer'}
@@ -3572,7 +3572,7 @@ export default function WebRTCManagerConnectPlus({
                   className={`w-full px-4 py-3.5 rounded-2xl font-black ${
                     dialBusy || normalizePin(dialPin).length < 4
                       ? 'bg-white/10 opacity-50 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700'
+                      : 'bg-[#1b5e20] hover:bg-[#16381a]'
                   }`}
                 >
                   {dialBusy ? 'Recherche...' : 'Appeler'}
@@ -3591,7 +3591,7 @@ export default function WebRTCManagerConnectPlus({
                 onClick={() => {
                   requestCallOrOffline()
                 }}
-                className="w-full bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 px-7 py-4 rounded-2xl flex items-center justify-center gap-3 font-black text-xl shadow-lg shadow-black/30"
+                className="w-full bg-[#1b5e20] hover:bg-[#16381a] px-7 py-4 rounded-2xl flex items-center justify-center gap-3 font-black text-xl shadow-lg shadow-black/30"
               >
                 <Phone className="w-7 h-7" />
                 <span>{shouldOfferOfflineMessage || offlinePromptOpen || offlineMessageOpen ? 'Message' : callPrimaryLabel}</span>
@@ -3684,7 +3684,7 @@ export default function WebRTCManagerConnectPlus({
                 onClick={() => {
                   requestCallOrOffline()
                 }}
-                className="bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 px-7 py-3.5 rounded-xl flex items-center space-x-2 font-semibold shadow-lg shadow-black/30"
+                className="bg-[#1b5e20] hover:bg-[#16381a] px-7 py-3.5 rounded-xl flex items-center space-x-2 font-semibold shadow-lg shadow-black/30"
               >
                 <Phone className="w-5 h-5" />
                 <span>{shouldOfferOfflineMessage || offlinePromptOpen || offlineMessageOpen ? 'Laisser un message' : callPrimaryLabel}</span>

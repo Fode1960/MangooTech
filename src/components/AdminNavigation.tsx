@@ -44,7 +44,7 @@ export default function AdminNavigation() {
 
   return (
     <div className="h-full w-64 bg-white dark:bg-gray-900 shadow-lg border-r border-gray-200 dark:border-gray-700 flex-shrink-0 flex flex-col overflow-hidden">
-      <div className="flex items-center justify-center h-16 bg-gradient-to-r from-orange-500 to-amber-500">
+      <div className="flex items-center justify-center h-16 bg-[#1b5e20]">
         <div className="flex items-center space-x-2">
           <Shield className="h-8 w-8 text-white" />
           <span className="text-xl font-bold text-white">Admin Mangoo Tech</span>

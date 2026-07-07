@@ -152,21 +152,21 @@ export const IncomingCallModal: React.FC<IncomingCallModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
         {/* Header avec animation */}
-        <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 text-white relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-75">
+        <div className="bg-[#f6faf3] p-6 text-gray-900 relative">
+          <div className="absolute inset-0 bg-[#f6faf3] opacity-75">
             <div className={`absolute inset-0 bg-white opacity-20 rounded-full ${ringing ? 'animate-ping' : ''}`}></div>
           </div>
           <div className="relative z-10 text-center">
             <Phone className={`h-16 w-16 mx-auto mb-4 ${ringing ? 'animate-bounce' : ''}`} />
             <h2 className="text-2xl font-bold mb-2">Appel entrant</h2>
-            <p className="text-blue-100">
+            <p className="text-gray-600">
               {incomingCall.fromName || 'Appelant inconnu'}
             </p>
-            <p className="text-sm text-blue-200 mt-1">
+            <p className="text-sm text-gray-500 mt-1">
               {formatPhoneNumber(incomingCall.from)}
             </p>
             {ringing && (
-              <div className="flex items-center justify-center mt-3 text-blue-100">
+              <div className="flex items-center justify-center mt-3 text-gray-600">
                 <Clock className="h-4 w-4 mr-2" />
                 <span className="text-sm">{formatDuration(callTimer)}</span>
               </div>
@@ -215,7 +215,7 @@ export const IncomingCallModal: React.FC<IncomingCallModalProps> = ({
           {incomingCall.type === 'video' && (
             <button
               onClick={() => handleAccept('video')}
-              className="w-full bg-purple-500 hover:bg-purple-600 text-white p-3 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2 mb-3"
+              className="w-full bg-[#1b5e20] hover:bg-[#16381a] text-white p-3 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2 mb-3"
             >
               <Video className="h-5 w-5" />
               <span className="text-sm font-medium">Accepter en vidéo</span>

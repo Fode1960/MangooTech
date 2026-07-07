@@ -245,7 +245,7 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
               >
                 {/* Badge populaire */}
                 {pack.is_popular && (
-                  <div className="absolute top-0 right-0 bg-gradient-to-r from-orange-500 to-green-500 text-white px-3 py-1 text-sm font-semibold rounded-bl-lg">
+                  <div className="absolute top-0 right-0 bg-[#1b5e20] text-white px-3 py-1 text-sm font-semibold rounded-bl-lg">
                     Populaire
                   </div>
                 )}
@@ -291,7 +291,7 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
                       <div className={`text-center p-3 rounded-lg ${
                         isDark ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-800'
                       }`}>
-                        <p className="font-semibold">✅ Pack Actif</p>
+                        <p className="font-semibold">Pack Actif</p>
                         {activeSubscription?.current_period_end && (
                           <p className="text-sm">
                             Renouvellement: {new Date(activeSubscription.current_period_end * 1000).toLocaleDateString('fr-FR')}
@@ -318,7 +318,7 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
                       disabled={loading}
                       className={`w-full py-3 px-6 rounded-lg font-semibold transition-all transform ${
                         pack.is_popular
-                          ? 'bg-gradient-to-r from-orange-500 to-green-500 hover:from-orange-600 hover:to-green-600 text-white shadow-lg hover:shadow-xl'
+                          ? 'bg-[#1b5e20] hover:bg-[#2e7d32] text-white shadow-lg hover:shadow-xl'
                           : isDark
                           ? 'bg-gray-700 hover:bg-gray-600 text-white'
                           : 'bg-gray-900 hover:bg-gray-800 text-white'

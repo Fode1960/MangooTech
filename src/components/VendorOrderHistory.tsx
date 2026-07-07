@@ -264,7 +264,7 @@ export default function VendorOrderHistory({ vendorId }: VendorOrderHistoryProps
   const getStatusColor = (status: string) => {
     switch (String(status || '').toLowerCase()) {
       case 'paid':
-        return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+        return 'bg-[#eef6ea] text-[#1b5e20] border-[#cfe0c8]';
       case 'processing':
         return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'shipped':
@@ -316,7 +316,7 @@ export default function VendorOrderHistory({ vendorId }: VendorOrderHistoryProps
             {filteredOrders.length} commande(s) � {totalRevenue.toLocaleString('fr-FR')} FCFA
           </p>
         </div>
-        <div className={`px-3 py-2 rounded-lg text-sm font-black ${isDark ? 'bg-emerald-900/20 text-emerald-400' : 'bg-emerald-100 text-emerald-800'}`}>
+        <div className={`px-3 py-2 rounded-lg text-sm font-black ${isDark ? 'bg-[#1b5e20]/20 text-[#ecf7e7]' : 'bg-[#eef6ea] text-[#1b5e20]'}`}>
           Secteur formel : le vendeur lance la livraison
         </div>
       </div>
@@ -421,7 +421,7 @@ export default function VendorOrderHistory({ vendorId }: VendorOrderHistoryProps
                     disabled={deliveryLaunched}
                     className={deliveryLaunched
                       ? `${isDark ? 'bg-white/5 border border-white/10 text-gray-400' : 'bg-white border border-gray-200 text-gray-400'} px-4 py-2 rounded-xl font-black opacity-70 cursor-not-allowed`
-                      : 'px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-green-600 text-white font-black hover:from-orange-600 hover:to-green-700 transition-all'
+                      : 'px-4 py-2 rounded-xl bg-[#1b5e20] text-white font-black hover:bg-[#16381a] transition-all'
                     }
                     title={deliveryLaunched ? 'La livraison a d�j� �t� lanc�e pour cette commande' : 'D�clencher la livraison une fois le colis pr�t'}
                   >
@@ -488,7 +488,7 @@ export default function VendorOrderHistory({ vendorId }: VendorOrderHistoryProps
               <div className="mt-6 flex justify-end gap-2">
                 <button
                   onClick={() => setInvoiceOrder(buildInvoiceOrder(selectedOrder))}
-                  className="px-4 py-2 rounded-lg font-semibold bg-emerald-600 text-white hover:bg-emerald-700"
+                  className="px-4 py-2 rounded-lg font-semibold bg-[#1b5e20] text-white hover:bg-[#16381a]"
                 >
                   ?? �mettre facture
                 </button>

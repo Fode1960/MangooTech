@@ -348,8 +348,8 @@ export default function ProviderDashboard() {
         badge: 'Aucune fiche envoyée',
         badgeClass: 'bg-orange-50 text-orange-700 border-orange-200',
         message: "Votre fiche n'est pas encore envoyée.",
-        actionLabel: '📤 Envoyer ma fiche',
-        actionClass: 'px-3 py-2 rounded-xl text-sm font-black bg-gradient-to-r from-orange-500 to-green-600 text-white',
+        actionLabel: 'Envoyer ma fiche',
+        actionClass: 'px-3 py-2 rounded-xl text-sm font-black bg-[#1b5e20] text-white hover:bg-[#16381a]',
       };
     }
 
@@ -362,8 +362,8 @@ export default function ProviderDashboard() {
 
     if (isApproved || isVisible) {
       return {
-        badge: '✅ Fiche validée',
-        badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        badge: 'Fiche validée',
+        badgeClass: 'bg-[#eef6ea] text-[#1b5e20] border-[#cfe0c8]',
         message: isVisible ? 'Votre fiche est visible.' : 'Votre fiche est validée.',
         actionLabel: '',
         actionClass: '',
@@ -372,17 +372,17 @@ export default function ProviderDashboard() {
 
     if (needsChanges) {
       return {
-        badge: '✏️ Fiche à corriger',
+        badge: 'Fiche à corriger',
         badgeClass: 'bg-amber-50 text-amber-700 border-amber-200',
         message: 'Quelques informations sont à corriger.',
-        actionLabel: '✏️ Corriger ma fiche',
+        actionLabel: 'Corriger ma fiche',
         actionClass: 'px-3 py-2 rounded-xl text-sm font-black border border-gray-200 bg-white hover:bg-gray-50 text-gray-900',
       };
     }
 
     return {
-      badge: '⏳ En attente de validation',
-      badgeClass: 'bg-sky-50 text-sky-700 border-sky-200',
+      badge: 'En attente de validation',
+      badgeClass: 'bg-[#eef6ea] text-[#1b5e20] border-[#cfe0c8]',
       message: 'Votre fiche est en cours de vérification.',
       actionLabel: '',
       actionClass: '',
@@ -910,7 +910,7 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
                   onClick={() => setTab(t.key)}
                   className={`px-3 py-2 rounded-full text-sm font-black border transition-colors ${
                     tab === t.key
-                      ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white border-transparent'
+                      ? 'bg-[#1b5e20] text-white border-transparent'
                       : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
                   }`}
                 >
@@ -1087,7 +1087,7 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
                                         <option value="cancelled">Annulé</option>
                                         <option value="paid">Payé</option>
                                       </select>
-                                      <span className={`text-xs font-black ${paid ? 'text-emerald-600' : 'text-gray-600'}`}>{paid ? '• payé' : ''}</span>
+                                      <span className={`text-xs font-black ${paid ? 'text-[#1b5e20]' : 'text-gray-600'}`}>{paid ? 'payé' : ''}</span>
                                       <span className="text-gray-600 text-xs">{label}</span>
                                     </div>
                                   );

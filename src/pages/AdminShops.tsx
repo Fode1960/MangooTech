@@ -146,7 +146,7 @@ const normalizeStatus = (shop: DemoShop): DemoShop => {
 };
 
 const statusBadge = (status: ApprovalStatus, isDark: boolean) => {
-  if (status === 'approved') return isDark ? 'bg-emerald-900/30 text-emerald-200 border border-emerald-700' : 'bg-emerald-50 text-emerald-800 border border-emerald-200';
+  if (status === 'approved') return isDark ? 'bg-[#1b5e20]/20 text-[#ecf7e7] border-[#2e5d34]/30' : 'bg-[#eef6ea] text-[#1b5e20] border-[#cfe0c8]';
   if (status === 'rejected') return isDark ? 'bg-red-900/30 text-red-200 border border-red-700' : 'bg-red-50 text-red-800 border border-red-200';
   if (status === 'suspended') return isDark ? 'bg-gray-900/40 text-gray-200 border border-gray-700' : 'bg-gray-100 text-gray-800 border border-gray-300';
   return isDark ? 'bg-amber-900/30 text-amber-200 border border-amber-700' : 'bg-amber-50 text-amber-800 border border-amber-200';
@@ -158,8 +158,8 @@ const resolveSector = (shop: DemoShop): Exclude<SectorFilter, 'all'> => {
 };
 
 const sectorBadge = (sector: Exclude<SectorFilter, 'all'>, isDark: boolean) => {
-  if (sector === 'informal') return isDark ? 'bg-fuchsia-900/30 text-fuchsia-200 border border-fuchsia-700' : 'bg-fuchsia-50 text-fuchsia-800 border border-fuchsia-200';
-  return isDark ? 'bg-sky-900/30 text-sky-200 border border-sky-700' : 'bg-sky-50 text-sky-800 border border-sky-200';
+  if (sector === 'informal') return isDark ? 'bg-[#1b5e20]/20 text-[#ecf7e7] border-[#2e5d34]/30' : 'bg-[#eef6ea] text-[#1b5e20] border-[#cfe0c8]';
+  return isDark ? 'bg-[#1b5e20]/20 text-[#ecf7e7] border-[#2e5d34]/30' : 'bg-[#eef6ea] text-[#1b5e20] border-[#cfe0c8]';
 };
 
 export default function AdminShops() {
@@ -719,14 +719,14 @@ export default function AdminShops() {
             <button
               type="button"
               onClick={() => applySectorFilter('formal')}
-              className={`px-3 py-2 rounded-lg text-sm font-semibold border ${filterSector === 'formal' ? (isDark ? 'bg-sky-900/30 text-sky-100 border-sky-700' : 'bg-sky-50 text-sky-900 border-sky-200') : (isDark ? 'bg-gray-900 text-gray-300 border-gray-700 hover:bg-gray-800' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white')}`}
+              className={`px-3 py-2 rounded-lg text-sm font-semibold border ${filterSector === 'formal' ? (isDark ? 'bg-[#1b5e20]/20 text-[#ecf7e7] border-[#2e5d34]/30' : 'bg-[#eef6ea] text-[#1b5e20] border-[#cfe0c8]') : (isDark ? 'bg-gray-900 text-gray-300 border-gray-700 hover:bg-gray-800' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white')}`}
             >
               Formel
             </button>
             <button
               type="button"
               onClick={() => applySectorFilter('informal')}
-              className={`px-3 py-2 rounded-lg text-sm font-semibold border ${filterSector === 'informal' ? (isDark ? 'bg-fuchsia-900/30 text-fuchsia-100 border-fuchsia-700' : 'bg-fuchsia-50 text-fuchsia-900 border-fuchsia-200') : (isDark ? 'bg-gray-900 text-gray-300 border-gray-700 hover:bg-gray-800' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white')}`}
+              className={`px-3 py-2 rounded-lg text-sm font-semibold border ${filterSector === 'informal' ? (isDark ? 'bg-[#1b5e20]/20 text-[#ecf7e7] border-[#2e5d34]/30' : 'bg-[#eef6ea] text-[#1b5e20] border-[#cfe0c8]') : (isDark ? 'bg-gray-900 text-gray-300 border-gray-700 hover:bg-gray-800' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white')}`}
             >
               Informel
             </button>
@@ -747,7 +747,7 @@ export default function AdminShops() {
             <button
               type="button"
               onClick={() => setFilterStatus('approved')}
-              className={`px-3 py-2 rounded-lg text-sm font-semibold border ${filterStatus === 'approved' ? (isDark ? 'bg-emerald-900/30 text-emerald-100 border-emerald-700' : 'bg-emerald-50 text-emerald-900 border-emerald-200') : (isDark ? 'bg-gray-900 text-gray-300 border-gray-700 hover:bg-gray-800' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white')}`}
+              className={`px-3 py-2 rounded-lg text-sm font-semibold border ${filterStatus === 'approved' ? (isDark ? 'bg-[#1b5e20]/20 text-[#ecf7e7] border-[#2e5d34]/30' : 'bg-[#eef6ea] text-[#1b5e20] border-[#cfe0c8]') : (isDark ? 'bg-gray-900 text-gray-300 border-gray-700 hover:bg-gray-800' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white')}`}
             >
               Approuvées
             </button>
@@ -810,7 +810,7 @@ export default function AdminShops() {
                             type="button"
                             onClick={() => void setApproval(String(s.slug), 'approved')}
                             disabled={status === 'approved'}
-                            className="touch-manipulation px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold text-sm"
+                            className="touch-manipulation px-3 py-2 rounded-lg bg-[#1b5e20] hover:bg-[#16381a] disabled:opacity-60 text-white font-bold text-sm"
                           >
                             Approuver
                           </button>
@@ -844,7 +844,7 @@ export default function AdminShops() {
                         <button
                           type="button"
                           onClick={() => window.open(`/?lp_role=vendor&lp_view=account&lp_vendor_tab=settings&lp_vendor_edit_shop=${encodeURIComponent(String(s.slug))}`, '_blank', 'noopener,noreferrer')}
-                          className="touch-manipulation px-3 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm inline-flex items-center gap-2"
+                          className="touch-manipulation px-3 py-2 rounded-lg bg-[#1b5e20] hover:bg-[#16381a] text-white font-bold text-sm inline-flex items-center gap-2"
                         >
                           Espace vendeur
                         </button>
@@ -939,7 +939,7 @@ export default function AdminShops() {
                             <button
                               type="button"
                               onClick={() => window.open(`/?lp_role=vendor&lp_view=account&lp_vendor_tab=settings&lp_vendor_edit_shop=${encodeURIComponent(String(s.slug))}`, '_blank', 'noopener,noreferrer')}
-                              className="px-3 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs"
+                              className="px-3 py-2 rounded-lg bg-[#1b5e20] hover:bg-[#16381a] text-white font-bold text-xs"
                               title="Ouvrir l'espace vendeur"
                             >
                               Espace vendeur
@@ -948,7 +948,7 @@ export default function AdminShops() {
                               type="button"
                               onClick={() => void setApproval(String(s.slug), 'approved')}
                               disabled={status === 'approved'}
-                              className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold text-xs"
+                              className="px-3 py-2 rounded-lg bg-[#1b5e20] hover:bg-[#16381a] disabled:opacity-60 text-white font-bold text-xs"
                               title="Approuver"
                             >
                               Approuver
@@ -1089,7 +1089,7 @@ export default function AdminShops() {
                   <button
                     type="button"
                     onClick={saveBilling}
-                    className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-4 py-2 rounded-xl font-black hover:from-orange-600 hover:to-green-700"
+                    className="bg-[#1b5e20] text-white hover:bg-[#16381a] px-4 py-2 rounded-xl font-black"
                   >
                     Enregistrer
                   </button>

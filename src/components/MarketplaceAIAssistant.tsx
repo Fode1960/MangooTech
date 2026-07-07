@@ -145,7 +145,7 @@ export default function MarketplaceAIAssistant(props: {
                       ? isDark
                         ? 'bg-white/10 opacity-60 cursor-not-allowed'
                         : 'bg-gray-100 opacity-60 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-orange-500 to-green-600 text-white hover:from-orange-600 hover:to-green-700'
+                      : 'bg-[#1b5e20] text-white hover:bg-[#16381a]'
                   }`}
                 >
                   {loading ? 'Recherche…' : 'Chercher'}
@@ -187,7 +187,7 @@ export default function MarketplaceAIAssistant(props: {
                       </div>
                     </div>
                     <div className="mt-3 flex items-center justify-between gap-3">
-                      <div className="font-black text-orange-400">{formatPrice(p.price) || '—'}</div>
+                      <div className="font-black text-[#66bb6a]">{formatPrice(p.price) || '—'}</div>
                       <div className="text-xs font-semibold opacity-80 truncate">{p.shop?.name || ''}</div>
                     </div>
                     <div className="mt-3 flex gap-2">
@@ -218,7 +218,7 @@ export default function MarketplaceAIAssistant(props: {
                           if (props.onAddToCart) props.onAddToCart(toCartItem(p))
                           setOpen(false)
                         }}
-                        className="flex-1 rounded-xl px-3 py-2 font-black text-sm bg-gradient-to-r from-orange-500 to-green-600 text-white hover:from-orange-600 hover:to-green-700"
+                        className="flex-1 rounded-xl px-3 py-2 font-black text-sm bg-[#1b5e20] text-white hover:bg-[#16381a]"
                       >
                         <span className="inline-flex items-center justify-center gap-2">
                           <ShoppingCart className="w-4 h-4" />

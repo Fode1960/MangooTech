@@ -185,7 +185,7 @@ export const VendorPhoneManager: React.FC = () => {
     <div className="space-y-6">
       {/* Appel actif */}
       {activeCall && (
-        <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-4 rounded-lg shadow-lg">
+        <div className="bg-[#1b5e20] text-white p-4 rounded-lg shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <PhoneCall className="h-6 w-6 animate-pulse" />

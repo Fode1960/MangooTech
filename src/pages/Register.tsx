@@ -42,11 +42,11 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#f6faf3] flex items-center justify-center px-4">
       <div className="max-w-md w-full">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-[#1b5e20] rounded-full flex items-center justify-center mx-auto mb-4">
               <Store className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">MangooTech</h1>
@@ -69,7 +69,7 @@ const Register: React.FC = () => {
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20] focus:border-[#1b5e20]"
                   placeholder="Votre nom complet"
                 />
               </div>
@@ -90,7 +90,7 @@ const Register: React.FC = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20] focus:border-[#1b5e20]"
                   placeholder="votre@email.com"
                 />
               </div>
@@ -111,7 +111,7 @@ const Register: React.FC = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20] focus:border-[#1b5e20]"
                   placeholder="••••••••"
                 />
               </div>
@@ -132,7 +132,7 @@ const Register: React.FC = () => {
                   required
                   value={formData.phone}
                   onChange={handleChange}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20] focus:border-[#1b5e20]"
                   placeholder="+221 77 123 45 67"
                 />
               </div>
@@ -153,7 +153,7 @@ const Register: React.FC = () => {
                   required
                   value={formData.address}
                   onChange={handleChange}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20] focus:border-[#1b5e20]"
                   placeholder="Votre adresse complète"
                 />
               </div>
@@ -168,7 +168,7 @@ const Register: React.FC = () => {
                 name="userType"
                 value={formData.userType}
                 onChange={handleChange}
-                className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20] focus:border-[#1b5e20]"
               >
                 <option value="customer">Client</option>
                 <option value="vendor">Vendeur</option>
@@ -182,7 +182,7 @@ const Register: React.FC = () => {
                 type="checkbox"
                 checked={formData.geolocationConsent}
                 onChange={(e) => setFormData(prev => ({ ...prev, geolocationConsent: e.target.checked }))}
-                className="mt-1 h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
+                className="mt-1 h-4 w-4 text-[#1b5e20] focus:ring-[#1b5e20] border-gray-300 rounded"
                 required
               />
               <label htmlFor="geolocationConsent" className="text-sm text-gray-600">
@@ -195,7 +195,7 @@ const Register: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading || !formData.geolocationConsent}
-              className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3 px-4 rounded-lg font-medium hover:from-orange-600 hover:to-amber-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="w-full bg-[#1b5e20] text-white py-3 px-4 rounded-lg font-medium hover:bg-[#16381a] focus:outline-none focus:ring-2 focus:ring-[#1b5e20] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {isLoading ? 'Inscription...' : 'S\'inscrire'}
             </button>
@@ -204,7 +204,7 @@ const Register: React.FC = () => {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Déjà un compte ?{' '}
-              <Link to="/login" className="font-medium text-orange-500 hover:text-orange-600">
+              <Link to="/login" className="font-medium text-[#1b5e20] hover:text-[#16381a]">
                 Se connecter
               </Link>
             </p>

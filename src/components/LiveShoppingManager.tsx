@@ -651,9 +651,9 @@ const LiveShoppingManager: React.FC<LiveShoppingManagerProps> = ({
   };
 
   return (
-    <div className={`${embedded ? 'h-full flex flex-col' : 'min-h-screen'} ${embedded ? 'bg-transparent' : 'bg-gradient-to-br from-orange-50 to-amber-50'} ${className || ''}`}>
+    <div className={`${embedded ? 'h-full flex flex-col' : 'min-h-screen'} ${embedded ? 'bg-transparent' : 'bg-[#f6faf3]'} ${className || ''}`}>
       {/* En-tête avec design MangooTech */}
-      <div className={`bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg ${embedded ? 'p-3' : 'p-4'}`}>
+      <div className={`bg-[#f6faf3] text-gray-900 shadow-lg ${embedded ? 'p-3' : 'p-4'}`}>
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
@@ -668,15 +668,15 @@ const LiveShoppingManager: React.FC<LiveShoppingManagerProps> = ({
           <div className="flex items-center space-x-6">
             <div className="text-center">
               <div className="text-2xl font-bold">{viewers}</div>
-              <div className="text-sm text-orange-100">Spectateurs</div>
+              <div className="text-sm text-gray-600">Spectateurs</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">{formatDuration(streamDuration)}</div>
-              <div className="text-sm text-orange-100">Durée</div>
+              <div className="text-sm text-gray-600">Durée</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">{totalSales.toLocaleString()}</div>
-              <div className="text-sm text-orange-100">FCFA ventes</div>
+              <div className="text-sm text-gray-600">FCFA ventes</div>
             </div>
           </div>
         </div>
@@ -747,7 +747,7 @@ const LiveShoppingManager: React.FC<LiveShoppingManagerProps> = ({
                             onClick={startAudioTest}
                             className="mt-1 bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded"
                           >
-                            ▶️ Démarrer Audio
+                            Démarrer Audio
                           </button>
                         )}
                       </div>
@@ -920,7 +920,7 @@ const LiveShoppingManager: React.FC<LiveShoppingManagerProps> = ({
                         <span className="text-sm text-gray-500">Stock: {product.stock}</span>
                         <button
                           onClick={() => buyProduct(product)}
-                          className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-amber-600 transition-colors flex items-center space-x-2"
+                          className="bg-[#1b5e20] text-white hover:bg-[#16381a] px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
                         >
                           <ShoppingCart className="w-4 h-4" />
                           <span>Acheter</span>
@@ -976,7 +976,7 @@ const LiveShoppingManager: React.FC<LiveShoppingManagerProps> = ({
                       onChange={(e) => setNewMessage(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                       placeholder="Écrire un message..."
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
                     />
                     <button
                       onClick={sendMessage}
@@ -1114,7 +1114,7 @@ const LiveShoppingManager: React.FC<LiveShoppingManagerProps> = ({
                           setSelectedProduct(product);
                           buyProduct(product);
                         }}
-                        className="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3 rounded-lg hover:from-orange-600 hover:to-amber-600 transition-colors flex items-center justify-center space-x-2"
+                        className="flex-1 bg-[#1b5e20] text-white hover:bg-[#16381a] py-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
                       >
                         <ShoppingCart className="w-5 h-5" />
                         <span>Acheter Maintenant</span>

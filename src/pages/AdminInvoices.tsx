@@ -236,7 +236,7 @@ export default function AdminInvoices() {
                       </td>
                       <td className={`px-4 py-3 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{(it.vendors || []).map((v) => v.name).join(', ') || '—'}</td>
                       <td className="px-4 py-3 text-right">
-                        <div className="font-bold text-emerald-400">{Number(it.totalTtcFcfa || 0).toLocaleString('fr-FR')} FCFA</div>
+                        <div className="font-bold text-[#1b5e20] dark:text-[#8ccf8c]">{Number(it.totalTtcFcfa || 0).toLocaleString('fr-FR')} FCFA</div>
                         <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-xs`}>TVA incluse: {Number(it.vatIncludedFcfa || 0).toLocaleString('fr-FR')} FCFA</div>
                       </td>
                       <td className="px-4 py-3 text-right">

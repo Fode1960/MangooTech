@@ -37,18 +37,18 @@ const Home: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
+    <div className="min-h-screen bg-[#f6faf3]">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="text-center">
             <div className="mb-8">
-              <div className="w-20 h-20 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 bg-[#1b5e20] rounded-full flex items-center justify-center mx-auto mb-6">
                 <Store className="w-10 h-10 text-white" />
               </div>
               <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
                 Bienvenue sur{' '}
-                <span className="bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
+                <span className="text-[#1b5e20]">
                   MangooTech
                 </span>
               </h1>
@@ -61,14 +61,14 @@ const Home: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/register"
-                className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                className="inline-flex items-center px-8 py-4 bg-[#1b5e20] text-white font-semibold rounded-xl hover:bg-[#16381a] transition-all duration-200 transform hover:scale-105 shadow-lg"
               >
                 Commencer
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
               <Link
                 to="/login"
-                className="inline-flex items-center px-8 py-4 bg-white text-orange-500 font-semibold rounded-xl border-2 border-orange-500 hover:bg-orange-50 transition-all duration-200"
+                className="inline-flex items-center px-8 py-4 bg-white text-[#1b5e20] font-semibold rounded-xl border-2 border-[#1b5e20] hover:bg-[#f6faf3] transition-all duration-200"
               >
                 Se connecter
               </Link>
@@ -96,9 +96,9 @@ const Home: React.FC = () => {
               return (
                 <div
                   key={index}
-                  className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-8 hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                  className="bg-[#f6faf3] rounded-2xl p-8 hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                 >
-                  <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl flex items-center justify-center mb-6">
+                  <div className="w-12 h-12 bg-[#1b5e20] rounded-xl flex items-center justify-center mb-6">
                     <Icon className="w-6 h-6 text-white" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-4">{feature.title}</h3>
@@ -111,7 +111,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* Demo Section */}
-      <section className="py-24 bg-gradient-to-r from-orange-500 to-amber-500">
+      <section className="py-24 bg-[#1b5e20]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-bold text-white mb-8">
             Essayez nos fonctionnalités maintenant
@@ -119,28 +119,28 @@ const Home: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Link
               to="/live-shopping-demo"
-              className="bg-white text-orange-500 px-6 py-4 rounded-xl font-semibold hover:bg-orange-50 transition-colors flex items-center justify-center space-x-2"
+              className="bg-white text-[#1b5e20] px-6 py-4 rounded-xl font-semibold hover:bg-[#f6faf3] transition-colors flex items-center justify-center space-x-2"
             >
               <Film className="w-5 h-5" />
               <span>Live Shopping</span>
             </Link>
             <Link
               to="/webrtc-test-hub"
-              className="bg-white text-orange-500 px-6 py-4 rounded-xl font-semibold hover:bg-orange-50 transition-colors flex items-center justify-center space-x-2"
+              className="bg-white text-[#1b5e20] px-6 py-4 rounded-xl font-semibold hover:bg-[#f6faf3] transition-colors flex items-center justify-center space-x-2"
             >
               <Video className="w-5 h-5" />
               <span>Appels Vidéo</span>
             </Link>
             <Link
               to="/login"
-              className="bg-white text-orange-500 px-6 py-4 rounded-xl font-semibold hover:bg-orange-50 transition-colors flex items-center justify-center space-x-2"
+              className="bg-white text-[#1b5e20] px-6 py-4 rounded-xl font-semibold hover:bg-[#f6faf3] transition-colors flex items-center justify-center space-x-2"
             >
               <Store className="w-5 h-5" />
               <span>Espace Vendeur</span>
             </Link>
             <Link
               to="/register"
-              className="bg-white text-orange-500 px-6 py-4 rounded-xl font-semibold hover:bg-orange-50 transition-colors flex items-center justify-center space-x-2"
+              className="bg-white text-[#1b5e20] px-6 py-4 rounded-xl font-semibold hover:bg-[#f6faf3] transition-colors flex items-center justify-center space-x-2"
             >
               <Users className="w-5 h-5" />
               <span>Rejoindre</span>
@@ -150,15 +150,15 @@ const Home: React.FC = () => {
       </section>
 
       {/* Innovation Hub Section */}
-      <section className="py-24 bg-gradient-to-br from-purple-50 to-blue-50">
+      <section className="py-24 bg-[#f6faf3]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <div className="flex items-center justify-center space-x-3 mb-6">
-              <Rocket className="w-12 h-12 text-purple-600" />
+              <Rocket className="w-12 h-12 text-[#1b5e20]" />
               <h2 className="text-4xl font-bold text-gray-900">
                 Technologies Révolutionnaires
               </h2>
-              <Sparkles className="w-12 h-12 text-blue-600" />
+              <Sparkles className="w-12 h-12 text-[#1b5e20]" />
             </div>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Découvrez nos innovations de pointe : IA prédictive, Réalité Augmentée, 
@@ -169,7 +169,7 @@ const Home: React.FC = () => {
           <div className="text-center">
             <Link
               to="/innovation-hub"
-              className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
+              className="inline-flex items-center px-8 py-4 bg-[#1b5e20] text-white font-semibold rounded-xl hover:bg-[#16381a] transition-all duration-200 transform hover:scale-105 shadow-lg"
             >
               <Rocket className="mr-3 w-6 h-6" />
               Explorer l'Innovation Hub
@@ -185,7 +185,7 @@ const Home: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-[#1b5e20] rounded-full flex items-center justify-center">
                   <Store className="w-5 h-5 text-white" />
                 </div>
                 <span className="text-xl font-bold">MangooTech</span>

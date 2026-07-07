@@ -172,7 +172,7 @@ const AfricanMarketplace: React.FC = () => {
   const getStatusColor = (status: string): string => {
     switch (status) {
       case 'pending': return 'text-yellow-600 bg-yellow-100';
-      case 'in_transit': return 'text-blue-600 bg-blue-100';
+      case 'in_transit': return 'text-[#1b5e20] bg-[#eef6ea]';
       case 'delivered': return 'text-green-600 bg-green-100';
       default: return 'text-gray-600 bg-gray-100';
     }
@@ -201,7 +201,7 @@ const AfricanMarketplace: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-gradient-to-br from-orange-50 to-yellow-50">
+    <div className="max-w-7xl mx-auto p-6 bg-[#f6faf3]">
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold text-gray-800 mb-4">Marché Africain Intelligent</h1>
         <p className="text-lg text-gray-600">Prix en temps réel, commerce transfrontalier et connexion des marchés locaux</p>
@@ -214,8 +214,8 @@ const AfricanMarketplace: React.FC = () => {
             onClick={() => setActiveTab('prices')}
             className={`px-6 py-3 rounded-lg font-medium transition-all ${
               activeTab === 'prices'
-                ? 'bg-orange-600 text-white shadow-md'
-                : 'text-gray-600 hover:text-orange-600'
+                ? 'bg-[#1b5e20] text-white shadow-md'
+                : 'text-gray-600 hover:text-[#1b5e20]'
             }`}
           >
             <TrendingUp className="w-5 h-5 inline mr-2" />
@@ -225,8 +225,8 @@ const AfricanMarketplace: React.FC = () => {
             onClick={() => setActiveTab('stalls')}
             className={`px-6 py-3 rounded-lg font-medium transition-all ${
               activeTab === 'stalls'
-                ? 'bg-orange-600 text-white shadow-md'
-                : 'text-gray-600 hover:text-orange-600'
+                ? 'bg-[#1b5e20] text-white shadow-md'
+                : 'text-gray-600 hover:text-[#1b5e20]'
             }`}
           >
             <ShoppingCart className="w-5 h-5 inline mr-2" />
@@ -236,8 +236,8 @@ const AfricanMarketplace: React.FC = () => {
             onClick={() => setActiveTab('crossborder')}
             className={`px-6 py-3 rounded-lg font-medium transition-all ${
               activeTab === 'crossborder'
-                ? 'bg-orange-600 text-white shadow-md'
-                : 'text-gray-600 hover:text-orange-600'
+                ? 'bg-[#1b5e20] text-white shadow-md'
+                : 'text-gray-600 hover:text-[#1b5e20]'
             }`}
           >
             <Globe className="w-5 h-5 inline mr-2" />
@@ -258,8 +258,8 @@ const AfricanMarketplace: React.FC = () => {
                   onClick={() => setPriceFilter(category)}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     (category === 'all' && priceFilter === 'all') || (category === priceFilter)
-                      ? 'bg-orange-600 text-white'
-                      : 'bg-white text-gray-600 hover:bg-orange-100'
+                      ? 'bg-[#1b5e20] text-white'
+                      : 'bg-white text-gray-600 hover:bg-[#eef6ea]'
                   }`}
                 >
                   {category === 'all' ? 'Tous' : category}
@@ -297,7 +297,7 @@ const AfricanMarketplace: React.FC = () => {
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
                       <p className="text-gray-500 text-sm">Prix actuel</p>
-                      <p className="text-xl font-bold text-orange-600">
+                      <p className="text-xl font-bold text-[#1b5e20]">
                         {formatCurrency(price.currentPrice)}
                       </p>
                       <p className="text-xs text-gray-500">par {price.unit}</p>
@@ -337,7 +337,7 @@ const AfricanMarketplace: React.FC = () => {
                         {[40, 55, 45, 60, 50, 65, 70, 60, 75, 80, 70, 85].map((height, index) => (
                           <div
                             key={index}
-                            className="bg-orange-500 w-6 rounded-t"
+                            className="bg-[#1b5e20] w-6 rounded-t"
                             style={{ height: `${height}%` }}
                           ></div>
                         ))}
@@ -346,15 +346,15 @@ const AfricanMarketplace: React.FC = () => {
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-orange-50 p-4 rounded-lg">
-                      <h4 className="font-medium text-orange-800">Prix moyen</h4>
-                      <p className="text-2xl font-bold text-orange-600">
+                    <div className="bg-[#eef6ea] p-4 rounded-lg">
+                      <h4 className="font-medium text-[#1b5e20]">Prix moyen</h4>
+                      <p className="text-2xl font-bold text-[#1b5e20]">
                         {formatCurrency(selectedProduct.currentPrice * 0.95)}
                       </p>
                     </div>
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <h4 className="font-medium text-blue-800">Volume total</h4>
-                      <p className="text-2xl font-bold text-blue-600">
+                    <div className="bg-[#eef6ea] p-4 rounded-lg">
+                      <h4 className="font-medium text-[#1b5e20]">Volume total</h4>
+                      <p className="text-2xl font-bold text-[#1b5e20]">
                         {selectedProduct.volume.toLocaleString()} {selectedProduct.unit}
                       </p>
                     </div>
@@ -377,7 +377,7 @@ const AfricanMarketplace: React.FC = () => {
 
                   <button 
                     onClick={() => simulatePriceUpdate(selectedProduct.id)}
-                    className="w-full bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700"
+                    className="w-full bg-[#1b5e20] text-white py-2 px-4 rounded-lg hover:bg-[#16381a]"
                   >
                     Actualiser le prix
                   </button>
@@ -419,7 +419,7 @@ const AfricanMarketplace: React.FC = () => {
                 <p className="text-gray-500 text-sm mb-2">Produits</p>
                 <div className="flex flex-wrap gap-1">
                   {stall.products.map((product, index) => (
-                    <span key={index} className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs">
+                    <span key={index} className="bg-[#eef6ea] text-[#1b5e20] px-2 py-1 rounded-full text-xs">
                       {product}
                     </span>
                   ))}
@@ -445,7 +445,7 @@ const AfricanMarketplace: React.FC = () => {
                   e.stopPropagation();
                   contactVendor(stall.id);
                 }}
-                className="w-full bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 flex items-center justify-center gap-2"
+                className="w-full bg-[#1b5e20] text-white py-2 px-4 rounded-lg hover:bg-[#16381a] flex items-center justify-center gap-2"
               >
                 <Smartphone className="w-4 h-4" />
                 Contacter
@@ -498,7 +498,7 @@ const AfricanMarketplace: React.FC = () => {
                           e.stopPropagation();
                           trackShipment(trade.id);
                         }}
-                        className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                        className="text-[#1b5e20] hover:text-[#16381a] flex items-center gap-1"
                       >
                         <Truck className="w-4 h-4" />
                         Suivre
@@ -517,14 +517,14 @@ const AfricanMarketplace: React.FC = () => {
                   
                   <div className="mb-6">
                     <h4 className="font-medium mb-2">Itinéraire</h4>
-                    <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                    <div className="flex items-center justify-between p-4 bg-[#eef6ea] rounded-lg">
                       <div className="text-center">
                         <p className="font-semibold">{selectedTrade.fromCountry}</p>
                         <p className="text-sm text-gray-600">Départ</p>
                       </div>
                       <div className="flex-1 mx-4">
-                        <div className="border-t-2 border-dashed border-blue-300 relative">
-                          <Truck className="w-6 h-6 text-blue-600 absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-blue-50" />
+                        <div className="border-t-2 border-dashed border-[#d7e4d1] relative">
+                          <Truck className="w-6 h-6 text-[#1b5e20] absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#eef6ea]" />
                         </div>
                       </div>
                       <div className="text-center">
@@ -541,9 +541,9 @@ const AfricanMarketplace: React.FC = () => {
                         {formatCurrency(selectedTrade.price)}
                       </p>
                     </div>
-                    <div className="bg-orange-50 p-4 rounded-lg">
-                      <h4 className="font-medium text-orange-800">Frais totaux</h4>
-                      <p className="text-2xl font-bold text-orange-600">
+                    <div className="bg-[#eef6ea] p-4 rounded-lg">
+                      <h4 className="font-medium text-[#1b5e20]">Frais totaux</h4>
+                      <p className="text-2xl font-bold text-[#1b5e20]">
                         {formatCurrency(selectedTrade.customsFees + selectedTrade.transportCost)}
                       </p>
                     </div>
@@ -571,7 +571,7 @@ const AfricanMarketplace: React.FC = () => {
 
                   <button 
                     onClick={() => trackShipment(selectedTrade.id)}
-                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
+                    className="w-full bg-[#1b5e20] text-white py-2 px-4 rounded-lg hover:bg-[#16381a] flex items-center justify-center gap-2"
                   >
                     <Globe className="w-5 h-5" />
                     Suivre en temps réel

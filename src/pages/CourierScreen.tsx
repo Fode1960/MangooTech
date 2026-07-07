@@ -473,7 +473,7 @@ export default function CourierScreen() {
         <div className="max-w-3xl mx-auto">
           <div className={`rounded-2xl border p-6 ${isDark ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-white shadow-xl'}`}>
             <div className="flex items-center gap-3">
-              <Truck className={`w-7 h-7 ${isDark ? 'text-emerald-300' : 'text-emerald-600'}`} />
+              <Truck className={`w-7 h-7 ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`} />
               <div>
                 <div className="text-lg font-black">Bienvenue</div>
                 <div className={`text-sm ${isDark ? 'text-zinc-300' : 'text-gray-600'}`}>Inscrivez-vous puis ouvrez votre espace Livrer.</div>
@@ -483,7 +483,7 @@ export default function CourierScreen() {
               <button
                 type="button"
                 onClick={() => navigate('/livreur/inscription')}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-emerald-500 text-white font-black hover:from-orange-600 hover:to-emerald-600"
+                className="px-4 py-2 rounded-xl bg-[#1b5e20] text-white font-black hover:bg-[#16381a]"
               >
                 Créer mon compte livreur
               </button>
@@ -515,7 +515,7 @@ export default function CourierScreen() {
               <button
                 type="button"
                 onClick={() => navigate('/livreur/inscription')}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-emerald-500 text-white font-black hover:from-orange-600 hover:to-emerald-600"
+                className="px-4 py-2 rounded-xl bg-[#1b5e20] text-white font-black hover:bg-[#16381a]"
               >
                 Créer un compte livreur
               </button>
@@ -545,18 +545,18 @@ export default function CourierScreen() {
       <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-4" style={{ minHeight: 'calc(100vh - 160px)' }}>
           <div className="h-full flex flex-col gap-4">
             {notificationPermission !== 'granted' ? (
-              <div className={`px-4 py-3 rounded-2xl border text-sm flex items-center justify-between gap-3 ${isDark ? 'bg-sky-500/10 border-sky-500/20 text-sky-100' : 'bg-white/90 border-sky-200 text-sky-900 shadow-sm'}`}>
+              <div className={`px-4 py-3 rounded-2xl border text-sm flex items-center justify-between gap-3 ${isDark ? 'bg-[#1b5e20]/20 border-[#2e5d34]/30 text-[#ecf7e7]' : 'bg-[#eef6ea] border-[#cfe0c8] text-[#1b5e20] shadow-sm'}`}>
                 <div className="min-w-0">Notifications: activez pour être alerté quand une commande arrive.</div>
                 <button
                   type="button"
                   onClick={requestBrowserNotifications}
-                  className={`shrink-0 px-3 py-2 rounded-xl font-black text-xs transition-colors ${isDark ? 'bg-white/5 border border-white/10 hover:bg-white/10' : 'bg-gradient-to-r from-orange-500 to-emerald-600 text-white hover:from-orange-600 hover:to-emerald-700 shadow-sm'}`}
+                  className={`shrink-0 px-3 py-2 rounded-xl font-black text-xs transition-colors ${isDark ? 'bg-white/5 border border-white/10 hover:bg-white/10' : 'bg-[#1b5e20] text-white hover:bg-[#16381a] shadow-sm'}`}
                 >
                   Activer
                 </button>
               </div>
             ) : (
-              <div className={`px-4 py-3 rounded-2xl border text-sm ${isDark ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-100' : 'bg-white/90 border-emerald-200 text-emerald-900 shadow-sm'}`}>
+              <div className={`px-4 py-3 rounded-2xl border text-sm ${isDark ? 'bg-[#1b5e20]/20 border-[#2e5d34]/30 text-[#ecf7e7]' : 'bg-[#eef6ea] border-[#cfe0c8] text-[#1b5e20] shadow-sm'}`}>
                 <div className="min-w-0">Notifications: activées.</div>
               </div>
             )}
@@ -584,10 +584,10 @@ export default function CourierScreen() {
                 <button
                   type="button"
                   onClick={() => setInvoiceOpen(true)}
-                  className={`w-full px-4 py-3 rounded-2xl font-black transition-colors ${isDark ? 'bg-white/5 border border-white/10 hover:bg-white/10 text-white' : 'bg-gradient-to-r from-orange-500 to-emerald-600 text-white hover:from-orange-600 hover:to-emerald-700 shadow-lg shadow-orange-100/60'}`}
+                  className={`w-full px-4 py-3 rounded-2xl font-black transition-colors ${isDark ? 'bg-white/5 border border-white/10 hover:bg-white/10 text-white' : 'bg-[#1b5e20] text-white hover:bg-[#16381a] shadow-sm'}`}
                   title="Voir la fiche livreur"
                 >
-                  🧾 Fiche livreur
+                  Fiche livreur
                 </button>
                 {premiumTrackingUrl && (
                   <button
@@ -596,7 +596,7 @@ export default function CourierScreen() {
                     className={`w-full px-4 py-3 rounded-2xl font-black transition-colors ${isDark ? 'bg-white/5 border border-white/10 hover:bg-white/10 text-white' : 'bg-white border border-orange-200 text-gray-900 hover:bg-orange-50 shadow-sm'}`}
                     title="Ouvrir le suivi premium"
                   >
-                    🚚 Suivi premium
+                    Suivi premium
                   </button>
                 )}
               </div>
@@ -643,7 +643,7 @@ export default function CourierScreen() {
           <div className={`h-full rounded-2xl border overflow-hidden relative ${isDark ? 'border-white/10 bg-white/5' : 'border-orange-100 bg-white/95 shadow-xl'}`}>
             <div className="absolute top-4 left-4 z-[500] flex flex-wrap items-center gap-2">
               <div className={`px-3 py-2 rounded-xl backdrop-blur border text-xs font-black inline-flex items-center gap-2 ${isDark ? 'bg-black/40 border-white/10 text-white' : 'bg-white/85 border-orange-200 text-gray-900 shadow-sm'}`}>
-                <Navigation className={`w-4 h-4 ${isDark ? 'text-sky-300' : 'text-emerald-600'}`} />
+                <Navigation className={`w-4 h-4 ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`} />
                 {activeOrderId
                   ? activeOrder?.status === 'picked_up'
                     ? 'Trajet vers le client'

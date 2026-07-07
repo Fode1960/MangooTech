@@ -101,7 +101,7 @@ export default function CourierInvoiceModal({ open, onClose, order }: Props) {
               </div>
               <div className="flex items-center justify-between text-base">
                 <div className="font-black">Net à payer au livreur</div>
-                <div className="font-black text-emerald-400">{formatFcfa(payoutHtFcfa)}</div>
+                <div className="font-black text-[#66bb6a]">{formatFcfa(payoutHtFcfa)}</div>
               </div>
             </div>
           </div>

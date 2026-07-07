@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 import PropTypes from 'prop-types';
 import { useThemeStore } from '../stores/themeStore';
+import { getPaymentPublicConfig } from '../services/paymentPublicConfig';
 
 export const PayPalPayment = ({
   amount,
@@ -18,12 +19,36 @@ export const PayPalPayment = ({
   const [isLoading, setIsLoading] = useState(false);
   const [orderId, setOrderId] = useState(null);
   const [paymentId, setPaymentId] = useState(null);
+  const [paypalClientId, setPaypalClientId] = useState(import.meta.env.VITE_PAYPAL_CLIENT_ID || '');
+  const [configReady, setConfigReady] = useState(false);
   
   const { isDark } = useThemeStore();
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadPublicConfig = async () => {
+      try {
+        const publicConfig = await getPaymentPublicConfig();
+        if (!isMounted) return;
+        setPaypalClientId(publicConfig.paypalClientId || '');
+      } finally {
+        if (isMounted) {
+          setConfigReady(true);
+        }
+      }
+    };
+
+    void loadPublicConfig();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Configuration PayPal
   const paypalOptions = {
-    'client-id': import.meta.env.VITE_PAYPAL_CLIENT_ID || 'YOUR_PAYPAL_CLIENT_ID',
+    'client-id': paypalClientId || 'YOUR_PAYPAL_CLIENT_ID',
     currency: currency.toUpperCase(),
     intent: 'capture',
     'enable-funding': 'venmo',
@@ -174,6 +199,34 @@ export const PayPalPayment = ({
   // Calculer les frais et le total
   const processingFee = (amount * 0.029) + 0.30;
   const totalAmount = amount + processingFee;
+
+  if (!configReady) {
+    return (
+      <div className={`w-full max-w-md mx-auto p-6 rounded-lg shadow-lg transition-colors duration-300 ${
+        isDark
+          ? 'bg-gray-800 text-white border border-gray-700'
+          : 'bg-white text-gray-900 border border-gray-200'
+      }`}>
+        <p className={`text-sm text-center ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+          Chargement de la configuration PayPal...
+        </p>
+      </div>
+    );
+  }
+
+  if (!paypalClientId) {
+    return (
+      <div className={`w-full max-w-md mx-auto p-6 rounded-lg shadow-lg transition-colors duration-300 ${
+        isDark
+          ? 'bg-gray-800 text-white border border-gray-700'
+          : 'bg-white text-gray-900 border border-gray-200'
+      }`}>
+        <p className={`text-sm text-center ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+          Configuration publique PayPal manquante.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <PayPalScriptProvider options={paypalOptions}>

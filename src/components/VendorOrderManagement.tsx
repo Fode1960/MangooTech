@@ -264,7 +264,7 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
       case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'confirmed': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'preparing': return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'shipped': return 'bg-indigo-100 text-indigo-800 border-indigo-200';
+      case 'shipped': return 'bg-[#eef6ea] text-[#1b5e20] border-[#cfe0c8]';
       case 'delivered': return 'bg-green-100 text-green-800 border-green-200';
       case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -314,7 +314,7 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
                   onClick={() => setNewOrdersCount(0)}
                   className="text-xs text-blue-600 hover:text-blue-800 mt-1"
                 >
-                  🔔 {newOrdersCount} nouvelle{newOrdersCount > 1 ? 's' : ''} commande{newOrdersCount > 1 ? 's' : ''}
+                   {newOrdersCount} nouvelle{newOrdersCount > 1 ? 's' : ''} commande{newOrdersCount > 1 ? 's' : ''}
                 </button>
               )}
             </div>
@@ -381,7 +381,7 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
                 placeholder="Rechercher une commande..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent"
               />
             </div>
           </div>
@@ -390,7 +390,7 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent"
             >
               <option value="all">Tous les statuts</option>
               <option value="pending">En attente</option>
@@ -404,7 +404,7 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
             <select
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent"
             >
               <option value="all">Toutes les dates</option>
               <option value="today">Aujourd'hui</option>
@@ -472,7 +472,7 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(order.paymentStatus)}`}>
-                      {order.paymentStatus === 'paid' ? '✅' : order.paymentStatus === 'pending' ? '⏳' : '❌'}
+                      {order.paymentStatus === 'paid' ? '' : order.paymentStatus === 'pending' ? '' : ''}
                       {order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)}
                     </span>
                   </td>
@@ -508,7 +508,7 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
                         {order.status === 'preparing' && (
                           <button
                             onClick={() => updateOrderStatus(order.id, 'shipped')}
-                            className="bg-indigo-600 text-white px-2 py-1 rounded text-xs hover:bg-indigo-700"
+                            className="bg-[#1b5e20] text-white px-2 py-1 rounded text-xs hover:bg-[#16381a]"
                           >
                             Expédier
                           </button>
@@ -674,7 +674,7 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
                 </button>
                 <button
                   onClick={() => updateOrderStatus(selectedOrder.id, 'shipped')}
-                  className="bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors"
+                  className="bg-[#1b5e20] text-white px-4 py-2 rounded-lg hover:bg-[#16381a] transition-colors"
                 >
                   Marquer expédiée
                 </button>

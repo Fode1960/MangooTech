@@ -139,7 +139,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '', compact =
       <div className={`flex gap-2 mb-4 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
         {!isOwnMessage && (
           <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
+            <div className="w-10 h-10 bg-[#1b5e20] rounded-full flex items-center justify-center text-white font-medium">
               {participant?.avatar || message.senderAvatar || message.senderName.charAt(0)}
             </div>
           </div>
@@ -184,7 +184,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '', compact =
         }`}
       >
         <div className="relative flex-shrink-0">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium text-lg">
+          <div className="w-12 h-12 bg-[#1b5e20] rounded-full flex items-center justify-center text-white font-medium text-lg">
             {otherParticipant?.avatar || otherParticipant?.name.charAt(0)}
           </div>
           {otherParticipant?.isOnline && (
@@ -341,7 +341,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '', compact =
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="relative">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
+                    <div className="w-10 h-10 bg-[#1b5e20] rounded-full flex items-center justify-center text-white font-medium">
                       {activeConversation.participants.find(p => p.id !== 'current-user')?.avatar || 
                        activeConversation.participants.find(p => p.id !== 'current-user')?.name.charAt(0)}
                     </div>
@@ -427,7 +427,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '', compact =
                         }}
                         className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
                       >
-                        📄 Document
+                        Document
                       </button>
                       <button
                         onClick={() => {
@@ -436,7 +436,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '', compact =
                         }}
                         className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
                       >
-                        🖼️ Image
+                        Image
                       </button>
                     </div>
                   )}

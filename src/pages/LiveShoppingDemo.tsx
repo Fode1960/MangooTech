@@ -16,13 +16,13 @@ const LiveShoppingDemo: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
+    <div className="min-h-screen bg-[#f6faf3]">
       {/* En-tête de navigation */}
-      <div className="bg-white shadow-lg border-b border-orange-200">
+      <div className="bg-white shadow-lg border-b border-[#c8e6c9]">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-[#1b5e20] rounded-full flex items-center justify-center">
                 <Store className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -32,7 +32,7 @@ const LiveShoppingDemo: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              <div className="bg-orange-100 px-4 py-2 rounded-lg">
+              <div className="bg-[#e8f5e9] px-4 py-2 rounded-lg">
                 <div className="flex items-center space-x-2">
                   <div className={`w-3 h-3 rounded-full ${isLive ? 'bg-red-500 animate-pulse' : 'bg-gray-400'}`} />
                   <span className="text-sm font-medium text-gray-700">
@@ -46,7 +46,7 @@ const LiveShoppingDemo: React.FC = () => {
                   onClick={() => setMode('host')}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                     mode === 'host'
-                      ? 'bg-orange-500 text-white shadow-md'
+                      ? 'bg-[#1b5e20] text-white shadow-md'
                       : 'text-gray-600 hover:text-gray-800'
                   }`}
                 >
@@ -57,7 +57,7 @@ const LiveShoppingDemo: React.FC = () => {
                   onClick={() => setMode('viewer')}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                     mode === 'viewer'
-                      ? 'bg-blue-500 text-white shadow-md'
+                      ? 'bg-[#1b5e20] text-white shadow-md'
                       : 'text-gray-600 hover:text-gray-800'
                   }`}
                 >
@@ -71,7 +71,7 @@ const LiveShoppingDemo: React.FC = () => {
       </div>
 
       {/* Barre d'informations */}
-      <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white">
+      <div className="bg-[#1b5e20] text-white">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6">
@@ -101,8 +101,8 @@ const LiveShoppingDemo: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <Users className="w-6 h-6 text-blue-500" />
+              <div className="w-12 h-12 bg-[#e8f5e9] rounded-full flex items-center justify-center">
+                <Users className="w-6 h-6 text-[#1b5e20]" />
               </div>
               <span className="text-2xl font-bold text-gray-800">245</span>
             </div>
@@ -112,8 +112,8 @@ const LiveShoppingDemo: React.FC = () => {
           
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <ShoppingBag className="w-6 h-6 text-green-500" />
+              <div className="w-12 h-12 bg-[#e8f5e9] rounded-full flex items-center justify-center">
+                <ShoppingBag className="w-6 h-6 text-[#1b5e20]" />
               </div>
               <span className="text-2xl font-bold text-gray-800">1,247</span>
             </div>
@@ -123,8 +123,8 @@ const LiveShoppingDemo: React.FC = () => {
           
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-orange-500" />
+              <div className="w-12 h-12 bg-[#e8f5e9] rounded-full flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-[#1b5e20]" />
               </div>
               <span className="text-2xl font-bold text-gray-800">87%</span>
             </div>
@@ -152,39 +152,39 @@ const LiveShoppingDemo: React.FC = () => {
             {mode === 'host' ? (
               <>
                 <div>
-                  <h3 className="text-lg font-semibold text-orange-600 mb-4">Pour le Vendeur</h3>
+                  <h3 className="text-lg font-semibold text-[#1b5e20] mb-4">Pour le Vendeur</h3>
                   <ul className="space-y-3 text-gray-700">
                     <li className="flex items-start space-x-3">
-                      <div className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5">1</div>
+                      <div className="w-6 h-6 bg-[#1b5e20] text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5">1</div>
                       <span>Cliquez sur le bouton PLAY pour démarrer le live</span>
                     </li>
                     <li className="flex items-start space-x-3">
-                      <div className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5">2</div>
+                      <div className="w-6 h-6 bg-[#1b5e20] text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5">2</div>
                       <span>Sélectionnez des produits à présenter depuis le panel</span>
                     </li>
                     <li className="flex items-start space-x-3">
-                      <div className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5">3</div>
+                      <div className="w-6 h-6 bg-[#1b5e20] text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5">3</div>
                       <span>Interagissez avec les spectateurs via le chat</span>
                     </li>
                     <li className="flex items-start space-x-3">
-                      <div className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5">4</div>
+                      <div className="w-6 h-6 bg-[#1b5e20] text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5">4</div>
                       <span>Surveillez les statistiques en temps réel</span>
                     </li>
                   </ul>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-blue-600 mb-4">Fonctionnalités Avancées</h3>
+                  <h3 className="text-lg font-semibold text-[#1b5e20] mb-4">Fonctionnalités Avancées</h3>
                   <ul className="space-y-3 text-gray-700">
                     <li className="flex items-start space-x-3">
-                      <Play className="w-5 h-5 text-green-500 mt-0.5" />
+                      <Play className="w-5 h-5 text-[#1b5e20] mt-0.5" />
                       <span>Contrôle complet du streaming (play, pause, stop)</span>
                     </li>
                     <li className="flex items-start space-x-3">
-                      <Users className="w-5 h-5 text-blue-500 mt-0.5" />
+                      <Users className="w-5 h-5 text-[#1b5e20] mt-0.5" />
                       <span>Gestion des spectateurs et modérateurs</span>
                     </li>
                     <li className="flex items-start space-x-3">
-                      <TrendingUp className="w-5 h-5 text-purple-500 mt-0.5" />
+                      <TrendingUp className="w-5 h-5 text-[#1b5e20] mt-0.5" />
                       <span>Analytiques détaillées en temps réel</span>
                     </li>
                     <li className="flex items-start space-x-3">
@@ -197,39 +197,39 @@ const LiveShoppingDemo: React.FC = () => {
             ) : (
               <>
                 <div>
-                  <h3 className="text-lg font-semibold text-blue-600 mb-4">Pour le Client</h3>
+                  <h3 className="text-lg font-semibold text-[#1b5e20] mb-4">Pour le Client</h3>
                   <ul className="space-y-3 text-gray-700">
                     <li className="flex items-start space-x-3">
-                      <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5">1</div>
+                      <div className="w-6 h-6 bg-[#1b5e20] text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5">1</div>
                       <span>Regardez le live et découvrez les produits</span>
                     </li>
                     <li className="flex items-start space-x-3">
-                      <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5">2</div>
+                      <div className="w-6 h-6 bg-[#1b5e20] text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5">2</div>
                       <span>Utilisez le chat pour poser des questions</span>
                     </li>
                     <li className="flex items-start space-x-3">
-                      <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5">3</div>
+                      <div className="w-6 h-6 bg-[#1b5e20] text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5">3</div>
                       <span>Cliquez sur "Acheter" pour vos produits favoris</span>
                     </li>
                     <li className="flex items-start space-x-3">
-                      <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5">4</div>
+                      <div className="w-6 h-6 bg-[#1b5e20] text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5">4</div>
                       <span>Partagez le live avec vos amis</span>
                     </li>
                   </ul>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-green-600 mb-4">Avantages Client</h3>
+                  <h3 className="text-lg font-semibold text-[#1b5e20] mb-4">Avantages Client</h3>
                   <ul className="space-y-3 text-gray-700">
                     <li className="flex items-start space-x-3">
-                      <ShoppingBag className="w-5 h-5 text-green-500 mt-0.5" />
+                      <ShoppingBag className="w-5 h-5 text-[#1b5e20] mt-0.5" />
                       <span>Réductions exclusives pendant le live</span>
                     </li>
                     <li className="flex items-start space-x-3">
-                      <Users className="w-5 h-5 text-blue-500 mt-0.5" />
+                      <Users className="w-5 h-5 text-[#1b5e20] mt-0.5" />
                       <span>Interaction directe avec le vendeur</span>
                     </li>
                     <li className="flex items-start space-x-3">
-                      <TrendingUp className="w-5 h-5 text-purple-500 mt-0.5" />
+                      <TrendingUp className="w-5 h-5 text-[#1b5e20] mt-0.5" />
                       <span>Découverte de nouveaux produits en avant-première</span>
                     </li>
                     <li className="flex items-start space-x-3">

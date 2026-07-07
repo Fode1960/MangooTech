@@ -26,7 +26,7 @@ const ProductManager = ({ vendorId }) => {
       images: [
         { id: 1, preview: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOWNhM2FmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+8J+TpDwvdGV4dD48L3N2Zz4=' }
       ],
-      icon: '📱'
+      icon: 'Telephone'
     }
   ]);
 
@@ -111,7 +111,7 @@ const ProductManager = ({ vendorId }) => {
         </h2>
         <button
           onClick={() => setShowForm(true)}
-          className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-4 py-2 rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all flex items-center space-x-2"
+          className="bg-[#1b5e20] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#2e7d32] transition-all flex items-center space-x-2"
         >
           <Plus className="w-5 h-5" />
           <span>Ajouter un produit</span>
@@ -147,7 +147,7 @@ const ProductManager = ({ vendorId }) => {
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-[#1b5e20] focus:border-[#1b5e20] dark:bg-gray-700 dark:text-white"
                       required
                     />
                   </div>
@@ -160,7 +160,7 @@ const ProductManager = ({ vendorId }) => {
                       value={formData.description}
                       onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                       rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-[#1b5e20] focus:border-[#1b5e20] dark:bg-gray-700 dark:text-white"
                       required
                     />
                   </div>
@@ -177,7 +177,7 @@ const ProductManager = ({ vendorId }) => {
                           value={formData.price}
                           onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
                           placeholder="150.000 FCFA"
-                          className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                          className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-[#1b5e20] focus:border-[#1b5e20] dark:bg-gray-700 dark:text-white"
                           required
                         />
                       </div>
@@ -194,7 +194,7 @@ const ProductManager = ({ vendorId }) => {
                           value={formData.originalPrice}
                           onChange={(e) => setFormData(prev => ({ ...prev, originalPrice: e.target.value }))}
                           placeholder="180.000 FCFA"
-                          className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                          className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-[#1b5e20] focus:border-[#1b5e20] dark:bg-gray-700 dark:text-white"
                         />
                       </div>
                     </div>
@@ -208,7 +208,7 @@ const ProductManager = ({ vendorId }) => {
                       <select
                         value={formData.category}
                         onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-[#1b5e20] focus:border-[#1b5e20] dark:bg-gray-700 dark:text-white"
                         required
                       >
                         {PRODUCT_CATEGORIES.map(cat => (
@@ -230,7 +230,7 @@ const ProductManager = ({ vendorId }) => {
                           value={formData.stock}
                           onChange={(e) => setFormData(prev => ({ ...prev, stock: parseInt(e.target.value) || 0 }))}
                           min="0"
-                          className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                          className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-[#1b5e20] focus:border-[#1b5e20] dark:bg-gray-700 dark:text-white"
                           required
                         />
                       </div>
@@ -298,7 +298,7 @@ const ProductManager = ({ vendorId }) => {
                 <button
                   type="submit"
                   onClick={handleSubmit}
-                  className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-6 py-2 rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all flex items-center space-x-2"
+                  className="bg-[#1b5e20] text-white px-6 py-2 rounded-lg font-medium hover:bg-[#2e7d32] transition-all flex items-center space-x-2"
                 >
                   <span>{editingProduct ? 'Modifier' : 'Ajouter'}</span>
                 </button>
@@ -393,7 +393,7 @@ const ProductManager = ({ vendorId }) => {
 
       {products.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-6xl mb-4">📦</div>
+          <div className="text-6xl mb-4">Aucun produit</div>
           <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
             Aucun produit trouvé
           </h3>
@@ -402,7 +402,7 @@ const ProductManager = ({ vendorId }) => {
           </p>
           <button
             onClick={() => setShowForm(true)}
-            className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-4 py-2 rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all"
+            className="bg-[#1b5e20] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#2e7d32] transition-all"
           >
             Ajouter un produit
           </button>

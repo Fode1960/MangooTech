@@ -194,7 +194,7 @@ export function BoostCreditsAdmin({ isEnabled }: { isEnabled: boolean }) {
           Les crédits sont en XOF et servent à acheter des boosts sans carte.
         </div>
         {error && <div className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</div>}
-        {notice && <div className="mt-3 text-sm text-emerald-700 dark:text-emerald-400">{notice}</div>}
+        {notice && <div className="mt-3 text-sm text-[#1b5e20] dark:text-[#8ccf8c]">{notice}</div>}
       </div>
 
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
@@ -241,7 +241,7 @@ export function BoostCreditsAdmin({ isEnabled }: { isEnabled: boolean }) {
 
           <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-4">
             <div className="text-sm font-bold text-gray-900 dark:text-white">Solde</div>
-            <div className="mt-2 text-2xl font-black text-emerald-600 dark:text-emerald-400">
+            <div className="mt-2 text-2xl font-black text-[#1b5e20] dark:text-[#8ccf8c]">
               {balanceXof === null ? '—' : `${formatXof(balanceXof)} XOF`}
             </div>
             <button
@@ -284,7 +284,7 @@ export function BoostCreditsAdmin({ isEnabled }: { isEnabled: boolean }) {
             className={`px-5 py-2 rounded-xl text-sm font-bold transition-colors ${
               !isEnabled || !selectedUserId
                 ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
-                : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                : 'bg-[#1b5e20] text-white hover:bg-[#16381a]'
             }`}
           >
             Créditer

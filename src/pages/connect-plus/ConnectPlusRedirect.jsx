@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { Link2 } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 const fetchJson = async (url, init = {}) => {
@@ -45,9 +46,11 @@ export default function ConnectPlusRedirect() {
   }, [navigate, token])
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-orange-50 to-green-50">
-      <div className="max-w-md w-full rounded-2xl shadow-2xl p-6 bg-white border border-gray-100 text-center">
-        <div className="text-5xl">🔗</div>
+    <div className="min-h-screen flex items-center justify-center bg-[#f6faf3] p-4">
+      <div className="max-w-md w-full rounded-2xl border border-[#d7e4d1] bg-white p-6 text-center shadow-sm">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#eef6ea] text-[#1b5e20]">
+          <Link2 className="h-7 w-7" aria-hidden="true" />
+        </div>
         <div className="mt-2 text-2xl font-black text-gray-900">Ouverture...</div>
         {error && <div className="mt-3 text-sm font-bold text-red-600">{error}</div>}
       </div>

@@ -255,7 +255,7 @@ const LiveShoppingStream: React.FC<LiveShoppingStreamProps> = ({
         {/* Informations du streamer */}
         <div className="absolute bottom-4 left-4 bg-black bg-opacity-70 text-white px-3 py-2 rounded-lg">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-[#1b5e20] rounded-full flex items-center justify-center">
               <span className="text-sm font-bold">{streamData.streamer.name[0]}</span>
             </div>
             <div>
@@ -316,7 +316,7 @@ const LiveShoppingStream: React.FC<LiveShoppingStreamProps> = ({
                   </button>
                   <button
                     onClick={() => onPurchase && onPurchase(currentProduct)}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded flex items-center justify-center space-x-2"
+                    className="flex-1 bg-[#1b5e20] hover:bg-[#16381a] px-4 py-2 rounded flex items-center justify-center space-x-2"
                   >
                     <ShoppingCart className="w-4 h-4" />
                     <span>Acheter Maintenant</span>
@@ -337,7 +337,7 @@ const LiveShoppingStream: React.FC<LiveShoppingStreamProps> = ({
                     key={product.id}
                     onClick={() => setCurrentProduct(product)}
                     className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 ${
-                      currentProduct.id === product.id ? 'border-blue-500' : 'border-gray-600'
+                      currentProduct.id === product.id ? 'border-[#1b5e20]' : 'border-gray-600'
                     }`}
                   >
                     <img
@@ -360,13 +360,13 @@ const LiveShoppingStream: React.FC<LiveShoppingStreamProps> = ({
                   <div className="flex space-x-2">
                     <button
                       onClick={onLike}
-                      className="text-pink-500 hover:text-pink-400"
+                      className="text-[#1b5e20] hover:text-[#66bb6a]"
                     >
                       <Heart className="w-4 h-4" />
                     </button>
                     <button
                       onClick={onShare}
-                      className="text-blue-500 hover:text-blue-400"
+                      className="text-[#1b5e20] hover:text-[#66bb6a]"
                     >
                       <Share2 className="w-4 h-4" />
                     </button>
@@ -381,7 +381,7 @@ const LiveShoppingStream: React.FC<LiveShoppingStreamProps> = ({
                 {chatMessages.map((msg) => (
                   <div key={msg.id} className="text-sm">
                     <div className="flex items-center space-x-2">
-                      <span className="font-semibold text-blue-400">{msg.username}</span>
+                      <span className="font-semibold text-[#1b5e20]">{msg.username}</span>
                       <span className="text-xs text-gray-400">
                         {msg.timestamp.toLocaleTimeString()}
                       </span>
@@ -399,11 +399,11 @@ const LiveShoppingStream: React.FC<LiveShoppingStreamProps> = ({
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                     placeholder="Écrire un message..."
-                    className="flex-1 bg-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 bg-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
                   />
                   <button
                     onClick={handleSendMessage}
-                    className="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-lg"
+                    className="bg-[#1b5e20] hover:bg-[#16381a] px-3 py-2 rounded-lg"
                   >
                     <MessageCircle className="w-4 h-4" />
                   </button>
@@ -417,7 +417,7 @@ const LiveShoppingStream: React.FC<LiveShoppingStreamProps> = ({
       {/* Bouton toggle chat (mobile) */}
       <button
         onClick={() => setShowChat(!showChat)}
-        className="md:hidden fixed bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg"
+        className="md:hidden fixed bottom-4 right-4 bg-[#1b5e20] hover:bg-[#16381a] text-white p-3 rounded-full shadow-lg"
       >
         <MessageCircle className="w-5 h-5" />
       </button>

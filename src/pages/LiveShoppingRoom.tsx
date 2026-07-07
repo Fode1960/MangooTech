@@ -79,9 +79,9 @@ const LiveShoppingRoom: React.FC = () => {
 
   if (!roomData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f6faf3] flex items-center justify-center">
         <div className="text-center">
-          <div className="text-6xl mb-4">🛍️</div>
+          <div className="text-6xl mb-4"></div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Room non trouvée</h1>
           <p className="text-gray-600">Cette session de live shopping n'existe pas ou est terminée.</p>
         </div>
@@ -90,7 +90,7 @@ const LiveShoppingRoom: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
+    <div className="min-h-screen bg-[#f6faf3]">
       <Toaster position="top-right" />
       
       {/* Header de la session active */}
@@ -134,15 +134,15 @@ const LiveShoppingRoom: React.FC = () => {
           {/* Zone vidéo principale */}
           <div className="lg:col-span-2">
             <div className="bg-black rounded-2xl overflow-hidden shadow-2xl">
-              <div className="aspect-video bg-gradient-to-br from-red-400 to-pink-500 flex items-center justify-center text-white text-8xl">
-                🎥
+              <div className="aspect-video bg-[#1b5e20] flex items-center justify-center text-white text-8xl">
+                
               </div>
               
               {/* Contrôles de streaming */}
               <div className="bg-gray-900 p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div className="bg-red-600 text-white px-3 py-1 rounded text-sm font-bold animate-pulse">
-                    🔴 LIVE
+                     LIVE
                   </div>
                   <div className="text-white text-sm">
                     Room ID: {roomId}
@@ -182,12 +182,12 @@ const LiveShoppingRoom: React.FC = () => {
             <div className="mt-6 bg-white rounded-xl shadow-lg p-6">
               <h3 className="text-xl font-bold text-gray-900 mb-4">À propos du vendeur</h3>
               <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-pink-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                <div className="w-16 h-16 bg-[#1b5e20] rounded-full flex items-center justify-center text-white text-2xl font-bold">
                   {roomData.vendor.charAt(0)}
                 </div>
                 <div>
                   <h4 className="font-semibold text-gray-900">{roomData.vendor}</h4>
-                  <p className="text-gray-600">Vendeur vérifié • 4.8⭐ (245 avis)</p>
+                  <p className="text-gray-600">Vendeur vérifié • 4.8 (245 avis)</p>
                 </div>
               </div>
             </div>
@@ -231,7 +231,7 @@ const LiveShoppingRoom: React.FC = () => {
                   onChange={(e) => setMessageInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Écrire un message..."
-                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
                 />
                 <button 
                   onClick={handleSendMessage}
@@ -250,7 +250,7 @@ const LiveShoppingRoom: React.FC = () => {
               {currentProduct && (
                 <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
                   <div className="flex items-center space-x-3">
-                    <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center text-white text-2xl font-bold">
+                    <div className="w-16 h-16 bg-[#1b5e20] rounded-lg flex items-center justify-center text-white text-2xl font-bold">
                       {currentProduct.image}
                     </div>
                     <div className="flex-1">
@@ -266,12 +266,12 @@ const LiveShoppingRoom: React.FC = () => {
                 <div 
                   className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
                   onClick={() => {
-                    const product = { id: 1, name: 'Robe Wax Ankara', price: 25000, image: '👗', description: 'Magnifique robe wax africain, faite main avec des motifs traditionnels' };
+                    const product = { id: 1, name: 'Robe Wax Ankara', price: 25000, image: '', description: 'Magnifique robe wax africain, faite main avec des motifs traditionnels' };
                     selectProduct(product);
                   }}
                 >
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-500 rounded-lg flex items-center justify-center text-white font-bold">
-                    👗
+                  <div className="w-12 h-12 bg-[#1b5e20] rounded-lg flex items-center justify-center text-white font-bold">
+                    
                   </div>
                   <div className="flex-1">
                     <div className="font-medium text-gray-900">Robe Wax Ankara</div>
@@ -285,12 +285,12 @@ const LiveShoppingRoom: React.FC = () => {
                 <div 
                   className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
                   onClick={() => {
-                    const product = { id: 2, name: 'Collier Perles', price: 15000, image: '💎', description: 'Collier traditionnel en perles artisanales, parfait pour les occasions spéciales' };
+                    const product = { id: 2, name: 'Collier Perles', price: 15000, image: '', description: 'Collier traditionnel en perles artisanales, parfait pour les occasions spéciales' };
                     selectProduct(product);
                   }}
                 >
-                  <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center text-white font-bold">
-                    💎
+                  <div className="w-12 h-12 bg-[#1b5e20] rounded-lg flex items-center justify-center text-white font-bold">
+                    
                   </div>
                   <div className="flex-1">
                     <div className="font-medium text-gray-900">Collier traditionnel</div>

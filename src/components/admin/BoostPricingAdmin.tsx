@@ -447,7 +447,7 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
           </button>
         </div>
         {error && <div className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</div>}
-        {notice && <div className="mt-3 text-sm text-emerald-700 dark:text-emerald-400">{notice}</div>}
+        {notice && <div className="mt-3 text-sm text-[#1b5e20] dark:text-[#8ccf8c]">{notice}</div>}
         {!error && !loading && products.length === 0 && (
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <div className="text-sm text-gray-600 dark:text-gray-300">Aucune offre en base. Initialise les offres par défaut.</div>
@@ -458,7 +458,7 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
               className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
                 !isEnabled || seeding
                   ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
-                  : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                  : 'bg-[#1b5e20] text-white hover:bg-[#16381a]'
               }`}
             >
               {seeding ? 'Initialisation…' : 'Initialiser les offres'}
@@ -531,7 +531,7 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
                     type="button"
                     onClick={() => setCreateDraft((prev) => ({ ...prev, active: !prev.active }))}
                     className={`w-full px-3 py-2 rounded-lg text-xs font-bold ${
-                      createDraft.active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                      createDraft.active ? 'bg-[#f6faf3] text-[#1b5e20] dark:bg-[#1b5e20]/30 dark:text-[#8ccf8c]' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
                     }`}
                   >
                     {createDraft.active ? 'Actif' : 'Off'}
@@ -571,7 +571,7 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors ${
                     !isEnabled || creating
                       ? 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
-                      : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                      : 'bg-[#1b5e20] text-white hover:bg-[#16381a]'
                   }`}
                 >
                   {creating ? 'Création…' : 'Créer'}
@@ -635,7 +635,7 @@ export function BoostPricingAdmin({ isEnabled }: { isEnabled: boolean }) {
                           type="button"
                           onClick={() => updateDraft(p.id, { active: !activeValue })}
                           className={`px-3 py-2 rounded-lg text-xs font-bold ${
-                            activeValue ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                            activeValue ? 'bg-[#f6faf3] text-[#1b5e20] dark:bg-[#1b5e20]/30 dark:text-[#8ccf8c]' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
                           }`}
                         >
                           {activeValue ? 'Actif' : 'Off'}

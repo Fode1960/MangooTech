@@ -22,10 +22,29 @@ interface ChatMessage {
   fileName?: string;
 }
 
+const getChatInitials = (vendorName: string, vendorAvatar?: string) => {
+  const avatar = String(vendorAvatar || '').trim();
+  if (avatar && /^[A-Za-zÀ-ÿ0-9]{1,3}$/.test(avatar)) {
+    return avatar.toUpperCase();
+  }
+
+  const source = String(vendorName || '').trim();
+  if (!source) return 'M';
+
+  const parts = source
+    .split(/\s+/)
+    .map((part) => part.replace(/[^A-Za-zÀ-ÿ0-9]/g, ''))
+    .filter(Boolean);
+
+  if (parts.length === 0) return source.slice(0, 1).toUpperCase();
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+};
+
 const CustomerChat: React.FC<CustomerChatProps> = ({ 
   vendorId, 
   vendorName, 
-  vendorAvatar = '👨‍🎨',
+  vendorAvatar,
   onClose 
 }) => {
   const { 
@@ -38,6 +57,7 @@ const CustomerChat: React.FC<CustomerChatProps> = ({
   
   const { conversations } = state;
   const currentUserId = state.currentUserId;
+  const vendorInitials = getChatInitials(vendorName, vendorAvatar);
   
   const [message, setMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -179,7 +199,7 @@ const CustomerChat: React.FC<CustomerChatProps> = ({
       <div className="fixed bottom-4 right-4 z-50">
         <button
           onClick={() => setIsMinimized(false)}
-          className="bg-gradient-to-r from-orange-500 to-green-600 text-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+          className="rounded-full bg-[#1b5e20] p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#16381a] hover:shadow-xl"
         >
           <MessageCircle className="w-6 h-6" />
         </button>
@@ -190,9 +210,11 @@ const CustomerChat: React.FC<CustomerChatProps> = ({
   return (
     <div className="fixed bottom-4 right-4 w-96 h-[500px] bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 z-50 flex flex-col">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-green-600 text-white p-4 rounded-t-lg flex items-center justify-between">
+      <div className="bg-[#1b5e20] text-white p-4 rounded-t-lg flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="text-2xl">{vendorAvatar}</div>
+          <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/12 text-sm font-black">
+            {vendorInitials}
+          </div>
           <div>
             <h3 className="font-semibold">{vendorName}</h3>
             <p className="text-sm opacity-90">En ligne</p>
@@ -264,7 +286,7 @@ const CustomerChat: React.FC<CustomerChatProps> = ({
               <div
                 className={`max-w-xs px-4 py-2 rounded-lg ${
                   message.senderId === currentUserId
-                    ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white'
+                    ? 'bg-[#1b5e20] text-white'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
                 }`}
               >
@@ -348,13 +370,13 @@ const CustomerChat: React.FC<CustomerChatProps> = ({
             onChange={(e) => handleTyping(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
             placeholder="Écrire un message..."
-            className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="flex-1 rounded-lg bg-gray-100 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#1b5e20] dark:bg-gray-700"
           />
           
           <button
             onClick={handleSendMessage}
             disabled={!message.trim()}
-            className="p-2 bg-gradient-to-r from-orange-500 to-green-600 text-white rounded-lg hover:from-orange-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="rounded-lg bg-[#1b5e20] p-2 text-white transition-colors hover:bg-[#16381a] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Send className="w-5 h-5" />
           </button>

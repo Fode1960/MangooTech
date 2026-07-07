@@ -17,7 +17,7 @@ function statusLabel(s: string): { label: string; tone: 'neutral' | 'ok' | 'warn
 }
 
 function toneClasses(t: 'neutral' | 'ok' | 'warn') {
-  if (t === 'ok') return 'bg-emerald-50 border-emerald-200 text-emerald-800'
+  if (t === 'ok') return 'bg-[#eef6ea] border-[#cfe0c8] text-[#1b5e20]'
   if (t === 'warn') return 'bg-amber-50 border-amber-200 text-amber-800'
   return 'bg-gray-50 border-gray-200 text-gray-800'
 }
@@ -83,12 +83,12 @@ export default function OrderStatus() {
   }, [premiumTrackingUrl])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-emerald-50 text-gray-900">
+    <div className="min-h-screen bg-[#f6faf3] text-gray-900">
       <div className="max-w-2xl mx-auto px-4 py-10">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-white border border-orange-100 shadow-sm flex items-center justify-center">
-              <Clock className="w-6 h-6 text-emerald-600" />
+              <Clock className="w-6 h-6 text-[#1b5e20]" />
             </div>
             <div>
               <div className="text-2xl font-black">Suivi livraison</div>
@@ -116,7 +116,7 @@ export default function OrderStatus() {
             <button
               type="button"
               onClick={() => navigate('/checkout/livraison')}
-              className="px-3 py-2 rounded-xl bg-emerald-600 text-white font-black hover:bg-emerald-700 text-xs shadow-sm"
+              className="px-3 py-2 rounded-xl bg-[#1b5e20] text-white font-black hover:bg-[#16381a] text-xs shadow-sm"
             >
               Nouvelle livraison
             </button>
@@ -124,7 +124,7 @@ export default function OrderStatus() {
               <button
                 type="button"
                 onClick={openPremiumTracking}
-                className="px-3 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-emerald-600 text-white font-black hover:from-orange-600 hover:to-emerald-700 text-xs shadow-sm"
+                className="px-3 py-2 rounded-xl bg-[#1b5e20] text-white font-black hover:bg-[#16381a] text-xs shadow-sm"
                 title="Ouvrir le suivi premium Mangoo"
               >
                 Suivi premium
@@ -187,8 +187,8 @@ export default function OrderStatus() {
               )}
 
               <div className="mt-5 flex flex-wrap gap-3">
-                <div className="px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-black inline-flex items-center gap-2">
-                  <CircleCheck className="w-4 h-4 text-emerald-600" />
+                <div className="px-4 py-2 rounded-xl bg-[#eef6ea] border border-[#cfe0c8] text-[#1b5e20] font-black inline-flex items-center gap-2">
+                  <CircleCheck className="w-4 h-4 text-[#1b5e20]" />
                   Apparition temps réel activée
                 </div>
                 {premiumTrackingUrl && (

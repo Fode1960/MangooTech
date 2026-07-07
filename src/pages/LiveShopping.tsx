@@ -83,7 +83,7 @@ const LiveShopping: React.FC = () => {
 
   if (selectedSession && showCallInterface) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
+      <div className="min-h-screen bg-[#f6faf3]">
         <Toaster position="top-right" />
         
         {/* Header de la session active */}
@@ -125,7 +125,7 @@ const LiveShopping: React.FC = () => {
             {/* Zone vidéo principale */}
             <div className="lg:col-span-2">
               <div className="bg-black rounded-2xl overflow-hidden shadow-2xl">
-                <div className="aspect-video bg-gradient-to-br from-red-400 to-pink-500 flex items-center justify-center text-white text-8xl">
+                <div className="aspect-video bg-[#f6faf3] flex items-center justify-center text-[#1b5e20] text-8xl">
                   {selectedSession.thumbnail}
                 </div>
                 
@@ -133,7 +133,7 @@ const LiveShopping: React.FC = () => {
                 <div className="bg-gray-900 p-4 flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="bg-red-600 text-white px-3 py-1 rounded text-sm font-bold animate-pulse">
-                      🔴 LIVE
+                      LIVE
                     </div>
                     <div className="text-white text-sm">
                       Durée: {selectedSession.duration}
@@ -158,7 +158,7 @@ const LiveShopping: React.FC = () => {
               <div className="mt-6 bg-white rounded-xl shadow-lg p-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-4">À propos du vendeur</h3>
                 <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-pink-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                  <div className="w-16 h-16 bg-[#f6faf3] rounded-full flex items-center justify-center text-[#1b5e20] text-2xl font-bold">
                     {selectedSession.vendor.charAt(0)}
                   </div>
                   <div>
@@ -217,7 +217,7 @@ const LiveShopping: React.FC = () => {
                   <input
                     type="text"
                     placeholder="Écrire un message..."
-                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
                         const input = e.target as HTMLInputElement;
@@ -251,7 +251,7 @@ const LiveShopping: React.FC = () => {
                 {currentProduct && (
                   <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
                     <div className="flex items-center space-x-3">
-                      <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center text-white text-2xl font-bold">
+                      <div className="w-16 h-16 bg-[#f6faf3] rounded-lg flex items-center justify-center text-[#1b5e20] text-2xl font-bold">
                         {currentProduct.image}
                       </div>
                       <div className="flex-1">
@@ -273,7 +273,7 @@ const LiveShopping: React.FC = () => {
                       selectProduct(product);
                     }}
                   >
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-500 rounded-lg flex items-center justify-center text-white font-bold">
+                    <div className="w-12 h-12 bg-[#f6faf3] rounded-lg flex items-center justify-center text-[#1b5e20] font-bold">
                       👗
                     </div>
                     <div className="flex-1">
@@ -292,7 +292,7 @@ const LiveShopping: React.FC = () => {
                       selectProduct(product);
                     }}
                   >
-                    <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center text-white font-bold">
+                    <div className="w-12 h-12 bg-[#f6faf3] rounded-lg flex items-center justify-center text-[#1b5e20] font-bold">
                       💎
                     </div>
                     <div className="flex-1">
@@ -313,7 +313,7 @@ const LiveShopping: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
+    <div className="min-h-screen bg-[#f6faf3]">
       <Toaster position="top-right" />
       
       {/* Header */}
@@ -351,11 +351,11 @@ const LiveShopping: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {liveSessions.map((session) => (
             <div key={session.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-              <div className="aspect-video bg-gradient-to-br from-red-400 to-pink-500 flex items-center justify-center text-white text-6xl relative">
+              <div className="aspect-video bg-[#f6faf3] flex items-center justify-center text-[#1b5e20] text-6xl relative">
                 {session.thumbnail}
                 {session.status === 'live' && (
                   <div className="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold animate-pulse">
-                    🔴 LIVE
+                    LIVE
                   </div>
                 )}
               </div>
@@ -395,7 +395,7 @@ const LiveShopping: React.FC = () => {
                   <button
                     onClick={() => handleJoinSession(session)}
                     disabled={!session.isActive}
-                    className="w-full bg-gradient-to-r from-red-500 to-pink-500 text-white py-3 px-4 rounded-xl hover:from-red-600 hover:to-pink-600 transition-all duration-200 transform hover:scale-105 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    className="w-full bg-[#1b5e20] text-white hover:bg-[#16381a] py-3 px-4 rounded-xl transition-all duration-200 transform hover:scale-105 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                   >
                     <Play className="w-5 h-5" />
                     <span>{session.isActive ? 'Rejoindre + Appel' : 'Bientôt disponible'}</span>
@@ -414,7 +414,7 @@ const LiveShopping: React.FC = () => {
 
       {/* Demo Access */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-gradient-to-r from-red-500 to-pink-500 rounded-2xl p-8 text-white text-center">
+        <div className="bg-[#1b5e20] rounded-2xl p-8 text-white text-center">
           <div className="flex items-center justify-center mb-4">
             <Film className="w-12 h-12 mr-4" />
             <h2 className="text-3xl font-bold">Démonstration Live Shopping</h2>

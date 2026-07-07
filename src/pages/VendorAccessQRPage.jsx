@@ -114,7 +114,7 @@ const VendorAccessQRPage = () => {
     return (
       <div className="min-h-full flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1b5e20] mx-auto mb-4"></div>
           <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>Chargement des boutiques...</p>
         </div>
       </div>
@@ -157,7 +157,7 @@ const VendorAccessQRPage = () => {
           <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mt-2`}>Préparez les identifiants, le lien, le QR code et le PIN pour un accès simple à la boutique.</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <div className={`${isDark ? 'bg-gray-800 border-gray-700 text-gray-200' : 'bg-white border-gray-200 text-gray-800'} border rounded-lg px-3 py-2 text-sm font-semibold`}>Total: {shops.length}</div>
-            <div className={`${isDark ? 'bg-emerald-900/30 border-emerald-700 text-emerald-200' : 'bg-emerald-50 border-emerald-200 text-emerald-800'} border rounded-lg px-3 py-2 text-sm font-semibold`}>Approuvées: {approvedCount}</div>
+            <div className={`${isDark ? 'bg-[#1b5e20]/30 border-[#2e7d32] text-[#66bb6a]' : 'bg-[#eef6ea] border-[#d7e4d1] text-[#1b5e20]'} border rounded-lg px-3 py-2 text-sm font-semibold`}>Approuvées: {approvedCount}</div>
             <div className={`${isDark ? 'bg-amber-900/30 border-amber-700 text-amber-200' : 'bg-amber-50 border-amber-200 text-amber-800'} border rounded-lg px-3 py-2 text-sm font-semibold`}>En attente: {pendingCount}</div>
           </div>
         </div>
@@ -182,7 +182,7 @@ const VendorAccessQRPage = () => {
                     }}
                     className={`w-full text-left p-3 rounded-lg border transition-colors ${
                       selectedShop?.id === shop.id
-                        ? (isDark ? 'bg-blue-900/20 border-blue-700 text-blue-200' : 'bg-blue-50 border-blue-300 text-blue-800')
+                        ? (isDark ? 'bg-[#1b5e20]/20 border-[#2e7d32] text-[#66bb6a]' : 'bg-[#eef6ea] border-[#d7e4d1] text-[#1b5e20]')
                         : (isDark ? 'bg-gray-900 border-gray-700 text-gray-200 hover:bg-gray-800' : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100')
                     }`}
                   >

@@ -231,8 +231,8 @@ const TontinesNumeriques: React.FC = () => {
 
   const getCycleStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'completed': return 'bg-blue-100 text-blue-800';
+      case 'active': return 'bg-[#e8f5e9] text-[#16381a]';
+      case 'completed': return 'bg-[#e8f5e9] text-[#16381a]';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -248,12 +248,12 @@ const TontinesNumeriques: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-6">
+    <div className="min-h-screen bg-[#f6faf3] p-6">
       <div className="max-w-7xl mx-auto">
         {/* En-tête */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <div className="bg-gradient-to-r from-green-500 to-blue-500 p-3 rounded-full">
+            <div className="bg-[#1b5e20] p-3 rounded-full">
               <Users className="w-8 h-8 text-white" />
             </div>
           </div>
@@ -280,7 +280,7 @@ const TontinesNumeriques: React.FC = () => {
                 onClick={() => setActiveTab(tab.key as any)}
                 className={`px-4 py-2 rounded-md font-medium transition-all duration-200 flex items-center space-x-2 ${
                   activeTab === tab.key
-                    ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-md'
+                    ? 'bg-[#1b5e20] text-white shadow-md'
                     : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
                 }`}
               >
@@ -309,11 +309,11 @@ const TontinesNumeriques: React.FC = () => {
                   <div className="space-y-3 mb-4">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Montant par contribution:</span>
-                      <span className="font-semibold text-green-600">{cycle.contributionAmount.toLocaleString()} FCFA</span>
+                      <span className="font-semibold text-[#1b5e20]">{cycle.contributionAmount.toLocaleString()} FCFA</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Total collecté:</span>
-                      <span className="font-semibold text-blue-600">{cycle.totalAmount.toLocaleString()} FCFA</span>
+                      <span className="font-semibold text-[#1b5e20]">{cycle.totalAmount.toLocaleString()} FCFA</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Position actuelle:</span>
@@ -321,7 +321,7 @@ const TontinesNumeriques: React.FC = () => {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Prochain paiement:</span>
-                      <span className="font-semibold text-orange-600">
+                      <span className="font-semibold text-[#1b5e20]">
                         {getNextPaymentDate(cycle).toLocaleDateString()}
                       </span>
                     </div>
@@ -330,13 +330,13 @@ const TontinesNumeriques: React.FC = () => {
                   <div className="flex space-x-2">
                     <button
                       onClick={() => setSelectedCycle(cycle)}
-                      className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                      className="flex-1 bg-[#1b5e20] hover:bg-[#16381a] text-white font-medium py-2 px-4 rounded-lg transition-colors"
                     >
                       Voir Détails
                     </button>
                     <button
                       onClick={() => setShowContributeModal(true)}
-                      className="flex-1 bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                      className="flex-1 bg-[#1b5e20] hover:bg-[#16381a] text-white font-medium py-2 px-4 rounded-lg transition-colors"
                     >
                       Contribuer
                     </button>
@@ -360,7 +360,7 @@ const TontinesNumeriques: React.FC = () => {
                       type="text"
                       value={newCycle.name}
                       onChange={(e) => setNewCycle({ ...newCycle, name: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent"
                       placeholder="ex: Tontine des Commerçants"
                     />
                   </div>
@@ -372,7 +372,7 @@ const TontinesNumeriques: React.FC = () => {
                     <textarea
                       value={newCycle.description}
                       onChange={(e) => setNewCycle({ ...newCycle, description: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent"
                       rows={3}
                       placeholder="Décrivez le but et les règles de cette tontine..."
                     />
@@ -387,7 +387,7 @@ const TontinesNumeriques: React.FC = () => {
                         type="number"
                         value={newCycle.contributionAmount}
                         onChange={(e) => setNewCycle({ ...newCycle, contributionAmount: parseInt(e.target.value) })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent"
                         min="1000"
                         step="1000"
                       />
@@ -400,7 +400,7 @@ const TontinesNumeriques: React.FC = () => {
                       <select
                         value={newCycle.frequency}
                         onChange={(e) => setNewCycle({ ...newCycle, frequency: e.target.value as 'weekly' | 'monthly' })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent"
                       >
                         <option value="weekly">Hebdomadaire</option>
                         <option value="monthly">Mensuelle</option>
@@ -417,7 +417,7 @@ const TontinesNumeriques: React.FC = () => {
                         type="number"
                         value={newCycle.maxMembers}
                         onChange={(e) => setNewCycle({ ...newCycle, maxMembers: parseInt(e.target.value) })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent"
                         min="3"
                         max="50"
                       />
@@ -431,18 +431,18 @@ const TontinesNumeriques: React.FC = () => {
                         type="date"
                         value={newCycle.startDate}
                         onChange={(e) => setNewCycle({ ...newCycle, startDate: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent"
                         min={new Date().toISOString().split('T')[0]}
                       />
                     </div>
                   </div>
 
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="bg-[#f6faf3] border border-[#c8e6c9] rounded-lg p-4">
                     <div className="flex items-center space-x-2">
-                      <Shield className="w-5 h-5 text-green-600" />
-                      <span className="font-medium text-green-800">Sécurité et Transparence</span>
+                      <Shield className="w-5 h-5 text-[#1b5e20]" />
+                      <span className="font-medium text-[#16381a]">Sécurité et Transparence</span>
                     </div>
-                    <p className="text-green-700 text-sm mt-2">
+                    <p className="text-[#1b5e20] text-sm mt-2">
                       Toutes les contributions sont enregistrées de manière transparente. 
                       Les membres peuvent suivre l'évolution en temps réel.
                     </p>
@@ -457,7 +457,7 @@ const TontinesNumeriques: React.FC = () => {
                     </button>
                     <button
                       onClick={createCycle}
-                      className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200"
+                      className="flex-1 bg-[#1b5e20] hover:bg-[#16381a] text-white font-medium py-3 px-4 rounded-lg transition-all duration-200"
                     >
                       Créer la Tontine
                     </button>
@@ -486,7 +486,7 @@ const TontinesNumeriques: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex space-x-2">
-                        <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        <button className="bg-[#1b5e20] hover:bg-[#16381a] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                           Accepter
                         </button>
                         <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
@@ -518,7 +518,7 @@ const TontinesNumeriques: React.FC = () => {
                       <div className="grid grid-cols-4 gap-4 text-sm">
                         <div>
                           <span className="text-gray-600">Montant total:</span>
-                          <p className="font-semibold text-green-600">{cycle.totalAmount.toLocaleString()} FCFA</p>
+                          <p className="font-semibold text-[#1b5e20]">{cycle.totalAmount.toLocaleString()} FCFA</p>
                         </div>
                         <div>
                           <span className="text-gray-600">Membres:</span>
@@ -544,16 +544,16 @@ const TontinesNumeriques: React.FC = () => {
         {/* Statistiques */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white rounded-xl shadow-lg p-6 text-center">
-            <div className="bg-green-100 p-3 rounded-full w-12 h-12 mx-auto mb-4 flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-green-600" />
+            <div className="bg-[#e8f5e9] p-3 rounded-full w-12 h-12 mx-auto mb-4 flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-[#1b5e20]" />
             </div>
             <h3 className="text-2xl font-bold text-gray-800">{cycles.length}</h3>
             <p className="text-gray-600">Tontines créées</p>
           </div>
 
           <div className="bg-white rounded-xl shadow-lg p-6 text-center">
-            <div className="bg-blue-100 p-3 rounded-full w-12 h-12 mx-auto mb-4 flex items-center justify-center">
-              <Users className="w-6 h-6 text-blue-600" />
+            <div className="bg-[#e8f5e9] p-3 rounded-full w-12 h-12 mx-auto mb-4 flex items-center justify-center">
+              <Users className="w-6 h-6 text-[#1b5e20]" />
             </div>
             <h3 className="text-2xl font-bold text-gray-800">
               {cycles.reduce((total, cycle) => total + cycle.members.length, 0)}
@@ -572,8 +572,8 @@ const TontinesNumeriques: React.FC = () => {
           </div>
 
           <div className="bg-white rounded-xl shadow-lg p-6 text-center">
-            <div className="bg-purple-100 p-3 rounded-full w-12 h-12 mx-auto mb-4 flex items-center justify-center">
-              <Award className="w-6 h-6 text-purple-600" />
+            <div className="bg-[#e8f5e9] p-3 rounded-full w-12 h-12 mx-auto mb-4 flex items-center justify-center">
+              <Award className="w-6 h-6 text-[#1b5e20]" />
             </div>
             <h3 className="text-2xl font-bold text-gray-800">
               {cycles.filter(c => c.status === 'completed').length}

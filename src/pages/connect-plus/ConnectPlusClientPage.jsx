@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { ArrowLeft, Copy, Link2, Phone, Volume2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { QRCodeCanvas } from 'qrcode.react'
 import { supabase } from '../../config/supabase'
@@ -154,9 +155,10 @@ export default function ConnectPlusClientPage() {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 font-bold"
+            className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 font-bold transition-colors hover:bg-white/15"
           >
-            ← Retour
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Retour
           </button>
           <div className="text-sm text-gray-300">Mon Connect+</div>
         </div>
@@ -171,18 +173,20 @@ export default function ConnectPlusClientPage() {
               <button
                 type="button"
                 onClick={() => speakDigitsFR(pin)}
-                className="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/15 font-black"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white/10 px-4 py-3 font-black transition-colors hover:bg-white/15"
                 disabled={!pin}
               >
-                🔊 Lire
+                <Volume2 className="h-4 w-4" aria-hidden="true" />
+                Lire
               </button>
               <button
                 type="button"
                 onClick={() => copy(normalizePin(pin))}
-                className="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/15 font-black"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white/10 px-4 py-3 font-black transition-colors hover:bg-white/15"
                 disabled={!pin}
               >
-                📋 Copier
+                <Copy className="h-4 w-4" aria-hidden="true" />
+                Copier
               </button>
             </div>
           </div>
@@ -199,17 +203,19 @@ export default function ConnectPlusClientPage() {
                   window.open(connectPlusUrl, '_blank', 'noopener,noreferrer')
                 }}
                 disabled={!connectPlusUrl}
-                className="w-full px-4 py-4 rounded-2xl bg-gradient-to-r from-orange-500 to-green-600 font-black disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#1b5e20] px-4 py-4 font-black text-white transition-colors hover:bg-[#16381a] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                📞 Recevoir appels
+                <Phone className="h-4 w-4" aria-hidden="true" />
+                Recevoir appels
               </button>
               <button
                 type="button"
                 onClick={() => copy(connectPlusUrl)}
                 disabled={!connectPlusUrl}
-                className="mt-3 w-full px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/15 font-black disabled:opacity-50 disabled:cursor-not-allowed"
+                className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white/10 px-4 py-3 font-black transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                🔗 Copier le lien
+                <Link2 className="h-4 w-4" aria-hidden="true" />
+                Copier le lien
               </button>
             </div>
           </div>
@@ -259,4 +265,3 @@ export default function ConnectPlusClientPage() {
     </div>
   )
 }
-

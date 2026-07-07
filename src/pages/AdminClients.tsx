@@ -233,14 +233,14 @@ export default function AdminClients({ embedded = false }: AdminClientsProps) {
               <button
                 type="button"
                 onClick={() => setSector("formal")}
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${sector === "formal" ? "bg-sky-600 text-white" : isDark ? "bg-gray-900 text-gray-200" : "bg-sky-50 text-sky-700"}`}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${sector === "formal" ? "bg-[#1b5e20] text-white" : isDark ? "bg-gray-900 text-gray-200" : "bg-[#f6faf3] text-[#1b5e20]"}`}
               >
                 Formel
               </button>
               <button
                 type="button"
                 onClick={() => setSector("informal")}
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${sector === "informal" ? "bg-fuchsia-600 text-white" : isDark ? "bg-gray-900 text-gray-200" : "bg-fuchsia-50 text-fuchsia-700"}`}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${sector === "informal" ? "bg-[#1b5e20] text-white" : isDark ? "bg-gray-900 text-gray-200" : "bg-[#f6faf3] text-[#1b5e20]"}`}
               >
                 Informel
               </button>
@@ -289,11 +289,11 @@ export default function AdminClients({ embedded = false }: AdminClientsProps) {
         </div>
         <div className={`rounded-xl border px-4 py-3 ${isDark ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"}`}>
           <div className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-500"}`}>Formel</div>
-          <div className="mt-1 text-lg font-bold text-sky-600">{counts.formal}</div>
+          <div className="mt-1 text-lg font-bold text-[#1b5e20]">{counts.formal}</div>
         </div>
         <div className={`rounded-xl border px-4 py-3 ${isDark ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"}`}>
           <div className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-500"}`}>Informel</div>
-          <div className="mt-1 text-lg font-bold text-fuchsia-600">{counts.informal}</div>
+          <div className="mt-1 text-lg font-bold text-[#1b5e20]">{counts.informal}</div>
         </div>
         <div className={`rounded-xl border px-4 py-3 ${isDark ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"}`}>
           <div className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-500"}`}>Filtre</div>
@@ -343,8 +343,8 @@ export default function AdminClients({ embedded = false }: AdminClientsProps) {
                 <div>
                   <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
                     client.sector === "formal"
-                      ? "bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-200"
-                      : "bg-fuchsia-50 text-fuchsia-700 dark:bg-fuchsia-900/30 dark:text-fuchsia-200"
+                      ? "bg-[#f6faf3] text-[#1b5e20] dark:bg-[#1b5e20]/30 dark:text-[#8ccf8c]"
+                      : "bg-[#f6faf3] text-[#1b5e20] dark:bg-[#1b5e20]/30 dark:text-[#8ccf8c]"
                   }`}>
                     {client.sector === "formal" ? "Formel" : "Informel"}
                   </span>

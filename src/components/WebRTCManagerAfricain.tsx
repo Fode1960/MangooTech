@@ -391,7 +391,7 @@ const WebRTCManagerAfricain: React.FC<WebRTCManagerAfricainProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex flex-col">
+    <div className="min-h-screen bg-[#f6faf3] flex flex-col">
       {/* Audio pour la sonnerie */}
       <audio
         ref={audioRef}
@@ -403,7 +403,9 @@ const WebRTCManagerAfricain: React.FC<WebRTCManagerAfricainProps> = ({
       {incomingCall && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-8 text-center max-w-md mx-4">
-            <div className="text-6xl mb-4">📞</div>
+            <div className="text-6xl mb-4">
+            <Phone className="w-16 h-16 mx-auto text-[#1b5e20]" />
+          </div>
             <h3 className="text-xl font-bold mb-2">Appel entrant</h3>
             <p className="text-gray-600 mb-6">
               {userRole === 'vendor' ? 'Un client' : 'Le vendeur'} vous appelle...
@@ -429,13 +431,13 @@ const WebRTCManagerAfricain: React.FC<WebRTCManagerAfricainProps> = ({
       )}
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white p-4 flex-shrink-0">
+      <div className="bg-[#1b5e20] text-white p-4 flex-shrink-0">
         <div className="flex items-center justify-between max-w-6xl mx-auto">
           <div className="flex items-center space-x-3">
             <Phone className="w-6 h-6" />
             <div>
               <h1 className="text-xl font-bold">MangooTech WebRTC Africain</h1>
-              <p className="text-sm text-orange-100">
+              <p className="text-sm text-[#ecf7e7]">
                 {userRole === 'vendor' ? 'Vendeur' : 'Client'} • {remoteUserName ? `Connecté avec ${remoteUserName}` : 'En attente de connexion'}
               </p>
             </div>
@@ -486,7 +488,7 @@ const WebRTCManagerAfricain: React.FC<WebRTCManagerAfricainProps> = ({
                 
                 {/* Vidéo distante */}
                 {connectionStatus === 'connected' && (
-                  <div className="absolute top-4 right-4 w-40 h-32 bg-gray-800 rounded-lg overflow-hidden border-2 border-orange-500">
+                  <div className="absolute top-4 right-4 w-40 h-32 bg-gray-800 rounded-lg overflow-hidden border-2 border-[#1b5e20]">
                     <video
                       ref={remoteVideoRef}
                       autoPlay
@@ -500,7 +502,7 @@ const WebRTCManagerAfricain: React.FC<WebRTCManagerAfricainProps> = ({
                 )}
                 
                 {/* Badge rôle */}
-                <div className="absolute top-4 left-4 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                <div className="absolute top-4 left-4 bg-[#1b5e20] text-white px-3 py-1 rounded-full text-sm font-medium">
                   {userRole === 'vendor' ? 'Vendeur' : 'Client'}
                 </div>
                 
@@ -511,7 +513,7 @@ const WebRTCManagerAfricain: React.FC<WebRTCManagerAfricainProps> = ({
                       onClick={toggleVideo}
                       className={`p-3 rounded-full transition-colors shadow-lg ${
                         isVideoEnabled 
-                          ? 'bg-orange-500 hover:bg-orange-600 text-white' 
+                          ? 'bg-[#1b5e20] hover:bg-[#16381a] text-white' 
                           : 'bg-gray-600 hover:bg-gray-700 text-white'
                       }`}
                       title={isVideoEnabled ? 'Désactiver la vidéo' : 'Activer la vidéo'}
@@ -523,7 +525,7 @@ const WebRTCManagerAfricain: React.FC<WebRTCManagerAfricainProps> = ({
                       onClick={toggleAudio}
                       className={`p-3 rounded-full transition-colors shadow-lg ${
                         isAudioEnabled 
-                          ? 'bg-orange-500 hover:bg-orange-600 text-white' 
+                          ? 'bg-[#1b5e20] hover:bg-[#16381a] text-white' 
                           : 'bg-gray-600 hover:bg-gray-700 text-white'
                       }`}
                       title={isAudioEnabled ? 'Désactiver le micro' : 'Activer le micro'}
@@ -583,7 +585,7 @@ const WebRTCManagerAfricain: React.FC<WebRTCManagerAfricainProps> = ({
 
           {/* Chat */}
           <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col">
-            <div className="bg-orange-500 text-white p-4">
+            <div className="bg-[#1b5e20] text-white p-4">
               <div className="flex items-center space-x-2">
                 <Send className="w-5 h-5" />
                 <h3 className="font-semibold">Chat Africain</h3>
@@ -601,12 +603,12 @@ const WebRTCManagerAfricain: React.FC<WebRTCManagerAfricainProps> = ({
                 messages.map((msg) => (
                   <div key={msg.id} className={`p-3 rounded-lg ${
                     msg.role === userRole
-                      ? 'bg-orange-100 ml-8'
+                      ? 'bg-[#eef6ea] ml-8'
                       : 'bg-gray-100 mr-8'
                   }`}>
                     <div className="flex items-center space-x-2 mb-1">
                       <div className={`w-2 h-2 rounded-full ${
-                        msg.role === 'vendor' ? 'bg-orange-500' : 'bg-blue-500'
+                        msg.role === 'vendor' ? 'bg-[#1b5e20]' : 'bg-[#1b5e20]'
                       }`} />
                       <div className="font-medium text-sm text-gray-600">{msg.user}</div>
                     </div>
@@ -623,12 +625,12 @@ const WebRTCManagerAfricain: React.FC<WebRTCManagerAfricainProps> = ({
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Tapez votre message..."
-                  className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
                   disabled={connectionStatus !== 'connected'}
                 />
                 <button
                   type="submit"
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors disabled:bg-gray-300"
+                  className="bg-[#1b5e20] hover:bg-[#16381a] text-white px-4 py-2 rounded-lg transition-colors disabled:bg-gray-300"
                   disabled={connectionStatus !== 'connected' || !newMessage.trim()}
                 >
                   <Send className="w-4 h-4" />

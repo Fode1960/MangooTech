@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useThemeStore } from '../stores/themeStore';
 import { PayPalPayment } from './PayPalPayment';
 import { StripePayment } from './StripePayment';
+import { getPaymentPublicConfig } from '../services/paymentPublicConfig';
 
 export const PaymentTestPage = () => {
   const { isDark } = useThemeStore();
@@ -11,11 +12,13 @@ export const PaymentTestPage = () => {
     config: {
       paypal: {
         clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || 'Non configuré',
-        status: 'Vérification...'
+        status: 'Vérification...',
+        details: []
       },
       stripe: {
         publishableKey: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'Non configuré',
-        status: 'Vérification...'
+        status: 'Vérification...',
+        details: []
       }
     }
   });
@@ -27,6 +30,8 @@ export const PaymentTestPage = () => {
   useEffect(() => {
     const checkConfiguration = async () => {
       try {
+        const publicConfig = await getPaymentPublicConfig();
+
         // Vérifier PayPal
         const paypalResponse = await fetch('/api/paypal/config-check');
         const paypalConfig = paypalResponse.ok ? await paypalResponse.json() : { status: 'error' };
@@ -35,16 +40,32 @@ export const PaymentTestPage = () => {
         const stripeResponse = await fetch('/api/payments/config-check');
         const stripeConfig = stripeResponse.ok ? await stripeResponse.json() : { status: 'error' };
 
+        const paypalDetails = [];
+        if (paypalConfig?.config?.clientId === false) paypalDetails.push('clientId backend manquant');
+        if (paypalConfig?.config?.clientSecret === false) paypalDetails.push('secret backend manquant');
+        if (paypalConfig?.config?.webhookId === false) paypalDetails.push('webhook PayPal manquant');
+        if (paypalConfig?.config?.authValid === false) paypalDetails.push('identifiants PayPal invalides');
+
+        const stripeDetails = [];
+        if (stripeConfig?.config?.secretKey === false) stripeDetails.push('secret Stripe backend manquant');
+        if (stripeConfig?.config?.publishableKey === false) stripeDetails.push('clé publique Stripe manquante');
+        if (stripeConfig?.config?.webhookSecret === false) stripeDetails.push('webhook Stripe manquant');
+        if (stripeConfig?.config?.authValid === false) stripeDetails.push('clé Stripe invalide');
+
         setTestResults(prev => ({
           ...prev,
           config: {
             paypal: {
               ...prev.config.paypal,
-              status: paypalConfig.status === 'ok' ? '✅ Configuré' : '❌ Erreur'
+              clientId: publicConfig.paypalClientId || prev.config.paypal.clientId,
+              status: paypalConfig.status === 'ok' ? '✅ Configuré' : '❌ Erreur',
+              details: paypalDetails
             },
             stripe: {
               ...prev.config.stripe,
-              status: stripeConfig.status === 'ok' ? '✅ Configuré' : '❌ Erreur'
+              publishableKey: publicConfig.stripePublishableKey || prev.config.stripe.publishableKey,
+              status: stripeConfig.status === 'ok' ? '✅ Configuré' : '❌ Erreur',
+              details: stripeDetails
             }
           }
         }));
@@ -53,8 +74,8 @@ export const PaymentTestPage = () => {
         setTestResults(prev => ({
           ...prev,
           config: {
-            paypal: { ...prev.config.paypal, status: '❌ Non disponible' },
-            stripe: { ...prev.config.stripe, status: '❌ Non disponible' }
+            paypal: { ...prev.config.paypal, status: '❌ Non disponible', details: [] },
+            stripe: { ...prev.config.stripe, status: '❌ Non disponible', details: [] }
           }
         }));
       }
@@ -127,6 +148,14 @@ export const PaymentTestPage = () => {
                   <span>Statut:</span>
                   <span>{testResults.config.paypal.status}</span>
                 </div>
+                {testResults.config.paypal.details.length > 0 && (
+                  <div>
+                    <span>Détails:</span>
+                    <div className="text-xs mt-1">
+                      {testResults.config.paypal.details.join(', ')}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <div>
@@ -142,6 +171,14 @@ export const PaymentTestPage = () => {
                   <span>Statut:</span>
                   <span>{testResults.config.stripe.status}</span>
                 </div>
+                {testResults.config.stripe.details.length > 0 && (
+                  <div>
+                    <span>Détails:</span>
+                    <div className="text-xs mt-1">
+                      {testResults.config.stripe.details.join(', ')}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

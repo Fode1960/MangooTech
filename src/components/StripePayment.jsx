@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useThemeStore } from '../stores/themeStore';
 import { usePaymentStore } from '../stores/paymentStore';
-
-// Initialiser Stripe avec la clé depuis les variables d'environnement
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_your_stripe_publishable_key_here');
+import { getPaymentPublicConfig } from '../services/paymentPublicConfig';
 
 const CheckoutForm = ({ amount, currency = 'eur', onSuccess, onError }) => {
   const stripe = useStripe();
@@ -162,7 +160,7 @@ const CheckoutForm = ({ amount, currency = 'eur', onSuccess, onError }) => {
           type="text"
           name="name"
           required
-          className={`w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors duration-300 ${
+          className={`w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent transition-colors duration-300 ${
             isDark 
               ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
               : 'bg-white border-gray-300 text-gray-900'
@@ -181,7 +179,7 @@ const CheckoutForm = ({ amount, currency = 'eur', onSuccess, onError }) => {
           type="email"
           name="email"
           required
-          className={`w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors duration-300 ${
+          className={`w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-[#1b5e20] focus:border-transparent transition-colors duration-300 ${
             isDark 
               ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
               : 'bg-white border-gray-300 text-gray-900'
@@ -226,7 +224,7 @@ const CheckoutForm = ({ amount, currency = 'eur', onSuccess, onError }) => {
         className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
           !stripe || isProcessing
             ? 'bg-gray-400 cursor-not-allowed'
-            : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 transform hover:scale-105'
+            : 'bg-[#1b5e20] hover:bg-[#16381a]'
         } text-white`}
       >
         {isProcessing ? (
@@ -244,6 +242,70 @@ const CheckoutForm = ({ amount, currency = 'eur', onSuccess, onError }) => {
 
 export const StripePayment = ({ amount, currency = 'eur', onSuccess, onError }) => {
   const { isDark } = useThemeStore();
+  const [stripePromise, setStripePromise] = useState(null);
+  const [configReady, setConfigReady] = useState(false);
+  const [configError, setConfigError] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadStripeConfig = async () => {
+      try {
+        const publicConfig = await getPaymentPublicConfig();
+        if (!isMounted) return;
+
+        if (!publicConfig.stripePublishableKey) {
+          setConfigError('Clé publique Stripe manquante.');
+          return;
+        }
+
+        setStripePromise(loadStripe(publicConfig.stripePublishableKey));
+      } catch (error) {
+        console.error('Erreur lors du chargement de la configuration Stripe publique:', error);
+        if (isMounted) {
+          setConfigError('Configuration Stripe indisponible.');
+        }
+      } finally {
+        if (isMounted) {
+          setConfigReady(true);
+        }
+      }
+    };
+
+    void loadStripeConfig();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  if (!configReady) {
+    return (
+      <div className={`rounded-xl shadow-lg p-6 transition-colors duration-300 ${
+        isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white'
+      }`}>
+        <p className={`text-sm text-center transition-colors duration-300 ${
+          isDark ? 'text-gray-400' : 'text-gray-600'
+        }`}>
+          Chargement de la configuration Stripe...
+        </p>
+      </div>
+    );
+  }
+
+  if (configError || !stripePromise) {
+    return (
+      <div className={`rounded-xl shadow-lg p-6 transition-colors duration-300 ${
+        isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white'
+      }`}>
+        <p className={`text-sm text-center transition-colors duration-300 ${
+          isDark ? 'text-gray-400' : 'text-gray-600'
+        }`}>
+          {configError || 'Configuration Stripe indisponible.'}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className={`rounded-xl shadow-lg p-6 transition-colors duration-300 ${

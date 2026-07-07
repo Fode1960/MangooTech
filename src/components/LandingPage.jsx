@@ -1,7 +1,6 @@
 import React from 'react';
 import { useThemeStore } from '../stores/themeStore';
 import { 
-  Store, 
   Moon, 
   Sun, 
   ShoppingBag, 
@@ -10,11 +9,10 @@ import {
   MapPin, 
   Video, 
   MessageCircle, 
-  Smartphone, 
-  Facebook, 
-  Twitter, 
-  Instagram 
+  Smartphone 
 } from 'lucide-react';
+import Footer from './layout/Footer';
+import mangooLogoUrl from '../assets/mangoo-logo.svg';
 
 const MarketplaceAIAssistant = React.lazy(() => import('./MarketplaceAIAssistant'));
 
@@ -310,56 +308,54 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
 
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-300 ${
-      isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'
+      isDark ? 'bg-[#102814] text-white' : 'bg-[#f6faf3] text-slate-900'
     }`}>
       {/* Header */}
-      <header className={`shadow-sm border-b sticky top-0 z-50 transition-colors ${
-        isDark ? 'bg-gray-900 border-gray-800' : 'bg-white'
+      <header className={`sticky top-0 z-50 border-b backdrop-blur transition-colors ${
+        isDark ? 'border-[#2e5d34] bg-[#102814]/92' : 'border-[#d7e4d1] bg-white/92'
       }`}>
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center gap-3 flex-wrap">
+        <div className="container mx-auto flex flex-wrap items-center justify-between gap-3 px-4 py-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-md transform rotate-3">
-              <Store className="text-white w-5 h-5" />
-            </div>
-            <span className={`text-2xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>MangooTech</span>
+            <img src={mangooLogoUrl} alt="Mangoo Tech" className="h-11 w-11 shrink-0 rounded-2xl border border-[#d7e4d1] bg-white p-1.5 shadow-sm" />
+            <span className={`text-2xl font-extrabold tracking-tight ${isDark ? 'text-[#ecf7e7]' : 'text-[#1b5e20]'}`}>MangooTech</span>
           </div>
-          <nav className={`hidden md:flex gap-2 text-sm font-semibold ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+          <nav className={`hidden md:flex gap-2 text-sm font-semibold ${isDark ? 'text-[#d7ecd8]' : 'text-[#4d6551]'}`}>
             <a
               href="#"
-              className={`px-3 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:ring-offset-2 ${
-                isDark ? 'hover:bg-gray-800 focus:ring-offset-gray-900' : 'hover:bg-gray-100 focus:ring-offset-white'
+              className={`px-3 py-2 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:ring-offset-2 ${
+                isDark ? 'hover:bg-[#17331c] focus:ring-offset-[#102814]' : 'hover:bg-[#f2f8ef] focus:ring-offset-white'
               }`}
             >
               Accueil
             </a>
             <a
               href="#features"
-              className={`px-3 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:ring-offset-2 ${
-                isDark ? 'hover:bg-gray-800 focus:ring-offset-gray-900' : 'hover:bg-gray-100 focus:ring-offset-white'
+              className={`px-3 py-2 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:ring-offset-2 ${
+                isDark ? 'hover:bg-[#17331c] focus:ring-offset-[#102814]' : 'hover:bg-[#f2f8ef] focus:ring-offset-white'
               }`}
             >
               Fonctionnalités
             </a>
             <a
               href="#pricing"
-              className={`px-3 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:ring-offset-2 ${
-                isDark ? 'hover:bg-gray-800 focus:ring-offset-gray-900' : 'hover:bg-gray-100 focus:ring-offset-white'
+              className={`px-3 py-2 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:ring-offset-2 ${
+                isDark ? 'hover:bg-[#17331c] focus:ring-offset-[#102814]' : 'hover:bg-[#f2f8ef] focus:ring-offset-white'
               }`}
             >
               Tarifs
             </a>
             <a
               href="#innovations"
-              className={`px-3 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:ring-offset-2 ${
-                isDark ? 'hover:bg-gray-800 focus:ring-offset-gray-900' : 'hover:bg-gray-100 focus:ring-offset-white'
+              className={`px-3 py-2 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:ring-offset-2 ${
+                isDark ? 'hover:bg-[#17331c] focus:ring-offset-[#102814]' : 'hover:bg-[#f2f8ef] focus:ring-offset-white'
               }`}
             >
               Innovations
             </a>
             <a
               href="#contact"
-              className={`px-3 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:ring-offset-2 ${
-                isDark ? 'hover:bg-gray-800 focus:ring-offset-gray-900' : 'hover:bg-gray-100 focus:ring-offset-white'
+              className={`px-3 py-2 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:ring-offset-2 ${
+                isDark ? 'hover:bg-[#17331c] focus:ring-offset-[#102814]' : 'hover:bg-[#f2f8ef] focus:ring-offset-white'
               }`}
             >
               Contact
@@ -369,7 +365,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
             <button 
               onClick={toggleTheme} 
               className={`p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:ring-offset-2 ${
-                isDark ? 'bg-gray-800 text-yellow-400 focus:ring-offset-gray-900' : 'bg-gray-100 text-gray-700 focus:ring-offset-white'
+                isDark ? 'bg-slate-900 text-amber-300 focus:ring-offset-slate-950' : 'bg-slate-100 text-slate-700 focus:ring-offset-white'
               }`} 
               title="Mode Jour/Nuit"
             >
@@ -380,7 +376,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                 type="button"
                 onClick={onAdminDashboard}
                 className={`px-3 sm:px-4 py-2 rounded-full font-bold text-sm transition-colors whitespace-nowrap ${
-                  isDark ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-purple-600 hover:bg-purple-700 text-white'
+                  isDark ? 'bg-[#ffa726] hover:bg-[#ff6f00] text-[#16381a]' : 'bg-[#1b5e20] hover:bg-[#2e7d32] text-white'
                 }`}
               >
                 Admin
@@ -391,7 +387,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                 type="button"
                 onClick={() => onLogin && onLogin(null)}
                 className={`px-3 sm:px-5 py-2 rounded-full font-bold text-sm transition-colors whitespace-nowrap ${
-                  isDark ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-gray-900 hover:bg-gray-800 text-white'
+                  isDark ? 'bg-[#ffa726] hover:bg-[#ff6f00] text-[#16381a]' : 'bg-[#1b5e20] hover:bg-[#2e7d32] text-white'
                 }`}
               >
                 Déconnexion
@@ -401,7 +397,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                 type="button"
                 onClick={() => onLogin({ role: 'login_request' })} 
                 className={`px-3 sm:px-5 py-2 min-h-[44px] rounded-full font-bold text-sm transition-colors whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:ring-offset-2 ${
-                  isDark ? 'bg-orange-600 hover:bg-orange-700 text-white focus:ring-offset-gray-900' : 'bg-gray-900 hover:bg-gray-800 text-white focus:ring-offset-white'
+                  isDark ? 'bg-[#ffa726] hover:bg-[#ff6f00] text-[#16381a] focus:ring-offset-slate-950' : 'bg-[#1b5e20] hover:bg-[#2e7d32] text-white focus:ring-offset-white'
                 }`}
               >
                 Connexion
@@ -412,55 +408,54 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
       </header>
 
       {/* Hero Section */}
-      <main className="flex-1 container mx-auto px-4 py-12 flex flex-col items-center justify-center text-center">
-        <div className="max-w-3xl animate-fadeIn">
-          <span className="inline-block bg-orange-100 text-orange-700 px-4 py-1 rounded-full text-sm font-bold mb-6">🚀 La solution n°1 pour le commerce digital</span>
-          <h1 className={`text-5xl md:text-6xl font-extrabold mb-6 leading-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            Vendez et Achetez <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">En Toute Simplicité</span>
+      <main className="container mx-auto flex flex-1 flex-col items-center justify-center px-4 py-12 text-center sm:py-16 lg:py-20">
+        <div className="max-w-4xl animate-fadeIn">
+          <span className="app-eyebrow mb-6">Commerce, services et relation client sur une base unique</span>
+          <h1 className={`text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            Une interface plus claire pour vendre, acheter et gérer vos échanges.
           </h1>
-          <p className={`text-xl mb-10 max-w-2xl mx-auto ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-            MangooTech connecte vendeurs et acheteurs avec des outils puissants : Live Shopping, Appels Vidéo et Chat en temps réel.
+          <p className={`mx-auto mt-6 max-w-2xl text-lg sm:text-xl ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+            MangooTech connecte vendeurs, clients et prestataires avec un parcours lisible, des actions nettes et un design cohérent sur mobile comme sur desktop.
           </p>
   
-          <div className="flex flex-col md:flex-row gap-6 justify-center w-full max-w-2xl mx-auto animate-slideUp">
+          <div className="mx-auto mt-10 flex w-full max-w-3xl flex-col gap-6 md:flex-row animate-slideUp">
             
             {/* Carte Vendeur */}
             <button 
               onClick={() => onLogin({ role: 'register_request' })}
-              className={`group flex-1 rounded-3xl p-8 border shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1 relative overflow-hidden text-left ${
-                isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
+              className={`group relative flex-1 overflow-hidden rounded-3xl border p-8 text-left shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl ${
+                isDark ? 'border-slate-800 bg-slate-900' : 'border-slate-200 bg-white'
               }`}
             >
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-orange-500 to-red-600"></div>
-              <div className="w-16 h-16 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform">
+              <div className="absolute inset-x-0 top-0 h-1.5 bg-orange-600"></div>
+              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-50 text-orange-600 transition-transform group-hover:scale-105 dark:bg-orange-950/40 dark:text-orange-200">
                 <ShoppingBag className="w-8 h-8" />
               </div>
-              <h2 className={`text-2xl font-bold mb-2 text-center ${isDark ? 'text-white' : 'text-gray-900'}`}>Je suis Vendeur</h2>
-              <p className={`mb-6 text-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Créez votre boutique en 2 minutes et commencez à vendre.</p>
-              <div className="bg-orange-50 text-orange-700 py-3 min-h-[44px] rounded-xl font-bold group-hover:bg-orange-600 group-hover:text-white transition-colors flex items-center justify-center gap-2">
+              <h2 className={`mb-2 text-center text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Je suis vendeur</h2>
+              <p className={`mb-6 text-center ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Créez votre boutique, gérez vos offres et activez vos canaux de vente sans friction.</p>
+              <div className="flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[#1b5e20] py-3 font-bold text-white transition-colors group-hover:bg-[#2e7d32] dark:bg-[#ffa726] dark:text-[#16381a] dark:group-hover:bg-[#ff6f00]">
                 Créer ma boutique <ArrowRight className="w-4 h-4" />
               </div>
             </button>
   
             {/* Carte Acheteur */}
             <div
-              className={`group flex-1 rounded-3xl p-8 border shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1 relative overflow-hidden text-left ${
-                isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
+              className={`group relative flex-1 overflow-hidden rounded-3xl border p-8 text-left shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl ${
+                isDark ? 'border-slate-800 bg-slate-900' : 'border-slate-200 bg-white'
               }`}
             >
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
-              <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform">
+              <div className="absolute inset-x-0 top-0 h-1.5 bg-slate-900 dark:bg-white"></div>
+              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-700 transition-transform group-hover:scale-105 dark:bg-slate-800 dark:text-slate-100">
                 <ShoppingCart className="w-8 h-8" />
               </div>
-              <h2 className={`text-2xl font-bold mb-2 text-center ${isDark ? 'text-white' : 'text-gray-900'}`}>Je suis Acheteur</h2>
-              <p className={`mb-6 text-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Découvrez des produits uniques et achetez en direct.</p>
+              <h2 className={`mb-2 text-center text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Je suis acheteur</h2>
+              <p className={`mb-6 text-center ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Accédez rapidement aux boutiques, à la marketplace et aux parcours de contact utiles.</p>
               <div className="grid grid-cols-1 gap-3">
                 <button
                   type="button"
                   onClick={() => onNavigate('marketplace')}
                   className={`py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 ${
-                    isDark ? 'bg-blue-600 text-white hover:bg-blue-500' : 'bg-blue-600 text-white hover:bg-blue-700'
+                    isDark ? 'bg-[#ffa726] text-[#16381a] hover:bg-[#ff6f00]' : 'bg-[#1b5e20] text-white hover:bg-[#2e7d32]'
                   }`}
                 >
                   Entrer dans la marketplace <ArrowRight className="w-4 h-4" />
@@ -469,7 +464,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                   type="button"
                   onClick={() => onNavigate('shops')}
                   className={`py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 border ${
-                    isDark ? 'bg-transparent text-blue-200 border-blue-700 hover:bg-blue-900/30' : 'bg-white text-blue-700 border-blue-200 hover:bg-blue-50'
+                    isDark ? 'bg-transparent text-slate-200 border-slate-700 hover:bg-slate-800' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
                   }`}
                 >
                   Voir les boutiques <ArrowRight className="w-4 h-4" />
@@ -480,20 +475,24 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
           </div>
   
           {/* MANGOO LOCAL+ BANNER */}
-          <div className="mt-12 w-full max-w-2xl mx-auto animate-fadeIn animate-slideUp" style={{ animationDelay: '0.1s' }}>
+          <div className="mx-auto mt-12 w-full max-w-3xl animate-fadeIn animate-slideUp" style={{ animationDelay: '0.1s' }}>
             <button 
               onClick={() => onNavigate('innovation')}
-              className="w-full block bg-gradient-to-r from-green-600 to-emerald-700 rounded-3xl p-1 shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-1 group text-decoration-none"
+              className={`group block w-full rounded-3xl border p-3 text-decoration-none shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl ${
+                isDark ? 'border-slate-800 bg-slate-900' : 'border-slate-200 bg-white'
+              }`}
             >
-              <div className="bg-white/10 backdrop-blur-sm rounded-[20px] p-6 flex items-center justify-between">
-                <div className="text-left text-white">
+              <div className={`flex items-center justify-between rounded-[20px] p-6 ${
+                isDark ? 'bg-slate-950/70' : 'bg-slate-50'
+              }`}>
+                <div className={`text-left ${isDark ? 'text-white' : 'text-slate-900'}`}>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="bg-white text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">NOUVEAU</span>
-                    <h3 className="text-xl font-bold">Mangoo Local+ 🌍</h3>
+                    <span className="rounded-full border border-[#cfe0c8] bg-[#eef6ea] px-2 py-0.5 text-xs font-bold uppercase tracking-[0.14em] text-[#1b5e20] dark:border-[#2e5d34] dark:bg-[#1b5e20]/25 dark:text-[#ecf7e7]">Nouveau</span>
+                    <h3 className="text-xl font-bold">Mangoo Local+</h3>
                   </div>
-                  <p className="text-green-50 text-sm mb-0">Trouvez les commerces autour de vous (Géolocalisation & Voix)</p>
+                  <p className={`mb-0 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Trouvez les commerces proches, consultez l’offre locale et lancez vos parcours utiles depuis une interface plus nette.</p>
                 </div>
-                <div className="bg-white text-green-700 w-12 h-12 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1b5e20] text-white shadow-sm transition-transform group-hover:scale-105 dark:bg-[#ffa726] dark:text-[#16381a]">
                   <MapPin className="w-6 h-6" />
                 </div>
               </div>
@@ -526,7 +525,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                 
                 container.innerHTML = `
                         <!-- Video Background Placeholder -->
-                        <div style="width:100%; height:100%; background:linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%); display:flex; align-items:center; justify-content:center; color:white; font-size:2rem; font-weight:bold; position:absolute; top:0; left:0; z-index:0;">
+                        <div style="width:100%; height:100%; background:#0f172a; display:flex; align-items:center; justify-content:center; color:white; font-size:2rem; font-weight:bold; position:absolute; top:0; left:0; z-index:0;">
                             🔴 LIVE MODE
                         </div>
                         
@@ -652,7 +651,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                             <!-- Stories -->
                             <div style="padding:20px 0 10px 20px; display:flex; gap:15px; overflow-x:auto; scrollbar-width: none; flex-shrink: 0;">
                                 <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
-                                    <div style="width:65px; height:65px; background:linear-gradient(45deg, #f0932b, #e55039); padding:2px; border-radius:50%;">
+                                    <div style="width:65px; height:65px; background:#0f172a; padding:2px; border-radius:50%;">
                                         <div style="width:100%; height:100%; background:white; border-radius:50%; padding:2px;">
                                             <img src="https://ui-avatars.com/api/?name=Store+A&background=random" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
                                         </div>
@@ -660,7 +659,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                                     <span style="font-size:0.7rem; font-weight:600;">Promo 🔥</span>
                                 </div>
                                 <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
-                                    <div style="width:65px; height:65px; background:linear-gradient(45deg, #f0932b, #e55039); padding:2px; border-radius:50%;">
+                                    <div style="width:65px; height:65px; background:#0f172a; padding:2px; border-radius:50%;">
                                         <div style="width:100%; height:100%; background:white; border-radius:50%; padding:2px;">
                                             <img src="https://ui-avatars.com/api/?name=Store+B&background=random" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
                                         </div>
@@ -738,7 +737,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
         </div>
 
         <div id="pricing" className="mt-24 w-full max-w-6xl scroll-mt-24">
-          <h2 className={`text-3xl font-bold text-center mb-12 ${isDark ? 'text-white' : 'text-gray-900'}`}>Nos Tarifs</h2>
+          <h2 className={`mb-12 text-center text-3xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Nos tarifs</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div
               onPointerDown={() => setActivePricingCard('pack_decouverte')}
@@ -774,7 +773,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
               onFocus={() => setActivePricingCard('pack_visibilite')}
               onBlur={() => setActivePricingCard('')}
               tabIndex={0}
-              className={`p-7 rounded-3xl border-2 border-orange-500 relative flex flex-col outline-none transition-all duration-150 transform-gpu hover:scale-[1.02] hover:shadow-lg active:scale-[1.02] ${
+              className={`relative flex flex-col rounded-3xl border-2 border-orange-500 p-7 outline-none transition-all duration-150 transform-gpu hover:scale-[1.02] hover:shadow-lg active:scale-[1.02] ${
                 activePricingCard === 'pack_visibilite'
                   ? 'scale-[1.03] shadow-2xl'
                   : activePricingCard
@@ -782,7 +781,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                     : ''
               } ${isDark ? 'bg-gray-800' : 'bg-white'}`}
             >
-              <div className="absolute top-0 right-0 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl">POPULAIRE</div>
+              <div className="absolute top-0 right-0 rounded-bl-xl rounded-tr-xl bg-orange-600 px-3 py-1 text-xs font-bold text-white">POPULAIRE</div>
               <h3 className="text-xl font-bold text-orange-600 mb-2">Visibilité</h3>
               <div className={`text-4xl font-extrabold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>5 000 FCFA<span className={`text-sm font-normal ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>/mois</span></div>
               <ul className={`space-y-3 mb-8 flex-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -791,7 +790,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                 <li>✅ Badge “Vérifié”</li>
                 <li>✅ Support prioritaire</li>
               </ul>
-              <button type="button" onClick={() => selectPlan('pack_visibilite')} className="w-full py-3 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold hover:shadow-lg transition-all">Choisir</button>
+              <button type="button" onClick={() => selectPlan('pack_visibilite')} className="w-full rounded-xl bg-[#1b5e20] py-3 font-bold text-white transition-colors hover:bg-[#2e7d32] dark:bg-[#ffa726] dark:text-[#16381a] dark:hover:bg-[#ff6f00]">Choisir</button>
             </div>
 
             <div
@@ -857,19 +856,19 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
         {/* INNOVATIONS SECTION */}
         <div id="innovations" className="mt-24 w-full max-w-5xl scroll-mt-24 text-center">
             <h2 className={`text-3xl font-bold mb-12 ${isDark ? 'text-white' : 'text-gray-900'}`}>Innovations Mangoo</h2>
-            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-3xl p-10 text-white shadow-2xl relative overflow-hidden">
+            <div className="relative overflow-hidden rounded-3xl border border-[#d7e4d1] bg-[#1b5e20] p-10 text-white shadow-2xl dark:border-[#2e5d34]">
                 <div className="relative z-10">
-                    <h3 className="text-2xl font-bold mb-4">Mangoo AI Assistant 🤖</h3>
-                    <p className="mb-6 max-w-2xl mx-auto opacity-90">Notre intelligence artificielle aide vos clients à trouver le produit parfait et négocie les prix pour vous (en option).</p>
+                    <h3 className="mb-4 text-2xl font-bold">Mangoo AI Assistant</h3>
+                    <p className="mx-auto mb-6 max-w-2xl text-slate-300">Notre intelligence artificielle aide vos clients à trouver le bon produit et réduit la friction commerciale quand elle est réellement utile.</p>
                     <button 
                         onClick={() => setAiOpen(true)}
-                        className="bg-white text-indigo-600 px-6 py-3 rounded-full font-bold hover:bg-opacity-90 transition-opacity"
+                        className="rounded-full bg-[#ffa726] px-6 py-3 font-bold text-[#16381a] transition-colors hover:bg-[#ff6f00]"
                     >
                         Découvrir l'IA
                     </button>
                 </div>
-                <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white opacity-10 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-purple-400 opacity-20 rounded-full blur-3xl"></div>
+                <div className="absolute right-8 top-8 h-28 w-28 rounded-full border border-white/10 bg-white/5 blur-2xl"></div>
+                <div className="absolute bottom-8 left-8 h-24 w-24 rounded-full border border-orange-500/20 bg-orange-500/10 blur-2xl"></div>
             </div>
             {aiOpen ? (
               <React.Suspense fallback={null}>
@@ -888,17 +887,17 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
         {/* CONTACT SECTION */}
         <div id="contact" className="mt-24 mb-12 w-full max-w-3xl scroll-mt-24 text-center">
             <h2 className={`text-3xl font-bold mb-8 ${isDark ? 'text-white' : 'text-gray-900'}`}>Contactez-nous</h2>
-            <p className={`mb-8 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Une question ? Une proposition de partenariat ? L'équipe Mangoo est à votre écoute.</p>
+            <p className={`mb-8 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Une question produit, un besoin de partenariat ou un projet de déploiement ? L’équipe Mangoo est à votre écoute.</p>
             <div className="flex justify-center gap-4 flex-wrap">
                 <a 
                     href="mailto:support@mangoo.tech" 
-                    className={`px-8 py-3 rounded-full font-bold transition-all transform hover:scale-105 shadow-lg flex items-center gap-2 ${isDark ? 'bg-white text-gray-900 hover:bg-gray-200' : 'bg-gray-900 text-white hover:bg-gray-800'}`}
+                    className={`flex items-center gap-2 rounded-full px-8 py-3 font-bold shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md ${isDark ? 'bg-[#ffa726] text-[#16381a] hover:bg-[#ff6f00]' : 'bg-[#1b5e20] text-white hover:bg-[#2e7d32]'}`}
                 >
-                    ✉️ support@mangoo.tech
+                    support@mangoo.tech
                 </a>
                 <button 
                     onClick={openChatWidget}
-                    className={`px-8 py-3 rounded-full border font-bold transition-all transform hover:scale-105 shadow-lg flex items-center gap-2 ${isDark ? 'border-green-500 text-green-500 hover:bg-gray-800' : 'border-green-600 text-green-600 hover:bg-green-50'}`}
+                    className={`flex items-center gap-2 rounded-full border px-8 py-3 font-bold shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md ${isDark ? 'border-slate-700 text-slate-200 hover:bg-slate-900' : 'border-slate-300 text-slate-700 hover:bg-slate-50'}`}
                 >
                     <MessageCircle className="w-5 h-5" />
                     Mangoo Connect+
@@ -908,46 +907,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
 
       </main>
 
-      <footer className="bg-gray-900 text-white py-12 border-t border-gray-800">
-        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
-                <Store className="text-white w-4 h-4" />
-              </div>
-              <span className="text-xl font-bold">MangooTech</span>
-            </div>
-            <p className="text-gray-400 text-sm">La plateforme de référence pour le commerce digital en Afrique.</p>
-          </div>
-          <div>
-            <h4 className="font-bold mb-4">Produit</h4>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li><a href="#features" className="hover:text-white">Fonctionnalités</a></li>
-              <li><a href="#pricing" className="hover:text-white">Tarifs</a></li>
-              <li><button onClick={() => onLogin({ role: 'login_request' })} className="hover:text-white">Créer une boutique</button></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-bold mb-4">Légal</h4>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li><a href="#" className="hover:text-white">Conditions d'utilisation</a></li>
-              <li><a href="#" className="hover:text-white">Politique de confidentialité</a></li>
-              <li><a href="#" className="hover:text-white">Mentions légales</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-bold mb-4">Suivez-nous</h4>
-            <div className="flex gap-4">
-              <a href="#" className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors"><Facebook className="w-5 h-5" /></a>
-              <a href="#" className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-400 transition-colors"><Twitter className="w-5 h-5" /></a>
-              <a href="#" className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-pink-600 transition-colors"><Instagram className="w-5 h-5" /></a>
-            </div>
-          </div>
-        </div>
-        <div className="text-center text-gray-500 text-sm pt-8 border-t border-gray-800">
-          <p>&copy; 2026 MangooTech. Tous droits réservés.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

@@ -57,13 +57,13 @@ const Navigation: React.FC = () => {
   ];
 
   return (
-    <nav className="bg-white shadow-lg border-b border-orange-200">
+    <nav className="bg-white shadow-lg border-b border-[#cfe0c8]">
       <Toaster position="top-right" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           <div className="flex items-center space-x-4">
             <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-[#1b5e20] rounded-full flex items-center justify-center">
                 <Store className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl font-bold text-gray-900">MangooTech</span>
@@ -79,7 +79,7 @@ const Navigation: React.FC = () => {
                   to={item.path}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive(item.path)
-                      ? 'bg-orange-100 text-orange-700'
+                      ? 'bg-[#eef6ea] text-[#1b5e20]'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   }`}
                 >
@@ -120,7 +120,7 @@ const Navigation: React.FC = () => {
                   to={item.path}
                   className={`flex flex-col items-center space-y-1 p-2 rounded-lg text-xs font-medium transition-colors ${
                     isActive(item.path)
-                      ? 'bg-orange-100 text-orange-700'
+                      ? 'bg-[#eef6ea] text-[#1b5e20]'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   }`}
                 >

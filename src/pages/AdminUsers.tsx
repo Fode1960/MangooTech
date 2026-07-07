@@ -40,9 +40,9 @@ const seedDemoUsersIfMissing = () => {
     if (keys.length > 0) return;
     const now = new Date().toISOString();
     const seed = {
-      'admin@mangoo.tech': { id: 1, name: 'Administrateur', role: 'admin', email: 'admin@mangoo.tech', avatar: '👨‍💼', createdAt: now, lastLogin: now, status: 'active' },
-      'vendor@example.com': { id: 2, name: 'Commerçant Mangoo', role: 'vendor', email: 'vendor@example.com', avatar: '🏪', shopName: 'Boutique Mangoo', createdAt: now, lastLogin: now, status: 'active' },
-      'client@example.com': { id: 3, name: 'Client Mangoo', role: 'client', email: 'client@example.com', avatar: '🧑‍💻', createdAt: now, lastLogin: now, status: 'active' }
+      'admin@mangoo.tech': { id: 1, name: 'Administrateur', role: 'admin', email: 'admin@mangoo.tech', createdAt: now, lastLogin: now, status: 'active' },
+      'vendor@example.com': { id: 2, name: 'Commerçant Mangoo', role: 'vendor', email: 'vendor@example.com', shopName: 'Boutique Mangoo', createdAt: now, lastLogin: now, status: 'active' },
+      'client@example.com': { id: 3, name: 'Client Mangoo', role: 'client', email: 'client@example.com', createdAt: now, lastLogin: now, status: 'active' }
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
   } catch {
@@ -251,7 +251,7 @@ export default function AdminUsers({ embedded = false, scope = 'all' }: AdminUse
       case 'super_admin': return isDark ? 'bg-purple-900/20 text-purple-400' : 'bg-purple-100 text-purple-800';
       case 'admin': return isDark ? 'bg-orange-900/20 text-orange-300' : 'bg-orange-100 text-orange-800';
       case 'moderator': return isDark ? 'bg-orange-900/20 text-orange-400' : 'bg-orange-100 text-orange-800';
-      case 'vendor': return isDark ? 'bg-emerald-900/20 text-emerald-300' : 'bg-emerald-100 text-emerald-800';
+      case 'vendor': return isDark ? 'bg-[#1b5e20]/30 text-[#8ccf8c]' : 'bg-[#f6faf3] text-[#1b5e20]';
       case 'client': return isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-800';
       default: return isDark ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-800';
     }

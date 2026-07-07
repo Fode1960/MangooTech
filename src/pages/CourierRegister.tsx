@@ -162,14 +162,14 @@ export default function CourierRegister() {
             <button
               type="submit"
               disabled={!canSubmit || loading}
-              className="w-full px-4 py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-emerald-500 text-white font-black hover:from-orange-600 hover:to-emerald-600 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 rounded-2xl bg-[#1b5e20] text-white font-black hover:bg-[#16381a] disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? 'Création…' : 'Créer mon compte livreur'}
             </button>
           </form>
 
           <div className={`mt-5 flex items-center gap-2 text-xs ${isDark ? 'text-zinc-300' : 'text-gray-600'}`}>
-            <ShieldCheck className={`w-4 h-4 ${isDark ? 'text-emerald-300' : 'text-emerald-600'}`} />
+            <ShieldCheck className={`w-4 h-4 ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`} />
             <div>Rôle attribué: <span className="font-black">livreur</span>.</div>
           </div>
 

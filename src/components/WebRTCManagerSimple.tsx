@@ -405,7 +405,7 @@ const WebRTCManagerSimple: React.FC<WebRTCManagerSimpleProps> = ({
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex flex-col overflow-hidden">
+    <div className="h-screen bg-[#f6faf3] flex flex-col overflow-hidden">
       {/* Notification d'appel entrant */}
       {incomingCall && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
@@ -436,13 +436,13 @@ const WebRTCManagerSimple: React.FC<WebRTCManagerSimpleProps> = ({
       )}
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white p-4 flex-shrink-0 shadow-lg">
+      <div className="bg-[#1b5e20] text-white p-4 flex-shrink-0 shadow-lg">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center space-x-4">
             <Phone className="w-7 h-7" />
             <div>
               <h1 className="text-2xl font-bold">MangooTech WebRTC</h1>
-              <p className="text-orange-100">
+              <p className="text-[#ecf7e7]">
                 {userRole === 'vendor' ? 'Vendeur' : 'Client'} • 
                 {connectionStatus === 'connected' ? `Connecté avec ${remoteUserName}` : 'En attente de connexion'}
               </p>
@@ -494,7 +494,7 @@ const WebRTCManagerSimple: React.FC<WebRTCManagerSimpleProps> = ({
                 
                 {/* Vidéo distante */}
                 {connectionStatus === 'connected' && (
-                  <div className="absolute top-6 right-6 w-48 h-36 bg-gray-800 rounded-xl overflow-hidden border-4 border-orange-500 shadow-xl">
+                  <div className="absolute top-6 right-6 w-48 h-36 bg-gray-800 rounded-xl overflow-hidden border-4 border-[#1b5e20] shadow-xl">
                     <video
                       ref={remoteVideoRef}
                       autoPlay
@@ -508,7 +508,7 @@ const WebRTCManagerSimple: React.FC<WebRTCManagerSimpleProps> = ({
                 )}
                 
                 {/* Badge rôle */}
-                <div className="absolute top-6 left-6 bg-orange-500 text-white px-4 py-2 rounded-full text-lg font-bold shadow-lg">
+                <div className="absolute top-6 left-6 bg-[#1b5e20] text-white px-4 py-2 rounded-full text-lg font-bold shadow-lg">
                   {userRole === 'vendor' ? 'Vendeur' : 'Client'}
                 </div>
                 
@@ -519,7 +519,7 @@ const WebRTCManagerSimple: React.FC<WebRTCManagerSimpleProps> = ({
                       onClick={toggleVideo}
                       className={`p-4 rounded-full transition-all shadow-xl transform hover:scale-110 ${
                         isVideoEnabled 
-                          ? 'bg-orange-500 hover:bg-orange-600 text-white' 
+                          ? 'bg-[#1b5e20] hover:bg-[#16381a] text-white' 
                           : 'bg-gray-700 hover:bg-gray-800 text-white'
                       }`}
                       title={isVideoEnabled ? 'Désactiver la vidéo' : 'Activer la vidéo'}
@@ -531,7 +531,7 @@ const WebRTCManagerSimple: React.FC<WebRTCManagerSimpleProps> = ({
                       onClick={toggleAudio}
                       className={`p-4 rounded-full transition-all shadow-xl transform hover:scale-110 ${
                         isAudioEnabled 
-                          ? 'bg-orange-500 hover:bg-orange-600 text-white' 
+                          ? 'bg-[#1b5e20] hover:bg-[#16381a] text-white' 
                           : 'bg-gray-700 hover:bg-gray-800 text-white'
                       }`}
                       title={isAudioEnabled ? 'Désactiver le micro' : 'Activer le micro'}
@@ -554,7 +554,9 @@ const WebRTCManagerSimple: React.FC<WebRTCManagerSimpleProps> = ({
               {!isCallActive && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60">
                   <div className="text-center">
-                    <div className="text-6xl mb-6 animate-bounce">📹</div>
+                    <div className="text-6xl mb-6 animate-bounce">
+                      <Video className="w-16 h-16 mx-auto text-[#1b5e20]" />
+                    </div>
                     <button
                       onClick={startCall}
                       className="bg-green-500 hover:bg-green-600 text-white px-10 py-5 rounded-2xl flex items-center space-x-4 text-xl font-bold transition-all shadow-2xl transform hover:scale-105"
@@ -571,7 +573,7 @@ const WebRTCManagerSimple: React.FC<WebRTCManagerSimpleProps> = ({
 
           {/* Chat */}
           <div className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-            <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white p-5">
+            <div className="bg-[#1b5e20] text-white p-5">
               <div className="flex items-center space-x-3">
                 <Send className="w-6 h-6" />
                 <h3 className="font-bold text-xl">Chat Africain</h3>
@@ -592,19 +594,19 @@ const WebRTCManagerSimple: React.FC<WebRTCManagerSimpleProps> = ({
                   <p className="text-lg">Aucun message encore</p>
                   <p className="text-sm mt-2">Discutez avec {userRole === 'vendor' ? 'votre client' : 'le vendeur'} !</p>
                   {connectionStatus !== 'connected' && (
-                    <p className="text-xs mt-3 text-orange-500">💡 Connectez-vous pour discuter</p>
+                    <p className="text-xs mt-3 text-[#1b5e20]">Connectez-vous pour discuter</p>
                   )}
                 </div>
               ) : (
                 messages.map((msg) => (
                   <div key={msg.id} className={`p-4 rounded-2xl transition-all ${
                     msg.role === userRole
-                      ? 'bg-orange-100 ml-8 shadow-sm'
+                      ? 'bg-[#eef6ea] ml-8 shadow-sm'
                       : 'bg-gray-100 mr-8 shadow-sm'
                   }`}>
                     <div className="flex items-center space-x-3 mb-2">
                       <div className={`w-3 h-3 rounded-full ${
-                        msg.role === 'vendor' ? 'bg-orange-500' : 'bg-blue-500'
+                        msg.role === 'vendor' ? 'bg-[#1b5e20]' : 'bg-[#1b5e20]'
                       }`} />
                       <div className="font-bold text-sm text-gray-700">{msg.user}</div>
                       <div className="text-xs text-gray-500">
@@ -625,12 +627,12 @@ const WebRTCManagerSimple: React.FC<WebRTCManagerSimpleProps> = ({
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder={connectionStatus === 'connected' ? 'Tapez votre message...' : 'Connectez-vous pour discuter'}
-                  className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all text-lg"
+                  className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1b5e20] focus:border-[#1b5e20] transition-all text-lg"
                   disabled={connectionStatus !== 'connected'}
                 />
                 <button
                   type="submit"
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl transition-all transform hover:scale-105 disabled:bg-gray-300 disabled:transform-none shadow-lg font-medium"
+                  className="bg-[#1b5e20] hover:bg-[#16381a] text-white px-6 py-3 rounded-xl transition-all transform hover:scale-105 disabled:bg-gray-300 disabled:transform-none shadow-lg font-medium"
                   disabled={connectionStatus !== 'connected' || !newMessage.trim()}
                 >
                   <Send className="w-5 h-5" />

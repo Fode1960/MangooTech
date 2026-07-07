@@ -242,7 +242,7 @@ export default function ClientInvoiceModal({ open, onClose, client, order }: Pro
 
             <div className={`rounded-2xl border p-4 ${isDark ? 'border-gray-800 bg-gray-950/20' : 'border-gray-200 bg-gray-50'}`}>
               <div className="text-xs font-black">Paiement</div>
-              <div className={`mt-1 text-sm font-black ${String(order.status) === 'paid' ? 'text-emerald-400' : ''}`}>{String(order.status)}</div>
+              <div className={`mt-1 text-sm font-black ${String(order.status) === 'paid' ? 'text-[#66bb6a]' : ''}`}>{String(order.status)}</div>
               {delivery?.courierOrderId ? (
                 <div className={`mt-2 text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Livraison: {delivery.courierOrderId}</div>
               ) : (
@@ -301,7 +301,7 @@ export default function ClientInvoiceModal({ open, onClose, client, order }: Pro
                 </div>
                 <div className="flex items-center justify-between text-base">
                   <div className="font-black">Total TTC</div>
-                  <div className="font-black text-emerald-400">{formatFcfa(totalTtc)}</div>
+                  <div className="font-black text-[#66bb6a]">{formatFcfa(totalTtc)}</div>
                 </div>
               </div>
             </div>

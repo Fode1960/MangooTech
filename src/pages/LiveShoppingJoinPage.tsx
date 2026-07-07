@@ -1250,7 +1250,7 @@ const LiveShoppingUltraSimple: React.FC<{
           </div>
         </div>
 
-        <div className="mt-5 rounded-2xl bg-gradient-to-br from-orange-500/20 to-green-700/20 border border-white/10 h-44 flex items-center justify-center overflow-hidden">
+        <div className="mt-5 rounded-2xl bg-[#f6faf3] border border-white/10 h-44 flex items-center justify-center overflow-hidden">
           {role === 'vendor' && live ? (
             <video ref={videoRef as any} autoPlay playsInline muted className="w-full h-full object-cover" />
           ) : (
@@ -1304,7 +1304,7 @@ const LiveShoppingUltraSimple: React.FC<{
               className={`rounded-2xl px-4 py-5 flex flex-col items-center justify-center gap-2 font-semibold ${
                 !connected
                   ? 'bg-white/10 opacity-50 cursor-not-allowed'
-                  : `bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 ${
+                  : `bg-[#1b5e20] text-white hover:bg-[#16381a] ${
                       vendorNextStep === 'go' ? 'ring-4 ring-orange-400/60' : ''
                     }`
               }`}
@@ -1363,7 +1363,7 @@ const LiveShoppingUltraSimple: React.FC<{
                 beep(520, 70)
                 openView()
               }}
-              className="rounded-2xl bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 px-4 py-5 flex flex-col items-center justify-center gap-2 font-semibold"
+              className="rounded-2xl bg-[#1b5e20] text-white hover:bg-[#16381a] px-4 py-5 flex flex-col items-center justify-center gap-2 font-semibold"
             >
               <Play className="w-8 h-8" />
               <span className="text-sm">1 Voir</span>
@@ -1447,7 +1447,7 @@ const LiveShoppingUltraSimple: React.FC<{
                 <div className="font-semibold truncate">{selectedProduct?.title || 'Produit'}</div>
                 <div className="text-sm text-gray-300 truncate">{(selectedProduct?.priceCfa || 0).toLocaleString()} FCFA</div>
               </div>
-              <div className="w-full sm:w-40 h-40 rounded-2xl bg-gradient-to-br from-orange-500/30 to-green-700/30 flex items-center justify-center overflow-hidden border border-white/10">
+              <div className="w-full sm:w-40 h-40 rounded-2xl bg-[#f6faf3] flex items-center justify-center overflow-hidden border border-white/10">
                 {selectedProduct?.imageUrl ? (
                   <img
                     src={selectedProduct.imageUrl}
@@ -1476,7 +1476,7 @@ const LiveShoppingUltraSimple: React.FC<{
                     setShowProduct(false)
                     beep(990, 90)
                   }}
-                  className={`w-full rounded-2xl bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 px-4 py-4 font-semibold ${
+                  className={`w-full rounded-2xl bg-[#1b5e20] text-white hover:bg-[#16381a] px-4 py-4 font-semibold ${
                     role === 'vendor' && vendorNextStep === 'present' ? 'ring-4 ring-orange-400/60' : ''
                   }`}
                 >
@@ -1497,7 +1497,7 @@ const LiveShoppingUltraSimple: React.FC<{
                     if (!selectedProduct?.id) return
                     openCart(selectedProduct.id)
                   }}
-                  className="w-full rounded-2xl bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 px-4 py-4 font-semibold"
+                  className="w-full rounded-2xl bg-[#1b5e20] text-white hover:bg-[#16381a] px-4 py-4 font-semibold"
                 >
                   Acheter
                 </button>
@@ -1729,7 +1729,7 @@ const LiveShoppingUltraSimple: React.FC<{
                       setShowRangeSheet(false)
                     }
                   }}
-                  className="rounded-2xl bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 px-4 py-4 font-semibold"
+                  className="rounded-2xl bg-[#1b5e20] text-white hover:bg-[#16381a] px-4 py-4 font-semibold"
                 >
                   {rangeApplyStatus === 'applying' ? 'Application…' : 'Appliquer'}
                 </button>
@@ -1827,7 +1827,7 @@ const LiveShoppingUltraSimple: React.FC<{
                               className={`rounded-2xl px-3 py-3 font-semibold ${
                                 !id || !canMarkDelivered || alreadyDelivered
                                   ? 'bg-white/10 opacity-60 cursor-not-allowed'
-                                  : 'bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700'
+                                  : 'bg-[#1b5e20] text-white hover:bg-[#16381a]'
                               }`}
                             >
                               Livré
@@ -1931,7 +1931,7 @@ const LiveShoppingUltraSimple: React.FC<{
                               className={`rounded-2xl px-3 py-3 font-semibold ${
                                 !id || !canConfirm
                                   ? 'bg-white/10 opacity-60 cursor-not-allowed'
-                                  : 'bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700'
+                                  : 'bg-[#1b5e20] text-white hover:bg-[#16381a]'
                               }`}
                             >
                               J'ai reçu
@@ -2087,7 +2087,7 @@ const LiveShoppingUltraSimple: React.FC<{
                       className={`rounded-2xl px-4 py-4 font-semibold ${
                         cartPayStatus === 'creating' || cartPayStatus === 'paying'
                           ? 'bg-white/10 opacity-60 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700'
+                          : 'bg-[#1b5e20] text-white hover:bg-[#16381a]'
                       }`}
                     >
                       {cartPayStatus === 'creating' ? 'Commande…' : cartPayStatus === 'paying' ? 'Paiement…' : 'Payer'}
@@ -2105,7 +2105,7 @@ const LiveShoppingUltraSimple: React.FC<{
                     <button
                       type="button"
                       onClick={confirmReceived}
-                      className="rounded-2xl bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 px-4 py-4 font-semibold"
+                      className="rounded-2xl bg-[#1b5e20] text-white hover:bg-[#16381a] px-4 py-4 font-semibold"
                     >
                       J'ai reçu
                     </button>
@@ -2325,7 +2325,7 @@ const LiveShoppingUltraSimple: React.FC<{
                   beep(740, 70)
                   speak(res.ok ? 'Envoyé' : 'Erreur')
                 }}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 font-semibold"
+                className="px-4 py-2 rounded-xl bg-[#1b5e20] text-white hover:bg-[#16381a] font-semibold"
               >
                 <Send className="w-5 h-5" />
               </button>
@@ -2360,7 +2360,7 @@ const LiveShoppingUltraSimple: React.FC<{
               setCallDockMinimized(false)
               beep(520, 60)
             }}
-            className="w-12 h-12 rounded-full bg-gradient-to-r from-orange-500 to-green-600 text-white shadow-2xl flex items-center justify-center"
+            className="w-12 h-12 rounded-full bg-[#1b5e20] text-white shadow-2xl flex items-center justify-center"
           >
             <Phone className="w-5 h-5" />
           </button>
@@ -2488,7 +2488,7 @@ const LiveShoppingJoinPage: React.FC = () => {
   const clientHrefSimple = `${clientHref}&ui=simple`
 
   return (
-    <div className="h-dvh overflow-hidden bg-gradient-to-br from-gray-950 via-gray-950 to-green-950">
+    <div className="h-dvh overflow-hidden bg-[#f6faf3]">
       <div className="max-w-6xl mx-auto h-full p-4 flex flex-col gap-4">
         <div className="rounded-2xl border border-white/10 bg-black/30 backdrop-blur px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
@@ -2511,13 +2511,13 @@ const LiveShoppingJoinPage: React.FC = () => {
           <div className="flex items-center gap-2 shrink-0">
             <a
               href={ui === 'simple' ? vendorHrefSimple : vendorHref}
-              className={`text-xs font-semibold px-3 py-2 rounded-xl transition-colors ${role === 'vendor' ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white' : 'bg-white/10 hover:bg-white/15 text-white'}`}
+              className={`text-xs font-semibold px-3 py-2 rounded-xl transition-colors ${role === 'vendor' ? 'bg-[#1b5e20] text-white hover:bg-[#16381a]' : 'bg-white/10 hover:bg-white/15 text-white'}`}
             >
               Vendeur
             </a>
             <a
               href={ui === 'simple' ? clientHrefSimple : clientHref}
-              className={`text-xs font-semibold px-3 py-2 rounded-xl transition-colors ${role === 'client' ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white' : 'bg-white/10 hover:bg-white/15 text-white'}`}
+              className={`text-xs font-semibold px-3 py-2 rounded-xl transition-colors ${role === 'client' ? 'bg-[#1b5e20] text-white hover:bg-[#16381a]' : 'bg-white/10 hover:bg-white/15 text-white'}`}
             >
               Client
             </a>

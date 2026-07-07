@@ -137,14 +137,14 @@ export default function VendorClientInvoiceModal({ open, onClose, isDark, vendor
                 <button
                   type="button"
                   onClick={() => setMode('invoice')}
-                  className={`${mode === 'invoice' ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white' : isDark ? 'bg-white/5 border border-white/10 text-white hover:bg-white/10' : 'bg-white border border-gray-200 text-gray-800 hover:bg-gray-50'} px-3 py-2 rounded-xl font-black text-sm transition-colors`}
+                  className={`${mode === 'invoice' ? 'bg-[#1b5e20] text-white' : isDark ? 'bg-white/5 border border-white/10 text-white hover:bg-white/10' : 'bg-white border border-gray-200 text-gray-800 hover:bg-gray-50'} px-3 py-2 rounded-xl font-black text-sm transition-colors`}
                 >
                   Facture
                 </button>
                 <button
                   type="button"
                   onClick={() => setMode('delivery_note')}
-                  className={`${mode === 'delivery_note' ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white' : isDark ? 'bg-white/5 border border-white/10 text-white hover:bg-white/10' : 'bg-white border border-gray-200 text-gray-800 hover:bg-gray-50'} px-3 py-2 rounded-xl font-black text-sm transition-colors`}
+                  className={`${mode === 'delivery_note' ? 'bg-[#1b5e20] text-white' : isDark ? 'bg-white/5 border border-white/10 text-white hover:bg-white/10' : 'bg-white border border-gray-200 text-gray-800 hover:bg-gray-50'} px-3 py-2 rounded-xl font-black text-sm transition-colors`}
                 >
                   Bon livreur
                 </button>
@@ -170,7 +170,7 @@ export default function VendorClientInvoiceModal({ open, onClose, isDark, vendor
               </div>
               <div className={`rounded-2xl border p-4 ${isDark ? 'border-gray-800 bg-gray-950/20' : 'border-gray-200 bg-gray-50'}`}>
                 <div className="text-xs font-black">Paiement</div>
-                <div className={`mt-1 text-sm font-black ${String(order.status) === 'delivered' ? 'text-emerald-400' : ''}`}>{String(order.status)}</div>
+                <div className={`mt-1 text-sm font-black ${String(order.status) === 'delivered' ? 'text-[#66bb6a]' : ''}`}>{String(order.status)}</div>
                 <div className={`mt-2 text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Méthode: {order.paymentMethod}</div>
               </div>
             </div>
@@ -208,7 +208,7 @@ export default function VendorClientInvoiceModal({ open, onClose, isDark, vendor
                     </div>
                     <div className="flex items-center justify-between text-base">
                       <div className="font-black">Total TTC</div>
-                      <div className="font-black text-emerald-400">{formatFcfa(itemsTtc)}</div>
+                      <div className="font-black text-[#66bb6a]">{formatFcfa(itemsTtc)}</div>
                     </div>
                   </div>
                 )}

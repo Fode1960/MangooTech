@@ -70,24 +70,24 @@ const formatStatus = (value: string | null | undefined) => {
 
 const statusBadgeClass = (status: string | null | undefined, isDark: boolean) => {
   const normalized = String(status || "").trim().toLowerCase();
-  if (normalized === "approved" || normalized === "open") return isDark ? "bg-emerald-900/30 text-emerald-200" : "bg-emerald-50 text-emerald-700";
+  if (normalized === "approved" || normalized === "open") return isDark ? "bg-[#1b5e20]/30 text-[#8ccf8c]" : "bg-[#f6faf3] text-[#1b5e20]";
   if (normalized === "rejected") return isDark ? "bg-red-900/30 text-red-200" : "bg-red-50 text-red-700";
   if (normalized === "suspended" || normalized === "closed") return isDark ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-700";
   return isDark ? "bg-amber-900/30 text-amber-200" : "bg-amber-50 text-amber-700";
 };
 
 const sectorBadgeClass = (sector: PinSector, isDark: boolean) => {
-  if (sector === "informal") return isDark ? "bg-fuchsia-900/30 text-fuchsia-200" : "bg-fuchsia-50 text-fuchsia-700";
-  return isDark ? "bg-sky-900/30 text-sky-200" : "bg-sky-50 text-sky-700";
+  if (sector === "informal") return isDark ? "bg-[#1b5e20]/30 text-[#8ccf8c]" : "bg-[#f6faf3] text-[#1b5e20]";
+  return isDark ? "bg-[#1b5e20]/30 text-[#8ccf8c]" : "bg-[#f6faf3] text-[#1b5e20]";
 };
 
 const sourceBadgeClass = (source: "supabase" | "local-sync", isDark: boolean) => {
-  if (source === "supabase") return isDark ? "bg-emerald-900/30 text-emerald-200" : "bg-emerald-50 text-emerald-700";
-  return isDark ? "bg-violet-900/30 text-violet-200" : "bg-violet-50 text-violet-700";
+  if (source === "supabase") return isDark ? "bg-[#1b5e20]/30 text-[#8ccf8c]" : "bg-[#f6faf3] text-[#1b5e20]";
+  return isDark ? "bg-[#1b5e20]/30 text-[#8ccf8c]" : "bg-[#f6faf3] text-[#1b5e20]";
 };
 
 const accessBadgeClass = (role: "client" | "vendor", isDark: boolean) => {
-  if (role === "client") return isDark ? "bg-cyan-900/30 text-cyan-200" : "bg-cyan-50 text-cyan-700";
+  if (role === "client") return isDark ? "bg-[#1b5e20]/30 text-[#8ccf8c]" : "bg-[#f6faf3] text-[#1b5e20]";
   return isDark ? "bg-orange-900/30 text-orange-200" : "bg-orange-50 text-orange-700";
 };
 
@@ -301,14 +301,14 @@ export default function AdminPinAccess({ embedded = false }: AdminPinAccessProps
               <button
                 type="button"
                 onClick={() => setKind("shop")}
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${kind === "shop" ? "bg-sky-600 text-white" : isDark ? "bg-gray-900 text-gray-200" : "bg-sky-50 text-sky-700"}`}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${kind === "shop" ? "bg-[#1b5e20] text-white" : isDark ? "bg-gray-900 text-gray-200" : "bg-[#f6faf3] text-[#1b5e20]"}`}
               >
                 Boutiques
               </button>
               <button
                 type="button"
                 onClick={() => setKind("provider")}
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${kind === "provider" ? "bg-fuchsia-600 text-white" : isDark ? "bg-gray-900 text-gray-200" : "bg-fuchsia-50 text-fuchsia-700"}`}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${kind === "provider" ? "bg-[#1b5e20] text-white" : isDark ? "bg-gray-900 text-gray-200" : "bg-[#f6faf3] text-[#1b5e20]"}`}
               >
                 Prestataires
               </button>
@@ -375,19 +375,19 @@ export default function AdminPinAccess({ embedded = false }: AdminPinAccessProps
         </div>
         <div className={`rounded-xl border px-4 py-3 ${isDark ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"}`}>
           <div className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-500"}`}>Boutiques</div>
-          <div className="mt-1 text-lg font-bold text-sky-600">{counts.shops}</div>
+          <div className="mt-1 text-lg font-bold text-[#1b5e20]">{counts.shops}</div>
         </div>
         <div className={`rounded-xl border px-4 py-3 ${isDark ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"}`}>
           <div className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-500"}`}>Prestataires</div>
-          <div className="mt-1 text-lg font-bold text-fuchsia-600">{counts.providers}</div>
+          <div className="mt-1 text-lg font-bold text-[#1b5e20]">{counts.providers}</div>
         </div>
         <div className={`rounded-xl border px-4 py-3 ${isDark ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"}`}>
           <div className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-500"}`}>Formel</div>
-          <div className="mt-1 text-lg font-bold text-sky-600">{counts.formal}</div>
+          <div className="mt-1 text-lg font-bold text-[#1b5e20]">{counts.formal}</div>
         </div>
         <div className={`rounded-xl border px-4 py-3 ${isDark ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"}`}>
           <div className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-500"}`}>Informel</div>
-          <div className="mt-1 text-lg font-bold text-fuchsia-600">{counts.informal}</div>
+          <div className="mt-1 text-lg font-bold text-[#1b5e20]">{counts.informal}</div>
         </div>
       </div>
 
@@ -501,7 +501,7 @@ export default function AdminPinAccess({ embedded = false }: AdminPinAccessProps
                       type="button"
                       onClick={() => void regenerateStablePin(item)}
                       disabled={busyId === item.id}
-                      className={`inline-flex items-center justify-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold ${isDark ? "bg-emerald-900/30 text-emerald-200 hover:bg-emerald-900/50" : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"} ${busyId === item.id ? "cursor-wait opacity-70" : ""}`}
+                      className={`inline-flex items-center justify-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold ${isDark ? "bg-[#1b5e20]/30 text-[#8ccf8c] hover:bg-[#1b5e20]/50" : "bg-[#f6faf3] text-[#1b5e20] hover:bg-[#e0f0d8]"} ${busyId === item.id ? "cursor-wait opacity-70" : ""}`}
                     >
                       <RotateCw className={`h-4 w-4 ${busyId === item.id ? "animate-spin" : ""}`} />
                       Regenerer

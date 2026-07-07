@@ -565,7 +565,7 @@ const SIPClient: React.FC<SIPClientProps> = ({ userId, sipCredentials }) => {
     }
     
     setIsTestingAudio(true);
-    toast.info('🎤 Test audio en cours... parlez maintenant!');
+    toast.info('Test audio en cours... parlez maintenant!');
     
     try {
       // Créer un contexte audio pour analyser le microphone
@@ -601,7 +601,7 @@ const SIPClient: React.FC<SIPClientProps> = ({ userId, sipCredentials }) => {
           audioContext.close();
           setIsTestingAudio(false);
           setAudioLevel(0);
-          toast.success('✅ Test audio terminé');
+          toast.success('Test audio termine');
         }
       }, 100);
       
@@ -627,12 +627,12 @@ const SIPClient: React.FC<SIPClientProps> = ({ userId, sipCredentials }) => {
       startTime: testStartTime
     }));
     
-    toast.success(`🧪 Test compteur démarré pour ${userId}`);
+    toast.success(`Test compteur demarre pour ${userId}`);
     
     // Arrêter le test après 15 secondes
     setTimeout(() => {
       setCallSession(prev => ({ ...prev, id: '', status: 'idle' }));
-      toast.info(`✅ Test compteur terminé pour ${userId}`);
+      toast.info(`Test compteur termine pour ${userId}`);
     }, 15000);
   };
 
@@ -681,7 +681,7 @@ const SIPClient: React.FC<SIPClientProps> = ({ userId, sipCredentials }) => {
   }, [callSession.status, callSession.startTime, userId]); // Ajouter userId pour séparer les sessions
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 p-4">
+    <div className="min-h-screen bg-[#f6faf3] p-4">
       <Toaster position="top-right" />
       
       <div className="max-w-6xl mx-auto">
@@ -690,16 +690,16 @@ const SIPClient: React.FC<SIPClientProps> = ({ userId, sipCredentials }) => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-                <Phone className="w-6 h-6 text-orange-500 mr-3" />
+                <Phone className="w-6 h-6 text-[#1b5e20] mr-3" />
                 Client SIP WebRTC
               </h1>
               <p className="text-gray-600 mt-1">
-                Connecté: {connected ? '✅' : '❌'} | Utilisateur: {userId}
+                Connecte: {connected ? 'Oui' : 'Non'} | Utilisateur: {userId}
               </p>
               {!connected && (
                 <button 
                   onClick={testConnection}
-                  className="mt-2 px-3 py-1 bg-orange-500 text-white text-sm rounded hover:bg-orange-600"
+                  className="mt-2 px-3 py-1 bg-[#1b5e20] text-white text-sm rounded hover:bg-[#16381a]"
                 >
                   Tester la connexion
                 </button>
@@ -715,7 +715,7 @@ const SIPClient: React.FC<SIPClientProps> = ({ userId, sipCredentials }) => {
                   {mediaPermission !== 'granted' && (
                     <button 
                       onClick={requestMediaAccess}
-                      className="mt-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+                      className="mt-2 px-3 py-1 bg-[#1b5e20] text-white text-sm rounded hover:bg-[#16381a]"
                     >
                       Autoriser Micro/Caméra
                     </button>
@@ -823,14 +823,14 @@ const SIPClient: React.FC<SIPClientProps> = ({ userId, sipCredentials }) => {
           <div className="bg-blue-50 border border-blue-200 rounded-2xl shadow-lg p-6 mt-6">
             <div className="text-center">
               <div className="flex items-center justify-center mb-4">
-                <div className="animate-pulse bg-blue-500 rounded-full p-3">
+                <div className="animate-pulse bg-[#1b5e20] rounded-full p-3">
                   <Phone className="w-8 h-8 text-white" />
                 </div>
               </div>
-              <h3 className="text-lg font-semibold text-blue-900 mb-2">
+              <h3 className="text-lg font-semibold text-[#1b5e20] mb-2">
                 Appel entrant de {incomingCall.caller}
               </h3>
-              <p className="text-blue-700 mb-4">L'appel a commencé à {new Date(incomingCall.timestamp).toLocaleTimeString()}</p>
+              <p className="text-[#1b5e20] mb-4">L'appel a commencé à {new Date(incomingCall.timestamp).toLocaleTimeString()}</p>
               <div className="flex items-center justify-center space-x-4">
                 <button
                   onClick={() => answerCall(incomingCall.callId, incomingCall.sdp)}
@@ -919,7 +919,7 @@ const SIPClient: React.FC<SIPClientProps> = ({ userId, sipCredentials }) => {
             <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${
               callSession.status === 'idle' ? 'bg-gray-100 text-gray-800' :
               callSession.status === 'calling' ? 'bg-yellow-100 text-yellow-800' :
-              callSession.status === 'ringing' ? 'bg-blue-100 text-blue-800' :
+              callSession.status === 'ringing' ? 'bg-[#eef6ea] text-[#1b5e20]' :
               callSession.status === 'answered' ? 'bg-green-100 text-green-800' :
               'bg-red-100 text-red-800'
             }`}>
@@ -993,7 +993,7 @@ const SIPClient: React.FC<SIPClientProps> = ({ userId, sipCredentials }) => {
                       className={`text-xs px-2 py-1 rounded ${
                         isTestingAudio 
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                          : 'bg-blue-500 text-white hover:bg-blue-600'
+                          : 'bg-[#1b5e20] text-white hover:bg-[#16381a]'
                       }`}
                     >
                       {isTestingAudio ? 'Test en cours...' : 'Tester'}
@@ -1062,7 +1062,7 @@ const SIPClient: React.FC<SIPClientProps> = ({ userId, sipCredentials }) => {
                   toast.success('Paramètres sauvegardés');
                   setShowSettings(false);
                 }}
-                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+                className="px-4 py-2 bg-[#1b5e20] text-white rounded-lg hover:bg-[#16381a]"
               >
                 Sauvegarder
               </button>

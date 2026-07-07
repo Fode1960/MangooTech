@@ -89,8 +89,8 @@ export default function ProductCard({
     <div 
       className={`group relative rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer overflow-hidden ${
         isDark 
-          ? 'bg-gray-800 border border-gray-700 hover:border-orange-500/50' 
-          : 'bg-white border border-gray-200 hover:border-orange-500/50'
+          ? 'bg-gray-800 border border-gray-700 hover:border-[#1b5e20]/50' 
+          : 'bg-white border border-gray-200 hover:border-[#1b5e20]/50'
       }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -134,8 +134,8 @@ export default function ProductCard({
           onClick={handleChat}
           className={`p-2 rounded-full shadow-lg transition-colors ${
             isDark
-              ? 'bg-gray-700 text-gray-300 hover:bg-green-500 hover:text-white'
-              : 'bg-white text-gray-600 hover:bg-green-500 hover:text-white'
+              ? 'bg-gray-700 text-gray-300 hover:bg-[#1b5e20] hover:text-white'
+              : 'bg-white text-gray-600 hover:bg-[#1b5e20] hover:text-white'
           }`}
         >
           <MessageCircle className="h-4 w-4" />
@@ -145,8 +145,8 @@ export default function ProductCard({
           onClick={handleQuickView}
           className={`p-2 rounded-full shadow-lg transition-colors ${
             isDark
-              ? 'bg-gray-700 text-gray-300 hover:bg-blue-500 hover:text-white'
-              : 'bg-white text-gray-600 hover:bg-blue-500 hover:text-white'
+              ? 'bg-gray-700 text-gray-300 hover:bg-[#1b5e20] hover:text-white'
+              : 'bg-white text-gray-600 hover:bg-[#1b5e20] hover:text-white'
           }`}
         >
           <Eye className="h-4 w-4" />
@@ -154,7 +154,7 @@ export default function ProductCard({
       </div>
 
       {/* Image du produit */}
-      <div className="relative h-56 overflow-hidden bg-gradient-to-br from-orange-100 to-green-100 dark:from-gray-700 dark:to-gray-600">
+      <div className="relative h-56 overflow-hidden bg-[#f6faf3] dark:from-gray-700 dark:to-gray-600">
         {product.image && !imageError ? (
           <img 
             src={product.image} 
@@ -180,7 +180,7 @@ export default function ProductCard({
               disabled={!product.inStock}
               className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 ${
                 product.inStock
-                  ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white hover:from-orange-600 hover:to-green-700'
+                  ? 'bg-[#1b5e20] text-white hover:bg-[#16381a]'
                   : 'bg-gray-500 text-gray-300 cursor-not-allowed'
               }`}
             >
@@ -193,7 +193,7 @@ export default function ProductCard({
             {onChat && (
               <button
                 onClick={handleChat}
-                className="px-6 py-3 rounded-full font-semibold bg-gradient-to-r from-green-500 to-blue-600 text-white hover:from-green-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105"
+                className="px-6 py-3 rounded-full font-semibold bg-[#1b5e20] text-white hover:bg-[#16381a] transition-all duration-300 transform hover:scale-105"
               >
                 <div className="flex items-center space-x-2">
                   <MessageCircle className="h-5 w-5" />
@@ -209,7 +209,7 @@ export default function ProductCard({
       <div className="p-5">
         {/* Vendeur */}
         <div className="flex items-center space-x-2 mb-2">
-          <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-green-600 rounded-full flex items-center justify-center">
+          <div className="w-6 h-6 bg-[#1b5e20] rounded-full flex items-center justify-center">
             <span className="text-xs">👤</span>
           </div>
           <span className={`text-xs font-medium ${
@@ -260,7 +260,7 @@ export default function ProductCard({
           <div className="flex items-center space-x-2">
             {product.discount ? (
               <>
-                <span className="text-xl font-bold text-orange-600">
+                <span className="text-xl font-bold text-[#1b5e20]">
                   {getDiscountedPrice()}
                 </span>
                 <span className={`text-sm line-through ${
@@ -270,7 +270,7 @@ export default function ProductCard({
                 </span>
               </>
             ) : (
-              <span className="text-xl font-bold text-orange-600">
+              <span className="text-xl font-bold text-[#1b5e20]">
                 {product.price}
               </span>
             )}
@@ -278,7 +278,7 @@ export default function ProductCard({
           
           <span className={`text-xs px-2 py-1 rounded-full ${
             product.inStock
-              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+              ? 'bg-[#e8f5e9] text-[#16381a] dark:bg-[#0d3310] dark:text-[#c8e6c9]'
               : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
           }`}>
             {product.inStock ? 'En stock' : 'Rupture'}

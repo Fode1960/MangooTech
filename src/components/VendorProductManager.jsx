@@ -474,7 +474,7 @@ const VendorProductManager = ({ shops = [], defaultShopSlug = '' }) => {
             type="button"
             onClick={openCreate}
             disabled={!selectedShopSlug}
-            className="bg-gradient-to-r from-orange-500 to-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-60"
+            className="bg-[#1b5e20] text-white px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-60"
           >
             Ajouter un produit
           </button>
@@ -515,7 +515,7 @@ const VendorProductManager = ({ shops = [], defaultShopSlug = '' }) => {
 
       {visibleProducts.length === 0 ? (
         <div className="border border-gray-200 dark:border-gray-700 rounded-2xl p-6 text-center bg-white dark:bg-gray-800">
-          <div className="text-4xl mb-2">📦</div>
+          <div className="text-4xl mb-2">&#128230;</div>
           <div className="font-semibold text-gray-900 dark:text-white">Aucun produit</div>
           <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">Ajoutez votre premier produit pour l’afficher sur la page boutique.</div>
         </div>
@@ -671,7 +671,7 @@ const VendorProductManager = ({ shops = [], defaultShopSlug = '' }) => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-orange-500 to-green-600 text-white"
+                  className="px-4 py-2 rounded-xl text-sm font-semibold bg-[#1b5e20] text-white"
                 >
                   Enregistrer
                 </button>

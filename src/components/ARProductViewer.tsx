@@ -276,7 +276,7 @@ export default function ARProductViewer() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-6">
+    <div className="min-h-screen bg-[#f6faf3] p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -350,7 +350,7 @@ export default function ARProductViewer() {
                 autoRotate ? 'bg-purple-600 text-white' : 'bg-gray-300 text-gray-700'
               }`}
             >
-              🔄 Rotation Auto
+              <Maximize2 className="w-5 h-5 inline mr-2" /> Rotation Auto
             </button>
 
             <button
@@ -385,7 +385,7 @@ export default function ARProductViewer() {
 
                 {/* Message quand AR non actif */}
                 {!isARActive && (
-                  <div className="w-full h-96 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+                  <div className="w-full h-96 bg-[#f6faf3] flex items-center justify-center">
                     <div className="text-center">
                       <Camera className="w-20 h-20 text-gray-400 mx-auto mb-4" />
                       <p className="text-gray-600 text-lg">Cliquez sur "Démarrer l'AR" pour commencer</p>
@@ -437,7 +437,7 @@ export default function ARProductViewer() {
                     }`}
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+                      <div className="w-12 h-12 bg-[#f6faf3] rounded-lg flex items-center justify-center">
                         🥭
                       </div>
                       <div className="flex-1 text-left">

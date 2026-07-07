@@ -252,7 +252,7 @@ const AfricanAgriculturalWeather: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="max-w-7xl mx-auto p-6 bg-[#f6faf3]">
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold text-gray-800 mb-4">Météo Agricole Africaine</h1>
         <p className="text-lg text-gray-600">Prévisions météo et conseils agricoles intelligents</p>

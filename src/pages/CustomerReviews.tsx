@@ -47,9 +47,9 @@ const CustomerReviews: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
+    <div className="min-h-screen bg-[#f6faf3]">
       {/* Header */}
-      <div className="bg-white shadow-lg border-b border-orange-200">
+      <div className="bg-white shadow-lg border-b border-[#c8e6c9]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between">
             <div>
@@ -61,11 +61,11 @@ const CustomerReviews: React.FC = () => {
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-orange-500">4.8</div>
+                <div className="text-2xl font-bold text-[#1b5e20]">4.8</div>
                 <div className="text-sm text-gray-500">Note moyenne</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-500">156</div>
+                <div className="text-2xl font-bold text-[#1b5e20]">156</div>
                 <div className="text-sm text-gray-500">Total avis</div>
               </div>
             </div>
@@ -80,7 +80,7 @@ const CustomerReviews: React.FC = () => {
             <div key={review.id} className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full flex items-center justify-center">
+                  <div className="w-12 h-12 bg-[#1b5e20] rounded-full flex items-center justify-center">
                     <User className="w-6 h-6 text-white" />
                   </div>
                   <div>
@@ -88,7 +88,7 @@ const CustomerReviews: React.FC = () => {
                     <div className="flex items-center space-x-2">
                       <div className="flex">{renderStars(review.rating)}</div>
                       {review.verified && (
-                        <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                        <span className="bg-[#e8f5e9] text-[#16381a] text-xs px-2 py-1 rounded-full">
                           Vérifié
                         </span>
                       )}
@@ -109,11 +109,11 @@ const CustomerReviews: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                <button className="flex items-center space-x-2 text-gray-500 hover:text-blue-500 transition-colors">
+                <button className="flex items-center space-x-2 text-gray-500 hover:text-[#1b5e20] transition-colors">
                   <MessageCircle className="w-4 h-4" />
                   <span>Répondre</span>
                 </button>
-                <button className="flex items-center space-x-2 text-gray-500 hover:text-green-500 transition-colors">
+                <button className="flex items-center space-x-2 text-gray-500 hover:text-[#1b5e20] transition-colors">
                   <ThumbsUp className="w-4 h-4" />
                   <span>Utile ({review.helpful})</span>
                 </button>

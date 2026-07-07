@@ -44,7 +44,7 @@ const statusToLabel = (s: ProviderStatus) => {
 }
 
 const statusToBadge = (s: ProviderStatus) => {
-  if (s === 'approved') return 'bg-emerald-100 text-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-200'
+  if (s === 'approved') return 'bg-[#f6faf3] text-[#1b5e20] dark:bg-[#1b5e20]/30 dark:text-[#8ccf8c]'
   if (s === 'pending') return 'bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-200'
   if (s === 'rejected') return 'bg-rose-100 text-rose-900 dark:bg-rose-900/30 dark:text-rose-200'
   if (s === 'suspended') return 'bg-gray-200 text-gray-900 dark:bg-gray-800 dark:text-gray-200'
@@ -618,7 +618,7 @@ export default function AdminProviders({ embedded = false }: AdminProvidersProps
               <div className="whitespace-nowrap">· Suspendus: {stats.suspended}</div>
             </div>
           </div>
-          <div className="mt-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-black bg-fuchsia-50 text-fuchsia-900 dark:bg-fuchsia-900/30 dark:text-fuchsia-200">
+          <div className="mt-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-black bg-[#f6faf3] text-[#1b5e20] dark:bg-[#1b5e20]/30 dark:text-[#8ccf8c]">
             Secteur informel
           </div>
         </div>
@@ -665,7 +665,7 @@ export default function AdminProviders({ embedded = false }: AdminProvidersProps
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Prestataires</h2>
               <p className="text-sm text-gray-600 dark:text-gray-300">Suivi des prestataires du secteur informel avec leurs statuts et visibilités.</p>
             </div>
-            <div className="inline-flex items-center rounded-full bg-fuchsia-50 px-3 py-1 text-xs font-semibold text-fuchsia-900 dark:bg-fuchsia-900/30 dark:text-fuchsia-200">
+            <div className="inline-flex items-center rounded-full bg-[#f6faf3] px-3 py-1 text-xs font-semibold text-[#1b5e20] dark:bg-[#1b5e20]/30 dark:text-[#8ccf8c]">
               Secteur informel
             </div>
           </div>
@@ -722,7 +722,7 @@ export default function AdminProviders({ embedded = false }: AdminProvidersProps
         <button
           type="button"
           onClick={() => setStatus('approved')}
-          className={`px-3 py-2 rounded-lg text-sm font-semibold border ${status === 'approved' ? 'bg-emerald-50 text-emerald-900 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-100 dark:border-emerald-700' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-800'}`}
+          className={`px-3 py-2 rounded-lg text-sm font-semibold border ${status === 'approved' ? 'bg-[#f6faf3] text-[#1b5e20] border-[#1b5e20]/20 dark:bg-[#1b5e20]/30 dark:text-[#8ccf8c] dark:border-[#1b5e20]/30' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-white dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-800'}`}
         >
           Approuvés
         </button>
@@ -787,7 +787,7 @@ export default function AdminProviders({ embedded = false }: AdminProvidersProps
                     <div className="text-xs">{p.phone || '—'}</div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-black bg-fuchsia-50 text-fuchsia-900 dark:bg-fuchsia-900/30 dark:text-fuchsia-200">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-black bg-[#f6faf3] text-[#1b5e20] dark:bg-[#1b5e20]/30 dark:text-[#8ccf8c]">
                       Informel
                     </span>
                   </td>
@@ -803,7 +803,7 @@ export default function AdminProviders({ embedded = false }: AdminProvidersProps
                       disabled={isProcessing}
                       className={`px-3 py-1 rounded-full text-xs font-bold ${
                         p.is_visible
-                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200'
+                          ? 'bg-[#f6faf3] text-[#1b5e20] dark:bg-[#1b5e20]/30 dark:text-[#8ccf8c]'
                           : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
                       }`}
                     >
@@ -824,7 +824,7 @@ export default function AdminProviders({ embedded = false }: AdminProvidersProps
                         type="button"
                         onClick={() => approve(p)}
                         disabled={isProcessing || p.status === 'approved'}
-                        className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold"
+                        className="px-3 py-2 rounded-lg bg-[#1b5e20] hover:bg-[#16381a] disabled:opacity-60 text-white font-bold"
                       >
                         Approuver
                       </button>

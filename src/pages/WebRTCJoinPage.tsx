@@ -85,7 +85,7 @@ const WebRTCJoinPage: React.FC = () => {
 
   return (
     <LiveShoppingProvider>
-      <div className="h-dvh overflow-hidden bg-gradient-to-br from-gray-950 via-gray-950 to-green-950">
+      <div className="h-dvh overflow-hidden bg-[#f6faf3]">
         <div className="max-w-6xl mx-auto h-full p-4 flex flex-col gap-4">
           <div className="rounded-2xl border border-white/10 bg-black/30 backdrop-blur px-4 py-3 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
@@ -106,13 +106,13 @@ const WebRTCJoinPage: React.FC = () => {
             <div className="flex items-center gap-2 shrink-0">
               <a
                 href={ui === 'ultra' ? vendorHrefUltra : (ui === 'simple' ? vendorHrefSimple : vendorHref)}
-                className={`text-xs font-semibold px-3 py-2 rounded-xl transition-colors ${role === 'vendor' ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white' : 'bg-white/10 hover:bg-white/15 text-white'}`}
+                className={`text-xs font-semibold px-3 py-2 rounded-xl transition-colors ${role === 'vendor' ? 'bg-[#1b5e20] text-white hover:bg-[#16381a]' : 'bg-white/10 hover:bg-white/15 text-white'}`}
               >
                 Vendeur
               </a>
               <a
                 href={ui === 'ultra' ? clientHrefUltra : (ui === 'simple' ? clientHrefSimple : clientHref)}
-                className={`text-xs font-semibold px-3 py-2 rounded-xl transition-colors ${role === 'client' ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white' : 'bg-white/10 hover:bg-white/15 text-white'}`}
+                className={`text-xs font-semibold px-3 py-2 rounded-xl transition-colors ${role === 'client' ? 'bg-[#1b5e20] text-white hover:bg-[#16381a]' : 'bg-white/10 hover:bg-white/15 text-white'}`}
               >
                 Client
               </a>

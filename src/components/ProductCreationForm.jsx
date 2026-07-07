@@ -109,10 +109,10 @@ const ProductCreationForm = ({ onProductCreated }) => {
             required
             value={formData.name}
             onChange={handleInputChange}
-            className={`w-full px-4 py-2 rounded-lg border transition-colors duration-300 focus:ring-2 focus:ring-orange-500 ${
+            className={`w-full px-4 py-2 rounded-lg border transition-colors duration-300 focus:ring-2 focus:ring-[#1b5e20] ${
               isDark 
-                ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:border-orange-500' 
-                : 'bg-white border border-gray-300 text-gray-900 focus:border-orange-500'
+                ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:border-[#1b5e20]' 
+                : 'bg-white border border-gray-300 text-gray-900 focus:border-[#1b5e20]'
             }`}
             placeholder="Ex: Smartphone Android"
           />
@@ -128,10 +128,10 @@ const ProductCreationForm = ({ onProductCreated }) => {
             required
             value={formData.description}
             onChange={handleInputChange}
-            className={`w-full px-4 py-2 rounded-lg border transition-colors duration-300 focus:ring-2 focus:ring-orange-500 ${
+            className={`w-full px-4 py-2 rounded-lg border transition-colors duration-300 focus:ring-2 focus:ring-[#1b5e20] ${
               isDark 
-                ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:border-orange-500' 
-                : 'bg-white border border-gray-300 text-gray-900 focus:border-orange-500'
+                ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:border-[#1b5e20]' 
+                : 'bg-white border border-gray-300 text-gray-900 focus:border-[#1b5e20]'
             }`}
             rows="4"
             placeholder="Décrivez votre produit en détail..."
@@ -152,10 +152,10 @@ const ProductCreationForm = ({ onProductCreated }) => {
               step="0.01"
               value={formData.price}
               onChange={handleInputChange}
-              className={`w-full px-4 py-2 rounded-lg border transition-colors duration-300 focus:ring-2 focus:ring-orange-500 ${
+              className={`w-full px-4 py-2 rounded-lg border transition-colors duration-300 focus:ring-2 focus:ring-[#1b5e20] ${
                 isDark 
-                  ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:border-orange-500' 
-                  : 'bg-white border border-gray-300 text-gray-900 focus:border-orange-500'
+                  ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:border-[#1b5e20]' 
+                  : 'bg-white border border-gray-300 text-gray-900 focus:border-[#1b5e20]'
               }`}
               placeholder="10000"
             />
@@ -172,10 +172,10 @@ const ProductCreationForm = ({ onProductCreated }) => {
               min="0"
               value={formData.stock}
               onChange={handleInputChange}
-              className={`w-full px-4 py-2 rounded-lg border transition-colors duration-300 focus:ring-2 focus:ring-orange-500 ${
+              className={`w-full px-4 py-2 rounded-lg border transition-colors duration-300 focus:ring-2 focus:ring-[#1b5e20] ${
                 isDark 
-                  ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:border-orange-500' 
-                  : 'bg-white border border-gray-300 text-gray-900 focus:border-orange-500'
+                  ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:border-[#1b5e20]' 
+                  : 'bg-white border border-gray-300 text-gray-900 focus:border-[#1b5e20]'
               }`}
               placeholder="10"
             />
@@ -192,10 +192,10 @@ const ProductCreationForm = ({ onProductCreated }) => {
             required
             value={formData.category}
             onChange={handleInputChange}
-            className={`w-full px-4 py-2 rounded-lg border transition-colors duration-300 focus:ring-2 focus:ring-orange-500 ${
+            className={`w-full px-4 py-2 rounded-lg border transition-colors duration-300 focus:ring-2 focus:ring-[#1b5e20] ${
               isDark 
-                ? 'bg-gray-700 border border-gray-600 text-white focus:border-orange-500' 
-                : 'bg-white border border-gray-300 text-gray-900 focus:border-orange-500'
+                ? 'bg-gray-700 border border-gray-600 text-white focus:border-[#1b5e20]' 
+                : 'bg-white border border-gray-300 text-gray-900 focus:border-[#1b5e20]'
             }`}
           >
             {categories.map((category) => (
@@ -210,10 +210,10 @@ const ProductCreationForm = ({ onProductCreated }) => {
         <button 
           type="submit"
           disabled={isSubmitting}
-          className={`w-full bg-gradient-to-r from-orange-500 to-green-600 text-white py-3 px-4 rounded-lg font-medium transition-all ${
+          className={`w-full bg-[#1b5e20] text-white py-3 px-4 rounded-lg font-medium transition-all ${
             isSubmitting 
               ? 'opacity-50 cursor-not-allowed' 
-              : 'hover:from-orange-600 hover:to-green-700'
+              : 'hover:bg-[#16381a]'
           }`}
         >
           {isSubmitting ? 'Création en cours...' : 'Créer le Produit'}
