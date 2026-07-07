@@ -31,7 +31,7 @@ const MiniBoutiques: React.FC = () => {
             Créez et gérez vos mini-boutiques en ligne avec des outils professionnels
           </p>
           {isTestMode && (
-            <div className="mt-2 p-2 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded text-sm">
+            <div className="mt-2 p-2 bg-[#eef6ea] dark:bg-[#17331c] text-[#1b5e20] dark:text-[#66bb6a] rounded text-sm">
               🧪 Mode Test Activé - Accès complet pour démonstration
             </div>
           )}
@@ -39,7 +39,7 @@ const MiniBoutiques: React.FC = () => {
 
         {!isAuthenticated ? (
           <div className="bg-white dark:bg-gray-800 rounded-lg p-8 text-center border border-gray-200 dark:border-gray-700">
-            <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-[#eef6ea] dark:bg-[#17331c] rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">🔒</span>
             </div>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
@@ -50,7 +50,7 @@ const MiniBoutiques: React.FC = () => {
             </p>
             <button
               onClick={() => window.location.href = '/login'}
-              className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+              className="bg-[#1b5e20] hover:bg-[#16381a] text-white px-6 py-3 rounded-lg font-medium transition-colors"
             >
               Se Connecter
             </button>

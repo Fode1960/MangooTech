@@ -128,7 +128,7 @@ const VendorDashboard = () => {
           <p className="text-gray-600 dark:text-gray-400 mb-4">Veuillez vous reconnecter</p>
           <button
             onClick={() => navigate('/vendor-login')}
-            className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition-colors"
+            className="bg-[#1b5e20] hover:bg-[#2e7d32] text-white px-4 py-2 rounded-lg transition-colors"
           >
             Se reconnecter
           </button>
@@ -222,7 +222,7 @@ const VendorDashboard = () => {
                 onClick={() => setActiveTab('overview')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'overview'
-                    ? 'border-orange-500 text-orange-600 dark:text-orange-400'
+                    ? 'border-[#1b5e20] text-[#1b5e20] dark:text-[#66bb6a]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                 }`}
               >
@@ -232,7 +232,7 @@ const VendorDashboard = () => {
                 onClick={() => setActiveTab('products')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'products'
-                    ? 'border-orange-500 text-orange-600 dark:text-orange-400'
+                    ? 'border-[#1b5e20] text-[#1b5e20] dark:text-[#66bb6a]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                 }`}
               >
@@ -242,7 +242,7 @@ const VendorDashboard = () => {
                 onClick={() => setActiveTab('orders')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'orders'
-                    ? 'border-orange-500 text-orange-600 dark:text-orange-400'
+                    ? 'border-[#1b5e20] text-[#1b5e20] dark:text-[#66bb6a]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                 }`}
               >
@@ -252,7 +252,7 @@ const VendorDashboard = () => {
                 onClick={() => setActiveTab('settings')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'settings'
-                    ? 'border-orange-500 text-orange-600 dark:text-orange-400'
+                    ? 'border-[#1b5e20] text-[#1b5e20] dark:text-[#66bb6a]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                 }`}
               >

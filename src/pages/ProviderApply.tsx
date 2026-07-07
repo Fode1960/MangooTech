@@ -386,7 +386,7 @@ export default function ProviderApply() {
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-orange-400/40"
+              className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-[#1b5e20]/30"
               placeholder="Ex: Plomberie Diallo"
             />
           </div>
@@ -396,7 +396,7 @@ export default function ProviderApply() {
             <input
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
-              className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-orange-400/40"
+              className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-[#1b5e20]/30"
               placeholder="Ex: plomberie-diallo"
             />
             <div className="mt-1 text-xs text-gray-600">Normalisé : {normalizedSlug || '—'}</div>
@@ -408,7 +408,7 @@ export default function ProviderApply() {
               <input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-orange-400/40"
+                className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-[#1b5e20]/30"
                 placeholder="Ex: +226 70 00 00 00"
               />
             </div>
@@ -417,7 +417,7 @@ export default function ProviderApply() {
               <input
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-orange-400/40"
+                className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-[#1b5e20]/30"
                 placeholder="Ex: Ouagadougou"
               />
             </div>
@@ -428,7 +428,7 @@ export default function ProviderApply() {
             <input
               value={country}
               onChange={(e) => setCountry(e.target.value)}
-              className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-orange-400/40"
+              className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-[#1b5e20]/30"
               placeholder="BF"
             />
           </div>
@@ -438,7 +438,7 @@ export default function ProviderApply() {
             <input
               value={services}
               onChange={(e) => setServices(e.target.value)}
-              className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-orange-400/40"
+              className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-[#1b5e20]/30"
               placeholder="Ex: Dépannage, Installation, Entretien"
             />
           </div>

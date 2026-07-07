@@ -1243,8 +1243,8 @@ const LiveShoppingUltraSimple: React.FC<{
             <div className="text-xs text-gray-300 truncate">{userName || (role === 'vendor' ? 'Vendeur' : 'Client')}</div>
           </div>
           <div className="flex items-center gap-2">
-            <div className={`w-2.5 h-2.5 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`} />
-            <div className={`px-3 py-2 rounded-xl text-xs font-semibold ${live ? 'bg-green-600/30 text-green-200' : 'bg-white/10 text-gray-200'}`}>
+            <div className={`w-2.5 h-2.5 rounded-full ${connected ? 'bg-[#1b5e20]' : 'bg-red-500'}`} />
+            <div className={`px-3 py-2 rounded-xl text-xs font-semibold ${live ? 'bg-[#1b5e20]/30 text-[#ecf7e7]' : 'bg-white/10 text-gray-200'}`}>
               {live ? 'Live: ON' : 'Live: OFF'}
             </div>
           </div>
@@ -1268,7 +1268,7 @@ const LiveShoppingUltraSimple: React.FC<{
                 setShowShopPicker(true)
               }}
               className={`rounded-2xl bg-white/10 hover:bg-white/15 px-4 py-5 flex flex-col items-center justify-center gap-2 font-semibold ${
-                vendorNextStep === 'shop' ? 'ring-4 ring-orange-400/60' : ''
+                vendorNextStep === 'shop' ? 'ring-4 ring-[#ffa726]/60' : ''
               }`}
             >
               <Store className="w-8 h-8" />
@@ -1279,7 +1279,7 @@ const LiveShoppingUltraSimple: React.FC<{
               type="button"
               onClick={openRange}
               className={`rounded-2xl bg-white/10 hover:bg-white/15 px-4 py-5 flex flex-col items-center justify-center gap-2 font-semibold ${
-                vendorNextStep === 'range' ? 'ring-4 ring-orange-400/60' : ''
+                vendorNextStep === 'range' ? 'ring-4 ring-[#ffa726]/60' : ''
               }`}
             >
               <Package className="w-8 h-8" />
@@ -1290,7 +1290,7 @@ const LiveShoppingUltraSimple: React.FC<{
               type="button"
               onClick={openProduct}
               className={`rounded-2xl bg-white/10 hover:bg-white/15 px-4 py-5 flex flex-col items-center justify-center gap-2 font-semibold ${
-                vendorNextStep === 'present' ? 'ring-4 ring-orange-400/60' : ''
+                vendorNextStep === 'present' ? 'ring-4 ring-[#ffa726]/60' : ''
               }`}
             >
               <ShoppingBag className="w-8 h-8" />
@@ -1305,7 +1305,7 @@ const LiveShoppingUltraSimple: React.FC<{
                 !connected
                   ? 'bg-white/10 opacity-50 cursor-not-allowed'
                   : `bg-[#1b5e20] text-white hover:bg-[#16381a] ${
-                      vendorNextStep === 'go' ? 'ring-4 ring-orange-400/60' : ''
+                      vendorNextStep === 'go' ? 'ring-4 ring-[#ffa726]/60' : ''
                     }`
               }`}
             >
@@ -1335,7 +1335,7 @@ const LiveShoppingUltraSimple: React.FC<{
                 setCallStartSignal((v) => v + 1)
               }}
               className={`rounded-2xl bg-white/10 hover:bg-white/15 px-4 py-5 flex flex-col items-center justify-center gap-2 font-semibold ${
-                vendorNextStep === 'call' ? 'ring-4 ring-orange-400/60' : ''
+                vendorNextStep === 'call' ? 'ring-4 ring-[#ffa726]/60' : ''
               }`}
             >
               <Phone className="w-8 h-8" />
@@ -1477,7 +1477,7 @@ const LiveShoppingUltraSimple: React.FC<{
                     beep(990, 90)
                   }}
                   className={`w-full rounded-2xl bg-[#1b5e20] text-white hover:bg-[#16381a] px-4 py-4 font-semibold ${
-                    role === 'vendor' && vendorNextStep === 'present' ? 'ring-4 ring-orange-400/60' : ''
+                    role === 'vendor' && vendorNextStep === 'present' ? 'ring-4 ring-[#ffa726]/60' : ''
                   }`}
                 >
                   Présenter
@@ -1528,11 +1528,11 @@ const LiveShoppingUltraSimple: React.FC<{
                           })
                         }}
                         className={`rounded-xl border border-white/10 px-3 py-3 text-left bg-white/5 hover:bg-white/10 ${
-                          checked ? 'ring-2 ring-orange-400/60' : ''
+                          checked ? 'ring-2 ring-[#ffa726]/60' : ''
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          <input type="checkbox" readOnly checked={checked} className="w-4 h-4 accent-orange-500" />
+                          <input type="checkbox" readOnly checked={checked} className="w-4 h-4 accent-[#1b5e20]" />
                           <div className="w-10 h-10 rounded-lg bg-black/30 border border-white/10 overflow-hidden flex items-center justify-center">
                             {p.imageUrl ? (
                               <img src={p.imageUrl} alt={p.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
@@ -1562,7 +1562,7 @@ const LiveShoppingUltraSimple: React.FC<{
                           }
                         }}
                         className={`rounded-xl border border-white/10 px-3 py-3 text-left bg-white/5 hover:bg-white/10 ${
-                          selectedProductId === p.id ? 'ring-2 ring-orange-400/60' : featuredProductId === p.id ? 'ring-2 ring-white/20' : ''
+                          selectedProductId === p.id ? 'ring-2 ring-[#ffa726]/60' : featuredProductId === p.id ? 'ring-2 ring-white/20' : ''
                         }`}
                       >
                         <div className="flex items-center gap-2">
@@ -1662,11 +1662,11 @@ const LiveShoppingUltraSimple: React.FC<{
                             })
                           }}
                           className={`rounded-2xl border border-white/10 px-3 py-3 text-left bg-white/5 hover:bg-white/10 ${
-                            checked ? 'ring-2 ring-orange-400/60' : ''
+                            checked ? 'ring-2 ring-[#ffa726]/60' : ''
                           }`}
                         >
                           <div className="flex items-center gap-3">
-                            <input type="checkbox" readOnly checked={checked} className="w-5 h-5 accent-orange-500" />
+                            <input type="checkbox" readOnly checked={checked} className="w-5 h-5 accent-[#1b5e20]" />
                             <div className="w-12 h-12 rounded-xl bg-black/30 border border-white/10 overflow-hidden flex items-center justify-center shrink-0">
                               {p.imageUrl ? (
                                 <img
@@ -1786,7 +1786,7 @@ const LiveShoppingUltraSimple: React.FC<{
                 </div>
               </div>
 
-              {ordersError ? <div className="mt-2 text-sm text-orange-200">{ordersError}</div> : null}
+              {ordersError ? <div className="mt-2 text-sm text-[#ffe082]">{ordersError}</div> : null}
 
               <div className="mt-3 max-h-[58vh] overflow-y-auto pr-1">
                 {ordersLoading ? (
@@ -1891,7 +1891,7 @@ const LiveShoppingUltraSimple: React.FC<{
                 </div>
               </div>
 
-              {myOrdersError ? <div className="mt-2 text-sm text-orange-200">{myOrdersError}</div> : null}
+              {myOrdersError ? <div className="mt-2 text-sm text-[#ffe082]">{myOrdersError}</div> : null}
 
               <div className="mt-3 max-h-[58vh] overflow-y-auto pr-1">
                 {myOrdersLoading ? (
@@ -2042,7 +2042,7 @@ const LiveShoppingUltraSimple: React.FC<{
                               setShowCartMethodPicker(false)
                             }}
                             className={`px-3 py-3 rounded-2xl font-semibold ${
-                              cartPaymentMethod === m ? 'bg-white/15 ring-2 ring-orange-400/60' : 'bg-white/10 hover:bg-white/15'
+                              cartPaymentMethod === m ? 'bg-white/15 ring-2 ring-[#ffa726]/60' : 'bg-white/10 hover:bg-white/15'
                             }`}
                           >
                             {m === 'wave'
@@ -2077,7 +2077,7 @@ const LiveShoppingUltraSimple: React.FC<{
                     </div>
                   </div>
 
-                  {cartError ? <div className="mt-2 text-sm text-orange-200">{cartError}</div> : null}
+                  {cartError ? <div className="mt-2 text-sm text-[#ffe082]">{cartError}</div> : null}
 
                   <div className="mt-3 grid grid-cols-1 gap-2">
                     <button
@@ -2147,7 +2147,7 @@ const LiveShoppingUltraSimple: React.FC<{
                   beep(740, 60)
                   startShopVoiceSearch()
                 }}
-                className={`px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 font-semibold ${shopVoiceListening ? 'ring-2 ring-orange-400/60 animate-pulse' : ''}`}
+                className={`px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 font-semibold ${shopVoiceListening ? 'ring-2 ring-[#ffa726]/60 animate-pulse' : ''}`}
               >
                 <Mic className="w-5 h-5" />
               </button>
@@ -2216,7 +2216,7 @@ const LiveShoppingUltraSimple: React.FC<{
                           e.stopPropagation()
                         }}
                         className={`w-full rounded-xl border border-white/10 px-3 py-3 text-left bg-white/5 hover:bg-white/10 ${
-                          active ? 'ring-2 ring-orange-400/60' : ''
+                          active ? 'ring-2 ring-[#ffa726]/60' : ''
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -2295,7 +2295,7 @@ const LiveShoppingUltraSimple: React.FC<{
                   .reverse()
                   .map((m) => (
                     <div key={m.id} className="text-sm">
-                      <span className={`font-semibold ${m.fromRole === 'vendor' ? 'text-orange-200' : 'text-green-200'}`}>
+                      <span className={`font-semibold ${m.fromRole === 'vendor' ? 'text-[#ffe082]' : 'text-[#ecf7e7]'}`}>
                         {m.fromName}:
                       </span>{' '}
                       <span className="text-gray-100">{m.text}</span>

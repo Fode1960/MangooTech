@@ -68,7 +68,7 @@ const BoutiqueIndividualPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <Store className="w-12 h-12 text-orange-500 mx-auto mb-4 animate-pulse" />
+          <Store className="w-12 h-12 text-[#1b5e20] mx-auto mb-4 animate-pulse" />
           <p className="text-gray-600">Chargement de la boutique...</p>
         </div>
       </div>
@@ -84,7 +84,7 @@ const BoutiqueIndividualPage = () => {
           <p className="text-gray-600 mb-4">{error}</p>
           <Link 
             to="/"
-            className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors"
+            className="bg-[#1b5e20] text-white px-6 py-2 rounded-lg hover:bg-[#16381a] transition-colors"
           >
             Retour à l'accueil
           </Link>
@@ -102,7 +102,7 @@ const BoutiqueIndividualPage = () => {
           <p className="text-gray-600 mb-4">Cette boutique n'existe pas ou n'est plus disponible.</p>
           <Link 
             to="/"
-            className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors"
+            className="bg-[#1b5e20] text-white px-6 py-2 rounded-lg hover:bg-[#16381a] transition-colors"
           >
             Retour à l'accueil
           </Link>
@@ -150,14 +150,14 @@ const BoutiqueIndividualPage = () => {
               <div className="flex flex-wrap justify-center md:justify-start gap-4 mb-4">
                 {boutique.contact_phone && (
                   <a href={`tel:${typeof boutique.contact_phone === 'object' ? boutique.contact_phone.phone || '' : boutique.contact_phone}`} 
-                     className="flex items-center gap-2 text-gray-600 hover:text-orange-500">
+                     className="flex items-center gap-2 text-gray-600 hover:text-[#1b5e20]">
                     <Phone className="w-4 h-4" />
                     {typeof boutique.contact_phone === 'object' ? boutique.contact_phone.phone || boutique.contact_phone : boutique.contact_phone}
                   </a>
                 )}
                 {boutique.contact_email && (
                   <a href={`mailto:${typeof boutique.contact_email === 'object' ? boutique.contact_email.email || '' : boutique.contact_email}`} 
-                     className="flex items-center gap-2 text-gray-600 hover:text-orange-500">
+                     className="flex items-center gap-2 text-gray-600 hover:text-[#1b5e20]">
                     <Mail className="w-4 h-4" />
                     Email
                   </a>
@@ -178,7 +178,7 @@ const BoutiqueIndividualPage = () => {
                   <Share2 className="w-4 h-4" />
                   Partager
                 </button>
-                <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                <button className="bg-[#1b5e20] hover:bg-[#16381a] text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
                   <Heart className="w-4 h-4" />
                   Suivre
                 </button>
@@ -192,7 +192,7 @@ const BoutiqueIndividualPage = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="flex items-center justify-between mb-8">
           <h3 className="text-2xl font-bold text-gray-900">Nos Produits</h3>
-          <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium">
+          <span className="bg-[#eef6ea] text-[#1b5e20] px-3 py-1 rounded-full text-sm font-medium">
             {products.length} produits
           </span>
         </div>
@@ -222,11 +222,11 @@ const BoutiqueIndividualPage = () => {
                   <h4 className="font-semibold text-gray-900 mb-1">{product.name}</h4>
                   <p className="text-gray-600 text-sm mb-2 line-clamp-2">{product.description}</p>
                   <div className="flex items-center justify-between">
-                    <span className="text-lg font-bold text-orange-500">
+                    <span className="text-lg font-bold text-[#1b5e20]">
                       {product.price?.toLocaleString('fr-FR', { style: 'currency', currency: 'XOF' }) || 'Prix non défini'}
                     </span>
                     <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                      <Star className="w-4 h-4 text-[#ffa726] fill-current" />
                       <span className="text-sm text-gray-600">{product.rating || 0}</span>
                     </div>
                   </div>

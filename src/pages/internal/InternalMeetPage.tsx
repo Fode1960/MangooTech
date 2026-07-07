@@ -261,7 +261,7 @@ export default function InternalMeetPage() {
   const isInRoom = Boolean(chatOnly || (lkToken && lkUrl))
 
   return (
-    <div className="h-dvh overflow-hidden bg-gradient-to-br from-orange-50 via-white to-green-50 text-gray-900">
+    <div className="h-dvh overflow-hidden bg-[#f6faf3] text-gray-900">
       <div className="h-full flex flex-col">
         <div className="px-4 py-3 border-b border-black/10 bg-white/70 backdrop-blur flex items-center justify-between gap-3">
           <div className="min-w-0">
@@ -285,7 +285,7 @@ export default function InternalMeetPage() {
                 !avAvailable
                   ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                   : micEnabled
-                    ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white border-transparent'
+                    ? 'bg-[#1b5e20] text-white border-transparent'
                     : 'bg-white hover:bg-gray-50 border-gray-200'
               }`}
             >
@@ -300,7 +300,7 @@ export default function InternalMeetPage() {
                 !avAvailable
                   ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                   : camEnabled
-                    ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white border-transparent'
+                    ? 'bg-[#1b5e20] text-white border-transparent'
                     : 'bg-white hover:bg-gray-50 border-gray-200'
               }`}
             >
@@ -318,7 +318,7 @@ export default function InternalMeetPage() {
             <button
               type="button"
               onClick={() => setChatOpen((v) => !v)}
-              className="bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 text-white px-3 py-2 rounded-xl font-black text-sm"
+              className="bg-[#1b5e20] hover:bg-[#16381a] text-white px-3 py-2 rounded-xl font-black text-sm"
             >
               Chat
             </button>
@@ -359,7 +359,7 @@ export default function InternalMeetPage() {
                   className={`w-full px-4 py-3 rounded-xl font-black ${
                     busy || !String(meetingId || '').trim()
                       ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 text-white'
+                      : 'bg-[#1b5e20] hover:bg-[#16381a] text-white'
                   }`}
                 >
                   {busy ? 'Connexion…' : 'Rejoindre'}
@@ -470,7 +470,7 @@ export default function InternalMeetPage() {
                       className={`px-3 py-2 rounded-xl font-black text-sm ${
                         !String(chatText || '').trim()
                           ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 text-white'
+                          : 'bg-[#1b5e20] hover:bg-[#16381a] text-white'
                       }`}
                     >
                       <Send className="w-4 h-4" />

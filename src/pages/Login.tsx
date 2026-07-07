@@ -241,10 +241,10 @@ const Login: React.FC = () => {
                       setIsLoading(false);
                     }
                   }}
-                  className="w-full p-3 bg-orange-100 hover:bg-orange-200 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                  className="w-full p-3 bg-[#eef6ea] hover:bg-[#d7e4d1] rounded-lg transition-colors flex items-center justify-center space-x-2"
                   disabled={isLoading}
                 >
-                  <div className="font-medium text-orange-900">🎯 Mode vendeur (bypass)</div>
+                  <div className="font-medium text-[#1b5e20]">🎯 Mode vendeur (bypass)</div>
                 </button>
 
                 <button
@@ -266,9 +266,9 @@ const Login: React.FC = () => {
                     localStorage.setItem('fake_mode', 'true');
                     window.location.href = '/dashboard';
                   }}
-                  className="w-full p-3 bg-purple-100 hover:bg-purple-200 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                  className="w-full p-3 bg-[#eef6ea] hover:bg-[#d7e4d1] rounded-lg transition-colors flex items-center justify-center space-x-2"
                 >
-                  <div className="font-medium text-purple-900">⚡ Connexion directe</div>
+                  <div className="font-medium text-[#1b5e20]">⚡ Connexion directe</div>
                 </button>
               </div>
             </div>

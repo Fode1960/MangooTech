@@ -360,7 +360,7 @@ export default function BoostReturn({ mode }: { mode: 'success' | 'cancel' }) {
               }
               navigate('/connexion')
             }}
-            className="px-4 py-2 rounded-xl text-sm font-bold bg-blue-600 text-white hover:bg-blue-700"
+            className="px-4 py-2 rounded-xl text-sm font-bold bg-[#1b5e20] text-white hover:bg-[#16381a]"
           >
             Ouvrir Boost vendeur
           </button>

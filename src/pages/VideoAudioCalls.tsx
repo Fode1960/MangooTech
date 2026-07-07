@@ -34,25 +34,25 @@ const VideoAudioCalls: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
+    <div className="min-h-screen bg-[#f6faf3]">
       {/* Header */}
-      <div className="bg-white shadow-lg border-b border-orange-200">
+      <div className="bg-white shadow-lg border-b border-[#cfe0c8]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-                <Video className="w-8 h-8 text-orange-500 mr-3" />
+                <Video className="w-8 h-8 text-[#1b5e20] mr-3" />
                 Appels Audio & Vidéo
               </h1>
               <p className="text-gray-600 mt-2">Communiquez en direct avec vos clients via WebRTC</p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-500">12</div>
-                <div className="text-sm text-gray-500">Appels aujourd\'hui</div>
+                <div className="text-2xl font-bold text-[#1b5e20]">12</div>
+                <div className="text-sm text-gray-500">Appels aujourd'hui</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-500">4</div>
+                <div className="text-2xl font-bold text-[#1b5e20]">4</div>
                 <div className="text-sm text-gray-500">En cours</div>
               </div>
             </div>
@@ -71,18 +71,18 @@ const VideoAudioCalls: React.FC = () => {
                 className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all duration-300 transform hover:scale-105"
               >
                 <div className="flex items-center justify-between mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl flex items-center justify-center">
+                  <div className="w-16 h-16 bg-[#1b5e20] rounded-xl flex items-center justify-center">
                     <Icon className="w-8 h-8 text-white" />
                   </div>
                   <div className="text-right">
-                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    <div className="w-3 h-3 bg-[#1b5e20] rounded-full animate-pulse"></div>
                   </div>
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">{feature.title}</h3>
                 <p className="text-gray-600 mb-6">{feature.description}</p>
                 <a
                   href={feature.path}
-                  className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all duration-200 transform hover:scale-105"
+                  className="inline-flex items-center px-6 py-3 bg-[#1b5e20] text-white font-semibold rounded-xl hover:bg-[#16381a] transition-all duration-200 transform hover:scale-105"
                 >
                   <Play className="w-5 h-5 mr-2" />
                   {feature.action}
@@ -95,15 +95,15 @@ const VideoAudioCalls: React.FC = () => {
         {/* Quick Actions */}
         <div className="bg-white rounded-2xl shadow-lg p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-            <Settings className="w-6 h-6 text-orange-500 mr-3" />
+            <Settings className="w-6 h-6 text-[#1b5e20] mr-3" />
             Actions Rapides
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <a
               href="/webrtc-test-hub"
-              className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+              className="bg-[#eef6ea] rounded-xl p-6 hover:shadow-lg transition-all duration-300 transform hover:scale-105"
             >
-              <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mb-4">
+              <div className="w-12 h-12 bg-[#1b5e20] rounded-xl flex items-center justify-center mb-4">
                 <Settings className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">Test Hub</h3>
@@ -112,9 +112,9 @@ const VideoAudioCalls: React.FC = () => {
             
             <a
               href="/live-shopping-demo"
-              className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-6 hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+              className="bg-[#eef6ea] rounded-xl p-6 hover:shadow-lg transition-all duration-300 transform hover:scale-105"
             >
-              <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center mb-4">
+              <div className="w-12 h-12 bg-[#1b5e20] rounded-xl flex items-center justify-center mb-4">
                 <Play className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">Live Shopping</h3>
@@ -123,9 +123,9 @@ const VideoAudioCalls: React.FC = () => {
             
             <a
               href="/voip-integration"
-              className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+              className="bg-[#eef6ea] rounded-xl p-6 hover:shadow-lg transition-all duration-300 transform hover:scale-105"
             >
-              <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center mb-4">
+              <div className="w-12 h-12 bg-[#1b5e20] rounded-xl flex items-center justify-center mb-4">
                 <Phone className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">Intégration VoIP</h3>
@@ -137,7 +137,7 @@ const VideoAudioCalls: React.FC = () => {
 
       {/* Features Info */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl p-8 text-white text-center">
+        <div className="bg-[#1b5e20] rounded-2xl p-8 text-white text-center">
           <h2 className="text-3xl font-bold mb-4">Technologie WebRTC de Pointe</h2>
           <p className="text-xl mb-8">
             MangooTech utilise la technologie WebRTC pour des communications en temps réel de haute qualité,

@@ -18,7 +18,7 @@ function statusLabel(s: string): { label: string; tone: 'neutral' | 'ok' | 'warn
 
 function toneClasses(t: 'neutral' | 'ok' | 'warn') {
   if (t === 'ok') return 'bg-[#eef6ea] border-[#cfe0c8] text-[#1b5e20]'
-  if (t === 'warn') return 'bg-amber-50 border-amber-200 text-amber-800'
+  if (t === 'warn') return 'bg-[#fff4d6] border-[#ffa726] text-[#8f4b00]'
   return 'bg-gray-50 border-gray-200 text-gray-800'
 }
 
@@ -87,7 +87,7 @@ export default function OrderStatus() {
       <div className="max-w-2xl mx-auto px-4 py-10">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-white border border-orange-100 shadow-sm flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-white border border-[#cfe0c8] shadow-sm flex items-center justify-center">
               <Clock className="w-6 h-6 text-[#1b5e20]" />
             </div>
             <div>
@@ -151,7 +151,7 @@ export default function OrderStatus() {
 
               <div className={`mt-4 px-4 py-3 rounded-2xl border text-sm ${
                 premiumTrackingUrl
-                  ? 'bg-orange-50 border-orange-200 text-orange-800'
+                  ? 'bg-[#eef6ea] border-[#cfe0c8] text-[#1b5e20]'
                   : 'bg-gray-50 border-gray-200 text-gray-700'
               }`}>
                 <div className="font-black">
@@ -195,7 +195,7 @@ export default function OrderStatus() {
                   <button
                     type="button"
                     onClick={openPremiumTracking}
-                    className="px-4 py-2 rounded-xl bg-white border border-orange-200 text-gray-900 font-black hover:bg-orange-50 inline-flex items-center gap-2 shadow-sm"
+                    className="px-4 py-2 rounded-xl bg-white border border-[#cfe0c8] text-gray-900 font-black hover:bg-[#eef6ea] inline-flex items-center gap-2 shadow-sm"
                   >
                     Ouvrir la carte live Mangoo
                   </button>

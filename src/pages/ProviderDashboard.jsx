@@ -346,7 +346,7 @@ export default function ProviderDashboard() {
     if (!providerProfile) {
       return {
         badge: 'Aucune fiche envoyée',
-        badgeClass: 'bg-orange-50 text-orange-700 border-orange-200',
+        badgeClass: 'bg-[#eef6ea] text-[#1b5e20] border-[#cfe0c8]',
         message: "Votre fiche n'est pas encore envoyée.",
         actionLabel: 'Envoyer ma fiche',
         actionClass: 'px-3 py-2 rounded-xl text-sm font-black bg-[#1b5e20] text-white hover:bg-[#16381a]',
@@ -373,7 +373,7 @@ export default function ProviderDashboard() {
     if (needsChanges) {
       return {
         badge: 'Fiche à corriger',
-        badgeClass: 'bg-amber-50 text-amber-700 border-amber-200',
+        badgeClass: 'bg-[#eef6ea] text-[#1b5e20] border-[#cfe0c8]',
         message: 'Quelques informations sont à corriger.',
         actionLabel: 'Corriger ma fiche',
         actionClass: 'px-3 py-2 rounded-xl text-sm font-black border border-gray-200 bg-white hover:bg-gray-50 text-gray-900',
@@ -689,7 +689,7 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
   }, [selectedProvider]);
 
   const title = 'Mon compte';
-  const pageClass = 'min-h-dvh bg-gray-50 text-gray-900 py-10';
+  const pageClass = 'min-h-dvh bg-[#f6faf3] text-gray-900 py-10';
   const surfaceClass = 'rounded-2xl border border-gray-200 bg-white';
   const surfaceClassStrong = 'rounded-2xl border border-gray-200 bg-white';
   const mutedText = 'text-gray-600';
@@ -1149,7 +1149,7 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
                   <input
                     defaultValue={String(selectedProvider?.name || '')}
                     onBlur={(e) => updateLocalProvider(selectedProviderId, { name: String(e.target.value || '').trim() })}
-                    className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 outline-none focus:ring-2 focus:ring-orange-400/40"
+                    className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 outline-none focus:ring-2 focus:ring-[#1b5e20]/30"
                   />
                 </div>
                 <div>
@@ -1157,7 +1157,7 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
                   <input
                     defaultValue={String(selectedProvider?.trade || '')}
                     onBlur={(e) => updateLocalProvider(selectedProviderId, { trade: String(e.target.value || '').trim() })}
-                    className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 outline-none focus:ring-2 focus:ring-orange-400/40"
+                    className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 outline-none focus:ring-2 focus:ring-[#1b5e20]/30"
                   />
                 </div>
               </div>
@@ -1168,7 +1168,7 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
                   <input
                     defaultValue={String(selectedProvider?.phone || '')}
                     onBlur={(e) => updateLocalProvider(selectedProviderId, { phone: String(e.target.value || '').trim() })}
-                    className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 outline-none focus:ring-2 focus:ring-orange-400/40"
+                    className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 outline-none focus:ring-2 focus:ring-[#1b5e20]/30"
                   />
                 </div>
                 <div>
@@ -1176,7 +1176,7 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
                   <input
                     defaultValue={String(selectedProvider?.city || '')}
                     onBlur={(e) => updateLocalProvider(selectedProviderId, { city: String(e.target.value || '').trim() })}
-                    className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 outline-none focus:ring-2 focus:ring-orange-400/40"
+                    className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 outline-none focus:ring-2 focus:ring-[#1b5e20]/30"
                   />
                 </div>
               </div>
@@ -1193,7 +1193,7 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
                         .filter(Boolean),
                     })
                   }
-                  className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 outline-none focus:ring-2 focus:ring-orange-400/40"
+                  className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 outline-none focus:ring-2 focus:ring-[#1b5e20]/30"
                 />
               </div>
 
@@ -1209,7 +1209,7 @@ ${payments.map((p) => `<tr><td>${formatDateTime(p.paidAt)}</td><td>${csvEscape(p
                         .filter(Boolean),
                     })
                   }
-                  className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 outline-none focus:ring-2 focus:ring-orange-400/40"
+                  className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 outline-none focus:ring-2 focus:ring-[#1b5e20]/30"
                 />
               </div>
 

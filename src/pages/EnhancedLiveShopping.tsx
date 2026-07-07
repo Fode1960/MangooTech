@@ -78,7 +78,7 @@ const EnhancedLiveShopping: React.FC = () => {
       <Toaster position="top-right" />
       
       {/* Header de la session active */}
-      <div className="bg-white shadow-lg border-b border-orange-200">
+      <div className="bg-white shadow-lg border-b border-[#cfe0c8]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -91,7 +91,7 @@ const EnhancedLiveShopping: React.FC = () => {
               </button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-                  <Film className="w-6 h-6 text-red-500 mr-2" />
+                  <Film className="w-6 h-6 text-[#1b5e20] mr-2" />
                   Session Live Shopping
                 </h1>
                 <p className="text-gray-600">
@@ -176,15 +176,15 @@ const EnhancedLiveShopping: React.FC = () => {
                   ) : (
                     messages.map((msg) => (
                       <div key={msg.id} className={`rounded-lg p-2 text-sm ${
-                        msg.from === 'Vendeur' || msg.from === userRole ? 'bg-blue-100' : 'bg-gray-100'
+                        msg.from === 'Vendeur' || msg.from === userRole ? 'bg-[#eef6ea]' : 'bg-gray-100'
                       }`}>
                         <div className={`font-medium ${
-                          msg.from === 'Vendeur' || msg.from === userRole ? 'text-blue-800' : 'text-gray-800'
+                          msg.from === 'Vendeur' || msg.from === userRole ? 'text-[#1b5e20]' : 'text-gray-800'
                         }`}>
                           {msg.from}
                         </div>
                         <div className={`${
-                          msg.from === 'Vendeur' || msg.from === userRole ? 'text-blue-700' : 'text-gray-700'
+                          msg.from === 'Vendeur' || msg.from === userRole ? 'text-[#1b5e20]' : 'text-gray-700'
                         }`}>
                           {msg.message}
                         </div>
@@ -216,7 +216,7 @@ const EnhancedLiveShopping: React.FC = () => {
                       input.value = '';
                     }
                   }}
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors"
+                  className="bg-[#1b5e20] hover:bg-[#16381a] text-white px-4 py-2 rounded-lg transition-colors"
                 >
                   <MessageCircle className="w-4 h-4" />
                 </button>
@@ -229,15 +229,15 @@ const EnhancedLiveShopping: React.FC = () => {
               
               {/* Produit actuellement présenté */}
               {currentProduct && (
-                <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                <div className="mb-4 p-4 bg-[#eef6ea] border border-[#cfe0c8] rounded-lg">
                   <div className="flex items-center space-x-3">
                     <div className="w-16 h-16 bg-[#1b5e20] rounded-lg flex items-center justify-center text-white text-2xl font-bold">
                       {currentProduct.image}
                     </div>
                     <div className="flex-1">
-                      <div className="font-bold text-orange-800">En vedette maintenant</div>
+                      <div className="font-bold text-[#1b5e20]">En vedette maintenant</div>
                       <div className="font-medium text-gray-900">{currentProduct.name}</div>
-                      <div className="text-sm text-green-600 font-bold">{currentProduct.price.toLocaleString()} FCFA</div>
+                      <div className="text-sm text-[#1b5e20] font-bold">{currentProduct.price.toLocaleString()} FCFA</div>
                     </div>
                   </div>
                 </div>
@@ -256,9 +256,9 @@ const EnhancedLiveShopping: React.FC = () => {
                   </div>
                   <div className="flex-1">
                     <div className="font-medium text-gray-900">Robe Wax Ankara</div>
-                    <div className="text-sm text-green-600 font-bold">25 000 FCFA</div>
+                    <div className="text-sm text-[#1b5e20] font-bold">25 000 FCFA</div>
                   </div>
-                  <button className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm transition-colors">
+                  <button className="bg-[#1b5e20] hover:bg-[#16381a] text-white px-3 py-1 rounded text-sm transition-colors">
                     Acheter
                   </button>
                 </div>
@@ -275,9 +275,9 @@ const EnhancedLiveShopping: React.FC = () => {
                   </div>
                   <div className="flex-1">
                     <div className="font-medium text-gray-900">Collier traditionnel</div>
-                    <div className="text-sm text-green-600 font-bold">15 000 FCFA</div>
+                    <div className="text-sm text-[#1b5e20] font-bold">15 000 FCFA</div>
                   </div>
-                  <button className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm transition-colors">
+                  <button className="bg-[#1b5e20] hover:bg-[#16381a] text-white px-3 py-1 rounded text-sm transition-colors">
                     Acheter
                   </button>
                 </div>

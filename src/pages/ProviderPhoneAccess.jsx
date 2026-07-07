@@ -56,7 +56,7 @@ function isLocalLanHost() {
   }
 }
 
-const mobileInputClassName = 'mt-1 w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-lg font-semibold text-gray-900 shadow-sm outline-none appearance-none focus:border-orange-300 focus:ring-2 focus:ring-orange-400/40 placeholder:text-gray-400'
+const mobileInputClassName = 'mt-1 w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-lg font-semibold text-gray-900 shadow-sm outline-none appearance-none focus:border-[#cfe0c8] focus:ring-2 focus:ring-[#1b5e20]/30 placeholder:text-gray-400'
 const mobileInputStyle = {
   colorScheme: 'light',
   WebkitAppearance: 'none',
@@ -650,7 +650,7 @@ export default function ProviderPhoneAccess() {
   return (
     <div className="min-h-dvh bg-[#f6faf3] text-gray-900">
       <div className="max-w-md mx-auto p-4 sm:p-6">
-        <div className="rounded-[28px] border border-orange-100 bg-white shadow-sm p-5 sm:p-6">
+        <div className="rounded-[28px] border border-[#cfe0c8] bg-white shadow-sm p-5 sm:p-6">
           <div className="flex items-center gap-3">
             <img src={mangooLogoUrl} alt="Mangoo Tech" className="w-11 h-11 shrink-0" />
             <div className="min-w-0">
@@ -659,7 +659,7 @@ export default function ProviderPhoneAccess() {
             </div>
           </div>
 
-          <div className="mt-5 rounded-2xl bg-orange-50 border border-orange-100 px-4 py-3 text-sm font-semibold text-gray-700">
+          <div className="mt-5 rounded-2xl bg-[#eef6ea] border border-[#cfe0c8] px-4 py-3 text-sm font-semibold text-gray-700">
             Entrez votre numéro de téléphone.
           </div>
 
