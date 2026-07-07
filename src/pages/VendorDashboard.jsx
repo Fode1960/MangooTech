@@ -112,7 +112,7 @@ const VendorDashboard = () => {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-[#1b5e20] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-300">Chargement de votre tableau de bord...</p>
         </div>
       </div>
@@ -144,7 +144,7 @@ const VendorDashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <Store className="w-8 h-8 text-orange-500" />
+              <Store className="w-8 h-8 text-[#1b5e20]" />
               <div>
                 <h1 className="text-xl font-bold text-gray-900 dark:text-white">{shop.name}</h1>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Tableau de bord vendeur</p>
@@ -179,7 +179,7 @@ const VendorDashboard = () => {
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Produits</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalProducts}</p>
               </div>
-              <Package className="w-8 h-8 text-blue-500" />
+              <Package className="w-8 h-8 text-[#1b5e20]" />
             </div>
           </div>
 
@@ -189,7 +189,7 @@ const VendorDashboard = () => {
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Commandes</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalOrders}</p>
               </div>
-              <Users className="w-8 h-8 text-green-500" />
+              <Users className="w-8 h-8 text-[#1b5e20]" />
             </div>
           </div>
 
@@ -199,7 +199,7 @@ const VendorDashboard = () => {
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Revenus</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalRevenue.toLocaleString('fr-FR')} FCFA</p>
               </div>
-              <DollarSign className="w-8 h-8 text-yellow-500" />
+              <DollarSign className="w-8 h-8 text-[#66bb6a]" />
             </div>
           </div>
 
@@ -209,7 +209,7 @@ const VendorDashboard = () => {
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Clients</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalCustomers}</p>
               </div>
-              <TrendingUp className="w-8 h-8 text-purple-500" />
+              <TrendingUp className="w-8 h-8 text-[#1b5e20]" />
             </div>
           </div>
         </div>
@@ -283,7 +283,7 @@ const VendorDashboard = () => {
                 <div className="text-center py-8">
                   <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600 dark:text-gray-400">Fonctionnalité de gestion des produits à implémenter</p>
-                  <button className="mt-4 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition-colors">
+                  <button className="mt-4 bg-[#1b5e20] hover:bg-[#2e7d32] text-white px-4 py-2 rounded-lg transition-colors">
                     Ajouter un produit
                   </button>
                 </div>
@@ -311,7 +311,7 @@ const VendorDashboard = () => {
                         https://mangootech.com/shop/{shop.slug || shopId}
                       </p>
                     </div>
-                    <button className="flex items-center space-x-2 text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300">
+                    <button className="flex items-center space-x-2 text-[#1b5e20] hover:text-[#2e7d32] dark:text-[#66bb6a] dark:hover:text-[#ecf7e7]">
                       <Eye className="w-4 h-4" />
                       <span>Voir</span>
                     </button>
@@ -322,8 +322,8 @@ const VendorDashboard = () => {
                       <p className="text-sm text-gray-600 dark:text-gray-400 capitalize">{shop.status}</p>
                     </div>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      shop.status === 'approved' ? 'bg-green-100 text-green-800' :
-                      shop.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                      shop.status === 'approved' ? 'bg-[#eef6ea] text-[#1b5e20]' :
+                      shop.status === 'pending' ? 'bg-[#ffe082] text-[#8f4b00]' :
                       shop.status === 'suspended' ? 'bg-red-100 text-red-800' :
                       'bg-gray-100 text-gray-800'
                     }`}>
@@ -339,19 +339,19 @@ const VendorDashboard = () => {
         {/* Actions rapides */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <button className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow">
-            <Package className="w-8 h-8 text-blue-500 mb-3" />
+            <Package className="w-8 h-8 text-[#1b5e20] mb-3" />
             <h3 className="font-medium text-gray-900 dark:text-white mb-2">Ajouter un produit</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">Ajoutez de nouveaux produits à votre boutique</p>
           </button>
 
           <button className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow">
-            <QrCode className="w-8 h-8 text-green-500 mb-3" />
+            <QrCode className="w-8 h-8 text-[#1b5e20] mb-3" />
             <h3 className="font-medium text-gray-900 dark:text-white mb-2">QR Code</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">Générez votre QR code pour partager votre boutique</p>
           </button>
 
           <button className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow">
-            <Settings className="w-8 h-8 text-purple-500 mb-3" />
+            <Settings className="w-8 h-8 text-[#1b5e20] mb-3" />
             <h3 className="font-medium text-gray-900 dark:text-white mb-2">Paramètres</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">Modifiez les paramètres de votre boutique</p>
           </button>

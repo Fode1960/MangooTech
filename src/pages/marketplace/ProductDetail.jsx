@@ -122,7 +122,7 @@ const ProductDetail = () => {
         {/* Bouton de retour */}
         <button
           onClick={() => navigate('/marketplace')}
-          className="flex items-center space-x-2 mb-6 text-orange-600 hover:text-orange-700 transition-colors"
+          className="flex items-center space-x-2 mb-6 text-[#1b5e20] hover:text-[#2e7d32] transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
           <span>Retour au marché</span>
@@ -161,8 +161,8 @@ const ProductDetail = () => {
                     key={i}
                     className={`aspect-square rounded-lg border-2 cursor-pointer transition-all ${
                       selectedImage === i-1 
-                        ? 'border-orange-500 shadow-lg' 
-                        : 'border-gray-200 dark:border-gray-600 hover:border-orange-300'
+                        ? 'border-[#1b5e20] shadow-lg' 
+                        : 'border-gray-200 dark:border-gray-600 hover:border-[#66bb6a]'
                     }`}
                     onClick={() => setSelectedImage(i-1)}
                   >
@@ -179,7 +179,7 @@ const ProductDetail = () => {
               {/* En-tête */}
               <div>
                 <div className="flex items-center space-x-2 mb-2">
-                  <span className="px-3 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-sm rounded-full">
+                  <span className="px-3 py-1 bg-[#eef6ea] text-[#1b5e20] dark:text-[#66bb6a] text-sm rounded-full">
                     {product.category}
                   </span>
                   {product.discount && (
@@ -199,7 +199,7 @@ const ProductDetail = () => {
                         key={i}
                         className={`w-5 h-5 ${
                           i < product.rating
-                            ? 'text-yellow-400 fill-current'
+                            ? 'text-[#ffa726] fill-current'
                             : 'text-gray-300 dark:text-gray-600'
                         }`}
                       />
@@ -223,7 +223,7 @@ const ProductDetail = () => {
               <div className="space-y-2">
                 {product.discount ? (
                   <div className="flex items-center space-x-3">
-                    <span className="text-3xl font-bold text-orange-600">
+                    <span className="text-3xl font-bold text-[#1b5e20]">
                       {Math.round(parseFloat(product.price.replace(/[^\d]/g, '')) * (1 - product.discount / 100)).toLocaleString()} FCFA
                     </span>
                     <span className="text-lg text-gray-500 line-through">
@@ -231,7 +231,7 @@ const ProductDetail = () => {
                     </span>
                   </div>
                 ) : (
-                  <span className="text-3xl font-bold text-orange-600">
+                  <span className="text-3xl font-bold text-[#1b5e20]">
                     {product.price}
                   </span>
                 )}
@@ -306,7 +306,7 @@ const ProductDetail = () => {
                     <div>
                       <p className="font-medium">{shop.name}</p>
                       <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
-                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                        <Star className="w-4 h-4 text-[#ffa726] fill-current" />
                         <span>{shop.rating} ({shop.reviews} avis)</span>
                       </div>
                     </div>
@@ -336,15 +336,15 @@ const ProductDetail = () => {
               {/* Garanties */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                 <div className="flex items-center space-x-2">
-                  <Truck className="w-5 h-5 text-green-600" />
+                  <Truck className="w-5 h-5 text-[#1b5e20]" />
                   <span className="text-gray-600 dark:text-gray-400">Livraison rapide</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Shield className="w-5 h-5 text-blue-600" />
+                  <Shield className="w-5 h-5 text-[#1b5e20]" />
                   <span className="text-gray-600 dark:text-gray-400">Paiement sécurisé</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Clock className="w-5 h-5 text-orange-600" />
+                  <Clock className="w-5 h-5 text-[#1b5e20]" />
                   <span className="text-gray-600 dark:text-gray-400">Retour 14j</span>
                 </div>
               </div>

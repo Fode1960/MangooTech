@@ -29,7 +29,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
     chatWidget.id = 'mangoo-chat-widget';
     chatWidget.innerHTML = `
         <div style="position:fixed; bottom:20px; right:20px; width:350px; height:500px; background:white; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.2); z-index:9999; display:flex; flex-direction:column; overflow:hidden; font-family:sans-serif; animation: slideInUp 0.3s ease-out;">
-            <div style="background:#2ecc71; padding:15px; color:white; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">
+            <div style="background:#1b5e20; padding:15px; color:white; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">
                 <div style="display:flex; align-items:center; gap:5px;">
                     <span>Mangoo Connect+</span>
                 </div>
@@ -50,7 +50,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                 </div>
                 <div style="flex:1; overflow-y:auto;">
                     <div style="padding:10px 15px; border-bottom:1px solid #f5f5f5; display:flex; align-items:center; gap:10px; cursor:pointer; background:#f9f9f9;">
-                        <div style="width:35px; height:35px; background:#2ecc71; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">S</div>
+                        <div style="width:35px; height:35px; background:#1b5e20; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">S</div>
                         <div>
                             <div style="font-weight:bold; font-size:0.9rem;">@Support_Mangoo</div>
                             <div style="font-size:0.8rem; color:green;">En ligne</div>
@@ -64,7 +64,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                         </div>
                     </div>
                     <div style="padding:10px 15px; border-bottom:1px solid #f5f5f5; display:flex; align-items:center; gap:10px; cursor:pointer;">
-                        <div style="width:35px; height:35px; background:#3498db; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">L</div>
+                        <div style="width:35px; height:35px; background:#1b5e20; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">L</div>
                         <div>
                             <div style="font-weight:bold; font-size:0.9rem;">@Livreur_Express</div>
                             <div style="font-size:0.8rem; color:gray;">Hors ligne</div>
@@ -86,7 +86,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                 <input type="file" id="chat-file-input" style="display:none;">
                 <button id="chat-attach-btn" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:#7f8c8d; padding:0 5px;" title="Joindre un fichier">📎</button>
                 <input id="chat-input" type="text" placeholder="Écrivez votre message..." style="flex:1; border:1px solid #ddd; padding:10px; border-radius:20px; outline:none;">
-                <button id="chat-send-btn" style="background:#2ecc71; color:white; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: transform 0.2s;">➤</button>
+                <button id="chat-send-btn" style="background:#1b5e20; color:white; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: transform 0.2s;">➤</button>
             </div>
         </div>
         <style>
@@ -600,7 +600,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                     const messages = document.getElementById('chat-messages');
                     if(messages) {
                         const demoMsg = document.createElement('div');
-                        demoMsg.style.cssText = "background:white; color:#333; padding:10px 15px; border-radius:15px 15px 15px 0; max-width:80%; align-self:flex-start; box-shadow:0 2px 5px rgba(0,0,0,0.05); margin-top:10px; border-left: 3px solid #2ecc71;";
+                        demoMsg.style.cssText = "background:white; color:#333; padding:10px 15px; border-radius:15px 15px 15px 0; max-width:80%; align-self:flex-start; box-shadow:0 2px 5px rgba(0,0,0,0.05); margin-top:10px; border-left: 3px solid #1b5e20;";
                         demoMsg.innerHTML = "<b>Mode Démo :</b><br>Vous testez actuellement le Chat Intégré. C'est ici que vos clients vous contacteront en temps réel !";
                         messages.appendChild(demoMsg);
                         messages.scrollTop = messages.scrollHeight;
@@ -643,7 +643,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                         <!-- Mobile Screen Content -->
                         <div style="flex:1; width:100%; overflow-y:auto; background:#f8f9fa; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; scrollbar-width: thin; display: flex; flex-direction: column;">
                             <!-- Header -->
-                            <div style="background:#1f6d3a; color:white; padding:45px 20px 15px 20px; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position:sticky; top:0; z-index:10; flex-shrink: 0;">
+                            <div style="background:#1b5e20; color:white; padding:45px 20px 15px 20px; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position:sticky; top:0; z-index:10; flex-shrink: 0;">
                                 <div style="font-weight:800; font-size:1.1rem; letter-spacing:-0.5px;">Mangoo App</div>
                                 <div style="font-size:1.2rem;">🍔</div>
                             </div>
@@ -708,9 +708,9 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                         
                         <!-- Bottom Nav -->
                         <div style="position:absolute; bottom:0; left:0; width:100%; height:70px; background:white; border-top:1px solid #f0f0f0; display:flex; justify-content:space-around; align-items:center; padding-bottom:15px; box-sizing:border-box; z-index: 15;">
-                            <div style="color:#1f6d3a; font-size:1.5rem;">🏠</div>
+                            <div style="color:#1b5e20; font-size:1.5rem;">🏠</div>
                             <div style="color:#bdc3c7; font-size:1.5rem;">🔍</div>
-                            <div style="width:50px; height:50px; background:#1f6d3a; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:1.2rem; margin-top:-20px; box-shadow: 0 5px 15px rgba(31, 109, 58, 0.3);">🛒</div>
+                            <div style="width:50px; height:50px; background:#1b5e20; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:1.2rem; margin-top:-20px; box-shadow: 0 5px 15px rgba(27,94,32,0.3);">🛒</div>
                             <div style="color:#bdc3c7; font-size:1.5rem;">❤️</div>
                             <div style="color:#bdc3c7; font-size:1.5rem;">👤</div>
                         </div>
@@ -725,7 +725,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
             }}
             className={`p-6 rounded-2xl shadow-sm border flex items-center gap-4 transition-all hover:scale-105 hover:shadow-lg text-left w-full ${isDark ? 'bg-gray-800 border-gray-700 hover:bg-gray-700' : 'bg-white border-gray-100 hover:bg-gray-50'}`}
           >
-            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 shrink-0">
+            <div className="w-12 h-12 bg-[#eef6ea] rounded-full flex items-center justify-center text-[#1b5e20] shrink-0">
               <Smartphone className="w-6 h-6" />      
             </div>
             <div>
@@ -809,7 +809,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                     : ''
               } ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}
             >
-              <h3 className="text-xl font-bold text-green-600 mb-2">Professionnel</h3>
+              <h3 className="text-xl font-bold text-[#1b5e20] mb-2">Professionnel</h3>
               <div className={`text-4xl font-extrabold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>10 000 FCFA<span className={`text-sm font-normal ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>/mois</span></div>
               <ul className={`space-y-3 mb-8 flex-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                 <li>✅ Live Shopping</li>
@@ -836,7 +836,7 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                     : ''
               } ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}
             >
-              <h3 className="text-xl font-bold text-purple-600 mb-2">Premium</h3>
+              <h3 className="text-xl font-bold text-[#66bb6a] mb-2">Premium</h3>
               <div className={`text-4xl font-extrabold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>15 000 FCFA<span className={`text-sm font-normal ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>/mois</span></div>
               <ul className={`space-y-3 mb-8 flex-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                 <li>✅ Priorité marketplace</li>
@@ -844,12 +844,12 @@ const LandingPage = ({ onNavigate, onLogin, showAdminDashboard = false, onAdminD
                 <li>✅ Automations</li>
                 <li>✅ Insights avancés</li>
               </ul>
-              <button type="button" onClick={() => selectPlan('pack_premium')} className={`w-full py-3 rounded-xl border font-bold transition-colors ${isDark ? 'border-purple-500 text-purple-300 hover:bg-gray-700' : 'border-purple-600 text-purple-700 hover:bg-purple-50'}`}>Choisir</button>
+              <button type="button" onClick={() => selectPlan('pack_premium')} className={`w-full py-3 rounded-xl border font-bold transition-colors ${isDark ? 'border-[#66bb6a] text-[#66bb6a] hover:bg-[#17331c]' : 'border-[#1b5e20] text-[#1b5e20] hover:bg-[#eef6ea]'}`}>Choisir</button>
             </div>
           </div>
 
           <div className="mt-8 text-center">
-            <button type="button" onClick={goToContact} className={`px-6 py-3 rounded-full font-bold transition-colors border ${isDark ? 'border-blue-400 text-blue-300 hover:bg-gray-800' : 'border-blue-600 text-blue-700 hover:bg-blue-50'}`}>Offre Entreprise : contacter</button>
+            <button type="button" onClick={goToContact} className={`px-6 py-3 rounded-full font-bold transition-colors border ${isDark ? 'border-[#66bb6a] text-[#66bb6a] hover:bg-[#17331c]' : 'border-[#1b5e20] text-[#1b5e20] hover:bg-[#eef6ea]'}`}>Offre Entreprise : contacter</button>
           </div>
         </div>
 

@@ -507,7 +507,7 @@ export default function CourierScreen() {
         <div className="max-w-3xl mx-auto">
           <div className={`rounded-2xl border p-6 ${isDark ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-white shadow-xl'}`}>
             <div className="flex items-center gap-3">
-              <Shield className={`w-6 h-6 ${isDark ? 'text-amber-300' : 'text-amber-600'}`} />
+              <Shield className={`w-6 h-6 ${isDark ? 'text-[#ffe082]' : 'text-[#8f4b00]'}`} />
               <div className="text-lg font-black">Accès refusé</div>
             </div>
             <div className={`mt-2 text-sm ${isDark ? 'text-zinc-300' : 'text-gray-600'}`}>Connectez-vous avec un compte livreur ou créez un compte dédié.</div>
@@ -536,7 +536,7 @@ export default function CourierScreen() {
   return (
     <CourierLayout title="Espace livreur" subtitle={`Compte: ${String(user?.email || user?.name || courierId)}`}>
       {!isOnline && (
-        <div className={`mb-4 px-4 py-3 rounded-2xl border text-sm font-black inline-flex items-center gap-2 ${isDark ? 'bg-rose-500/15 text-rose-200 border-rose-500/20' : 'bg-rose-50 text-rose-800 border-rose-200'}`}>
+        <div className={`mb-4 px-4 py-3 rounded-2xl border text-sm font-black inline-flex items-center gap-2 ${isDark ? 'bg-[#1b5e20]/15 text-[#66bb6a] border-[#1b5e20]/20' : 'bg-[#eef6ea] text-[#1b5e20] border-[#cfe0c8]'}`}>
           <WifiOff className="w-4 h-4" />
           Hors ligne
         </div>
@@ -561,18 +561,18 @@ export default function CourierScreen() {
               </div>
             )}
             {ordersError && (
-              <div className={`px-4 py-3 rounded-2xl border text-sm ${isDark ? 'bg-rose-500/10 border-rose-500/20 text-rose-200' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>{ordersError}</div>
+              <div className={`px-4 py-3 rounded-2xl border text-sm ${isDark ? 'bg-[#1b5e20]/10 border-[#1b5e20]/20 text-[#66bb6a]' : 'bg-[#eef6ea] border-[#cfe0c8] text-[#1b5e20]'}`}>{ordersError}</div>
             )}
             {gpsError && (
-              <div className={`px-4 py-3 rounded-2xl border text-sm ${isDark ? 'bg-amber-500/10 border-amber-500/20 text-amber-200' : 'bg-amber-50 border-amber-200 text-amber-800'}`}>GPS: {gpsError}</div>
+              <div className={`px-4 py-3 rounded-2xl border text-sm ${isDark ? 'bg-[#ffa726]/15 border-[#ffa726]/20 text-[#ffe082]' : 'bg-[#fff4d6] border-[#ffe082] text-[#8f4b00]'}`}>GPS: {gpsError}</div>
             )}
             {routeErrorLabel && (
-              <div className={`px-4 py-3 rounded-2xl border text-sm flex items-center justify-between gap-3 ${isDark ? 'bg-rose-500/10 border-rose-500/20 text-rose-200' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
+              <div className={`px-4 py-3 rounded-2xl border text-sm flex items-center justify-between gap-3 ${isDark ? 'bg-[#1b5e20]/10 border-[#1b5e20]/20 text-[#66bb6a]' : 'bg-[#eef6ea] border-[#cfe0c8] text-[#1b5e20]'}`}>
                 <div className="min-w-0">Itinéraire: {routeErrorLabel}</div>
                 <button
                   type="button"
                   onClick={retryRoute}
-                  className={`shrink-0 px-3 py-2 rounded-xl font-black text-xs transition-colors ${isDark ? 'bg-white/5 border border-white/10 hover:bg-white/10' : 'bg-white border border-rose-200 hover:bg-rose-100'}`}
+                  className={`shrink-0 px-3 py-2 rounded-xl font-black text-xs transition-colors ${isDark ? 'bg-white/5 border border-white/10 hover:bg-white/10' : 'bg-white border border-[#cfe0c8] hover:bg-[#eef6ea]'}`}
                 >
                   Réessayer
                 </button>
@@ -593,7 +593,7 @@ export default function CourierScreen() {
                   <button
                     type="button"
                     onClick={openPremiumTracking}
-                    className={`w-full px-4 py-3 rounded-2xl font-black transition-colors ${isDark ? 'bg-white/5 border border-white/10 hover:bg-white/10 text-white' : 'bg-white border border-orange-200 text-gray-900 hover:bg-orange-50 shadow-sm'}`}
+                    className={`w-full px-4 py-3 rounded-2xl font-black transition-colors ${isDark ? 'bg-white/5 border border-white/10 hover:bg-white/10 text-white' : 'bg-white border border-[#ffe082] text-gray-900 hover:bg-[#fff4d6] shadow-sm'}`}
                     title="Ouvrir le suivi premium"
                   >
                     Suivi premium
@@ -640,9 +640,9 @@ export default function CourierScreen() {
             />
           </div>
 
-          <div className={`h-full rounded-2xl border overflow-hidden relative ${isDark ? 'border-white/10 bg-white/5' : 'border-orange-100 bg-white/95 shadow-xl'}`}>
+          <div className={`h-full rounded-2xl border overflow-hidden relative ${isDark ? 'border-white/10 bg-white/5' : 'border-[#cfe0c8] bg-white/95 shadow-xl'}`}>
             <div className="absolute top-4 left-4 z-[500] flex flex-wrap items-center gap-2">
-              <div className={`px-3 py-2 rounded-xl backdrop-blur border text-xs font-black inline-flex items-center gap-2 ${isDark ? 'bg-black/40 border-white/10 text-white' : 'bg-white/85 border-orange-200 text-gray-900 shadow-sm'}`}>
+              <div className={`px-3 py-2 rounded-xl backdrop-blur border text-xs font-black inline-flex items-center gap-2 ${isDark ? 'bg-black/40 border-white/10 text-white' : 'bg-white/85 border-[#ffe082] text-gray-900 shadow-sm'}`}>
                 <Navigation className={`w-4 h-4 ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`} />
                 {activeOrderId
                   ? activeOrder?.status === 'picked_up'
