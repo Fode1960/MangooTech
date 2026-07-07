@@ -49,8 +49,8 @@ const ProductCard = memo(({
   // Mémorisation du statut de stock
   const stockStatus = useMemo(() => {
     if (product.stock === 0) return { text: 'Rupture de stock', className: 'bg-red-100 text-red-800' };
-    if (product.stock <= 5) return { text: `Plus que ${product.stock}`, className: 'bg-orange-100 text-orange-800' };
-    return { text: 'En stock', className: 'bg-green-100 text-green-800' };
+    if (product.stock <= 5) return { text: `Plus que ${product.stock}`, className: 'bg-[#eef6ea] text-[#1b5e20]' };
+    return { text: 'En stock', className: 'bg-[#eef6ea] text-[#1b5e20]' };
   }, [product.stock]);
 
   return (
@@ -83,7 +83,7 @@ const ProductCard = memo(({
       </button>
 
       {/* Image du produit */}
-      <div className="aspect-w-1 aspect-h-1 w-full h-48 bg-gradient-to-br from-orange-50 to-green-50 dark:from-gray-700 dark:to-gray-600 overflow-hidden">
+      <div className="aspect-w-1 aspect-h-1 w-full h-48 bg-gradient-to-br from-[#eef6ea] to-[#eef6ea] dark:from-gray-700 dark:to-gray-600 overflow-hidden">
         <div className="w-full h-full flex items-center justify-center">
           <span className="text-5xl group-hover:scale-110 transition-transform duration-300">
             {product.icon}
@@ -94,7 +94,7 @@ const ProductCard = memo(({
       {/* Informations du produit */}
       <div className="p-4">
         <div className="mb-2">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate group-hover:text-[#1b5e20] dark:group-hover:text-[#66bb6a] transition-colors">
             {product.name}
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mt-1">
@@ -109,7 +109,7 @@ const ProductCard = memo(({
               <svg
                 key={i}
                 className={`w-4 h-4 ${
-                  i < product.rating ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'
+                  i < product.rating ? 'text-[#8f4b00]' : 'text-gray-300 dark:text-gray-600'
                 }`}
                 fill="currentColor"
                 viewBox="0 0 20 20"
@@ -134,7 +134,7 @@ const ProductCard = memo(({
         <div className="mb-4">
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
-              <span className="text-xl font-bold text-orange-600 dark:text-orange-400">
+              <span className="text-xl font-bold text-[#1b5e20] dark:text-[#66bb6a]">
                 {displayPrice}
               </span>
               {originalPrice && (
@@ -158,8 +158,8 @@ const ProductCard = memo(({
               product.stock === 0
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 : isInCart
-                ? 'bg-green-600 text-white hover:bg-green-700'
-                : 'bg-gradient-to-r from-orange-500 to-green-600 text-white hover:from-orange-600 hover:to-green-700'
+                ? 'bg-[#eef6ea] text-white hover:bg-[#eef6ea]'
+                : 'bg-gradient-to-r from-[#1b5e20] to-[#1b5e20] text-white hover:from-[#16381a] hover:to-[#16381a]'
             }`}
           >
             {isInCart ? '✓ Ajouté' : 'Ajouter'}

@@ -264,15 +264,15 @@ const VendorDeliveryManagement: React.FC<VendorDeliveryManagementProps> = ({ ven
   const getStatusColor = (status: Delivery['status']) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-[#fff4d6] text-[#8f4b00]';
       case 'assigned':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-[#eef6ea] text-[#1b5e20]';
       case 'picked-up':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-[#eef6ea] text-[#1b5e20]';
       case 'in-transit':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-[#eef6ea] text-[#1b5e20]';
       case 'delivered':
-        return 'bg-green-100 text-green-800';
+        return 'bg-[#eef6ea] text-[#1b5e20]';
       case 'cancelled':
         return 'bg-red-100 text-red-800';
       default:
@@ -449,8 +449,8 @@ const VendorDeliveryManagement: React.FC<VendorDeliveryManagementProps> = ({ ven
               <p className="text-sm text-gray-600">Total Livraisons</p>
               <p className="text-2xl font-bold text-gray-900">{deliveries.length}</p>
             </div>
-            <div className="bg-blue-100 p-2 rounded-full">
-              <Package className="w-6 h-6 text-blue-600" />
+            <div className="bg-[#eef6ea] p-2 rounded-full">
+              <Package className="w-6 h-6 text-[#1b5e20]" />
             </div>
           </div>
         </div>
@@ -459,12 +459,12 @@ const VendorDeliveryManagement: React.FC<VendorDeliveryManagementProps> = ({ ven
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">En Attente</p>
-              <p className="text-2xl font-bold text-yellow-600">
+              <p className="text-2xl font-bold text-[#8f4b00]">
                 {deliveries.filter(d => d.status === 'pending').length}
               </p>
             </div>
-            <div className="bg-yellow-100 p-2 rounded-full">
-              <Clock className="w-6 h-6 text-yellow-600" />
+            <div className="bg-[#fff4d6] p-2 rounded-full">
+              <Clock className="w-6 h-6 text-[#8f4b00]" />
             </div>
           </div>
         </div>
@@ -473,12 +473,12 @@ const VendorDeliveryManagement: React.FC<VendorDeliveryManagementProps> = ({ ven
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">En Cours</p>
-              <p className="text-2xl font-bold text-orange-600">
+              <p className="text-2xl font-bold text-[#1b5e20]">
                 {deliveries.filter(d => ['assigned', 'picked-up', 'in-transit'].includes(d.status)).length}
               </p>
             </div>
-            <div className="bg-orange-100 p-2 rounded-full">
-              <Truck className="w-6 h-6 text-orange-600" />
+            <div className="bg-[#eef6ea] p-2 rounded-full">
+              <Truck className="w-6 h-6 text-[#1b5e20]" />
             </div>
           </div>
         </div>
@@ -487,12 +487,12 @@ const VendorDeliveryManagement: React.FC<VendorDeliveryManagementProps> = ({ ven
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Livreurs Disponibles</p>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-2xl font-bold text-[#1b5e20]">
                 {deliveryPartners.filter(p => p.status === 'available').length}
               </p>
             </div>
-            <div className="bg-green-100 p-2 rounded-full">
-              <User className="w-6 h-6 text-green-600" />
+            <div className="bg-[#eef6ea] p-2 rounded-full">
+              <User className="w-6 h-6 text-[#1b5e20]" />
             </div>
           </div>
         </div>
@@ -509,7 +509,7 @@ const VendorDeliveryManagement: React.FC<VendorDeliveryManagementProps> = ({ ven
                 placeholder="Rechercher par commande, client ou téléphone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent"
               />
             </div>
           </div>
@@ -517,7 +517,7 @@ const VendorDeliveryManagement: React.FC<VendorDeliveryManagementProps> = ({ ven
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent"
             >
               <option value="all">Tous les statuts</option>
               <option value="pending">En attente</option>
@@ -529,14 +529,14 @@ const VendorDeliveryManagement: React.FC<VendorDeliveryManagementProps> = ({ ven
             </select>
             <button
               onClick={() => setShowPartnerModal(true)}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-[#1b5e20] text-white rounded-lg hover:bg-[#16381a] transition-colors flex items-center gap-2"
             >
               <Users className="w-4 h-4" />
               Transporteurs
             </button>
             <button
               onClick={exportDeliveries}
-              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-[#1b5e20] text-white rounded-lg hover:bg-[#16381a] transition-colors flex items-center gap-2"
             >
               <Download className="w-4 h-4" />
               Exporter
@@ -620,7 +620,7 @@ const VendorDeliveryManagement: React.FC<VendorDeliveryManagementProps> = ({ ven
                           setSelectedDelivery(delivery);
                           setShowTrackingModal(true);
                         }}
-                        className="text-blue-600 hover:text-blue-900 bg-blue-100 px-2 py-1 rounded text-xs flex items-center gap-1"
+                        className="text-[#1b5e20] hover:text-[#ecf7e7] bg-[#eef6ea] px-2 py-1 rounded text-xs flex items-center gap-1"
                       >
                         <Eye className="w-3 h-3" />
                         Suivre
@@ -631,7 +631,7 @@ const VendorDeliveryManagement: React.FC<VendorDeliveryManagementProps> = ({ ven
                             setSelectedDelivery(delivery);
                             setShowAssignModal(true);
                           }}
-                          className="text-green-600 hover:text-green-900 bg-green-100 px-2 py-1 rounded text-xs flex items-center gap-1"
+                          className="text-[#1b5e20] hover:text-[#1b5e20] bg-[#eef6ea] px-2 py-1 rounded text-xs flex items-center gap-1"
                         >
                           <User className="w-3 h-3" />
                           Assigner
@@ -671,9 +671,9 @@ const VendorDeliveryManagement: React.FC<VendorDeliveryManagementProps> = ({ ven
               <p className="text-sm text-gray-600 mb-2">
                 Total: <span className="font-medium">{formatCurrency(selectedDelivery.totalAmount)}</span>
               </p>
-              <div className="bg-blue-50 p-3 rounded-lg mt-3">
-                <p className="text-sm text-blue-800 font-medium mb-1">💡 Calcul automatique des frais</p>
-                <p className="text-xs text-blue-600">
+              <div className="bg-[#eef6ea] p-3 rounded-lg mt-3">
+                <p className="text-sm text-[#1b5e20] font-medium mb-1">💡 Calcul automatique des frais</p>
+                <p className="text-xs text-[#1b5e20]">
                   Les frais de livraison seront calculés automatiquement selon la distance, 
                   le type de véhicule et le district de livraison.
                 </p>
@@ -696,7 +696,7 @@ const VendorDeliveryManagement: React.FC<VendorDeliveryManagementProps> = ({ ven
                           <span className="text-xs text-gray-500">⭐ {partner.rating}</span>
                           <span className="text-xs text-gray-500">{partner.completedDeliveries} livraisons</span>
                           <span className={`text-xs px-2 py-1 rounded-full ${
-                            partner.status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            partner.status === 'available' ? 'bg-[#eef6ea] text-[#1b5e20]' : 'bg-red-100 text-red-800'
                           }`}>
                             {partner.status}
                           </span>
@@ -828,8 +828,8 @@ const VendorDeliveryManagement: React.FC<VendorDeliveryManagementProps> = ({ ven
                   {selectedDelivery.trackingHistory.map((history, index) => (
                     <div key={index} className="flex gap-3">
                       <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <CheckCircle className="w-4 h-4 text-blue-600" />
+                        <div className="w-8 h-8 bg-[#eef6ea] rounded-full flex items-center justify-center">
+                          <CheckCircle className="w-4 h-4 text-[#1b5e20]" />
                         </div>
                       </div>
                       <div className="flex-1">
@@ -875,37 +875,37 @@ const VendorDeliveryManagement: React.FC<VendorDeliveryManagementProps> = ({ ven
 
             {/* Statistiques des transporteurs */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="bg-[#eef6ea] p-4 rounded-lg">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-blue-600">Total Transporteurs</p>
-                    <p className="text-2xl font-bold text-blue-900">{deliveryPartners.length}</p>
+                    <p className="text-sm text-[#1b5e20]">Total Transporteurs</p>
+                    <p className="text-2xl font-bold text-[#ecf7e7]">{deliveryPartners.length}</p>
                   </div>
-                  <Users className="w-8 h-8 text-blue-600" />
+                  <Users className="w-8 h-8 text-[#1b5e20]" />
                 </div>
               </div>
               
-              <div className="bg-green-50 p-4 rounded-lg">
+              <div className="bg-[#eef6ea] p-4 rounded-lg">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-green-600">Disponibles</p>
-                    <p className="text-2xl font-bold text-green-900">
+                    <p className="text-sm text-[#1b5e20]">Disponibles</p>
+                    <p className="text-2xl font-bold text-[#ecf7e7]">
                       {deliveryPartners.filter(p => p.status === 'available').length}
                     </p>
                   </div>
-                  <CheckCircle className="w-8 h-8 text-green-600" />
+                  <CheckCircle className="w-8 h-8 text-[#1b5e20]" />
                 </div>
               </div>
               
-              <div className="bg-orange-50 p-4 rounded-lg">
+              <div className="bg-[#eef6ea] p-4 rounded-lg">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-orange-600">En Mission</p>
-                    <p className="text-2xl font-bold text-orange-900">
+                    <p className="text-sm text-[#1b5e20]">En Mission</p>
+                    <p className="text-2xl font-bold text-[#ecf7e7]">
                       {deliveryPartners.filter(p => p.status === 'busy').length}
                     </p>
                   </div>
-                  <Truck className="w-8 h-8 text-orange-600" />
+                  <Truck className="w-8 h-8 text-[#1b5e20]" />
                 </div>
               </div>
             </div>
@@ -923,8 +923,8 @@ const VendorDeliveryManagement: React.FC<VendorDeliveryManagementProps> = ({ ven
                       </div>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      partner.status === 'available' ? 'bg-green-100 text-green-800' :
-                      partner.status === 'busy' ? 'bg-orange-100 text-orange-800' :
+                      partner.status === 'available' ? 'bg-[#eef6ea] text-[#1b5e20]' :
+                      partner.status === 'busy' ? 'bg-[#eef6ea] text-[#1b5e20]' :
                       'bg-gray-100 text-gray-800'
                     }`}>
                       {partner.status === 'available' ? 'Disponible' :
@@ -940,7 +940,7 @@ const VendorDeliveryManagement: React.FC<VendorDeliveryManagementProps> = ({ ven
                     <div>
                       <p className="text-gray-600">Note</p>
                       <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                        <Star className="w-4 h-4 text-[#ffa726] fill-current" />
                         <span className="font-medium">{partner.rating}</span>
                       </div>
                     </div>
@@ -957,13 +957,13 @@ const VendorDeliveryManagement: React.FC<VendorDeliveryManagementProps> = ({ ven
                   </div>
                   
                   <div className="flex gap-2 mt-4">
-                    <button className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition-colors">
+                    <button className="px-3 py-1 bg-[#eef6ea] text-[#1b5e20] rounded text-sm hover:bg-[#cfe0c8] transition-colors">
                       Contacter
                     </button>
                     <button className="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200 transition-colors">
                       Historique
                     </button>
-                    <button className="px-3 py-1 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200 transition-colors">
+                    <button className="px-3 py-1 bg-[#eef6ea] text-[#1b5e20] rounded text-sm hover:bg-[#cfe0c8] transition-colors">
                       Localiser
                     </button>
                   </div>

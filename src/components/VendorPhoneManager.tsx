@@ -176,7 +176,7 @@ export const VendorPhoneManager: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1b5e20]"></div>
       </div>
     );
   }
@@ -197,7 +197,7 @@ export const VendorPhoneManager: React.FC = () => {
             <div className="flex space-x-2">
               <button
                 onClick={handleAnswerCall}
-                className="bg-white text-green-600 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className="bg-white text-[#1b5e20] px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 Répondre
               </button>
@@ -220,7 +220,7 @@ export const VendorPhoneManager: React.FC = () => {
         </div>
         <button
           onClick={() => setShowAddNumber(true)}
-          className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
+          className="bg-[#1b5e20] text-white px-4 py-2 rounded-lg hover:bg-[#16381a] transition-colors flex items-center space-x-2"
         >
           <Plus className="h-5 w-5" />
           <span>Ajouter un numéro</span>
@@ -237,7 +237,7 @@ export const VendorPhoneManager: React.FC = () => {
                 {phoneNumbers.filter(n => n.status === 'active').length}
               </p>
             </div>
-            <Phone className="h-8 w-8 text-green-500" />
+            <Phone className="h-8 w-8 text-[#66bb6a]" />
           </div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
@@ -250,7 +250,7 @@ export const VendorPhoneManager: React.FC = () => {
                 ).length}
               </p>
             </div>
-            <PhoneCall className="h-8 w-8 text-blue-500" />
+            <PhoneCall className="h-8 w-8 text-[#1b5e20]" />
           </div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
@@ -261,7 +261,7 @@ export const VendorPhoneManager: React.FC = () => {
                 {formatDuration(callHistory.reduce((acc, call) => acc + call.duration, 0))}
               </p>
             </div>
-            <User className="h-8 w-8 text-purple-500" />
+            <User className="h-8 w-8 text-[#1b5e20]" />
           </div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
@@ -272,7 +272,7 @@ export const VendorPhoneManager: React.FC = () => {
                 {phoneNumbers.filter(n => n.voicemailEnabled).length}
               </p>
             </div>
-            <Building className="h-8 w-8 text-orange-500" />
+            <Building className="h-8 w-8 text-[#1b5e20]" />
           </div>
         </div>
       </div>
@@ -287,11 +287,11 @@ export const VendorPhoneManager: React.FC = () => {
             <div key={number.id} className="px-6 py-4 flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className={`p-2 rounded-full ${
-                  number.status === 'active' ? 'bg-green-100' :
+                  number.status === 'active' ? 'bg-[#eef6ea]' :
                   number.status === 'busy' ? 'bg-red-100' : 'bg-gray-100'
                 }`}>
                   <Phone className={`h-5 w-5 ${
-                    number.status === 'active' ? 'text-green-600' :
+                    number.status === 'active' ? 'text-[#1b5e20]' :
                     number.status === 'busy' ? 'text-red-600' : 'text-gray-400'
                   }`} />
                 </div>
@@ -300,7 +300,7 @@ export const VendorPhoneManager: React.FC = () => {
                   <p className="text-sm text-gray-600">Poste: {number.extension} • {number.assignedTo}</p>
                   <div className="flex items-center space-x-2 mt-1">
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      number.status === 'active' ? 'bg-green-100 text-green-800' :
+                      number.status === 'active' ? 'bg-[#eef6ea] text-[#1b5e20]' :
                       number.status === 'busy' ? 'bg-red-100 text-red-800' :
                       'bg-gray-100 text-gray-800'
                     }`}>
@@ -308,7 +308,7 @@ export const VendorPhoneManager: React.FC = () => {
                        number.status === 'busy' ? 'Occupé' : 'Inactif'}
                     </span>
                     {number.voicemailEnabled && (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#eef6ea] text-[#1b5e20]">
                         Messagerie
                       </span>
                     )}
@@ -321,7 +321,7 @@ export const VendorPhoneManager: React.FC = () => {
                   className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
                     number.status === 'active'
                       ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                      : 'bg-green-100 text-green-700 hover:bg-green-200'
+                      : 'bg-[#eef6ea] text-[#1b5e20] hover:bg-[#cfe0c8]'
                   }`}
                 >
                   {number.status === 'active' ? 'Désactiver' : 'Activer'}
@@ -348,13 +348,13 @@ export const VendorPhoneManager: React.FC = () => {
             <div key={call.id} className="px-6 py-3 flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className={`p-1 rounded-full ${
-                  call.type === 'incoming' ? 'bg-blue-100' :
-                  call.type === 'outgoing' ? 'bg-green-100' : 'bg-red-100'
+                  call.type === 'incoming' ? 'bg-[#eef6ea]' :
+                  call.type === 'outgoing' ? 'bg-[#eef6ea]' : 'bg-red-100'
                 }`}>
                   {call.type === 'incoming' ? (
-                    <PhoneCall className="h-4 w-4 text-blue-600" />
+                    <PhoneCall className="h-4 w-4 text-[#1b5e20]" />
                   ) : call.type === 'outgoing' ? (
-                    <PhoneCall className="h-4 w-4 text-green-600" />
+                    <PhoneCall className="h-4 w-4 text-[#1b5e20]" />
                   ) : (
                     <PhoneOff className="h-4 w-4 text-red-600" />
                   )}
@@ -369,9 +369,9 @@ export const VendorPhoneManager: React.FC = () => {
                 </div>
               </div>
               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                call.status === 'completed' ? 'bg-green-100 text-green-800' :
+                call.status === 'completed' ? 'bg-[#eef6ea] text-[#1b5e20]' :
                 call.status === 'failed' ? 'bg-red-100 text-red-800' :
-                'bg-yellow-100 text-yellow-800'
+                'bg-[#fff4d6] text-[#8f4b00]'
               }`}>
                 {call.status === 'completed' ? 'Terminé' :
                  call.status === 'failed' ? 'Échoué' : 'En cours'}
@@ -393,7 +393,7 @@ export const VendorPhoneManager: React.FC = () => {
                   type="text"
                   value={newNumber.extension}
                   onChange={(e) => setNewNumber({ ...newNumber, extension: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent"
                   placeholder="Ex: 102"
                 />
               </div>
@@ -402,7 +402,7 @@ export const VendorPhoneManager: React.FC = () => {
                 <select
                   value={newNumber.type}
                   onChange={(e) => setNewNumber({ ...newNumber, type: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent"
                 >
                   <option value="department">Département</option>
                   <option value="mobile">Mobile</option>
@@ -418,7 +418,7 @@ export const VendorPhoneManager: React.FC = () => {
               </button>
               <button
                 onClick={handleAddNumber}
-                className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                className="bg-[#1b5e20] text-white px-4 py-2 rounded-lg hover:bg-[#16381a] transition-colors"
               >
                 Ajouter
               </button>

@@ -55,11 +55,11 @@ export default function AdminNavigation() {
       <div className="mt-4 px-4">
         <button
           onClick={toggleTheme}
-          className="p-3 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-200 transform hover:scale-105 active:scale-95 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50 w-full flex items-center justify-center space-x-2"
+          className="p-3 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-200 transform hover:scale-105 active:scale-95 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/30 focus:ring-opacity-50 w-full flex items-center justify-center space-x-2"
           title={isDark ? "Passer en mode jour" : "Passer en mode nuit"}
         >
           {isDark ? (
-            <Sun className="h-5 w-5 text-yellow-500 transition-transform duration-300 hover:rotate-180" />
+            <Sun className="h-5 w-5 text-[#8f4b00] transition-transform duration-300 hover:rotate-180" />
           ) : (
             <Moon className="h-5 w-5 text-gray-600 transition-transform duration-300 hover:rotate-12" />
           )}
@@ -81,7 +81,7 @@ export default function AdminNavigation() {
                   }}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all text-left cursor-pointer active:scale-95 ${
                     isActive(item.href)
-                      ? "bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border-l-4 border-orange-600 dark:border-orange-500"
+                      ? "bg-[#eef6ea] dark:bg-[#17331c]/20 text-[#1b5e20] dark:text-[#66bb6a] border-l-4 border-[#cfe0c8] dark:border-[#2e5d34]"
                       : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white hover:translate-x-1"
                   }`}
                 >

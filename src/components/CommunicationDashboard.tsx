@@ -183,8 +183,8 @@ export const CommunicationDashboard: React.FC<CommunicationDashboardProps> = ({
         </h2>
         <div className="flex items-center space-x-2">
           <div className={`w-3 h-3 rounded-full ${
-            connectionStatus === 'connected' ? 'bg-green-500' : 
-            connectionStatus === 'connecting' ? 'bg-yellow-500' : 'bg-red-500'
+            connectionStatus === 'connected' ? 'bg-[#eef6ea]' : 
+            connectionStatus === 'connecting' ? 'bg-[#ffa726]' : 'bg-red-500'
           }`}></div>
           <span className="text-sm text-gray-600">
             {connectionStatus === 'connected' ? 'Connecté' : 
@@ -194,14 +194,14 @@ export const CommunicationDashboard: React.FC<CommunicationDashboardProps> = ({
       </div>
 
       {/* Configuration SIP */}
-      <div className="bg-blue-50 rounded-lg p-4 mb-6">
+      <div className="bg-[#eef6ea] rounded-lg p-4 mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-blue-800">Numéro SIP</h3>
-            <p className="text-blue-600">{sipConfig.number}</p>
+            <h3 className="text-lg font-semibold text-[#1b5e20]">Numéro SIP</h3>
+            <p className="text-[#1b5e20]">{sipConfig.number}</p>
             <p className={`text-sm ${
-              sipConfig.status === 'connected' ? 'text-green-600' : 
-              sipConfig.status === 'registering' ? 'text-yellow-600' : 'text-red-600'
+              sipConfig.status === 'connected' ? 'text-[#1b5e20]' : 
+              sipConfig.status === 'registering' ? 'text-[#8f4b00]' : 'text-red-600'
             }`}>
               {sipConfig.status === 'connected' ? '✅ Enregistré' : 
                sipConfig.status === 'registering' ? '⏳ Enregistrement...' : '❌ Non enregistré'}
@@ -209,7 +209,7 @@ export const CommunicationDashboard: React.FC<CommunicationDashboardProps> = ({
           </div>
           <button
             onClick={() => setShowSettings(!showSettings)}
-            className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="p-2 bg-[#1b5e20] text-white rounded-lg hover:bg-[#16381a]"
           >
             <Settings className="w-5 h-5" />
           </button>
@@ -217,11 +217,11 @@ export const CommunicationDashboard: React.FC<CommunicationDashboardProps> = ({
       </div>
 
       {/* Mode Live Shopping */}
-      <div className="bg-purple-50 rounded-lg p-4 mb-6">
+      <div className="bg-[#eef6ea] rounded-lg p-4 mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-purple-800">Mode Live Shopping</h3>
-            <p className="text-purple-600">
+            <h3 className="text-lg font-semibold text-[#1b5e20]">Mode Live Shopping</h3>
+            <p className="text-[#1b5e20]">
               {liveShoppingMode ? `🎥 En direct avec ${participants} participants` : 'Arrêté'}
             </p>
           </div>
@@ -230,7 +230,7 @@ export const CommunicationDashboard: React.FC<CommunicationDashboardProps> = ({
             className={`px-4 py-2 rounded-lg font-medium ${
               liveShoppingMode 
                 ? 'bg-red-600 text-white hover:bg-red-700' 
-                : 'bg-purple-600 text-white hover:bg-purple-700'
+                : 'bg-[#1b5e20] text-white hover:bg-[#16381a]'
             }`}
           >
             {liveShoppingMode ? 'Arrêter le Live' : 'Démarrer le Live'}
@@ -247,12 +247,12 @@ export const CommunicationDashboard: React.FC<CommunicationDashboardProps> = ({
             value={dialNumber}
             onChange={(e) => setDialNumber(e.target.value)}
             placeholder="+33XXXXXXXXX"
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/30"
           />
           <button
             onClick={handleMakeCall}
             disabled={!dialNumber}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center space-x-2"
+            className="px-4 py-2 bg-[#1b5e20] text-white rounded-lg hover:bg-[#16381a] disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center space-x-2"
           >
             <PhoneCall className="w-4 h-4" />
             <span>Appeler</span>
@@ -266,7 +266,7 @@ export const CommunicationDashboard: React.FC<CommunicationDashboardProps> = ({
           <h3 className="text-lg font-semibold text-gray-800 mb-3">Appels Actifs</h3>
           <div className="space-y-3">
             {activeCalls.map((call) => (
-              <div key={call.id} className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div key={call.id} className="bg-[#fff4d6] border border-[#cfe0c8] rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-gray-800">
@@ -283,7 +283,7 @@ export const CommunicationDashboard: React.FC<CommunicationDashboardProps> = ({
                     {call.status === 'ringing' && call.type === 'incoming' && (
                       <button
                         onClick={() => handleAnswerCall(call.id)}
-                        className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                        className="p-2 bg-[#1b5e20] text-white rounded-lg hover:bg-[#16381a]"
                       >
                         <PhoneCall className="w-4 h-4" />
                       </button>
@@ -324,30 +324,30 @@ export const CommunicationDashboard: React.FC<CommunicationDashboardProps> = ({
 
       {/* Statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-blue-50 rounded-lg p-4">
+        <div className="bg-[#eef6ea] rounded-lg p-4">
           <div className="flex items-center space-x-3">
-            <Phone className="w-8 h-8 text-blue-600" />
+            <Phone className="w-8 h-8 text-[#1b5e20]" />
             <div>
-              <p className="text-2xl font-bold text-blue-800">{callHistory.length}</p>
-              <p className="text-blue-600">Appels totaux</p>
+              <p className="text-2xl font-bold text-[#1b5e20]">{callHistory.length}</p>
+              <p className="text-[#1b5e20]">Appels totaux</p>
             </div>
           </div>
         </div>
-        <div className="bg-green-50 rounded-lg p-4">
+        <div className="bg-[#eef6ea] rounded-lg p-4">
           <div className="flex items-center space-x-3">
-            <Users className="w-8 h-8 text-green-600" />
+            <Users className="w-8 h-8 text-[#1b5e20]" />
             <div>
-              <p className="text-2xl font-bold text-green-800">{activeCalls.length}</p>
-              <p className="text-green-600">Appels actifs</p>
+              <p className="text-2xl font-bold text-[#1b5e20]">{activeCalls.length}</p>
+              <p className="text-[#1b5e20]">Appels actifs</p>
             </div>
           </div>
         </div>
-        <div className="bg-purple-50 rounded-lg p-4">
+        <div className="bg-[#eef6ea] rounded-lg p-4">
           <div className="flex items-center space-x-3">
-            <Activity className="w-8 h-8 text-purple-600" />
+            <Activity className="w-8 h-8 text-[#1b5e20]" />
             <div>
-              <p className="text-2xl font-bold text-purple-800">{participants}</p>
-              <p className="text-purple-600">Participants live</p>
+              <p className="text-2xl font-bold text-[#1b5e20]">{participants}</p>
+              <p className="text-[#1b5e20]">Participants live</p>
             </div>
           </div>
         </div>
@@ -367,7 +367,7 @@ export const CommunicationDashboard: React.FC<CommunicationDashboardProps> = ({
                   type="tel"
                   value={sipConfig.number}
                   onChange={(e) => setSipConfig(prev => ({ ...prev, number: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/30"
                 />
               </div>
               <div className="flex items-center justify-between">
@@ -375,7 +375,7 @@ export const CommunicationDashboard: React.FC<CommunicationDashboardProps> = ({
                 <button
                   onClick={handleLiveShoppingToggle}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    liveShoppingMode ? 'bg-blue-600' : 'bg-gray-200'
+                    liveShoppingMode ? 'bg-[#1b5e20]' : 'bg-gray-200'
                   }`}
                 >
                   <span
@@ -398,7 +398,7 @@ export const CommunicationDashboard: React.FC<CommunicationDashboardProps> = ({
                   // Sauvegarder les paramètres
                   setShowSettings(false);
                 }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="px-4 py-2 bg-[#1b5e20] text-white rounded-lg hover:bg-[#16381a]"
               >
                 Sauvegarder
               </button>

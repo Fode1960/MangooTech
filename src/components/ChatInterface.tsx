@@ -32,9 +32,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '', compact =
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const contacts = [
-    { id: 'support', name: 'Support Mangoo', avatar: 'S', status: 'online', role: 'Support', color: 'bg-green-500' },
-    { id: 'vendor_1', name: 'Vendeur Mode', avatar: 'V', status: 'offline', role: 'Vendeur', color: 'bg-orange-500' },
-    { id: 'delivery_1', name: 'Livreur Express', avatar: 'L', status: 'online', role: 'Livreur', color: 'bg-blue-500' }
+    { id: 'support', name: 'Support Mangoo', avatar: 'S', status: 'online', role: 'Support', color: 'bg-[#eef6ea]' },
+    { id: 'vendor_1', name: 'Vendeur Mode', avatar: 'V', status: 'offline', role: 'Vendeur', color: 'bg-[#1b5e20]' },
+    { id: 'delivery_1', name: 'Livreur Express', avatar: 'L', status: 'online', role: 'Livreur', color: 'bg-[#1b5e20]' }
   ];
 
   const emojis = ['😀', '😂', '😍', '🤔', '👍', '👎', '❤️', '🎉', '🚀', '💡', '🔥', '✅', '⚠️', '📦', '🚚'];
@@ -121,7 +121,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '', compact =
       return (
         <div className="flex items-center gap-1 ml-2">
           {message.isRead ? (
-            <CheckCheck className="w-4 h-4 text-blue-500" />
+            <CheckCheck className="w-4 h-4 text-[#1b5e20]" />
           ) : (
             <CheckCheck className="w-4 h-4 text-gray-400" />
           )}
@@ -152,7 +152,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '', compact =
             </div>
           )}
           
-          <div className={`relative group ${isOwnMessage ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-900'} rounded-2xl px-4 py-2`}>
+          <div className={`relative group ${isOwnMessage ? 'bg-[#1b5e20] text-white' : 'bg-gray-100 text-gray-900'} rounded-2xl px-4 py-2`}>
             <div className="text-sm break-words">
               {message.content}
             </div>
@@ -179,7 +179,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '', compact =
         onClick={() => setActiveConversation(conversation)}
         className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 ${
           isActive 
-            ? 'bg-blue-50 border-l-4 border-blue-500' 
+            ? 'bg-[#eef6ea] border-l-4 border-[#cfe0c8]' 
             : 'hover:bg-gray-50 border-l-4 border-transparent'
         }`}
       >
@@ -188,7 +188,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '', compact =
             {otherParticipant?.avatar || otherParticipant?.name.charAt(0)}
           </div>
           {otherParticipant?.isOnline && (
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#eef6ea] border-2 border-white rounded-full"></div>
           )}
         </div>
         
@@ -209,7 +209,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '', compact =
               {conversation.lastMessage || 'Aucun message'}
             </p>
             {unreadCount > 0 && (
-              <span className="bg-blue-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
+              <span className="bg-[#1b5e20] text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
                 {unreadCount}
               </span>
             )}
@@ -225,7 +225,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '', compact =
         {/* Header compact */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <MessageCircle className="w-6 h-6 text-blue-500" />
+            <MessageCircle className="w-6 h-6 text-[#1b5e20]" />
             <h3 className="font-semibold text-gray-900">Messages</h3>
             {conversations.some(conv => conv.unreadCount > 0) && (
               <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1">
@@ -270,7 +270,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '', compact =
               >
                 {viewMode === 'conversations' ? <Users className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
               </button>
-              <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-[#eef6ea]' : 'bg-red-500'}`}></div>
             </div>
           </div>
           
@@ -282,7 +282,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '', compact =
               placeholder={viewMode === 'conversations' ? "Rechercher une conversation..." : "Rechercher un contact..."}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent text-sm"
             />
           </div>
         </div>
@@ -308,7 +308,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '', compact =
                   <div className="flex-1">
                     <div className="font-medium text-gray-900">{contact.name}</div>
                     <div className="text-xs text-gray-500 flex items-center gap-1">
-                      <span className={`w-2 h-2 rounded-full ${contact.status === 'online' ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+                      <span className={`w-2 h-2 rounded-full ${contact.status === 'online' ? 'bg-[#eef6ea]' : 'bg-gray-300'}`}></span>
                       {contact.role}
                     </div>
                   </div>
@@ -346,7 +346,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '', compact =
                        activeConversation.participants.find(p => p.id !== 'current-user')?.name.charAt(0)}
                     </div>
                     {activeConversation.participants.find(p => p.id !== 'current-user')?.isOnline && (
-                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-[#eef6ea] border-2 border-white rounded-full"></div>
                     )}
                   </div>
                   <div>
@@ -355,7 +355,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '', compact =
                     </h3>
                     <p className="text-sm text-gray-600">
                       {typingUsers.length > 0 ? (
-                        <span className="text-blue-500">En train d\'écrire...</span>
+                        <span className="text-[#1b5e20]">En train d\'écrire...</span>
                       ) : (
                         activeConversation.participants.find(p => p.id !== 'current-user')?.isOnline ? 'En ligne' : 'Hors ligne'
                       )}
@@ -449,7 +449,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '', compact =
                     onChange={(e) => handleTyping(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Tapez votre message..."
-                    className="w-full resize-none border border-gray-300 rounded-lg px-4 py-2 pr-12 focus:ring-2 focus:ring-blue-500 focus:border-transparent max-h-32"
+                    className="w-full resize-none border border-gray-300 rounded-lg px-4 py-2 pr-12 focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent max-h-32"
                     rows={1}
                   />
                   
@@ -484,7 +484,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '', compact =
                 <button
                   onClick={handleSendMessage}
                   disabled={!newMessage.trim()}
-                  className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="p-2 bg-[#1b5e20] text-white rounded-lg hover:bg-[#16381a] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <Send className="w-5 h-5" />
                 </button>

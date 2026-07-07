@@ -161,10 +161,10 @@ const VendorNotificationCenter: React.FC<VendorNotificationCenterProps> = ({
   // Obtenir l'icône selon le type
   const getNotificationIcon = (type: Notification['type']) => {
     switch (type) {
-      case 'order': return <Package className="w-5 h-5 text-blue-500" />;
-      case 'review': return <MessageCircle className="w-5 h-5 text-yellow-500" />;
+      case 'order': return <Package className="w-5 h-5 text-[#1b5e20]" />;
+      case 'review': return <MessageCircle className="w-5 h-5 text-[#8f4b00]" />;
       case 'alert': return <AlertCircle className="w-5 h-5 text-red-500" />;
-      case 'success': return <CheckCircle className="w-5 h-5 text-green-500" />;
+      case 'success': return <CheckCircle className="w-5 h-5 text-[#66bb6a]" />;
       default: return <Bell className="w-5 h-5 text-gray-500" />;
     }
   };
@@ -173,8 +173,8 @@ const VendorNotificationCenter: React.FC<VendorNotificationCenterProps> = ({
   const getPriorityColor = (priority: Notification['priority']) => {
     switch (priority) {
       case 'high': return 'border-red-400 bg-red-50';
-      case 'medium': return 'border-yellow-400 bg-yellow-50';
-      case 'low': return 'border-green-400 bg-green-50';
+      case 'medium': return 'border-[#cfe0c8] bg-[#fff4d6]';
+      case 'low': return 'border-[#cfe0c8] bg-[#eef6ea]';
       default: return 'border-gray-400 bg-gray-50';
     }
   };
@@ -279,14 +279,14 @@ const VendorNotificationCenter: React.FC<VendorNotificationCenterProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setSoundEnabled(!soundEnabled)}
-                  className={`p-1 rounded ${soundEnabled ? 'text-blue-600 hover:text-blue-700' : 'text-gray-400 hover:text-gray-600'}`}
+                  className={`p-1 rounded ${soundEnabled ? 'text-[#1b5e20] hover:text-[#1b5e20]' : 'text-gray-400 hover:text-gray-600'}`}
                   title={soundEnabled ? 'Son activé' : 'Son désactivé'}
                 >
                   {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                 </button>
                 <button
                   onClick={markAllAsRead}
-                  className="text-sm text-blue-600 hover:text-blue-700"
+                  className="text-sm text-[#1b5e20] hover:text-[#1b5e20]"
                   disabled={unreadCount === 0}
                 >
                   Tout marquer comme lu
@@ -313,7 +313,7 @@ const VendorNotificationCenter: React.FC<VendorNotificationCenterProps> = ({
                     <div
                       key={notification.id}
                       className={`p-4 border-l-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-                        notification.read ? 'bg-white' : 'bg-blue-50'
+                        notification.read ? 'bg-white' : 'bg-[#eef6ea]'
                       } ${getPriorityColor(notification.priority)}`}
                       onClick={() => {
                         markAsRead(notification.id);
@@ -336,7 +336,7 @@ const VendorNotificationCenter: React.FC<VendorNotificationCenterProps> = ({
                                 {formatTimeAgo(notification.timestamp)}
                               </span>
                               {!notification.read && (
-                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                <div className="w-2 h-2 bg-[#1b5e20] rounded-full"></div>
                               )}
                             </div>
                           </div>

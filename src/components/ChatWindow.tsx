@@ -179,7 +179,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     if (message.senderId !== 'vendor_001') return null;
     
     return message.isRead ? (
-      <CheckCheck className="h-3 w-3 text-blue-500" />
+      <CheckCheck className="h-3 w-3 text-[#1b5e20]" />
     ) : (
       <Check className="h-3 w-3 text-gray-400" />
     );
@@ -193,7 +193,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   if (isMinimized) {
     return (
       <div className={`bg-white rounded-lg shadow-lg border border-gray-200 ${className}`}>
-        <div className="flex items-center justify-between p-3 bg-blue-600 text-white rounded-t-lg">
+        <div className="flex items-center justify-between p-3 bg-[#1b5e20] text-white rounded-t-lg">
           <div className="flex items-center space-x-2">
             <img
               src={conversation.customerAvatar}
@@ -202,7 +202,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             />
             <span className="text-sm font-medium truncate">{conversation.customerName}</span>
             {conversation.isOnline && (
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+              <div className="w-2 h-2 bg-[#eef6ea] rounded-full"></div>
             )}
           </div>
           <div className="flex items-center space-x-1">
@@ -215,7 +215,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   priority: 'medium'
                 });
               }}
-              className="p-1 hover:bg-blue-700 rounded"
+              className="p-1 hover:bg-[#16381a] rounded"
               title="Appel audio"
             >
               <Phone className="w-4 h-4" />
@@ -230,14 +230,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 });
                 window.open('/video-call-manager', '_blank', 'width=800,height=600');
               }}
-              className="p-1 hover:bg-blue-700 rounded"
+              className="p-1 hover:bg-[#16381a] rounded"
               title="Appel vidéo"
             >
               <Video className="w-4 h-4" />
             </button>
             <button
               onClick={onMinimize}
-              className="p-1 hover:bg-blue-700 rounded"
+              className="p-1 hover:bg-[#16381a] rounded"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -245,7 +245,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             </button>
             <button
               onClick={onClose}
-              className="p-1 hover:bg-blue-700 rounded"
+              className="p-1 hover:bg-[#16381a] rounded"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -260,7 +260,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   return (
     <div className={`bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-blue-600 text-white rounded-t-lg">
+      <div className="flex items-center justify-between p-4 bg-[#1b5e20] text-white rounded-t-lg">
         <div className="flex items-center space-x-3">
           <img
             src={conversation.customerAvatar}
@@ -269,9 +269,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           />
           <div>
             <h3 className="font-medium">{conversation.customerName}</h3>
-            <div className="flex items-center space-x-2 text-sm text-blue-100">
+            <div className="flex items-center space-x-2 text-sm text-[#ecf7e7]">
               <div className={`w-2 h-2 rounded-full ${
-                conversation.isOnline ? 'bg-green-400' : 'bg-gray-400'
+                conversation.isOnline ? 'bg-[#eef6ea]' : 'bg-gray-400'
               }`}></div>
               <span>{conversation.isOnline ? 'En ligne' : 'Hors ligne'}</span>
               {conversation.isTyping && (
@@ -291,7 +291,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 priority: 'medium'
               });
             }}
-            className="p-2 hover:bg-blue-700 rounded-lg transition-colors"
+            className="p-2 hover:bg-[#16381a] rounded-lg transition-colors"
             title="Appel audio"
           >
             <Phone className="h-4 w-4" />
@@ -306,7 +306,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               });
               window.open('/video-call-manager', '_blank', 'width=800,height=600');
             }}
-            className="p-2 hover:bg-blue-700 rounded-lg transition-colors"
+            className="p-2 hover:bg-[#16381a] rounded-lg transition-colors"
             title="Appel vidéo"
           >
             <Video className="h-4 w-4" />
@@ -314,7 +314,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           <div className="relative">
             <button
               onClick={() => setShowDropdown(!showDropdown)}
-              className="p-2 hover:bg-blue-700 rounded-lg transition-colors"
+              className="p-2 hover:bg-[#16381a] rounded-lg transition-colors"
             >
               <MoreVertical className="h-4 w-4" />
             </button>
@@ -348,7 +348,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           {onMinimize && (
             <button
               onClick={onMinimize}
-              className="p-2 hover:bg-blue-700 rounded-lg transition-colors"
+              className="p-2 hover:bg-[#16381a] rounded-lg transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -358,7 +358,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           {onClose && (
             <button
               onClick={onClose}
-              className="p-2 hover:bg-blue-700 rounded-lg transition-colors"
+              className="p-2 hover:bg-[#16381a] rounded-lg transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -386,12 +386,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             >
               <div className={`max-w-xs px-3 py-2 rounded-lg ${
                 message.senderId === 'vendor_001'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-[#1b5e20] text-white'
                   : 'bg-white text-gray-900 border border-gray-200'
               }`}>
                 {message.type === 'file' && (
                   <div className={`flex items-center space-x-2 mb-1 p-2 rounded ${
-                    message.senderId === 'vendor_001' ? 'bg-blue-700' : 'bg-gray-100'
+                    message.senderId === 'vendor_001' ? 'bg-[#16381a]' : 'bg-gray-100'
                   }`}>
                     {getFileIcon(message.type)}
                     <div className="flex-1 min-w-0">
@@ -420,7 +420,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 )}
                 
                 <div className={`flex items-center justify-end mt-1 space-x-1 text-xs ${
-                  message.senderId === 'vendor_001' ? 'text-blue-100' : 'text-gray-500'
+                  message.senderId === 'vendor_001' ? 'text-[#ecf7e7]' : 'text-gray-500'
                 }`}>
                   <span>{formatMessageTime(message.timestamp)}</span>
                   {getMessageStatusIcon(message)}
@@ -484,13 +484,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             onKeyPress={handleKeyPress}
             placeholder="Tapez votre message..."
             rows={1}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent transition-all"
           />
           
           <button
             onClick={handleSendMessage}
             disabled={!newMessage.trim()}
-            className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            className="p-2 bg-[#1b5e20] text-white rounded-lg hover:bg-[#16381a] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

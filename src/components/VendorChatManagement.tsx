@@ -39,9 +39,9 @@ const VendorChatManagement: React.FC = () => {
   const [viewMode, setViewMode] = useState<'conversations' | 'contacts'>('conversations');
 
   const contacts = [
-    { id: 'support', name: 'Support Mangoo', avatar: 'S', status: 'online', role: 'Support', color: 'bg-green-500' },
-    { id: 'supplier_1', name: 'Fournisseur Chine', avatar: 'F', status: 'offline', role: 'Fournisseur', color: 'bg-purple-500' },
-    { id: 'delivery_1', name: 'Livreur Express', avatar: 'L', status: 'online', role: 'Livreur', color: 'bg-blue-500' }
+    { id: 'support', name: 'Support Mangoo', avatar: 'S', status: 'online', role: 'Support', color: 'bg-[#1b5e20]' },
+    { id: 'supplier_1', name: 'Fournisseur Chine', avatar: 'F', status: 'offline', role: 'Fournisseur', color: 'bg-[#1b5e20]' },
+    { id: 'delivery_1', name: 'Livreur Express', avatar: 'L', status: 'online', role: 'Livreur', color: 'bg-[#1b5e20]' }
   ];
 
   // Données de démonstration
@@ -254,7 +254,7 @@ const VendorChatManagement: React.FC = () => {
               placeholder={viewMode === 'conversations' ? "Rechercher une conversation..." : "Rechercher un contact..."}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent"
             />
           </div>
 
@@ -267,7 +267,7 @@ const VendorChatManagement: React.FC = () => {
                   onClick={() => setFilterStatus(status as any)}
                   className={`px-3 py-1 rounded-full text-xs font-medium ${
                     filterStatus === status
-                      ? 'bg-blue-100 text-blue-800'
+                      ? 'bg-[#eef6ea] text-[#1b5e20]'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
@@ -298,7 +298,7 @@ const VendorChatManagement: React.FC = () => {
                    <div className="flex-1">
                      <div className="font-medium text-gray-900">{contact.name}</div>
                      <div className="text-xs text-gray-500 flex items-center gap-1">
-                       <span className={`w-2 h-2 rounded-full ${contact.status === 'online' ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+                       <span className={`w-2 h-2 rounded-full ${contact.status === 'online' ? 'bg-[#1b5e20]' : 'bg-gray-300'}`}></span>
                        {contact.role}
                      </div>
                    </div>
@@ -311,7 +311,7 @@ const VendorChatManagement: React.FC = () => {
                 key={conversation.id}
                 onClick={() => setSelectedConversation(conversation)}
                 className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${
-                  selectedConversation?.id === conversation.id ? 'bg-blue-50 border-blue-200' : ''
+                  selectedConversation?.id === conversation.id ? 'bg-[#eef6ea] border-[#cfe0c8]' : ''
                 }`}
               >
                 <div className="flex items-start space-x-3">
@@ -322,7 +322,7 @@ const VendorChatManagement: React.FC = () => {
                       className="w-12 h-12 rounded-full object-cover"
                     />
                     {conversation.isOnline && (
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#1b5e20] rounded-full border-2 border-white"></div>
                     )}
                   </div>
                   
@@ -341,7 +341,7 @@ const VendorChatManagement: React.FC = () => {
                     </p>
                     
                     {conversation.unreadCount > 0 && (
-                      <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-white bg-blue-600 rounded-full mt-1">
+                      <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-white bg-[#1b5e20] rounded-full mt-1">
                         {conversation.unreadCount}
                       </span>
                     )}
@@ -380,7 +380,7 @@ const VendorChatManagement: React.FC = () => {
                   </h3>
                   <div className="flex items-center space-x-2">
                     <div className={`w-2 h-2 rounded-full ${
-                      selectedConversation.isOnline ? 'bg-green-500' : 'bg-gray-400'
+                      selectedConversation.isOnline ? 'bg-[#1b5e20]' : 'bg-gray-400'
                     }`}></div>
                     <span className="text-sm text-gray-500">
                       {selectedConversation.isOnline ? 'En ligne' : 'Hors ligne'}
@@ -428,12 +428,12 @@ const VendorChatManagement: React.FC = () => {
               >
                 <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                   message.senderId === 'vendor_001'
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-[#1b5e20] text-white'
                     : 'bg-gray-200 text-gray-900'
                 }`}>
                   <p className="text-sm">{message.content}</p>
                   <div className={`flex items-center justify-end mt-1 text-xs ${
-                    message.senderId === 'vendor_001' ? 'text-blue-100' : 'text-gray-500'
+                    message.senderId === 'vendor_001' ? 'text-[#ecf7e7]' : 'text-gray-500'
                   }`}>
                     <span>{message.timestamp.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
                     {message.senderId === 'vendor_001' && (
@@ -469,13 +469,13 @@ const VendorChatManagement: React.FC = () => {
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                 placeholder="Tapez votre message..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent"
               />
               
               <button
                 onClick={sendMessage}
                 disabled={!newMessage.trim()}
-                className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="p-2 bg-[#1b5e20] text-white rounded-lg hover:bg-[#16381a] disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
                 <Send className="h-5 w-5" />
               </button>

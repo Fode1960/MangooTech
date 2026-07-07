@@ -134,7 +134,7 @@ const VendorRevenueDashboard: React.FC<VendorRevenueDashboardProps> = ({ vendorI
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1b5e20]"></div>
       </div>
     );
   }
@@ -151,7 +151,7 @@ const VendorRevenueDashboard: React.FC<VendorRevenueDashboardProps> = ({ vendorI
           <select
             value={selectedPeriod}
             onChange={(e) => setSelectedPeriod(e.target.value as any)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent"
           >
             <option value="week">Cette semaine</option>
             <option value="month">Ce mois</option>
@@ -160,7 +160,7 @@ const VendorRevenueDashboard: React.FC<VendorRevenueDashboardProps> = ({ vendorI
           </select>
           <button
             onClick={exportData}
-            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-[#1b5e20] text-white rounded-lg hover:bg-[#1b5e20] transition-colors flex items-center gap-2"
           >
             <Download className="w-4 h-4" />
             Exporter
@@ -175,13 +175,13 @@ const VendorRevenueDashboard: React.FC<VendorRevenueDashboardProps> = ({ vendorI
             <div>
               <p className="text-sm font-medium text-gray-600">Revenu Total</p>
               <p className="text-3xl font-bold text-gray-900">{formatCurrency(totals.totalRevenue)}</p>
-              <div className={`flex items-center gap-1 mt-1 text-sm ${revenueChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`flex items-center gap-1 mt-1 text-sm ${revenueChange >= 0 ? 'text-[#1b5e20]' : 'text-red-600'}`}>
                 {revenueChange >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                 <span>{Math.abs(revenueChange).toFixed(1)}% vs période précédente</span>
               </div>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <DollarSign className="w-6 h-6 text-blue-600" />
+            <div className="bg-[#eef6ea] p-3 rounded-full">
+              <DollarSign className="w-6 h-6 text-[#1b5e20]" />
             </div>
           </div>
         </div>
@@ -191,13 +191,13 @@ const VendorRevenueDashboard: React.FC<VendorRevenueDashboardProps> = ({ vendorI
             <div>
               <p className="text-sm font-medium text-gray-600">Commandes</p>
               <p className="text-3xl font-bold text-gray-900">{formatNumber(totals.totalOrders)}</p>
-              <div className={`flex items-center gap-1 mt-1 text-sm ${ordersChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`flex items-center gap-1 mt-1 text-sm ${ordersChange >= 0 ? 'text-[#1b5e20]' : 'text-red-600'}`}>
                 {ordersChange >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                 <span>{Math.abs(ordersChange).toFixed(1)}% vs période précédente</span>
               </div>
             </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <ShoppingCart className="w-6 h-6 text-green-600" />
+            <div className="bg-[#eef6ea] p-3 rounded-full">
+              <ShoppingCart className="w-6 h-6 text-[#1b5e20]" />
             </div>
           </div>
         </div>
@@ -209,8 +209,8 @@ const VendorRevenueDashboard: React.FC<VendorRevenueDashboardProps> = ({ vendorI
               <p className="text-3xl font-bold text-gray-900">{formatCurrency(totals.totalCommission)}</p>
               <p className="text-xs text-gray-500 mt-1">Frais de la plateforme</p>
             </div>
-            <div className="bg-yellow-100 p-3 rounded-full">
-              <DollarSign className="w-6 h-6 text-yellow-600" />
+            <div className="bg-[#fff4d6] p-3 rounded-full">
+              <DollarSign className="w-6 h-6 text-[#8f4b00]" />
             </div>
           </div>
         </div>
@@ -222,8 +222,8 @@ const VendorRevenueDashboard: React.FC<VendorRevenueDashboardProps> = ({ vendorI
               <p className="text-3xl font-bold text-gray-900">{formatCurrency(totals.totalNetRevenue)}</p>
               <p className="text-xs text-gray-500 mt-1">Après commission</p>
             </div>
-            <div className="bg-purple-100 p-3 rounded-full">
-              <DollarSign className="w-6 h-6 text-purple-600" />
+            <div className="bg-[#eef6ea] p-3 rounded-full">
+              <DollarSign className="w-6 h-6 text-[#1b5e20]" />
             </div>
           </div>
         </div>
@@ -357,7 +357,7 @@ const VendorRevenueDashboard: React.FC<VendorRevenueDashboardProps> = ({ vendorI
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {formatCurrency(day.commission)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#1b5e20]">
                     {formatCurrency(day.netRevenue)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

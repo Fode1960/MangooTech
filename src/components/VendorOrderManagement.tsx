@@ -261,11 +261,11 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
 
   const getStatusColor = (status: Order['status']) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'confirmed': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'preparing': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'pending': return 'bg-[#fff4d6] text-[#8f4b00] border-[#cfe0c8]';
+      case 'confirmed': return 'bg-[#eef6ea] text-[#1b5e20] border-[#cfe0c8]';
+      case 'preparing': return 'bg-[#eef6ea] text-[#1b5e20] border-[#cfe0c8]';
       case 'shipped': return 'bg-[#eef6ea] text-[#1b5e20] border-[#cfe0c8]';
-      case 'delivered': return 'bg-green-100 text-green-800 border-green-200';
+      case 'delivered': return 'bg-[#eef6ea] text-[#1b5e20] border-[#cfe0c8]';
       case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
@@ -273,8 +273,8 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
 
   const getPaymentStatusColor = (paymentStatus: Order['paymentStatus']) => {
     switch (paymentStatus) {
-      case 'paid': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'paid': return 'bg-[#eef6ea] text-[#1b5e20]';
+      case 'pending': return 'bg-[#fff4d6] text-[#8f4b00]';
       case 'failed': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -295,7 +295,7 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1b5e20]"></div>
       </div>
     );
   }
@@ -312,14 +312,14 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
               {newOrdersCount > 0 && (
                 <button
                   onClick={() => setNewOrdersCount(0)}
-                  className="text-xs text-blue-600 hover:text-blue-800 mt-1"
+                  className="text-xs text-[#1b5e20] hover:text-[#1b5e20] mt-1"
                 >
                    {newOrdersCount} nouvelle{newOrdersCount > 1 ? 's' : ''} commande{newOrdersCount > 1 ? 's' : ''}
                 </button>
               )}
             </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Package className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 bg-[#eef6ea] rounded-lg flex items-center justify-center">
+              <Package className="w-6 h-6 text-[#1b5e20]" />
             </div>
           </div>
         </div>
@@ -328,10 +328,10 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Commandes en Attente</p>
-              <p className="text-3xl font-bold text-orange-600">{stats.pendingOrders}</p>
+              <p className="text-3xl font-bold text-[#1b5e20]">{stats.pendingOrders}</p>
             </div>
-            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-              <Clock className="w-6 h-6 text-orange-600" />
+            <div className="w-12 h-12 bg-[#eef6ea] rounded-lg flex items-center justify-center">
+              <Clock className="w-6 h-6 text-[#1b5e20]" />
             </div>
           </div>
           {newOrdersCount > 0 && (
@@ -345,12 +345,12 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Revenu Total</p>
-              <p className="text-3xl font-bold text-green-600">
+              <p className="text-3xl font-bold text-[#1b5e20]">
                 {stats.totalRevenue.toLocaleString('fr-FR', { style: 'currency', currency: 'XOF' })}
               </p>
             </div>
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-green-600" />
+            <div className="w-12 h-12 bg-[#eef6ea] rounded-lg flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-[#1b5e20]" />
             </div>
           </div>
         </div>
@@ -359,12 +359,12 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Panier Moyen</p>
-              <p className="text-3xl font-bold text-purple-600">
+              <p className="text-3xl font-bold text-[#1b5e20]">
                 {stats.averageOrderValue.toLocaleString('fr-FR', { style: 'currency', currency: 'XOF' })}
               </p>
             </div>
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <BarChart3 className="w-6 h-6 text-purple-600" />
+            <div className="w-12 h-12 bg-[#eef6ea] rounded-lg flex items-center justify-center">
+              <BarChart3 className="w-6 h-6 text-[#1b5e20]" />
             </div>
           </div>
         </div>
@@ -483,7 +483,7 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setSelectedOrder(order)}
-                        className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
+                        className="text-[#1b5e20] hover:text-[#ecf7e7] p-1 rounded hover:bg-[#eef6ea]"
                         title="Voir les détails"
                       >
                         <Eye className="w-4 h-4" />
@@ -492,7 +492,7 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
                         {order.status === 'pending' && (
                           <button
                             onClick={() => updateOrderStatus(order.id, 'confirmed')}
-                            className="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700"
+                            className="bg-[#1b5e20] text-white px-2 py-1 rounded text-xs hover:bg-[#16381a]"
                           >
                             Confirmer
                           </button>
@@ -500,7 +500,7 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
                         {order.status === 'confirmed' && (
                           <button
                             onClick={() => updateOrderStatus(order.id, 'preparing')}
-                            className="bg-purple-600 text-white px-2 py-1 rounded text-xs hover:bg-purple-700"
+                            className="bg-[#1b5e20] text-white px-2 py-1 rounded text-xs hover:bg-[#16381a]"
                           >
                             Préparer
                           </button>
@@ -516,7 +516,7 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
                         {order.status === 'shipped' && (
                           <button
                             onClick={() => updateOrderStatus(order.id, 'delivered')}
-                            className="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700"
+                            className="bg-[#1b5e20] text-white px-2 py-1 rounded text-xs hover:bg-[#16381a]"
                           >
                             Livrer
                           </button>
@@ -649,10 +649,10 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
               </div>
 
               {/* Total */}
-              <div className="mt-6 bg-orange-50 rounded-lg p-4">
+              <div className="mt-6 bg-[#eef6ea] rounded-lg p-4">
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-semibold text-gray-900">Total:</span>
-                  <span className="text-2xl font-bold text-orange-600">
+                  <span className="text-2xl font-bold text-[#1b5e20]">
                     {selectedOrder.totalAmount.toLocaleString('fr-FR', { style: 'currency', currency: 'XOF' })}
                   </span>
                 </div>
@@ -662,13 +662,13 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
               <div className="mt-6 flex gap-3">
                 <button
                   onClick={() => updateOrderStatus(selectedOrder.id, 'confirmed')}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                  className="bg-[#1b5e20] text-white px-4 py-2 rounded-lg hover:bg-[#1b5e20] transition-colors"
                 >
                   Confirmer la commande
                 </button>
                 <button
                   onClick={() => updateOrderStatus(selectedOrder.id, 'preparing')}
-                  className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors"
+                  className="bg-[#1b5e20] text-white px-4 py-2 rounded-lg hover:bg-[#1b5e20] transition-colors"
                 >
                   Marquer en préparation
                 </button>
@@ -680,7 +680,7 @@ const VendorOrderManagement = ({ vendorId }: { vendorId: string }) => {
                 </button>
                 <button
                   onClick={() => updateOrderStatus(selectedOrder.id, 'delivered')}
-                  className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                  className="bg-[#1b5e20] text-white px-4 py-2 rounded-lg hover:bg-[#1b5e20] transition-colors"
                 >
                   Marquer livrée
                 </button>

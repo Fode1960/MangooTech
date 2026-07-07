@@ -156,9 +156,9 @@ export default function VendorStockManager({ vendorId }: VendorStockManagerProps
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'in-stock':
-        return 'text-green-600 bg-green-100 border-green-200';
+        return 'text-[#1b5e20] bg-[#eef6ea] border-[#cfe0c8]';
       case 'low-stock':
-        return 'text-orange-600 bg-orange-100 border-orange-200';
+        return 'text-[#1b5e20] bg-[#eef6ea] border-[#cfe0c8]';
       case 'out-of-stock':
         return 'text-red-600 bg-red-100 border-red-200';
       default:
@@ -210,7 +210,7 @@ export default function VendorStockManager({ vendorId }: VendorStockManagerProps
           </p>
         </div>
         <div className="flex items-center space-x-4 text-sm">
-          <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${isDark ? 'bg-orange-900/20 text-orange-400' : 'bg-orange-100 text-orange-800'}`}>
+          <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${isDark ? 'bg-[#17331c]/20 text-[#66bb6a]' : 'bg-[#eef6ea] text-[#1b5e20]'}`}>
             <AlertCircle className="h-4 w-4" />
             <span>{lowStockCount} Stock faible</span>
           </div>
@@ -315,7 +315,7 @@ export default function VendorStockManager({ vendorId }: VendorStockManagerProps
                         />
                         <button
                           onClick={() => updateStock(product.id, editStock)}
-                          className="text-green-600 hover:text-green-800"
+                          className="text-[#1b5e20] hover:text-[#1b5e20]"
                         >
                           <Save className="h-4 w-4" />
                         </button>
@@ -329,8 +329,8 @@ export default function VendorStockManager({ vendorId }: VendorStockManagerProps
                     ) : (
                       <span className={`text-sm font-medium ${
                         product.stock === 0 ? 'text-red-600' :
-                        product.stock <= product.minStock ? 'text-orange-600' :
-                        'text-green-600'
+                        product.stock <= product.minStock ? 'text-[#1b5e20]' :
+                        'text-[#1b5e20]'
                       }`}>
                         {product.stock}
                       </span>
@@ -358,13 +358,13 @@ export default function VendorStockManager({ vendorId }: VendorStockManagerProps
                           setEditingProduct(product.id);
                           setEditStock(product.stock);
                         }}
-                        className={`${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'}`}
+                        className={`${isDark ? 'text-[#66bb6a] hover:text-[#66bb6a]' : 'text-[#1b5e20] hover:text-[#1b5e20]'}`}
                       >
                         <Edit className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => updateStock(product.id, product.stock + 10)}
-                        className={`${isDark ? 'text-green-400 hover:text-green-300' : 'text-green-600 hover:text-green-800'}`}
+                        className={`${isDark ? 'text-[#66bb6a] hover:text-[#66bb6a]' : 'text-[#1b5e20] hover:text-[#1b5e20]'}`}
                       >
                         <PlusCircle className="h-4 w-4" />
                       </button>

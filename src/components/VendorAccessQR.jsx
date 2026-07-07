@@ -232,7 +232,7 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
     return (
       <div className="bg-white rounded-lg shadow-lg p-6">
         <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1b5e20]"></div>
           <span className="ml-3">Chargement des données d'authentification...</span>
         </div>
       </div>
@@ -260,8 +260,8 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
   // Affichage si aucune donnée
   if (!authData) {
     return (
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-        <div className="text-yellow-800">
+      <div className="bg-[#fff4d6] border border-[#cfe0c8] rounded-lg p-6">
+        <div className="text-[#8f4b00]">
           <h3 className="font-semibold mb-2">Aucune donnée d'authentification</h3>
           <p>Les paramètres d'authentification n'ont pas été configurés pour cette boutique.</p>
         </div>
@@ -280,7 +280,7 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
         <p className="text-gray-600">Informations de connexion pour le vendeur</p>
       </div>
 
-      <div className="mb-6 rounded-lg border border-orange-200 bg-orange-50 p-4">
+      <div className="mb-6 rounded-lg border border-[#cfe0c8] bg-[#eef6ea] p-4">
         <h3 className="text-lg font-semibold text-gray-800 mb-2">3 façons d'ouvrir la boutique</h3>
         <p className="text-sm text-gray-700">Le client peut ouvrir la boutique avec le lien, le QR code ou le PIN. Le vendeur continue de se connecter avec son login et son mot de passe.</p>
       </div>
@@ -305,14 +305,14 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
                 />
                 <button
                   onClick={() => copyToClipboard(authData.vendor_login, 'login')}
-                  className="px-3 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-2 bg-[#1b5e20] text-white rounded-r-md hover:bg-[#16381a] focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/30"
                   title="Copier"
                 >
                   <Copy size={16} />
                 </button>
               </div>
               {copiedField === 'login' && (
-                <p className="text-sm text-green-600 mt-1">Copie effectuée.</p>
+                <p className="text-sm text-[#1b5e20] mt-1">Copie effectuée.</p>
               )}
             </div>
 
@@ -337,21 +337,21 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
                 </button>
                 <button
                   onClick={() => copyToClipboard(authData.vendor_password, 'password')}
-                  className="px-3 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-2 bg-[#1b5e20] text-white rounded-r-md hover:bg-[#16381a] focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/30"
                   title="Copier"
                 >
                   <Copy size={16} />
                 </button>
               </div>
               {copiedField === 'password' && (
-                <p className="text-sm text-green-600 mt-1">Copie effectuée.</p>
+                <p className="text-sm text-[#1b5e20] mt-1">Copie effectuée.</p>
               )}
             </div>
 
             {/* Bouton régénérer */}
             <button
               onClick={regeneratePassword}
-              className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="flex items-center px-4 py-2 bg-[#1b5e20] text-white rounded-md hover:bg-[#16381a] focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/30"
             >
               <RefreshCw size={16} className="mr-2" />
               Régénérer le mot de passe
@@ -359,7 +359,7 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
           </div>
 
           {/* URL de la boutique */}
-          <div className="bg-blue-50 rounded-lg p-4">
+          <div className="bg-[#eef6ea] rounded-lg p-4">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Lien de la boutique</h3>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -374,27 +374,27 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
                 />
                 <button
                   onClick={() => copyToClipboard(shopUrl, 'url')}
-                  className="px-3 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-2 bg-[#1b5e20] text-white rounded-r-md hover:bg-[#16381a] focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/30"
                   title="Copier"
                 >
                   <Copy size={16} />
                 </button>
               </div>
               {copiedField === 'url' && (
-                <p className="text-sm text-green-600 mt-1">Copie effectuée.</p>
+                <p className="text-sm text-[#1b5e20] mt-1">Copie effectuée.</p>
               )}
             </div>
             <a
               href={shopUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="inline-block px-4 py-2 bg-[#1b5e20] text-white rounded-md hover:bg-[#16381a] focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/30"
             >
               Ouvrir la boutique
             </a>
           </div>
 
-          <div className="bg-orange-50 rounded-lg p-4">
+          <div className="bg-[#eef6ea] rounded-lg p-4">
             <div className="flex items-start justify-between gap-3 mb-4">
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">PIN de la boutique</h3>
@@ -404,14 +404,14 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
                 type="button"
                 onClick={() => ensurePin('change')}
                 disabled={pinBusy || !shopSlug}
-                className="flex items-center px-3 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-60"
+                className="flex items-center px-3 py-2 bg-[#1b5e20] text-white rounded-md hover:bg-[#16381a] focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/30 disabled:opacity-60"
               >
                 <RefreshCw size={16} className="mr-2" />
                 {pinBusy ? 'Chargement...' : 'Changer le PIN'}
               </button>
             </div>
 
-            <div className="mb-4 rounded-lg border border-orange-200 bg-white px-4 py-5">
+            <div className="mb-4 rounded-lg border border-[#cfe0c8] bg-white px-4 py-5">
               <div className="text-sm font-medium text-gray-700 mb-2">Code PIN</div>
               <div className="text-4xl font-black tracking-widest text-gray-900">{normalizePin(pin) || '------'}</div>
             </div>
@@ -421,7 +421,7 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
                 type="button"
                 onClick={() => copyToClipboard(normalizePin(pin), 'pin')}
                 disabled={!normalizePin(pin)}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
+                className="flex items-center px-4 py-2 bg-[#1b5e20] text-white rounded-md hover:bg-[#16381a] focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/30 disabled:opacity-60"
               >
                 <Copy size={16} className="mr-2" />
                 Copier le PIN
@@ -446,7 +446,7 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
             </div>
 
             {copiedField === 'pin' && (
-              <p className="text-sm text-green-600 mt-2">PIN copié.</p>
+              <p className="text-sm text-[#1b5e20] mt-2">PIN copié.</p>
             )}
             {pinError && (
               <p className="text-sm text-red-600 mt-2">{pinError}</p>
@@ -526,30 +526,30 @@ const VendorAccessQR = ({ shopId, shopName, shopSlug, shopOwnerEmail, shopOwnerP
 
                 toast.success('QR code téléchargé');
               }}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="px-4 py-2 bg-[#1b5e20] text-white rounded-md hover:bg-[#16381a] focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/30"
             >
               Télécharger le QR Code
             </button>
           </div>
 
           {/* Instructions */}
-          <div className="bg-green-50 rounded-lg p-4">
+          <div className="bg-[#eef6ea] rounded-lg p-4">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Instructions pour le vendeur</h3>
             <ol className="text-sm text-gray-700 space-y-2">
               <li className="flex items-start">
-                <span className="bg-green-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mr-3 mt-0.5">1</span>
+                <span className="bg-[#1b5e20] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mr-3 mt-0.5">1</span>
                 <span>Utilisez le nom d'utilisateur et le mot de passe ci-dessus pour vous connecter</span>
               </li>
               <li className="flex items-start">
-                <span className="bg-green-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mr-3 mt-0.5">2</span>
+                <span className="bg-[#1b5e20] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mr-3 mt-0.5">2</span>
                 <span>Le client peut ouvrir la boutique avec le lien, le QR code ou le PIN ci-dessus</span>
               </li>
               <li className="flex items-start">
-                <span className="bg-green-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mr-3 mt-0.5">3</span>
+                <span className="bg-[#1b5e20] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mr-3 mt-0.5">3</span>
                 <span>Partagez le lien URL ou lisez le PIN pour les clients non-lettrés</span>
               </li>
               <li className="flex items-start">
-                <span className="bg-green-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mr-3 mt-0.5">4</span>
+                <span className="bg-[#1b5e20] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mr-3 mt-0.5">4</span>
                 <span>Contactez l'administrateur si vous avez besoin d'aide</span>
               </li>
             </ol>

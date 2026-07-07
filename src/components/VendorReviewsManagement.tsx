@@ -263,8 +263,8 @@ const VendorReviewsManagement = ({ vendorId }: { vendorId: string }) => {
           <Star
             key={star}
             className={`${size} ${
-              star <= rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-            } ${interactive ? 'cursor-pointer hover:text-yellow-400' : ''}`}
+              star <= rating ? 'text-[#ffa726] fill-current' : 'text-gray-300'
+            } ${interactive ? 'cursor-pointer hover:text-[#ffa726]' : ''}`}
           />
         ))}
       </div>
@@ -287,7 +287,7 @@ const VendorReviewsManagement = ({ vendorId }: { vendorId: string }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1b5e20]"></div>
         <span className="ml-2 text-gray-600">Chargement des avis...</span>
       </div>
     );
@@ -299,7 +299,7 @@ const VendorReviewsManagement = ({ vendorId }: { vendorId: string }) => {
       <div className="bg-[#f6faf3] rounded-xl p-6 border border-[#cfe0c8]">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Star className="w-6 h-6 text-yellow-500" />
+            <Star className="w-6 h-6 text-[#8f4b00]" />
             Gestion des Avis Clients
           </h2>
           {stats.pendingReply > 0 && (
@@ -310,40 +310,40 @@ const VendorReviewsManagement = ({ vendorId }: { vendorId: string }) => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-lg p-4 border border-orange-100">
+          <div className="bg-white rounded-lg p-4 border border-[#cfe0c8]">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Note Moyenne</p>
                 <div className="flex items-center gap-2">
                   <span className="text-3xl font-bold text-gray-900">{stats.averageRating}</span>
-                  <span className="text-yellow-500">⭐</span>
+                  <span className="text-[#8f4b00]">⭐</span>
                 </div>
               </div>
-              <Award className="w-8 h-8 text-yellow-500" />
+              <Award className="w-8 h-8 text-[#8f4b00]" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-4 border border-orange-100">
+          <div className="bg-white rounded-lg p-4 border border-[#cfe0c8]">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Avis</p>
                 <p className="text-3xl font-bold text-gray-900">{stats.totalReviews}</p>
               </div>
-              <MessageCircle className="w-8 h-8 text-blue-500" />
+              <MessageCircle className="w-8 h-8 text-[#1b5e20]" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-4 border border-orange-100">
+          <div className="bg-white rounded-lg p-4 border border-[#cfe0c8]">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Avis Répondus</p>
-                <p className="text-3xl font-bold text-green-600">{stats.repliedCount}</p>
+                <p className="text-3xl font-bold text-[#1b5e20]">{stats.repliedCount}</p>
               </div>
-              <Reply className="w-8 h-8 text-green-500" />
+              <Reply className="w-8 h-8 text-[#66bb6a]" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-4 border border-orange-100">
+          <div className="bg-white rounded-lg p-4 border border-[#cfe0c8]">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Réponse Attendue</p>
@@ -363,7 +363,7 @@ const VendorReviewsManagement = ({ vendorId }: { vendorId: string }) => {
             <div key={rating} className="flex items-center gap-3">
               <div className="flex items-center gap-1 w-16">
                 <span className="text-sm font-medium">{rating}</span>
-                <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                <Star className="w-4 h-4 text-[#ffa726] fill-current" />
               </div>
               <div className="flex-1 bg-gray-200 rounded-full h-2">
                 <div
@@ -389,7 +389,7 @@ const VendorReviewsManagement = ({ vendorId }: { vendorId: string }) => {
               placeholder="Rechercher par produit, client ou commentaire..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent"
             />
           </div>
           
@@ -432,14 +432,14 @@ const VendorReviewsManagement = ({ vendorId }: { vendorId: string }) => {
             <div key={review.id} className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                    <User className="w-5 h-5 text-orange-600" />
+                  <div className="w-10 h-10 bg-[#eef6ea] rounded-full flex items-center justify-center">
+                    <User className="w-5 h-5 text-[#1b5e20]" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
                       <h4 className="font-semibold text-gray-900">{review.customerName}</h4>
                       {review.verified && (
-                        <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                        <span className="bg-[#eef6ea] text-[#1b5e20] text-xs px-2 py-1 rounded-full">
                           ✅ Vérifié
                         </span>
                       )}
@@ -476,7 +476,7 @@ const VendorReviewsManagement = ({ vendorId }: { vendorId: string }) => {
 
               <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                 <div className="flex items-center gap-4">
-                  <button className="flex items-center gap-1 text-sm text-gray-500 hover:text-orange-600">
+                  <button className="flex items-center gap-1 text-sm text-gray-500 hover:text-[#1b5e20]">
                     <ThumbsUp className="w-4 h-4" />
                     Utile ({review.helpful})
                   </button>
@@ -484,7 +484,7 @@ const VendorReviewsManagement = ({ vendorId }: { vendorId: string }) => {
                   {!review.vendorReply && (
                     <button
                       onClick={() => handleReply(review)}
-                      className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+                      className="flex items-center gap-1 text-sm text-[#1b5e20] hover:text-[#1b5e20]"
                     >
                       <Reply className="w-4 h-4" />
                       Répondre
@@ -493,22 +493,22 @@ const VendorReviewsManagement = ({ vendorId }: { vendorId: string }) => {
                 </div>
 
                 {review.vendorReply && (
-                  <div className="text-sm text-green-600 flex items-center gap-1">
+                  <div className="text-sm text-[#1b5e20] flex items-center gap-1">
                     Répondu
                   </div>
                 )}
               </div>
 
               {review.vendorReply && (
-                <div className="mt-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+                <div className="mt-4 p-4 bg-[#eef6ea] rounded-lg border-l-4 border-[#cfe0c8]">
                   <div className="flex items-center gap-2 mb-2">
-                    <Reply className="w-4 h-4 text-blue-600" />
-                    <span className="font-medium text-blue-900">Réponse du vendeur</span>
-                    <span className="text-xs text-blue-600">
+                    <Reply className="w-4 h-4 text-[#1b5e20]" />
+                    <span className="font-medium text-[#ecf7e7]">Réponse du vendeur</span>
+                    <span className="text-xs text-[#1b5e20]">
                       {review.replyDate && new Date(review.replyDate).toLocaleDateString('fr-FR')}
                     </span>
                   </div>
-                  <p className="text-blue-800">{review.vendorReply}</p>
+                  <p className="text-[#1b5e20]">{review.vendorReply}</p>
                 </div>
               )}
             </div>
@@ -533,7 +533,7 @@ const VendorReviewsManagement = ({ vendorId }: { vendorId: string }) => {
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               placeholder="Écrivez votre réponse..."
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent resize-none"
               rows={4}
             />
 
@@ -541,7 +541,7 @@ const VendorReviewsManagement = ({ vendorId }: { vendorId: string }) => {
               <button
                 onClick={submitReply}
                 disabled={!replyText.trim()}
-                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="flex-1 bg-[#1b5e20] text-white py-2 px-4 rounded-lg hover:bg-[#16381a] disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
                 Envoyer la réponse
               </button>

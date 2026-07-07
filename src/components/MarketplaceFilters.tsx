@@ -96,7 +96,7 @@ export default function MarketplaceFilters({
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Rechercher des produits, marques, catégories..."
-              className={`w-full pl-12 pr-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors ${
+              className={`w-full pl-12 pr-4 py-3 rounded-xl border focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent transition-colors ${
                 isDark
                   ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400'
                   : 'bg-white border-gray-300 text-gray-900'
@@ -126,7 +126,7 @@ export default function MarketplaceFilters({
             <SlidersHorizontal className="h-5 w-5" />
             <span>Filtres</span>
             {activeFiltersCount > 0 && (
-              <span className="bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+              <span className="bg-[#1b5e20] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                 {activeFiltersCount}
               </span>
             )}
@@ -135,7 +135,7 @@ export default function MarketplaceFilters({
           <select
             value={selectedSort}
             onChange={(e) => onSortChange(e.target.value)}
-            className={`px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors ${
+            className={`px-4 py-3 rounded-xl border focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent transition-colors ${
               isDark
                 ? 'bg-gray-800 border-gray-600 text-white'
                 : 'bg-white border-gray-300 text-gray-900'
@@ -167,7 +167,7 @@ export default function MarketplaceFilters({
               {activeFiltersCount > 0 && (
                 <button
                   onClick={onClearFilters}
-                  className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+                  className="text-sm text-[#1b5e20] hover:text-[#1b5e20] font-medium"
                 >
                   Tout effacer
                 </button>
@@ -202,7 +202,7 @@ export default function MarketplaceFilters({
                       value={category.id}
                       checked={selectedCategory === category.id}
                       onChange={(e) => onCategoryChange(e.target.value)}
-                      className="text-orange-600 focus:ring-orange-500"
+                      className="text-[#1b5e20] focus:ring-[#1b5e20]/30"
                     />
                     <span className={`text-sm ${
                       isDark ? 'text-gray-300' : 'text-gray-700'
@@ -238,7 +238,7 @@ export default function MarketplaceFilters({
                       min: parseInt(e.target.value) || 0
                     }))}
                     placeholder="Min"
-                    className={`w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                    className={`w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent ${
                       isDark
                         ? 'bg-gray-700 border-gray-600 text-white'
                         : 'bg-white border-gray-300 text-gray-900'
@@ -257,7 +257,7 @@ export default function MarketplaceFilters({
                       max: parseInt(e.target.value) || priceRange.max
                     }))}
                     placeholder="Max"
-                    className={`w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                    className={`w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent ${
                       isDark
                         ? 'bg-gray-700 border-gray-600 text-white'
                         : 'bg-white border-gray-300 text-gray-900'
@@ -266,7 +266,7 @@ export default function MarketplaceFilters({
                 </div>
                 <button
                   onClick={handlePriceRangeSubmit}
-                  className="w-full px-3 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors"
+                  className="w-full px-3 py-2 bg-[#1b5e20] text-white rounded-lg text-sm font-medium hover:bg-[#16381a] transition-colors"
                 >
                   Appliquer
                 </button>
@@ -289,7 +289,7 @@ export default function MarketplaceFilters({
                       value={option.id}
                       checked={selectedRating === parseInt(option.id)}
                       onChange={(e) => onRatingChange(parseInt(e.target.value))}
-                      className="text-orange-600 focus:ring-orange-500"
+                      className="text-[#1b5e20] focus:ring-[#1b5e20]/30"
                     />
                     <span className={`text-sm ${
                       isDark ? 'text-gray-300' : 'text-gray-700'
@@ -312,7 +312,7 @@ export default function MarketplaceFilters({
                 <label className="flex items-center space-x-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="text-orange-600 focus:ring-orange-500"
+                    className="text-[#1b5e20] focus:ring-[#1b5e20]/30"
                   />
                   <span className={`text-sm ${
                     isDark ? 'text-gray-300' : 'text-gray-700'
@@ -323,7 +323,7 @@ export default function MarketplaceFilters({
                 <label className="flex items-center space-x-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="text-orange-600 focus:ring-orange-500"
+                    className="text-[#1b5e20] focus:ring-[#1b5e20]/30"
                   />
                   <span className={`text-sm ${
                     isDark ? 'text-gray-300' : 'text-gray-700'
@@ -342,7 +342,7 @@ export default function MarketplaceFilters({
         <div className={`flex flex-wrap items-center gap-2 p-4 rounded-xl border ${
           isDark
             ? 'bg-gray-800 border-gray-700'
-            : 'bg-orange-50 border-orange-200'
+            : 'bg-[#eef6ea] border-[#cfe0c8]'
         }`}>
           <span className={`text-sm font-medium ${
             isDark ? 'text-gray-300' : 'text-gray-700'
@@ -350,33 +350,33 @@ export default function MarketplaceFilters({
             Filtres actifs:
           </span>
           {selectedCategory !== 'all' && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-orange-100 text-orange-800">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-[#eef6ea] text-[#1b5e20]">
               {categories.find(c => c.id === selectedCategory)?.name}
               <button
                 onClick={() => onCategoryChange('all')}
-                className="ml-2 text-orange-600 hover:text-orange-800"
+                className="ml-2 text-[#1b5e20] hover:text-[#1b5e20]"
               >
                 <X className="h-3 w-3" />
               </button>
             </span>
           )}
           {(selectedPriceRange.min > priceRange.min || selectedPriceRange.max < priceRange.max) && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-orange-100 text-orange-800">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-[#eef6ea] text-[#1b5e20]">
               {selectedPriceRange.min.toLocaleString()} - {selectedPriceRange.max.toLocaleString()} FCFA
               <button
                 onClick={() => onPriceRangeChange(priceRange)}
-                className="ml-2 text-orange-600 hover:text-orange-800"
+                className="ml-2 text-[#1b5e20] hover:text-[#1b5e20]"
               >
                 <X className="h-3 w-3" />
               </button>
             </span>
           )}
           {selectedRating > 0 && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-orange-100 text-orange-800">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-[#eef6ea] text-[#1b5e20]">
               {selectedRating}★ et plus
               <button
                 onClick={() => onRatingChange(0)}
-                className="ml-2 text-orange-600 hover:text-orange-800"
+                className="ml-2 text-[#1b5e20] hover:text-[#1b5e20]"
               >
                 <X className="h-3 w-3" />
               </button>

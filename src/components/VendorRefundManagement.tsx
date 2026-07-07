@@ -72,13 +72,13 @@ const VendorRefundManagement: React.FC<VendorRefundManagementProps> = ({ vendorI
   const getStatusColor = (status: Refund['status']) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-[#fff4d6] text-[#8f4b00]';
       case 'approved':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-[#eef6ea] text-[#1b5e20]';
       case 'rejected':
         return 'bg-red-100 text-red-800';
       case 'completed':
-        return 'bg-green-100 text-green-800';
+        return 'bg-[#eef6ea] text-[#1b5e20]';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -210,8 +210,8 @@ const VendorRefundManagement: React.FC<VendorRefundManagementProps> = ({ vendorI
               <p className="text-sm text-gray-600">Total Demandes</p>
               <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
             </div>
-            <div className="bg-blue-100 p-2 rounded-full">
-              <RotateCcw className="w-6 h-6 text-blue-600" />
+            <div className="bg-[#eef6ea] p-2 rounded-full">
+              <RotateCcw className="w-6 h-6 text-[#1b5e20]" />
             </div>
           </div>
         </div>
@@ -220,10 +220,10 @@ const VendorRefundManagement: React.FC<VendorRefundManagementProps> = ({ vendorI
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">En Attente</p>
-              <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+              <p className="text-2xl font-bold text-[#8f4b00]">{stats.pending}</p>
             </div>
-            <div className="bg-yellow-100 p-2 rounded-full">
-              <Clock className="w-6 h-6 text-yellow-600" />
+            <div className="bg-[#fff4d6] p-2 rounded-full">
+              <Clock className="w-6 h-6 text-[#8f4b00]" />
             </div>
           </div>
         </div>
@@ -232,10 +232,10 @@ const VendorRefundManagement: React.FC<VendorRefundManagementProps> = ({ vendorI
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Approuvées</p>
-              <p className="text-2xl font-bold text-blue-600">{stats.approved}</p>
+              <p className="text-2xl font-bold text-[#1b5e20]">{stats.approved}</p>
             </div>
-            <div className="bg-blue-100 p-2 rounded-full">
-              <CheckCircle className="w-6 h-6 text-blue-600" />
+            <div className="bg-[#eef6ea] p-2 rounded-full">
+              <CheckCircle className="w-6 h-6 text-[#1b5e20]" />
             </div>
           </div>
         </div>
@@ -244,10 +244,10 @@ const VendorRefundManagement: React.FC<VendorRefundManagementProps> = ({ vendorI
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Montant Total</p>
-              <p className="text-2xl font-bold text-green-600">{formatAmount(stats.totalAmount)}</p>
+              <p className="text-2xl font-bold text-[#1b5e20]">{formatAmount(stats.totalAmount)}</p>
             </div>
-            <div className="bg-green-100 p-2 rounded-full">
-              <RotateCcw className="w-6 h-6 text-green-600" />
+            <div className="bg-[#eef6ea] p-2 rounded-full">
+              <RotateCcw className="w-6 h-6 text-[#1b5e20]" />
             </div>
           </div>
         </div>
@@ -264,7 +264,7 @@ const VendorRefundManagement: React.FC<VendorRefundManagementProps> = ({ vendorI
                 placeholder="Rechercher par client, commande ou téléphone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent"
               />
             </div>
           </div>
@@ -272,7 +272,7 @@ const VendorRefundManagement: React.FC<VendorRefundManagementProps> = ({ vendorI
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent"
             >
               <option value="all">Tous les statuts</option>
               <option value="pending">En attente</option>
@@ -282,7 +282,7 @@ const VendorRefundManagement: React.FC<VendorRefundManagementProps> = ({ vendorI
             </select>
             <button
               onClick={exportRefunds}
-              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-[#1b5e20] text-white rounded-lg hover:bg-[#1b5e20] transition-colors flex items-center gap-2"
             >
               <Download className="w-4 h-4" />
               Exporter
@@ -355,7 +355,7 @@ const VendorRefundManagement: React.FC<VendorRefundManagementProps> = ({ vendorI
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleProcessRefund(refund, 'approve')}
-                          className="text-green-600 hover:text-green-900 bg-green-100 px-2 py-1 rounded text-xs"
+                          className="text-[#1b5e20] hover:text-[#ecf7e7] bg-[#eef6ea] px-2 py-1 rounded text-xs"
                         >
                           Approuver
                         </button>
@@ -370,7 +370,7 @@ const VendorRefundManagement: React.FC<VendorRefundManagementProps> = ({ vendorI
                     {refund.status !== 'pending' && (
                       <button
                         onClick={() => setSelectedRefund(refund)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-[#1b5e20] hover:text-[#ecf7e7]"
                       >
                         Voir détails
                       </button>
@@ -420,7 +420,7 @@ const VendorRefundManagement: React.FC<VendorRefundManagementProps> = ({ vendorI
                 value={processNotes}
                 onChange={(e) => setProcessNotes(e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent"
                 placeholder="Ajoutez des notes sur votre décision..."
               />
             </div>
@@ -435,7 +435,7 @@ const VendorRefundManagement: React.FC<VendorRefundManagementProps> = ({ vendorI
                 onClick={confirmProcessRefund}
                 className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
                   processAction === 'approve'
-                    ? 'bg-green-500 text-white hover:bg-green-600'
+                    ? 'bg-[#1b5e20] text-white hover:bg-[#1b5e20]'
                     : 'bg-red-500 text-white hover:bg-red-600'
                 }`}
               >

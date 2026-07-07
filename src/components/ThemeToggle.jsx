@@ -9,8 +9,8 @@ export const ThemeToggle = () => {
       onClick={toggleTheme}
       className={`relative p-2 rounded-lg transition-all duration-300 ${
         isDark 
-          ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600' 
-          : 'bg-orange-100 text-orange-600 hover:bg-orange-200'
+          ? 'bg-gray-700 text-[#8f4b00] hover:bg-gray-600' 
+          : 'bg-[#eef6ea] text-[#1b5e20] hover:bg-[#eef6ea]'
       }`}
       title={isDark ? 'Passer en mode jour' : 'Passer en mode nuit'}
     >

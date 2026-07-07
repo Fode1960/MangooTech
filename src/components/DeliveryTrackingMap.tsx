@@ -97,10 +97,10 @@ const DeliveryTrackingMap: React.FC<DeliveryTrackingMapProps> = ({
 
   const getTileColor = (type: string) => {
     switch (type) {
-      case 'water': return 'bg-blue-200';
+      case 'water': return 'bg-[#eef6ea]';
       case 'road': return 'bg-gray-300';
       case 'building': return 'bg-gray-400';
-      default: return 'bg-green-200';
+      default: return 'bg-[#eef6ea]';
     }
   };
 
@@ -115,8 +115,8 @@ const DeliveryTrackingMap: React.FC<DeliveryTrackingMapProps> = ({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'available': return 'text-green-600 bg-green-100';
-      case 'busy': return 'text-orange-600 bg-orange-100';
+      case 'available': return 'text-[#1b5e20] bg-[#eef6ea]';
+      case 'busy': return 'text-[#1b5e20] bg-[#eef6ea]';
       case 'offline': return 'text-gray-600 bg-gray-100';
       default: return 'text-gray-600 bg-gray-100';
     }
@@ -127,7 +127,7 @@ const DeliveryTrackingMap: React.FC<DeliveryTrackingMapProps> = ({
       {/* Map Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
-          <Navigation className="w-6 h-6 text-blue-600" />
+          <Navigation className="w-6 h-6 text-[#1b5e20]" />
           <h3 className="text-lg font-semibold text-gray-900">Tracking GPS en Temps Réel</h3>
         </div>
         <div className="flex items-center space-x-2">
@@ -136,7 +136,7 @@ const DeliveryTrackingMap: React.FC<DeliveryTrackingMapProps> = ({
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               isTracking 
                 ? 'bg-red-100 text-red-700 hover:bg-red-200' 
-                : 'bg-green-100 text-green-700 hover:bg-green-200'
+                : 'bg-[#eef6ea] text-[#1b5e20] hover:bg-[#eef6ea]'
             }`}
           >
             {isTracking ? 'Arrêter le tracking' : 'Démarrer le tracking'}
@@ -157,7 +157,7 @@ const DeliveryTrackingMap: React.FC<DeliveryTrackingMapProps> = ({
       </div>
 
       {/* Map Container */}
-      <div className="relative bg-blue-50 rounded-lg overflow-hidden" style={{ height: '500px' }}>
+      <div className="relative bg-[#eef6ea] rounded-lg overflow-hidden" style={{ height: '500px' }}>
         {/* Simulated Map */}
         <div className="absolute inset-0" ref={mapRef}>
           {/* Map Tiles */}
@@ -186,8 +186,8 @@ const DeliveryTrackingMap: React.FC<DeliveryTrackingMapProps> = ({
               }}
             >
               <div className="relative">
-                <div className="absolute -inset-2 bg-blue-400 rounded-full animate-ping opacity-75"></div>
-                <div className="relative bg-blue-600 text-white p-2 rounded-full shadow-lg">
+                <div className="absolute -inset-2 bg-[#1b5e20] rounded-full animate-ping opacity-75"></div>
+                <div className="relative bg-[#1b5e20] text-white p-2 rounded-full shadow-lg">
                   <Package className="w-4 h-4" />
                 </div>
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 bg-white px-2 py-1 rounded shadow-lg text-xs font-medium whitespace-nowrap">
@@ -207,8 +207,8 @@ const DeliveryTrackingMap: React.FC<DeliveryTrackingMapProps> = ({
               }}
             >
               <div className="relative">
-                <div className="absolute -inset-2 bg-green-400 rounded-full animate-ping opacity-75"></div>
-                <div className="relative bg-green-600 text-white p-2 rounded-full shadow-lg">
+                <div className="absolute -inset-2 bg-[#eef6ea] rounded-full animate-ping opacity-75"></div>
+                <div className="relative bg-[#eef6ea] text-white p-2 rounded-full shadow-lg">
                   <MapPin className="w-4 h-4" />
                 </div>
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 bg-white px-2 py-1 rounded shadow-lg text-xs font-medium whitespace-nowrap">
@@ -234,8 +234,8 @@ const DeliveryTrackingMap: React.FC<DeliveryTrackingMapProps> = ({
               }}
             >
               <div className="relative">
-                <div className="absolute -inset-2 bg-orange-400 rounded-full animate-pulse opacity-75"></div>
-                <div className="relative bg-orange-600 text-white p-3 rounded-full shadow-lg flex items-center justify-center">
+                <div className="absolute -inset-2 bg-[#1b5e20] rounded-full animate-pulse opacity-75"></div>
+                <div className="relative bg-[#1b5e20] text-white p-3 rounded-full shadow-lg flex items-center justify-center">
                   <span className="text-lg">{getVehicleIcon(deliveryPartner.vehicleType)}</span>
                 </div>
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 bg-white px-2 py-1 rounded shadow-lg text-xs font-medium whitespace-nowrap">
@@ -253,7 +253,7 @@ const DeliveryTrackingMap: React.FC<DeliveryTrackingMapProps> = ({
                 y1={coordToPixel(pickupLocation.coordinates.lat, pickupLocation.coordinates.lng).y}
                 x2={coordToPixel(deliveryLocation.coordinates.lat, deliveryLocation.coordinates.lng).x}
                 y2={coordToPixel(deliveryLocation.coordinates.lat, deliveryLocation.coordinates.lng).y}
-                stroke="#3B82F6"
+                stroke="#1b5e20"
                 strokeWidth="3"
                 strokeDasharray="10,5"
                 opacity="0.7"
@@ -276,8 +276,8 @@ const DeliveryTrackingMap: React.FC<DeliveryTrackingMapProps> = ({
         {isTracking && (
           <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3">
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-sm font-medium text-green-700">Tracking actif</span>
+              <div className="w-3 h-3 bg-[#eef6ea] rounded-full animate-pulse"></div>
+              <span className="text-sm font-medium text-[#1b5e20]">Tracking actif</span>
             </div>
             <div className="text-xs text-gray-600 mt-1">
               Progression: {Math.round(routeProgress * 100)}%
@@ -331,15 +331,15 @@ const DeliveryTrackingMap: React.FC<DeliveryTrackingMapProps> = ({
       {/* Legend */}
       <div className="mt-4 flex flex-wrap gap-4 text-sm">
         <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+          <div className="w-3 h-3 bg-[#1b5e20] rounded-full"></div>
           <span>Point de ramassage</span>
         </div>
         <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+          <div className="w-3 h-3 bg-[#eef6ea] rounded-full"></div>
           <span>Point de livraison</span>
         </div>
         <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 bg-orange-600 rounded-full"></div>
+          <div className="w-3 h-3 bg-[#1b5e20] rounded-full"></div>
           <span>Livreur</span>
         </div>
       </div>

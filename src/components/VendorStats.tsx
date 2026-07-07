@@ -183,7 +183,7 @@ export default function VendorStats({ vendorId }: VendorStatsProps) {
               <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 {stats.totalRevenue.toLocaleString()} FCFA
               </p>
-              <div className={`flex items-center mt-1 text-sm ${stats.growthRate > 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`flex items-center mt-1 text-sm ${stats.growthRate > 0 ? 'text-[#1b5e20]' : 'text-red-600'}`}>
                 {stats.growthRate > 0 ? <TrendingUp className="h-4 w-4 mr-1" /> : <TrendingDown className="h-4 w-4 mr-1" />}
                 {Math.abs(stats.growthRate)}%
               </div>
@@ -310,9 +310,9 @@ export default function VendorStats({ vendorId }: VendorStatsProps) {
               <div key={product.name} className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    index === 0 ? 'bg-yellow-100 text-yellow-800' :
+                    index === 0 ? 'bg-[#fff4d6] text-[#8f4b00]' :
                     index === 1 ? 'bg-gray-100 text-gray-800' :
-                    'bg-orange-100 text-orange-800'
+                    'bg-[#eef6ea] text-[#1b5e20]'
                   }`}>
                     {index + 1}
                   </div>
@@ -387,21 +387,21 @@ export default function VendorStats({ vendorId }: VendorStatsProps) {
             <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
               Alertes Stock
             </h3>
-            <AlertCircle className="h-5 w-5 text-orange-500" />
+            <AlertCircle className="h-5 w-5 text-[#1b5e20]" />
           </div>
           <div className="space-y-3">
             {topProducts.filter(p => p.stock < 10).map((product) => (
-              <div key={product.name} className={`p-3 rounded-lg ${isDark ? 'bg-orange-900/20 border border-orange-800' : 'bg-orange-50 border border-orange-200'}`}>
+              <div key={product.name} className={`p-3 rounded-lg ${isDark ? 'bg-[#17331c]/20 border border-[#2e5d34]' : 'bg-[#eef6ea] border border-[#cfe0c8]'}`}>
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className={`font-medium ${isDark ? 'text-orange-300' : 'text-orange-800'}`}>
+                    <p className={`font-medium ${isDark ? 'text-[#ecf7e7]' : 'text-[#1b5e20]'}`}>
                       {product.name}
                     </p>
-                    <p className={`text-sm ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>
+                    <p className={`text-sm ${isDark ? 'text-[#66bb6a]' : 'text-[#1b5e20]'}`}>
                       Stock faible: {product.stock} restants
                     </p>
                   </div>
-                  <button className={`px-3 py-1 text-xs rounded-lg ${isDark ? 'bg-orange-800 text-orange-200' : 'bg-orange-200 text-orange-800'}`}>
+                  <button className={`px-3 py-1 text-xs rounded-lg ${isDark ? 'bg-[#16381a] text-[#ecf7e7]' : 'bg-[#cfe0c8] text-[#1b5e20]'}`}>
                     Réapprovisionner
                   </button>
                 </div>

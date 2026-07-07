@@ -61,18 +61,18 @@ const VendorPaymentSettings: React.FC<VendorPaymentSettingsProps> = ({ vendorId,
     <div className="max-w-4xl mx-auto">
       {/* Bannière d'information Demo */}
       {showDemoInfo && (
-        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="mb-6 bg-[#eef6ea] border border-[#cfe0c8] rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-[#1b5e20] mt-0.5" />
             <div className="flex-1">
-              <h3 className="font-medium text-blue-900">Mode Démonstration</h3>
-              <p className="text-sm text-blue-800 mt-1">
+              <h3 className="font-medium text-[#ecf7e7]">Mode Démonstration</h3>
+              <p className="text-sm text-[#1b5e20] mt-1">
                 Ces paramètres sont simulés. En production, vous devrez configurer vos vraies clés API Stripe et Mobile Money.
               </p>
             </div>
             <button
               onClick={() => setShowDemoInfo(false)}
-              className="text-blue-600 hover:text-blue-800"
+              className="text-[#1b5e20] hover:text-[#1b5e20]"
             >
               ×
             </button>
@@ -89,7 +89,7 @@ const VendorPaymentSettings: React.FC<VendorPaymentSettingsProps> = ({ vendorId,
           </div>
           <button
             onClick={() => setIsEditing(!isEditing)}
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+            className="bg-[#1b5e20] text-white px-4 py-2 rounded-lg hover:bg-[#1b5e20] transition-colors flex items-center gap-2"
           >
             <Settings className="w-4 h-4" />
             {isEditing ? 'Annuler' : 'Modifier'}
@@ -105,7 +105,7 @@ const VendorPaymentSettings: React.FC<VendorPaymentSettingsProps> = ({ vendorId,
               onClick={() => setActiveTab('cards')}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'cards'
-                  ? 'border-blue-500 text-blue-600'
+                  ? 'border-[#1b5e20] text-[#1b5e20]'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -118,7 +118,7 @@ const VendorPaymentSettings: React.FC<VendorPaymentSettingsProps> = ({ vendorId,
               onClick={() => setActiveTab('mobile')}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'mobile'
-                  ? 'border-blue-500 text-blue-600'
+                  ? 'border-[#1b5e20] text-[#1b5e20]'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -131,7 +131,7 @@ const VendorPaymentSettings: React.FC<VendorPaymentSettingsProps> = ({ vendorId,
               onClick={() => setActiveTab('settings')}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'settings'
-                  ? 'border-blue-500 text-blue-600'
+                  ? 'border-[#1b5e20] text-[#1b5e20]'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -160,7 +160,7 @@ const VendorPaymentSettings: React.FC<VendorPaymentSettingsProps> = ({ vendorId,
                     disabled={!isEditing}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#1b5e20]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1b5e20]"></div>
                 </label>
               </div>
 
@@ -176,7 +176,7 @@ const VendorPaymentSettings: React.FC<VendorPaymentSettingsProps> = ({ vendorId,
                       onChange={(e) => handleSettingChange('stripePublicKey', e.target.value)}
                       disabled={!isEditing}
                       placeholder="pk_test_..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent disabled:bg-gray-100"
                     />
                     <p className="text-xs text-gray-500 mt-1">Votre clé publique Stripe (pk_test_...)</p>
                   </div>
@@ -191,22 +191,22 @@ const VendorPaymentSettings: React.FC<VendorPaymentSettingsProps> = ({ vendorId,
                       onChange={(e) => handleSettingChange('stripeSecretKey', e.target.value)}
                       disabled={!isEditing}
                       placeholder="sk_test_..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent disabled:bg-gray-100"
                     />
                     <p className="text-xs text-gray-500 mt-1">Votre clé secrète Stripe (sk_test_...)</p>
                   </div>
 
-                  <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  <div className="flex items-center gap-3 p-4 bg-[#eef6ea] rounded-lg">
+                    <CheckCircle className="w-5 h-5 text-[#1b5e20]" />
                     <div>
-                      <p className="font-medium text-green-900">Sécurité SSL</p>
-                      <p className="text-sm text-green-700">Toutes les transactions sont cryptées avec SSL 256-bit</p>
+                      <p className="font-medium text-[#ecf7e7]">Sécurité SSL</p>
+                      <p className="text-sm text-[#1b5e20]">Toutes les transactions sont cryptées avec SSL 256-bit</p>
                     </div>
                   </div>
 
                   <button
                     onClick={testStripeConnection}
-                    className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
+                    className="bg-[#1b5e20] text-white px-4 py-2 rounded-lg hover:bg-[#1b5e20] transition-colors flex items-center gap-2"
                   >
                     <CheckCircle className="w-4 h-4" />
                     Tester la connexion Stripe
@@ -231,16 +231,16 @@ const VendorPaymentSettings: React.FC<VendorPaymentSettingsProps> = ({ vendorId,
                     disabled={!isEditing}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#1b5e20]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1b5e20]"></div>
                 </label>
               </div>
 
               {settings.mobileMoneyEnabled && (
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center justify-between p-4 bg-orange-50 rounded-lg">
+                    <div className="flex items-center justify-between p-4 bg-[#eef6ea] rounded-lg">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-sm">O</div>
+                        <div className="w-8 h-8 bg-[#1b5e20] rounded-full flex items-center justify-center text-white font-bold text-sm">O</div>
                         <div>
                           <p className="font-medium text-gray-900">Orange Money</p>
                           <p className="text-xs text-gray-600">Opérateur Orange</p>
@@ -254,13 +254,13 @@ const VendorPaymentSettings: React.FC<VendorPaymentSettingsProps> = ({ vendorId,
                           disabled={!isEditing}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#1b5e20]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1b5e20]"></div>
                       </label>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg">
+                    <div className="flex items-center justify-between p-4 bg-[#fff4d6] rounded-lg">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold text-sm">M</div>
+                        <div className="w-8 h-8 bg-[#fff4d6] rounded-full flex items-center justify-center text-white font-bold text-sm">M</div>
                         <div>
                           <p className="font-medium text-gray-900">MTN Money</p>
                           <p className="text-xs text-gray-600">Opérateur MTN</p>
@@ -274,13 +274,13 @@ const VendorPaymentSettings: React.FC<VendorPaymentSettingsProps> = ({ vendorId,
                           disabled={!isEditing}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#1b5e20]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1b5e20]"></div>
                       </label>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+                    <div className="flex items-center justify-between p-4 bg-[#eef6ea] rounded-lg">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">M</div>
+                        <div className="w-8 h-8 bg-[#1b5e20] rounded-full flex items-center justify-center text-white font-bold text-sm">M</div>
                         <div>
                           <p className="font-medium text-gray-900">Moov Money</p>
                           <p className="text-xs text-gray-600">Opérateur Moov</p>
@@ -294,22 +294,22 @@ const VendorPaymentSettings: React.FC<VendorPaymentSettingsProps> = ({ vendorId,
                           disabled={!isEditing}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#1b5e20]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1b5e20]"></div>
                       </label>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-                    <Shield className="w-5 h-5 text-blue-600" />
+                  <div className="flex items-center gap-3 p-4 bg-[#eef6ea] rounded-lg">
+                    <Shield className="w-5 h-5 text-[#1b5e20]" />
                     <div>
-                      <p className="font-medium text-blue-900">Sécurité renforcée</p>
-                      <p className="text-sm text-blue-700">Les paiements Mobile Money sont protégés par double authentification</p>
+                      <p className="font-medium text-[#ecf7e7]">Sécurité renforcée</p>
+                      <p className="text-sm text-[#1b5e20]">Les paiements Mobile Money sont protégés par double authentification</p>
                     </div>
                   </div>
 
                   <button
                     onClick={testMobileMoneyConnection}
-                    className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
+                    className="bg-[#1b5e20] text-white px-4 py-2 rounded-lg hover:bg-[#1b5e20] transition-colors flex items-center gap-2"
                   >
                     <CheckCircle className="w-4 h-4" />
                     Tester la connexion Mobile Money
@@ -334,7 +334,7 @@ const VendorPaymentSettings: React.FC<VendorPaymentSettingsProps> = ({ vendorId,
                     value={settings.commissionRate}
                     onChange={(e) => handleSettingChange('commissionRate', parseFloat(e.target.value))}
                     disabled={!isEditing}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent disabled:bg-gray-100"
                   />
                   <p className="text-xs text-gray-500 mt-1">Commission prélevée sur chaque vente</p>
                 </div>
@@ -347,7 +347,7 @@ const VendorPaymentSettings: React.FC<VendorPaymentSettingsProps> = ({ vendorId,
                     value={settings.payoutSchedule}
                     onChange={(e) => handleSettingChange('payoutSchedule', e.target.value)}
                     disabled={!isEditing}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent disabled:bg-gray-100"
                   >
                     <option value="daily">Quotidien</option>
                     <option value="weekly">Hebdomadaire</option>
@@ -367,18 +367,18 @@ const VendorPaymentSettings: React.FC<VendorPaymentSettingsProps> = ({ vendorId,
                     value={settings.minimumPayout}
                     onChange={(e) => handleSettingChange('minimumPayout', parseInt(e.target.value))}
                     disabled={!isEditing}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent disabled:bg-gray-100"
                   />
                   <p className="text-xs text-gray-500 mt-1">Montant minimum avant versement</p>
                 </div>
               </div>
 
-              <div className="p-4 bg-yellow-50 rounded-lg">
+              <div className="p-4 bg-[#fff4d6] rounded-lg">
                 <div className="flex items-center gap-3">
-                  <AlertCircle className="w-5 h-5 text-yellow-600" />
+                  <AlertCircle className="w-5 h-5 text-[#8f4b00]" />
                   <div>
-                    <p className="font-medium text-yellow-900">Informations importantes</p>
-                    <ul className="text-sm text-yellow-800 mt-2 space-y-1">
+                    <p className="font-medium text-[#8f4b00]">Informations importantes</p>
+                    <ul className="text-sm text-[#8f4b00] mt-2 space-y-1">
                       <li>• Les commissions sont prélevées automatiquement sur chaque vente</li>
                       <li>• Les paiements sont sécurisés et conformes PCI DSS</li>
                       <li>• Les fonds sont transférés selon la fréquence choisie</li>
@@ -400,7 +400,7 @@ const VendorPaymentSettings: React.FC<VendorPaymentSettingsProps> = ({ vendorId,
               </button>
               <button
                 onClick={handleSave}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-[#1b5e20] text-white rounded-lg hover:bg-[#1b5e20] transition-colors flex items-center gap-2"
               >
                 <CheckCircle className="w-4 h-4" />
                 Sauvegarder
@@ -415,17 +415,17 @@ const VendorPaymentSettings: React.FC<VendorPaymentSettingsProps> = ({ vendorId,
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Résumé de votre configuration</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">{settings.commissionRate}%</div>
+            <div className="text-2xl font-bold text-[#1b5e20]">{settings.commissionRate}%</div>
             <div className="text-sm text-gray-600">Commission</div>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-[#1b5e20]">
               {(settings.stripeEnabled ? 1 : 0) + (settings.mobileMoneyEnabled ? 1 : 0)}
             </div>
             <div className="text-sm text-gray-600">Méthodes actives</div>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <div className="text-2xl font-bold text-orange-600">
+            <div className="text-2xl font-bold text-[#1b5e20]">
               {settings.minimumPayout.toLocaleString('fr-FR')} XOF
             </div>
             <div className="text-sm text-gray-600">Minimum de paiement</div>

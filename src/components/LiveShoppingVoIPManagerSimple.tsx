@@ -699,30 +699,30 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
             </div>
             <div>
               <h1 className="text-2xl font-bold">MangooTech Live Shopping</h1>
-              <p className="text-orange-100">Vente en direct • Appels VoIP • Expérience interactive</p>
+              <p className="text-[#ecf7e7]">Vente en direct • Appels VoIP • Expérience interactive</p>
             </div>
           </div>
           
           <div className="flex items-center space-x-6">
             {/* VoIP Status */}
             <div className="text-center">
-              <div className={`text-lg font-bold ${isRegistered ? 'text-green-300' : 'text-red-300'}`}>
+              <div className={`text-lg font-bold ${isRegistered ? 'text-[#66bb6a]' : 'text-red-300'}`}>
                 {isRegistered ? 'VoIP' : 'VoIP'}
               </div>
-              <div className="text-sm text-orange-100">{callStatus}</div>
+              <div className="text-sm text-[#ecf7e7]">{callStatus}</div>
             </div>
             
             <div className="text-center">
               <div className="text-2xl font-bold">{viewers}</div>
-              <div className="text-sm text-orange-100">Spectateurs</div>
+              <div className="text-sm text-[#ecf7e7]">Spectateurs</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">{formatDuration(streamDuration)}</div>
-              <div className="text-sm text-orange-100">Durée</div>
+              <div className="text-sm text-[#ecf7e7]">Durée</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">{totalSales.toLocaleString()}</div>
-              <div className="text-sm text-orange-100">FCFA ventes</div>
+              <div className="text-sm text-[#ecf7e7]">FCFA ventes</div>
             </div>
           </div>
         </div>
@@ -732,13 +732,13 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
       {incomingCall && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6 text-center">
-            <PhoneIncoming className="w-16 h-16 text-green-500 mx-auto mb-4 animate-bounce" />
+            <PhoneIncoming className="w-16 h-16 text-[#1b5e20] mx-auto mb-4 animate-bounce" />
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Appel entrant</h2>
             <p className="text-lg text-gray-600 mb-6">De: {incomingCall}</p>
             <div className="flex space-x-4">
               <button
                 onClick={answerCall}
-                className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                className="flex-1 bg-[#eef6ea] hover:bg-[#eef6ea] text-white py-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
               >
                 <PhoneCall className="w-5 h-5" />
                 <span>Répondre</span>
@@ -790,12 +790,12 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
                       {/* Microphone level */}
                       <div className="bg-black bg-opacity-70 rounded-lg p-2">
                         <div className="flex items-center space-x-2 mb-1">
-                          <Mic className="w-4 h-4 text-blue-400" />
+                          <Mic className="w-4 h-4 text-[#1b5e20]" />
                           <span className="text-white text-xs">Micro</span>
                         </div>
                         <div className="w-20 bg-gray-700 rounded-full h-1">
                           <div 
-                            className="bg-blue-400 h-1 rounded-full transition-all duration-100"
+                            className="bg-[#1b5e20] h-1 rounded-full transition-all duration-100"
                             style={{ width: `${localAudioLevel}%` }}
                           ></div>
                         </div>
@@ -805,12 +805,12 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
                       {/* Headset level */}
                       <div className="bg-black bg-opacity-70 rounded-lg p-2">
                         <div className="flex items-center space-x-2 mb-1">
-                          <Volume2 className="w-4 h-4 text-green-400" />
+                          <Volume2 className="w-4 h-4 text-[#1b5e20]" />
                           <span className="text-white text-xs">Casque</span>
                         </div>
                         <div className="w-20 bg-gray-700 rounded-full h-1">
                           <div 
-                            className="bg-green-400 h-1 rounded-full transition-all duration-100"
+                            className="bg-[#eef6ea] h-1 rounded-full transition-all duration-100"
                             style={{ width: `${remoteAudioLevel}%` }}
                           ></div>
                         </div>
@@ -818,7 +818,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
                         {!isAudioConnected && (
                           <button 
                             onClick={initializeAudio}
-                            className="mt-1 bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded"
+                            className="mt-1 bg-[#eef6ea] hover:bg-[#eef6ea] text-white text-xs px-2 py-1 rounded"
                           >
                             Démarrer Audio
                           </button>
@@ -827,7 +827,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
                       
                       {/* Call status */}
                       {isInCall && callParticipant && (
-                        <div className="bg-green-600 bg-opacity-90 rounded-lg p-2">
+                        <div className="bg-[#eef6ea] bg-opacity-90 rounded-lg p-2">
                           <div className="flex items-center space-x-2 mb-1">
                             <PhoneCall className="w-4 h-4 text-white" />
                             <span className="text-white text-xs">Appel</span>
@@ -851,7 +851,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
                         <>
                           <button
                             onClick={toggleLive}
-                            className={`p-3 rounded-full ${isLive ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'} text-white transition-colors`}
+                            className={`p-3 rounded-full ${isLive ? 'bg-red-500 hover:bg-red-600' : 'bg-[#eef6ea] hover:bg-[#eef6ea]'} text-white transition-colors`}
                           >
                             {isLive ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
                           </button>
@@ -859,7 +859,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
                           {isLive && (
                             <button
                               onClick={togglePause}
-                              className="p-3 rounded-full bg-orange-500 hover:bg-orange-600 text-white transition-colors"
+                              className="p-3 rounded-full bg-[#1b5e20] hover:bg-[#1b5e20] text-white transition-colors"
                             >
                               {isPaused ? <Play className="w-5 h-5" /> : <Pause className="w-5 h-5" />}
                             </button>
@@ -869,7 +869,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
                           {!isInCall && !incomingCall && (
                             <button
                               onClick={() => setShowCallModal(true)}
-                              className="p-3 rounded-full bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+                              className="p-3 rounded-full bg-[#1b5e20] hover:bg-[#1b5e20] text-white transition-colors"
                             >
                               <Phone className="w-5 h-5" />
                             </button>
@@ -881,7 +881,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
                       {mode === 'viewer' && !isInCall && !incomingCall && (
                         <button
                           onClick={() => setShowCallModal(true)}
-                          className="p-3 rounded-full bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+                          className="p-3 rounded-full bg-[#1b5e20] hover:bg-[#1b5e20] text-white transition-colors"
                         >
                           <Phone className="w-5 h-5" />
                         </button>
@@ -912,14 +912,14 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={() => setShowProductPanel(!showProductPanel)}
-                        className="p-3 rounded-full bg-orange-500 hover:bg-orange-600 text-white transition-colors"
+                        className="p-3 rounded-full bg-[#1b5e20] hover:bg-[#1b5e20] text-white transition-colors"
                       >
                         <ShoppingCart className="w-5 h-5" />
                       </button>
                       
                       <button
                         onClick={() => setShowChat(!showChat)}
-                        className="p-3 rounded-full bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+                        className="p-3 rounded-full bg-[#1b5e20] hover:bg-[#1b5e20] text-white transition-colors"
                       >
                         <MessageCircle className="w-5 h-5" />
                       </button>
@@ -949,7 +949,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
             {isLive && isRegistered && (
               <div className="mt-4 bg-white rounded-xl shadow-lg p-4">
                 <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                  <Phone className="w-5 h-5 text-green-500 mr-2" />
+                  <Phone className="w-5 h-5 text-[#1b5e20] mr-2" />
                   Contrôles d'appel VoIP
                 </h3>
                 
@@ -959,13 +959,13 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
                     value={callNumber}
                     onChange={(e) => setCallNumber(e.target.value)}
                     placeholder="Numéro à appeler (ex: 8889)"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1b5e20]/30"
                   />
                   
                   <button
                     onClick={() => makeCall(callNumber)}
                     disabled={!callNumber || isInCall || isCalling}
-                    className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
+                    className="bg-[#eef6ea] hover:bg-[#eef6ea] disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
                   >
                     <PhoneOutgoing className="w-4 h-4" />
                     <span>Appeler</span>
@@ -984,7 +984,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
                 
                 <div className="mt-2 text-sm text-gray-600">
                   Votre numéro: <span className="font-bold">{sipNumber}</span> 
-                  {isRegistered && <span className="text-green-600">Enregistré</span>}
+                  {isRegistered && <span className="text-[#1b5e20]">Enregistré</span>}
                 </div>
               </div>
             )}
@@ -993,12 +993,12 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
             <div className="mt-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-gray-800 flex items-center">
-                  <Sparkles className="w-6 h-6 text-orange-500 mr-2" />
+                  <Sparkles className="w-6 h-6 text-[#1b5e20] mr-2" />
                   Produits en Vedette
                 </h3>
                 <button
                   onClick={() => setShowProductPanel(true)}
-                  className="text-orange-500 hover:text-orange-600 font-medium"
+                  className="text-[#1b5e20] hover:text-[#1b5e20] font-medium"
                 >
                   Voir tout
                 </button>
@@ -1031,7 +1031,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
                       
                       <div className="flex items-center justify-between mb-3">
                         <div>
-                          <div className="text-xl font-bold text-orange-500">
+                          <div className="text-xl font-bold text-[#1b5e20]">
                             {product.price.toLocaleString()} FCFA
                           </div>
                           {product.originalPrice && (
@@ -1041,7 +1041,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
                           )}
                         </div>
                         <div className="flex items-center">
-                          <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                          <Star className="w-4 h-4 text-[#8f4b00] fill-current" />
                           <span className="text-sm text-gray-600 ml-1">{product.rating}</span>
                         </div>
                       </div>
@@ -1067,7 +1067,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
               <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                 <div className="p-4 border-b border-gray-200">
                   <h3 className="font-bold text-gray-800 flex items-center">
-                    <MessageCircle className="w-5 h-5 text-blue-500 mr-2" />
+                    <MessageCircle className="w-5 h-5 text-[#1b5e20] mr-2" />
                     Chat en Direct
                   </h3>
                 </div>
@@ -1082,7 +1082,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
                   ) : (
                     chatMessages.map(message => (
                       <div key={message.id} className={`flex ${message.isHost ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-xs px-4 py-2 rounded-lg ${message.isHost ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-800'}`}>
+                        <div className={`max-w-xs px-4 py-2 rounded-lg ${message.isHost ? 'bg-[#1b5e20] text-white' : 'bg-gray-100 text-gray-800'}`}>
                           <div className="font-semibold text-sm">{message.username}</div>
                           <div>{message.message}</div>
                           <div className="text-xs opacity-70 mt-1">
@@ -1107,7 +1107,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
                     />
                     <button
                       onClick={sendMessage}
-                      className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors"
+                      className="bg-[#1b5e20] hover:bg-[#1b5e20] text-white px-4 py-2 rounded-lg transition-colors"
                     >
                       <Send className="w-5 h-5" />
                     </button>
@@ -1120,7 +1120,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
             <div className="bg-white rounded-xl shadow-lg overflow-hidden">
               <div className="p-4 border-b border-gray-200">
                 <h3 className="font-bold text-gray-800 flex items-center">
-                  <Users className="w-5 h-5 text-green-500 mr-2" />
+                  <Users className="w-5 h-5 text-[#1b5e20] mr-2" />
                   Spectateurs ({viewers})
                 </h3>
               </div>
@@ -1135,7 +1135,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
                       <div className="font-medium text-gray-800">
                         {index === 0 && mode === 'host' ? 'Hôte' : `Spectateur ${index + 1}`}
                         {index === 0 && mode === 'host' && (
-                          <Crown className="w-4 h-4 text-orange-500 ml-1 inline" />
+                          <Crown className="w-4 h-4 text-[#1b5e20] ml-1 inline" />
                         )}
                       </div>
                       <div className="text-sm text-gray-500">
@@ -1156,7 +1156,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
           <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden">
             <div className="p-6 border-b border-gray-200 flex items-center justify-between">
               <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-                <ShoppingCart className="w-6 h-6 text-orange-500 mr-3" />
+                <ShoppingCart className="w-6 h-6 text-[#1b5e20] mr-3" />
                 Catalogue Produits
               </h2>
               <button
@@ -1189,7 +1189,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
                     
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <div className="text-2xl font-bold text-orange-500">
+                        <div className="text-2xl font-bold text-[#1b5e20]">
                           {product.price.toLocaleString()} FCFA
                         </div>
                         {product.originalPrice && (
@@ -1199,7 +1199,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
                         )}
                       </div>
                       <div className="flex items-center">
-                        <Star className="w-5 h-5 text-yellow-400 fill-current" />
+                        <Star className="w-5 h-5 text-[#8f4b00] fill-current" />
                         <span className="text-gray-600 ml-1">{product.rating}</span>
                       </div>
                     </div>
@@ -1216,7 +1216,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
                         <span>Acheter Maintenant</span>
                       </button>
                       
-                      <button className="p-3 border border-orange-500 text-orange-500 rounded-lg hover:bg-orange-50 transition-colors">
+                      <button className="p-3 border border-[#cfe0c8] text-[#1b5e20] rounded-lg hover:bg-[#eef6ea] transition-colors">
                         <Heart className="w-5 h-5" />
                       </button>
                     </div>
@@ -1248,7 +1248,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-gray-700">Notifications</span>
-                <button className="w-12 h-6 bg-orange-500 rounded-full relative">
+                <button className="w-12 h-6 bg-[#1b5e20] rounded-full relative">
                   <div className="w-5 h-5 bg-white rounded-full absolute right-0.5 top-0.5" />
                 </button>
               </div>
@@ -1262,7 +1262,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
               
               <div className="flex items-center justify-between">
                 <span className="text-gray-700">Réactions</span>
-                <button className="w-12 h-6 bg-orange-500 rounded-full relative">
+                <button className="w-12 h-6 bg-[#1b5e20] rounded-full relative">
                   <div className="w-5 h-5 bg-white rounded-full absolute right-0.5 top-0.5" />
                 </button>
               </div>
@@ -1288,7 +1288,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-800 flex items-center">
-                <Phone className="w-5 h-5 text-blue-500 mr-2" />
+                <Phone className="w-5 h-5 text-[#1b5e20] mr-2" />
                 Passer un appel
               </h2>
               <button
@@ -1309,7 +1309,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
                   value={callNumber}
                   onChange={(e) => setCallNumber(e.target.value)}
                   placeholder="Entrez le numéro (ex: 8889)"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b5e20]/30 focus:border-transparent"
                 />
               </div>
               
@@ -1319,7 +1319,7 @@ const LiveShoppingVoIPManagerSimple: React.FC<LiveShoppingVoIPManagerSimpleProps
                     setShowCallModal(false);
                     makeCall(callNumber);
                   }}
-                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                  className="flex-1 bg-[#1b5e20] hover:bg-[#1b5e20] text-white py-2 rounded-lg transition-colors flex items-center justify-center space-x-2"
                 >
                   <PhoneCall className="w-4 h-4" />
                   <span>Appeler</span>

@@ -49,11 +49,11 @@ export const LiveShoppingLobby: React.FC<LiveShoppingLobbyProps> = ({
               </p>
             </div>
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
-                <User className="w-5 h-5 text-blue-600" />
+              <div className="flex items-center gap-2 p-3 bg-[#eef6ea] rounded-lg">
+                <User className="w-5 h-5 text-[#1b5e20]" />
                 <div>
-                  <p className="text-sm font-medium text-blue-800">{userName}</p>
-                  <p className="text-xs text-blue-600">ID: {userId.slice(-6)}</p>
+                  <p className="text-sm font-medium text-[#1b5e20]">{userName}</p>
+                  <p className="text-xs text-[#1b5e20]">ID: {userId.slice(-6)}</p>
                 </div>
               </div>
             </div>
@@ -68,7 +68,7 @@ export const LiveShoppingLobby: React.FC<LiveShoppingLobbyProps> = ({
               onClick={() => setUserRole('client')}
               className={`flex-1 p-4 rounded-lg border-2 transition-colors ${
                 userRole === 'client'
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  ? 'border-[#cfe0c8] bg-[#eef6ea] text-[#1b5e20]'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
@@ -82,7 +82,7 @@ export const LiveShoppingLobby: React.FC<LiveShoppingLobbyProps> = ({
               onClick={() => setUserRole('vendor')}
               className={`flex-1 p-4 rounded-lg border-2 transition-colors ${
                 userRole === 'vendor'
-                  ? 'border-green-500 bg-green-50 text-green-700'
+                  ? 'border-[#cfe0c8] bg-[#eef6ea] text-[#1b5e20]'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
@@ -109,7 +109,7 @@ export const LiveShoppingLobby: React.FC<LiveShoppingLobbyProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button
                 onClick={() => setShowCreator(true)}
-                className="flex items-center justify-center gap-3 p-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                className="flex items-center justify-center gap-3 p-4 bg-[#1b5e20] hover:bg-[#16381a] text-white rounded-lg transition-colors"
               >
                 <Plus className="w-5 h-5" />
                 <div className="text-left">
@@ -133,7 +133,7 @@ export const LiveShoppingLobby: React.FC<LiveShoppingLobbyProps> = ({
                   };
                   handleCreateRoom(memorableId, roomInfo);
                 }}
-                className="flex items-center justify-center gap-3 p-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                className="flex items-center justify-center gap-3 p-4 bg-[#1b5e20] hover:bg-[#16381a] text-white rounded-lg transition-colors"
               >
                 <Store className="w-5 h-5" />
                 <div className="text-left">

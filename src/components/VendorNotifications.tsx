@@ -158,11 +158,11 @@ export default function VendorNotifications({ vendorId }: VendorNotificationsPro
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'order':
-        return <ShoppingCart className="h-5 w-5 text-blue-500" />;
+        return <ShoppingCart className="h-5 w-5 text-[#1b5e20]" />;
       case 'stock':
-        return <TrendingDown className="h-5 w-5 text-orange-500" />;
+        return <TrendingDown className="h-5 w-5 text-[#1b5e20]" />;
       case 'payment':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+        return <CheckCircle className="h-5 w-5 text-[#66bb6a]" />;
       case 'system':
         return <Info className="h-5 w-5 text-gray-500" />;
       default:
@@ -269,7 +269,7 @@ export default function VendorNotifications({ vendorId }: VendorNotificationsPro
           <div className="max-h-96 overflow-y-auto">
             {loading ? (
               <div className="p-8 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1b5e20] mx-auto mb-4"></div>
                 <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                   Chargement des notifications...
                 </p>
@@ -289,8 +289,8 @@ export default function VendorNotifications({ vendorId }: VendorNotificationsPro
                     className={`p-4 border-l-4 ${getPriorityColor(notification.priority)} ${
                       !notification.read 
                         ? isDark 
-                          ? 'bg-blue-900/10' 
-                          : 'bg-blue-50'
+                          ? 'bg-[#17331c]/10' 
+                          : 'bg-[#eef6ea]'
                         : ''
                     }`}
                   >
@@ -335,7 +335,7 @@ export default function VendorNotifications({ vendorId }: VendorNotificationsPro
                         {!notification.read && (
                           <button
                             onClick={() => markAsRead(notification.id)}
-                            className="text-xs text-orange-600 hover:text-orange-700 mt-2"
+                            className="text-xs text-[#1b5e20] hover:text-[#1b5e20] mt-2"
                           >
                             Marquer comme lu
                           </button>
@@ -351,7 +351,7 @@ export default function VendorNotifications({ vendorId }: VendorNotificationsPro
           {/* Footer */}
           {notifications.length > 0 && (
             <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-              <button className="w-full text-center text-sm text-orange-600 hover:text-orange-700 font-medium">
+              <button className="w-full text-center text-sm text-[#1b5e20] hover:text-[#1b5e20] font-medium">
                 Voir toutes les notifications
               </button>
             </div>
