@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#1b5e20">
+    <meta name="theme-color" content="#f97316">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -517,7 +517,7 @@
                 return;
             }
             
-            btn.innerHTML = '<div class="spinner" style="width:15px; height:15px; border-width:2px; border-left-color:#1b5e20; display:inline-block; margin-right:5px;"></div> Recherche Satellites...';
+            btn.innerHTML = '<div class="spinner" style="width:15px; height:15px; border-width:2px; border-left-color:var(--ml-brand-from); display:inline-block; margin-right:5px;"></div> Recherche Satellites...';
             btn.disabled = true;
 
             const fail = () => {
@@ -669,20 +669,20 @@
         }
 
         :root {
-            --ml-bg: #f6faf3;
+            --ml-bg: #f9fafb;
             --ml-panel: #ffffff;
             --ml-card: #ffffff;
             --ml-text: #111827;
             --ml-muted: #6b7280;
-            --ml-border: #cfe0c8;
-            --ml-brand-from: #1b5e20;
-            --ml-brand-to: #1b5e20;
+            --ml-border: #e5e7eb;
+            --ml-brand-from: #f97316;
+            --ml-brand-to: #16a34a;
             --ml-radius-xl: 12px;
             --ml-radius-2xl: 16px;
             --ml-shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
             --ml-shadow-md: 0 10px 15px rgba(0,0,0,0.10);
             --ml-danger: #dc2626;
-            --ml-info: #1b5e20;
+            --ml-info: #2563eb;
         }
         html.dark {
             --ml-bg: #111827;
@@ -776,7 +776,7 @@
         html.dark .lp-modal-card { background: var(--ml-panel); }
         .lp-modal-head {
             padding: 18px;
-            background: #1b5e20;
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
             color: #ffffff;
             position: relative;
         }
@@ -1039,7 +1039,7 @@
         }
         .lp-onboard-head {
             padding: 18px 18px 14px;
-            background: #1b5e20;
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
             color: #ffffff;
         }
         .lp-onboard-title { font-size: 1.05rem; font-weight: 950; margin: 0; }
@@ -1081,7 +1081,7 @@
         }
         .lp-onboard-btn.primary {
             color: #ffffff;
-            background: #1b5e20;
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
             box-shadow: var(--ml-shadow-sm);
         }
         .lp-onboard-btn.secondary {
@@ -1455,12 +1455,12 @@
             color: #f3f4f6;
         }
         .scope-btn.active {
-            background: #1b5e20;
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
             border-color: rgba(255,255,255,0.16);
             color: white;
         }
         .mic-active {
-            background: #1b5e20 !important;
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)) !important;
             color: white;
             animation: pulse-mic 1s infinite;
         }
@@ -1560,13 +1560,13 @@
         }
 
         .kind-btn.active {
-            background: #1b5e20;
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
             border-color: rgba(255,255,255,0.16);
             color: white;
         }
 
         html.dark .kind-btn.active {
-            background: #1b5e20;
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
             border-color: rgba(255,255,255,0.16);
             color: white;
         }
@@ -1613,7 +1613,7 @@
         }
         .lp-simple-action:active { transform: scale(0.98); }
         .lp-simple-primary {
-            background: #1b5e20;
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
             color: white;
         }
         .lp-simple-secondary {
@@ -1837,9 +1837,9 @@
             gap: 8px;
             padding: 8px;
             border-radius: 16px;
-            background: rgba(255,255,255,0.78);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(27,94,32,0.18);
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--ml-border);
             box-shadow: 0 4px 16px rgba(0,0,0,0.10);
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
@@ -2008,8 +2008,8 @@
             width: 38px;
             height: 38px;
             border-radius: 19px;
-            border: 1px solid rgba(27,94,32,0.18);
-            background: rgba(255,255,255,0.78);
+            border: 1px solid var(--ml-border);
+            background: rgba(255,255,255,0.96);
             color: #1b5e20;
             font-weight: 950;
             cursor: pointer;
@@ -2054,9 +2054,8 @@
             flex: 0 0 auto;
             padding: 8px 10px;
             border-radius: 999px;
-            border: 1px solid rgba(27,94,32,0.18);
-            background: rgba(255,255,255,0.78);
-            backdrop-filter: blur(6px);
+            border: 1px solid var(--ml-border);
+            background: #eef6ea;
             color: #1b5e20;
             font-weight: 950;
             font-size: 0.8rem;
@@ -2076,9 +2075,8 @@
             flex: 0 0 auto;
             padding: 8px 10px;
             border-radius: 999px;
-            border: 1px solid rgba(27,94,32,0.16);
-            background: rgba(255,255,255,0.78);
-            backdrop-filter: blur(6px);
+            border: 1px solid rgba(27,94,32,0.20);
+            background: rgba(255,255,255,0.98);
             color: #2d3436;
             font-weight: 900;
             font-size: 0.8rem;
@@ -2092,13 +2090,13 @@
         }
 
         .metiers-family-chip.active {
-            background: #1b5e20;
-            border-color: #1b5e20;
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
+            border-color: transparent;
             color: #ffffff;
         }
         html.dark .metiers-family-chip.active {
-            background: #1b5e20;
-            border-color: #1b5e20;
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
+            border-color: transparent;
             color: #ffffff;
         }
 
@@ -2186,7 +2184,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 0; /* Base layer */
+            z-index: 910; /* Base layer - above overlays for markers */
         }
 
         /* === SCROLLABLE VIEW (List & Account) === */
@@ -2514,13 +2512,13 @@
 
         /* === TONTINE SHOPPING === */
         .tontine-badge {
-            background: #1b5e20; color: white; padding: 2px 6px; border-radius: 4px;
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color: white; padding: 2px 6px; border-radius: 4px;
             font-size: 0.7rem; font-weight: bold; margin-left: 5px;
         }
 
         /* === WALLET CARD === */
         .wallet-card {
-            background: #1b5e20;
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
             color: var(--ml-text);
             border-radius: var(--ml-radius-2xl);
             padding: 16px;
@@ -2531,7 +2529,7 @@
             overflow: hidden;
         }
         html.dark .wallet-card {
-            background: #1b5e20;
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
             border-color: rgba(255,255,255,0.08);
             box-shadow: 0 12px 28px rgba(0,0,0,0.35);
         }
@@ -2760,7 +2758,7 @@
         html.dark .arrow { color: #6b7280; }
 
         .btn-seller {
-            background: #1b5e20;
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
             color: white;
             width: 100%;
             padding: 15px;
@@ -2995,7 +2993,7 @@
         }
         .lp-delivery-option .t { font-weight: 950; color: var(--ml-text); }
         .lp-delivery-option .s { font-size: 0.82rem; color: var(--ml-muted); font-weight: 700; margin-top: 2px; }
-        .lp-delivery-option .p { font-weight: 950; color: #1b5e20; margin-top: 4px; }
+        .lp-delivery-option .p { font-weight: 950; color: var(--ml-brand-to); margin-top: 4px; }
         .lp-delivery-option.selected {
             border: 2px solid rgba(27,94,32,0.55);
             background: rgba(27,94,32,0.08);
@@ -3084,12 +3082,12 @@
             font-weight: bold;
             text-transform: uppercase;
         }
-        .status-open { background: #1b5e20; color: #ffffff; }
-        html.dark .status-open { background: #1b5e20; color: #ffffff; }
+        .status-open { background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color: #ffffff; }
+        html.dark .status-open { background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color: #ffffff; }
         .status-closed { background: #f8d7da; color: #721c24; }
         html.dark .status-closed { background: #7f1d1d; color: #fca5a5; }
         .status-live { 
-            background: #1b5e20; 
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); 
             color: white; 
             animation: pulse 1.5s infinite;
         }
@@ -3131,7 +3129,7 @@
         .play-btn {
             width: 40px;
             height: 40px;
-            background: #1b5e20;
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -3322,7 +3320,7 @@
         .lp-list-bar {
             width: 54px;
             height: 4px;
-            background: #1b5e20;
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
             margin: 10px auto 6px;
             border-radius: 999px;
         }
@@ -3426,7 +3424,7 @@
         }
         html.dark .chat-overlay { background: #111827; }
         .chat-header {
-            background: #1b5e20;
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
             color: white;
             padding: 15px;
             display: flex;
@@ -3467,7 +3465,7 @@
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
         html.dark .msg-sent {
-            background: #1b5e20;
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
             color: white;
         }
         .msg-meta {
@@ -3554,7 +3552,7 @@
             color: var(--ml-text);
         }
         .btn-send {
-            background: #1b5e20;
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
             color: white;
             width: 40px; height: 40px;
             border-radius: 50%;
@@ -3580,7 +3578,7 @@
         .spinner {
             width: 50px; height: 50px;
             border: 5px solid var(--ml-border);
-            border-top: 5px solid #1b5e20;
+            border-top: 5px solid var(--ml-brand-from);
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -3636,7 +3634,7 @@
             margin: 0 auto 10px;
             font-size: 2rem;
             color: white;
-            background: #1b5e20;
+            background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));
             box-shadow: var(--ml-shadow-md);
         }
         #sellerModal .modal-title {
@@ -3673,7 +3671,7 @@
         }
         html.dark #sellerModal .input-field { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); color: var(--ml-text); }
         #sellerModal .input-field:focus { box-shadow: 0 0 0 4px rgba(27,94,32,0.16); border-color: rgba(27,94,32,0.65); }
-        .btn-submit { background: #1b5e20; color: white; width: 100%; min-height: 44px; padding: 12px 14px; border: none; border-radius: var(--ml-radius-xl); font-weight: 600; font-size: 0.95rem; cursor: pointer; box-shadow: var(--ml-shadow-sm); }
+        .btn-submit { background: linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color: white; width: 100%; min-height: 44px; padding: 12px 14px; border: none; border-radius: var(--ml-radius-xl); font-weight: 600; font-size: 0.95rem; cursor: pointer; box-shadow: var(--ml-shadow-sm); }
         #sellerModal label[for="shopLogoFile"] {
             background: rgba(17,24,39,0.06);
             color: var(--ml-text);
@@ -3982,7 +3980,7 @@
                         
                         <div style="margin-bottom: 14px; font-size: 0.9rem; background: rgba(17,24,39,0.03); padding: 10px 12px; border-radius: 14px; display: flex; justify-content: space-between; border: 1px solid rgba(0,0,0,0.06); font-weight: 900; color: var(--ml-text);">
                             <span>⚡ Crédit Instantané</span>
-                            <span style="color: #1b5e20; font-weight: 950;">25 000 FCFA</span>
+                            <span style="color: var(--ml-brand-to); font-weight: 950;">25 000 FCFA</span>
                         </div>
                         
                         <button class="wallet-btn wide" style="margin-bottom:12px;" onclick="requestCredit()">
@@ -4289,7 +4287,7 @@
         </div>
 
             <!-- MANGOO SUPPLY (NEW ACCESS) -->
-            <div id="supplyChainCard" style="background:#1b5e20; border-radius:15px; padding:20px; margin-bottom:20px; color:white; display:none; box-shadow:0 8px 15px rgba(9, 132, 227, 0.3); cursor:pointer; animation: slideUp 0.3s;" onclick="openSupplyModal()">
+            <div id="supplyChainCard" style="background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); border-radius:15px; padding:20px; margin-bottom:20px; color:white; display:none; box-shadow:0 8px 15px rgba(9, 132, 227, 0.3); cursor:pointer; animation: slideUp 0.3s;" onclick="openSupplyModal()">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <div style="font-weight:bold; font-size:1.1rem;">Mangoo Supply Chain 🏭</div>
@@ -4328,7 +4326,7 @@
                         </div>
                         <div style="text-align:right;">
                             <div class="debt-amount">70 000 F</div>
-                            <button class="btn-remind" style="background:#1b5e20;" onclick="alert('Rappel programmé pour demain')">📅 Suivre</button>
+                            <button class="btn-remind" style="background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));" onclick="alert('Rappel programmé pour demain')">📅 Suivre</button>
                         </div>
                     </div>
                     <button class="wallet-btn" style="background:#f1f2f6; color:#2d3436; margin-top:10px;" onclick="addDebt()">+ Noter un nouveau crédit</button>
@@ -4395,7 +4393,7 @@
                 🚀 Devenir Vendeur
             </button>
 
-            <button class="btn-seller" onclick="lpStartOnboarding('service')" style="margin-top:10px; background:#1b5e20;">
+            <button class="btn-seller" onclick="lpStartOnboarding('service')" style="margin-top:10px;">
                 🧰 Créer ma fiche
             </button>
 
@@ -4443,8 +4441,8 @@
             <div id="ownerEditLink" style="text-align:center; margin-bottom:15px; display:none;">
                 <div style="display:flex; gap:10px; justify-content:center;">
                     <a href="#" onclick="openSellerModal()" style="color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px;">⚙️ Réglages</a>
-                    <a href="#" onclick="openProductModal()" style="color:#1b5e20; font-size:0.85rem; text-decoration:none; border:1px solid #1b5e20; padding:8px 15px; border-radius:20px; font-weight:bold;">📦 Nouveau</a>
-                    <a href="#" onclick="openSupplyModal()" style="color:#1b5e20; font-size:0.85rem; text-decoration:none; border:1px solid #1b5e20; padding:8px 15px; border-radius:20px; font-weight:bold;">🏭 S'approvisionner</a>
+                    <a href="#" onclick="openProductModal()" style="color:var(--ml-brand-to); font-size:0.85rem; text-decoration:none; border:1px solid var(--ml-border); padding:8px 15px; border-radius:20px; font-weight:bold;">📦 Nouveau</a>
+                    <a href="#" onclick="openSupplyModal()" style="color:var(--ml-brand-to); font-size:0.85rem; text-decoration:none; border:1px solid var(--ml-border); padding:8px 15px; border-radius:20px; font-weight:bold;">🏭 S'approvisionner</a>
                 </div>
             </div>
 
@@ -4828,7 +4826,7 @@
                     <div class="lp-section-desc">Parlez avec votre voix pour présenter le produit.</div>
 
                     <div style="display:flex; align-items:center; gap:12px;">
-                        <button id="btnRecordProdAudio" onclick="toggleProdAudioRecord()" style="width:60px; height:60px; border-radius:50%; border:none; background:#1b5e20; color:white; font-size:1.8rem; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 15px rgba(225, 112, 85, 0.4); transition:all 0.2s;">🎙️</button>
+                        <button id="btnRecordProdAudio" onclick="toggleProdAudioRecord()" style="width:60px; height:60px; border-radius:50%; border:none; background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:white; font-size:1.8rem; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 15px rgba(225, 112, 85, 0.4); transition:all 0.2s;">🎙️</button>
 
                         <div id="prodAudioPreviewContainer" style="display:none; align-items:center; gap:10px; flex:1;">
                             <audio id="prodAudioPreview" controls style="height:40px; width:100%; border-radius:20px;"></audio>
@@ -4844,7 +4842,7 @@
             </div>
 
             <div class="lp-modal-foot">
-                <button class="btn-submit" onclick="submitProduct()" style="background: #1b5e20;">Publier le produit</button>
+                <button class="btn-submit" onclick="submitProduct()">Publier le produit</button>
             </div>
         </div>
     </div>
@@ -4880,7 +4878,7 @@
                 </label>
             </div>
 
-            <button class="btn-submit" onclick="document.getElementById('labModal').style.display='none'" style="background:#1b5e20;">Fermer le Lab</button>
+            <button class="btn-submit" onclick="document.getElementById('labModal').style.display='none'">Fermer le Lab</button>
         </div>
     </div>
 
@@ -5083,12 +5081,12 @@
 
                     <!-- Orange Money -->
                     <div onclick="selectPaymentMethod('orange_money')" class="payment-method-card">
-                        <div class="lp-pay-icon" style="background:#1b5e20;">OM</div>
+                        <div class="lp-pay-icon" style="background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));">OM</div>
                         <div class="lp-pay-meta">
                             <div class="lp-pay-name">Orange Money</div>
                             <div class="lp-pay-sub">CI, SN, ML, BF</div>
                         </div>
-                        <div class="lp-pay-fee" style="color:#1b5e20;">1%</div>
+                        <div class="lp-pay-fee" style="color:var(--ml-brand-to);">1%</div>
                     </div>
 
                     <!-- MTN MoMo -->
@@ -5098,7 +5096,7 @@
                             <div class="lp-pay-name">MTN Mobile Money</div>
                             <div class="lp-pay-sub">CI, GH, UG, RW</div>
                         </div>
-                        <div class="lp-pay-fee" style="color:#1b5e20;">1.5%</div>
+                        <div class="lp-pay-fee" style="color:var(--ml-brand-to);">1.5%</div>
                     </div>
                     
                     <!-- Free Money (New) -->
@@ -5113,22 +5111,22 @@
                     
                     <!-- Moov (New) -->
                     <div onclick="selectPaymentMethod('moov_money')" class="payment-method-card">
-                        <div class="lp-pay-icon" style="background:#1b5e20;">Moov</div>
+                        <div class="lp-pay-icon" style="background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));">Moov</div>
                         <div class="lp-pay-meta">
                             <div class="lp-pay-name">Moov Money</div>
                             <div class="lp-pay-sub">CI, TG, BJ, BF</div>
                         </div>
-                        <div class="lp-pay-fee" style="color:#1b5e20;">1%</div>
+                        <div class="lp-pay-fee" style="color:var(--ml-brand-to);">1%</div>
                     </div>
 
                     <!-- Wave -->
                     <div onclick="selectPaymentMethod('wave')" class="payment-method-card">
-                        <div class="lp-pay-icon" style="background:#1b5e20;">W</div>
+                        <div class="lp-pay-icon" style="background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));">W</div>
                         <div class="lp-pay-meta">
                             <div class="lp-pay-name">Wave</div>
                             <div class="lp-pay-sub">CI, SN</div>
                         </div>
-                        <div class="lp-pay-fee" style="color:#1b5e20;">1%</div>
+                        <div class="lp-pay-fee" style="color:var(--ml-brand-to);">1%</div>
                     </div>
 
                     <!-- Carte Bancaire -->
@@ -5143,22 +5141,22 @@
                     
                     <!-- PayPal (New) -->
                     <div onclick="selectPaymentMethod('paypal')" class="payment-method-card">
-                        <div class="lp-pay-icon" style="background:#1b5e20;">P</div>
+                        <div class="lp-pay-icon" style="background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));">P</div>
                         <div class="lp-pay-meta">
                             <div class="lp-pay-name">PayPal</div>
                             <div class="lp-pay-sub">International</div>
                         </div>
-                        <div class="lp-pay-fee" style="color:#1b5e20;">3%</div>
+                        <div class="lp-pay-fee" style="color:var(--ml-brand-to);">3%</div>
                     </div>
                     
                     <!-- Stripe (New) -->
                     <div onclick="selectPaymentMethod('stripe')" class="payment-method-card">
-                        <div class="lp-pay-icon" style="background:#1b5e20;">S</div>
+                        <div class="lp-pay-icon" style="background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));">S</div>
                         <div class="lp-pay-meta">
                             <div class="lp-pay-name">Stripe</div>
                             <div class="lp-pay-sub">International</div>
                         </div>
-                        <div class="lp-pay-fee" style="color:#1b5e20;">2.9%</div>
+                        <div class="lp-pay-fee" style="color:var(--ml-brand-to);">2.9%</div>
                     </div>
                 </div>
 
@@ -8518,7 +8516,7 @@
                 return;
             }
 
-            btn.innerHTML = '<div class="spinner" style="width:15px; height:15px; border-width:2px; border-left-color:#1b5e20; display:inline-block; margin-right:5px;"></div> Recherche Satellites...';
+            btn.innerHTML = '<div class="spinner" style="width:15px; height:15px; border-width:2px; border-left-color:var(--ml-brand-from); display:inline-block; margin-right:5px;"></div> Recherche Satellites...';
             btn.disabled = true;
 
             const done = (lat, lng, accuracy) => {
@@ -9590,6 +9588,10 @@
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
             }).addTo(map);
+
+            // Ajuster la zone visible pour tenir compte des overlays UI
+            setTimeout(() => { try { map.invalidateSize(); } catch {} }, 50);
+            setTimeout(() => { try { map.invalidateSize(); } catch {} }, 400);
 
             // User Marker
             updateUserMarker();
@@ -10850,7 +10852,7 @@
 
             overlay.innerHTML = `
                 <div style="background: white; padding: 0; border-radius: 20px; width: 90%; max-width: 350px; overflow:hidden; animation: slideUp 0.3s; font-family: sans-serif;">
-                    <div style="background: #1b5e20; color:white; padding:20px; text-align:center;">
+                    <div style="background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:white; padding:20px; text-align:center;">
                         <div style="font-size:2rem;">✍️</div>
                         <h2 style="margin:5px 0 0 0;">Signature Numérique</h2>
                         <div style="font-size:0.8rem; opacity:0.8;">Contrat légal simplifié</div>
@@ -10870,7 +10872,7 @@
                         
                         <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px; font-size:0.8rem; color:#636e72;">
                             <input type="checkbox" checked disabled>
-                            <span>J'accepte les <a href="cgu.html" target="_blank" rel="noopener" style="color:#1b5e20;">CGU Mangoo</a></span>
+                            <span>J'accepte les <a href="cgu.html" target="_blank" rel="noopener" style="color:var(--ml-brand-to);">CGU Mangoo</a></span>
                         </div>
 
                         <button onclick="confirmSignature('${name}', ${total}, ${share})" style="width:100%; padding:15px; background: #1b5e20; color:white; border:none; border-radius:var(--ml-radius-xl); font-weight:900; font-size:1rem; cursor:pointer; box-shadow:var(--ml-shadow-md);">
@@ -11036,7 +11038,7 @@
             overlay.innerHTML = `
                 <div style="background: white; width: 100%; max-width: 350px; border-radius: 15px; overflow: hidden; position: relative; box-shadow: 0 10px 30px rgba(255,255,255,0.1); max-height: 90vh; display: flex; flex-direction: column;">
                     <!-- Header with pattern -->
-                    <div style="background: #1b5e20; color: white; padding: 15px; text-align: center; position: relative; flex-shrink: 0;">
+                    <div style="background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color: white; padding: 15px; text-align: center; position: relative; flex-shrink: 0;">
                         <div style="font-size: 1.5rem;">📜</div>
                         <h2 style="margin: 5px 0 0 0; font-size: 1.1rem;">Contrat Numérique</h2>
                         <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 5px;">Document légal simplifié</div>
@@ -11649,7 +11651,7 @@
                     }
                 </style>
                 
-                <div style="background: ${isCredit ? '#111827' : '#1b5e20'}; padding: 20px; color: white; border-radius: 0 0 30px 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 100;">
+                <div style="background: ${isCredit ? '#111827' : 'linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to))'}; padding: 20px; color: white; border-radius: 0 0 30px 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 100;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                         <button onclick="document.getElementById('scheduleOverlay').remove()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 10px; font-weight: bold; cursor: pointer;">✕ Fermer</button>
                         <h2 style="margin: 0; font-size: 1.2rem;">Parcours Tontine</h2>
@@ -13660,7 +13662,7 @@
                         <div style="margin-top:14px; padding:14px; border-radius:var(--ml-radius-2xl); border:1px solid rgba(0,0,0,0.06); background:rgba(17,24,39,0.03);">
                             <div style="display:flex; justify-content:space-between; gap:10px; font-weight:950; font-size:1.1rem; color:var(--ml-text);">
                                 <span>Total payé</span>
-                                <span style="color:#1b5e20;">${price.toLocaleString()} FCFA</span>
+                                <span style="color:var(--ml-brand-to);">${price.toLocaleString()} FCFA</span>
                             </div>
                             <div style="margin-top:6px; font-size:0.88rem; font-weight:850; color:var(--ml-muted); line-height:1.35;">
                                 ${String(productName || '').trim() ? `${productName} (prix négocié)` : 'Paiement'}
@@ -14267,7 +14269,7 @@
                     </div>
 
                     <div class="lp-modal-foot">
-                        <button class="btn-submit" onclick="publishProduct()" style="background: #1b5e20;">Publier</button>
+                        <button class="btn-submit" onclick="publishProduct()">Publier</button>
                         <button type="button" class="lp-btn lp-btn-secondary" onclick="document.getElementById('addProductOverlay')?.remove()" style="width:100%; margin-top:10px;">Annuler</button>
                     </div>
                 </div>
@@ -14408,7 +14410,7 @@
                         </div>
                         <div style="text-align:right;">
                             <div class="debt-amount">${parseInt(amount).toLocaleString()} F</div>
-                            <button class="btn-remind" style="background:#1b5e20;" onclick="alert('Rappel programmé dans 7 jours')">📅 Suivre</button>
+                            <button class="btn-remind" style="background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to));" onclick="alert('Rappel programmé dans 7 jours')">📅 Suivre</button>
                         </div>
                     </div>`;
                     
@@ -14709,7 +14711,7 @@
                     ownerLink.style.display = 'block';
                     ownerLink.innerHTML = `
                         <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center;">
-                            <a href="#" onclick="setVendorApprovalStatus('${safeVendorId}', 'approved')" style="color:#1b5e20; font-size:0.85rem; text-decoration:none; border:1px solid #1b5e20; padding:8px 15px; border-radius:20px; font-weight:bold;">✅ Approuver</a>
+                            <a href="#" onclick="setVendorApprovalStatus('${safeVendorId}', 'approved')" style="color:var(--ml-brand-to); font-size:0.85rem; text-decoration:none; border:1px solid var(--ml-border); padding:8px 15px; border-radius:20px; font-weight:bold;">✅ Approuver</a>
                             <a href="#" onclick="setVendorApprovalStatus('${safeVendorId}', 'pending')" style="color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px; font-weight:bold;">⏳ En attente</a>
                             <a href="#" onclick="setVendorApprovalStatus('${safeVendorId}', 'rejected')" style="color:#d63031; font-size:0.85rem; text-decoration:none; border:1px solid #d63031; padding:8px 15px; border-radius:20px; font-weight:bold;">⛔ Rejeter</a>
                             <a href="#" onclick="setVendorApprovalStatus('${safeVendorId}', 'suspended')" style="color:#ffe082; font-size:0.85rem; text-decoration:none; border:1px solid #ffe082; padding:8px 15px; border-radius:20px; font-weight:bold;">⏸️ Suspendre</a>
@@ -14720,7 +14722,7 @@
                             <div style="height:10px;"></div>
                             <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
                                 <a href="#" onclick="openProviderModalForVendor('${safeVendorId}')" style="color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px;">🏪 Ma fiche</a>
-                                <a href="#" onclick="startServicePayment('${safeVendorId}')" style="color:#1b5e20; font-size:0.85rem; text-decoration:none; border:1px solid #1b5e20; padding:8px 15px; border-radius:20px; font-weight:bold;">💳 Paiement</a>
+                                <a href="#" onclick="startServicePayment('${safeVendorId}')" style="color:var(--ml-brand-to); font-size:0.85rem; text-decoration:none; border:1px solid var(--ml-border); padding:8px 15px; border-radius:20px; font-weight:bold;">💳 Paiement</a>
                                 <a href="#" onclick="openProviderDashboard('${safeVendorId}')" style="color:#ffe082; font-size:0.85rem; text-decoration:none; border:1px solid #ffe082; padding:8px 15px; border-radius:20px; font-weight:bold;">👤 Mon compte</a>
                                 <a href="#" onclick="try{lpDisconnectProvider()}catch{}; try{closeSheet()}catch{}" style="color:#d63031; font-size:0.85rem; text-decoration:none; border:1px solid #d63031; padding:8px 15px; border-radius:20px; font-weight:bold;">🚪 Quitter</a>
                             </div>
@@ -14735,7 +14737,7 @@
                         <div style="display:flex; gap:10px; justify-content:flex-start; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:0 12px; scroll-snap-type:x proximity;">
                                 <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpTryOpenBoostFromLocal('${safeVendorId}', 'provider');" style="flex:0 0 auto; white-space:nowrap; background:#ffe082; color:white; font-size:0.95rem; border:1px solid #ffe082; padding:10px 16px; border-radius:999px; font-weight:950; scroll-snap-align:start; cursor:pointer; pointer-events:auto;">🚀 Booster</button>
                             <a href="#" onclick="openProviderModalForVendor('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px; scroll-snap-align:start;">🏪 Ma fiche</a>
-                            <a href="#" onclick="startServicePayment('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#1b5e20; font-size:0.85rem; text-decoration:none; border:1px solid #1b5e20; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">💳 Paiement</a>
+                            <a href="#" onclick="startServicePayment('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:var(--ml-brand-to); font-size:0.85rem; text-decoration:none; border:1px solid var(--ml-border); padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">💳 Paiement</a>
                             <a href="#" onclick="openProviderDashboard('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#ffe082; font-size:0.85rem; text-decoration:none; border:1px solid #ffe082; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">👤 Mon compte</a>
                             <a href="#" onclick="try{lpDisconnectProvider()}catch{}; try{closeSheet()}catch{}" style="flex:0 0 auto; white-space:nowrap; color:#d63031; font-size:0.85rem; text-decoration:none; border:1px solid #d63031; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">🚪 Quitter</a>
                         </div>
@@ -16304,7 +16306,7 @@
             overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:var(--ml-bg); z-index:10000; display:flex; flex-direction:column; overflow-y:auto; color:var(--ml-text);";
             
             overlay.innerHTML = `
-                <div style="background: #1b5e20; color:white; padding:20px; display:flex; align-items:center; gap:15px;">
+                <div style="background:linear-gradient(90deg, var(--ml-brand-from), var(--ml-brand-to)); color:white; padding:20px; display:flex; align-items:center; gap:15px;">
                     <button onclick="document.getElementById('driverOverlay').remove()" style="background:none; border:none; color:white; font-size:1.5rem;">←</button>
                     <h2 style="margin:0; flex:1;">Espace Livreur</h2>
                     <div style="font-weight:950; font-size:0.78rem; opacity:0.9;">v20260617</div>
