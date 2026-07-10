@@ -1,6 +1,20 @@
 // Serveur WebSocket WebRTC pour MangooTech - Port 3008
+// Avec tracking presence, push notifications et verification horaires
 import http from 'http';
 import WebSocket, { WebSocketServer } from 'ws';
+import fs from 'fs';
+import path from 'path';
+import webpush from 'web-push';
+import { saveSubscription, removeSubscription, getSubscriptions } from './webrtc-push-store.js';
+
+// Configuration VAPID pour Web Push
+const VAPID_KEYS = {
+  publicKey: 'BOZ9Fe4c0vpE7UiBnhWUX62s5shdFTJngzG1PoO2RKqNH02N-XSugmasWvcAOjo7RrNBQZqHgPbgzJo_FnQlyPs',
+  privateKey: 'jyg4ZLempjREByaxLglNq4szkouwv5hK7F8Li-6XXQg'
+};
+const VAPID_SUBJECT = 'mailto:contact@mangootech.com';
+
+webpush.setVapidDetails(VAPID_SUBJECT, VAPID_KEYS.publicKey, VAPID_KEYS.privateKey);
 
 const server = http.createServer();
 const wss = new WebSocketServer({ server });
@@ -9,18 +23,244 @@ const wss = new WebSocketServer({ server });
 const rooms = new Map();
 const users = new Map();
 
+// Stockage des offres en attente pour le replay (scenario push : le vendeur rejoint apres l'offre)
+// Map: roomId -> { offer, fromLabel, callId, callMode, from, timestamp }
+const pendingOffers = new Map();
+
+// ===== PRESENCE TRACKING =====
+// Map: vendorId -> { ws, userId, connectedAt, lastPing }
+const vendorPresence = new Map();
+
+// ===== ANTI-DUPLICATION PUSH =====
+// Empeche l'envoi de push multiples pour le meme appel
+const recentPushCallIds = new Map(); // callId -> timestamp
+const PUSH_DEDUP_WINDOW = 60000; // 60 secondes
+const recentPushMessageIds = new Map(); // messageId -> timestamp
+const MESSAGE_PUSH_DEDUP_WINDOW = 60000; // 60 secondes
+
+// ===== HORAIRES D'OUVERTURE =====
+// Charge les horaires depuis le fichier de donnees local
+const localSyncPath = path.join(process.cwd(), 'server', 'data', 'local-sync.json');
+const chatStorePath = path.join(process.cwd(), 'server', 'data', 'connect-plus-chat-store.json');
+
+function loadVendorData() {
+  try {
+    if (!fs.existsSync(localSyncPath)) return { shops: [], providers: [], localPlusVendors: [] };
+    const raw = fs.readFileSync(localSyncPath, 'utf-8');
+    return JSON.parse(raw);
+  } catch {
+    return { shops: [], providers: [], localPlusVendors: [] };
+  }
+}
+
+function ensureDataDir() {
+  try {
+    fs.mkdirSync(path.dirname(chatStorePath), { recursive: true });
+  } catch {
+  }
+}
+
+function loadChatStore() {
+  try {
+    if (!fs.existsSync(chatStorePath)) return { rooms: {} };
+    const raw = fs.readFileSync(chatStorePath, 'utf-8');
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return { rooms: {} };
+    if (!parsed.rooms || typeof parsed.rooms !== 'object') parsed.rooms = {};
+    return parsed;
+  } catch {
+    return { rooms: {} };
+  }
+}
+
+function saveChatStore(store) {
+  try {
+    ensureDataDir();
+    fs.writeFileSync(chatStorePath, JSON.stringify(store, null, 2), 'utf-8');
+    return true;
+  } catch (err) {
+    console.error('[WebRTC-3008] Erreur sauvegarde chat store:', err);
+    return false;
+  }
+}
+
+function appendChatMessage(roomId, message) {
+  try {
+    const store = loadChatStore();
+    if (!store.rooms[roomId]) store.rooms[roomId] = { messages: [], updatedAt: null };
+    const room = store.rooms[roomId];
+    if (!Array.isArray(room.messages)) room.messages = [];
+    room.messages.push(message);
+    room.messages = room.messages.slice(-100);
+    room.updatedAt = new Date().toISOString();
+    saveChatStore(store);
+    return true;
+  } catch (err) {
+    console.error('[WebRTC-3008] Erreur append chat:', err);
+    return false;
+  }
+}
+
+function getChatHistory(roomId) {
+  try {
+    const store = loadChatStore();
+    const room = store.rooms && store.rooms[roomId];
+    return Array.isArray(room?.messages) ? room.messages : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Verifie si un vendeur est dans ses heures d'ouverture
+ * @param {string} vendorId - ID du vendeur
+ * @returns {{ isOpen: boolean, reason?: string }}
+ */
+function checkOpeningHours(vendorId) {
+  try {
+    const data = loadVendorData();
+    const vendors = data.localPlusVendors || [];
+
+    const vendor = vendors.find(v => v.id === vendorId || v.slug === vendorId);
+    if (!vendor) return { isOpen: true, reason: 'vendor_not_found' };
+
+    const openTime = vendor.open_time || vendor.openTime || null;
+    const closeTime = vendor.close_time || vendor.closeTime || null;
+
+    // Si pas d'horaires definis, considere comme ouvert
+    if (!openTime || !closeTime) return { isOpen: true, reason: 'no_hours_set' };
+
+    const timezone = vendor.timezone || 'Africa/Douala';
+    const now = new Date();
+    const localTimeStr = now.toLocaleTimeString('fr-FR', { timeZone: timezone, hour12: false, hour: '2-digit', minute: '2-digit' });
+
+    const nowMinutes = timeToMinutes(localTimeStr);
+    const openMinutes = timeToMinutes(openTime);
+    const closeMinutes = timeToMinutes(closeTime);
+
+    if (nowMinutes >= openMinutes && nowMinutes < closeMinutes) {
+      return { isOpen: true };
+    }
+    return {
+      isOpen: false,
+      reason: 'closed',
+      openTime,
+      closeTime,
+      timezone
+    };
+  } catch (err) {
+    console.error('[WebRTC-3008] Erreur verification horaires:', err);
+    return { isOpen: true, reason: 'error' };
+  }
+}
+
+function timeToMinutes(timeStr) {
+  if (!timeStr) return 0;
+  const parts = String(timeStr).split(':');
+  return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+}
+
+/**
+ * Extrait l'identifiant brut depuis le roomId (format: shop:slug-ou-id)
+ */
+function extractRawIdFromRoomId(roomId) {
+  if (!roomId) return null;
+  const parts = String(roomId).split(':');
+  return parts.length > 1 ? parts.slice(1).join(':') : parts[0];
+}
+
+/**
+ * Resout l'ID reel du vendeur a partir d'un slug ou d'un ID partiel
+ * Cherche d'abord par ID exact, puis par slug
+ */
+function resolveVendorId(rawId) {
+  if (!rawId) return null;
+  const data = loadVendorData();
+  const vendors = data.localPlusVendors || [];
+
+  // Essayer correspondance exacte par ID
+  let vendor = vendors.find(v => v.id === rawId);
+  if (vendor) return vendor.id;
+
+  // Essayer par slug
+  vendor = vendors.find(v => v.slug === rawId);
+  if (vendor) return vendor.id;
+
+  // Essayer par nom (slugifie)
+  vendor = vendors.find(v => {
+    const nameSlug = String(v.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    return nameSlug === rawId;
+  });
+  if (vendor) return vendor.id;
+
+  // Aucune correspondance : retourner l'ID brut (c'est peut-etre deja l'ID)
+  return rawId;
+}
+
+/**
+ * Verifie si un vendeur est en ligne (WebSocket connecte)
+ * Cherche par ID exact ou resolu depuis le slug
+ */
+function isVendorOnline(vendorIdOrSlug) {
+  // Verifier directement
+  if (vendorPresence.has(vendorIdOrSlug)) return true;
+  // Resoudre depuis le slug vers l'ID canonique
+  const resolved = resolveVendorId(vendorIdOrSlug);
+  if (resolved !== vendorIdOrSlug && vendorPresence.has(resolved)) return true;
+  // Reverse : parcourir les cles de presence pour voir si l'une d'elles
+  // correspond a ce vendorId une fois resolue
+  for (const key of vendorPresence.keys()) {
+    if (resolveVendorId(key) === vendorIdOrSlug) return true;
+  }
+  return false;
+}
+
+/**
+ * Envoie une notification push a un vendeur hors-ligne
+ */
+async function sendPushToVendor(vendorId, payload) {
+  const subscriptions = getSubscriptions(vendorId);
+  if (subscriptions.length === 0) {
+    console.log(`[WebRTC-3008] Aucune souscription push pour vendor ${vendorId}`);
+    return false;
+  }
+
+  let sent = 0;
+  const pushPayload = JSON.stringify(payload);
+
+  for (const sub of subscriptions) {
+    try {
+      await webpush.sendNotification(sub, pushPayload);
+      sent++;
+      console.log(`[WebRTC-3008] Push envoye a ${vendorId} (endpoint: ${sub.endpoint.substring(0, 60)}...)`);
+    } catch (err) {
+      console.error(`[WebRTC-3008] Echec push pour ${vendorId}:`, err.statusCode, err.message);
+      // Nettoyer les souscriptions invalides (410 Gone, 404 Not Found)
+      if (err.statusCode === 410 || err.statusCode === 404) {
+        removeSubscription(vendorId, sub.endpoint);
+      }
+    }
+  }
+  return sent > 0;
+}
+
+// ===== WEBSOCKET HANDLERS =====
+
 wss.on('connection', (ws) => {
   console.log('[WebRTC-3008] Nouvelle connexion WebSocket');
-  
+
   let currentUser = null;
   const joinedRooms = new Set();
 
   ws.on('message', (message) => {
     try {
       const data = JSON.parse(message);
-      console.log('[WebRTC-3008] Message reçu:', data.type);
 
       switch (data.type) {
+        case 'register-presence':
+          handleRegisterPresence(ws, data);
+          break;
+
         case 'join-room':
           handleJoinRoom(ws, data);
           break;
@@ -53,6 +293,10 @@ wss.on('connection', (ws) => {
           handleChatMessage(ws, data);
           break;
 
+        case 'chat-notification':
+          handleChatNotification(ws, data);
+          break;
+
         case 'ping':
           ws.send(JSON.stringify({ type: 'pong', timestamp: Date.now() }));
           break;
@@ -74,25 +318,64 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
-    console.log('[WebRTC-3008] Connexion WebSocket fermée');
+    console.log('[WebRTC-3008] Connexion WebSocket fermee');
+    // Nettoyer les rooms
     if (currentUser && joinedRooms.size) {
       for (const rid of Array.from(joinedRooms.values())) {
         handleUserDisconnect(rid, currentUser);
       }
     }
+    // Nettoyer la presence
+    if (currentUser && currentUser.vendorId) {
+      const existing = vendorPresence.get(currentUser.vendorId);
+      if (existing && existing.ws === ws) {
+        vendorPresence.delete(currentUser.vendorId);
+        console.log(`[WebRTC-3008] Presence retirée pour vendor ${currentUser.vendorId}`);
+      }
+    }
   });
+
+  // ===== PRESENCE =====
+
+  function handleRegisterPresence(ws, data) {
+    let { vendorId, userId } = data;
+    if (!vendorId || !userId) return;
+
+    // Normaliser : toujours resoudre vers l'ID canonique
+    const resolved = resolveVendorId(vendorId);
+    if (resolved) {
+      console.log(`[WebRTC-3008] Presence normalisee: ${vendorId} → ${resolved}`);
+      vendorId = resolved;
+    }
+
+    currentUser = { id: userId, vendorId, ws };
+
+    vendorPresence.set(vendorId, {
+      ws,
+      userId,
+      connectedAt: new Date(),
+      lastPing: Date.now()
+    });
+
+    console.log(`[WebRTC-3008] Presence enregistree: vendor ${vendorId} (user ${userId})`);
+    ws.send(JSON.stringify({
+      type: 'presence-registered',
+      vendorId,
+      status: 'online'
+    }));
+  }
+
+  // ===== ROOM MANAGEMENT =====
 
   function handleJoinRoom(ws, data) {
     const { roomId, role, userId, silent } = data;
     if (!roomId || !userId) return;
-    
+
     if (!rooms.has(roomId)) {
       rooms.set(roomId, new Map());
     }
 
     const room = rooms.get(roomId);
-    
-    // Ajouter l'utilisateur à la room
     const userData = {
       id: userId,
       role: role,
@@ -100,18 +383,17 @@ wss.on('connection', (ws) => {
       ws: ws,
       joinedAt: new Date()
     };
-    
+
     room.set(userId, userData);
     users.set(`${roomId}|${userId}`, { roomId, ws, userData });
     joinedRooms.add(roomId);
 
     if (!currentUser) currentUser = userData;
 
-    console.log(`[WebRTC-3008] Utilisateur ${userId} (${role}) a rejoint la room ${roomId}`);
+    console.log(`[WebRTC-3008] ${userId} (${role}) a rejoint room ${roomId}`);
 
     if (silent) return;
 
-    // Informer les autres utilisateurs de la room
     broadcastToRoom(roomId, {
       type: 'joined-room',
       roomId: roomId,
@@ -119,7 +401,6 @@ wss.on('connection', (ws) => {
       role: role
     }, userId);
 
-    // Envoyer la liste des utilisateurs existants
     const existingUsers = Array.from(room.values())
       .filter(user => user.id !== userId)
       .map(user => ({
@@ -132,72 +413,112 @@ wss.on('connection', (ws) => {
       roomId: roomId,
       users: existingUsers
     }));
+
+    // Replay de l'offre en attente si le vendeur rejoint apres l'offre (scenario push)
+    const pendingOffer = pendingOffers.get(roomId);
+    if (pendingOffer) {
+      console.log(`[WebRTC-3008] Replay offre en attente vers ${userId} (${role}) pour room ${roomId}`);
+      ws.send(JSON.stringify({
+        type: 'offer',
+        roomId: roomId,
+        data: pendingOffer.offer,
+        from: pendingOffer.from,
+        fromLabel: pendingOffer.fromLabel,
+        fromRole: 'client',
+        callMode: pendingOffer.callMode,
+        ...(pendingOffer.callId ? { callId: pendingOffer.callId } : {})
+      }));
+    }
   }
+
+  // ===== SIGNALING =====
 
   function handleOffer(ws, data) {
     const { roomId, data: offerData, fromLabel, callId, callMode } = data;
     const cm = typeof callMode === 'string' ? callMode.trim().toLowerCase() : '';
-    
-    console.log(`[WebRTC-3008] Offre reçue de ${currentUser.id} pour la room ${roomId}`);
-    console.log(`[WebRTC-3008] Type d'offre: ${offerData.type}`);
-    console.log(`[WebRTC-3008] SDP présent: ${offerData.sdp ? 'Oui' : 'Non'}`);
-    
-    // Transmettre l'offre aux autres utilisateurs de la room
+
+    console.log(`[WebRTC-3008] Offre de ${currentUser?.id} pour room ${roomId}`);
+
+    // Stocker l'offre en attente pour replay quand le vendeur rejoint (scenario push)
+    pendingOffers.set(roomId, {
+      offer: offerData,
+      fromLabel: typeof fromLabel === 'string' && fromLabel.trim() ? fromLabel.trim() : undefined,
+      callId: typeof callId === 'string' && callId.trim() ? callId.trim() : undefined,
+      callMode: cm || 'audio',
+      from: currentUser?.id,
+      timestamp: Date.now()
+    });
+
     broadcastToRoom(roomId, {
       type: 'offer',
       roomId: roomId,
       data: offerData,
-      from: currentUser.id,
+      from: currentUser?.id,
       fromLabel: typeof fromLabel === 'string' && fromLabel.trim() ? fromLabel.trim() : undefined,
-      fromRole: currentUser.role,
+      fromRole: currentUser?.role,
       ...((cm === 'audio' || cm === 'video') ? { callMode: cm } : {}),
       ...(typeof callId === 'string' && callId.trim() ? { callId: callId.trim() } : {})
-    }, currentUser.id);
-    
-    console.log(`[WebRTC-3008] Offre transmise dans la room ${roomId}`);
+    }, currentUser?.id);
   }
 
   function handleAnswer(ws, data) {
     const { roomId, data: answerData, callId } = data;
-    
-    console.log(`[WebRTC-3008] Réponse reçue de ${currentUser.id} pour la room ${roomId}`);
-    console.log(`[WebRTC-3008] Type de réponse: ${answerData.type}`);
-    console.log(`[WebRTC-3008] SDP présent: ${answerData.sdp ? 'Oui' : 'Non'}`);
-    
-    // Transmettre la réponse aux autres utilisateurs de la room
+
+    // Nettoyer l'offre en attente (appel accepte)
+    pendingOffers.delete(roomId);
+
     broadcastToRoom(roomId, {
       type: 'answer',
       roomId: roomId,
       data: answerData,
-      from: currentUser.id,
-      fromRole: currentUser.role,
+      from: currentUser?.id,
+      fromRole: currentUser?.role,
       ...(typeof callId === 'string' && callId.trim() ? { callId: callId.trim() } : {})
-    }, currentUser.id);
-    
-    console.log(`[WebRTC-3008] Réponse transmise dans la room ${roomId}`);
+    }, currentUser?.id);
   }
 
   function handleIceCandidate(ws, data) {
     const { roomId, data: candidateData, callId } = data;
-    
-    // Transmettre le candidat ICE aux autres utilisateurs de la room
+
     broadcastToRoom(roomId, {
       type: 'ice-candidate',
       roomId: roomId,
       data: candidateData,
-      from: currentUser.id,
+      from: currentUser?.id,
       ...(typeof callId === 'string' && callId.trim() ? { callId: callId.trim() } : {})
-    }, currentUser.id);
-    
-    console.log(`[WebRTC-3008] ICE candidate transmis dans la room ${roomId}`);
+    }, currentUser?.id);
   }
+
+  // ===== CALL NOTIFICATION AVEC HORAIRES + PRESENCE + PUSH =====
 
   function handleCallNotification(ws, data) {
     const { roomId, from, message, fromLabel, timestamp, callId, callMode } = data;
     const cm = typeof callMode === 'string' ? callMode.trim().toLowerCase() : '';
-    
-    // Notifier les autres utilisateurs de l'appel entrant
-    broadcastToRoom(roomId, {
+
+    // Extraire l'identifiant brut puis resoudre l'ID reel du vendeur
+    const rawId = extractRawIdFromRoomId(roomId);
+    const vendorId = resolveVendorId(rawId);
+    console.log(`[WebRTC-3008] Call notification: rawId=${rawId} resolvedVendorId=${vendorId}`);
+
+    // 1. Verifier les heures d'ouverture
+    const hoursCheck = checkOpeningHours(vendorId);
+    if (!hoursCheck.isOpen) {
+      console.log(`[WebRTC-3008] Vendor ${vendorId} est ferme (${hoursCheck.reason})`);
+      ws.send(JSON.stringify({
+        type: 'vendor-closed',
+        roomId,
+        vendorId,
+        reason: 'closed',
+        openTime: hoursCheck.openTime,
+        closeTime: hoursCheck.closeTime,
+        timezone: hoursCheck.timezone,
+        message: 'La boutique est actuellement fermee. Laissez un message vocal.'
+      }));
+      return;
+    }
+
+    // 2. Preparer le message incoming-call
+    const incomingCallMsg = {
       type: 'incoming-call',
       roomId: roomId,
       from: from || (currentUser ? currentUser.id : ''),
@@ -207,29 +528,90 @@ wss.on('connection', (ws) => {
       message: message,
       timestamp: timestamp || Date.now(),
       ...(typeof callId === 'string' && callId.trim() ? { callId: callId.trim() } : {})
-    }, currentUser.id);
-    
-    console.log(`[WebRTC-3008] Notification d'appel transmise dans la room ${roomId}`);
+    };
+
+    // 3. Si le vendeur est en ligne, envoyer via WebSocket
+    const vendorOnline = isVendorOnline(vendorId);
+    if (vendorOnline) {
+      console.log(`[WebRTC-3008] Vendor ${vendorId} est en ligne, envoi direct (pas de push)`);
+      const vendorPres = vendorPresence.get(vendorId) || vendorPresence.get(rawId);
+      if (vendorPres && vendorPres.ws.readyState === WebSocket.OPEN) {
+        vendorPres.ws.send(JSON.stringify(incomingCallMsg));
+        console.log(`[WebRTC-3008] Appel envoye directement au vendor ${vendorId}`);
+      }
+      broadcastToRoom(roomId, incomingCallMsg, currentUser?.id);
+      return; // Pas de push quand le vendeur est en ligne
+    }
+
+    console.log(`[WebRTC-3008] Vendor ${vendorId} est hors-ligne, envoi push`);
+
+    // 4. Anti-duplication push : ne pas renvoyer pour le meme callId
+    const cid = callId || '';
+    const lastPush = recentPushCallIds.get(cid);
+    if (lastPush && (Date.now() - lastPush) < PUSH_DEDUP_WINDOW) {
+      console.log(`[WebRTC-3008] Push deja envoye pour callId ${cid}, ignore doublon`);
+      return;
+    }
+    recentPushCallIds.set(cid, Date.now());
+
+    // Nettoyer les entrees expirees
+    for (const [key, ts] of recentPushCallIds) {
+      if (Date.now() - ts > PUSH_DEDUP_WINDOW) recentPushCallIds.delete(key);
+    }
+
+    const pushPayload = {
+      title: 'Appel entrant',
+      body: `${fromLabel || 'Un client'} souhaite vous appeler en ${cm === 'video' ? 'video' : 'audio'}`,
+      icon: '/mangoo-logo-192.png',
+      badge: '/mangoo-logo-192.png',
+      tag: 'mangoo-call-' + (callId || Date.now()),
+      url: '/webrtc-audio.html',
+      roomId,
+      vendorId,
+      callId: callId || '',
+      callMode: cm || 'audio',
+      fromLabel: fromLabel || '',
+      acceptLabel: 'Repondre',
+      rejectLabel: 'Refuser'
+    };
+
+    sendPushToVendor(vendorId, pushPayload).then(pushSent => {
+      if (!pushSent) {
+        console.log(`[WebRTC-3008] Aucun push envoye pour vendor ${vendorId} (pas de souscriptions)`);
+      }
+    });
+
+    // 5. Informer le client
+    ws.send(JSON.stringify({
+      type: 'call-routing',
+      roomId,
+      vendorId,
+      status: 'ringing',
+      method: vendorOnline ? 'websocket+push' : 'push',
+      message: vendorOnline
+        ? 'Le vendeur est en ligne. Son telephone sonne egalement.'
+        : 'Notification envoyee au vendeur. Il devrait repondre bientot...'
+    }));
   }
 
   function handleCallEnded(ws, data) {
     const { roomId, from, timestamp, callId } = data;
-    
-    // Notifier les autres utilisateurs de la fin d'appel
+
+    // Nettoyer l'offre en attente
+    pendingOffers.delete(roomId);
+
     broadcastToRoom(roomId, {
       type: 'call-ended',
       roomId: roomId,
       from: from,
       timestamp: timestamp,
       ...(typeof callId === 'string' && callId.trim() ? { callId: callId.trim() } : {})
-    }, currentUser.id);
-    
-    console.log(`[WebRTC-3008] Notification de fin d'appel transmise dans la room ${roomId}`);
+    }, currentUser?.id);
   }
 
   function handleCallAccepted(ws, data) {
     const { roomId, from, fromLabel, timestamp, callId } = data;
-    
+
     broadcastToRoom(roomId, {
       type: 'call-accepted',
       roomId: roomId,
@@ -238,24 +620,133 @@ wss.on('connection', (ws) => {
       fromRole: currentUser ? currentUser.role : undefined,
       timestamp: timestamp || Date.now(),
       ...(typeof callId === 'string' && callId.trim() ? { callId: callId.trim() } : {})
-    }, currentUser.id);
-    
-    console.log(`[WebRTC-3008] Notification call-accepted transmise dans la room ${roomId}`);
+    }, currentUser?.id);
   }
 
   function handleChatMessage(ws, data) {
-    const { roomId, message, from, timestamp } = data;
-    
-    // Transmettre le message aux autres utilisateurs de la room
-    broadcastToRoom(roomId, {
+    const {
+      roomId,
+      message,
+      from,
+      timestamp,
+      messageId,
+      fromLabel,
+      fromRole,
+      vendorId,
+      clientId,
+      tags
+    } = data;
+    if (!roomId || !message) return;
+
+    const chatMsg = {
       type: 'chat-message',
+      roomId,
+      messageId: messageId || ('msg-' + Date.now()),
       message: message,
       from: from,
-      timestamp: timestamp
-    }, currentUser.id);
-    
-    console.log(`[WebRTC-3008] Message chat transmis dans la room ${roomId}`);
+      fromLabel: typeof fromLabel === 'string' && fromLabel.trim() ? fromLabel.trim() : undefined,
+      fromRole: typeof fromRole === 'string' && fromRole.trim() ? fromRole.trim() : undefined,
+      vendorId: vendorId || resolveVendorId(extractRawIdFromRoomId(roomId)),
+      clientId: clientId || '',
+      tags: Array.isArray(tags) ? tags.slice(0, 8) : [],
+      timestamp: timestamp || Date.now()
+    };
+
+    appendChatMessage(roomId, chatMsg);
+    broadcastToRoom(roomId, chatMsg, currentUser?.id);
   }
+
+  function handleChatNotification(ws, data) {
+    const {
+      roomId,
+      from,
+      fromLabel,
+      message,
+      timestamp,
+      messageId,
+      clientId
+    } = data;
+    if (!roomId || !message) return;
+
+    const rawId = extractRawIdFromRoomId(roomId);
+    const vendorId = resolveVendorId(rawId);
+    const incomingChatMsg = {
+      type: 'incoming-chat',
+      roomId,
+      vendorId,
+      clientId: clientId || '',
+      from: from || (currentUser ? currentUser.id : ''),
+      fromLabel: typeof fromLabel === 'string' && fromLabel.trim() ? fromLabel.trim() : 'Client',
+      message: String(message || ''),
+      messageId: typeof messageId === 'string' && messageId.trim() ? messageId.trim() : ('msg-' + Date.now()),
+      timestamp: timestamp || Date.now()
+    };
+
+    const vendorOnline = isVendorOnline(vendorId);
+    if (vendorOnline) {
+      console.log(`[WebRTC-3008] Vendor ${vendorId} est en ligne, message envoye directement`);
+      const vendorPres = vendorPresence.get(vendorId) || vendorPresence.get(rawId);
+      if (vendorPres && vendorPres.ws.readyState === WebSocket.OPEN) {
+        vendorPres.ws.send(JSON.stringify(incomingChatMsg));
+      }
+      ws.send(JSON.stringify({
+        type: 'chat-routing',
+        roomId,
+        vendorId,
+        status: 'delivered-online',
+        method: 'websocket',
+        message: 'Le vendeur est en ligne. Votre message a ete transmis.'
+      }));
+      return;
+    }
+
+    const dedupId = incomingChatMsg.messageId;
+    const lastPush = recentPushMessageIds.get(dedupId);
+    if (lastPush && (Date.now() - lastPush) < MESSAGE_PUSH_DEDUP_WINDOW) {
+      console.log(`[WebRTC-3008] Push message deja envoye pour ${dedupId}, ignore doublon`);
+      return;
+    }
+    recentPushMessageIds.set(dedupId, Date.now());
+    for (const [key, ts] of recentPushMessageIds) {
+      if (Date.now() - ts > MESSAGE_PUSH_DEDUP_WINDOW) recentPushMessageIds.delete(key);
+    }
+
+    const preview = String(message || '').replace(/\s+/g, ' ').trim().slice(0, 120);
+    const pushPayload = {
+      kind: 'chat',
+      title: 'Nouveau message',
+      body: `${incomingChatMsg.fromLabel}: ${preview}`,
+      icon: '/mangoo-logo-192.png',
+      badge: '/mangoo-logo-192.png',
+      tag: 'mangoo-chat-' + dedupId,
+      url: '/mangoo-local.html',
+      roomId,
+      vendorId,
+      clientId: incomingChatMsg.clientId,
+      fromLabel: incomingChatMsg.fromLabel,
+      messageText: String(message || ''),
+      messageId: dedupId,
+      acceptLabel: 'Ouvrir',
+      rejectLabel: 'Plus tard'
+    };
+
+    sendPushToVendor(vendorId, pushPayload).then(pushSent => {
+      if (!pushSent) {
+        console.log(`[WebRTC-3008] Aucun push message envoye pour vendor ${vendorId}`);
+      }
+    });
+
+    ws.send(JSON.stringify({
+      type: 'chat-routing',
+      roomId,
+      vendorId,
+      status: 'notified',
+      method: 'push',
+      message: 'Notification de message envoyee au vendeur.'
+    }));
+  }
+
+  // ===== HELPERS =====
 
   function handleUserDisconnect(roomId, userInfo) {
     if (!rooms.has(roomId)) return;
@@ -264,11 +755,10 @@ wss.on('connection', (ws) => {
     const existing = room.get(userInfo.id);
     if (!existing) return;
     if (existing.ws !== userInfo.ws) {
-      console.log(`[WebRTC-3008] Ignoré disconnect ancien socket pour ${userInfo.id} (room ${roomId})`);
+      console.log(`[WebRTC-3008] Ignore disconnect ancien socket pour ${userInfo.id}`);
       return;
     }
-    
-    // Informer les autres utilisateurs
+
     broadcastToRoom(roomId, {
       type: 'user-left',
       userId: userInfo.id,
@@ -276,17 +766,15 @@ wss.on('connection', (ws) => {
       roomId: roomId
     });
 
-    // Retirer l'utilisateur de la room
     room.delete(userInfo.id);
     users.delete(`${roomId}|${userInfo.id}`);
     joinedRooms.delete(roomId);
 
-    console.log(`[WebRTC-3008] Utilisateur ${userInfo.id} a quitté la room ${roomId}`);
+    console.log(`[WebRTC-3008] ${userInfo.id} a quitte room ${roomId}`);
 
-    // Supprimer la room si elle est vide
     if (room.size === 0) {
       rooms.delete(roomId);
-      console.log(`[WebRTC-3008] Room ${roomId} supprimée (vide)`);
+      console.log(`[WebRTC-3008] Room ${roomId} supprimee (vide)`);
     }
   }
 
@@ -296,7 +784,7 @@ wss.on('connection', (ws) => {
     const room = rooms.get(roomId);
     room.forEach((user, userId) => {
       if (userId === excludeUserId) return;
-      
+
       if (user.ws.readyState === WebSocket.OPEN) {
         user.ws.send(JSON.stringify(message));
       }
@@ -304,26 +792,156 @@ wss.on('connection', (ws) => {
   }
 });
 
-// Health check endpoint
-server.on('request', (req, res) => {
-  if (req.url === '/health') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      rooms: rooms.size,
-      users: users.size
-    }));
-  } else {
-    res.writeHead(404);
+// ===== HTTP ENDPOINTS =====
+
+function parseBody(req) {
+  return new Promise((resolve) => {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try { resolve(JSON.parse(body)); }
+      catch { resolve({}); }
+    });
+  });
+}
+
+function sendJson(res, status, data) {
+  res.writeHead(status, {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type'
+  });
+  res.end(JSON.stringify(data));
+}
+
+server.on('request', async (req, res) => {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+
+  // CORS preflight
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204, {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    });
     res.end();
+    return;
+  }
+
+  switch (url.pathname) {
+    // Health check
+    case '/health':
+      sendJson(res, 200, {
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        rooms: rooms.size,
+        users: users.size,
+        onlineVendors: vendorPresence.size
+      });
+      break;
+
+    // Cle publique VAPID pour le frontend
+    case '/push/vapid-public-key':
+      sendJson(res, 200, {
+        publicKey: VAPID_KEYS.publicKey
+      });
+      break;
+
+    // Souscription push
+    case '/push/subscribe':
+    case '/webrtc-ws/push/subscribe':
+      if (req.method === 'POST') {
+        const body = await parseBody(req);
+        const { vendorId, subscription } = body;
+        if (!vendorId || !subscription) {
+          sendJson(res, 400, { error: 'vendorId et subscription requis' });
+          return;
+        }
+        const ok = saveSubscription(vendorId, subscription);
+        sendJson(res, ok ? 200 : 500, { success: ok });
+      } else {
+        sendJson(res, 405, { error: 'Method not allowed' });
+      }
+      break;
+
+    // Desouscription push
+    case '/push/unsubscribe':
+      if (req.method === 'POST') {
+        const body = await parseBody(req);
+        const { vendorId, endpoint } = body;
+        if (!vendorId || !endpoint) {
+          sendJson(res, 400, { error: 'vendorId et endpoint requis' });
+          return;
+        }
+        const ok = removeSubscription(vendorId, endpoint);
+        sendJson(res, 200, { success: ok });
+      } else {
+        sendJson(res, 405, { error: 'Method not allowed' });
+      }
+      break;
+
+    // Verifier la presence d'un vendeur
+    case '/presence/check':
+      if (req.method === 'GET') {
+        const vendorId = url.searchParams.get('vendorId');
+        if (!vendorId) {
+          sendJson(res, 400, { error: 'vendorId requis' });
+          return;
+        }
+        sendJson(res, 200, {
+          vendorId,
+          online: isVendorOnline(vendorId)
+        });
+      } else {
+        sendJson(res, 405, { error: 'Method not allowed' });
+      }
+      break;
+
+    // Historique d'une conversation Connect+
+    case '/chat/history':
+    case '/webrtc-ws/chat/history':
+      if (req.method === 'GET') {
+        const roomId = String(url.searchParams.get('roomId') || '').trim();
+        if (!roomId) {
+          sendJson(res, 400, { error: 'roomId requis' });
+          return;
+        }
+        sendJson(res, 200, {
+          roomId,
+          messages: getChatHistory(roomId)
+        });
+      } else {
+        sendJson(res, 405, { error: 'Method not allowed' });
+      }
+      break;
+
+    // Verifier les horaires d'un vendeur
+    case '/hours/check':
+      if (req.method === 'GET') {
+        const vendorId = url.searchParams.get('vendorId');
+        if (!vendorId) {
+          sendJson(res, 400, { error: 'vendorId requis' });
+          return;
+        }
+        const result = checkOpeningHours(vendorId);
+        sendJson(res, 200, result);
+      } else {
+        sendJson(res, 405, { error: 'Method not allowed' });
+      }
+      break;
+
+    default:
+      res.writeHead(404);
+      res.end();
   }
 });
 
 const PORT = process.env.PORT || 3008;
 const HOST = process.env.HOST || '0.0.0.0';
 server.listen(PORT, HOST, () => {
-  console.log(`🚀 [WebRTC-3008] Serveur WebSocket WebRTC démarré sur le port ${PORT}`);
+  console.log(`🚀 [WebRTC-3008] Serveur WebSocket WebRTC demarre sur le port ${PORT}`);
   console.log(`📡 [WebRTC-3008] WebSocket: ws://${HOST}:${PORT}`);
   console.log(`🏥 [WebRTC-3008] Health check: http://${HOST}:${PORT}/health`);
+  console.log(`🔔 [WebRTC-3008] Push notifications actives`);
 });

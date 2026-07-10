@@ -1,21 +1,15 @@
-// Service Worker pour Mangoo Tech
-const CACHE_NAME = 'mangoo-tech-v1';
-const urlsToCache = [
-  '/'
-];
+// Service Worker pour Mangoo Tech - avec Push Notifications
+const CACHE_NAME = 'mangoo-tech-v2';
 
 // Installation du service worker
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        return cache.addAll(urlsToCache);
-      })
-  );
+  console.log('[SW] Installation');
+  self.skipWaiting();
 });
 
 // Activation du service worker
 self.addEventListener('activate', (event) => {
+  console.log('[SW] Activation');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -25,42 +19,175 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
 });
 
-// Interception des requêtes
+// Interception des requetes
 self.addEventListener('fetch', (event) => {
-  // Ignorer les requêtes vers les modules Vite et les WebSockets
-  if (event.request.url.includes('/@vite/') || 
+  if (event.request.url.includes('/@vite/') ||
       event.request.url.includes('/__vite_ping') ||
-      event.request.url.includes('.js?') ||
-      event.request.url.includes('.css?') ||
       event.request.url.includes('ws://') ||
       event.request.url.includes('wss://')) {
     return;
   }
-
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Retourner la réponse du cache si elle existe
-        if (response) {
-          return response;
-        }
-        // Sinon, faire la requête réseau avec gestion d'erreur
-        return fetch(event.request).catch((error) => {
-          console.log('Service Worker: Fetch failed for', event.request.url, error);
-          // Retourner une réponse par défaut pour les erreurs de réseau
-          if (event.request.destination === 'document') {
-            return caches.match('/');
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request).catch(() => {
+        if (event.request.destination === 'document') return caches.match('/');
+        throw new Error('Network error');
+      });
+    })
+  );
+});
+
+// ===== PUSH NOTIFICATIONS =====
+
+/**
+ * Evenement push - recoit une notification push du serveur
+ * Quand le vendeur n'est pas connecte, lui envoie une notification d'appel entrant
+ */
+self.addEventListener('push', (event) => {
+  console.log('[SW] Push recu:', event);
+
+  let data = {};
+  try {
+    if (event.data) {
+      data = event.data.json();
+    }
+  } catch (e) {
+    data = { title: 'Appel entrant', body: 'Quelqu\'un souhaite vous parler' };
+  }
+
+  const title = data.title || 'MangooTech - Appel entrant';
+  const notifKind = data.kind || 'call';
+  const options = {
+    body: data.body || 'Un client souhaite vous contacter',
+    icon: data.icon || '/mangoo-logo-192.png',
+    badge: data.badge || '/mangoo-logo-192.png',
+    tag: data.tag || (notifKind === 'chat' ? 'mangoo-chat-' : 'mangoo-call-') + (data.roomId || Date.now()),
+    requireInteraction: true,
+    vibrate: [200, 100, 200, 100, 200],
+    data: {
+      kind: notifKind,
+      url: data.url || '/mangoo-local.html',
+      roomId: data.roomId || '',
+      callMode: data.callMode || 'audio',
+      fromLabel: data.fromLabel || '',
+      vendorId: data.vendorId || '',
+      callId: data.callId || '',
+      clientId: data.clientId || '',
+      messageText: data.messageText || '',
+      messageId: data.messageId || ''
+    },
+    actions: [
+      {
+        action: 'accept',
+        title: data.acceptLabel || (notifKind === 'chat' ? 'Ouvrir' : 'Repondre')
+      },
+      {
+        action: 'reject',
+        title: data.rejectLabel || (notifKind === 'chat' ? 'Plus tard' : 'Refuser')
+      }
+    ]
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
+
+/**
+ * Clic sur une notification
+ */
+self.addEventListener('notificationclick', (event) => {
+  console.log('[SW] Notification cliquee:', event.action);
+  event.notification.close();
+
+  const notifData = event.notification.data || {};
+
+  // Si le vendeur accepte un message, ouvrir directement le chat
+  if (event.action === 'accept') {
+    if (notifData.kind === 'chat') {
+      let targetUrl = '/mangoo-local.html';
+      const params = [];
+      params.push('v=' + Date.now());
+      params.push('chatAction=open');
+      if (notifData.roomId) params.push('roomId=' + encodeURIComponent(notifData.roomId));
+      if (notifData.vendorId) params.push('vendorId=' + encodeURIComponent(notifData.vendorId));
+      if (notifData.clientId) params.push('clientId=' + encodeURIComponent(notifData.clientId));
+      if (notifData.fromLabel) params.push('fromLabel=' + encodeURIComponent(notifData.fromLabel));
+      if (notifData.messageText) params.push('messageText=' + encodeURIComponent(notifData.messageText));
+      if (notifData.messageId) params.push('messageId=' + encodeURIComponent(notifData.messageId));
+      targetUrl += '?' + params.join('&');
+
+      event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+          for (const client of clientList) {
+            if (client.url.includes('mangoo-local')) {
+              return client.focus().then(() => client.navigate(targetUrl));
+            }
           }
-          throw error;
-        });
+          return clients.openWindow(targetUrl);
+        })
+      );
+      return;
+    }
+
+    // Si le vendeur accepte, ouvrir directement la page d'appel
+    let callUrl = '/webrtc-audio.html';
+    const params = [];
+    params.push('v=' + Date.now());
+    if (notifData.roomId) params.push('roomId=' + encodeURIComponent(notifData.roomId));
+    if (notifData.callMode) params.push('mode=' + encodeURIComponent(notifData.callMode));
+    else params.push('mode=audio');
+    params.push('role=vendor');
+    if (notifData.fromLabel) params.push('callee=' + encodeURIComponent(notifData.fromLabel));
+    if (notifData.callId) params.push('callId=' + encodeURIComponent(notifData.callId));
+    if (notifData.vendorId) params.push('vendorId=' + encodeURIComponent(notifData.vendorId));
+    callUrl += '?' + params.join('&');
+
+    event.waitUntil(
+      clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+        for (const client of clientList) {
+          if (client.url.includes('webrtc-audio') || client.url.includes('mangoo-local')) {
+            return client.focus().then(() => client.navigate(callUrl));
+          }
+        }
+        return clients.openWindow(callUrl);
       })
-      .catch((error) => {
-        console.log('Service Worker: Cache match failed', error);
-        return fetch(event.request);
-      })
+    );
+    return;
+  }
+
+  // Refus ou clic simple : ouvrir mangoo-local
+  let targetUrl = notifData.url || '/mangoo-local.html';
+  const params = new URLSearchParams();
+  if (notifData.roomId) params.set('roomId', notifData.roomId);
+  if (notifData.callMode) params.set('callMode', notifData.callMode);
+  if (notifData.fromLabel) params.set('fromLabel', notifData.fromLabel);
+  if (notifData.vendorId) params.set('vendorId', notifData.vendorId);
+  if (notifData.callId) params.set('callId', notifData.callId);
+  if (notifData.kind) params.set('kind', notifData.kind);
+  if (notifData.clientId) params.set('clientId', notifData.clientId);
+  if (notifData.messageText) params.set('messageText', notifData.messageText);
+  if (notifData.messageId) params.set('messageId', notifData.messageId);
+
+  if (event.action === 'reject') {
+    params.set('action', notifData.kind === 'chat' ? 'dismiss-chat' : 'reject-call');
+  }
+
+  const separator = targetUrl.includes('?') ? '&' : '?';
+  targetUrl += separator + params.toString();
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes('mangoo-local') || client.url.includes('webrtc-audio')) {
+          return client.focus().then(() => client.navigate(targetUrl));
+        }
+      }
+      return clients.openWindow(targetUrl);
+    })
   );
 });

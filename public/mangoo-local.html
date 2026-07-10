@@ -12753,6 +12753,16 @@
 
             renderChatQuickBar();
             
+            // Reinitialiser l'etat du chat
+            connectSessionHasUserMessage = false;
+            connectDraft = { urgent: false, quartier: null, devis: false };
+            if (activeVendor?.coverage && activeVendor.coverage.length) connectDraft.quartier = String(activeVendor.coverage[0]);
+            
+            const requestsView = document.getElementById('chat-requests-view');
+            const contactsView = document.getElementById('chat-contacts-view');
+            if (requestsView) requestsView.style.display = 'none';
+            if (contactsView) contactsView.style.display = 'none';
+            
             document.getElementById('connectPlus').style.display = 'flex';
         }
 
@@ -13825,7 +13835,106 @@
                 floatBtn.style.display = 'flex';
             }
         }
-        
+
+        // ===== WebSocket gestion chat =====
+        let webrtcMgmtWs = null;
+        let webrtcMgmtWsConnected = false;
+
+        function initMgmtWebSocket() {
+            try {
+                const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = protocol + '//' + location.host + '/webrtc-ws';
+                console.log('[MgmtWS] Connexion a', wsUrl);
+                webrtcMgmtWs = new WebSocket(wsUrl);
+
+                webrtcMgmtWs.onopen = () => {
+                    console.log('[MgmtWS] Connecte');
+                    webrtcMgmtWsConnected = true;
+                };
+
+                webrtcMgmtWs.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        handleMgmtWsMessage(data);
+                    } catch(e) {
+                        console.error('[MgmtWS] Erreur parsing:', e);
+                    }
+                };
+
+                webrtcMgmtWs.onclose = () => {
+                    console.log('[MgmtWS] Deconnecte, reconnexion dans 3s');
+                    webrtcMgmtWsConnected = false;
+                    setTimeout(initMgmtWebSocket, 3000);
+                };
+
+                webrtcMgmtWs.onerror = (e) => {
+                    console.error('[MgmtWS] Erreur socket');
+                };
+            } catch(e) {
+                console.error('[MgmtWS] Erreur init:', e);
+                setTimeout(initMgmtWebSocket, 5000);
+            }
+        }
+
+        function handleMgmtWsMessage(data) {
+            switch(data.type) {
+                case 'incoming-chat':
+                    handleIncomingChat(data);
+                    break;
+                case 'chat-message':
+                    handleChatBroadcast(data);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        function handleIncomingChat(data) {
+            console.log('[Chat] handleIncomingChat:', data);
+            const { fromLabel, message, vendorId } = data;
+            if (activeVendor && activeVendor.id === vendorId) {
+                displayReceivedMessage(fromLabel || 'Client', message);
+            }
+        }
+
+        function handleChatBroadcast(data) {
+            console.log('[Chat] handleChatBroadcast:', data);
+            const { from, fromLabel, message } = data;
+            if (from === getChatClientId()) return;
+            if (activeVendor) {
+                displayReceivedMessage(fromLabel || 'Client', message);
+            }
+        }
+
+        function displayReceivedMessage(label, text) {
+            const h = document.getElementById('chatHistory');
+            if (!h || !text) return;
+            const n = new Date();
+            const ts = n.getHours() + ':' + (n.getMinutes()<10?'0':'') + n.getMinutes();
+            h.innerHTML += '<div class="msg-bubble msg-received"><div class="msg-content">' + lpEscapeHtml(text) + '</div><div class="msg-meta"><span>' + (label || 'Client') + '</span> \u2022 <span>' + ts + '</span></div></div>';
+            h.scrollTop = h.scrollHeight;
+        }
+
+        function getChatClientId() {
+            try {
+                let id = localStorage.getItem('mangoo_client_id');
+                if (!id) {
+                    id = 'client-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+                    localStorage.setItem('mangoo_client_id', id);
+                }
+                return id;
+            } catch { return 'client-anon'; }
+        }
+
+        function getChatClientLabel() {
+            try {
+                return localStorage.getItem('userName') || localStorage.getItem('mangoo_user_name') || 'Client';
+            } catch { return 'Client'; }
+        }
+
+        // Init WebSocket au chargement
+        setTimeout(initMgmtWebSocket, 500);
+
         // Helper to toggle options on mobile
         function toggleMsgOptions(bubble) {
             // Remove tapped class from all others
@@ -13891,18 +14000,24 @@
             input.value = '';
             history.scrollTop = history.scrollHeight;
             
-            // Mock Auto Reply
-            setTimeout(() => {
-                history.innerHTML += `
-                    <div class="msg-bubble msg-received">
-                        <div class="msg-content">D'accord, je note ça !</div>
-                        <div class="msg-meta">
-                            <span>${timeStr}</span>
-                        </div>
-                    </div>
-                `;
-                history.scrollTop = history.scrollHeight;
-            }, 1500);
+            // Envoyer via WebSocket
+            const vendorId = activeVendor ? activeVendor.id : '';
+            console.log('[Chat] sendMessage() - vendorId:', vendorId);
+            if (!vendorId) {
+                console.log('[Chat] sendMessage() - ERREUR: pas de vendorId');
+                return;
+            }
+            const clientLabel = getChatClientLabel();
+            const clientId = getChatClientId();
+            const roomId = 'chat:' + vendorId;
+            const messageId = 'msg-' + Date.now();
+            if (webrtcMgmtWs && webrtcMgmtWsConnected) {
+                webrtcMgmtWs.send(JSON.stringify({ type: 'chat-message', roomId, from: clientId, fromLabel: clientLabel, vendorId, message: text, messageId, timestamp: Date.now() }));
+                webrtcMgmtWs.send(JSON.stringify({ type: 'chat-notification', roomId, from: clientId, fromLabel: clientLabel, vendorId, message: text, messageId, timestamp: Date.now(), clientId }));
+                console.log('[Chat] Message envoye via WebSocket');
+            } else {
+                console.log('[Chat] WebSocket non connecte, message non envoye');
+            }
         }
         
         function attachFile() {
@@ -22032,7 +22147,45 @@
                  }
                  const pin = String(p.get('pin') || '').trim();
                  const vendorParam = String(p.get('vendor') || p.get('vendorId') || '').trim();
-                 if (pin) {
+                 
+                 // Chat mode (depuis notification push) - prioritaire sur vendorParam
+                 const chatAction = String(p.get('chatAction') || '').trim();
+                 if (chatAction === 'open') {
+                     const chatVendorId = String(p.get('vendorId') || '').trim();
+                     const chatFromLabel = String(p.get('fromLabel') || '').trim();
+                     const chatMsg = String(p.get('messageText') || '').trim();
+                     console.log('[Chat Init] chatAction=open. vendorId:', chatVendorId, 'fromLabel:', chatFromLabel);
+                     setTimeout(() => {
+                         try {
+                             if (chatVendorId) {
+                                 console.log('[Chat Init] VENDORS.length:', VENDORS.length);
+                                 const vendor = VENDORS.find(v => v.id === chatVendorId);
+                                 console.log('[Chat Init] Vendor trouve:', vendor ? vendor.name : 'NON');
+                                 if (vendor) {
+                                     activeVendor = vendor;
+                                     console.log('[Chat Init] Ouverture chat...');
+                                     openChat(chatMsg);
+                                    // Injecter le message entrant dans l'historique
+                                    setTimeout(() => {
+                                        const h = document.getElementById('chatHistory');
+                                        if (h && chatMsg) {
+                                            const n = new Date();
+                                            const ts = n.getHours() + ":" + (n.getMinutes()<10?'0':'') + n.getMinutes();
+                                            h.innerHTML += '<div class="msg-bubble msg-received"><div class="msg-content">' + lpEscapeHtml(chatMsg) + '</div><div class="msg-meta"><span>' + (chatFromLabel || 'Client') + '</span> \u2022 <span>' + ts + '</span></div></div>';
+                                            h.scrollTop = h.scrollHeight;
+                                        }
+                                    }, 400);
+                                     console.log('[Chat Init] Chat ouvert');
+                                     try {
+                                         lpSpeak('Nouveau message de ' + (chatFromLabel || 'un client') + ': ' + chatMsg);
+                                     } catch(e) {}
+                                 }
+                             }
+                         } catch(e) {
+                             console.error('[Chat Init] Erreur ouverture chat:', e);
+                         }
+                     }, 800);
+                 } else if (pin) {
                      setTimeout(() => {
                          try { lpOpenVendorByPin(pin); } catch {}
                      }, 300);
@@ -22041,7 +22194,7 @@
                          try { lpOpenVendorById(vendorParam); } catch {}
                      }, 300);
                  }
-             } catch {
+} catch {
              }
         });
 
