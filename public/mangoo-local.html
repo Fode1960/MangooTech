@@ -3700,10 +3700,25 @@
         #callOverlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: black;
+            background: #1b5e20;
             z-index: 22000;
             display: none;
             flex-direction: column;
+        }
+        #callOverlay.loading::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 48px; height: 48px;
+            margin: -24px 0 0 -24px;
+            border: 4px solid rgba(255,255,255,0.2);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: callSpinner 0.8s linear infinite;
+            z-index: 1;
+        }
+        @keyframes callSpinner {
+            to { transform: rotate(360deg); }
         }
         #callFrame {
             width: 100%; height: 100%; border: none;
@@ -5034,7 +5049,7 @@
 
     <!-- AUDIO CALL OVERLAY -->
     <div id="callOverlay">
-        <iframe id="callFrame" src=""></iframe>
+        <iframe id="callFrame" src="" allow="microphone; camera; autoplay"></iframe>
     </div>
 
     <!-- INCOMING CALL BANNER -->
@@ -5902,6 +5917,8 @@
                 url += '&mode=video';
             }
             
+            callOverlay.classList.add('loading');
+            callFrame.onload = function() { callOverlay.classList.remove('loading'); };
             callFrame.src = url;
             callOverlay.style.display = 'flex';
             // Send call notification to WebSocket server + sauvegarder pour call-ended
@@ -5971,6 +5988,7 @@
                 }
 
                 if (callOverlay) {
+                    callOverlay.classList.remove('loading');
                     callOverlay.style.display = 'none';
                     if (callFrame) callFrame.src = ''; // Stop audio/video
 
@@ -13985,6 +14003,10 @@
                 if (myShopId) return myShopId;
             } catch {}
             try {
+                const myShopId2 = String((typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('mangoo_my_shop_id') : null) || '').trim();
+                if (myShopId2) return myShopId2;
+            } catch {}
+            try {
                 if (typeof lpGetStoredShopIdsForCurrentUser === 'function') {
                     const ids = lpGetStoredShopIdsForCurrentUser();
                     if (Array.isArray(ids) && ids.length > 0) return String(ids[0]);
@@ -14002,6 +14024,15 @@
                 const urlRole = new URLSearchParams(window.location.search).get('lpRole');
                 // Ne jamais enregistrer un simple client comme vendeur !
                 if (urlVendor && urlRole === 'vendor') return String(urlVendor).trim();
+            } catch {}
+            // Si lpRole=vendor est present, utiliser activeVendor sans verification de propriete
+            // (le param lpRole=vendor est deja une preuve suffisante du role vendeur)
+            try {
+                const urlRole2 = new URLSearchParams(window.location.search).get('lpRole');
+                if (urlRole2 === 'vendor' && activeVendor && typeof activeVendor === 'object') {
+                    const aid = String(activeVendor.id || '').trim();
+                    if (aid && lpGetVendorKind(activeVendor) === 'shop') return aid;
+                }
             } catch {}
             // Dernier recours : activeVendor (boutique actuellement affichée ET possédée)
             try {
@@ -14281,6 +14312,8 @@
                 const callOverlay = document.getElementById('callOverlay');
                 if (callFrame && callOverlay) {
                     const roomId = data.roomId || '';
+                    callOverlay.classList.add('loading');
+                    callFrame.onload = function() { callOverlay.classList.remove('loading'); };
                     callFrame.src = 'webrtc-audio.html?callee=' + encodeURIComponent(vendorName) + '&theme=' + isDark + '&mode=audio&autoConnect=true&t=' + Date.now() + '&role=callee&roomId=' + encodeURIComponent(roomId);
                     callOverlay.style.display = 'flex';
                     // Rejoindre la room WebRTC
@@ -14342,6 +14375,8 @@
                         const calleeName = String(data?.fromLabel || data?.from || 'Correspondant').trim();
                         const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
                         const acceptedRoomId = data.roomId || (activeCallData ? activeCallData.roomId : '');
+                        callOverlay.classList.add('loading');
+                        callFrame.onload = function() { callOverlay.classList.remove('loading'); };
                         callFrame.src = 'webrtc-audio.html?callee=' + encodeURIComponent(calleeName) + '&theme=' + isDark + '&mode=audio&autoConnect=true&t=' + Date.now() + '&role=caller&roomId=' + encodeURIComponent(acceptedRoomId);
                         // Rejoindre la room WebRTC (caller)
                         if (acceptedRoomId && webrtcMgmtWs && webrtcMgmtWsConnected && webrtcMgmtWs.readyState === WebSocket.OPEN) {

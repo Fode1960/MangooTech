@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Appel Audio - Mangoo Connect+</title>
   <style>
-    html, body { margin: 0; padding: 0; height: 100%; width: 100%; background: #000; }
+    html, body { margin: 0; padding: 0; height: 100%; width: 100%; background: #1b5e20; }
     iframe { border: 0; width: 100%; height: 100%; display: block; }
   </style>
 </head>
@@ -18,15 +18,39 @@
   ></iframe>
   <script>
     (function () {
+      // Si charge directement (clic notification push), rediriger vers mangoo-local.html
+      // qui gere le WebSocket et le relay des signaux WebRTC
+      if (window.top === window.self) {
+        var qs = window.location.search || '';
+        // Transmettre les parametres d'appel (roomId, vendorId, callId, role, etc.)
+        var searchParams = new URLSearchParams(qs);
+        var role = searchParams.get('role') || '';
+        // Ajouter lpRole=vendor si le role est vendor, pour que mangoo-local enregistre la presence
+        var redirectParams = new URLSearchParams(qs);
+        if (role === 'vendor') {
+          redirectParams.set('lpRole', 'vendor');
+          var vendorId = searchParams.get('vendorId');
+          if (vendorId) redirectParams.set('vendor', vendorId);
+        }
+        window.location.replace('/mangoo-local.html?' + redirectParams.toString());
+        return;
+      }
+
       var iframe = document.getElementById('webrtcFrame');
       if (!iframe) return;
 
       var qs = window.location.search || '';
       iframe.src = 'test-webrtc-audio.html' + qs;
 
+      // Relay bidirectionnel des messages entre mangoo-local.html (parent) et test-webrtc-audio.html (inner iframe)
       window.addEventListener('message', function (event) {
         try {
-          if (window.parent && window.parent !== window) {
+          // Forward messages from parent → inner iframe (signaux WebRTC du serveur)
+          if (event.source === window.parent && iframe.contentWindow) {
+            iframe.contentWindow.postMessage(event.data, '*');
+          }
+          // Forward messages from inner iframe → parent (signaux WebRTC + end_call)
+          if (event.source === iframe.contentWindow && window.parent && window.parent !== window) {
             window.parent.postMessage(event.data, '*');
           }
         } catch (e) {

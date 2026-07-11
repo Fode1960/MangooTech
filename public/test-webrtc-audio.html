@@ -237,6 +237,7 @@
         let pc = null;               // RTCPeerConnection
         let localStream = null;      // MediaStream local
         const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+        const pageLoadTime = Date.now();
 
         function startRinging() {
             try {
@@ -309,6 +310,11 @@
 
                 pc = new RTCPeerConnection(rtcConfig);
 
+                // Log de l'etat de connexion
+                pc.onconnectionstatechange = () => console.log('[WebRTC] Caller: connection state =', pc.connectionState);
+                pc.oniceconnectionstatechange = () => console.log('[WebRTC] Caller: ICE connection state =', pc.iceConnectionState);
+                pc.onsignalingstatechange = () => console.log('[WebRTC] Caller: signaling state =', pc.signalingState);
+
                 // Ajouter les pistes audio locales
                 localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
@@ -318,17 +324,18 @@
                         console.log('[WebRTC] Caller: ICE candidate');
                         window.parent.postMessage({
                             type: 'webrtc-signal',
-                            signal: { type: 'ice-candidate', roomId: roomId, data: event.candidate }
+                            signal: { type: 'ice-candidate', roomId: roomId, data: event.candidate.toJSON() }
                         }, '*');
                     }
                 };
 
                 // Quand la piste distante arrive, la jouer
                 pc.ontrack = (event) => {
-                    console.log('[WebRTC] Caller: piste distante recue');
+                    console.log('[WebRTC] Caller: piste distante recue, streams=' + (event.streams ? event.streams.length : 0));
                     const remoteAudio = document.getElementById('remoteAudio');
                     if (remoteAudio && event.streams[0]) {
                         remoteAudio.srcObject = event.streams[0];
+                        remoteAudio.play().catch(e => console.warn('[WebRTC] Caller: autoplay bloque, tentative Manuel...', e));
                     }
                     statusEl.innerText = "Appel en cours";
                 };
@@ -341,7 +348,7 @@
                 // Envoyer l'offre via postMessage → parent → WebSocket
                 window.parent.postMessage({
                     type: 'webrtc-signal',
-                    signal: { type: 'offer', roomId: roomId, data: pc.localDescription }
+                    signal: { type: 'offer', roomId: roomId, data: pc.localDescription.toJSON() }
                 }, '*');
 
                 statusEl.innerText = "Sonnerie...";
@@ -363,6 +370,11 @@
 
                 pc = new RTCPeerConnection(rtcConfig);
 
+                // Log de l'etat de connexion
+                pc.onconnectionstatechange = () => console.log('[WebRTC] Callee: connection state =', pc.connectionState);
+                pc.oniceconnectionstatechange = () => console.log('[WebRTC] Callee: ICE connection state =', pc.iceConnectionState);
+                pc.onsignalingstatechange = () => console.log('[WebRTC] Callee: signaling state =', pc.signalingState);
+
                 // Ajouter les pistes audio locales
                 localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
@@ -372,17 +384,18 @@
                         console.log('[WebRTC] Callee: ICE candidate');
                         window.parent.postMessage({
                             type: 'webrtc-signal',
-                            signal: { type: 'ice-candidate', roomId: roomId, data: event.candidate }
+                            signal: { type: 'ice-candidate', roomId: roomId, data: event.candidate.toJSON() }
                         }, '*');
                     }
                 };
 
                 // Quand la piste distante arrive, la jouer
                 pc.ontrack = (event) => {
-                    console.log('[WebRTC] Callee: piste distante recue');
+                    console.log('[WebRTC] Callee: piste distante recue, streams=' + (event.streams ? event.streams.length : 0));
                     const remoteAudio = document.getElementById('remoteAudio');
                     if (remoteAudio && event.streams[0]) {
                         remoteAudio.srcObject = event.streams[0];
+                        remoteAudio.play().catch(e => console.warn('[WebRTC] Callee: autoplay bloque, tentative Manuel...', e));
                     }
                     statusEl.innerText = "Appel en cours";
                 };
@@ -399,7 +412,7 @@
                 // Envoyer la reponse via postMessage → parent → WebSocket
                 window.parent.postMessage({
                     type: 'webrtc-signal',
-                    signal: { type: 'answer', roomId: roomId, data: pc.localDescription }
+                    signal: { type: 'answer', roomId: roomId, data: pc.localDescription.toJSON() }
                 }, '*');
 
                 statusEl.innerText = "Appel en cours";
@@ -656,7 +669,13 @@
         }
 
         function endCall() {
+            // Garde anti-clic accidentel : ignorer tout endCall dans les 3 premieres secondes
+            if (Date.now() - pageLoadTime < 3000) {
+                console.warn('[Call] endCall() ignore (trop tot apres chargement, ' + (Date.now() - pageLoadTime) + 'ms)');
+                return;
+            }
             console.log('[Call] endCall() declenche dans iframe');
+            console.log('[Call] Stack trace:', new Error().stack);
             callActive = false;
             try { statusEl.innerText = "Appel terminé"; } catch {}
             try { timerEl.innerText = "Fin"; } catch {}
