@@ -5934,20 +5934,19 @@
                 };
                 console.log('[Call] activeCallData=' + JSON.stringify(activeCallData));
                 try { lpSendCallNotification(vendorId, type, callId); } catch(e) { console.error('[Call] Erreur lpSendCallNotification:', e); }
-                // Rejoindre la room WebRTC sur le serveur
-                try {
-                    const joinMsg = { type: 'join-room', roomId: activeCallData.roomId, role: 'caller', userId: clientId };
-                    if (webrtcMgmtWs && webrtcMgmtWsConnected && webrtcMgmtWs.readyState === WebSocket.OPEN) {
-                        webrtcMgmtWs.send(JSON.stringify(joinMsg));
-                        console.log('[Call] join-room envoye: ' + activeCallData.roomId);
-                    } else {
-                        console.warn('[Call] WebSocket pas pret pour join-room, queue');
-                        webrtcMsgQueue.push(joinMsg);
-                    }
-                } catch(e) { console.error('[Call] Erreur join-room:', e); }
+                // Stocker le join-room pour l'envoyer quand l'iframe sera prete
+                _pendingJoinRoom = { type: 'join-room', roomId: activeCallData.roomId, role: 'caller', userId: clientId };
+                console.log('[Call] join-room caller mis en attente (iframe pas encore prete)');
+                _scheduleJoinRoomFallback();
             }
         }
         window.addEventListener('message', function(event) {
+            // Iframe signale qu'elle est prete → envoyer le join-room en attente
+            if (event.data && typeof event.data === 'object' && event.data.type === 'call-iframe-ready') {
+                console.log('[Call] call-iframe-ready recu de l\'iframe (role=' + (event.data.role || '?') + ')');
+                _sendPendingJoinRoom();
+                return;
+            }
             // Relai des signaux WebRTC de l'iframe → WebSocket
             if (event.data && typeof event.data === 'object' && event.data.type === 'webrtc-signal') {
                 const sig = event.data.signal;
@@ -5956,6 +5955,8 @@
                         webrtcMgmtWs.send(JSON.stringify(sig));
                         console.log('[Call] Signal WebRTC relaye vers WS: ' + sig.type + ' roomId=' + sig.roomId);
                     } catch(e) { console.error('[Call] Erreur relay signal WebRTC:', e); }
+                } else {
+                    console.warn('[Call] Signal WebRTC NON relaye: ws.readyState=' + (webrtcMgmtWs ? webrtcMgmtWs.readyState : 'null') + ' wsConnected=' + webrtcMgmtWsConnected + ' type=' + (sig ? sig.type : '?'));
                 }
                 return;
             }
@@ -5983,6 +5984,8 @@
                 // Toujours nettoyer activeCallData
                 const endedRoomId = activeCallData ? activeCallData.roomId : '';
                 activeCallData = null;
+                _pendingJoinRoom = null;
+                if (_pendingJoinRoomTimeout) { clearTimeout(_pendingJoinRoomTimeout); _pendingJoinRoomTimeout = null; }
                 if (endedRoomId && webrtcMgmtWs && webrtcMgmtWsConnected && webrtcMgmtWs.readyState === WebSocket.OPEN) {
                     try { webrtcMgmtWs.send(JSON.stringify({ type: 'leave-room', roomId: endedRoomId })); } catch {}
                 }
@@ -14046,7 +14049,7 @@
 
         let lpPresenceRetryTimer = null;
         let lpPresenceRetryCount = 0;
-        const LP_PRESENCE_MAX_RETRIES = 10;
+        const LP_PRESENCE_MAX_RETRIES = 60;
         const LP_PRESENCE_RETRY_MS = 2000;
 
         function lpTryRegisterVendorPresence() {
@@ -14266,6 +14269,32 @@
 
         let incomingCallData = null;
         let activeCallData = null; // Donnees de l'appel en cours (pour envoyer call-ended au serveur)
+        let _pendingJoinRoom = null; // join-room differe jusqu'a ce que l'iframe signale call-iframe-ready
+        let _pendingJoinRoomTimeout = null;
+
+        function _sendPendingJoinRoom() {
+            if (!_pendingJoinRoom) return;
+            if (_pendingJoinRoomTimeout) { clearTimeout(_pendingJoinRoomTimeout); _pendingJoinRoomTimeout = null; }
+            const msg = _pendingJoinRoom;
+            _pendingJoinRoom = null;
+            if (webrtcMgmtWs && webrtcMgmtWsConnected && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                webrtcMgmtWs.send(JSON.stringify(msg));
+                console.log('[Call] join-room envoye (iframe prete): ' + msg.roomId + ' role=' + msg.role);
+            } else {
+                console.warn('[Call] WebSocket pas pret pour join-room differe, mise en queue');
+                webrtcMsgQueue.push(msg);
+            }
+        }
+
+        function _scheduleJoinRoomFallback() {
+            if (_pendingJoinRoomTimeout) clearTimeout(_pendingJoinRoomTimeout);
+            _pendingJoinRoomTimeout = setTimeout(function() {
+                if (_pendingJoinRoom) {
+                    console.warn('[Call] Timeout fallback: envoi join-room sans signal iframe-ready');
+                    _sendPendingJoinRoom();
+                }
+            }, 3000);
+        }
 
         function handleIncomingCall(data) {
             console.log('[MgmtWS] Appel entrant:', data);
@@ -14316,17 +14345,12 @@
                     callFrame.onload = function() { callOverlay.classList.remove('loading'); };
                     callFrame.src = 'webrtc-audio.html?callee=' + encodeURIComponent(vendorName) + '&theme=' + isDark + '&mode=audio&autoConnect=true&t=' + Date.now() + '&role=callee&roomId=' + encodeURIComponent(roomId);
                     callOverlay.style.display = 'flex';
-                    // Rejoindre la room WebRTC
-                    try {
-                        const joinMsg = { type: 'join-room', roomId: roomId, role: 'callee', userId: (typeof data.from === 'string' ? data.from : 'vendor') };
-                        if (webrtcMgmtWs && webrtcMgmtWsConnected && webrtcMgmtWs.readyState === WebSocket.OPEN) {
-                            webrtcMgmtWs.send(JSON.stringify(joinMsg));
-                            console.log('[Call] Vendor join-room envoye: ' + roomId);
-                        } else {
-                            console.warn('[Call] WebSocket pas pret pour vendor join-room');
-                            webrtcMsgQueue.push(joinMsg);
-                        }
-                    } catch(e) { console.error('[Call] Erreur join-room vendor:', e); }
+                    // Stocker le join-room pour l'envoyer quand l'iframe sera prete
+                    // IMPORTANT: userId doit etre 'vendor' (pas data.from qui est l'ID du client appelant)
+                    // Sinon appelant et vendeur partagent le meme userId dans la room → broadcastToRoom casse
+                    _pendingJoinRoom = { type: 'join-room', roomId: roomId, role: 'callee', userId: 'vendor' };
+                    console.log('[Call] Vendor join-room mis en attente (iframe pas encore prete)');
+                    _scheduleJoinRoomFallback();
                 }
             } catch {}
         }
@@ -14378,9 +14402,11 @@
                         callOverlay.classList.add('loading');
                         callFrame.onload = function() { callOverlay.classList.remove('loading'); };
                         callFrame.src = 'webrtc-audio.html?callee=' + encodeURIComponent(calleeName) + '&theme=' + isDark + '&mode=audio&autoConnect=true&t=' + Date.now() + '&role=caller&roomId=' + encodeURIComponent(acceptedRoomId);
-                        // Rejoindre la room WebRTC (caller)
-                        if (acceptedRoomId && webrtcMgmtWs && webrtcMgmtWsConnected && webrtcMgmtWs.readyState === WebSocket.OPEN) {
-                            try { webrtcMgmtWs.send(JSON.stringify({ type: 'join-room', roomId: acceptedRoomId, role: 'caller', userId: getChatClientId() })); } catch {}
+                        // Stocker le join-room pour l'envoyer quand l'iframe sera prete
+                        if (acceptedRoomId) {
+                            _pendingJoinRoom = { type: 'join-room', roomId: acceptedRoomId, role: 'caller', userId: getChatClientId() };
+                            console.log('[Call] Caller join-room (handleCallAccepted) mis en attente');
+                            _scheduleJoinRoomFallback();
                         }
                     }
                 } catch {}
@@ -14397,6 +14423,8 @@
                 // Quitter la room WebRTC
                 const roomId = data.roomId || (activeCallData ? activeCallData.roomId : '');
                 activeCallData = null;
+                _pendingJoinRoom = null;
+                if (_pendingJoinRoomTimeout) { clearTimeout(_pendingJoinRoomTimeout); _pendingJoinRoomTimeout = null; }
                 if (roomId && webrtcMgmtWs && webrtcMgmtWsConnected && webrtcMgmtWs.readyState === WebSocket.OPEN) {
                     try { webrtcMgmtWs.send(JSON.stringify({ type: 'leave-room', roomId: roomId })); } catch {}
                 }

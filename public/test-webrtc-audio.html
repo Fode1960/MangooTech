@@ -63,6 +63,17 @@
     <!-- Audio element cache pour le flux distant WebRTC -->
     <audio id="remoteAudio" autoplay playsinline style="display:none;"></audio>
 
+    <!-- Video PiP pour recevoir le flux video distant (produit vendeur) -->
+    <div id="remoteVideoContainer" class="hidden fixed bottom-24 right-4 w-40 h-56 bg-[#102814] rounded-2xl border-2 border-[#eef6ea] dark:border-[#2e5d34] overflow-hidden shadow-2xl z-40">
+        <video id="remoteVideo" autoplay playsinline muted class="w-full h-full object-cover"></video>
+        <div id="remoteVideoStatus" class="absolute inset-0 flex items-center justify-center bg-[#102814]/90 text-white text-[11px] text-center px-2 pointer-events-none">
+            <div><span class="text-xl block mb-1">⏳</span>Réception vidéo...</div>
+        </div>
+        <div id="remoteVideoLabel" class="absolute top-2 left-2 bg-red-600 text-white px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-1">
+            <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> EN DIRECT
+        </div>
+    </div>
+
     <!-- Header info -->
     <div class="mt-10 text-center px-6 w-full max-w-xl">
         <div class="rounded-3xl shadow-xl overflow-hidden border border-[#cfe0c8] dark:border-[#2e5d34]">
@@ -235,7 +246,12 @@
 
         // === WebRTC ===
         let pc = null;               // RTCPeerConnection
-        let localStream = null;      // MediaStream local
+        let localStream = null;      // MediaStream local (audio)
+        let videoStream = null;      // MediaStream video (produit)
+        let remoteAudioStream = null; // Stream audio distant persistant (jamais detruit)
+        let remoteVideoStream = null; // Stream video distant persistant
+        let isRenegotiating = false;    // Verrou pour eviter renegociations simultanees
+        let initialSetupComplete = false; // Bloque onnegotiationneeded pendant l'init
         const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
         const pageLoadTime = Date.now();
 
@@ -314,6 +330,37 @@
                 pc.onconnectionstatechange = () => console.log('[WebRTC] Caller: connection state =', pc.connectionState);
                 pc.oniceconnectionstatechange = () => console.log('[WebRTC] Caller: ICE connection state =', pc.iceConnectionState);
                 pc.onsignalingstatechange = () => console.log('[WebRTC] Caller: signaling state =', pc.signalingState);
+                // Renegociation (ajout/retrait piste video) — actif seulement APRES l'init
+                pc.onnegotiationneeded = async () => {
+                    if (!initialSetupComplete) {
+                        console.log('[WebRTC] Caller: onnegotiationneeded ignore (init en cours)');
+                        return;
+                    }
+                    if (isRenegotiating) return;
+                    if (pc.signalingState !== 'stable') {
+                        console.warn('[WebRTC] Caller: renegociation ignoree, signaling=' + pc.signalingState);
+                        return;
+                    }
+                    isRenegotiating = true;
+                    try {
+                        console.log('[WebRTC] Caller: renegociation declenchee, transceivers:');
+                        pc.getTransceivers().forEach((t, i) => {
+                            console.log('[WebRTC]   transceiver[' + i + '] mid=' + t.mid + ' dir=' + t.direction + ' cur=' + t.currentDirection + ' kind=' + (t.sender.track ? t.sender.track.kind : 'none'));
+                        });
+                        // Créer l'offre en incluant tous les transceivers existants
+                        const offer = await pc.createOffer();
+                        await pc.setLocalDescription(offer);
+                        const sdp = pc.localDescription.sdp;
+                        const hasAudio = sdp.indexOf('m=audio') !== -1;
+                        const hasVideo = sdp.indexOf('m=video') !== -1;
+                        console.log('[WebRTC] Caller: offre de renegociation envoyee, audio=' + hasAudio + ' video=' + hasVideo);
+                        window.parent.postMessage({ type: 'webrtc-signal', signal: { type: 'offer', roomId, data: pc.localDescription.toJSON() } }, '*');
+                    } catch (err) {
+                        console.error('[WebRTC] Caller: erreur renegociation:', err);
+                    } finally {
+                        isRenegotiating = false;
+                    }
+                };
 
                 // Ajouter les pistes audio locales
                 localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
@@ -331,11 +378,93 @@
 
                 // Quand la piste distante arrive, la jouer
                 pc.ontrack = (event) => {
-                    console.log('[WebRTC] Caller: piste distante recue, streams=' + (event.streams ? event.streams.length : 0));
-                    const remoteAudio = document.getElementById('remoteAudio');
-                    if (remoteAudio && event.streams[0]) {
-                        remoteAudio.srcObject = event.streams[0];
-                        remoteAudio.play().catch(e => console.warn('[WebRTC] Caller: autoplay bloque, tentative Manuel...', e));
+                    console.log('[WebRTC] Caller: piste distante recue, kind=' + event.track.kind + ' id=' + event.track.id + ' readyState=' + event.track.readyState);
+                    const track = event.track;
+                    if (!track) return;
+
+                    if (track.kind === 'audio') {
+                        // Audio : creer un stream persistant UNE SEULE FOIS, ne jamais le modifier
+                        if (!remoteAudioStream) {
+                            remoteAudioStream = new MediaStream();
+                            remoteAudioStream.addTrack(track);
+                            const remoteAudio = document.getElementById('remoteAudio');
+                            if (remoteAudio) {
+                                remoteAudio.srcObject = remoteAudioStream;
+                                remoteAudio.play().catch(e => console.warn('[WebRTC] Caller: autoplay audio bloque...', e));
+                            }
+                            console.log('[WebRTC] Caller: audio distant initialise');
+                        } else {
+                            // Renegociation : NE PAS toucher au stream audio. Remplacer la piste silencieusement
+                            const existingTracks = remoteAudioStream.getAudioTracks();
+                            if (existingTracks.length > 0 && existingTracks[0].id !== track.id) {
+                                existingTracks.forEach(t => remoteAudioStream.removeTrack(t));
+                                remoteAudioStream.addTrack(track);
+                                console.log('[WebRTC] Caller: piste audio mise a jour (renegociation)');
+                            }
+                            // S'assurer que l'audio est toujours en cours de lecture
+                            const remoteAudio = document.getElementById('remoteAudio');
+                            if (remoteAudio) {
+                                remoteAudio.muted = false;
+                                remoteAudio.volume = 1.0;
+                                remoteAudio.play().catch(() => {});
+                            }
+                        }
+                    } else if (track.kind === 'video') {
+                        // Video : stream persistant, gerer les pistes
+                        const remoteVideo = document.getElementById('remoteVideo');
+                        const remoteVideoContainer = document.getElementById('remoteVideoContainer');
+                        const remoteVideoStatus = document.getElementById('remoteVideoStatus');
+                        if (!remoteVideoStream) {
+                            remoteVideoStream = new MediaStream();
+                            if (remoteVideo) remoteVideo.srcObject = remoteVideoStream;
+                        }
+                        // Remplacer les pistes video existantes
+                        remoteVideoStream.getVideoTracks().forEach(t => {
+                            if (t.id !== track.id) remoteVideoStream.removeTrack(t);
+                        });
+                        if (!remoteVideoStream.getVideoTracks().some(t => t.id === track.id)) {
+                            remoteVideoStream.addTrack(track);
+                        }
+                        console.log('[WebRTC] Caller: piste video distante ajoutee au stream persistant, nbTracks=' + remoteVideoStream.getVideoTracks().length);
+
+                        // Detecter quand la video est coupee cote distant
+                        track.onended = () => {
+                            console.log('[WebRTC] Caller: piste video distante terminee, masquage PiP');
+                            const rvc = document.getElementById('remoteVideoContainer');
+                            if (rvc) rvc.classList.add('hidden');
+                            const rvs = document.getElementById('remoteVideoStatus');
+                            if (rvs) { rvs.classList.add('hidden'); rvs.innerHTML = ''; }
+                        };
+
+                        // Afficher le PiP video
+                        if (remoteVideoContainer) {
+                            remoteVideoContainer.classList.remove('hidden');
+                            // Si la video a deja des donnees, cacher le statut immediatement
+                            if (remoteVideo.readyState >= 2 && remoteVideo.videoWidth > 0) {
+                                if (remoteVideoStatus) remoteVideoStatus.classList.add('hidden');
+                            } else if (remoteVideoStatus) {
+                                remoteVideoStatus.classList.remove('hidden');
+                                remoteVideoStatus.innerHTML = '<div><span class="text-xl block mb-1">⏳</span>Réception vidéo...</div>';
+                            }
+                            const vidFallback = setTimeout(() => {
+                                if (remoteVideoStatus && !remoteVideoStatus.classList.contains('hidden')) {
+                                    remoteVideoStatus.innerHTML = '<div><span class="text-xl block mb-1">📶</span>Vidéo en attente...</div>';
+                                }
+                            }, 5000);
+                            remoteVideo.onloadeddata = () => {
+                                clearTimeout(vidFallback);
+                                console.log('[WebRTC] Caller: video distante - metadonnees chargees, dimensions=' + remoteVideo.videoWidth + 'x' + remoteVideo.videoHeight);
+                                if (remoteVideoStatus) remoteVideoStatus.classList.add('hidden');
+                                remoteVideo.onloadeddata = null;
+                            };
+                            remoteVideo.play().catch(e => {
+                                clearTimeout(vidFallback);
+                                console.warn('[WebRTC] Caller: video autoplay bloque...', e);
+                                if (remoteVideoStatus) {
+                                    remoteVideoStatus.innerHTML = '<div><span class="text-xl block mb-1">▶️</span>Appuyez pour voir</div>';
+                                }
+                            });
+                        }
                     }
                     statusEl.innerText = "Appel en cours";
                 };
@@ -351,6 +480,10 @@
                     signal: { type: 'offer', roomId: roomId, data: pc.localDescription.toJSON() }
                 }, '*');
 
+                // Activer la renegociation seulement APRES l'init
+                initialSetupComplete = true;
+                console.log('[WebRTC] Caller: init terminee, renegociation activee');
+
                 statusEl.innerText = "Sonnerie...";
             } catch (err) {
                 console.error('[WebRTC] Caller: erreur:', err);
@@ -362,6 +495,31 @@
         // === WEBRTC CALLEE : recoit l'offre et repond ===
         async function handleWebRTCOffer(offerData) {
             try {
+                // Renegociation : si on a deja un pc, on repond sans re-creer getUserMedia
+                if (pc && pc.signalingState !== 'closed') {
+                    console.log('[WebRTC] Renegociation: offre recue sur pc existant, transceivers:');
+                    pc.getTransceivers().forEach((t, i) => {
+                        console.log('[WebRTC]   transceiver[' + i + '] mid=' + t.mid + ' dir=' + t.direction + ' cur=' + t.currentDirection + ' kind=' + (t.sender.track ? t.sender.track.kind : 'none'));
+                    });
+                    await pc.setRemoteDescription(new RTCSessionDescription(offerData));
+                    console.log('[WebRTC] Renegociation: remote description definie, signaling=' + pc.signalingState);
+                    const answer = await pc.createAnswer();
+                    await pc.setLocalDescription(answer);
+                    const sdp = pc.localDescription.sdp;
+                    const hasAudio = sdp.indexOf('m=audio') !== -1;
+                    const hasVideo = sdp.indexOf('m=video') !== -1;
+                    console.log('[WebRTC] Renegociation: reponse envoyee, audio=' + hasAudio + ' video=' + hasVideo);
+                    window.parent.postMessage({ type: 'webrtc-signal', signal: { type: 'answer', roomId, data: pc.localDescription.toJSON() } }, '*');
+                    // Réactiver l'audio si nécessaire
+                    if (remoteAudio && remoteAudio.srcObject) {
+                        remoteAudio.muted = false;
+                        remoteAudio.volume = 1.0;
+                        remoteAudio.play().catch(e => console.warn('[WebRTC] Renegociation: echec relecture audio:', e));
+                        console.log('[WebRTC] Renegociation: audio distant reactive');
+                    }
+                    return;
+                }
+
                 console.log('[WebRTC] Callee: offre recue, demarrage WebRTC...');
                 statusEl.innerText = "Activation microphone...";
 
@@ -374,6 +532,36 @@
                 pc.onconnectionstatechange = () => console.log('[WebRTC] Callee: connection state =', pc.connectionState);
                 pc.oniceconnectionstatechange = () => console.log('[WebRTC] Callee: ICE connection state =', pc.iceConnectionState);
                 pc.onsignalingstatechange = () => console.log('[WebRTC] Callee: signaling state =', pc.signalingState);
+                // Renegociation (ajout/retrait piste video) — actif seulement APRES l'init
+                pc.onnegotiationneeded = async () => {
+                    if (!initialSetupComplete) {
+                        console.log('[WebRTC] Callee: onnegotiationneeded ignore (init en cours)');
+                        return;
+                    }
+                    if (isRenegotiating) return;
+                    if (pc.signalingState !== 'stable') {
+                        console.warn('[WebRTC] Callee: renegociation ignoree, signaling=' + pc.signalingState);
+                        return;
+                    }
+                    isRenegotiating = true;
+                    try {
+                        console.log('[WebRTC] Callee: renegociation declenchee, transceivers:');
+                        pc.getTransceivers().forEach((t, i) => {
+                            console.log('[WebRTC]   transceiver[' + i + '] mid=' + t.mid + ' dir=' + t.direction + ' cur=' + t.currentDirection + ' kind=' + (t.sender.track ? t.sender.track.kind : 'none'));
+                        });
+                        const offer = await pc.createOffer();
+                        await pc.setLocalDescription(offer);
+                        const sdp = pc.localDescription.sdp;
+                        const hasAudio = sdp.indexOf('m=audio') !== -1;
+                        const hasVideo = sdp.indexOf('m=video') !== -1;
+                        console.log('[WebRTC] Callee: offre de renegociation envoyee, audio=' + hasAudio + ' video=' + hasVideo);
+                        window.parent.postMessage({ type: 'webrtc-signal', signal: { type: 'offer', roomId, data: pc.localDescription.toJSON() } }, '*');
+                    } catch (err) {
+                        console.error('[WebRTC] Callee: erreur renegociation:', err);
+                    } finally {
+                        isRenegotiating = false;
+                    }
+                };
 
                 // Ajouter les pistes audio locales
                 localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
@@ -391,11 +579,90 @@
 
                 // Quand la piste distante arrive, la jouer
                 pc.ontrack = (event) => {
-                    console.log('[WebRTC] Callee: piste distante recue, streams=' + (event.streams ? event.streams.length : 0));
-                    const remoteAudio = document.getElementById('remoteAudio');
-                    if (remoteAudio && event.streams[0]) {
-                        remoteAudio.srcObject = event.streams[0];
-                        remoteAudio.play().catch(e => console.warn('[WebRTC] Callee: autoplay bloque, tentative Manuel...', e));
+                    console.log('[WebRTC] Callee: piste distante recue, kind=' + event.track.kind + ' id=' + event.track.id + ' readyState=' + event.track.readyState);
+                    const track = event.track;
+                    if (!track) return;
+
+                    if (track.kind === 'audio') {
+                        // Audio : creer un stream persistant UNE SEULE FOIS, ne jamais le modifier
+                        if (!remoteAudioStream) {
+                            remoteAudioStream = new MediaStream();
+                            remoteAudioStream.addTrack(track);
+                            const remoteAudio = document.getElementById('remoteAudio');
+                            if (remoteAudio) {
+                                remoteAudio.srcObject = remoteAudioStream;
+                                remoteAudio.play().catch(e => console.warn('[WebRTC] Callee: autoplay audio bloque...', e));
+                            }
+                            console.log('[WebRTC] Callee: audio distant initialise');
+                        } else {
+                            // Renegociation : remplacer la piste silencieusement
+                            const existingTracks = remoteAudioStream.getAudioTracks();
+                            if (existingTracks.length > 0 && existingTracks[0].id !== track.id) {
+                                existingTracks.forEach(t => remoteAudioStream.removeTrack(t));
+                                remoteAudioStream.addTrack(track);
+                                console.log('[WebRTC] Callee: piste audio mise a jour (renegociation)');
+                            }
+                            // S'assurer que l'audio est toujours en cours de lecture
+                            const remoteAudio = document.getElementById('remoteAudio');
+                            if (remoteAudio) {
+                                remoteAudio.muted = false;
+                                remoteAudio.volume = 1.0;
+                                remoteAudio.play().catch(() => {});
+                            }
+                        }
+                    } else if (track.kind === 'video') {
+                        const remoteVideo = document.getElementById('remoteVideo');
+                        const remoteVideoContainer = document.getElementById('remoteVideoContainer');
+                        const remoteVideoStatus = document.getElementById('remoteVideoStatus');
+                        if (!remoteVideoStream) {
+                            remoteVideoStream = new MediaStream();
+                            if (remoteVideo) remoteVideo.srcObject = remoteVideoStream;
+                        }
+                        remoteVideoStream.getVideoTracks().forEach(t => {
+                            if (t.id !== track.id) remoteVideoStream.removeTrack(t);
+                        });
+                        if (!remoteVideoStream.getVideoTracks().some(t => t.id === track.id)) {
+                            remoteVideoStream.addTrack(track);
+                        }
+                        console.log('[WebRTC] Callee: piste video distante ajoutee au stream persistant, nbTracks=' + remoteVideoStream.getVideoTracks().length);
+
+                        // Detecter quand la video est coupee cote distant
+                        track.onended = () => {
+                            console.log('[WebRTC] Callee: piste video distante terminee, masquage PiP');
+                            const rvc = document.getElementById('remoteVideoContainer');
+                            if (rvc) rvc.classList.add('hidden');
+                            const rvs = document.getElementById('remoteVideoStatus');
+                            if (rvs) { rvs.classList.add('hidden'); rvs.innerHTML = ''; }
+                        };
+
+                        if (remoteVideoContainer) {
+                            remoteVideoContainer.classList.remove('hidden');
+                            // Si la video a deja des donnees, cacher le statut immediatement
+                            if (remoteVideo.readyState >= 2 && remoteVideo.videoWidth > 0) {
+                                if (remoteVideoStatus) remoteVideoStatus.classList.add('hidden');
+                            } else if (remoteVideoStatus) {
+                                remoteVideoStatus.classList.remove('hidden');
+                                remoteVideoStatus.innerHTML = '<div><span class="text-xl block mb-1">⏳</span>Réception vidéo...</div>';
+                            }
+                            const vidFallback = setTimeout(() => {
+                                if (remoteVideoStatus && !remoteVideoStatus.classList.contains('hidden')) {
+                                    remoteVideoStatus.innerHTML = '<div><span class="text-xl block mb-1">📶</span>Vidéo en attente...</div>';
+                                }
+                            }, 5000);
+                            remoteVideo.onloadeddata = () => {
+                                clearTimeout(vidFallback);
+                                console.log('[WebRTC] Callee: video distante - metadonnees chargees, dimensions=' + remoteVideo.videoWidth + 'x' + remoteVideo.videoHeight);
+                                if (remoteVideoStatus) remoteVideoStatus.classList.add('hidden');
+                                remoteVideo.onloadeddata = null;
+                            };
+                            remoteVideo.play().catch(e => {
+                                clearTimeout(vidFallback);
+                                console.warn('[WebRTC] Callee: video autoplay bloque...', e);
+                                if (remoteVideoStatus) {
+                                    remoteVideoStatus.innerHTML = '<div><span class="text-xl block mb-1">▶️</span>Appuyez pour voir</div>';
+                                }
+                            });
+                        }
                     }
                     statusEl.innerText = "Appel en cours";
                 };
@@ -414,6 +681,10 @@
                     type: 'webrtc-signal',
                     signal: { type: 'answer', roomId: roomId, data: pc.localDescription.toJSON() }
                 }, '*');
+
+                // Activer la renegociation seulement APRES l'init
+                initialSetupComplete = true;
+                console.log('[WebRTC] Callee: init terminee, renegociation activee');
 
                 statusEl.innerText = "Appel en cours";
             } catch (err) {
@@ -445,11 +716,34 @@
                     localStream.getTracks().forEach(t => t.stop());
                     localStream = null;
                 }
+                if (videoStream) {
+                    videoStream.getTracks().forEach(t => t.stop());
+                    videoStream = null;
+                }
             } catch(e) { console.error('[WebRTC] Erreur arret pistes:', e); }
             try {
+                const remoteVideo = document.getElementById('remoteVideo');
+                const remoteVideoContainer = document.getElementById('remoteVideoContainer');
+                const remoteVideoStatus = document.getElementById('remoteVideoStatus');
+                if (remoteVideo) { remoteVideo.srcObject = null; remoteVideo.onloadeddata = null; }
+                if (remoteVideoContainer) remoteVideoContainer.classList.add('hidden');
+                if (remoteVideoStatus) { remoteVideoStatus.classList.add('hidden'); remoteVideoStatus.innerHTML = ''; }
                 const remoteAudio = document.getElementById('remoteAudio');
                 if (remoteAudio) remoteAudio.srcObject = null;
             } catch {}
+            // Nettoyer les streams persistants
+            try {
+                if (remoteAudioStream) {
+                    remoteAudioStream.getTracks().forEach(t => t.stop());
+                    remoteAudioStream = null;
+                }
+                if (remoteVideoStream) {
+                    remoteVideoStream.getTracks().forEach(t => t.stop());
+                    remoteVideoStream = null;
+                }
+            } catch(e) { console.error('[WebRTC] Erreur nettoyage streams persistants:', e); }
+            isRenegotiating = false;
+            initialSetupComplete = false;
         }
 
         function terminateCall() {
@@ -509,6 +803,10 @@
             } catch {}
         });
 
+        // Signaler au parent que l'iframe est prete a recevoir les signaux WebRTC
+        console.log('[Call] Iframe prete, envoi call-iframe-ready au parent (role=' + role + ')');
+        window.parent.postMessage({ type: 'call-iframe-ready', role: role }, '*');
+
         function handleWebRTCSignal(signal) {
             if (!signal) return;
             console.log('[WebRTC] Signal recu du parent:', signal.type);
@@ -520,12 +818,41 @@
                     }
                     handleWebRTCOffer(signal.data);
                 } else if (signal.type === 'answer') {
-                    // Caller recoit la reponse
-                    if (pc && signal.data) {
-                        pc.setRemoteDescription(new RTCSessionDescription(signal.data))
-                            .then(() => console.log('[WebRTC] Remote description (answer) definie'))
-                            .catch(e => console.error('[WebRTC] Erreur setRemoteDescription answer:', e));
+                    // Ignorer l'answer si on est deja stable (relai de notre propre reponse)
+                    // Accepter seulement si on est en have-local-offer (on attend une reponse a notre offre)
+                    if (pc && pc.signalingState === 'stable') {
+                        console.log('[WebRTC] Answer ignoree (deja stable, relai de ma propre reponse), role=' + role);
+                        return;
                     }
+                    if (!pc || !signal.data) return;
+                    if (pc.signalingState !== 'have-local-offer') {
+                        console.warn('[WebRTC] Answer recue dans un etat inattendu: ' + pc.signalingState + ', ignoree');
+                        return;
+                    }
+                    console.log('[WebRTC] Answer acceptee (signaling=' + pc.signalingState + ', role=' + role + ')');
+                    pc.setRemoteDescription(new RTCSessionDescription(signal.data))
+                            .then(() => {
+                                console.log('[WebRTC] Remote description (answer) definie, signaling=' + pc.signalingState);
+                                // Vérifier l'état des transceivers après renégociation
+                                pc.getTransceivers().forEach((t, i) => {
+                                    console.log('[WebRTC]   transceiver[' + i + '] mid=' + t.mid + ' dir=' + t.direction + ' cur=' + t.currentDirection + ' kind=' + (t.sender.track ? t.sender.track.kind : 'none'));
+                                });
+                                // Réactiver l'audio distant si nécessaire
+                                if (remoteAudio && remoteAudio.srcObject) {
+                                    remoteAudio.muted = false;
+                                    remoteAudio.volume = 1.0;
+                                    remoteAudio.play().catch(e => console.warn('[WebRTC] echec relecture audio:', e));
+                                    console.log('[WebRTC] Audio distant reactive apres answer');
+                                }
+                                // Vérifier que la piste audio locale est toujours active
+                                if (localStream) {
+                                    localStream.getAudioTracks().forEach(t => {
+                                        if (!t.enabled) { t.enabled = true; console.log('[WebRTC] Audio local reactive'); }
+                                        console.log('[WebRTC] Audio local: enabled=' + t.enabled + ' muted=' + t.muted + ' readyState=' + t.readyState);
+                                    });
+                                }
+                            })
+                            .catch(e => console.error('[WebRTC] Erreur setRemoteDescription answer:', e));
                 } else if (signal.type === 'ice-candidate') {
                     // Ajouter le candidat ICE
                     if (pc && signal.data) {
@@ -599,20 +926,47 @@
             try { applyProductPreview(); } catch {}
 
             if (!videoModal.classList.contains('hidden')) {
+                // === DESACTIVER LA VIDEO ===
                 videoModal.classList.add('hidden');
                 if(label) label.innerText = "Appel Audio Mangoo";
 
                 if (noCamIcon) noCamIcon.innerHTML = '';
 
+                // Retirer les pistes video du RTCPeerConnection
+                if (pc && videoStream) {
+                    const senders = pc.getSenders();
+                    for (const sender of senders) {
+                        if (sender.track && sender.track.kind === 'video') {
+                            pc.removeTrack(sender);
+                            console.log('[WebRTC] Piste video retiree du PC');
+                        }
+                    }
+                    // S'assurer que l'audio est toujours actif après retrait vidéo
+                    if (localStream) {
+                        localStream.getAudioTracks().forEach(t => { t.enabled = true; });
+                    }
+                    if (remoteAudio && remoteAudio.srcObject) {
+                        remoteAudio.muted = false;
+                        remoteAudio.volume = 1.0;
+                        remoteAudio.play().catch(() => {});
+                    }
+                }
+
+                // Arreter les pistes video locales
                 const localVideo = document.getElementById('localVideo');
                 if (localVideo && localVideo.srcObject) {
                     const tracks = localVideo.srcObject.getTracks();
                     tracks.forEach(track => track.stop());
                     localVideo.srcObject = null;
                 }
+                if (videoStream) {
+                    videoStream.getTracks().forEach(t => t.stop());
+                    videoStream = null;
+                }
                 return;
             }
 
+            // === ACTIVER LA VIDEO ===
             isProcessing = true;
 
             let originalStatusText = "Appel en cours";
@@ -643,17 +997,126 @@
             try {
                 const localVideo = document.getElementById('localVideo');
                 if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    // Attendre que le PC soit en état stable avant d'ajouter des pistes
+                    if (pc && pc.signalingState !== 'stable') {
+                        console.log('[WebRTC] PC pas stable (' + pc.signalingState + '), attente...');
+                        // Forcer le retour à stable si bloqué
+                        try {
+                            if (pc.signalingState === 'have-local-offer' && pc.localDescription) {
+                                console.log('[WebRTC] PC bloqué en have-local-offer, tentative de restauration');
+                            }
+                        } catch {}
+                        // Attendre jusqu'à 3 secondes que le PC redevienne stable
+                        let waited = 0;
+                        while (pc.signalingState !== 'stable' && waited < 3000) {
+                            await new Promise(r => setTimeout(r, 100));
+                            waited += 100;
+                        }
+                        if (pc.signalingState !== 'stable') {
+                            console.warn('[WebRTC] PC toujours pas stable apres attente: ' + pc.signalingState);
+                        }
+                    }
+
+                    // NE PAS recréer getUserMedia pour l'audio — on garde le stream existant intact
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                    videoStream = stream;
                     if (localVideo) {
                         localVideo.srcObject = stream;
+                        localVideo.muted = true;
                         try { await localVideo.play(); } catch {}
                     }
                     if (noCamIcon) noCamIcon.innerHTML = '';
+
+                    // VÉRIFIER que la piste audio n'a pas été tuée par getUserMedia(video)
+                    // (bug connu Chrome/Windows : ouvrir la caméra peut tuer le micro)
+                    if (localStream && pc && pc.connectionState !== 'closed') {
+                        const deadAudio = localStream.getAudioTracks().filter(t => t.readyState === 'ended');
+                        if (deadAudio.length > 0) {
+                            console.warn('[WebRTC] Piste audio locale TERMINEE apres getUserMedia(video) ! Tentative de recuperation...');
+                            try {
+                                const recoveryStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                                const newTrack = recoveryStream.getAudioTracks()[0];
+                                if (newTrack) {
+                                    const senders = pc.getSenders();
+                                    const audioSender = senders.find(s => s.track && s.track.kind === 'audio');
+                                    if (audioSender) {
+                                        await audioSender.replaceTrack(newTrack);
+                                        console.log('[WebRTC] Audio recupere via replaceTrack');
+                                    } else {
+                                        pc.addTrack(newTrack, recoveryStream);
+                                        console.log('[WebRTC] Audio recupere via addTrack');
+                                    }
+                                    // Nettoyer l'ancien stream mort
+                                    localStream.getAudioTracks().forEach(t => { try { t.stop(); } catch {} });
+                                    // Conserver la nouvelle piste audio
+                                    localStream = recoveryStream;
+                                    console.log('[WebRTC] Audio local restaure, readyState=' + newTrack.readyState);
+                                }
+                            } catch (recErr) {
+                                console.error('[WebRTC] Echec recuperation audio:', recErr);
+                            }
+                        } else {
+                            const aliveAudio = localStream.getAudioTracks().filter(t => t.readyState === 'live');
+                            console.log('[WebRTC] Audio local OK apres getUserMedia(video), ' + aliveAudio.length + ' piste(s) live');
+                        }
+                    }
+
+                    // Ajouter les pistes video a la connexion WebRTC existante
+                    if (pc && pc.connectionState !== 'closed' && pc.connectionState !== 'failed') {
+                        // Verrouiller pour eviter double renégociation
+                        if (isRenegotiating) {
+                            console.log('[WebRTC] Renegociation deja en cours, attente...');
+                            let waited = 0;
+                            while (isRenegotiating && waited < 5000) {
+                                await new Promise(r => setTimeout(r, 100));
+                                waited += 100;
+                            }
+                        }
+                        const videoTracks = stream.getVideoTracks();
+                        for (const track of videoTracks) {
+                            pc.addTrack(track, stream);
+                            console.log('[WebRTC] Piste video ajoutee au PC: ' + track.label);
+                        }
+                        console.log('[WebRTC] ' + videoTracks.length + ' piste(s) video ajoutee(s), renegociation en cours...');
+                        // S'assurer que la piste audio est toujours active
+                        if (localStream) {
+                            const audioTracks = localStream.getAudioTracks();
+                            audioTracks.forEach(t => console.log('[WebRTC] Audio local track: ' + t.id + ' enabled=' + t.enabled + ' muted=' + t.muted + ' readyState=' + t.readyState));
+                        }
+                    } else {
+                        console.warn('[WebRTC] PC non disponible pour ajouter la video (state=' + (pc ? pc.connectionState : 'null') + ')');
+                    }
                 } else {
                     if (noCamIcon) noCamIcon.innerHTML = '<div class="text-center px-2"><div class="text-2xl mb-1">🚫</div><div class="font-bold">Caméra indisponible</div><div class="text-[10px] opacity-80">Navigateur non supporté</div></div>';
                 }
             } catch (err) {
+                console.error('[WebRTC] Erreur activation video:', err);
                 if (noCamIcon) noCamIcon.innerHTML = '<div class="text-center px-2"><div class="text-2xl mb-1">🚫</div><div class="font-bold">Caméra non autorisée</div><div class="text-[10px] opacity-80">Vous pouvez continuer en audio</div></div>';
+                // Même si la caméra échoue, vérifier que l'audio n'a pas été tué par la tentative
+                if (localStream && pc && pc.connectionState !== 'closed') {
+                    const deadAudio = localStream.getAudioTracks().filter(t => t.readyState === 'ended');
+                    if (deadAudio.length > 0) {
+                        console.warn('[WebRTC] Piste audio locale TERMINEE apres echec camera ! Tentative de recuperation...');
+                        try {
+                            const recoveryStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                            const newTrack = recoveryStream.getAudioTracks()[0];
+                            if (newTrack) {
+                                const senders = pc.getSenders();
+                                const audioSender = senders.find(s => s.track && s.track.kind === 'audio');
+                                if (audioSender) {
+                                    await audioSender.replaceTrack(newTrack);
+                                } else {
+                                    pc.addTrack(newTrack, recoveryStream);
+                                }
+                                localStream.getAudioTracks().forEach(t => { try { t.stop(); } catch {} });
+                                localStream = recoveryStream;
+                                console.log('[WebRTC] Audio local restaure apres echec camera');
+                            }
+                        } catch (recErr) {
+                            console.error('[WebRTC] Echec recuperation audio apres echec camera:', recErr);
+                        }
+                    }
+                }
             } finally {
                 isProcessing = false;
                 if (statusEl) {

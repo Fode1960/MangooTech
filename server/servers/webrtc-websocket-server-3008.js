@@ -521,13 +521,16 @@ wss.on('connection', (ws) => {
   // ===== CALL NOTIFICATION AVEC HORAIRES + PRESENCE + PUSH =====
 
   function handleCallNotification(ws, data) {
-    const { roomId, from, message, fromLabel, timestamp, callId, callMode } = data;
+    const { roomId, from, message, fromLabel, timestamp, callId, callMode, vendorId: dataVendorId } = data;
     const cm = typeof callMode === 'string' ? callMode.trim().toLowerCase() : '';
 
     // Extraire l'identifiant brut puis resoudre l'ID reel du vendeur
     const rawId = extractRawIdFromRoomId(roomId);
-    const vendorId = resolveVendorId(rawId);
-    console.log(`[WebRTC-3008] Call notification: rawId=${rawId} resolvedVendorId=${vendorId}`);
+    let vendorId = resolveVendorId(rawId);
+    // Fallback : utiliser le vendorId explicite du message s'il differe
+    const fallbackVendorId = (typeof dataVendorId === 'string' && dataVendorId.trim()) ? resolveVendorId(dataVendorId.trim()) : null;
+    if (!vendorId && fallbackVendorId) vendorId = fallbackVendorId;
+    console.log(`[WebRTC-3008] Call notification: rawId=${rawId} resolvedVendorId=${vendorId}` + (fallbackVendorId && fallbackVendorId !== vendorId ? ` fallback=${fallbackVendorId}` : ''));
 
     // 1. Verifier les heures d'ouverture
     const hoursCheck = checkOpeningHours(vendorId);
@@ -560,12 +563,12 @@ wss.on('connection', (ws) => {
     };
 
     // 3. Si le vendeur est en ligne, envoyer via WebSocket
-    const vendorOnline = isVendorOnline(vendorId);
+    const vendorOnline = isVendorOnline(vendorId) || (fallbackVendorId ? isVendorOnline(fallbackVendorId) : false);
     // Stocker la session client pour pouvoir lui renvoyer call-accepted / call-ended
     callSessions.set(roomId, ws);
     if (vendorOnline) {
       console.log(`[WebRTC-3008] Vendor ${vendorId} est en ligne, envoi direct (pas de push)`);
-      const vendorPres = vendorPresence.get(vendorId) || vendorPresence.get(rawId);
+      const vendorPres = vendorPresence.get(vendorId) || vendorPresence.get(rawId) || (fallbackVendorId ? vendorPresence.get(fallbackVendorId) : null);
       if (vendorPres && vendorPres.ws !== ws && vendorPres.ws.readyState === WebSocket.OPEN) {
         vendorPres.ws.send(JSON.stringify(incomingCallMsg));
         console.log(`[WebRTC-3008] Appel envoye directement au vendor ${vendorId}`);
@@ -652,8 +655,10 @@ wss.on('connection', (ws) => {
 
     // Envoyer call-ended au vendeur si le client raccroche
     const rawId = extractRawIdFromRoomId(roomId);
-    const vendorId = resolveVendorId(rawId);
-    const vendorPres = vendorPresence.get(vendorId) || vendorPresence.get(rawId);
+    let vendorId = resolveVendorId(rawId);
+    const fallbackVendorId = (typeof data.vendorId === 'string' && data.vendorId.trim()) ? resolveVendorId(data.vendorId.trim()) : null;
+    if (!vendorId && fallbackVendorId) vendorId = fallbackVendorId;
+    const vendorPres = vendorPresence.get(vendorId) || vendorPresence.get(rawId) || (fallbackVendorId ? vendorPresence.get(fallbackVendorId) : null);
     if (vendorPres && vendorPres.ws !== ws && vendorPres.ws.readyState === WebSocket.OPEN) {
       vendorPres.ws.send(JSON.stringify(endedMsg));
       console.log(`[WebRTC-3008] call-ended envoye directement au vendor ${vendorId} pour room ${roomId}`);
@@ -661,6 +666,16 @@ wss.on('connection', (ws) => {
 
     // Fallback broadcast
     broadcastToRoom(roomId, endedMsg, currentUser?.id);
+
+    // Nettoyer la room (evite que des entrees perimees interferent avec les appels suivants)
+    if (rooms.has(roomId)) {
+      const room = rooms.get(roomId);
+      for (const [userId] of room) {
+        users.delete(`${roomId}|${userId}`);
+      }
+      rooms.delete(roomId);
+      console.log(`[WebRTC-3008] Room ${roomId} nettoyee apres call-ended`);
+    }
 
     // Nettoyer la session
     callSessions.delete(roomId);
