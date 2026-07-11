@@ -164,6 +164,7 @@
         const name = params.get('callee') || 'Service Client';
         const theme = params.get('theme');
         const mode = params.get('mode');
+        const autoConnect = params.get('autoConnect') === 'true';
         const productNameParam = params.get('productName');
         const productImgParam = params.get('productImg');
 
@@ -222,13 +223,115 @@
         const statusEl = document.getElementById('statusText');
         const visualizer = document.getElementById('visualizer');
 
-        // Simulate Connection
-        setTimeout(() => {
+        // Ringtone via Web Audio API
+        let ringtoneCtx = null;
+        let ringtoneInterval = null;
+        let callConnected = false;
+
+        function startRinging() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                ringtoneCtx = new AudioCtx();
+                let beep = true;
+                // Attendre la reprise du contexte avant de jouer
+                const doResume = ringtoneCtx.state === 'suspended' ? ringtoneCtx.resume() : Promise.resolve();
+                doResume.then(() => {
+                    if (!ringtoneCtx) return;
+                    ringtoneInterval = setInterval(() => {
+                        try {
+                            if (callConnected) { stopRinging(); return; }
+                            if (!ringtoneCtx) { clearInterval(ringtoneInterval); return; }
+                            if (ringtoneCtx.state === 'suspended') { ringtoneCtx.resume(); return; }
+                            const osc = ringtoneCtx.createOscillator();
+                            const gain = ringtoneCtx.createGain();
+                            osc.connect(gain);
+                            gain.connect(ringtoneCtx.destination);
+                            osc.type = 'sine';
+                            osc.frequency.value = beep ? 800 : 1000;
+                            gain.gain.value = 0.3;
+                            gain.gain.exponentialRampToValueAtTime(0.001, ringtoneCtx.currentTime + 0.4);
+                            osc.start(ringtoneCtx.currentTime);
+                            osc.stop(ringtoneCtx.currentTime + 0.4);
+                            beep = !beep;
+                        } catch {}
+                    }, 800);
+                }).catch(() => {});
+            } catch {}
+        }
+
+        function stopRinging() {
+            try {
+                if (ringtoneInterval) { clearInterval(ringtoneInterval); ringtoneInterval = null; }
+                if (ringtoneCtx) {
+                    try { ringtoneCtx.close(); } catch {}
+                    ringtoneCtx = null;
+                }
+            } catch {}
+        }
+
+        function connectCall() {
+            if (callConnected) return;
+            callConnected = true;
+            stopRinging();
             statusEl.innerText = "Appel en cours";
             timerEl.innerText = "00:00";
             callActive = true;
             startTimer();
-        }, 500);
+        }
+
+        function terminateCall() {
+            stopRinging();
+            callActive = false;
+            callConnected = false;
+            statusEl.innerText = "Appel terminé";
+            timerEl.innerText = "Fin";
+            if (visualizer) visualizer.style.opacity = '0';
+            try {
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = null;
+            } catch {}
+            // Stop camera if active
+            try {
+                const localVideo = document.getElementById('localVideo');
+                if (localVideo && localVideo.srcObject) {
+                    localVideo.srcObject.getTracks().forEach(t => t.stop());
+                    localVideo.srcObject = null;
+                }
+                const videoModal = document.getElementById('videoModal');
+                if (videoModal) videoModal.classList.add('hidden');
+            } catch {}
+            try { if (navigator && navigator.vibrate) navigator.vibrate(0); } catch {}
+        }
+
+        // Start ringing on page load (sauf si autoConnect = appel déjà accepté)
+        if (autoConnect) {
+            console.log('[Call] autoConnect=true, connexion directe sans sonnerie');
+            connectCall();
+        } else {
+            startRinging();
+        }
+
+        // Listen for messages from parent (mangoo-local.html)
+        window.addEventListener('message', function(event) {
+            try {
+                const data = typeof event.data === 'string' ? event.data : event.data;
+                if (data && data.type === 'call_accepted') {
+                    console.log('[Call] call_accepted recu, connexion...');
+                    if (!callConnected) connectCall();
+                } else if (data && data.type === 'call_ended') {
+                    console.log('[Call] call_ended recu, terminaison...');
+                    terminateCall();
+                    setTimeout(() => {
+                        try { window.parent.postMessage('end_call', '*'); } catch {}
+                    }, 350);
+                } else if (data === 'call_accepted') {
+                    if (!callConnected) connectCall();
+                } else if (data === 'call_ended') {
+                    terminateCall();
+                }
+            } catch {}
+        });
 
         function startTimer() {
             if (timerInterval) return;
@@ -353,10 +456,11 @@
         }
 
         function endCall() {
+            console.log('[Call] endCall() declenche dans iframe');
             callActive = false;
-            statusEl.innerText = "Appel terminé";
-            timerEl.innerText = "Fin";
-            visualizer.style.opacity = '0';
+            try { statusEl.innerText = "Appel terminé"; } catch {}
+            try { timerEl.innerText = "Fin"; } catch {}
+            try { if (visualizer) visualizer.style.opacity = '0'; } catch {}
 
             try {
                 if (timerInterval) clearInterval(timerInterval);
@@ -397,29 +501,13 @@
             try { if (navigator && navigator.vibrate) navigator.vibrate(0); } catch {}
 
             setTimeout(() => {
-                // Try to communicate with parent if in iframe
+                // Signaler au parent (mangoo-local.html) de fermer l'overlay
                 try {
+                    console.log('[Call] iframe envoie postMessage end_call au parent');
                     window.parent.postMessage('end_call', '*');
-                } catch {
-                }
-                try {
-                    window.close();
-                } catch {
-                }
-
-                try {
-                    if (history.length > 1) {
-                        history.back();
-                        return;
-                    }
-                } catch {
-                }
-
-                try {
-                    const fallback = params.get('return') || '/mangoo-local.html';
-                    window.location.assign(fallback);
-                } catch {
-                }
+                } catch(e) { console.error('[Call] Erreur postMessage end_call:', e); }
+                // NE PAS appeler window.close(), history.back() ou location.assign() !
+                // Ces appels font disparaitre la page parente entiere.
             }, 350);
         }
     </script>

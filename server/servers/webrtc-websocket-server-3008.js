@@ -27,6 +27,10 @@ const users = new Map();
 // Map: roomId -> { offer, fromLabel, callId, callMode, from, timestamp }
 const pendingOffers = new Map();
 
+// Stockage des sessions d'appel actives: roomId -> WebSocket du client appelant
+// Permet d'envoyer call-accepted / call-ended directement au client
+const callSessions = new Map();
+
 // ===== PRESENCE TRACKING =====
 // Map: vendorId -> { ws, userId, connectedAt, lastPing }
 const vendorPresence = new Map();
@@ -532,12 +536,16 @@ wss.on('connection', (ws) => {
 
     // 3. Si le vendeur est en ligne, envoyer via WebSocket
     const vendorOnline = isVendorOnline(vendorId);
+    // Stocker la session client pour pouvoir lui renvoyer call-accepted / call-ended
+    callSessions.set(roomId, ws);
     if (vendorOnline) {
       console.log(`[WebRTC-3008] Vendor ${vendorId} est en ligne, envoi direct (pas de push)`);
       const vendorPres = vendorPresence.get(vendorId) || vendorPresence.get(rawId);
-      if (vendorPres && vendorPres.ws.readyState === WebSocket.OPEN) {
+      if (vendorPres && vendorPres.ws !== ws && vendorPres.ws.readyState === WebSocket.OPEN) {
         vendorPres.ws.send(JSON.stringify(incomingCallMsg));
         console.log(`[WebRTC-3008] Appel envoye directement au vendor ${vendorId}`);
+      } else if (vendorPres && vendorPres.ws === ws) {
+        console.log(`[WebRTC-3008] ATTENTION: le client appelant est enregistre comme vendeur ${vendorId} - incoming-call NON envoye (evite boucle)`);
       }
       broadcastToRoom(roomId, incomingCallMsg, currentUser?.id);
       return; // Pas de push quand le vendeur est en ligne
@@ -600,27 +608,67 @@ wss.on('connection', (ws) => {
     // Nettoyer l'offre en attente
     pendingOffers.delete(roomId);
 
-    broadcastToRoom(roomId, {
+    const endedMsg = {
       type: 'call-ended',
       roomId: roomId,
       from: from,
       timestamp: timestamp,
       ...(typeof callId === 'string' && callId.trim() ? { callId: callId.trim() } : {})
-    }, currentUser?.id);
+    };
+
+    // Envoyer call-ended directement au client appelant
+    const clientWs = callSessions.get(roomId);
+    if (clientWs && clientWs.readyState === WebSocket.OPEN) {
+      clientWs.send(JSON.stringify(endedMsg));
+      console.log(`[WebRTC-3008] call-ended envoye directement au client pour room ${roomId}`);
+    } else {
+      console.log(`[WebRTC-3008] call-ended: client WS non trouve ou ferme pour room ${roomId}. callSessions.size=${callSessions.size}, clientWs=${!!clientWs}, readyState=${clientWs ? clientWs.readyState : 'N/A'}`);
+    }
+
+    // Envoyer call-ended au vendeur si le client raccroche
+    const rawId = extractRawIdFromRoomId(roomId);
+    const vendorId = resolveVendorId(rawId);
+    const vendorPres = vendorPresence.get(vendorId) || vendorPresence.get(rawId);
+    if (vendorPres && vendorPres.ws !== ws && vendorPres.ws.readyState === WebSocket.OPEN) {
+      vendorPres.ws.send(JSON.stringify(endedMsg));
+      console.log(`[WebRTC-3008] call-ended envoye directement au vendor ${vendorId} pour room ${roomId}`);
+    }
+
+    // Fallback broadcast
+    broadcastToRoom(roomId, endedMsg, currentUser?.id);
+
+    // Nettoyer la session
+    callSessions.delete(roomId);
   }
 
   function handleCallAccepted(ws, data) {
     const { roomId, from, fromLabel, timestamp, callId } = data;
 
-    broadcastToRoom(roomId, {
-      type: 'call-accepted',
-      roomId: roomId,
-      from: from || (currentUser ? currentUser.id : ''),
-      fromLabel: typeof fromLabel === 'string' && fromLabel.trim() ? fromLabel.trim() : undefined,
-      fromRole: currentUser ? currentUser.role : undefined,
-      timestamp: timestamp || Date.now(),
-      ...(typeof callId === 'string' && callId.trim() ? { callId: callId.trim() } : {})
-    }, currentUser?.id);
+    // Envoyer call-accepted directement au client appelant (pas via broadcastToRoom car le client n'est pas dans la room)
+    const clientWs = callSessions.get(roomId);
+    if (clientWs && clientWs.readyState === WebSocket.OPEN) {
+      clientWs.send(JSON.stringify({
+        type: 'call-accepted',
+        roomId: roomId,
+        from: from || (currentUser ? currentUser.id : ''),
+        fromLabel: typeof fromLabel === 'string' && fromLabel.trim() ? fromLabel.trim() : undefined,
+        fromRole: currentUser ? currentUser.role : undefined,
+        timestamp: timestamp || Date.now(),
+        ...(typeof callId === 'string' && callId.trim() ? { callId: callId.trim() } : {})
+      }));
+      console.log(`[WebRTC-3008] call-accepted envoye directement au client pour room ${roomId}`);
+    } else {
+      console.log(`[WebRTC-3008] Aucun client WS trouve pour room ${roomId}, fallback broadcast`);
+      broadcastToRoom(roomId, {
+        type: 'call-accepted',
+        roomId: roomId,
+        from: from || (currentUser ? currentUser.id : ''),
+        fromLabel: typeof fromLabel === 'string' && fromLabel.trim() ? fromLabel.trim() : undefined,
+        fromRole: currentUser ? currentUser.role : undefined,
+        timestamp: timestamp || Date.now(),
+        ...(typeof callId === 'string' && callId.trim() ? { callId: callId.trim() } : {})
+      }, currentUser?.id);
+    }
   }
 
   function handleChatMessage(ws, data) {

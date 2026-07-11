@@ -1397,7 +1397,7 @@
             z-index: 1001;
         }
         .search-container:focus-within {
-            box-shadow: var(--ml-shadow-sm), 0 0 0 2px rgba(249, 115, 22, 0.30);
+            box-shadow: var(--ml-shadow-sm), 0 0 0 2px rgba(27, 94, 32, 0.30);
         }
         html.dark .search-container {
             background: rgba(255,255,255,0.06);
@@ -1489,7 +1489,7 @@
             left: 0;
             width: auto;
             height: calc(100% - 240px);
-            z-index: 900;
+            z-index: 1200;
             background: transparent;
             display: flex;
             flex-direction: column;
@@ -1507,7 +1507,7 @@
             pointer-events: auto;
             margin-bottom: 0;
             margin-left: 5px;
-            display: none;
+            display: flex;
         }
 
         .filter-actions {
@@ -2875,6 +2875,13 @@
             color: #ffffff;
             animation: pulse 1.5s infinite;
         }
+        .lp-call-btn {
+            background: var(--ml-green, #10b981);
+            color: #ffffff;
+        }
+        .lp-call-btn:hover {
+            filter: brightness(1.1);
+        }
 
         .lp-delivery-sheet {
             background: var(--ml-panel);
@@ -3261,7 +3268,7 @@
         html.dark .nav-item { color: #6b7280; }
         .nav-item.active { 
             color: #1b5e20;
-            background: rgba(249, 115, 22, 0.12);
+            background: rgba(27, 94, 32, 0.12);
             transform: translateY(-5px);
         }
 
@@ -3700,6 +3707,62 @@
         }
         #callFrame {
             width: 100%; height: 100%; border: none;
+        }
+        /* === INCOMING CALL BANNER === */
+        #incomingCallBanner {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 23000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 20px 20px;
+            background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+            color: white;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.45);
+            animation: slideDown 0.35s ease;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+        #incomingCallBanner .icb-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.85;
+            margin-bottom: 4px;
+        }
+        #incomingCallBanner .icb-caller {
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 14px;
+        }
+        #incomingCallBanner .icb-actions {
+            display: flex;
+            gap: 14px;
+        }
+        #incomingCallBanner .icb-actions button {
+            border: none;
+            padding: 10px 22px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        #incomingCallBanner .icb-actions button:active {
+            transform: scale(0.94);
+        }
+        .icb-accept {
+            background: white;
+            color: #1b5e20;
+        }
+        .icb-reject {
+            background: rgba(255,255,255,0.18);
+            color: white;
+            border: 1.5px solid rgba(255,255,255,0.5) !important;
         }
     </style>
 </head>
@@ -4892,8 +4955,8 @@
                 <div style="font-size:0.75rem; opacity:0.8;">En ligne</div>
             </div>
             <div style="display:flex; gap:5px; align-items:center;">
-                <button id="chat-requests-btn" onclick="toggleRequestsView()" style="background:none; border:none; color:white; cursor:pointer; font-size:1.2rem; padding:5px;" title="Mes demandes">📋</button>
-                <button id="chat-contacts-btn" onclick="toggleContactsView()" style="background:none; border:none; color:white; cursor:pointer; font-size:1.2rem; padding:5px;" title="Contacts">👥</button>
+                <button id="chat-requests-btn" onclick="toggleRequestsView()" style="background:rgba(255,255,255,0.15); border:none; color:white; cursor:pointer; font-size:1.2rem; padding:8px; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center;" title="Mes demandes">📋</button>
+                <button id="chat-contacts-btn" onclick="toggleContactsView()" style="background:rgba(255,255,255,0.15); border:none; color:white; cursor:pointer; font-size:1.2rem; padding:8px; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center;" title="Contacts">👥</button>
                 <button onclick="startAudioCall()" style="background:rgba(255,255,255,0.2); border:none; color:white; font-size:1.2rem; cursor:pointer; padding:8px; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 0111.19 18.85 19.5 19.5 0 015.19 12.85 19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg></button>
             </div>
         </div>
@@ -4972,6 +5035,16 @@
     <!-- AUDIO CALL OVERLAY -->
     <div id="callOverlay">
         <iframe id="callFrame" src=""></iframe>
+    </div>
+
+    <!-- INCOMING CALL BANNER -->
+    <div id="incomingCallBanner">
+        <div class="icb-label">Appel entrant</div>
+        <div class="icb-caller" id="icbCallerName">Client</div>
+        <div class="icb-actions">
+            <button class="icb-reject" onclick="rejectIncomingCall()">Refuser</button>
+            <button class="icb-accept" onclick="acceptIncomingCall()">Accepter</button>
+        </div>
     </div>
 
     <!-- SUPPLY MODAL (NEW) -->
@@ -5228,6 +5301,8 @@
     <script src="/localplus-country-seeds.js"></script>
     
     <script>
+        // Tunnel WebSocket géré par le proxy unifié sur port 3090 (même tunnel que HTTP)
+        const LP_WS_TUNNEL_URL = '';
         const LP_FALLBACK_USER_POS = [4.051056, 9.767869];
         const LP_COUNTRY_CONTEXT = (() => {
             try {
@@ -5646,7 +5721,7 @@
                 if (currentView === 'list' || currentView === 'fav') filterVendors();
                 if (currentView === 'map') {
                     const listHeader = document.getElementById('listHeader');
-                    if (listHeader) listHeader.style.background = document.documentElement.classList.contains('dark') ? '#111827' : '#f0f2f5';
+                    if (listHeader) listHeader.style.background = document.documentElement.classList.contains('dark') ? '#111827' : '#f6faf3';
                 }
             } catch {
             }
@@ -5753,6 +5828,7 @@
         function startAudioCall() {
             // Check if activeVendor exists
             const vendorName = activeVendor ? activeVendor.name : "le vendeur";
+            console.log('[Call] startAudioCall declenche, activeVendor=', activeVendor ? (activeVendor.name + ' | slug=' + activeVendor.slug + ' | id=' + activeVendor.id) : 'null');
             
             // Show selection modal instead of direct call
             const selectionOverlay = document.createElement('div');
@@ -5798,8 +5874,18 @@
 
         function launchCall(type) {
             closeCallSelection();
+            // Nettoyer tout appel precedent
+            activeCallData = null;
             
             const vendorName = activeVendor ? activeVendor.name : "le vendeur";
+            const vendorId = activeVendor ? (String(activeVendor.slug || activeVendor.id || '').trim()) : '';
+            console.log('[Call] launchCall declenche, type=' + type + ', vendorId=' + vendorId + ', activeVendor=', activeVendor ? (activeVendor.name + ' | slug=' + activeVendor.slug + ' | id=' + activeVendor.id) : 'null');
+            console.log('[Call] WebSocket state: connected=' + webrtcMgmtWsConnected + ', readyState=' + (webrtcMgmtWs ? webrtcMgmtWs.readyState : 'null') + ', queue=' + webrtcMsgQueue.length);
+            if (!vendorId) {
+                console.error('[Call] ERREUR: vendorId vide! Impossible d\'envoyer la notification.');
+                showLocalToast('Erreur : vendeur introuvable.', 'error');
+                return;
+            }
             const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
             const callFrame = document.getElementById('callFrame');
             const callOverlay = document.getElementById('callOverlay');
@@ -5811,20 +5897,53 @@
             } catch {
             }
             
-            let url = `webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}`;
+            let url = `webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}&t=${Date.now()}`;
             if (type === 'video') {
                 url += '&mode=video';
             }
             
             callFrame.src = url;
             callOverlay.style.display = 'flex';
+            // Send call notification to WebSocket server + sauvegarder pour call-ended
+            if (vendorId) {
+                const callId = 'call-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+                const clientId = getChatClientId();
+                const clientLabel = getChatClientLabel();
+                activeCallData = {
+                    roomId: 'call:' + vendorId,
+                    from: clientId,
+                    fromLabel: clientLabel,
+                    callId: callId
+                };
+                console.log('[Call] activeCallData=' + JSON.stringify(activeCallData));
+                try { lpSendCallNotification(vendorId, type, callId); } catch(e) { console.error('[Call] Erreur lpSendCallNotification:', e); }
+            }
         }
-
-        // Add listener for end_call
         window.addEventListener('message', function(event) {
             if (event.data === 'end_call') {
+                console.log('[Call] end_call recu du iframe, activeCallData=', activeCallData ? JSON.stringify(activeCallData) : 'null');
                 const callOverlay = document.getElementById('callOverlay');
                 const callFrame = document.getElementById('callFrame');
+
+                // Envoyer call-ended au serveur si on a un appel actif
+                if (activeCallData && webrtcMgmtWs && webrtcMgmtWsConnected && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                    try {
+                        webrtcMgmtWs.send(JSON.stringify({
+                            type: 'call-ended',
+                            roomId: activeCallData.roomId,
+                            from: activeCallData.from,
+                            fromLabel: activeCallData.fromLabel,
+                            callId: activeCallData.callId,
+                            reason: 'ended'
+                        }));
+                        console.log('[Call] call-ended envoye au serveur depuis end_call, roomId=' + activeCallData.roomId);
+                    } catch(e) {
+                        console.error('[Call] Erreur envoi call-ended depuis end_call:', e);
+                    }
+                }
+                // Toujours nettoyer activeCallData
+                activeCallData = null;
+
                 if (callOverlay) {
                     callOverlay.style.display = 'none';
                     if (callFrame) callFrame.src = ''; // Stop audio/video
@@ -7723,10 +7842,13 @@
 
         function lpFocusOwnedShopContext(vendorId) {
             try {
-                const v = VENDORS.find((x) => String(x?.id) === String(vendorId));
+                // Chercher par ID exact, puis par slug
+                const sid = String(vendorId);
+                let v = VENDORS.find((x) => String(x?.id) === sid || String(x?.slug) === sid);
                 if (!v || !lpIsOwnedShopVendor(v)) return false;
                 localStorage.setItem('mangoo_my_shop_id', String(v.id));
                 try { checkUserShop(); } catch {}
+                try { lpTryRegisterVendorPresence(); } catch {}
                 return true;
             } catch {
                 return false;
@@ -12753,16 +12875,6 @@
 
             renderChatQuickBar();
             
-            // Reinitialiser l'etat du chat
-            connectSessionHasUserMessage = false;
-            connectDraft = { urgent: false, quartier: null, devis: false };
-            if (activeVendor?.coverage && activeVendor.coverage.length) connectDraft.quartier = String(activeVendor.coverage[0]);
-            
-            const requestsView = document.getElementById('chat-requests-view');
-            const contactsView = document.getElementById('chat-contacts-view');
-            if (requestsView) requestsView.style.display = 'none';
-            if (contactsView) contactsView.style.display = 'none';
-            
             document.getElementById('connectPlus').style.display = 'flex';
         }
 
@@ -13839,17 +13951,131 @@
         // ===== WebSocket gestion chat =====
         let webrtcMgmtWs = null;
         let webrtcMgmtWsConnected = false;
+        let webrtcMgmtWsReconnectAttempt = 0;
+        let webrtcMgmtWsReconnecting = false;
+        let webrtcMgmtWsPingInterval = null;
+        const webrtcMsgQueue = [];
+
+        function lpGetVendorWsVendorId() {
+            // Try multiple sources to find the vendor's shop ID
+            try {
+                const pref = String(typeof lpGetPreferredShopAccountId === 'function' ? (lpGetPreferredShopAccountId() || '') : '').trim();
+                if (pref) return pref;
+            } catch {}
+            try {
+                const myShopId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
+                if (myShopId) return myShopId;
+            } catch {}
+            try {
+                if (typeof lpGetStoredShopIdsForCurrentUser === 'function') {
+                    const ids = lpGetStoredShopIdsForCurrentUser();
+                    if (Array.isArray(ids) && ids.length > 0) return String(ids[0]);
+                }
+            } catch {}
+            try {
+                if (typeof lpGetOwnedShopIds === 'function') {
+                    const ids = lpGetOwnedShopIds();
+                    if (Array.isArray(ids) && ids.length > 0) return String(ids[0]);
+                }
+            } catch {}
+            // Fallback: paramètre URL ?vendor=... UNIQUEMENT pour les vendeurs authentifies
+            try {
+                const urlVendor = new URLSearchParams(window.location.search).get('vendor');
+                const urlRole = new URLSearchParams(window.location.search).get('lpRole');
+                // Ne jamais enregistrer un simple client comme vendeur !
+                if (urlVendor && urlRole === 'vendor') return String(urlVendor).trim();
+            } catch {}
+            // Dernier recours : activeVendor (boutique actuellement affichée ET possédée)
+            try {
+                if (activeVendor && typeof activeVendor === 'object') {
+                    const aid = String(activeVendor.id || '').trim();
+                    if (aid && lpGetVendorKind(activeVendor) === 'shop' && lpIsOwnedShopVendor(activeVendor)) return aid;
+                }
+            } catch {}
+            return '';
+        }
+
+        let lpPresenceRetryTimer = null;
+        let lpPresenceRetryCount = 0;
+        const LP_PRESENCE_MAX_RETRIES = 10;
+        const LP_PRESENCE_RETRY_MS = 2000;
+
+        function lpTryRegisterVendorPresence() {
+            try {
+                if (!webrtcMgmtWs || !webrtcMgmtWsConnected) return;
+                const shopId = lpGetVendorWsVendorId();
+                if (!shopId) {
+                    console.log('[MgmtWS] Aucun vendorId, presence non enregistree (tentative ' + (lpPresenceRetryCount + 1) + '/' + LP_PRESENCE_MAX_RETRIES + ')');
+                    // Retry automatique si le vendorId n'est pas encore disponible
+                    // (ex: l'utilisateur n'a pas encore ouvert son Dashboard)
+                    if (lpPresenceRetryCount < LP_PRESENCE_MAX_RETRIES) {
+                        lpPresenceRetryCount++;
+                        if (lpPresenceRetryTimer) clearTimeout(lpPresenceRetryTimer);
+                        lpPresenceRetryTimer = setTimeout(() => {
+                            lpPresenceRetryTimer = null;
+                            lpTryRegisterVendorPresence();
+                        }, LP_PRESENCE_RETRY_MS);
+                    }
+                    return;
+                }
+                // Vendor ID trouve, annuler les retrys
+                if (lpPresenceRetryTimer) { clearTimeout(lpPresenceRetryTimer); lpPresenceRetryTimer = null; }
+                lpPresenceRetryCount = 0;
+                const userId = getChatClientId();
+                webrtcMgmtWs.send(JSON.stringify({ type: 'register-presence', vendorId: shopId, userId }));
+                console.log('[MgmtWS] Presence enregistree pour vendor', shopId);
+                // Flush queued messages
+                while (webrtcMsgQueue.length > 0) {
+                    const msg = webrtcMsgQueue.shift();
+                    try { webrtcMgmtWs.send(JSON.stringify(msg)); console.log('[MgmtWS] Message en file envoye'); } catch {}
+                }
+            } catch {}
+        }
 
         function initMgmtWebSocket() {
+            if (webrtcMgmtWsReconnecting) return;
+            webrtcMgmtWsReconnecting = true;
             try {
+                // Clean up previous socket
+                if (webrtcMgmtWs) {
+                    try { webrtcMgmtWs.onclose = null; } catch {}
+                    try { webrtcMgmtWs.onerror = null; } catch {}
+                    try { webrtcMgmtWs.onmessage = null; } catch {}
+                    try { webrtcMgmtWs.onopen = null; } catch {}
+                    try { webrtcMgmtWs.close(); } catch {}
+                    webrtcMgmtWs = null;
+                }
+                webrtcMgmtWsConnected = false;
                 const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-                const wsUrl = protocol + '//' + location.host + '/webrtc-ws';
-                console.log('[MgmtWS] Connexion a', wsUrl);
+                // Utiliser le tunnel WebSocket dédié (port 3008 exposé directement)
+                // car le proxy Vite ne relaie pas correctement les WebSocket via Cloudflare
+                const wsUrl = (typeof LP_WS_TUNNEL_URL === 'string' && LP_WS_TUNNEL_URL)
+                    ? LP_WS_TUNNEL_URL
+                    : (protocol + '//' + location.host + '/webrtc-ws');
+                console.log('[MgmtWS] Connexion a', wsUrl, '(tentative', webrtcMgmtWsReconnectAttempt + 1, ')');
                 webrtcMgmtWs = new WebSocket(wsUrl);
 
                 webrtcMgmtWs.onopen = () => {
                     console.log('[MgmtWS] Connecte');
                     webrtcMgmtWsConnected = true;
+                    webrtcMgmtWsReconnectAttempt = 0;
+                    webrtcMgmtWsReconnecting = false;
+                    // Ping keepalive toutes les 25s pour éviter déconnexion Cloudflare (code 1006)
+                    if (webrtcMgmtWsPingInterval) clearInterval(webrtcMgmtWsPingInterval);
+                    webrtcMgmtWsPingInterval = setInterval(() => {
+                        try {
+                            if (webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                                webrtcMgmtWs.send(JSON.stringify({ type: 'ping', ts: Date.now() }));
+                            }
+                        } catch {}
+                    }, 25000);
+                    // Flush queued messages (call notifications, etc.) — même sans présence vendeur
+                    while (webrtcMsgQueue.length > 0) {
+                        const msg = webrtcMsgQueue.shift();
+                        try { webrtcMgmtWs.send(JSON.stringify(msg)); console.log('[MgmtWS] Message en file envoye'); } catch {}
+                    }
+                    // Register vendor presence for incoming calls
+                    lpTryRegisterVendorPresence();
                 };
 
                 webrtcMgmtWs.onmessage = (event) => {
@@ -13861,18 +14087,27 @@
                     }
                 };
 
-                webrtcMgmtWs.onclose = () => {
-                    console.log('[MgmtWS] Deconnecte, reconnexion dans 3s');
+                webrtcMgmtWs.onclose = (event) => {
+                    console.log('[MgmtWS] Deconnecte (code', event.code, ')');
                     webrtcMgmtWsConnected = false;
-                    setTimeout(initMgmtWebSocket, 3000);
+                    webrtcMgmtWsReconnecting = false;
+                    if (webrtcMgmtWsPingInterval) { clearInterval(webrtcMgmtWsPingInterval); webrtcMgmtWsPingInterval = null; }
+                    const delay = Math.min(1000 * Math.pow(1.5, webrtcMgmtWsReconnectAttempt), 15000);
+                    webrtcMgmtWsReconnectAttempt++;
+                    console.log('[MgmtWS] Reconnexion dans', Math.round(delay / 1000), 's');
+                    setTimeout(initMgmtWebSocket, delay);
                 };
 
                 webrtcMgmtWs.onerror = (e) => {
                     console.error('[MgmtWS] Erreur socket');
+                    webrtcMgmtWsReconnecting = false;
                 };
             } catch(e) {
                 console.error('[MgmtWS] Erreur init:', e);
-                setTimeout(initMgmtWebSocket, 5000);
+                webrtcMgmtWsReconnecting = false;
+                const delay = Math.min(1000 * Math.pow(1.5, webrtcMgmtWsReconnectAttempt), 15000);
+                webrtcMgmtWsReconnectAttempt++;
+                setTimeout(initMgmtWebSocket, delay);
             }
         }
 
@@ -13884,9 +14119,210 @@
                 case 'chat-message':
                     handleChatBroadcast(data);
                     break;
+                case 'incoming-call':
+                    handleIncomingCall(data);
+                    break;
+                case 'call-accepted':
+                    handleCallAccepted(data);
+                    break;
+                case 'call-ended':
+                    handleCallEnded(data);
+                    break;
                 default:
                     break;
             }
+        }
+
+        let ringtoneAudio = null;
+        let ringtoneInterval = null;
+        // Pré-initialiser l'AudioContext au premier clic (les navigateurs exigent un geste utilisateur pour l'audio)
+        let _lpPreAudioCtx = null;
+        (function() {
+            const preInit = () => {
+                try {
+                    if (!_lpPreAudioCtx) {
+                        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                        if (AudioCtx) { _lpPreAudioCtx = new AudioCtx(); _lpPreAudioCtx.resume(); }
+                    }
+                } catch {}
+                document.removeEventListener('click', preInit, true);
+                document.removeEventListener('touchstart', preInit, true);
+            };
+            document.addEventListener('click', preInit, true);
+            document.addEventListener('touchstart', preInit, true);
+        })();
+
+        function startRinging() {
+            stopRinging();
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                ringtoneAudio = ctx;
+                let beep = true;
+                // Attendre la reprise du contexte avant de jouer (les navigateurs le mettent en "suspended" sans geste utilisateur)
+                const doResume = ctx.state === 'suspended' ? ctx.resume() : Promise.resolve();
+                doResume.then(() => {
+                    if (ringtoneAudio !== ctx) return; // stopRinging a ete appele entre-temps
+                    ringtoneInterval = setInterval(() => {
+                        try {
+                            if (ringtoneAudio !== ctx) { clearInterval(ringtoneInterval); return; }
+                            if (ctx.state === 'suspended') { ctx.resume(); return; }
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.type = 'sine';
+                            osc.frequency.value = beep ? 800 : 1000;
+                            gain.gain.value = 0.3;
+                            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+                            osc.start(ctx.currentTime);
+                            osc.stop(ctx.currentTime + 0.4);
+                            beep = !beep;
+                        } catch {}
+                    }, 800);
+                }).catch(() => {});
+            } catch {}
+        }
+
+        function stopRinging() {
+            try {
+                if (ringtoneInterval) { clearInterval(ringtoneInterval); ringtoneInterval = null; }
+                if (ringtoneAudio) {
+                    try { ringtoneAudio.close(); } catch {}
+                    ringtoneAudio = null;
+                }
+                try { if (navigator && navigator.vibrate) navigator.vibrate(0); } catch {}
+            } catch {}
+        }
+
+        let incomingCallData = null;
+        let activeCallData = null; // Donnees de l'appel en cours (pour envoyer call-ended au serveur)
+
+        function handleIncomingCall(data) {
+            console.log('[MgmtWS] Appel entrant:', data);
+            incomingCallData = data;
+            const banner = document.getElementById('incomingCallBanner');
+            const callerEl = document.getElementById('icbCallerName');
+            if (!banner || !callerEl) return;
+            const callerName = (typeof data.fromLabel === 'string' && data.fromLabel.trim()) ? data.fromLabel.trim() : 'Client';
+            callerEl.textContent = callerName;
+            banner.style.display = 'flex';
+            // Jouer la sonnerie
+            startRinging();
+            try { if (navigator && navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch {}
+        }
+
+        function acceptIncomingCall() {
+            const banner = document.getElementById('incomingCallBanner');
+            const data = incomingCallData;
+            // Sauvegarder pour pouvoir envoyer call-ended au serveur quand on raccroche
+            activeCallData = data ? { roomId: data.roomId, from: data.from, fromLabel: data.fromLabel, callId: data.callId } : null;
+            // Reset state immediately so next call can come in
+            incomingCallData = null;
+            if (banner) banner.style.display = 'none';
+            // Arreter la sonnerie immediatement
+            stopRinging();
+            if (!data) return;
+            // Send accept to server
+            try {
+                if (webrtcMgmtWs && webrtcMgmtWsConnected && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                    webrtcMgmtWs.send(JSON.stringify({
+                        type: 'call-accepted',
+                        roomId: data.roomId,
+                        from: data.from,
+                        fromLabel: data.fromLabel,
+                        callId: data.callId
+                    }));
+                }
+            } catch {}
+            // Open the call overlay
+            try {
+                const vendorName = (typeof data.fromLabel === 'string' && data.fromLabel.trim()) ? data.fromLabel.trim() : 'Client';
+                const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+                const callFrame = document.getElementById('callFrame');
+                const callOverlay = document.getElementById('callOverlay');
+                if (callFrame && callOverlay) {
+                    callFrame.src = 'webrtc-audio.html?callee=' + encodeURIComponent(vendorName) + '&theme=' + isDark + '&mode=audio&autoConnect=true&t=' + Date.now();
+                    callOverlay.style.display = 'flex';
+                }
+            } catch {}
+        }
+
+        function rejectIncomingCall() {
+            console.log('[Call] rejectIncomingCall declenche, data=', incomingCallData);
+            const banner = document.getElementById('incomingCallBanner');
+            if (banner) banner.style.display = 'none';
+            // Arreter la sonnerie immediatement
+            stopRinging();
+            const data = incomingCallData;
+            incomingCallData = null;
+            if (!data) return;
+            try {
+                if (webrtcMgmtWs && webrtcMgmtWsConnected) {
+                    console.log('[Call] Envoi call-ended (rejected), roomId=' + data.roomId + ', WS readyState=' + webrtcMgmtWs.readyState);
+                    webrtcMgmtWs.send(JSON.stringify({
+                        type: 'call-ended',
+                        roomId: data.roomId,
+                        from: data.from,
+                        fromLabel: data.fromLabel,
+                        callId: data.callId,
+                        reason: 'rejected'
+                    }));
+                } else {
+                    console.error('[Call] WebSocket non connecte, call-ended NON envoye!');
+                }
+            } catch(e) {
+                console.error('[Call] Erreur envoi call-ended:', e);
+            }
+        }
+
+        function handleCallAccepted(data) {
+            console.log('[MgmtWS] Appel accepte:', data);
+            try {
+                const banner = document.getElementById('incomingCallBanner');
+                if (banner) banner.style.display = 'none';
+                incomingCallData = null;
+                // Arreter la sonnerie
+                stopRinging();
+                // Reload l'iframe en mode connecte (avec autoConnect=true pour sauter la sonnerie)
+                try {
+                    const callFrame = document.getElementById('callFrame');
+                    const callOverlay = document.getElementById('callOverlay');
+                    if (callFrame && callOverlay) {
+                        const calleeName = String(data?.fromLabel || data?.from || 'Correspondant').trim();
+                        const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+                        callFrame.src = 'webrtc-audio.html?callee=' + encodeURIComponent(calleeName) + '&theme=' + isDark + '&mode=audio&autoConnect=true&t=' + Date.now();
+                    }
+                } catch {}
+            } catch {}
+        }
+
+        function handleCallEnded(data) {
+            console.log('[MgmtWS] Appel termine:', data);
+            console.log('[Call] handleCallEnded - arret sonnerie + fermeture overlay');
+            try {
+                const banner = document.getElementById('incomingCallBanner');
+                if (banner) banner.style.display = 'none';
+                incomingCallData = null;
+                activeCallData = null;
+                // Arreter la sonnerie du parent
+                stopRinging();
+                // Arreter l'iframe et fermer l'overlay
+                try {
+                    const callOverlay = document.getElementById('callOverlay');
+                    const callFrame = document.getElementById('callFrame');
+                    if (callFrame && callFrame.contentWindow) {
+                        // Envoyer le signal a l'iframe d'arreter
+                        callFrame.contentWindow.postMessage({ type: 'call_ended' }, '*');
+                    }
+                    // Vider le src pour couper tout audio
+                    if (callFrame) {
+                        setTimeout(() => { try { callFrame.src = ''; } catch {} }, 200);
+                    }
+                    if (callOverlay) callOverlay.style.display = 'none';
+                } catch {}
+            } catch {}
         }
 
         function handleIncomingChat(data) {
@@ -13934,6 +14370,41 @@
 
         // Init WebSocket au chargement
         setTimeout(initMgmtWebSocket, 500);
+
+        // Send call notification to server via WebSocket
+        function lpSendCallNotification(vendorId, callMode, optCallId) {
+            try {
+                const clientId = getChatClientId();
+                const clientLabel = getChatClientLabel();
+                const roomId = 'call:' + vendorId;
+                const callId = optCallId || ('call-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6));
+                const msg = {
+                    type: 'call-notification',
+                    roomId,
+                    from: clientId,
+                    fromLabel: clientLabel,
+                    vendorId,
+                    callMode: callMode || 'audio',
+                    message: 'Appel ' + (callMode === 'video' ? 'video' : 'audio') + ' de ' + clientLabel,
+                    callId,
+                    timestamp: Date.now()
+                };
+                if (!webrtcMgmtWs || !webrtcMgmtWsConnected || webrtcMgmtWs.readyState !== WebSocket.OPEN) {
+                    console.log('[Call] WebSocket non connecte, mise en file');
+                    webrtcMsgQueue.push(msg);
+                    // Force reconnect if needed
+                    if (!webrtcMgmtWsReconnecting) {
+                        console.log('[Call] Force reconnexion WebSocket');
+                        initMgmtWebSocket();
+                    }
+                    return;
+                }
+                webrtcMgmtWs.send(JSON.stringify(msg));
+                console.log('[Call] Notification envoyee pour vendor', vendorId, 'mode', callMode);
+            } catch(e) {
+                console.error('[Call] Erreur envoi notification:', e);
+            }
+        }
 
         // Helper to toggle options on mobile
         function toggleMsgOptions(bubble) {
@@ -14144,8 +14615,11 @@
             try { lpEnsureClientCommunicationTarget() } catch {}
             try {
                 const vendorName = String(activeVendor?.name || 'Support Mangoo').trim() || 'Support Mangoo'
+                const vendorId = activeVendor ? (String(activeVendor.slug || activeVendor.id || '').trim()) : ''
                 const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light'
                 const url = `webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}&mode=audio`
+                // Send call notification to server
+                try { if (vendorId) lpSendCallNotification(vendorId, 'audio'); } catch {}
                 try {
                     const w = window.open(url, '_blank')
                     if (w) return
@@ -14160,8 +14634,11 @@
             try { lpEnsureClientCommunicationTarget() } catch {}
             try {
                 const vendorName = String(activeVendor?.name || 'Support Mangoo').trim() || 'Support Mangoo'
+                const vendorId = activeVendor ? (String(activeVendor.slug || activeVendor.id || '').trim()) : ''
                 const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light'
                 const url = `webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}&mode=video`
+                // Send call notification to server
+                try { if (vendorId) lpSendCallNotification(vendorId, 'video'); } catch {}
                 try {
                     const w = window.open(url, '_blank')
                     if (w) return
@@ -14644,15 +15121,8 @@
                 if (lpRestoreVendorSheetOrigin()) return;
             } catch {
             }
-            try {
-                if (vendor && lpGetVendorKind(vendor) === 'shop' && lpIsOwnedShopVendor(vendor)) {
-                    try { switchView('account'); } catch {}
-                    try { switchAccountTab('sell'); } catch {}
-                    try { switchVendorTab('overview'); } catch {}
-                    return;
-                }
-            } catch {
-            }
+            // Si l'origine était la carte (pas de sauvegarde), on reste sur la carte.
+            // Ne pas rediriger le propriétaire vers le compte s'il vient de la carte.
         }
 
         // === GESTION DE LA FICHE VENDEUR ===
@@ -14674,7 +15144,7 @@
                     const isLive = Boolean(vendor && vendor.live);
                     try {
                         actions.classList.remove('lp-actions-2', 'lp-actions-3', 'lp-actions-4');
-                        const count = 2 + (isLive ? 1 : 0) + (isService ? 2 : 0);
+                        const count = 3 + (isLive ? 1 : 0) + (isService ? 2 : 0);
                         actions.classList.add(count >= 4 ? 'lp-actions-4' : count === 3 ? 'lp-actions-3' : 'lp-actions-2');
                     } catch {
                     }
@@ -14684,6 +15154,9 @@
                         </button>
                         <button type="button" class="vendor-action-btn btn-secondary" onclick="launchItinerary()">
                             <span style="font-size:1.1rem;">📍</span> Itinéraire
+                        </button>
+                        <button type="button" class="vendor-action-btn lp-call-btn" onclick="startAudioCall()">
+                            <span style="font-size:1.1rem;">📞</span> Appeler
                         </button>
                         ${isLive ? `
                             <button type="button" class="vendor-action-btn lp-live-btn" onclick="openLive()">
@@ -14838,7 +15311,7 @@
                             <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
                                 <a href="#" onclick="openProviderModalForVendor('${safeVendorId}')" style="color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px;">🏪 Ma fiche</a>
                                 <a href="#" onclick="startServicePayment('${safeVendorId}')" style="color:#1b5e20; font-size:0.85rem; text-decoration:none; border:1px solid #1b5e20; padding:8px 15px; border-radius:20px; font-weight:bold;">💳 Paiement</a>
-                                <a href="#" onclick="openProviderDashboard('${safeVendorId}')" style="color:#ffe082; font-size:0.85rem; text-decoration:none; border:1px solid #ffe082; padding:8px 15px; border-radius:20px; font-weight:bold;">👤 Mon compte</a>
+                                <a href="#" onclick="openProviderDashboard('${safeVendorId}')" style="color:#1b5e20; font-size:0.85rem; text-decoration:none; border:1px solid #1b5e20; padding:8px 15px; border-radius:20px; font-weight:bold;">👤 Mon compte</a>
                                 <a href="#" onclick="try{lpDisconnectProvider()}catch{}; try{closeSheet()}catch{}" style="color:#d63031; font-size:0.85rem; text-decoration:none; border:1px solid #d63031; padding:8px 15px; border-radius:20px; font-weight:bold;">🚪 Quitter</a>
                             </div>
                         `;
@@ -14850,10 +15323,10 @@
                     ownerLink.style.display = 'block';
                     ownerLink.innerHTML = `
                         <div style="display:flex; gap:10px; justify-content:flex-start; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:0 12px; scroll-snap-type:x proximity;">
-                                <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpTryOpenBoostFromLocal('${safeVendorId}', 'provider');" style="flex:0 0 auto; white-space:nowrap; background:#ffe082; color:white; font-size:0.95rem; border:1px solid #ffe082; padding:10px 16px; border-radius:999px; font-weight:950; scroll-snap-align:start; cursor:pointer; pointer-events:auto;">🚀 Booster</button>
+                                <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpTryOpenBoostFromLocal('${safeVendorId}', 'provider');" style="flex:0 0 auto; white-space:nowrap; background:#1b5e20; color:white; font-size:0.95rem; border:1px solid #1b5e20; padding:10px 16px; border-radius:999px; font-weight:950; scroll-snap-align:start; cursor:pointer; pointer-events:auto;">🚀 Booster</button>
                             <a href="#" onclick="openProviderModalForVendor('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px; scroll-snap-align:start;">🏪 Ma fiche</a>
                             <a href="#" onclick="startServicePayment('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#1b5e20; font-size:0.85rem; text-decoration:none; border:1px solid #1b5e20; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">💳 Paiement</a>
-                            <a href="#" onclick="openProviderDashboard('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#ffe082; font-size:0.85rem; text-decoration:none; border:1px solid #ffe082; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">👤 Mon compte</a>
+                            <a href="#" onclick="openProviderDashboard('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#1b5e20; font-size:0.85rem; text-decoration:none; border:1px solid #1b5e20; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">👤 Mon compte</a>
                             <a href="#" onclick="try{lpDisconnectProvider()}catch{}; try{closeSheet()}catch{}" style="flex:0 0 auto; white-space:nowrap; color:#d63031; font-size:0.85rem; text-decoration:none; border:1px solid #d63031; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">🚪 Quitter</a>
                         </div>
                     `;
@@ -14861,9 +15334,9 @@
                     ownerLink.style.display = 'block';
                     ownerLink.innerHTML = `
                         <div style="display:flex; gap:10px; justify-content:flex-start; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:0 12px; scroll-snap-type:x proximity;">
-                                <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpTryOpenBoostFromLocal('${safeVendorId}', 'shop');" style="flex:0 0 auto; white-space:nowrap; background:#ffe082; color:white; font-size:0.95rem; border:1px solid #ffe082; padding:10px 16px; border-radius:999px; font-weight:950; scroll-snap-align:start; cursor:pointer; pointer-events:auto;">🚀 Booster</button>
+                                <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpTryOpenBoostFromLocal('${safeVendorId}', 'shop');" style="flex:0 0 auto; white-space:nowrap; background:#1b5e20; color:white; font-size:0.95rem; border:1px solid #1b5e20; padding:10px 16px; border-radius:999px; font-weight:950; scroll-snap-align:start; cursor:pointer; pointer-events:auto;">🚀 Booster</button>
                             <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; openSellerModalForVendor('${safeVendorId}');" style="flex:0 0 auto; white-space:nowrap; color:#636e72; font-size:0.85rem; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px; background:transparent; font-weight:900; scroll-snap-align:start; cursor:pointer;">🏪 Ma fiche</button>
-                            <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpOpenShopAccountFromSheet('${safeVendorId}');" style="flex:0 0 auto; white-space:nowrap; color:#ffe082; font-size:0.85rem; border:1px solid #ffe082; padding:8px 15px; border-radius:20px; background:transparent; font-weight:950; scroll-snap-align:start; cursor:pointer;">👤 Mon compte</button>
+                            <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpOpenShopAccountFromSheet('${safeVendorId}');" style="flex:0 0 auto; white-space:nowrap; color:#1b5e20; font-size:0.85rem; border:1px solid #1b5e20; padding:8px 15px; border-radius:20px; background:transparent; font-weight:950; scroll-snap-align:start; cursor:pointer;">👤 Mon compte</button>
                             <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpOpenProductModalForShop('${safeVendorId}');" style="flex:0 0 auto; white-space:nowrap; color:#1b5e20; font-size:0.85rem; border:1px solid #1b5e20; padding:8px 15px; border-radius:20px; background:transparent; font-weight:950; scroll-snap-align:start; cursor:pointer;">📦 Nouveau</button>
                             <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpOpenSupplyModalForShop('${safeVendorId}');" style="flex:0 0 auto; white-space:nowrap; color:#1b5e20; font-size:0.85rem; border:1px solid #1b5e20; padding:8px 15px; border-radius:20px; background:transparent; font-weight:950; scroll-snap-align:start; cursor:pointer;">🏭 S'approvisionner</button>
                             <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; try{lpDisconnectShop()}catch{}; try{closeSheet()}catch{}" style="flex:0 0 auto; white-space:nowrap; color:#d63031; font-size:0.85rem; border:1px solid #d63031; padding:8px 15px; border-radius:20px; background:transparent; font-weight:950; scroll-snap-align:start; cursor:pointer;">🚪 Quitter</button>
@@ -15424,46 +15897,20 @@
 
         function lpQuickCallVendorById(vendorId) {
             const id = String(vendorId || '');
-            const v = VENDORS.find((x) => String(x?.id) === id);
+            // Chercher dans VENDORS, puis sinon dans le contexte local
+            let v = VENDORS.find((x) => String(x?.id) === id);
+            if (!v && typeof LP_COUNTRY_CONTEXT !== 'undefined' && LP_COUNTRY_CONTEXT?.vendors) {
+                v = LP_COUNTRY_CONTEXT.vendors.find((x) => String(x?.id) === id);
+            }
             if (!v) {
+                console.error('[Call] Vendeur introuvable dans VENDORS: ' + id);
                 showLocalToast("Impossible d'appeler ce vendeur.", 'error');
                 return;
             }
             activeVendor = v;
-            try {
-                startAudioCall();
-                setTimeout(() => {
-                    try {
-                        const sel = document.getElementById('callSelectionOverlay');
-                        const callOverlay = document.getElementById('callOverlay');
-                        const callOpen = !!(callOverlay && callOverlay.style && callOverlay.style.display && callOverlay.style.display !== 'none');
-                        if (sel || callOpen) return;
-
-                        const vendorName = String(activeVendor?.name || '').trim() || 'le vendeur';
-                        const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-                        const url = `webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}`;
-
-                        try {
-                            const w = window.open(url, '_blank');
-                            if (w) return;
-                        } catch {
-                        }
-                        try { window.location.assign(url); } catch {}
-                    } catch {
-                    }
-                }, 120);
-            } catch (e) {
-                try { console.error(e); } catch {}
-                try {
-                    const vendorName = String(activeVendor?.name || '').trim() || 'le vendeur';
-                    const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-                    const url = `webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}`;
-                    const w = window.open(url, '_blank');
-                    if (w) return;
-                } catch {
-                }
-                showLocalToast("Appel indisponible sur cet appareil.", 'error');
-            }
+            console.log('[Call] lpQuickCallVendorById: activeVendor=' + v.name + ' | id=' + v.id + ' | slug=' + (v.slug || 'N/A') + ' | Appel direct sans modale');
+            // Appel direct sans passer par la modale (comme le flux Discuter qui utilise le meme launchCall)
+            launchCall('audio');
         }
 
         function lpSpeakTopResults(maxCount = 3) {
