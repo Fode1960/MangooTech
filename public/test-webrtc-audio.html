@@ -60,6 +60,9 @@
 </head>
 <body class="bg-[#f6faf3] dark:bg-[#102814] text-gray-800 dark:text-white h-screen flex flex-col items-center justify-between transition-colors duration-300">
 
+    <!-- Audio element cache pour le flux distant WebRTC -->
+    <audio id="remoteAudio" autoplay playsinline style="display:none;"></audio>
+
     <!-- Header info -->
     <div class="mt-10 text-center px-6 w-full max-w-xl">
         <div class="rounded-3xl shadow-xl overflow-hidden border border-[#cfe0c8] dark:border-[#2e5d34]">
@@ -165,6 +168,8 @@
         const theme = params.get('theme');
         const mode = params.get('mode');
         const autoConnect = params.get('autoConnect') === 'true';
+        const role = params.get('role') || 'caller'; // 'caller' ou 'callee'
+        const roomId = params.get('roomId') || '';
         const productNameParam = params.get('productName');
         const productImgParam = params.get('productImg');
 
@@ -228,6 +233,11 @@
         let ringtoneInterval = null;
         let callConnected = false;
 
+        // === WebRTC ===
+        let pc = null;               // RTCPeerConnection
+        let localStream = null;      // MediaStream local
+        const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
         function startRinging() {
             try {
                 const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -274,14 +284,164 @@
             if (callConnected) return;
             callConnected = true;
             stopRinging();
-            statusEl.innerText = "Appel en cours";
+            statusEl.innerText = "Connexion audio...";
             timerEl.innerText = "00:00";
             callActive = true;
             startTimer();
+            console.log('[WebRTC] connectCall, role=' + role + ', roomId=' + roomId);
+            // Lancer le WebRTC selon le role
+            if (role === 'caller') {
+                startWebRTCCaller();
+            } else {
+                // Le callee attend l'offre via postMessage
+                statusEl.innerText = "En attente du correspondant...";
+            }
+        }
+
+        // === WEBRTC CALLER : cree l'offre ===
+        async function startWebRTCCaller() {
+            try {
+                console.log('[WebRTC] Caller: demarrage WebRTC...');
+                statusEl.innerText = "Activation microphone...";
+                
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                console.log('[WebRTC] Caller: microphone obtenu');
+
+                pc = new RTCPeerConnection(rtcConfig);
+
+                // Ajouter les pistes audio locales
+                localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+                // ICE candidates → parent → WebSocket
+                pc.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        console.log('[WebRTC] Caller: ICE candidate');
+                        window.parent.postMessage({
+                            type: 'webrtc-signal',
+                            signal: { type: 'ice-candidate', roomId: roomId, data: event.candidate }
+                        }, '*');
+                    }
+                };
+
+                // Quand la piste distante arrive, la jouer
+                pc.ontrack = (event) => {
+                    console.log('[WebRTC] Caller: piste distante recue');
+                    const remoteAudio = document.getElementById('remoteAudio');
+                    if (remoteAudio && event.streams[0]) {
+                        remoteAudio.srcObject = event.streams[0];
+                    }
+                    statusEl.innerText = "Appel en cours";
+                };
+
+                // Creer l'offre
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                console.log('[WebRTC] Caller: offre creee, envoi au callee');
+                
+                // Envoyer l'offre via postMessage → parent → WebSocket
+                window.parent.postMessage({
+                    type: 'webrtc-signal',
+                    signal: { type: 'offer', roomId: roomId, data: pc.localDescription }
+                }, '*');
+
+                statusEl.innerText = "Sonnerie...";
+            } catch (err) {
+                console.error('[WebRTC] Caller: erreur:', err);
+                statusEl.innerText = "Erreur microphone";
+                showWebRTCError(err);
+            }
+        }
+
+        // === WEBRTC CALLEE : recoit l'offre et repond ===
+        async function handleWebRTCOffer(offerData) {
+            try {
+                console.log('[WebRTC] Callee: offre recue, demarrage WebRTC...');
+                statusEl.innerText = "Activation microphone...";
+
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                console.log('[WebRTC] Callee: microphone obtenu');
+
+                pc = new RTCPeerConnection(rtcConfig);
+
+                // Ajouter les pistes audio locales
+                localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+                // ICE candidates → parent → WebSocket
+                pc.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        console.log('[WebRTC] Callee: ICE candidate');
+                        window.parent.postMessage({
+                            type: 'webrtc-signal',
+                            signal: { type: 'ice-candidate', roomId: roomId, data: event.candidate }
+                        }, '*');
+                    }
+                };
+
+                // Quand la piste distante arrive, la jouer
+                pc.ontrack = (event) => {
+                    console.log('[WebRTC] Callee: piste distante recue');
+                    const remoteAudio = document.getElementById('remoteAudio');
+                    if (remoteAudio && event.streams[0]) {
+                        remoteAudio.srcObject = event.streams[0];
+                    }
+                    statusEl.innerText = "Appel en cours";
+                };
+
+                // Appliquer l'offre recue
+                await pc.setRemoteDescription(new RTCSessionDescription(offerData));
+                console.log('[WebRTC] Callee: remote description definie');
+
+                // Creer la reponse
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+                console.log('[WebRTC] Callee: reponse creee, envoi au caller');
+
+                // Envoyer la reponse via postMessage → parent → WebSocket
+                window.parent.postMessage({
+                    type: 'webrtc-signal',
+                    signal: { type: 'answer', roomId: roomId, data: pc.localDescription }
+                }, '*');
+
+                statusEl.innerText = "Appel en cours";
+            } catch (err) {
+                console.error('[WebRTC] Callee: erreur:', err);
+                statusEl.innerText = "Erreur microphone";
+                showWebRTCError(err);
+            }
+        }
+
+        function showWebRTCError(err) {
+            const msg = err && err.name === 'NotAllowedError' ? 'Micro refusé. Autorisez-le dans les paramètres du navigateur.'
+                : err && err.name === 'NotFoundError' ? 'Aucun microphone détecté.'
+                : 'Erreur audio: ' + (err ? err.message : 'inconnue');
+            try { statusEl.innerText = msg; } catch {}
+            // Laisser le bouton raccrocher fonctionner meme en cas d'erreur
+        }
+
+        function closeWebRTC() {
+            try {
+                if (pc) {
+                    pc.onicecandidate = null;
+                    pc.ontrack = null;
+                    pc.close();
+                    pc = null;
+                }
+            } catch(e) { console.error('[WebRTC] Erreur fermeture pc:', e); }
+            try {
+                if (localStream) {
+                    localStream.getTracks().forEach(t => t.stop());
+                    localStream = null;
+                }
+            } catch(e) { console.error('[WebRTC] Erreur arret pistes:', e); }
+            try {
+                const remoteAudio = document.getElementById('remoteAudio');
+                if (remoteAudio) remoteAudio.srcObject = null;
+            } catch {}
         }
 
         function terminateCall() {
             stopRinging();
+            closeWebRTC();
             callActive = false;
             callConnected = false;
             statusEl.innerText = "Appel terminé";
@@ -329,9 +489,41 @@
                     if (!callConnected) connectCall();
                 } else if (data === 'call_ended') {
                     terminateCall();
+                } else if (data && data.type === 'webrtc-signal') {
+                    // Relai WebRTC du parent (offer / answer / ice-candidate)
+                    handleWebRTCSignal(data.signal);
                 }
             } catch {}
         });
+
+        function handleWebRTCSignal(signal) {
+            if (!signal) return;
+            console.log('[WebRTC] Signal recu du parent:', signal.type);
+            try {
+                if (signal.type === 'offer') {
+                    // Callee recoit l'offre
+                    if (role === 'callee' && !callConnected) {
+                        connectCall();
+                    }
+                    handleWebRTCOffer(signal.data);
+                } else if (signal.type === 'answer') {
+                    // Caller recoit la reponse
+                    if (pc && signal.data) {
+                        pc.setRemoteDescription(new RTCSessionDescription(signal.data))
+                            .then(() => console.log('[WebRTC] Remote description (answer) definie'))
+                            .catch(e => console.error('[WebRTC] Erreur setRemoteDescription answer:', e));
+                    }
+                } else if (signal.type === 'ice-candidate') {
+                    // Ajouter le candidat ICE
+                    if (pc && signal.data) {
+                        pc.addIceCandidate(new RTCIceCandidate(signal.data))
+                            .catch(e => console.error('[WebRTC] Erreur addIceCandidate:', e));
+                    }
+                }
+            } catch(e) {
+                console.error('[WebRTC] Erreur traitement signal:', e);
+            }
+        }
 
         function startTimer() {
             if (timerInterval) return;
@@ -354,6 +546,10 @@
                 } else {
                     btn.classList.add('text-red-500');
                 }
+                // Couper la piste audio locale
+                if (localStream) {
+                    localStream.getAudioTracks().forEach(t => { t.enabled = false; });
+                }
             } else {
                 icon.className = 'fas fa-microphone text-xl';
                 if(btn.classList.contains('bg-red-500')) {
@@ -361,6 +557,10 @@
                     btn.classList.add('bg-[#17331c]', 'text-white');
                 } else {
                     btn.classList.remove('text-red-500');
+                }
+                // Reactiver la piste audio locale
+                if (localStream) {
+                    localStream.getAudioTracks().forEach(t => { t.enabled = true; });
                 }
             }
         }

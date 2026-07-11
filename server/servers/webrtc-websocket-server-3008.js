@@ -293,6 +293,10 @@ wss.on('connection', (ws) => {
           handleCallEnded(ws, data);
           break;
 
+        case 'leave-room':
+          handleLeaveRoom(ws, data);
+          break;
+
         case 'chat-message':
           handleChatMessage(ws, data);
           break;
@@ -433,6 +437,27 @@ wss.on('connection', (ws) => {
         ...(pendingOffer.callId ? { callId: pendingOffer.callId } : {})
       }));
     }
+  }
+
+  function handleLeaveRoom(ws, data) {
+    const { roomId } = data;
+    if (!roomId || !currentUser) return;
+
+    if (rooms.has(roomId)) {
+      const room = rooms.get(roomId);
+      room.delete(currentUser.id);
+      if (room.size === 0) rooms.delete(roomId);
+    }
+    joinedRooms.delete(roomId);
+    users.delete(`${roomId}|${currentUser.id}`);
+    console.log(`[WebRTC-3008] ${currentUser.id} a quitté room ${roomId}`);
+
+    broadcastToRoom(roomId, {
+      type: 'user-left',
+      userId: currentUser.id,
+      role: currentUser.role,
+      roomId: roomId
+    }, currentUser.id);
   }
 
   // ===== SIGNALING =====

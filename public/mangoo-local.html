@@ -5897,7 +5897,7 @@
             } catch {
             }
             
-            let url = `webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}&t=${Date.now()}`;
+            let url = `webrtc-audio.html?callee=${encodeURIComponent(vendorName)}&theme=${isDark}&t=${Date.now()}&role=caller&roomId=${encodeURIComponent('call:' + vendorId)}`;
             if (type === 'video') {
                 url += '&mode=video';
             }
@@ -5917,9 +5917,31 @@
                 };
                 console.log('[Call] activeCallData=' + JSON.stringify(activeCallData));
                 try { lpSendCallNotification(vendorId, type, callId); } catch(e) { console.error('[Call] Erreur lpSendCallNotification:', e); }
+                // Rejoindre la room WebRTC sur le serveur
+                try {
+                    const joinMsg = { type: 'join-room', roomId: activeCallData.roomId, role: 'caller', userId: clientId };
+                    if (webrtcMgmtWs && webrtcMgmtWsConnected && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                        webrtcMgmtWs.send(JSON.stringify(joinMsg));
+                        console.log('[Call] join-room envoye: ' + activeCallData.roomId);
+                    } else {
+                        console.warn('[Call] WebSocket pas pret pour join-room, queue');
+                        webrtcMsgQueue.push(joinMsg);
+                    }
+                } catch(e) { console.error('[Call] Erreur join-room:', e); }
             }
         }
         window.addEventListener('message', function(event) {
+            // Relai des signaux WebRTC de l'iframe → WebSocket
+            if (event.data && typeof event.data === 'object' && event.data.type === 'webrtc-signal') {
+                const sig = event.data.signal;
+                if (sig && webrtcMgmtWs && webrtcMgmtWsConnected && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                    try {
+                        webrtcMgmtWs.send(JSON.stringify(sig));
+                        console.log('[Call] Signal WebRTC relaye vers WS: ' + sig.type + ' roomId=' + sig.roomId);
+                    } catch(e) { console.error('[Call] Erreur relay signal WebRTC:', e); }
+                }
+                return;
+            }
             if (event.data === 'end_call') {
                 console.log('[Call] end_call recu du iframe, activeCallData=', activeCallData ? JSON.stringify(activeCallData) : 'null');
                 const callOverlay = document.getElementById('callOverlay');
@@ -5942,7 +5964,11 @@
                     }
                 }
                 // Toujours nettoyer activeCallData
+                const endedRoomId = activeCallData ? activeCallData.roomId : '';
                 activeCallData = null;
+                if (endedRoomId && webrtcMgmtWs && webrtcMgmtWsConnected && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                    try { webrtcMgmtWs.send(JSON.stringify({ type: 'leave-room', roomId: endedRoomId })); } catch {}
+                }
 
                 if (callOverlay) {
                     callOverlay.style.display = 'none';
@@ -14120,9 +14146,28 @@
                 case 'call-ended':
                     handleCallEnded(data);
                     break;
+                // Relay WebRTC signaling du serveur → iframe
+                case 'offer':
+                case 'answer':
+                case 'ice-candidate':
+                    relayWebRTCToIframe(data);
+                    break;
                 default:
                     break;
             }
+        }
+
+        function relayWebRTCToIframe(data) {
+            try {
+                const callFrame = document.getElementById('callFrame');
+                if (callFrame && callFrame.contentWindow) {
+                    callFrame.contentWindow.postMessage({
+                        type: 'webrtc-signal',
+                        signal: data
+                    }, '*');
+                    console.log('[Call] Signal WebRTC relaye vers iframe: ' + data.type);
+                }
+            } catch(e) { console.error('[Call] Erreur relay vers iframe:', e); }
         }
 
         let ringtoneAudio = null;
@@ -14235,8 +14280,20 @@
                 const callFrame = document.getElementById('callFrame');
                 const callOverlay = document.getElementById('callOverlay');
                 if (callFrame && callOverlay) {
-                    callFrame.src = 'webrtc-audio.html?callee=' + encodeURIComponent(vendorName) + '&theme=' + isDark + '&mode=audio&autoConnect=true&t=' + Date.now();
+                    const roomId = data.roomId || '';
+                    callFrame.src = 'webrtc-audio.html?callee=' + encodeURIComponent(vendorName) + '&theme=' + isDark + '&mode=audio&autoConnect=true&t=' + Date.now() + '&role=callee&roomId=' + encodeURIComponent(roomId);
                     callOverlay.style.display = 'flex';
+                    // Rejoindre la room WebRTC
+                    try {
+                        const joinMsg = { type: 'join-room', roomId: roomId, role: 'callee', userId: (typeof data.from === 'string' ? data.from : 'vendor') };
+                        if (webrtcMgmtWs && webrtcMgmtWsConnected && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                            webrtcMgmtWs.send(JSON.stringify(joinMsg));
+                            console.log('[Call] Vendor join-room envoye: ' + roomId);
+                        } else {
+                            console.warn('[Call] WebSocket pas pret pour vendor join-room');
+                            webrtcMsgQueue.push(joinMsg);
+                        }
+                    } catch(e) { console.error('[Call] Erreur join-room vendor:', e); }
                 }
             } catch {}
         }
@@ -14284,7 +14341,12 @@
                     if (callFrame && callOverlay) {
                         const calleeName = String(data?.fromLabel || data?.from || 'Correspondant').trim();
                         const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-                        callFrame.src = 'webrtc-audio.html?callee=' + encodeURIComponent(calleeName) + '&theme=' + isDark + '&mode=audio&autoConnect=true&t=' + Date.now();
+                        const acceptedRoomId = data.roomId || (activeCallData ? activeCallData.roomId : '');
+                        callFrame.src = 'webrtc-audio.html?callee=' + encodeURIComponent(calleeName) + '&theme=' + isDark + '&mode=audio&autoConnect=true&t=' + Date.now() + '&role=caller&roomId=' + encodeURIComponent(acceptedRoomId);
+                        // Rejoindre la room WebRTC (caller)
+                        if (acceptedRoomId && webrtcMgmtWs && webrtcMgmtWsConnected && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                            try { webrtcMgmtWs.send(JSON.stringify({ type: 'join-room', roomId: acceptedRoomId, role: 'caller', userId: getChatClientId() })); } catch {}
+                        }
                     }
                 } catch {}
             } catch {}
@@ -14297,7 +14359,12 @@
                 const banner = document.getElementById('incomingCallBanner');
                 if (banner) banner.style.display = 'none';
                 incomingCallData = null;
+                // Quitter la room WebRTC
+                const roomId = data.roomId || (activeCallData ? activeCallData.roomId : '');
                 activeCallData = null;
+                if (roomId && webrtcMgmtWs && webrtcMgmtWsConnected && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                    try { webrtcMgmtWs.send(JSON.stringify({ type: 'leave-room', roomId: roomId })); } catch {}
+                }
                 // Arreter la sonnerie du parent
                 stopRinging();
                 // Arreter l'iframe et fermer l'overlay
