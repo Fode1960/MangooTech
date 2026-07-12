@@ -210,6 +210,11 @@
                     }
                 } catch {
                 }
+                // Fallback: produit recu du parent via postMessage
+                if ((!productName || !productImg) && window._callProduct) {
+                    if (!productName) productName = String(window._callProduct.name || '').trim();
+                    if (!productImg) productImg = String(window._callProduct.img || '').trim();
+                }
 
                 if (productImg) img.src = productImg;
                 img.alt = productName ? `Produit: ${productName}` : 'Produit';
@@ -218,6 +223,18 @@
                 if (badge) badge.textContent = productName ? `📦 ${productName}` : '📹 Caméra Vendeur (Produit)'
             } catch {
             }
+        }
+
+        function displaySharedProduct(product) {
+            try {
+                const img = document.getElementById('productVideoFeed');
+                if (img && product.img) img.src = product.img;
+                const badge = document.getElementById('productLabelBadge');
+                if (badge) badge.textContent = product.name ? `📦 ${product.name}` : '📹 Caméra Vendeur (Produit)';
+                // Mettre a jour le alt de l'image produit
+                if (img) img.alt = product.name ? `Produit partagé: ${product.name}` : 'Produit partagé';
+                console.log('[WebRTC] Produit affiche: ' + (product.name || 'sans nom'));
+            } catch {}
         }
 
         // Check for Video Mode
@@ -797,8 +814,15 @@
                 } else if (data === 'call_ended') {
                     terminateCall();
                 } else if (data && data.type === 'webrtc-signal') {
-                    // Relai WebRTC du parent (offer / answer / ice-candidate)
+                    // Relai WebRTC du parent (offer / answer / ice-candidate / product-preview)
                     handleWebRTCSignal(data.signal);
+                } else if (data && data.type === 'init-product') {
+                    // Produit recu du parent (mangoo-local.html) a l'init de l'appel
+                    if (data.product) {
+                        console.log('[WebRTC] Produit recu du parent: ' + (data.product.name || 'sans nom') + ' img=' + (data.product.img ? 'oui' : 'non'));
+                        window._callProduct = data.product;
+                        displaySharedProduct(data.product);
+                    }
                 }
             } catch {}
         });
@@ -812,9 +836,14 @@
             console.log('[WebRTC] Signal recu du parent:', signal.type);
             try {
                 if (signal.type === 'offer') {
-                    // Callee recoit l'offre
+                    // Callee recoit l'offre initiale
                     if (role === 'callee' && !callConnected) {
                         connectCall();
+                    }
+                    // Ignorer notre propre offre relayee par le WebSocket
+                    if (pc && pc.signalingState === 'have-local-offer') {
+                        console.log('[WebRTC] Offer ignoree (relai de ma propre offre), signaling=' + pc.signalingState + ' role=' + role);
+                        return;
                     }
                     handleWebRTCOffer(signal.data);
                 } else if (signal.type === 'answer') {
@@ -858,6 +887,12 @@
                     if (pc && signal.data) {
                         pc.addIceCandidate(new RTCIceCandidate(signal.data))
                             .catch(e => console.error('[WebRTC] Erreur addIceCandidate:', e));
+                    }
+                } else if (signal.type === 'product-preview') {
+                    // Produit partage par le correspondant
+                    if (signal.product) {
+                        console.log('[WebRTC] Produit recu du correspondant: ' + (signal.product.name || 'sans nom'));
+                        displaySharedProduct(signal.product);
                     }
                 }
             } catch(e) {
@@ -924,6 +959,41 @@
             if (!videoModal) return;
 
             try { applyProductPreview(); } catch {}
+
+            // Partager le produit avec le correspondant via WebSocket
+            try {
+                let productName = String(productNameParam || '').trim();
+                let productImg = String(productImgParam || '').trim();
+                console.log('[WebRTC] Debug produit: URL name="' + productName + '" img="' + productImg + '" localStorage=' + (typeof localStorage !== 'undefined'));
+                if ((!productName || !productImg) && typeof localStorage !== 'undefined') {
+                    try {
+                        const raw = localStorage.getItem('lp_last_product');
+                        console.log('[WebRTC] Debug localStorage lp_last_product=' + (raw ? ('present (' + raw.length + ' chars)') : 'null'));
+                        if (raw) {
+                            const p = JSON.parse(raw);
+                            if (!productName) productName = String(p?.name || '').trim();
+                            if (!productImg) productImg = String(p?.img || '').trim();
+                            console.log('[WebRTC] Debug produit depuis localStorage: name="' + productName + '" img="' + productImg + '"');
+                        }
+                    } catch(lsErr) { console.error('[WebRTC] Debug localStorage error:', lsErr); }
+                }
+                // Fallback: produit recu du parent (mangoo-local.html) via postMessage
+                if ((!productName || !productImg) && window._callProduct) {
+                    productName = String(window._callProduct.name || '').trim();
+                    productImg = String(window._callProduct.img || '').trim();
+                    console.log('[WebRTC] Debug produit depuis window._callProduct: name="' + productName + '" img="' + productImg + '"');
+                }
+                if (productName || productImg) {
+                    window.parent.postMessage({
+                        type: 'share-product',
+                        roomId: roomId,
+                        product: { name: productName, img: productImg }
+                    }, '*');
+                    console.log('[WebRTC] Produit partage: ' + productName);
+                } else {
+                    console.warn('[WebRTC] Produit NON partage: name et img vides');
+                }
+            } catch(e) { console.error('[WebRTC] Erreur partage produit:', e); }
 
             if (!videoModal.classList.contains('hidden')) {
                 // === DESACTIVER LA VIDEO ===
@@ -1027,37 +1097,34 @@
                     }
                     if (noCamIcon) noCamIcon.innerHTML = '';
 
-                    // VÉRIFIER que la piste audio n'a pas été tuée par getUserMedia(video)
-                    // (bug connu Chrome/Windows : ouvrir la caméra peut tuer le micro)
+                    // REACQUERIR l'audio SYSTEMATIQUEMENT apres getUserMedia(video)
+                    // Bug Chrome/Windows : ouvrir la camera tue le micro meme avec audio:false
+                    // Et parfois readyState reste 'live' mais la piste ne transmet plus rien
                     if (localStream && pc && pc.connectionState !== 'closed') {
-                        const deadAudio = localStream.getAudioTracks().filter(t => t.readyState === 'ended');
-                        if (deadAudio.length > 0) {
-                            console.warn('[WebRTC] Piste audio locale TERMINEE apres getUserMedia(video) ! Tentative de recuperation...');
-                            try {
-                                const recoveryStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                                const newTrack = recoveryStream.getAudioTracks()[0];
-                                if (newTrack) {
-                                    const senders = pc.getSenders();
-                                    const audioSender = senders.find(s => s.track && s.track.kind === 'audio');
-                                    if (audioSender) {
-                                        await audioSender.replaceTrack(newTrack);
-                                        console.log('[WebRTC] Audio recupere via replaceTrack');
-                                    } else {
-                                        pc.addTrack(newTrack, recoveryStream);
-                                        console.log('[WebRTC] Audio recupere via addTrack');
-                                    }
-                                    // Nettoyer l'ancien stream mort
-                                    localStream.getAudioTracks().forEach(t => { try { t.stop(); } catch {} });
-                                    // Conserver la nouvelle piste audio
-                                    localStream = recoveryStream;
-                                    console.log('[WebRTC] Audio local restaure, readyState=' + newTrack.readyState);
+                        const audioState = localStream.getAudioTracks().map(t => t.id + ':' + t.readyState + ':enabled=' + t.enabled).join(', ');
+                        console.log('[WebRTC] Audio local avant reacquisition: ' + audioState);
+                        try {
+                            const recoveryStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                            const newTrack = recoveryStream.getAudioTracks()[0];
+                            if (newTrack) {
+                                console.log('[WebRTC] Nouveau micro obtenu: ' + newTrack.id + ' label=' + newTrack.label);
+                                const senders = pc.getSenders();
+                                const audioSender = senders.find(s => s.track && s.track.kind === 'audio');
+                                if (audioSender) {
+                                    await audioSender.replaceTrack(newTrack);
+                                    console.log('[WebRTC] Audio remplace via replaceTrack');
+                                } else {
+                                    pc.addTrack(newTrack, recoveryStream);
+                                    console.log('[WebRTC] Audio ajoute via addTrack (sender absent)');
                                 }
-                            } catch (recErr) {
-                                console.error('[WebRTC] Echec recuperation audio:', recErr);
+                                // Nettoyer l'ancien stream
+                                localStream.getAudioTracks().forEach(t => { try { t.stop(); } catch {} });
+                                // Conserver la nouvelle piste audio
+                                localStream = recoveryStream;
+                                console.log('[WebRTC] Audio local restaure, readyState=' + newTrack.readyState);
                             }
-                        } else {
-                            const aliveAudio = localStream.getAudioTracks().filter(t => t.readyState === 'live');
-                            console.log('[WebRTC] Audio local OK apres getUserMedia(video), ' + aliveAudio.length + ' piste(s) live');
+                        } catch (recErr) {
+                            console.error('[WebRTC] Echec reacquisition audio:', recErr);
                         }
                     }
 
@@ -1092,29 +1159,26 @@
             } catch (err) {
                 console.error('[WebRTC] Erreur activation video:', err);
                 if (noCamIcon) noCamIcon.innerHTML = '<div class="text-center px-2"><div class="text-2xl mb-1">🚫</div><div class="font-bold">Caméra non autorisée</div><div class="text-[10px] opacity-80">Vous pouvez continuer en audio</div></div>';
-                // Même si la caméra échoue, vérifier que l'audio n'a pas été tué par la tentative
+                // Même si la caméra échoue, réacquérir l'audio systématiquement
                 if (localStream && pc && pc.connectionState !== 'closed') {
-                    const deadAudio = localStream.getAudioTracks().filter(t => t.readyState === 'ended');
-                    if (deadAudio.length > 0) {
-                        console.warn('[WebRTC] Piste audio locale TERMINEE apres echec camera ! Tentative de recuperation...');
-                        try {
-                            const recoveryStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                            const newTrack = recoveryStream.getAudioTracks()[0];
-                            if (newTrack) {
-                                const senders = pc.getSenders();
-                                const audioSender = senders.find(s => s.track && s.track.kind === 'audio');
-                                if (audioSender) {
-                                    await audioSender.replaceTrack(newTrack);
-                                } else {
-                                    pc.addTrack(newTrack, recoveryStream);
-                                }
-                                localStream.getAudioTracks().forEach(t => { try { t.stop(); } catch {} });
-                                localStream = recoveryStream;
-                                console.log('[WebRTC] Audio local restaure apres echec camera');
+                    console.warn('[WebRTC] Echec camera, reacquisition audio systematique...');
+                    try {
+                        const recoveryStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                        const newTrack = recoveryStream.getAudioTracks()[0];
+                        if (newTrack) {
+                            const senders = pc.getSenders();
+                            const audioSender = senders.find(s => s.track && s.track.kind === 'audio');
+                            if (audioSender) {
+                                await audioSender.replaceTrack(newTrack);
+                            } else {
+                                pc.addTrack(newTrack, recoveryStream);
                             }
-                        } catch (recErr) {
-                            console.error('[WebRTC] Echec recuperation audio apres echec camera:', recErr);
+                            localStream.getAudioTracks().forEach(t => { try { t.stop(); } catch {} });
+                            localStream = recoveryStream;
+                            console.log('[WebRTC] Audio local restaure apres echec camera');
                         }
+                    } catch (recErr) {
+                        console.error('[WebRTC] Echec recuperation audio apres echec camera:', recErr);
                     }
                 }
             } finally {

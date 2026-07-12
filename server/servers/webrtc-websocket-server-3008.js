@@ -281,6 +281,10 @@ wss.on('connection', (ws) => {
           handleIceCandidate(ws, data);
           break;
 
+        case 'product-preview':
+          handleProductPreview(ws, data);
+          break;
+
         case 'call-notification':
           handleCallNotification(ws, data);
           break;
@@ -515,6 +519,19 @@ wss.on('connection', (ws) => {
       data: candidateData,
       from: currentUser?.id,
       ...(typeof callId === 'string' && callId.trim() ? { callId: callId.trim() } : {})
+    }, currentUser?.id);
+  }
+
+  function handleProductPreview(ws, data) {
+    const { roomId, product } = data;
+    if (!roomId || !product) return;
+    console.log(`[WebRTC-3008] Product-preview de ${currentUser?.id} pour room ${roomId}: ${product.name || 'sans nom'}`);
+
+    broadcastToRoom(roomId, {
+      type: 'product-preview',
+      roomId: roomId,
+      product: product,
+      from: currentUser?.id
     }, currentUser?.id);
   }
 

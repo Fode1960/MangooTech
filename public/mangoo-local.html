@@ -5936,6 +5936,8 @@
                 try { lpSendCallNotification(vendorId, type, callId); } catch(e) { console.error('[Call] Erreur lpSendCallNotification:', e); }
                 // Stocker le join-room pour l'envoyer quand l'iframe sera prete
                 _pendingJoinRoom = { type: 'join-room', roomId: activeCallData.roomId, role: 'caller', userId: clientId };
+                // Capturer le produit pour le partage WebRTC
+                _pendingProductForIframe = _getProductForCall();
                 console.log('[Call] join-room caller mis en attente (iframe pas encore prete)');
                 _scheduleJoinRoomFallback();
             }
@@ -5945,6 +5947,20 @@
             if (event.data && typeof event.data === 'object' && event.data.type === 'call-iframe-ready') {
                 console.log('[Call] call-iframe-ready recu de l\'iframe (role=' + (event.data.role || '?') + ')');
                 _sendPendingJoinRoom();
+                // Envoyer le produit capture a l'iframe
+                if (_pendingProductForIframe && _pendingProductForIframe.name) {
+                    try {
+                        const callFrame = document.getElementById('callFrame');
+                        if (callFrame && callFrame.contentWindow) {
+                            callFrame.contentWindow.postMessage({
+                                type: 'init-product',
+                                product: _pendingProductForIframe
+                            }, '*');
+                            console.log('[Call] Produit envoye a l\'iframe: ' + _pendingProductForIframe.name);
+                        }
+                    } catch(e) { console.error('[Call] Erreur envoi produit a iframe:', e); }
+                }
+                _pendingProductForIframe = null;
                 return;
             }
             // Relai des signaux WebRTC de l'iframe → WebSocket
@@ -5957,6 +5973,20 @@
                     } catch(e) { console.error('[Call] Erreur relay signal WebRTC:', e); }
                 } else {
                     console.warn('[Call] Signal WebRTC NON relaye: ws.readyState=' + (webrtcMgmtWs ? webrtcMgmtWs.readyState : 'null') + ' wsConnected=' + webrtcMgmtWsConnected + ' type=' + (sig ? sig.type : '?'));
+                }
+                return;
+            }
+            // Relai du produit partage de l'iframe → WebSocket
+            if (event.data && typeof event.data === 'object' && event.data.type === 'share-product') {
+                if (webrtcMgmtWs && webrtcMgmtWsConnected && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                    try {
+                        webrtcMgmtWs.send(JSON.stringify({
+                            type: 'product-preview',
+                            roomId: event.data.roomId,
+                            product: event.data.product
+                        }));
+                        console.log('[Call] Produit relaye vers WS: ' + (event.data.product && event.data.product.name || '?'));
+                    } catch(e) { console.error('[Call] Erreur relay produit:', e); }
                 }
                 return;
             }
@@ -13976,6 +14006,22 @@
                     }
                 });
             }
+            // Initialiser lp_last_product pour le partage WebRTC (Voir produit)
+            try {
+                const stored = localStorage.getItem('mangoo_my_products');
+                if (stored) {
+                    const products = JSON.parse(stored);
+                    if (products.length > 0) {
+                        const first = products[0];
+                        const img = first.photo || first.img || '';
+                        localStorage.setItem('lp_last_product', JSON.stringify({
+                            name: first.name || '',
+                            img: img
+                        }));
+                        console.log('[LP] lp_last_product initialise depuis mangoo_my_products: ' + first.name + ' (img=' + (img ? 'oui' : 'non') + ')');
+                    }
+                }
+            } catch(e) { console.error('[LP] Erreur init lp_last_product:', e); }
         });
 
         function closeChat() {
@@ -14184,6 +14230,7 @@
                 case 'offer':
                 case 'answer':
                 case 'ice-candidate':
+                case 'product-preview':
                     relayWebRTCToIframe(data);
                     break;
                 default:
@@ -14271,6 +14318,73 @@
         let activeCallData = null; // Donnees de l'appel en cours (pour envoyer call-ended au serveur)
         let _pendingJoinRoom = null; // join-room differe jusqu'a ce que l'iframe signale call-iframe-ready
         let _pendingJoinRoomTimeout = null;
+        let _pendingProductForIframe = null; // Produit a envoyer a l'iframe pour le partage WebRTC
+
+        // Recupere le premier produit disponible pour le partage WebRTC (Voir produit)
+        function _getProductForCall() {
+            try {
+                console.log('[LP] _getProductForCall: recherche produit...');
+                // 1. window.MY_PRODUCTS (en memoire)
+                console.log('[LP]   window.MY_PRODUCTS=' + (typeof window.MY_PRODUCTS) + ' length=' + (window.MY_PRODUCTS ? window.MY_PRODUCTS.length : 'N/A'));
+                if (window.MY_PRODUCTS && window.MY_PRODUCTS.length > 0) {
+                    const p = window.MY_PRODUCTS[0];
+                    const img = p.photo || p.img || '';
+                    console.log('[LP] Produit trouve dans window.MY_PRODUCTS: ' + p.name + ' (img=' + (img ? 'oui' : 'non') + ')');
+                    return { name: p.name || '', img: img };
+                }
+                // 2. localStorage mangoo_my_products
+                const stored = localStorage.getItem('mangoo_my_products');
+                console.log('[LP]   localStorage mangoo_my_products=' + (stored ? ('present (' + stored.length + ' chars)') : 'null'));
+                if (stored) {
+                    const products = JSON.parse(stored);
+                    console.log('[LP]   localStorage products.length=' + products.length);
+                    if (products.length > 0) {
+                        const p = products[0];
+                        const img = p.photo || p.img || '';
+                        console.log('[LP] Produit trouve dans localStorage mangoo_my_products: ' + p.name + ' (img=' + (img ? 'oui' : 'non') + ')');
+                        return { name: p.name || '', img: img };
+                    }
+                }
+                // 3. DOM: chercher dans les cartes produit de la fiche vendeur
+                const cards = document.querySelectorAll('#vendorProductsList .product-card');
+                console.log('[LP]   DOM #vendorProductsList .product-card count=' + cards.length);
+                if (cards.length > 0) {
+                    const card = cards[0];
+                    const nameEl = card.querySelector('div[style*="font-weight:bold"]');
+                    const imgEl = card.querySelector('div[style*="background-image"]');
+                    const name = nameEl ? nameEl.textContent.trim() : '';
+                    let img = '';
+                    if (imgEl) {
+                        const style = imgEl.getAttribute('style') || '';
+                        const match = style.match(/url\(['"]?([^'"()]+)['"]?\)/);
+                        if (match) img = match[1];
+                    }
+                    console.log('[LP] Produit trouve dans le DOM: ' + name + ' (img=' + (img ? 'oui' : 'non') + ')');
+                    return { name: name, img: img };
+                }
+                // 4. Fallback: utiliser les infos du vendeur actif
+                if (activeVendor && activeVendor.name) {
+                    const fallbackName = activeVendor.name || 'Produit';
+                    const fallbackImg = lpResolveVendorAvatar(activeVendor) || '';
+                    console.log('[LP] Fallback: produit cree depuis activeVendor: ' + fallbackName + ' (img=' + (fallbackImg ? 'oui' : 'non') + ')');
+                    return { name: fallbackName, img: fallbackImg };
+                }
+                // 5. Fallback ultime: chercher le vendeur par son propre ID (lpRole=vendor)
+                try {
+                    const ownId = lpGetVendorWsVendorId();
+                    if (ownId && typeof VENDORS !== 'undefined' && Array.isArray(VENDORS)) {
+                        const selfVendor = VENDORS.find(v => String(v?.id) === String(ownId) || String(v?.slug) === String(ownId));
+                        if (selfVendor && selfVendor.name) {
+                            const fallbackImg = lpResolveVendorAvatar(selfVendor) || '';
+                            console.log('[LP] Fallback ultime: produit cree depuis selfVendor (' + ownId + '): ' + selfVendor.name + ' (img=' + (fallbackImg ? 'oui' : 'non') + ')');
+                            return { name: selfVendor.name, img: fallbackImg };
+                        }
+                    }
+                } catch(e) {}
+            } catch(e) { console.error('[LP] Erreur _getProductForCall:', e); }
+            console.log('[LP] Aucun produit trouve pour le partage WebRTC');
+            return null;
+        }
 
         function _sendPendingJoinRoom() {
             if (!_pendingJoinRoom) return;
@@ -14349,6 +14463,8 @@
                     // IMPORTANT: userId doit etre 'vendor' (pas data.from qui est l'ID du client appelant)
                     // Sinon appelant et vendeur partagent le meme userId dans la room → broadcastToRoom casse
                     _pendingJoinRoom = { type: 'join-room', roomId: roomId, role: 'callee', userId: 'vendor' };
+                    // Capturer le produit pour le partage WebRTC
+                    _pendingProductForIframe = _getProductForCall();
                     console.log('[Call] Vendor join-room mis en attente (iframe pas encore prete)');
                     _scheduleJoinRoomFallback();
                 }
@@ -15572,6 +15688,15 @@
                         myProducts.forEach(p => {
                             feed.insertAdjacentHTML('afterbegin', createProductCardHTML(p, true));
                         });
+                        // Sauvegarder le premier produit pour le partage WebRTC (Voir produit)
+                        try {
+                            const first = myProducts[0];
+                            localStorage.setItem('lp_last_product', JSON.stringify({
+                                name: first.name || '',
+                                img: first.photo || ''
+                            }));
+                            console.log('[LP] Produit sauvegarde pour partage WebRTC:', first.name);
+                        } catch(e) { console.error('[LP] Erreur save lp_last_product:', e); }
 
                         feed.insertAdjacentHTML('beforeend', `
                             <div style="text-align:center; margin-top:15px; padding:10px; background:#1b5e20; color:#ffffff; border-radius:8px; font-size:0.85rem;">
@@ -21400,6 +21525,14 @@
             }
             window.MY_PRODUCTS.push(post);
             localStorage.setItem('mangoo_my_products', JSON.stringify(window.MY_PRODUCTS)); // PERSIST!
+            // Sauvegarder aussi comme dernier produit pour le partage WebRTC
+            try {
+                localStorage.setItem('lp_last_product', JSON.stringify({
+                    name: post.name || '',
+                    img: post.photo || ''
+                }));
+                console.log('[LP] Nouveau produit sauvegarde pour partage WebRTC:', post.name);
+            } catch(e) { console.error('[LP] Erreur save lp_last_product:', e); }
             
             // Add to feed (mock)
             const feed = document.getElementById('vendorProductsList'); // Corrected target
