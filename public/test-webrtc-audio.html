@@ -958,42 +958,45 @@
 
             if (!videoModal) return;
 
+            const isActivating = videoModal.classList.contains('hidden');
             try { applyProductPreview(); } catch {}
 
-            // Partager le produit avec le correspondant via WebSocket
-            try {
-                let productName = String(productNameParam || '').trim();
-                let productImg = String(productImgParam || '').trim();
-                console.log('[WebRTC] Debug produit: URL name="' + productName + '" img="' + productImg + '" localStorage=' + (typeof localStorage !== 'undefined'));
-                if ((!productName || !productImg) && typeof localStorage !== 'undefined') {
-                    try {
-                        const raw = localStorage.getItem('lp_last_product');
-                        console.log('[WebRTC] Debug localStorage lp_last_product=' + (raw ? ('present (' + raw.length + ' chars)') : 'null'));
-                        if (raw) {
-                            const p = JSON.parse(raw);
-                            if (!productName) productName = String(p?.name || '').trim();
-                            if (!productImg) productImg = String(p?.img || '').trim();
-                            console.log('[WebRTC] Debug produit depuis localStorage: name="' + productName + '" img="' + productImg + '"');
-                        }
-                    } catch(lsErr) { console.error('[WebRTC] Debug localStorage error:', lsErr); }
-                }
-                // Fallback: produit recu du parent (mangoo-local.html) via postMessage
-                if ((!productName || !productImg) && window._callProduct) {
-                    productName = String(window._callProduct.name || '').trim();
-                    productImg = String(window._callProduct.img || '').trim();
-                    console.log('[WebRTC] Debug produit depuis window._callProduct: name="' + productName + '" img="' + productImg + '"');
-                }
-                if (productName || productImg) {
-                    window.parent.postMessage({
-                        type: 'share-product',
-                        roomId: roomId,
-                        product: { name: productName, img: productImg }
-                    }, '*');
-                    console.log('[WebRTC] Produit partage: ' + productName);
-                } else {
-                    console.warn('[WebRTC] Produit NON partage: name et img vides');
-                }
-            } catch(e) { console.error('[WebRTC] Erreur partage produit:', e); }
+            // Partager le produit uniquement a l'ACTIVATION (pas a la desactivation)
+            if (isActivating) {
+                try {
+                    let productName = String(productNameParam || '').trim();
+                    let productImg = String(productImgParam || '').trim();
+                    console.log('[WebRTC] Debug produit: URL name="' + productName + '" img="' + productImg + '" localStorage=' + (typeof localStorage !== 'undefined'));
+                    if ((!productName || !productImg) && typeof localStorage !== 'undefined') {
+                        try {
+                            const raw = localStorage.getItem('lp_last_product');
+                            console.log('[WebRTC] Debug localStorage lp_last_product=' + (raw ? ('present (' + raw.length + ' chars)') : 'null'));
+                            if (raw) {
+                                const p = JSON.parse(raw);
+                                if (!productName) productName = String(p?.name || '').trim();
+                                if (!productImg) productImg = String(p?.img || '').trim();
+                                console.log('[WebRTC] Debug produit depuis localStorage: name="' + productName + '" img="' + productImg + '"');
+                            }
+                        } catch(lsErr) { console.error('[WebRTC] Debug localStorage error:', lsErr); }
+                    }
+                    // Fallback: produit recu du parent (mangoo-local.html) via postMessage
+                    if ((!productName || !productImg) && window._callProduct) {
+                        productName = String(window._callProduct.name || '').trim();
+                        productImg = String(window._callProduct.img || '').trim();
+                        console.log('[WebRTC] Debug produit depuis window._callProduct: name="' + productName + '" img="' + productImg + '"');
+                    }
+                    if (productName || productImg) {
+                        window.parent.postMessage({
+                            type: 'share-product',
+                            roomId: roomId,
+                            product: { name: productName, img: productImg }
+                        }, '*');
+                        console.log('[WebRTC] Produit partage: ' + productName);
+                    } else {
+                        console.warn('[WebRTC] Produit NON partage: name et img vides');
+                    }
+                } catch(e) { console.error('[WebRTC] Erreur partage produit:', e); }
+            }
 
             if (!videoModal.classList.contains('hidden')) {
                 // === DESACTIVER LA VIDEO ===

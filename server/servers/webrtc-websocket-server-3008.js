@@ -400,7 +400,7 @@ wss.on('connection', (ws) => {
     users.set(`${roomId}|${userId}`, { roomId, ws, userData });
     joinedRooms.add(roomId);
 
-    if (!currentUser) currentUser = userData;
+    currentUser = userData;
 
     console.log(`[WebRTC-3008] ${userId} (${role}) a rejoint room ${roomId}`);
 
@@ -525,14 +525,27 @@ wss.on('connection', (ws) => {
   function handleProductPreview(ws, data) {
     const { roomId, product } = data;
     if (!roomId || !product) return;
-    console.log(`[WebRTC-3008] Product-preview de ${currentUser?.id} pour room ${roomId}: ${product.name || 'sans nom'}`);
+
+    // Trouver l'expediteur dans la room via sa connexion ws (pas currentUser qui est partage)
+    let senderUserId = null;
+    const room = rooms.get(roomId);
+    if (room) {
+      for (const [uid, userData] of room) {
+        if (userData.ws === ws) {
+          senderUserId = uid;
+          break;
+        }
+      }
+    }
+
+    console.log(`[WebRTC-3008] Product-preview de ${senderUserId || 'inconnu'} pour room ${roomId}: ${product.name || 'sans nom'}`);
 
     broadcastToRoom(roomId, {
       type: 'product-preview',
       roomId: roomId,
       product: product,
-      from: currentUser?.id
-    }, currentUser?.id);
+      from: senderUserId
+    }, senderUserId);
   }
 
   // ===== CALL NOTIFICATION AVEC HORAIRES + PRESENCE + PUSH =====

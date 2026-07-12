@@ -5891,6 +5891,7 @@
             closeCallSelection();
             // Nettoyer tout appel precedent
             activeCallData = null;
+            _amCaller = true; // Ce cote initie l'appel
             
             const vendorName = activeVendor ? activeVendor.name : "le vendeur";
             const vendorId = activeVendor ? (String(activeVendor.slug || activeVendor.id || '').trim()) : '';
@@ -14319,6 +14320,7 @@
         let _pendingJoinRoom = null; // join-room differe jusqu'a ce que l'iframe signale call-iframe-ready
         let _pendingJoinRoomTimeout = null;
         let _pendingProductForIframe = null; // Produit a envoyer a l'iframe pour le partage WebRTC
+        let _amCaller = false; // true = ce cote a initie l'appel, false = ce cote a recu l'appel
 
         // Recupere le premier produit disponible pour le partage WebRTC (Voir produit)
         function _getProductForCall() {
@@ -14427,6 +14429,7 @@
         function acceptIncomingCall() {
             const banner = document.getElementById('incomingCallBanner');
             const data = incomingCallData;
+            _amCaller = false; // Ce cote recoit l'appel
             // Sauvegarder pour pouvoir envoyer call-ended au serveur quand on raccroche
             activeCallData = data ? { roomId: data.roomId, from: data.from, fromLabel: data.fromLabel, callId: data.callId } : null;
             // Reset state immediately so next call can come in
@@ -14515,13 +14518,17 @@
                         const calleeName = String(data?.fromLabel || data?.from || 'Correspondant').trim();
                         const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
                         const acceptedRoomId = data.roomId || (activeCallData ? activeCallData.roomId : '');
+                        const role = _amCaller ? 'caller' : 'callee';
                         callOverlay.classList.add('loading');
                         callFrame.onload = function() { callOverlay.classList.remove('loading'); };
-                        callFrame.src = 'webrtc-audio.html?callee=' + encodeURIComponent(calleeName) + '&theme=' + isDark + '&mode=audio&autoConnect=true&t=' + Date.now() + '&role=caller&roomId=' + encodeURIComponent(acceptedRoomId);
+                        callFrame.src = 'webrtc-audio.html?callee=' + encodeURIComponent(calleeName) + '&theme=' + isDark + '&mode=audio&autoConnect=true&t=' + Date.now() + '&role=' + role + '&roomId=' + encodeURIComponent(acceptedRoomId);
+                        // Re-capturer le produit pour le nouvel iframe
+                        _pendingProductForIframe = _getProductForCall();
                         // Stocker le join-room pour l'envoyer quand l'iframe sera prete
                         if (acceptedRoomId) {
-                            _pendingJoinRoom = { type: 'join-room', roomId: acceptedRoomId, role: 'caller', userId: getChatClientId() };
-                            console.log('[Call] Caller join-room (handleCallAccepted) mis en attente');
+                            const userId = _amCaller ? getChatClientId() : 'vendor';
+                            _pendingJoinRoom = { type: 'join-room', roomId: acceptedRoomId, role: role, userId: userId };
+                            console.log('[Call] ' + role + ' join-room (handleCallAccepted) mis en attente');
                             _scheduleJoinRoomFallback();
                         }
                     }

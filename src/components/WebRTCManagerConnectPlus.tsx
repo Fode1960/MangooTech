@@ -191,6 +191,9 @@ export default function WebRTCManagerConnectPlus({
   const rejectCallRef = useRef<() => void>(() => {})
   const endCallRef = useRef<() => void>(() => {})
   const lastIncomingHistoryCallIdRef = useRef('')
+  const isRenegotiatingRef = useRef(false)
+  const remoteAudioStreamRef = useRef<MediaStream | null>(null)
+  const remoteVideoStreamRef = useRef<MediaStream | null>(null)
   const rosterReadyRef = useRef(false)
   const offlineHintRef = useRef(false)
   const pendingStartCallAfterRosterAtRef = useRef(0)
@@ -1390,6 +1393,7 @@ export default function WebRTCManagerConnectPlus({
         pc.ontrack = null
         pc.onconnectionstatechange = null
         pc.onsignalingstatechange = null
+        pc.onnegotiationneeded = null
         pc.close()
       } catch {
       }
@@ -1402,6 +1406,16 @@ export default function WebRTCManagerConnectPlus({
         stream.getTracks().forEach((t) => t.stop())
       } catch {
       }
+    }
+
+    // Nettoyer les streams distants persistants
+    if (remoteAudioStreamRef.current) {
+      remoteAudioStreamRef.current.getTracks().forEach((t) => t.stop())
+      remoteAudioStreamRef.current = null
+    }
+    if (remoteVideoStreamRef.current) {
+      remoteVideoStreamRef.current.getTracks().forEach((t) => t.stop())
+      remoteVideoStreamRef.current = null
     }
 
     if (localVideoRef.current) localVideoRef.current.srcObject = null
@@ -1610,10 +1624,11 @@ export default function WebRTCManagerConnectPlus({
     pc.ontrack = (event) => {
       armRingKill(20000)
       clearPcDisconnectTimer()
+      const track = event.track
+      if (!track) return
       try {
-        const tr: any = (event as any).track
-        if (tr && typeof tr.addEventListener === 'function') {
-          tr.addEventListener(
+        if (typeof track.addEventListener === 'function') {
+          track.addEventListener(
             'ended',
             () => {
               if (pcRef.current !== pc) return
@@ -1635,18 +1650,49 @@ export default function WebRTCManagerConnectPlus({
         clearIncomingTimeout()
         clearCallHardStop()
       }
-      const s = event.streams[0]
-      if (!s) return
-      if (remoteAudioRef.current) {
-        remoteAudioRef.current.srcObject = s
-        remoteAudioRef.current.muted = false
-        remoteAudioRef.current.volume = 1.0
-        remoteAudioRef.current.play().catch(() => {})
-      }
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = s
-        remoteVideoRef.current.muted = true
-        remoteVideoRef.current.play().catch(() => {})
+      // Gérer audio et vidéo dans des streams séparés pour éviter
+      // que la renégociation vidéo n'écrase le stream audio
+      if (track.kind === 'audio') {
+        if (!remoteAudioStreamRef.current) {
+          remoteAudioStreamRef.current = new MediaStream()
+        }
+        // Remplacer les anciennes pistes audio
+        remoteAudioStreamRef.current.getAudioTracks().forEach((t) => {
+          if (t.id !== track.id) remoteAudioStreamRef.current!.removeTrack(t)
+        })
+        if (!remoteAudioStreamRef.current.getAudioTracks().some((t) => t.id === track.id)) {
+          remoteAudioStreamRef.current.addTrack(track)
+        }
+        if (remoteAudioRef.current) {
+          remoteAudioRef.current.srcObject = remoteAudioStreamRef.current
+          remoteAudioRef.current.muted = false
+          remoteAudioRef.current.volume = 1.0
+          remoteAudioRef.current.play().catch(() => {})
+        }
+      } else if (track.kind === 'video') {
+        if (!remoteVideoStreamRef.current) {
+          remoteVideoStreamRef.current = new MediaStream()
+        }
+        // Remplacer les anciennes pistes vidéo
+        remoteVideoStreamRef.current.getVideoTracks().forEach((t) => {
+          if (t.id !== track.id) remoteVideoStreamRef.current!.removeTrack(t)
+        })
+        if (!remoteVideoStreamRef.current.getVideoTracks().some((t) => t.id === track.id)) {
+          remoteVideoStreamRef.current.addTrack(track)
+        }
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = remoteVideoStreamRef.current
+          remoteVideoRef.current.muted = true
+          remoteVideoRef.current.play().catch(() => {})
+        }
+        // Nettoyer quand la piste vidéo se termine
+        track.onended = () => {
+          if (remoteVideoStreamRef.current) {
+            remoteVideoStreamRef.current.getVideoTracks().forEach((t) => {
+              if (t.id === track.id) remoteVideoStreamRef.current!.removeTrack(t)
+            })
+          }
+        }
       }
     }
 
@@ -1686,6 +1732,34 @@ export default function WebRTCManagerConnectPlus({
       if (s === 'failed' || s === 'closed') {
         clearPcDisconnectTimer()
         endCall()
+      }
+    }
+
+    pc.onnegotiationneeded = async () => {
+      if (isRenegotiatingRef.current) return
+      if (pc.signalingState !== 'stable') return
+      isRenegotiatingRef.current = true
+      try {
+        const offer = await pc.createOffer()
+        await pc.setLocalDescription(offer)
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
+          const callId = String(activePeerIdRef.current || '').trim()
+          wsRef.current.send(
+            JSON.stringify({
+              type: 'offer',
+              roomId,
+              data: offer,
+              from: userId,
+              fromLabel: String(fromLabel || '').trim() || undefined,
+              callMode: activeCallModeRef.current,
+              ...(callId ? { callId } : {}),
+            }),
+          )
+        }
+      } catch (e) {
+        console.error('[WebRTC] Renegotiation error:', e)
+      } finally {
+        isRenegotiatingRef.current = false
       }
     }
 
@@ -2613,6 +2687,13 @@ export default function WebRTCManagerConnectPlus({
               setCallFrom('')
               setCallFromLabel('')
             } else if ((isInCallRef.current || isCallingRef.current) && activeCallId && incomingCallId === activeCallId) {
+              // Renégociation : traiter l'offre sur la connexion existante
+              const offer = data.data
+              pendingOfferRef.current = null
+              try {
+                await handleOffer(offer, incomingCallId || undefined)
+              } catch {
+              }
               return
             }
           }
@@ -2624,6 +2705,13 @@ export default function WebRTCManagerConnectPlus({
             setCallFrom('')
             setCallFromLabel('')
           } else if (isInCallRef.current || isCallingRef.current) {
+            // Renégociation sans callId explicite : traiter l'offre
+            const offer = data.data
+            pendingOfferRef.current = null
+            try {
+              await handleOffer(offer)
+            } catch {
+            }
             return
           }
           const offer = data.data
