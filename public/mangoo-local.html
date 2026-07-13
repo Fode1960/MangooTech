@@ -3782,6 +3782,19 @@
     </style>
 </head>
 <body>
+    <!-- Nettoyage Service Worker stale (peut bloquer le chargement des scripts) -->
+    <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        regs.forEach(function(r) { r.unregister().catch(function(){}); });
+      }).catch(function(){});
+      if (window.caches && typeof window.caches.keys === 'function') {
+        window.caches.keys().then(function(keys) {
+          keys.forEach(function(k) { window.caches.delete(k).catch(function(){}); });
+        }).catch(function(){});
+      }
+    }
+    </script>
 
     <!-- LOADER -->
     <div id="loader">
@@ -5313,7 +5326,7 @@
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-    <script src="/localplus-country-seeds.js"></script>
+    <script src="/localplus-country-seeds.js?v=2"></script>
     
     <script>
         // Tunnel WebSocket géré par le proxy unifié sur port 3090 (même tunnel que HTTP)

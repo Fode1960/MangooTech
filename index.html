@@ -19,7 +19,7 @@
       const getIsDevHost = () => {
         try {
           const host = String(location.hostname || '')
-          return host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')
+          return host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.') || host.includes('trycloudflare.com')
         } catch {
           return false
         }
@@ -144,46 +144,9 @@
         }
       }
 
-      const boot = getBootMode();
-      const bootTimeoutMs = boot.mode === 'vite' && getIsDevHost() ? 25000 : 4000
+      // getBootMode() deferred to end of body - runs after module script is in DOM
 
-      // If the app doesn't mount, show actionable diagnostics (bundle not loaded, cache, blocked script, etc.)
-      setTimeout(async () => {
-        try {
-          if (window.__mangoo_main_loaded || window.__mangootech_main_started__ || window.__mangootech_app_rendered__) return;
-        } catch {
-        }
-
-        const lines = [];
-        lines.push("L’application n’a pas démarré.");
-        lines.push('');
-        lines.push('Tests rapides :');
-        try {
-          const probeUrl = boot.scriptSrc || '/src/main.tsx';
-          const r1 = await fetch(probeUrl, { cache: 'no-store' });
-          lines.push(`- GET ${probeUrl} -> ${r1.status} ${r1.statusText}`);
-        } catch (e) {
-          const probeUrl = boot.scriptSrc || '/src/main.tsx';
-          lines.push(`- GET ${probeUrl} -> ERREUR: ${String(e?.message || e)}`);
-        }
-
-        if (boot.mode === 'vite') {
-          try {
-            const r2 = await fetch('/@vite/client', { cache: 'no-store' });
-            lines.push(`- GET /@vite/client -> ${r2.status} ${r2.statusText}`);
-          } catch (e) {
-            lines.push(`- GET /@vite/client -> ERREUR: ${String(e?.message || e)}`);
-          }
-        } else if (boot.mode === 'static') {
-          lines.push('- Mode détecté : build statique servi par Express');
-          lines.push(`- Entrée attendue sur mobile : ${location.origin}`);
-        } else {
-          lines.push('- Mode détecté : inconnu');
-        }
-        lines.push('');
-        lines.push('À essayer : Ctrl+F5 • Navigation privée • Désactiver extensions (adblock) • Vérifier que le serveur local répond bien.');
-        showBootError('MangooTech n’a pas démarré', lines.join('\n'));
-      }, bootTimeoutMs);
+      // Boot diagnostic moved to end of body
 
     </script>
   </head>
@@ -195,5 +158,50 @@
       </div>
     </div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Boot diagnostic - runs AFTER module script is in DOM
+      (function() {
+        var boot = getBootMode();
+        var isDev = getIsDevHost();
+        // Tunnel Cloudflare : donner aussi 25s (comme localhost)
+        var bootTimeoutMs = (boot.mode === 'vite' && isDev) || (boot.mode === 'vite') ? 25000 : 4000;
+
+        setTimeout(async function() {
+          try {
+            if (window.__mangoo_main_loaded || window.__mangootech_main_started__ || window.__mangootech_app_rendered__) return;
+          } catch(e) {}
+
+          var lines = [];
+          lines.push("L'application n'a pas demarre.");
+          lines.push('');
+          lines.push('Tests rapides :');
+          try {
+            var probeUrl = boot.scriptSrc || '/src/main.tsx';
+            var r1 = await fetch(probeUrl, { cache: 'no-store' });
+            lines.push('- GET ' + probeUrl + ' -> ' + r1.status + ' ' + r1.statusText);
+          } catch(e) {
+            var probeUrl = boot.scriptSrc || '/src/main.tsx';
+            lines.push('- GET ' + probeUrl + ' -> ERREUR: ' + String(e?.message || e));
+          }
+
+          if (boot.mode === 'vite') {
+            try {
+              var r2 = await fetch('/@vite/client', { cache: 'no-store' });
+              lines.push('- GET /@vite/client -> ' + r2.status + ' ' + r2.statusText);
+            } catch(e) {
+              lines.push('- GET /@vite/client -> ERREUR: ' + String(e?.message || e));
+            }
+          } else if (boot.mode === 'static') {
+            lines.push('- Mode detecte : build statique servi par Express');
+            lines.push('- Entree attendue sur mobile : ' + location.origin);
+          } else {
+            lines.push('- Mode detecte : inconnu');
+          }
+          lines.push('');
+          lines.push('A essayer : Ctrl+F5 . Navigation privee . Desactiver extensions (adblock) . Verifier que le serveur local repond bien.');
+          showBootError('MangooTech n\'a pas demarre', lines.join('\n'));
+        }, bootTimeoutMs);
+      })();
+    </script>
   </body>
 </html>
