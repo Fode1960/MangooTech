@@ -64,7 +64,7 @@
     <audio id="remoteAudio" autoplay playsinline style="display:none;"></audio>
 
     <!-- Video PiP pour recevoir le flux video distant (produit vendeur) -->
-    <div id="remoteVideoContainer" class="hidden fixed bottom-24 right-4 w-40 h-56 bg-[#102814] rounded-2xl border-2 border-[#eef6ea] dark:border-[#2e5d34] overflow-hidden shadow-2xl z-40">
+    <div id="remoteVideoContainer" class="hidden fixed bottom-24 left-4 w-40 h-56 bg-[#102814] rounded-2xl border-2 border-[#eef6ea] dark:border-[#2e5d34] overflow-hidden shadow-2xl" style="z-index:120;">
         <video id="remoteVideo" autoplay playsinline muted class="w-full h-full object-cover"></video>
         <div id="remoteVideoStatus" class="absolute inset-0 flex items-center justify-center bg-[#102814]/90 text-white text-[11px] text-center px-2 pointer-events-none">
             <div><span class="text-xl block mb-1">⏳</span>Réception vidéo...</div>
@@ -137,10 +137,10 @@
     </div>
     
     <!-- Video Modal (Hidden by default) -->
-    <div id="videoModal" class="fixed inset-0 bg-black z-50 hidden flex flex-col">
+    <div id="videoModal" class="fixed inset-0 bg-black hidden flex flex-col" style="z-index:110;">
         <div class="relative flex-1 bg-black flex items-center justify-center overflow-hidden">
             <!-- Simulated Remote Video (Product) -->
-            <img id="productVideoFeed" src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80" class="w-full h-full object-cover opacity-80 simulated-live" alt="Flux vidéo produit">
+            <img id="productVideoFeed" src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80" class="w-full h-full object-contain opacity-80 simulated-live" alt="Flux vidéo produit">
             
             <!-- Remote Label -->
             <div class="absolute top-4 left-4 flex items-center gap-2">
@@ -171,6 +171,37 @@
             </button>
         </div>
     </div>
+
+    <!-- Product Picker Modal -->
+    <div id="productPicker" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:100; align-items:flex-end; justify-content:center; backdrop-filter:blur(4px);">
+        <div class="bg-white dark:bg-[#1a1a2e] w-full max-w-md rounded-t-2xl p-5 animate-slide-up max-h-[70vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">📦 Choisir un produit</h3>
+                <button onclick="closeProductPicker()" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+            </div>
+            <div id="productPickerList" class="flex flex-col gap-3"></div>
+            <button onclick="closeProductPicker()" class="w-full mt-4 py-3 rounded-xl bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium">Annuler</button>
+        </div>
+    </div>
+
+    <style>
+        @keyframes slide-up {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .animate-slide-up { animation: slide-up 0.3s ease-out; }
+        .product-picker-item {
+            display: flex; align-items: center; gap: 12px; padding: 12px;
+            border-radius: 12px; cursor: pointer; transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        .product-picker-item:hover { border-color: #1b5e20; }
+        .product-picker-thumb {
+            width: 56px; height: 56px; border-radius: 10px; background-size: cover;
+            background-position: center; background-color: #f1f2f6; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+        }
+    </style>
 
     <script>
         // Init Params
@@ -228,13 +259,17 @@
         function displaySharedProduct(product) {
             try {
                 const img = document.getElementById('productVideoFeed');
-                if (img && product.img) img.src = product.img;
                 const badge = document.getElementById('productLabelBadge');
+                if (img && product.img) {
+                    img.src = product.img;
+                    console.log('[WebRTC] Image produit mise a jour: ' + product.img.substring(0, 60) + '...');
+                } else if (img && !product.img) {
+                    console.warn('[WebRTC] Produit sans image: ' + (product.name || 'sans nom'));
+                }
                 if (badge) badge.textContent = product.name ? `📦 ${product.name}` : '📹 Caméra Vendeur (Produit)';
-                // Mettre a jour le alt de l'image produit
                 if (img) img.alt = product.name ? `Produit partagé: ${product.name}` : 'Produit partagé';
-                console.log('[WebRTC] Produit affiche: ' + (product.name || 'sans nom'));
-            } catch {}
+                console.log('[WebRTC] Produit affiche: ' + (product.name || 'sans nom') + ' img=' + (product.img ? 'oui' : 'NON'));
+            } catch(e) { console.error('[WebRTC] Erreur displaySharedProduct:', e); }
         }
 
         // Check for Video Mode
@@ -783,7 +818,7 @@
                     localVideo.srcObject = null;
                 }
                 const videoModal = document.getElementById('videoModal');
-                if (videoModal) videoModal.classList.add('hidden');
+                if (videoModal) { videoModal.classList.add('hidden'); videoModal.style.display = 'none'; }
             } catch {}
             try { if (navigator && navigator.vibrate) navigator.vibrate(0); } catch {}
         }
@@ -822,6 +857,15 @@
                         console.log('[WebRTC] Produit recu du parent: ' + (data.product.name || 'sans nom') + ' img=' + (data.product.img ? 'oui' : 'non'));
                         window._callProduct = data.product;
                         displaySharedProduct(data.product);
+                    }
+                }
+                // Liste complete des produits pour le selecteur
+                if (data.type === 'init-products' && Array.isArray(data.products)) {
+                    console.log('[WebRTC] Liste de ' + data.products.length + ' produit(s) recue du parent');
+                    window._availableProducts = data.products;
+                    // Pre-charger le 1er produit comme fallback
+                    if (data.products.length > 0) {
+                        window._callProduct = data.products[0];
                     }
                 }
             } catch {}
@@ -893,6 +937,24 @@
                     if (signal.product) {
                         console.log('[WebRTC] Produit recu du correspondant: ' + (signal.product.name || 'sans nom'));
                         displaySharedProduct(signal.product);
+                        // Ajouter a la liste disponible si pas deja present
+                        if (!window._availableProducts) window._availableProducts = [];
+                        const exists = window._availableProducts.some(p => p.name === signal.product.name && p.img === signal.product.img);
+                        if (!exists) {
+                            window._availableProducts.push(signal.product);
+                            console.log('[WebRTC] Produit ajoute a la liste disponible (' + window._availableProducts.length + ' total)');
+                        }
+                        // Auto-ouvrir le modal video pour afficher le produit recu
+                        openVideoModalForProduct(signal.product);
+                    }
+                } else if (signal.type === 'products-list') {
+                    // Liste complete des produits recue du correspondant (vendeur → client)
+                    if (Array.isArray(signal.products)) {
+                        console.log('[WebRTC] Liste de ' + signal.products.length + ' produit(s) recue du correspondant');
+                        window._availableProducts = signal.products;
+                        if (signal.products.length > 0) {
+                            window._callProduct = signal.products[0];
+                        }
                     }
                 }
             } catch(e) {
@@ -940,11 +1002,156 @@
             }
         }
 
+        // === PRODUCT PICKER (selecteur de produit pour "Voir produit") ===
+        function openVideoModalForProduct(product) {
+            if (!product) return;
+            const videoModal = document.getElementById('videoModal');
+            if (!videoModal) return;
+            
+            // Mettre à jour l'image et le badge
+            displaySharedProduct(product);
+            
+            // Ouvrir le modal (style.display pour fiabilite)
+            videoModal.classList.remove('hidden');
+            videoModal.style.display = 'flex';
+            const label = document.getElementById('callTypeLabel');
+            if (label) label.innerText = 'Vue Produit 📦';
+            const statusEl = document.getElementById('statusText');
+            if (statusEl) statusEl.innerText = product.name || 'Produit';
+            // NOTE: ne pas appeler applyProductPreview() ici car elle ecraserait
+            // l'image avec les params URL ou window._callProduct (1er produit)
+            
+            // Afficher le PiP video distant si un flux video est actif
+            try {
+                const rvc = document.getElementById('remoteVideoContainer');
+                if (rvc && remoteVideoStream && remoteVideoStream.getVideoTracks().length > 0) {
+                    rvc.classList.remove('hidden');
+                    rvc.style.zIndex = '120';
+                }
+            } catch {}
+        }
+        
+        function showProductPicker() {
+            const picker = document.getElementById('productPicker');
+            const list = document.getElementById('productPickerList');
+            if (!picker || !list) {
+                console.warn('[WebRTC] productPicker ou productPickerList introuvable');
+                return;
+            }
+            
+            const products = window._availableProducts || [];
+            console.log('[WebRTC] showProductPicker: ' + products.length + ' produit(s) dispo');
+            
+            if (products.length === 0) {
+                list.innerHTML = '<div class="text-center text-gray-400 py-8 px-4"><div class="text-4xl mb-3">📦</div><div class="font-semibold text-gray-500 dark:text-gray-400 mb-2">Aucun produit dans la boutique</div><div class="text-sm text-gray-400">Ajoutez des produits via le dashboard vendeur<br>(onglet "🧾 Produits" ou "Nouveau")</div></div>';
+            } else {
+                let html = '';
+                products.forEach((p, idx) => {
+                    const img = p.img || p.photo || '';
+                    html += `
+                    <div class="product-picker-item bg-gray-50 dark:bg-gray-800" onclick="selectProductForCall(${idx})">
+                        <div class="product-picker-thumb" style="${img ? 'background-image:url(' + img + ')' : ''}">
+                            ${!img ? '📦' : ''}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-semibold text-gray-900 dark:text-white truncate">${p.name || 'Sans nom'}</div>
+                            ${p.price ? '<div class="text-sm text-green-600 font-medium">' + p.price + ' FCFA</div>' : ''}
+                            ${p.category ? '<div class="text-xs text-gray-500">' + p.category + '</div>' : ''}
+                        </div>
+                        <div class="text-green-600 text-xl">▶</div>
+                    </div>`;
+                });
+                list.innerHTML = html;
+            }
+            
+            picker.style.display = 'flex';
+            
+            // Click outside to close
+            picker.onclick = function(e) {
+                if (e.target === picker) closeProductPicker();
+            };
+        }
+        
+        function closeProductPicker() {
+            const picker = document.getElementById('productPicker');
+            if (picker) picker.style.display = 'none';
+        }
+        
+        function selectProductForCall(index) {
+            const products = window._availableProducts || [];
+            if (index < 0 || index >= products.length) return;
+            
+            const p = products[index];
+            console.log('[WebRTC] Produit selectionne: ' + p.name);
+            
+            // Fermer le picker AVANT d'ouvrir le modal (z-index superieur)
+            closeProductPicker();
+            
+            // Mettre à jour le produit actif et ouvrir le modal video
+            window._callProduct = p;
+            openVideoModalForProduct(p);
+            
+            // Partager via postMessage → WebSocket → correspondant
+            if (roomId) {
+                window.parent.postMessage({
+                    type: 'share-product',
+                    roomId: roomId,
+                    product: { name: p.name || '', img: p.img || '' }
+                }, '*');
+                console.log('[WebRTC] Produit partage: ' + (p.name || 'sans nom'));
+            }
+        }
+
         function toggleSpeaker(btn) {
             btn.classList.toggle('bg-[#eef6ea]');
             btn.classList.toggle('dark:bg-[#2e5d34]');
             btn.classList.toggle('text-[#1b5e20]');
             btn.classList.toggle('dark:text-white');
+        }
+
+        // Demarre la camera en arriere-plan (sans ouvrir le modal video)
+        async function _startCameraBackground() {
+            try {
+                if (videoStream) { console.log('[WebRTC] Camera deja active'); return; }
+                if (!pc || pc.connectionState === 'closed' || pc.connectionState === 'failed') {
+                    console.warn('[WebRTC] Camera background: PC non disponible');
+                    return;
+                }
+                
+                // Attendre que le PC soit stable
+                if (pc.signalingState !== 'stable') {
+                    let waited = 0;
+                    while (pc.signalingState !== 'stable' && waited < 3000) {
+                        await new Promise(r => setTimeout(r, 100));
+                        waited += 100;
+                    }
+                    if (pc.signalingState !== 'stable') {
+                        console.warn('[WebRTC] Camera background: PC pas stable');
+                        return;
+                    }
+                }
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                videoStream = stream;
+                
+                const localVideo = document.getElementById('localVideo');
+                if (localVideo) {
+                    localVideo.srcObject = stream;
+                    localVideo.muted = true;
+                    try { await localVideo.play(); } catch {}
+                }
+                const noCamIcon = document.getElementById('noCamIcon');
+                if (noCamIcon) noCamIcon.innerHTML = '';
+                
+                // Ajouter les pistes video au PC
+                const videoTracks = stream.getVideoTracks();
+                for (const track of videoTracks) {
+                    pc.addTrack(track, stream);
+                }
+                console.log('[WebRTC] Camera background: ' + videoTracks.length + ' piste(s) video ajoutee(s)');
+            } catch(e) {
+                console.warn('[WebRTC] Camera background: echec - ' + (e.message || e));
+            }
         }
 
         async function toggleVideo(btn) {
@@ -959,6 +1166,19 @@
             if (!videoModal) return;
 
             const isActivating = videoModal.classList.contains('hidden');
+            
+            // Si activation, toujours afficher le selecteur (meme sans produit)
+            // pour eviter de tomber sur l'ancien flux camera avec un produit fallback
+            if (isActivating) {
+                const hasProducts = window._availableProducts && window._availableProducts.length > 0;
+                console.log('[WebRTC] toggleVideo: activation, ' + (hasProducts ? window._availableProducts.length + ' produit(s) dispo' : 'aucun produit'));
+                showProductPicker();
+                if (hasProducts) {
+                    _startCameraBackground(); // Demarrer la camera en arriere-plan
+                }
+                return;
+            }
+            
             try { applyProductPreview(); } catch {}
 
             // Partager le produit uniquement a l'ACTIVATION (pas a la desactivation)
@@ -1001,6 +1221,7 @@
             if (!videoModal.classList.contains('hidden')) {
                 // === DESACTIVER LA VIDEO ===
                 videoModal.classList.add('hidden');
+                videoModal.style.display = 'none';
                 if(label) label.innerText = "Appel Audio Mangoo";
 
                 if (noCamIcon) noCamIcon.innerHTML = '';
@@ -1061,6 +1282,7 @@
             }
 
             videoModal.classList.remove('hidden');
+            videoModal.style.display = 'flex';
             if(label) label.innerText = "Appel Vidéo Mangoo";
 
             if (noCamIcon) {
@@ -1243,7 +1465,7 @@
 
             try {
                 const videoModal = document.getElementById('videoModal');
-                if (videoModal) videoModal.classList.add('hidden');
+                if (videoModal) { videoModal.classList.add('hidden'); videoModal.style.display = 'none'; }
             } catch {
             }
 

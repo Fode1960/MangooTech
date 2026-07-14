@@ -4902,6 +4902,34 @@
                 </div>
 
                 <div class="input-group">
+                    <label>Catégorie</label>
+                    <select id="prodCategory" class="input-field">
+                        <option value="🥬 Vivres Frais">🥬 Vivres Frais</option>
+                        <option value="🍎 Fruits & Légumes">🍎 Fruits & Légumes</option>
+                        <option value="🥩 Viande & Poisson">🥩 Viande & Poisson</option>
+                        <option value="🍞 Boulangerie">🍞 Boulangerie</option>
+                        <option value="🥤 Boissons">🥤 Boissons</option>
+                        <option value="📱 Électronique">📱 Électronique</option>
+                        <option value="💻 Informatique">💻 Informatique</option>
+                        <option value="🧵 Mode & Habillement">🧵 Mode & Habillement</option>
+                        <option value="👟 Chaussures">👟 Chaussures</option>
+                        <option value="💄 Beauté & Cosmétiques">💄 Beauté & Cosmétiques</option>
+                        <option value="🏠 Maison & Déco">🏠 Maison & Déco</option>
+                        <option value="🪑 Meubles">🪑 Meubles</option>
+                        <option value="🔧 Bricolage">🔧 Bricolage</option>
+                        <option value="🚗 Auto & Moto">🚗 Auto & Moto</option>
+                        <option value="🏋️ Sport & Fitness">🏋️ Sport & Fitness</option>
+                        <option value="🧸 Jouets & Enfants">🧸 Jouets & Enfants</option>
+                        <option value="📚 Livres & Papeterie">📚 Livres & Papeterie</option>
+                        <option value="💊 Santé & Pharmacie">💊 Santé & Pharmacie</option>
+                        <option value="🐾 Animaux">🐾 Animaux</option>
+                        <option value="🎵 Musique & Instruments">🎵 Musique & Instruments</option>
+                        <option value="🏪 Services">🏪 Services</option>
+                        <option value="📦 Autre">📦 Autre</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
                     <label>Image</label>
                     <div class="lp-upload-row">
                         <div id="prodPhotoPreview" style="width:60px; height:60px; background:rgba(17,24,39,0.06); border-radius:14px; display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px dashed rgba(17,24,39,0.20);">
@@ -5961,16 +5989,54 @@
             if (event.data && typeof event.data === 'object' && event.data.type === 'call-iframe-ready') {
                 console.log('[Call] call-iframe-ready recu de l\'iframe (role=' + (event.data.role || '?') + ')');
                 _sendPendingJoinRoom();
-                // Envoyer le produit capture a l'iframe
-                if (_pendingProductForIframe && _pendingProductForIframe.name) {
+                
+                const iframeRole = (event.data.role || '').trim().toLowerCase();
+                const callFrame = document.getElementById('callFrame');
+                
+                // Seul le callee (vendeur) envoie sa liste de produits
+                // Le caller (client) les recoit via WebSocket products-list
+                if (iframeRole === 'callee') {
+                    const allProducts = _getProductsForCall();
+                    console.log('[Call] _getProductsForCall callee: ' + allProducts.length + ' produit(s)');
+                    
+                    // Envoyer a l'iframe du vendeur (pour son propre selecteur)
+                    if (allProducts.length > 0 && callFrame && callFrame.contentWindow) {
+                        try {
+                            callFrame.contentWindow.postMessage({
+                                type: 'init-products',
+                                products: allProducts
+                            }, '*');
+                            console.log('[Call] Liste de ' + allProducts.length + ' produit(s) envoyee a l\'iframe vendeur');
+                        } catch(e) { console.error('[Call] Erreur envoi liste produits a iframe:', e); }
+                    }
+                    
+                    // Envoyer au caller (client) via WebSocket
+                    if (allProducts.length > 0 && webrtcMgmtWs && webrtcMgmtWsConnected) {
+                        try {
+                            const roomId = activeCallData ? activeCallData.roomId : null;
+                            if (roomId) {
+                                webrtcMgmtWs.send(JSON.stringify({
+                                    type: 'products-list',
+                                    roomId: roomId,
+                                    products: allProducts
+                                }));
+                                console.log('[Call] Liste de ' + allProducts.length + ' produit(s) envoyee au caller via WebSocket');
+                            }
+                        } catch(e) { console.error('[Call] Erreur envoi produits-list au caller:', e); }
+                    }
+                } else {
+                    console.log('[Call] Caller - pas d\'envoi de produits (reception via WebSocket du vendeur)');
+                }
+                
+                // Backward compat: envoyer aussi le 1er produit comme init-product au callee
+                if (iframeRole === 'callee' && _pendingProductForIframe && _pendingProductForIframe.name) {
                     try {
-                        const callFrame = document.getElementById('callFrame');
                         if (callFrame && callFrame.contentWindow) {
                             callFrame.contentWindow.postMessage({
                                 type: 'init-product',
                                 product: _pendingProductForIframe
                             }, '*');
-                            console.log('[Call] Produit envoye a l\'iframe: ' + _pendingProductForIframe.name);
+                            console.log('[Call] Produit (backward compat) envoye a l\'iframe (callee): ' + _pendingProductForIframe.name);
                         }
                     } catch(e) { console.error('[Call] Erreur envoi produit a iframe:', e); }
                 }
@@ -9586,6 +9652,24 @@
             appInitialized = true;
 
             try { lpBootstrapIdentityFromQuery(); } catch {}
+            // Charger les produits du vendeur depuis localStorage (lpRole=vendor)
+            // Si localStorage vide, tenter de charger depuis le serveur (persistance inter-tunnel)
+            try {
+                const qs = new URLSearchParams(String(window.location.search || ''));
+                if (qs.get('lpRole') === 'vendor') {
+                    if (!window.MY_PRODUCTS || window.MY_PRODUCTS.length === 0) {
+                        const stored = localStorage.getItem('mangoo_my_products');
+                        window.MY_PRODUCTS = stored ? JSON.parse(stored) : [];
+                        console.log('[LP] Produits vendeur charges du localStorage: ' + (window.MY_PRODUCTS ? window.MY_PRODUCTS.length : 0));
+                    }
+                    // Si toujours vide, charger depuis le serveur (async fire & forget)
+                    if (!window.MY_PRODUCTS || window.MY_PRODUCTS.length === 0) {
+                        _loadProductsFromServer().then(loaded => {
+                            if (loaded) console.log('[LP] Produits restaures depuis le serveur !');
+                        });
+                    }
+                }
+            } catch {}
             try { bindVendorCardClicks(); } catch {}
 
             try { requestUserGeolocation(); } catch {}
@@ -14245,6 +14329,7 @@
                 case 'answer':
                 case 'ice-candidate':
                 case 'product-preview':
+                case 'products-list':
                     relayWebRTCToIframe(data);
                     break;
                 default:
@@ -14399,6 +14484,87 @@
             } catch(e) { console.error('[LP] Erreur _getProductForCall:', e); }
             console.log('[LP] Aucun produit trouve pour le partage WebRTC');
             return null;
+        }
+
+        // Recupere TOUS les produits disponibles pour le partage WebRTC (selecteur)
+        // === PERSISTANCE SERVEUR DES PRODUITS (survit aux changements de tunnel) ===
+        
+        // Sauvegarde les produits sur le serveur (fichier JSON)
+        async function _saveProductsToServer(products) {
+            try {
+                const shopId = localStorage.getItem('mangoo_my_shop_id') || 'default';
+                const resp = await fetch('/api/my-products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ shopId, products })
+                });
+                const json = await resp.json();
+                console.log('[LP] Produits sauvegardes sur le serveur: ' + (json.count || 0));
+            } catch(e) {
+                console.warn('[LP] Echec sauvegarde produits serveur:', e.message);
+            }
+        }
+        
+        // Charge les produits depuis le serveur (fallback si localStorage vide)
+        async function _loadProductsFromServer() {
+            try {
+                const shopId = localStorage.getItem('mangoo_my_shop_id') || 'default';
+                const resp = await fetch('/api/my-products?shopId=' + encodeURIComponent(shopId));
+                const json = await resp.json();
+                if (json.success && Array.isArray(json.products) && json.products.length > 0) {
+                    window.MY_PRODUCTS = json.products;
+                    localStorage.setItem('mangoo_my_products', JSON.stringify(json.products));
+                    console.log('[LP] ' + json.products.length + ' produit(s) charges du serveur');
+                    return true;
+                }
+            } catch(e) {
+                console.warn('[LP] Echec chargement produits serveur:', e.message);
+            }
+            return false;
+        }
+
+        function _getProductsForCall() {
+            const products = [];
+            try {
+                // 1. window.MY_PRODUCTS (en memoire)
+                if (window.MY_PRODUCTS && window.MY_PRODUCTS.length > 0) {
+                    window.MY_PRODUCTS.forEach(p => {
+                        const img = p.photo || p.img || '';
+                        if (p.name) products.push({ name: p.name, img: img, price: p.price || '', category: p.category || '', id: p.id || '' });
+                    });
+                }
+                // 2. localStorage mangoo_my_products
+                if (products.length === 0) {
+                    const stored = localStorage.getItem('mangoo_my_products');
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        parsed.forEach(p => {
+                            const img = p.photo || p.img || '';
+                            if (p.name) products.push({ name: p.name, img: img, price: p.price || '', category: p.category || '', id: p.id || '' });
+                        });
+                    }
+                }
+                // 3. DOM: cartes produit de la fiche vendeur
+                if (products.length === 0) {
+                    const cards = document.querySelectorAll('#vendorProductsList .product-card');
+                    cards.forEach(card => {
+                        const nameEl = card.querySelector('div[style*="font-weight:bold"]');
+                        const imgEl = card.querySelector('div[style*="background-image"]');
+                        const name = nameEl ? nameEl.textContent.trim() : '';
+                        let img = '';
+                        if (imgEl) {
+                            const style = imgEl.getAttribute('style') || '';
+                            const match = style.match(/url\(['"]?([^'"()]+)['"]?\)/);
+                            if (match) img = match[1];
+                        }
+                        if (name) products.push({ name: name, img: img, price: '', category: '', id: '' });
+                    });
+                }
+                // Pas de fallback: si aucun produit reel, retourner vide
+                // (le selecteur affichera "Aucun produit dans la boutique")
+                console.log('[LP] _getProductsForCall: ' + products.length + ' produit(s) trouve(s)');
+            } catch(e) { console.error('[LP] Erreur _getProductsForCall:', e); }
+            return products;
         }
 
         function _sendPendingJoinRoom() {
@@ -15070,6 +15236,7 @@
             const overlay = document.createElement('div');
             overlay.id = 'addProductOverlay';
             overlay.className = 'modal-overlay';
+            overlay.style.display = 'flex';
             
             overlay.innerHTML = `
                 <div class="modal-card lp-modal-card" onclick="event.stopPropagation()">
@@ -15111,10 +15278,45 @@
                             <label>Catégorie</label>
                             <select id="newProdCategory" class="input-field">
                                 <option value="🥬 Vivres Frais">🥬 Vivres Frais</option>
+                                <option value="🍎 Fruits & Légumes">🍎 Fruits & Légumes</option>
+                                <option value="🥩 Viande & Poisson">🥩 Viande & Poisson</option>
+                                <option value="🍞 Boulangerie">🍞 Boulangerie</option>
+                                <option value="🥤 Boissons">🥤 Boissons</option>
                                 <option value="📱 Électronique">📱 Électronique</option>
-                                <option value="🧵 Mode">🧵 Mode</option>
-                                <option value="🏠 Maison">🏠 Maison</option>
+                                <option value="💻 Informatique">💻 Informatique</option>
+                                <option value="🧵 Mode & Habillement">🧵 Mode & Habillement</option>
+                                <option value="👟 Chaussures">👟 Chaussures</option>
+                                <option value="💄 Beauté & Cosmétiques">💄 Beauté & Cosmétiques</option>
+                                <option value="🏠 Maison & Déco">🏠 Maison & Déco</option>
+                                <option value="🪑 Meubles">🪑 Meubles</option>
+                                <option value="🔧 Bricolage">🔧 Bricolage</option>
+                                <option value="🚗 Auto & Moto">🚗 Auto & Moto</option>
+                                <option value="🏋️ Sport & Fitness">🏋️ Sport & Fitness</option>
+                                <option value="🧸 Jouets & Enfants">🧸 Jouets & Enfants</option>
+                                <option value="📚 Livres & Papeterie">📚 Livres & Papeterie</option>
+                                <option value="💊 Santé & Pharmacie">💊 Santé & Pharmacie</option>
+                                <option value="🐾 Animaux">🐾 Animaux</option>
+                                <option value="🎵 Musique & Instruments">🎵 Musique & Instruments</option>
+                                <option value="🏪 Services">🏪 Services</option>
+                                <option value="📦 Autre">📦 Autre</option>
                             </select>
+                        </div>
+
+                        <div class="lp-section">
+                            <div class="lp-section-title">🎙️ Description vocale</div>
+                            <div class="lp-section-desc">Parlez avec votre voix pour présenter le produit.</div>
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <button id="btnRecordAddProdAudio" onclick="toggleAddProdAudioRecord()" style="width:60px; height:60px; border-radius:50%; border:none; background:#1b5e20; color:white; font-size:1.8rem; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 15px rgba(27,94,32,0.4); transition:all 0.2s;">🎙️</button>
+                                <div id="addProdAudioPreviewContainer" style="display:none; align-items:center; gap:10px; flex:1;">
+                                    <audio id="addProdAudioPreview" controls style="height:40px; width:100%; border-radius:20px;"></audio>
+                                    <button onclick="deleteAddProdAudio()" style="background:var(--ml-panel); border:1px solid var(--ml-border); border-radius:50%; width:36px; height:36px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; color:var(--ml-danger);">🗑️</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Description écrite (optionnel)</label>
+                            <textarea class="input-field" id="addProdDesc" rows="2" placeholder="Ajoutez une courte phrase si besoin..."></textarea>
                         </div>
                     </div>
 
@@ -15153,6 +15355,57 @@
             }
         }
 
+        // Audio recording pour le formulaire "Ajouter produit"
+        let addProdAudioRecorder = null;
+        let addProdAudioChunks = [];
+
+        async function toggleAddProdAudioRecord() {
+            const btn = document.getElementById('btnRecordAddProdAudio');
+            if (!btn) return;
+            
+            if (addProdAudioRecorder && addProdAudioRecorder.state === 'recording') {
+                // Arrêter l'enregistrement
+                addProdAudioRecorder.stop();
+                btn.textContent = '🎙️';
+                btn.style.background = '#1b5e20';
+                return;
+            }
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                addProdAudioChunks = [];
+                addProdAudioRecorder = new MediaRecorder(stream);
+                
+                addProdAudioRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) addProdAudioChunks.push(e.data);
+                };
+                
+                addProdAudioRecorder.onstop = () => {
+                    const blob = new Blob(addProdAudioChunks, { type: 'audio/webm' });
+                    const url = URL.createObjectURL(blob);
+                    const audioEl = document.getElementById('addProdAudioPreview');
+                    const container = document.getElementById('addProdAudioPreviewContainer');
+                    if (audioEl) audioEl.src = url;
+                    if (container) container.style.display = 'flex';
+                    stream.getTracks().forEach(t => t.stop());
+                };
+                
+                addProdAudioRecorder.start();
+                btn.textContent = '⏺️';
+                btn.style.background = '#d63031';
+            } catch (err) {
+                console.error('[LP] Erreur micro addProd:', err);
+                alert('Impossible d\'accéder au microphone.');
+            }
+        }
+
+        function deleteAddProdAudio() {
+            const audioEl = document.getElementById('addProdAudioPreview');
+            const container = document.getElementById('addProdAudioPreviewContainer');
+            if (audioEl) audioEl.src = '';
+            if (container) container.style.display = 'none';
+        }
+
         function publishProduct() {
             const name = document.getElementById('newProdName').value;
             const price = document.getElementById('newProdPrice').value;
@@ -15173,59 +15426,87 @@
             // 1. Get or Create My Shop ID
             let myShopId = localStorage.getItem('mangoo_my_shop_id');
             if(!myShopId) {
-                // First time -> Create Shop
-                myShopId = Date.now().toString(); // Simple ID
-                localStorage.setItem('mangoo_my_shop_id', myShopId);
-                
-                // Add to Global Vendors (Mock)
-                const newVendor = {
-                    id: myShopId,
-                    name: "Ma Boutique (Moi)",
-                    category: category, // Take category of first product
-                    lat: USER_POS[0], // Use current user pos
-                    lng: USER_POS[1],
-                    status: "open",
-                    live: true,
-                    voicePitch: "Bienvenue dans ma nouvelle boutique sur Mangoo !",
-                    avatar: "https://ui-avatars.com/api/?name=Moi&background=27ae60&color=fff",
-                    isMine: true // Mark as mine
-                };
-                
-                // Add to VENDORS array (in memory)
-                VENDORS.push(newVendor);
-                
-                // Refresh Map
-                newVendor.kind = 'shop';
-                renderVendorsOnMap(VENDORS);
-                
-                // Switch to Seller UI
-                try {
-                    switchAccountTab('sell');
-                } catch {
+                // Si on est sur la page d'un vendeur actif, utiliser son ID
+                if (activeVendor && lpGetVendorKind(activeVendor) === 'shop' && activeVendor.id) {
+                    myShopId = String(activeVendor.id);
+                    localStorage.setItem('mangoo_my_shop_id', myShopId);
+                    console.log('[LP] publishProduct: utilisation de l\'ID vendeur actif: ' + myShopId);
+                } else {
+                    // First time -> Create Shop
+                    myShopId = Date.now().toString(); // Simple ID
+                    localStorage.setItem('mangoo_my_shop_id', myShopId);
+                    
+                    // Add to Global Vendors (Mock)
+                    const newVendor = {
+                        id: myShopId,
+                        name: "Ma Boutique (Moi)",
+                        category: category, // Take category of first product
+                        lat: USER_POS[0], // Use current user pos
+                        lng: USER_POS[1],
+                        status: "open",
+                        live: true,
+                        voicePitch: "Bienvenue dans ma nouvelle boutique sur Mangoo !",
+                        avatar: "https://ui-avatars.com/api/?name=Moi&background=27ae60&color=fff",
+                        isMine: true // Mark as mine
+                    };
+                    
+                    // Add to VENDORS array (in memory)
+                    VENDORS.push(newVendor);
+                    
+                    // Refresh Map
+                    newVendor.kind = 'shop';
+                    renderVendorsOnMap(VENDORS);
+                    
+                    // Switch to Seller UI
+                    try {
+                        switchAccountTab('sell');
+                    } catch {
+                    }
+                    
+                    alert("🎉 Félicitations ! Votre boutique est créee.");
                 }
-                
-                alert("🎉 Félicitations ! Votre boutique est créée.");
             }
             
             // 2. Add Product
             let myProducts = JSON.parse(localStorage.getItem('mangoo_my_products') || '[]');
+            
+            // Récupérer l'audio enregistré
+            let productAudio = null;
+            try {
+                const audioEl = document.getElementById('addProdAudioPreview');
+                if (audioEl && audioEl.src && !audioEl.src.endsWith('#')) {
+                    productAudio = audioEl.src;
+                }
+            } catch {}
+            
+            // Récupérer la description écrite
+            const textDesc = document.getElementById('addProdDesc') ? document.getElementById('addProdDesc').value.trim() : '';
+            
             const newProduct = {
                 id: Date.now(),
                 name: name,
                 price: parseInt(price).toLocaleString().replace(/\s/g, ' '), 
                 vendorName: "Moi",
                 category: category,
-                img: productImg // Save uploaded image or null
+                photo: productImg, // Save uploaded image or null
+                audio: productAudio,
+                textDesc: textDesc
             };
             
             myProducts.unshift(newProduct); // Add to top
             localStorage.setItem('mangoo_my_products', JSON.stringify(myProducts));
+            
+            // Synchro serveur (persistance inter-tunnel)
+            try { _saveProductsToServer(myProducts); } catch {}
             
             // Update Global `window.MY_PRODUCTS` just in case
             window.MY_PRODUCTS = myProducts;
             
             // Close Modal
             document.getElementById('addProductOverlay').remove();
+            
+            // Rafraichir l'onglet Produits du dashboard vendeur
+            try { refreshVendorProductsPane(); } catch {}
             
             // Switch to Account View and Show Orders/Sales Tab?
             // Actually, let's open the Vendor Sheet of the user
@@ -15693,16 +15974,25 @@
             } else {
                 if (boutiqueTab) boutiqueTab.style.display = 'block';
 
-                // For now, we only show products if it's the current user's shop (since we don't have a real backend for all shops)
-                // In a real app, we would fetch products by vendor.id
-                if (myShopId && vendor.id == myShopId) {
-                    // Check if we have products in memory (mock)
-                    if (!window.MY_PRODUCTS) {
-                        const stored = localStorage.getItem('mangoo_my_products');
-                        window.MY_PRODUCTS = stored ? JSON.parse(stored) : [];
-                    }
-
-                    const myProducts = window.MY_PRODUCTS || [];
+                // Verifier si l'utilisateur est un vendeur avec des produits (meme sans myShopId correspondant)
+                const isVendorUser = (() => {
+                    try {
+                        const u = getLpCurrentUser ? getLpCurrentUser() : null;
+                        return u && (u.role === 'vendor' || (Array.isArray(u.roles) && u.roles.includes('vendor')));
+                    } catch { return false; }
+                })();
+                
+                // Charger les produits si dispo
+                if (!window.MY_PRODUCTS) {
+                    const stored = localStorage.getItem('mangoo_my_products');
+                    window.MY_PRODUCTS = stored ? JSON.parse(stored) : [];
+                }
+                const myProducts = window.MY_PRODUCTS || [];
+                
+                // Afficher les vrais produits si : boutique possedee OU vendeur avec produits
+                const showRealProducts = (myShopId && vendor.id == myShopId) || (isVendorUser && myProducts.length > 0);
+                
+                if (showRealProducts) {
                     if (myProducts.length > 0) {
                         if (emptyMsg) emptyMsg.style.display = 'none';
                         myProducts.forEach(p => {
@@ -15713,7 +16003,7 @@
                             const first = myProducts[0];
                             localStorage.setItem('lp_last_product', JSON.stringify({
                                 name: first.name || '',
-                                img: first.photo || ''
+                                img: first.photo || first.img || ''
                             }));
                             console.log('[LP] Produit sauvegarde pour partage WebRTC:', first.name);
                         } catch(e) { console.error('[LP] Erreur save lp_last_product:', e); }
@@ -21435,6 +21725,9 @@
             document.getElementById('prodName').value = '';
             document.getElementById('prodPrice').value = '';
             document.getElementById('prodDesc').value = '';
+            // Reset category
+            const catSelect = document.getElementById('prodCategory');
+            if (catSelect) catSelect.selectedIndex = 0;
             
             // Reset Photo
             document.getElementById('prodPhotoInput').value = '';
@@ -21523,15 +21816,29 @@
         function submitProduct() {
             const name = document.getElementById('prodName').value;
             const price = document.getElementById('prodPrice').value;
-            const desc = document.getElementById('prodDesc').value; // Optional text
+            const desc = document.getElementById('prodDesc').value || ''; // Optional text
+            const category = document.getElementById('prodCategory') ? document.getElementById('prodCategory').value : '';
             
             if (!name || !price) return alert("Nom et prix obligatoires.");
+
+            // Gerer mangoo_my_shop_id (meme logique que publishProduct)
+            let myShopId = localStorage.getItem('mangoo_my_shop_id');
+            if (!myShopId) {
+                if (activeVendor && lpGetVendorKind(activeVendor) === 'shop' && activeVendor.id) {
+                    myShopId = String(activeVendor.id);
+                    localStorage.setItem('mangoo_my_shop_id', myShopId);
+                } else {
+                    myShopId = Date.now().toString();
+                    localStorage.setItem('mangoo_my_shop_id', myShopId);
+                }
+            }
 
             // Create Post
             const post = {
                 id: Date.now(),
                 name: name,
                 price: price,
+                category: category,
                 photo: currentProdPhoto,
                 audio: currentProductAudio,
                 textDesc: desc
@@ -21545,6 +21852,8 @@
             }
             window.MY_PRODUCTS.push(post);
             localStorage.setItem('mangoo_my_products', JSON.stringify(window.MY_PRODUCTS)); // PERSIST!
+            // Synchro serveur
+            try { _saveProductsToServer(window.MY_PRODUCTS); } catch {}
             // Sauvegarder aussi comme dernier produit pour le partage WebRTC
             try {
                 localStorage.setItem('lp_last_product', JSON.stringify({
@@ -21566,6 +21875,9 @@
             
             document.getElementById('productModal').style.display = 'none';
             alert("Produit publié avec succès ! 🚀");
+            
+            // Rafraichir l'onglet Produits du dashboard vendeur
+            try { refreshVendorProductsPane(); } catch {}
             
             // Force refresh of the vendor sheet if we are on it
             if(activeVendor && activeVendor.id == localStorage.getItem('mangoo_my_shop_id')) {
@@ -21596,6 +21908,7 @@
                     <div style="display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
                         <div style="display:flex; gap:5px;">
                             <button onclick="editProduct('${post.id}')" style="background:#dfe6e9; color:#636e72; border:none; width:35px; height:35px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">✏️</button>
+                            <button onclick="deleteProduct('${post.id}')" style="background:#ffe0e0; color:#d63031; border:none; width:35px; height:35px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">🗑️</button>
                             ${post.audio ? `
                             <button onclick="playProductAudio(this, '${audioSrc}')" style="background:#1b5e20; color:white; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 3px 10px rgba(225, 112, 85, 0.3);">
                                 🔊
@@ -21634,6 +21947,49 @@
                 // Show Modal
                 openProductModal();
                 alert(`✏️ Mode édition pour : ${product.name}\n(Sauvegarde bientôt disponible)`);
+            }
+        }
+
+        function deleteProduct(productId) {
+            if (!confirm('Supprimer définitivement ce produit ?')) return;
+            
+            // Charger depuis localStorage
+            const stored = localStorage.getItem('mangoo_my_products');
+            let products = stored ? JSON.parse(stored) : [];
+            
+            // Filtrer le produit à supprimer
+            const deleted = products.find(p => p.id == productId);
+            products = products.filter(p => p.id != productId);
+            
+            // Sauvegarder
+            localStorage.setItem('mangoo_my_products', JSON.stringify(products));
+            window.MY_PRODUCTS = products;
+            // Synchro serveur
+            try { _saveProductsToServer(products); } catch {}
+            
+            console.log('[LP] Produit supprimé: ' + (deleted ? deleted.name : productId));
+            
+            // Rafraîchir l'affichage
+            try { refreshVendorProductsPane(); } catch {}
+            
+            // Rafraîchir aussi la fiche vendeur si ouverte
+            if (activeVendor && activeVendor.id == localStorage.getItem('mangoo_my_shop_id')) {
+                try {
+                    const feed = document.getElementById('vendorProductsList');
+                    if (feed) {
+                        feed.innerHTML = '';
+                        if (products.length > 0) {
+                            const emptyMsg = document.getElementById('emptyProductsMsg');
+                            if (emptyMsg) emptyMsg.style.display = 'none';
+                            products.forEach(p => {
+                                feed.insertAdjacentHTML('afterbegin', createProductCardHTML(p, true));
+                            });
+                        } else {
+                            const emptyMsg = document.getElementById('emptyProductsMsg');
+                            if (emptyMsg) emptyMsg.style.display = 'block';
+                        }
+                    }
+                } catch {}
             }
         }
 
@@ -22421,6 +22777,8 @@
             if (!window.MY_PRODUCTS) window.MY_PRODUCTS = [];
             window.MY_PRODUCTS.unshift(newProd);
             localStorage.setItem('mangoo_my_products', JSON.stringify(window.MY_PRODUCTS));
+            // Synchro serveur
+            try { _saveProductsToServer(window.MY_PRODUCTS); } catch {}
 
             // Refresh if vendor sheet is open
             const currentVendor = VENDORS.find(v => v.id == localStorage.getItem('mangoo_my_shop_id'));
@@ -24937,6 +25295,45 @@
             if (next === 'orders') {
                 try { lpRefreshVendorOrders() } catch {}
             }
+            if (next === 'products') {
+                try { refreshVendorProductsPane() } catch {}
+            }
+        }
+
+        function refreshVendorProductsPane() {
+            const pane = document.getElementById('lp-vendor-products');
+            if (!pane) return;
+            
+            // Charger les produits
+            if (!window.MY_PRODUCTS) {
+                const stored = localStorage.getItem('mangoo_my_products');
+                window.MY_PRODUCTS = stored ? JSON.parse(stored) : [];
+            }
+            const products = window.MY_PRODUCTS || [];
+            
+            // Trouver le conteneur existant (garder le fond de carte)
+            const card = pane.querySelector('div[style]') || pane.firstElementChild;
+            if (!card) return;
+            
+            // Construire le HTML : titre + liste produits + bouton ajouter
+            let html = '<div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Produits</div>';
+            html += '<div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Ajoutez et gérez vos produits publiés.</div>';
+            
+            if (products.length > 0) {
+                html += '<div style="margin-top: 14px; display:flex; flex-direction:column; gap:8px;">';
+                products.forEach(p => {
+                    html += createProductCardHTML(p, true);
+                });
+                html += '</div>';
+            } else {
+                html += '<div style="margin-top: 14px; color: var(--ml-muted); font-size: 0.9rem; text-align:center; padding:20px;">Aucun produit publié pour le moment.</div>';
+            }
+            
+            html += '<div style="margin-top: 14px;">';
+            html += '<button type="button" class="lp-btn lp-btn-primary" onclick="openAddProductModal()">📸 Ajouter un produit</button>';
+            html += '</div>';
+            
+            card.innerHTML = html;
         }
 
         function loadLpProfile(withFeedback) {

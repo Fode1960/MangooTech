@@ -285,6 +285,10 @@ wss.on('connection', (ws) => {
           handleProductPreview(ws, data);
           break;
 
+        case 'products-list':
+          handleProductsList(ws, data);
+          break;
+
         case 'call-notification':
           handleCallNotification(ws, data);
           break;
@@ -544,6 +548,33 @@ wss.on('connection', (ws) => {
       type: 'product-preview',
       roomId: roomId,
       product: product,
+      from: senderUserId
+    }, senderUserId);
+  }
+
+  // ===== PRODUCTS LIST SYNC (envoi de la liste complete du vendeur au client) =====
+
+  function handleProductsList(ws, data) {
+    const { roomId, products } = data;
+    if (!roomId || !Array.isArray(products) || products.length === 0) return;
+
+    let senderUserId = null;
+    const room = rooms.get(roomId);
+    if (room) {
+      for (const [uid, userData] of room) {
+        if (userData.ws === ws) {
+          senderUserId = uid;
+          break;
+        }
+      }
+    }
+
+    console.log(`[WebRTC-3008] Products-list de ${senderUserId || 'inconnu'} pour room ${roomId}: ${products.length} produit(s)`);
+
+    broadcastToRoom(roomId, {
+      type: 'products-list',
+      roomId: roomId,
+      products: products,
       from: senderUserId
     }, senderUserId);
   }

@@ -52,6 +52,7 @@ import pricingPolicyRoutes from './routes/pricing-policy'
 import adminPricingPolicyRoutes from './routes/admin-pricing-policy'
 import liveShoppingRoutes from './routes/live-shopping'
 import productsRoutes from './routes/products'
+import myProductsRoutes from './routes/my-products'
 import internalMeetRoutes from './routes/internal-meet'
 
 // for esm mode
@@ -117,6 +118,7 @@ app.use('/api/live-orders', liveOrdersRoutes)
 app.use('/api/live-shopping', liveShoppingRoutes)
 app.use('/api/pricing-policy', pricingPolicyRoutes)
 app.use('/api/products', productsRoutes)
+app.use('/api/my-products', myProductsRoutes)
 app.use('/api/internal/meet', internalMeetRoutes)
 
 /**
