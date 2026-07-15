@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Appel Audio - Mangoo Connect+</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -55,6 +58,10 @@
         }
         .simulated-live {
             animation: subtle-move 20s ease-in-out infinite;
+        }
+        @keyframes camPulse {
+            0%, 100% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
         }
     </style>
 </head>
@@ -149,7 +156,7 @@
             </div>
             
             <!-- Local Video (User) -->
-            <div class="absolute bottom-24 right-4 w-32 h-48 bg-[#17331c] rounded-xl border-2 border-[#eef6ea] overflow-hidden shadow-lg">
+            <div class="fixed bottom-24 right-4 w-32 h-48 bg-[#17331c] rounded-xl border-2 border-[#eef6ea] overflow-hidden shadow-lg" style="z-index:125;">
                 <video id="localVideo" autoplay muted playsinline class="w-full h-full object-cover"></video>
                 <div class="absolute top-2 left-2 bg-black/50 text-white px-1.5 py-0.5 rounded text-[10px] backdrop-blur-sm">👤 Vous</div>
                 <div class="absolute inset-0 flex items-center justify-center text-white text-xs pointer-events-none" id="noCamIcon">
@@ -304,6 +311,7 @@
         let remoteVideoStream = null; // Stream video distant persistant
         let isRenegotiating = false;    // Verrou pour eviter renegociations simultanees
         let initialSetupComplete = false; // Bloque onnegotiationneeded pendant l'init
+        let _prewarmPromise = null;       // Promesse du prewarm en cours (evite conflit getUserMedia)
         const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
         const pageLoadTime = Date.now();
 
@@ -796,6 +804,7 @@
             } catch(e) { console.error('[WebRTC] Erreur nettoyage streams persistants:', e); }
             isRenegotiating = false;
             initialSetupComplete = false;
+            _prewarmPromise = null;
         }
 
         function terminateCall() {
@@ -1008,12 +1017,14 @@
             const videoModal = document.getElementById('videoModal');
             if (!videoModal) return;
             
+            // ⚠️ OUVRIR LE MODAL AVANT TOUT (obligatoire pour Edge :
+            //    un <video> dans un conteneur display:none ne se rend pas)
+            videoModal.classList.remove('hidden');
+            videoModal.style.display = 'flex';
+            
             // Mettre à jour l'image et le badge
             displaySharedProduct(product);
             
-            // Ouvrir le modal (style.display pour fiabilite)
-            videoModal.classList.remove('hidden');
-            videoModal.style.display = 'flex';
             const label = document.getElementById('callTypeLabel');
             if (label) label.innerText = 'Vue Produit 📦';
             const statusEl = document.getElementById('statusText');
@@ -1029,6 +1040,36 @@
                     rvc.style.zIndex = '120';
                 }
             } catch {}
+            
+            // Toujours afficher un prompt "Touchez pour activer" dans "Vous"
+            // L'initiateur appelle _startCameraBackground() separement (user gesture = OK)
+            // Le destinataire voit ce prompt et tape pour activer (user gesture = OK)
+            const noCamIcon = document.getElementById('noCamIcon');
+            const hasActiveCamera = videoStream && videoStream.getVideoTracks().some(t => t.readyState === 'live');
+            if (noCamIcon && !hasActiveCamera) {
+                console.log('[WebRTC] Affichage prompt camera dans noCamIcon');
+                // Forcer pointer-events auto (supprime la classe Tailwind)
+                noCamIcon.classList.remove('pointer-events-none');
+                noCamIcon.style.pointerEvents = 'auto';
+                noCamIcon.style.cursor = 'pointer';
+                noCamIcon.style.zIndex = '999';
+                noCamIcon.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:8px;cursor:pointer;background:rgba(0,0,0,0.75);border-radius:12px;width:100%;height:100%;box-sizing:border-box;animation:camPulse 2s infinite;" id="noCamPrompt"><div style="font-size:2rem;">📷</div><div style="font-weight:bold;font-size:13px;text-align:center;color:white;">Touchez pour<br>activer votre caméra</div></div>';
+                
+                // Handler separe pour debug
+                function camPromptClick(ev) {
+                    console.log('[WebRTC] CLIC sur prompt camera !');
+                    ev.stopPropagation();
+                    ev.preventDefault();
+                    const nic = document.getElementById('noCamIcon');
+                    if (nic) {
+                        nic.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:rgba(0,0,0,0.75);border-radius:12px;"><div style="font-size:1.5rem;">⏳</div></div>';
+                        nic.style.pointerEvents = 'none';
+                        nic.style.cursor = 'default';
+                    }
+                    _startCameraBackground();
+                }
+                noCamIcon.onclick = camPromptClick;
+            }
         }
         
         function showProductPicker() {
@@ -1091,6 +1132,9 @@
             window._callProduct = p;
             openVideoModalForProduct(p);
             
+            // Demarrer la camera (contexte geste utilisateur = OK)
+            _startCameraBackground();
+            
             // Partager via postMessage → WebSocket → correspondant
             if (roomId) {
                 window.parent.postMessage({
@@ -1109,48 +1153,143 @@
             btn.classList.toggle('dark:text-white');
         }
 
-        // Demarre la camera en arriere-plan (sans ouvrir le modal video)
-        async function _startCameraBackground() {
+        // Demande la camera en arriere-plan au moment de l'appel (geste utilisateur)
+        // ⚠️ Sur Edge, le stream prewarm peut devenir stale. _startCameraBackground()
+        //    obtient toujours un stream frais et ignore celui-ci.
+        async function _prewarmCamera() {
             try {
-                if (videoStream) { console.log('[WebRTC] Camera deja active'); return; }
+                // Ne pas reutiliser un ancien stream
+                if (videoStream) {
+                    videoStream.getTracks().forEach(t => { try { t.stop(); } catch {} });
+                    videoStream = null;
+                }
+                _prewarmPromise = navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                videoStream = await _prewarmPromise;
+                _prewarmPromise = null;
+                console.log('[WebRTC] Camera prechauffee (stream pret), tracks=' + videoStream.getVideoTracks().length);
+            } catch(e) {
+                console.warn('[WebRTC] Camera prewarm echoue: ' + (e.message || e));
+                _prewarmPromise = null;
+                videoStream = null;
+            }
+        }
+
+        // Demarre la camera en arriere-plan
+        // ⚠️ getUserMedia appele EN PREMIER car la fenetre de geste utilisateur est courte
+        async function _startCameraBackground() {
+            console.log('[WebRTC] Camera: DEMARRAGE');
+            
+            // === ETAPE 1 : getUserMedia IMMEDIATEMENT ===
+            // (doit etre dans la fenetre de geste utilisateur ~1s)
+            let stream;
+            try {
+                // Si la camera tourne deja, skip
+                if (videoStream) {
+                    const live = videoStream.getVideoTracks().filter(t => t.readyState === 'live');
+                    if (live.length > 0) {
+                        console.log('[WebRTC] Camera: deja active, skip');
+                        _updateLocalVideo();
+                        return;
+                    }
+                }
+                
+                console.log('[WebRTC] Camera: getUserMedia...');
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                console.log('[WebRTC] Camera: OK, ' + stream.getVideoTracks().length + ' piste(s)');
+            } catch(e) {
+                console.error('[WebRTC] Camera: ERREUR', e.name, e.message);
+                const noCamIcon = document.getElementById('noCamIcon');
+                if (noCamIcon) {
+                    console.log('[WebRTC] Camera: affichage erreur noCamIcon, type=' + e.name);
+                    noCamIcon.classList.remove('pointer-events-none');
+                    noCamIcon.style.pointerEvents = 'auto';
+                    noCamIcon.style.cursor = 'pointer';
+                    noCamIcon.style.zIndex = '999';
+                    noCamIcon.onclick = function(ev) {
+                        console.log('[WebRTC] CLIC retry camera !');
+                        ev.stopPropagation();
+                        ev.preventDefault();
+                        noCamIcon.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:rgba(0,0,0,0.75);border-radius:12px;"><div style="font-size:1.5rem;">⏳</div></div>';
+                        noCamIcon.style.pointerEvents = 'none';
+                        _startCameraBackground();
+                    };
+                    if (e.name === 'NotAllowedError') {
+                        noCamIcon.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:4px;width:100%;height:100%;background:rgba(0,0,0,0.75);border-radius:12px;cursor:pointer;box-sizing:border-box;animation:camPulse 2s infinite;"><div style="font-size:1.2rem;">🚫</div><div style="font-weight:bold;font-size:11px;text-align:center;color:white;">Caméra refusée</div><div style="font-size:9px;text-align:center;color:#ccc;">Tapotez</div></div>';
+                    } else if (e.name === 'NotReadableError') {
+                        noCamIcon.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:4px;width:100%;height:100%;background:rgba(0,0,0,0.75);border-radius:12px;cursor:pointer;box-sizing:border-box;animation:camPulse 2s infinite;"><div style="font-size:1.2rem;">🔒</div><div style="font-weight:bold;font-size:11px;text-align:center;color:white;">Caméra occupée</div><div style="font-size:9px;text-align:center;color:#ccc;">Tapotez</div></div>';
+                    } else {
+                        noCamIcon.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:4px;width:100%;height:100%;background:rgba(0,0,0,0.75);border-radius:12px;cursor:pointer;box-sizing:border-box;animation:camPulse 2s infinite;"><div style="font-size:1.2rem;">⚠️</div><div style="font-weight:bold;font-size:10px;text-align:center;color:white;">' + (e.message || 'Erreur') + '</div><div style="font-size:9px;text-align:center;color:#ccc;">Tapotez</div></div>';
+                    }
+                }
+                return;
+            }
+            
+            // === ETAPE 2 : le reste (PC, renegociation, etc.) ===
+            try {
                 if (!pc || pc.connectionState === 'closed' || pc.connectionState === 'failed') {
-                    console.warn('[WebRTC] Camera background: PC non disponible');
+                    console.warn('[WebRTC] Camera: PC non disponible, liberation stream');
+                    stream.getTracks().forEach(t => { try { t.stop(); } catch {} });
                     return;
                 }
                 
-                // Attendre que le PC soit stable
+                // Nettoyer l'ancien stream stale
+                if (videoStream && videoStream !== stream) {
+                    videoStream.getTracks().forEach(t => { try { t.stop(); } catch {} });
+                }
+                videoStream = stream;
+                
+                // Attendre que le PC soit stable (max 3s)
                 if (pc.signalingState !== 'stable') {
+                    console.log('[WebRTC] Camera: PC pas stable (' + pc.signalingState + '), attente...');
                     let waited = 0;
                     while (pc.signalingState !== 'stable' && waited < 3000) {
                         await new Promise(r => setTimeout(r, 100));
                         waited += 100;
                     }
                     if (pc.signalingState !== 'stable') {
-                        console.warn('[WebRTC] Camera background: PC pas stable');
+                        console.warn('[WebRTC] Camera: PC toujours pas stable');
+                        // Ne pas liberer le stream, il est deja pret
                         return;
                     }
                 }
                 
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-                videoStream = stream;
+                // Mettre a jour le localVideo
+                _updateLocalVideo();
                 
-                const localVideo = document.getElementById('localVideo');
-                if (localVideo) {
-                    localVideo.srcObject = stream;
-                    localVideo.muted = true;
-                    try { await localVideo.play(); } catch {}
+                // Ajouter les pistes au PC
+                const existingIds = new Set(pc.getSenders().map(s => s.track?.id).filter(Boolean));
+                let added = 0;
+                for (const track of videoStream.getVideoTracks()) {
+                    if (!existingIds.has(track.id)) {
+                        pc.addTrack(track, videoStream);
+                        added++;
+                    }
                 }
-                const noCamIcon = document.getElementById('noCamIcon');
-                if (noCamIcon) noCamIcon.innerHTML = '';
+                console.log('[WebRTC] Camera: ' + added + ' piste(s) ajoutee(s) au PC');
                 
-                // Ajouter les pistes video au PC
-                const videoTracks = stream.getVideoTracks();
-                for (const track of videoTracks) {
-                    pc.addTrack(track, stream);
-                }
-                console.log('[WebRTC] Camera background: ' + videoTracks.length + ' piste(s) video ajoutee(s)');
             } catch(e) {
-                console.warn('[WebRTC] Camera background: echec - ' + (e.message || e));
+                console.error('[WebRTC] Camera: erreur apres getUserMedia:', e);
+                if (stream) {
+                    stream.getTracks().forEach(t => { try { t.stop(); } catch {} });
+                }
+                videoStream = null;
+            }
+        }
+        
+        // Met a jour localVideo avec le stream courant + nettoie noCamIcon
+        function _updateLocalVideo() {
+            const localVideo = document.getElementById('localVideo');
+            const noCamIcon = document.getElementById('noCamIcon');
+            if (localVideo && videoStream && localVideo.srcObject !== videoStream) {
+                localVideo.srcObject = videoStream;
+                localVideo.muted = true;
+                try { localVideo.play(); } catch {}
+            }
+            if (noCamIcon) {
+                noCamIcon.innerHTML = '';
+                noCamIcon.style.pointerEvents = 'none';
+                noCamIcon.style.cursor = 'default';
+                noCamIcon.onclick = null;
             }
         }
 
@@ -1173,9 +1312,9 @@
                 const hasProducts = window._availableProducts && window._availableProducts.length > 0;
                 console.log('[WebRTC] toggleVideo: activation, ' + (hasProducts ? window._availableProducts.length + ' produit(s) dispo' : 'aucun produit'));
                 showProductPicker();
-                if (hasProducts) {
-                    _startCameraBackground(); // Demarrer la camera en arriere-plan
-                }
+                // NE PAS demarrer la camera ici : le modal video n'est pas encore ouvert.
+                // Sur Edge, un <video> dans un conteneur display:none ne se rend pas.
+                // La camera sera demarree dans openVideoModalForProduct() APRES ouverture du modal.
                 return;
             }
             
@@ -1342,11 +1481,12 @@
                                     pc.addTrack(newTrack, recoveryStream);
                                     console.log('[WebRTC] Audio ajoute via addTrack (sender absent)');
                                 }
-                                // Nettoyer l'ancien stream
+                                // Nettoyer l'ancienne piste audio du localStream
                                 localStream.getAudioTracks().forEach(t => { try { t.stop(); } catch {} });
-                                // Conserver la nouvelle piste audio
-                                localStream = recoveryStream;
-                                console.log('[WebRTC] Audio local restaure, readyState=' + newTrack.readyState);
+                                // Ajouter la nouvelle piste audio au localStream EXISTANT
+                                // (ne pas remplacer localStream, les pistes video de videoStream sont independantes)
+                                localStream.addTrack(newTrack);
+                                console.log('[WebRTC] Audio local restaure dans localStream, readyState=' + newTrack.readyState);
                             }
                         } catch (recErr) {
                             console.error('[WebRTC] Echec reacquisition audio:', recErr);
@@ -1399,7 +1539,7 @@
                                 pc.addTrack(newTrack, recoveryStream);
                             }
                             localStream.getAudioTracks().forEach(t => { try { t.stop(); } catch {} });
-                            localStream = recoveryStream;
+                            localStream.addTrack(newTrack);
                             console.log('[WebRTC] Audio local restaure apres echec camera');
                         }
                     } catch (recErr) {

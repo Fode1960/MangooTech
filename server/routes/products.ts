@@ -84,4 +84,54 @@ router.get('/search', async (req: Request, res: Response): Promise<void> => {
   }
 })
 
+// GET /api/products/active — tous les produits actifs (optionnel : shop_id)
+router.get('/active', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const shopId = safeString(req.query.shop_id)
+
+    let query = supabaseAdmin
+      .from('products')
+      .select('id,name,slug,description,short_description,image_url,price,compare_at_price,shop_id,product_images(url,alt_text,position,is_primary),shops!inner(id,slug,name,logo_url,status)', {
+        count: 'exact',
+      })
+      .eq('status', 'active')
+      .eq('shops.status', 'approved')
+      .limit(50)
+
+    if (shopId) query = query.eq('shop_id', shopId)
+
+    const { data, error } = await query
+    if (error) {
+      res.status(500).json({ success: false, error: error.message || 'Query failed' })
+      return
+    }
+
+    const items = (Array.isArray(data) ? data : []).map((p: any) => {
+      const imagesRaw = p?.product_images
+      const images = Array.isArray(imagesRaw) ? imagesRaw : []
+      const pickImageUrl = () => {
+        const direct = safeString(p?.image_url)
+        if (direct) return direct
+        const primary = images.find((x: any) => Boolean(x?.is_primary)) || null
+        if (primary) { const u = safeString(primary?.url); if (u) return u }
+        const byPos = [...images].sort((a: any, b: any) => Number(a?.position ?? 0) - Number(b?.position ?? 0))
+        const first = byPos[0] || null
+        return safeString(first?.url)
+      }
+      return {
+        id: safeString(p?.id),
+        name: safeString(p?.name),
+        slug: safeString(p?.slug),
+        imageUrl: pickImageUrl(),
+        price: typeof p?.price === 'number' ? p.price : safeNumber(p?.price),
+        currency: 'XOF',
+      }
+    })
+
+    res.status(200).json({ success: true, items })
+  } catch {
+    res.status(500).json({ success: false, error: 'Server internal error' })
+  }
+})
+
 export default router

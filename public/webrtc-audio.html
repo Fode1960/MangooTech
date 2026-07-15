@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Appel Audio - Mangoo Connect+</title>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; width: 100%; background: #1b5e20; }
@@ -40,7 +43,8 @@
       if (!iframe) return;
 
       var qs = window.location.search || '';
-      iframe.src = 'test-webrtc-audio.html' + qs;
+      var sep = qs ? '&' : '?';
+      iframe.src = 'test-webrtc-audio.html' + qs + sep + '_t=' + Date.now();
 
       // Relay bidirectionnel des messages entre mangoo-local.html (parent) et test-webrtc-audio.html (inner iframe)
       window.addEventListener('message', function (event) {

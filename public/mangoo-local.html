@@ -5984,7 +5984,7 @@
                 _scheduleJoinRoomFallback();
             }
         }
-        window.addEventListener('message', function(event) {
+        window.addEventListener('message', async function(event) {
             // Iframe signale qu'elle est prete → envoyer le join-room en attente
             if (event.data && typeof event.data === 'object' && event.data.type === 'call-iframe-ready') {
                 console.log('[Call] call-iframe-ready recu de l\'iframe (role=' + (event.data.role || '?') + ')');
@@ -5996,6 +5996,8 @@
                 // Seul le callee (vendeur) envoie sa liste de produits
                 // Le caller (client) les recoit via WebSocket products-list
                 if (iframeRole === 'callee') {
+                    // S'assurer que les produits sont charges (dont Supabase)
+                    await _loadProductsFromServer();
                     const allProducts = _getProductsForCall();
                     console.log('[Call] _getProductsForCall callee: ' + allProducts.length + ' produit(s)');
                     
@@ -14519,6 +14521,29 @@
                 }
             } catch(e) {
                 console.warn('[LP] Echec chargement produits serveur:', e.message);
+            }
+            
+            // Fallback Supabase : charger tous les produits actifs
+            try {
+                console.log('[LP] Tentative chargement produits depuis Supabase...');
+                const resp = await fetch('/api/products/active');
+                const json = await resp.json();
+                if (json.success && Array.isArray(json.items) && json.items.length > 0) {
+                    const prods = json.items.map(p => ({
+                        id: p.id,
+                        name: p.name,
+                        photo: p.imageUrl || '',
+                        price: p.price || 0,
+                        currency: p.currency || 'XOF',
+                        category: '',
+                    }));
+                    window.MY_PRODUCTS = prods;
+                    localStorage.setItem('mangoo_my_products', JSON.stringify(prods));
+                    console.log('[LP] ' + prods.length + ' produit(s) charges depuis Supabase');
+                    return true;
+                }
+            } catch(e) {
+                console.warn('[LP] Echec chargement produits Supabase:', e.message);
             }
             return false;
         }
