@@ -24,20 +24,23 @@ function writeStore(data) {
 
 /**
  * Ajoute ou met à jour une souscription push pour un vendorId
+ * @returns {{ ok: boolean, isNew: boolean }}
  */
 export function saveSubscription(vendorId, subscription) {
   const store = readStore();
   if (!store[vendorId]) store[vendorId] = [];
   // Éviter les doublons (même endpoint)
   const idx = store[vendorId].findIndex(s => s.endpoint === subscription.endpoint);
+  let isNew = false;
   if (idx >= 0) {
     store[vendorId][idx] = { ...subscription, updatedAt: new Date().toISOString() };
   } else {
     store[vendorId].push({ ...subscription, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    isNew = true;
   }
   writeStore(store);
-  console.log(`[PushStore] Souscription sauvegardée pour vendor ${vendorId} (total: ${store[vendorId].length})`);
-  return true;
+  console.log(`[PushStore] Souscription sauvegardée pour vendor ${vendorId} (total: ${store[vendorId].length}, nouveau: ${isNew})`);
+  return { ok: true, isNew };
 }
 
 /**

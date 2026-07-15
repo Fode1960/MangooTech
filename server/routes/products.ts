@@ -19,7 +19,7 @@ router.get('/search', async (req: Request, res: Response): Promise<void> => {
 
     let query = supabaseAdmin
       .from('products')
-      .select('id,name,slug,description,short_description,image_url,price,compare_at_price,shop_id,product_images(url,alt_text,position,is_primary),shops!inner(id,slug,name,logo_url,status)', {
+      .select('id,name,slug,description,short_description,price,compare_at_price,shop_id,product_images(url,alt_text,position,is_primary),shops!inner(id,slug,name,logo_url,status)', {
         count: 'exact',
       })
       .eq('status', 'active')
@@ -84,14 +84,25 @@ router.get('/search', async (req: Request, res: Response): Promise<void> => {
   }
 })
 
-// GET /api/products/active — tous les produits actifs (optionnel : shop_id)
+// GET /api/products/active — tous les produits actifs (optionnel : shop_id ou shop_slug)
 router.get('/active', async (req: Request, res: Response): Promise<void> => {
   try {
-    const shopId = safeString(req.query.shop_id)
+    let shopId = safeString(req.query.shop_id)
+    const shopSlug = safeString(req.query.shop_slug)
+
+    // Si shop_slug fourni, resoudre vers l'UUID du shop
+    if (shopSlug && !shopId) {
+      const { data: shop } = await supabaseAdmin
+        .from('shops')
+        .select('id')
+        .eq('slug', shopSlug)
+        .single()
+      if (shop) shopId = String(shop.id || '')
+    }
 
     let query = supabaseAdmin
       .from('products')
-      .select('id,name,slug,description,short_description,image_url,price,compare_at_price,shop_id,product_images(url,alt_text,position,is_primary),shops!inner(id,slug,name,logo_url,status)', {
+      .select('id,name,slug,description,short_description,price,compare_at_price,shop_id,product_images(url,alt_text,position,is_primary),shops!inner(id,slug,name,logo_url,status)', {
         count: 'exact',
       })
       .eq('status', 'active')

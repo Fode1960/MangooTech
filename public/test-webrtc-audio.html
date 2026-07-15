@@ -72,6 +72,11 @@
 
     <!-- Video PiP pour recevoir le flux video distant (produit vendeur) -->
     <div id="remoteVideoContainer" class="hidden fixed bottom-24 left-4 w-40 h-56 bg-[#102814] rounded-2xl border-2 border-[#eef6ea] dark:border-[#2e5d34] overflow-hidden shadow-2xl" style="z-index:120;">
+        <style>
+            @media (max-width: 640px) {
+                #remoteVideoContainer { bottom: 160px !important; left: 8px !important; width: 120px !important; height: 160px !important; }
+            }
+        </style>
         <video id="remoteVideo" autoplay playsinline muted class="w-full h-full object-cover"></video>
         <div id="remoteVideoStatus" class="absolute inset-0 flex items-center justify-center bg-[#102814]/90 text-white text-[11px] text-center px-2 pointer-events-none">
             <div><span class="text-xl block mb-1">⏳</span>Réception vidéo...</div>
@@ -157,6 +162,11 @@
             
             <!-- Local Video (User) -->
             <div class="fixed bottom-24 right-4 w-32 h-48 bg-[#17331c] rounded-xl border-2 border-[#eef6ea] overflow-hidden shadow-lg" style="z-index:125;">
+                <style>
+                    @media (max-width: 640px) {
+                        #videoModal .fixed.bottom-24.right-4 { bottom: 160px !important; right: 4px !important; width: 96px !important; height: 128px !important; }
+                    }
+                </style>
                 <video id="localVideo" autoplay muted playsinline class="w-full h-full object-cover"></video>
                 <div class="absolute top-2 left-2 bg-black/50 text-white px-1.5 py-0.5 rounded text-[10px] backdrop-blur-sm">👤 Vous</div>
                 <div class="absolute inset-0 flex items-center justify-center text-white text-xs pointer-events-none" id="noCamIcon">

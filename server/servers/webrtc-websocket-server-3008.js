@@ -9,8 +9,8 @@ import { saveSubscription, removeSubscription, getSubscriptions } from './webrtc
 
 // Configuration VAPID pour Web Push
 const VAPID_KEYS = {
-  publicKey: 'BOZ9Fe4c0vpE7UiBnhWUX62s5shdFTJngzG1PoO2RKqNH02N-XSugmasWvcAOjo7RrNBQZqHgPbgzJo_FnQlyPs',
-  privateKey: 'jyg4ZLempjREByaxLglNq4szkouwv5hK7F8Li-6XXQg'
+  publicKey: 'BEszMwB7h83nh_ULNDyvIfOtA7qxnAu6G5cf3XFeWntIjEnlPinLCjoQg_1sjlLZKerhUaf7WF5OnER3oCKgwX0',
+  privateKey: 'ma_Ap3w41D3Efn9BYdcmg5X3pny-id04gCP0ycgj2Fw'
 };
 const VAPID_SUBJECT = 'mailto:contact@mangootech.com';
 
@@ -26,6 +26,10 @@ const users = new Map();
 // Stockage des offres en attente pour le replay (scenario push : le vendeur rejoint apres l'offre)
 // Map: roomId -> { offer, fromLabel, callId, callMode, from, timestamp }
 const pendingOffers = new Map();
+
+// Stockage des appels en attente pour le replay (scenario push : dashboard ferme, vendeur se reconnecte)
+// Map: vendorId -> { incomingCallMsg, roomId, from, fromLabel, callId, callMode, timestamp }
+const pendingCalls = new Map();
 
 // Stockage des sessions d'appel actives: roomId -> WebSocket du client appelant
 // Permet d'envoyer call-accepted / call-ended directement au client
@@ -222,7 +226,7 @@ function isVendorOnline(vendorIdOrSlug) {
 /**
  * Envoie une notification push a un vendeur hors-ligne
  */
-async function sendPushToVendor(vendorId, payload) {
+async function sendPushToVendor(vendorId, payloadOrBuilder) {
   const subscriptions = getSubscriptions(vendorId);
   if (subscriptions.length === 0) {
     console.log(`[WebRTC-3008] Aucune souscription push pour vendor ${vendorId}`);
@@ -230,10 +234,13 @@ async function sendPushToVendor(vendorId, payload) {
   }
 
   let sent = 0;
-  const pushPayload = JSON.stringify(payload);
 
   for (const sub of subscriptions) {
     try {
+      // payloadOrBuilder peut etre un objet fixe ou une fonction (sub) => payload personnalise
+      const payload = typeof payloadOrBuilder === 'function' ? payloadOrBuilder(sub) : payloadOrBuilder;
+      if (payload === null || payload === undefined) continue; // skip les abonnements ignores
+      const pushPayload = JSON.stringify(payload);
       await webpush.sendNotification(sub, pushPayload);
       sent++;
       console.log(`[WebRTC-3008] Push envoye a ${vendorId} (endpoint: ${sub.endpoint.substring(0, 60)}...)`);
@@ -374,6 +381,17 @@ wss.on('connection', (ws) => {
     });
 
     console.log(`[WebRTC-3008] Presence enregistree: vendor ${vendorId} (user ${userId})`);
+
+    // Replay des appels en attente si le vendeur se reconnecte apres un push (dashboard ferme)
+    const pendingCall = pendingCalls.get(vendorId);
+    if (pendingCall) {
+      console.log(`[WebRTC-3008] Replay incoming-call vers vendor ${vendorId} (dashboard rouvert apres push)`);
+      ws.send(JSON.stringify(pendingCall.incomingCallMsg));
+      // Ne rejouer qu'une seule fois : supprimer apres le premier replay
+      pendingCalls.delete(vendorId);
+      console.log(`[WebRTC-3008] Appel en attente supprime apres replay pour vendor ${vendorId}`);
+    }
+
     ws.send(JSON.stringify({
       type: 'presence-registered',
       vendorId,
@@ -404,6 +422,8 @@ wss.on('connection', (ws) => {
     users.set(`${roomId}|${userId}`, { roomId, ws, userData });
     joinedRooms.add(roomId);
 
+    // Preserver vendorId si deja defini (evite de perdre la presence apres join-room)
+    if (currentUser && currentUser.vendorId) userData.vendorId = currentUser.vendorId;
     currentUser = userData;
 
     console.log(`[WebRTC-3008] ${userId} (${role}) a rejoint room ${roomId}`);
@@ -642,7 +662,26 @@ wss.on('connection', (ws) => {
 
     console.log(`[WebRTC-3008] Vendor ${vendorId} est hors-ligne, envoi push`);
 
-    // 4. Anti-duplication push : ne pas renvoyer pour le meme callId
+    // 4. Stocker l'appel en attente pour replay quand le vendeur reconnecte son dashboard
+    pendingCalls.set(vendorId, {
+      incomingCallMsg,
+      roomId,
+      from: from || (currentUser ? currentUser.id : ''),
+      fromLabel: fromLabel || '',
+      callId: callId || '',
+      callMode: cm || 'audio',
+      timestamp: Date.now()
+    });
+    // Nettoyage automatique apres 5 minutes
+    setTimeout(() => {
+      const pc = pendingCalls.get(vendorId);
+      if (pc && pc.callId === (callId || '')) {
+        pendingCalls.delete(vendorId);
+        console.log(`[WebRTC-3008] Appel en attente expire pour vendor ${vendorId}`);
+      }
+    }, 300000);
+
+    // 5. Anti-duplication push : ne pas renvoyer pour le meme callId
     const cid = callId || '';
     const lastPush = recentPushCallIds.get(cid);
     if (lastPush && (Date.now() - lastPush) < PUSH_DEDUP_WINDOW) {
@@ -662,7 +701,7 @@ wss.on('connection', (ws) => {
       icon: '/mangoo-logo-192.png',
       badge: '/mangoo-logo-192.png',
       tag: 'mangoo-call-' + (callId || Date.now()),
-      url: '/webrtc-audio.html',
+      url: '/mangoo-local.html',
       roomId,
       vendorId,
       callId: callId || '',
@@ -672,13 +711,18 @@ wss.on('connection', (ws) => {
       rejectLabel: 'Refuser'
     };
 
-    sendPushToVendor(vendorId, pushPayload).then(pushSent => {
+    sendPushToVendor(vendorId, (sub) => {
+      // URL relative : le Service Worker resoudra vers le domaine courant
+      const customPayload = { ...pushPayload };
+      customPayload.url = '/mangoo-local.html';
+      return customPayload;
+    }).then(pushSent => {
       if (!pushSent) {
         console.log(`[WebRTC-3008] Aucun push envoye pour vendor ${vendorId} (pas de souscriptions)`);
       }
     });
 
-    // 5. Informer le client
+    // 6. Informer le client
     ws.send(JSON.stringify({
       type: 'call-routing',
       roomId,
@@ -696,6 +740,13 @@ wss.on('connection', (ws) => {
 
     // Nettoyer l'offre en attente
     pendingOffers.delete(roomId);
+
+    // Nettoyer l'appel en attente
+    const hceRawId = extractRawIdFromRoomId(roomId);
+    let hceVendorId = resolveVendorId(hceRawId);
+    const hceFallbackVendorId = (typeof data.vendorId === 'string' && data.vendorId.trim()) ? resolveVendorId(data.vendorId.trim()) : null;
+    if (!hceVendorId && hceFallbackVendorId) hceVendorId = hceFallbackVendorId;
+    if (hceVendorId) pendingCalls.delete(hceVendorId);
 
     const endedMsg = {
       type: 'call-ended',
@@ -744,6 +795,11 @@ wss.on('connection', (ws) => {
 
   function handleCallAccepted(ws, data) {
     const { roomId, from, fromLabel, timestamp, callId } = data;
+
+    // Nettoyer l'appel en attente
+    const rawId = extractRawIdFromRoomId(roomId);
+    let vendorId = resolveVendorId(rawId);
+    if (vendorId) pendingCalls.delete(vendorId);
 
     // Envoyer call-accepted directement au client appelant (pas via broadcastToRoom car le client n'est pas dans la room)
     const clientWs = callSessions.get(roomId);
@@ -1007,7 +1063,27 @@ server.on('request', async (req, res) => {
           sendJson(res, 400, { error: 'vendorId et subscription requis' });
           return;
         }
-        const ok = saveSubscription(vendorId, subscription);
+        const { ok, isNew } = saveSubscription(vendorId, subscription);
+        if (isNew) {
+          // Envoyer un push de confirmation SEULEMENT pour les NOUVEAUX abonnements
+          try {
+            await webpush.sendNotification(subscription, JSON.stringify({
+              title: 'MangooTech - Notifications activées',
+              body: 'Vous recevrez désormais les appels même quand le dashboard est fermé.',
+              icon: '/mangoo-logo-192.png',
+              badge: '/mangoo-logo-192.png',
+              tag: 'mangoo-sub-confirm',
+              kind: 'system',
+              requireInteraction: false,
+              data: { url: '/mangoo-local.html', kind: 'system' }
+            }));
+            console.log(`[PushStore] Test push envoye a ${vendorId} avec succes (nouvel abonnement)`);
+          } catch (e) {
+            console.warn(`[PushStore] Test push echoue pour ${vendorId}:`, e.statusCode, e.message);
+          }
+        } else {
+          console.log(`[PushStore] Abonnement existant mis a jour pour ${vendorId}, pas de test push`);
+        }
         sendJson(res, ok ? 200 : 500, { success: ok });
       } else {
         sendJson(res, 405, { error: 'Method not allowed' });

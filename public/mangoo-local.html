@@ -3782,18 +3782,17 @@
     </style>
 </head>
 <body>
-    <!-- Nettoyage Service Worker stale (peut bloquer le chargement des scripts) -->
+    <!-- Enregistrement Service Worker pour Push Notifications -->
     <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(regs) {
-        regs.forEach(function(r) { r.unregister().catch(function(){}); });
-      }).catch(function(){});
-      if (window.caches && typeof window.caches.keys === 'function') {
-        window.caches.keys().then(function(keys) {
-          keys.forEach(function(k) { window.caches.delete(k).catch(function(){}); });
-        }).catch(function(){});
-      }
-    }
+    (function() {
+      if (!('serviceWorker' in navigator)) return;
+      // Enregistrer le SW sur le domaine courant (necessaire pour les push notifications)
+      navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(function(reg) {
+        console.log('[Push] Service Worker enregistre: ' + reg.scope);
+      }).catch(function(e) {
+        console.warn('[Push] Echec enregistrement SW:', e.message);
+      });
+    })();
     </script>
 
     <!-- LOADER -->
@@ -4612,6 +4611,12 @@
                 <div class="input-group">
                     <label>Nom de la boutique</label>
                     <input type="text" id="shopNameInput" class="input-field" placeholder="Ex: Boutique Elegance">
+                </div>
+
+                <div class="input-group">
+                    <label>Email (pour vous connecter)</label>
+                    <input type="email" id="shopEmailInput" class="input-field" placeholder="Ex: boutique@email.com">
+                    <div class="lp-small-note">Cet email servira pour vous connecter a votre compte.</div>
                 </div>
 
                 <div class="input-group">
@@ -9125,7 +9130,7 @@
                     }
                     try {
                         const isShop = lpGetVendorKind(v) === 'shop';
-                        if (isShop && currentView === 'list') return true;
+                        if (isShop) return true;
                     } catch {
                     }
                     if (!(typeof v.lat === 'number' && typeof v.lng === 'number')) return false;
@@ -9655,21 +9660,38 @@
 
             try { lpBootstrapIdentityFromQuery(); } catch {}
             // Charger les produits du vendeur depuis localStorage (lpRole=vendor)
-            // Si localStorage vide, tenter de charger depuis le serveur (persistance inter-tunnel)
+            // Puis rafraichir depuis Supabase (source de verite) pour harmoniser avec le Dashboard
             try {
                 const qs = new URLSearchParams(String(window.location.search || ''));
                 if (qs.get('lpRole') === 'vendor') {
+                    // Enregistrer le shopId des le chargement pour la presence WebSocket et les push
+                    var qsVendorId = String(qs.get('vendor') || '').trim();
+                    if (qsVendorId && !localStorage.getItem('mangoo_my_shop_id')) {
+                        localStorage.setItem('mangoo_my_shop_id', qsVendorId);
+                        console.log('[LP] mangoo_my_shop_id initialise depuis URL: ' + qsVendorId);
+                    }
                     if (!window.MY_PRODUCTS || window.MY_PRODUCTS.length === 0) {
                         const stored = localStorage.getItem('mangoo_my_products');
                         window.MY_PRODUCTS = stored ? JSON.parse(stored) : [];
                         console.log('[LP] Produits vendeur charges du localStorage: ' + (window.MY_PRODUCTS ? window.MY_PRODUCTS.length : 0));
                     }
-                    // Si toujours vide, charger depuis le serveur (async fire & forget)
-                    if (!window.MY_PRODUCTS || window.MY_PRODUCTS.length === 0) {
-                        _loadProductsFromServer().then(loaded => {
-                            if (loaded) console.log('[LP] Produits restaures depuis le serveur !');
-                        });
-                    }
+                    // Toujours charger depuis Supabase (meme si localStorage a des produits obsoletes)
+                    _loadProductsFromServer().then(loaded => {
+                        if (loaded) {
+                            console.log('[LP] Produits restaures depuis Supabase !');
+                            // Rafraichir la fiche vendeur si elle est deja ouverte
+                            try {
+                                const feed = document.getElementById('vendorProductsList');
+                                if (feed && window.MY_PRODUCTS && window.MY_PRODUCTS.length > 0) {
+                                    feed.innerHTML = '';
+                                    window.MY_PRODUCTS.forEach(p => {
+                                        feed.insertAdjacentHTML('afterbegin', typeof createProductCardHTML === 'function' ? createProductCardHTML(p, true) : '');
+                                    });
+                                    console.log('[LP] Fiche vendeur rafraichie avec ' + window.MY_PRODUCTS.length + ' produits Supabase');
+                                }
+                            } catch(e) { console.warn('[LP] Erreur rafraichissement fiche:', e.message); }
+                        }
+                    });
                 }
             } catch {}
             try { bindVendorCardClicks(); } catch {}
@@ -14147,6 +14169,21 @@
                 const pref = String(typeof lpGetPreferredShopAccountId === 'function' ? (lpGetPreferredShopAccountId() || '') : '').trim();
                 if (pref) return pref;
             } catch {}
+            // Fallback: paramètre URL ?vendor=... UNIQUEMENT pour les vendeurs authentifies
+            try {
+                const urlVendor = new URLSearchParams(window.location.search).get('vendor');
+                const urlRole = new URLSearchParams(window.location.search).get('lpRole');
+                // Ne jamais enregistrer un simple client comme vendeur !
+                if (urlVendor && urlRole === 'vendor') return String(urlVendor).trim();
+            } catch {}
+            // Fallback direct: mangoo_my_shop_id (ne necessite pas lpIsOwnedShopVendor qui echoue sur domaine frais)
+            try {
+                const qsVendor = new URLSearchParams(window.location.search).get('lpRole');
+                if (qsVendor === 'vendor') {
+                    const myShopId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
+                    if (myShopId) return myShopId;
+                }
+            } catch {}
             try {
                 const myShopId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
                 if (myShopId) return myShopId;
@@ -14166,13 +14203,6 @@
                     const ids = lpGetOwnedShopIds();
                     if (Array.isArray(ids) && ids.length > 0) return String(ids[0]);
                 }
-            } catch {}
-            // Fallback: paramètre URL ?vendor=... UNIQUEMENT pour les vendeurs authentifies
-            try {
-                const urlVendor = new URLSearchParams(window.location.search).get('vendor');
-                const urlRole = new URLSearchParams(window.location.search).get('lpRole');
-                // Ne jamais enregistrer un simple client comme vendeur !
-                if (urlVendor && urlRole === 'vendor') return String(urlVendor).trim();
             } catch {}
             // Si lpRole=vendor est present, utiliser activeVendor sans verification de propriete
             // (le param lpRole=vendor est deja une preuve suffisante du role vendeur)
@@ -14195,7 +14225,7 @@
 
         let lpPresenceRetryTimer = null;
         let lpPresenceRetryCount = 0;
-        const LP_PRESENCE_MAX_RETRIES = 60;
+        const LP_PRESENCE_MAX_RETRIES = 300;
         const LP_PRESENCE_RETRY_MS = 2000;
 
         function lpTryRegisterVendorPresence() {
@@ -14205,7 +14235,6 @@
                 if (!shopId) {
                     console.log('[MgmtWS] Aucun vendorId, presence non enregistree (tentative ' + (lpPresenceRetryCount + 1) + '/' + LP_PRESENCE_MAX_RETRIES + ')');
                     // Retry automatique si le vendorId n'est pas encore disponible
-                    // (ex: l'utilisateur n'a pas encore ouvert son Dashboard)
                     if (lpPresenceRetryCount < LP_PRESENCE_MAX_RETRIES) {
                         lpPresenceRetryCount++;
                         if (lpPresenceRetryTimer) clearTimeout(lpPresenceRetryTimer);
@@ -14228,6 +14257,146 @@
                     try { webrtcMgmtWs.send(JSON.stringify(msg)); console.log('[MgmtWS] Message en file envoye'); } catch {}
                 }
             } catch {}
+        }
+
+        // VAPID public key (meme cle que push-client.js)
+        var LP_VAPID_PUBLIC_KEY = 'BEszMwB7h83nh_ULNDyvIfOtA7qxnAu6G5cf3XFeWntIjEnlPinLCjoQg_1sjlLZKerhUaf7WF5OnER3oCKgwX0';
+        var _lpPushGestureInstalled = false;
+        var _lpPushSubRequested = false;
+
+        function lpUrlBase64ToUint8Array(base64String) {
+            var padding = '='.repeat((4 - base64String.length % 4) % 4);
+            var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            var rawData = window.atob(base64);
+            var outputArray = new Uint8Array(rawData.length);
+            for (var i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+
+        async function lpInitPushSubscription() {
+            try {
+                if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                    console.log('[Push] Non supporte sur ce navigateur');
+                    return;
+                }
+                // Verifier si deja abonne avec le bon domaine
+                var reg = await navigator.serviceWorker.ready;
+                var existingSub = await reg.pushManager.getSubscription();
+                if (existingSub) {
+                    console.log('[Push] Deja abonne, endpoint: ' + (existingSub.endpoint || '').substring(0, 60));
+                    await lpSavePushSubscription(existingSub);
+                    return;
+                }
+                // Verifier vendorId
+                var vendorId = lpGetVendorWsVendorId();
+                if (!vendorId) {
+                    console.log('[Push] Aucun vendorId, nouvel essai dans 3s...');
+                    setTimeout(lpInitPushSubscription, 3000);
+                    return;
+                }
+                // Verifier si permission deja demandee/refusee (ne pas re-demander)
+                if (_lpPushSubRequested) {
+                    console.log('[Push] Permission deja demandee, pas de nouvelle tentative');
+                    return;
+                }
+                var permState = Notification.permission;
+                if (permState === 'denied') {
+                    console.log('[Push] Permission deja refusee par l\'utilisateur');
+                    _lpPushSubRequested = true;
+                    return;
+                }
+                if (permState === 'granted') {
+                    // Permission deja accordee mais pas d'abonnement → s'abonner directement
+                    console.log('[Push] Permission deja accordee, abonnement direct');
+                    var subscription = await reg.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: lpUrlBase64ToUint8Array(LP_VAPID_PUBLIC_KEY)
+                    });
+                    console.log('[Push] Abonnement cree, endpoint: ' + (subscription.endpoint || '').substring(0, 60));
+                    await lpSavePushSubscription(subscription);
+                    _lpPushSubRequested = true;
+                    return;
+                }
+                // Besoin d'un geste utilisateur pour demander la permission
+                // Installer un listener one-shot sur le premier clic
+                if (!_lpPushGestureInstalled) {
+                    _lpPushGestureInstalled = true;
+                    console.log('[Push] En attente d\'un geste utilisateur pour demander la permission...');
+                    var gestureHandler = async function() {
+                        try {
+                            document.removeEventListener('click', gestureHandler, true);
+                            document.removeEventListener('touchstart', gestureHandler, true);
+                            _lpPushSubRequested = true;
+                            console.log('[Push] Geste utilisateur detecte, demande de permission...');
+                            var perm = await Notification.requestPermission();
+                            if (perm !== 'granted') {
+                                console.log('[Push] Permission refusee');
+                                return;
+                            }
+                            var reg2 = await navigator.serviceWorker.ready;
+                            var sub = await reg2.pushManager.subscribe({
+                                userVisibleOnly: true,
+                                applicationServerKey: lpUrlBase64ToUint8Array(LP_VAPID_PUBLIC_KEY)
+                            });
+                            console.log('[Push] Abonnement cree, endpoint: ' + (sub.endpoint || '').substring(0, 60));
+                            await lpSavePushSubscription(sub);
+                        } catch(e) {
+                            console.warn('[Push] Erreur abonnement apres geste:', e.message);
+                        }
+                    };
+                    document.addEventListener('click', gestureHandler, true);
+                    document.addEventListener('touchstart', gestureHandler, true);
+                    // Afficher un bandeau discret pour demander le clic
+                    lpShowPushPermissionHint();
+                }
+            } catch(e) {
+                console.warn('[Push] Erreur abonnement:', e.message);
+                // Reessayer dans 5s en cas d'erreur
+                setTimeout(lpInitPushSubscription, 5000);
+            }
+        }
+
+        function lpShowPushPermissionHint() {
+            try {
+                // Eviter les doublons
+                if (document.getElementById('lp-push-hint')) return;
+                var hint = document.createElement('div');
+                hint.id = 'lp-push-hint';
+                hint.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:99999;background:#1b5e20;color:#fff;padding:12px 20px;border-radius:999px;font-weight:900;font-size:0.9rem;box-shadow:0 4px 20px rgba(0,0,0,0.3);cursor:pointer;text-align:center;max-width:90vw;animation:fadeIn 0.4s ease';
+                hint.textContent = '🔔 Cliquez ici pour activer les notifications d\'appel';
+                hint.onclick = function() {
+                    hint.style.opacity = '0';
+                    hint.style.transition = 'opacity 0.3s';
+                    setTimeout(function() { try { hint.remove(); } catch {} }, 300);
+                };
+                document.body.appendChild(hint);
+                // Auto-suppression apres 30s
+                setTimeout(function() { try { hint.remove(); } catch {} }, 30000);
+            } catch {}
+        }
+
+        async function lpSavePushSubscription(subscription) {
+            try {
+                var vendorId = lpGetVendorWsVendorId();
+                if (!vendorId) {
+                    console.log('[Push] Aucun vendorId, abonnement differe');
+                    return;
+                }
+                var subJson = subscription.toJSON ? subscription.toJSON() : subscription;
+                subJson.baseUrl = location.origin; // Stocker le domaine courant pour URLs absolues
+                var resp = await fetch('/webrtc-ws/push/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ vendorId: vendorId, subscription: subJson })
+                });
+                if (resp.ok) {
+                    console.log('[Push] Abonnement sauvegarde sur le serveur (baseUrl=' + location.origin + ')');
+                }
+            } catch(e) {
+                console.warn('[Push] Erreur sauvegarde abonnement:', e.message);
+            }
         }
 
         function initMgmtWebSocket() {
@@ -14274,6 +14443,8 @@
                     }
                     // Register vendor presence for incoming calls
                     lpTryRegisterVendorPresence();
+                    // Souscrire aux push notifications (nouveau domaine)
+                    lpInitPushSubscription();
                 };
 
                 webrtcMgmtWs.onmessage = (event) => {
@@ -14507,8 +14678,9 @@
             }
         }
         
-        // Charge les produits depuis le serveur (fallback si localStorage vide)
+        // Charge les produits depuis le serveur (JSON prioritaire, Supabase en fallback)
         async function _loadProductsFromServer() {
+            // 1. Fichier JSON serveur (source de verite pour les produits geres localement, dont PC4)
             try {
                 const shopId = localStorage.getItem('mangoo_my_shop_id') || 'default';
                 const resp = await fetch('/api/my-products?shopId=' + encodeURIComponent(shopId));
@@ -14516,17 +14688,21 @@
                 if (json.success && Array.isArray(json.products) && json.products.length > 0) {
                     window.MY_PRODUCTS = json.products;
                     localStorage.setItem('mangoo_my_products', JSON.stringify(json.products));
-                    console.log('[LP] ' + json.products.length + ' produit(s) charges du serveur');
+                    console.log('[LP] ' + json.products.length + ' produit(s) charges du serveur (JSON)');
                     return true;
                 }
             } catch(e) {
-                console.warn('[LP] Echec chargement produits serveur:', e.message);
+                console.warn('[LP] Echec chargement produits serveur JSON:', e.message);
             }
             
-            // Fallback Supabase : charger tous les produits actifs
+            // 2. Supabase (fallback pour les shops geres via Supabase)
             try {
-                console.log('[LP] Tentative chargement produits depuis Supabase...');
-                const resp = await fetch('/api/products/active');
+                const shopId = localStorage.getItem('mangoo_my_shop_id') || 'default';
+                const shopVendor = (window.VENDORS || []).find(v => v.id === shopId || v.slug === shopId);
+                const shopSlug = shopVendor ? (shopVendor.slug || '') : '';
+                const slugParam = shopSlug ? ('shop_slug=' + encodeURIComponent(shopSlug)) : ('shop_id=' + encodeURIComponent(shopId));
+                console.log('[LP] Fallback Supabase (shopId=' + shopId + ', slug=' + shopSlug + ')...');
+                const resp = await fetch('/api/products/active?' + slugParam);
                 const json = await resp.json();
                 if (json.success && Array.isArray(json.items) && json.items.length > 0) {
                     const prods = json.items.map(p => ({
@@ -14535,7 +14711,7 @@
                         photo: p.imageUrl || '',
                         price: p.price || 0,
                         currency: p.currency || 'XOF',
-                        category: '',
+                        category: p.category || '',
                     }));
                     window.MY_PRODUCTS = prods;
                     localStorage.setItem('mangoo_my_products', JSON.stringify(prods));
@@ -15830,6 +16006,12 @@
             // CHECK IF OWNER
             const myShopId = localStorage.getItem('mangoo_my_shop_id');
             const myProviderId = localStorage.getItem('mangoo_my_provider_id');
+            // Enregistrer la presence WebSocket des que le vendeur voit sa propre fiche
+            try {
+                if (vendor && vendor.id && vendor.id === myShopId) {
+                    lpFocusOwnedShopContext(vendor.id);
+                }
+            } catch {}
             const ownerLink = document.getElementById('ownerEditLink');
             if (ownerLink) {
                 const kindMode = lpGetVendorKind(vendor);
@@ -16044,30 +16226,78 @@
                 } else {
                     if (emptyMsg) emptyMsg.style.display = 'none';
 
-                    const mockProducts = [
-                        { id: 1, name: 'Sneakers Pro', price: '15 000', vendorName: vendor.name },
-                        { id: 2, name: 'Montre Connectée', price: '25 000', vendorName: vendor.name },
-                        { id: 3, name: 'Sac à dos', price: '8 000', vendorName: vendor.name }
-                    ];
+                    // Tenter de charger les produits du vendeur (JSON serveur puis Supabase)
+                    const vendorShopId = vendor.id || vendor.name || '';
+                    const vendorSlug = vendor.slug || vendor.id || vendor.name || '';
+                    feed.innerHTML = '<div style="text-align:center; padding:20px; color:#9ca3af;">Chargement des produits...</div>';
 
-                    let html = '';
-                    mockProducts.forEach(p => {
-                        html += createProductCardHTML(p, false);
-                    });
+                    (async () => {
+                        let loaded = false;
+                        // 1. Fichier JSON serveur (source de verite)
+                        try {
+                            const resp = await fetch('/api/my-products?shopId=' + encodeURIComponent(vendorShopId));
+                            const json = await resp.json();
+                            if (json.success && Array.isArray(json.products) && json.products.length > 0) {
+                                feed.innerHTML = '';
+                                json.products.forEach(p => {
+                                    feed.insertAdjacentHTML('afterbegin', createProductCardHTML(p, false));
+                                });
+                                console.log('[LP] ' + json.products.length + ' produits JSON affiches pour ' + vendorShopId);
+                                loaded = true;
+                            }
+                        } catch(e) {
+                            console.warn('[LP] Echec chargement JSON pour ' + vendorShopId + ':', e.message);
+                        }
+                        if (loaded) return;
 
-                    feed.innerHTML = html;
+                        // 2. Supabase (fallback)
+                        try {
+                            const slugParam = vendor.slug ? ('shop_slug=' + encodeURIComponent(vendor.slug)) : ('shop_id=' + encodeURIComponent(vendor.id || vendor.name || ''));
+                            const resp = await fetch('/api/products/active?' + slugParam);
+                            const json = await resp.json();
+                            if (json.success && Array.isArray(json.items) && json.items.length > 0) {
+                                const prods = json.items.map(p => ({
+                                    id: p.id,
+                                    name: p.name,
+                                    photo: p.imageUrl || '',
+                                    price: p.price || 0,
+                                    currency: p.currency || 'XOF',
+                                    category: p.category || ''
+                                }));
+                                feed.innerHTML = '';
+                                prods.forEach(p => {
+                                    feed.insertAdjacentHTML('afterbegin', createProductCardHTML(p, false));
+                                });
+                                console.log('[LP] ' + prods.length + ' produits Supabase affiches pour ' + vendorSlug);
+                                loaded = true;
+                            }
+                        } catch(e) {
+                            console.warn('[LP] Echec Supabase pour ' + vendorSlug + ':', e.message);
+                        }
+                        if (loaded) return;
 
-                    const params = new URLSearchParams({
-                        name: vendor.name,
-                        category: vendor.category,
-                        avatar: lpResolveVendorAvatar(vendor)
-                    });
+                        // Fallback : mock products
+                        feed.innerHTML = '';
+                        const mockProducts = [
+                            { id: 1, name: 'Sneakers Pro', price: '15 000', vendorName: vendor.name },
+                            { id: 2, name: 'Montre Connectée', price: '25 000', vendorName: vendor.name },
+                            { id: 3, name: 'Sac à dos', price: '8 000', vendorName: vendor.name }
+                        ];
+                        mockProducts.forEach(p => {
+                            feed.insertAdjacentHTML('afterbegin', createProductCardHTML(p, false));
+                        });
 
-                    feed.insertAdjacentHTML('beforeend', `
-                        <button type="button" class="btn btn-secondary" onclick="lpGoToShopByVendorId('${lpEscapeInlineArg(vendor.id)}')" style="display:block; width:100%; text-align:center; margin-top:15px;">
-                            🏪 Visiter la boutique complète
-                        </button>
-                    `);
+                        const params = new URLSearchParams({
+                            name: vendor.name,
+                            category: vendor.category,
+                            avatar: lpResolveVendorAvatar(vendor)
+                        });
+                        feed.insertAdjacentHTML('beforeend', `
+                            <button type="button" class="btn btn-secondary" onclick="lpGoToShopByVendorId('${lpEscapeInlineArg(vendor.id)}')" style="display:block; width:100%; text-align:center; margin-top:15px;">
+                                🏪 Visiter la boutique complète
+                            </button>
+                        `);
+                    })();
                 }
             }
 
@@ -22226,6 +22456,7 @@
             const title = modal.querySelector('.modal-title');
             const btnSubmit = document.getElementById('btnSubmitShop');
             const nameInput = document.getElementById('shopNameInput');
+            const emailInput = document.getElementById('shopEmailInput');
             const categoryInput = document.getElementById('shopCategoryInput');
             const pitchInput = document.getElementById('shopPitchInput');
             const logoFile = document.getElementById('shopLogoFile');
@@ -22249,6 +22480,7 @@
                 btnSubmit.onclick = () => updateShop(myShop.id);
                 
                 nameInput.value = myShop.name;
+                if (emailInput) emailInput.value = myShop.ownerEmail || '';
                 categoryInput.value = myShop.category;
                 pitchInput.value = myShop.voicePitch || "";
                 if (logoFile) logoFile.value = '';
@@ -22291,6 +22523,10 @@
                 btnSubmit.onclick = submitSeller;
                 
                 nameInput.value = "";
+                if (emailInput) {
+                    const u = (() => { try { return getLpCurrentUser ? getLpCurrentUser() : null } catch { return null } })();
+                    emailInput.value = String(u?.email || '').trim().toLowerCase().replace('guest@mangoo.tech', '');
+                }
                 categoryInput.selectedIndex = 0;
                 pitchInput.value = "";
                 pitchInput.disabled = false;
@@ -22403,7 +22639,9 @@
                 const lpUser = (() => {
                     try { return getLpCurrentUser ? getLpCurrentUser() : null } catch { return null }
                 })();
-                const ownerEmail = String(lpUser?.email || '').trim().toLowerCase();
+                const shopEmailInput = document.getElementById('shopEmailInput');
+                const shopEmail = String(shopEmailInput?.value || '').trim();
+                const ownerEmail = shopEmail || String(lpUser?.email || '').trim().toLowerCase();
                 const ownerName = String(lpUser?.name || '').trim();
                 const ownerPhone = String(lpUser?.phone || '').trim();
 
@@ -22459,8 +22697,9 @@
                     const u = getLpCurrentUser ? getLpCurrentUser() : null;
                     const currentEmail = String(u?.email || '').trim().toLowerCase();
                     const currentName = String(u?.name || '').trim();
+                    const hasProvidedEmail = Boolean(shopEmail);
                     const isGuest = !currentEmail || currentEmail === 'guest@mangoo.tech';
-                    lpEnsuredOwnerEmail = isGuest ? `shop${String(newVendor.id)}@exemple.com` : currentEmail;
+                    lpEnsuredOwnerEmail = hasProvidedEmail ? shopEmail : (isGuest ? `shop${String(newVendor.id)}@exemple.com` : currentEmail);
                     lpEnsuredOwnerName = currentName || String(newVendor?.name || '').trim() || 'Vendeur';
 
                     if (isGuest) {

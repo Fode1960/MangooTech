@@ -86,10 +86,10 @@ const phoneMatchMeta = (a: any, b: any) => {
   if (!A || !B) return { score: 0, suffixLen: 0 }
   if (A === B) return { score: 3, suffixLen: Math.min(A.length, B.length) }
   const minLen = Math.min(A.length, B.length)
-  if (minLen < 8) return { score: 0, suffixLen: 0 }
+  if (minLen < 4) return { score: 0, suffixLen: 0 }
   let i = 0
   while (i < minLen && A[A.length - 1 - i] === B[B.length - 1 - i]) i += 1
-  if (i < 8) return { score: 0, suffixLen: i }
+  if (i < 4) return { score: 0, suffixLen: i }
   if (i >= 10) return { score: 2, suffixLen: i }
   return { score: 1, suffixLen: i }
 }
@@ -177,7 +177,7 @@ const buildResolvedIdentityFromUser = (params: {
 
 const buildResolvedIdentityFromVendor = (vendor: any, preferredRole?: string) => {
   if (!vendor || typeof vendor !== 'object') return null
-  const ownerEmail = normalizeEmail(vendor?.ownerEmail)
+  const ownerEmail = normalizeEmail(vendor?.ownerEmail) || `shop${vendor?.id || 'guest'}@exemple.com`
   if (!ownerEmail) return null
   const role = String(preferredRole || '').trim().toLowerCase() === 'client' ? 'client' : 'vendor'
   const vendorKind = getNormalizedVendorKind(vendor)

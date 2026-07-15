@@ -66,8 +66,8 @@ self.addEventListener('push', (event) => {
     icon: data.icon || '/mangoo-logo-192.png',
     badge: data.badge || '/mangoo-logo-192.png',
     tag: data.tag || (notifKind === 'chat' ? 'mangoo-chat-' : 'mangoo-call-') + (data.roomId || Date.now()),
-    requireInteraction: true,
-    vibrate: [200, 100, 200, 100, 200],
+    requireInteraction: data.requireInteraction !== undefined ? data.requireInteraction : (notifKind !== 'system'),
+    vibrate: notifKind === 'system' ? [100] : [200, 100, 200, 100, 200],
     data: {
       kind: notifKind,
       url: data.url || '/mangoo-local.html',
@@ -80,16 +80,18 @@ self.addEventListener('push', (event) => {
       messageText: data.messageText || '',
       messageId: data.messageId || ''
     },
-    actions: [
-      {
-        action: 'accept',
-        title: data.acceptLabel || (notifKind === 'chat' ? 'Ouvrir' : 'Repondre')
-      },
-      {
-        action: 'reject',
-        title: data.rejectLabel || (notifKind === 'chat' ? 'Plus tard' : 'Refuser')
-      }
-    ]
+    ...(notifKind !== 'system' ? {
+      actions: [
+        {
+          action: 'accept',
+          title: data.acceptLabel || (notifKind === 'chat' ? 'Ouvrir' : 'Repondre')
+        },
+        {
+          action: 'reject',
+          title: data.rejectLabel || (notifKind === 'chat' ? 'Plus tard' : 'Refuser')
+        }
+      ]
+    } : {})
   };
 
   event.waitUntil(
@@ -105,13 +107,15 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   const notifData = event.notification.data || {};
+  // Utiliser l'URL absolue si fournie, sinon relative
+  const basePage = (notifData.url && notifData.url.startsWith('http')) ? notifData.url : '/mangoo-local.html';
 
   // Si le vendeur accepte un message, ouvrir directement le chat
   if (event.action === 'accept') {
     if (notifData.kind === 'chat') {
-      let targetUrl = '/mangoo-local.html';
+      let targetUrl = basePage;
       const params = [];
-      params.push('v=' + Date.now());
+      if (!targetUrl.includes('?')) params.push('v=' + Date.now());
       params.push('chatAction=open');
       if (notifData.roomId) params.push('roomId=' + encodeURIComponent(notifData.roomId));
       if (notifData.vendorId) params.push('vendorId=' + encodeURIComponent(notifData.vendorId));
@@ -119,7 +123,7 @@ self.addEventListener('notificationclick', (event) => {
       if (notifData.fromLabel) params.push('fromLabel=' + encodeURIComponent(notifData.fromLabel));
       if (notifData.messageText) params.push('messageText=' + encodeURIComponent(notifData.messageText));
       if (notifData.messageId) params.push('messageId=' + encodeURIComponent(notifData.messageId));
-      targetUrl += '?' + params.join('&');
+      targetUrl += (targetUrl.includes('?') ? '&' : '?') + params.join('&');
 
       event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
@@ -135,22 +139,22 @@ self.addEventListener('notificationclick', (event) => {
     }
 
     // Si le vendeur accepte, ouvrir directement la page d'appel
-    let callUrl = '/webrtc-audio.html';
+    let callUrl = basePage;
     const params = [];
-    params.push('v=' + Date.now());
+    if (!callUrl.includes('?')) params.push('v=' + Date.now());
     if (notifData.roomId) params.push('roomId=' + encodeURIComponent(notifData.roomId));
     if (notifData.callMode) params.push('mode=' + encodeURIComponent(notifData.callMode));
     else params.push('mode=audio');
-    params.push('role=vendor');
+    params.push('lpRole=vendor');
     if (notifData.fromLabel) params.push('callee=' + encodeURIComponent(notifData.fromLabel));
     if (notifData.callId) params.push('callId=' + encodeURIComponent(notifData.callId));
-    if (notifData.vendorId) params.push('vendorId=' + encodeURIComponent(notifData.vendorId));
-    callUrl += '?' + params.join('&');
+    if (notifData.vendorId) params.push('vendor=' + encodeURIComponent(notifData.vendorId));
+    callUrl += (callUrl.includes('?') ? '&' : '?') + params.join('&');
 
     event.waitUntil(
       clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
         for (const client of clientList) {
-          if (client.url.includes('webrtc-audio') || client.url.includes('mangoo-local')) {
+          if (client.url.includes('mangoo-local')) {
             return client.focus().then(() => client.navigate(callUrl));
           }
         }
@@ -161,12 +165,12 @@ self.addEventListener('notificationclick', (event) => {
   }
 
   // Refus ou clic simple : ouvrir mangoo-local
-  let targetUrl = notifData.url || '/mangoo-local.html';
+  let targetUrl = basePage;
   const params = new URLSearchParams();
   if (notifData.roomId) params.set('roomId', notifData.roomId);
   if (notifData.callMode) params.set('callMode', notifData.callMode);
   if (notifData.fromLabel) params.set('fromLabel', notifData.fromLabel);
-  if (notifData.vendorId) params.set('vendorId', notifData.vendorId);
+  if (notifData.vendorId) params.set('vendor', notifData.vendorId);
   if (notifData.callId) params.set('callId', notifData.callId);
   if (notifData.kind) params.set('kind', notifData.kind);
   if (notifData.clientId) params.set('clientId', notifData.clientId);
