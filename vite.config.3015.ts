@@ -35,5 +35,16 @@ export default defineConfig({
         secure: false,
       }
     }
+  },
+  configureServer(server) {
+    server.middlewares.use((req, res, next) => {
+      const url = String(req.url || '');
+      if (url.endsWith('.html') || url === '/' || url.endsWith('/') || url === '/index.html' || url.endsWith('.js') || url.endsWith('.css')) {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+      }
+      next();
+    });
   }
 })

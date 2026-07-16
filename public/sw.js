@@ -1,25 +1,30 @@
 // Service Worker pour Mangoo Tech - avec Push Notifications
-const CACHE_NAME = 'mangoo-tech-v2';
+const CACHE_NAME = 'mangoo-tech-v3';
 
 // Installation du service worker
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installation');
+  console.log('[SW v3] Installation');
   self.skipWaiting();
 });
 
-// Activation du service worker
+// Activation du service worker – delete ALL caches, then claim & reload
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activation');
+  console.log('[SW v3] Activation – wiping all caches');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
+        cacheNames.map((cacheName) => caches.delete(cacheName))
       );
-    }).then(() => self.clients.claim())
+    }).then(() => {
+      return self.clients.claim();
+    }).then(() => {
+      // Force reload all controlled clients to get fresh HTML
+      return self.clients.matchAll({ type: 'window' }).then((clients) => {
+        clients.forEach((client) => {
+          client.navigate(client.url);
+        });
+      });
+    })
   );
 });
 
@@ -31,12 +36,18 @@ self.addEventListener('fetch', (event) => {
       event.request.url.includes('wss://')) {
     return;
   }
+
+  // Network-first for HTML documents – never serve stale HTML
+  if (event.request.destination === 'document') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((response) => {
-      return response || fetch(event.request).catch(() => {
-        if (event.request.destination === 'document') return caches.match('/');
-        throw new Error('Network error');
-      });
+      return response || fetch(event.request);
     })
   );
 });

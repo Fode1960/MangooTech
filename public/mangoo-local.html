@@ -7,7 +7,7 @@
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Mangoo Local+ 🌍</title>
+    <title>Mangoo Local+</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥭</text></svg>">
     <link rel="manifest" href="mangoo-local.webmanifest">
     <!-- Leaflet CSS - PRELOADED -->
@@ -16,6 +16,16 @@
     <link rel="preconnect" href="https://ui-avatars.com">
     
     <script>
+      // STARTUP: Purge forcée du cache vendor – exécuté avant tout le reste
+      (function() {
+        var vendorKeys = ['mangoo_vendors','mangoo_custom_vendors','mangoo_local_vendors_catalog','mangoo-local-country','mangoo_my_shop_id','mangoo-open-vendor-id','mangoo_local_provider_server_sync_sig_v1'];
+        try {
+          for (var i = 0; i < vendorKeys.length; i++) {
+            try { localStorage.removeItem(vendorKeys[i]); } catch(e) {}
+          }
+        } catch(e) {}
+      })();
+
       // Initialize theme immediately to prevent flash
       (function() {
         try {
@@ -294,6 +304,7 @@
                 try {
                     if (typeof relocateVendorsNearUser === 'function') relocateVendorsNearUser();
                     if (typeof filterVendors === 'function') filterVendors();
+                    try { lpRefreshMapMarkersNow(); } catch {}
                 } catch {
                 }
                 try {
@@ -3787,7 +3798,7 @@
     (function() {
       if (!('serviceWorker' in navigator)) return;
       // Enregistrer le SW sur le domaine courant (necessaire pour les push notifications)
-      navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(function(reg) {
+      navigator.serviceWorker.register('/sw.js?v=3', { scope: '/' }).then(function(reg) {
         console.log('[Push] Service Worker enregistre: ' + reg.scope);
       }).catch(function(e) {
         console.warn('[Push] Echec enregistrement SW:', e.message);
@@ -5380,6 +5391,8 @@
             }
         })();
         const LP_COUNTRY_CODE = String(LP_COUNTRY_CONTEXT?.code || 'cm').trim().toLowerCase();
+        console.log('[STARTUP] Country:', LP_COUNTRY_CODE, '| pos:', LP_COUNTRY_CONTEXT?.defaultUserPos);
+        try { ['mangoo_vendors','mangoo_custom_vendors'].forEach(k => localStorage.removeItem(k)); console.log('[STARTUP] Vendor cache wiped'); } catch {}
         const LP_COUNTRY_NAME = String(LP_COUNTRY_CONTEXT?.name || 'Local+').trim();
         const LP_COUNTRY_UI = LP_COUNTRY_CONTEXT?.ui && typeof LP_COUNTRY_CONTEXT.ui === 'object' ? LP_COUNTRY_CONTEXT.ui : {};
 
@@ -5707,7 +5720,7 @@
         }
 
         const VENDORS = lpCloneCountryVendors(LP_COUNTRY_CONTEXT?.vendors);
-        if (!VENDORS.length) {
+        if (!VENDORS.length && LP_COUNTRY_CODE !== 'fr') {
             VENDORS.push(
                 {
                     id: 'fallback_shop_1',
@@ -9470,17 +9483,11 @@
 
         function hydrateVendorsFromStorage() {
             try {
-                const custom = getStoredCustomVendors();
-                let base = [];
-                try {
-                    const raw = localStorage.getItem('mangoo_vendors');
-                    const parsed = raw ? JSON.parse(raw) : [];
-                    base = Array.isArray(parsed) ? parsed : [];
-                } catch {
-                    base = [];
-                }
+                // Always wipe the stale mangoo_vendors cache – base always starts from seeds
+                try { localStorage.removeItem('mangoo_vendors'); } catch {}
 
-                const merged = Array.isArray(base) && base.length ? [...base] : [...VENDORS];
+                const custom = getStoredCustomVendors();
+                const merged = [...VENDORS];
                 (custom || []).forEach((c) => {
                     const idx = merged.findIndex((x) => String(x?.id) === String(c?.id));
                     if (idx >= 0) merged[idx] = { ...merged[idx], ...c };
@@ -9522,6 +9529,7 @@
                 }
                 try { lpBackfillPinMapFromVendors(); } catch {}
                 try { applyBoostConfigToVendors(); } catch {}
+                try { lpRefreshMapMarkersNow(); } catch {}
             } catch {
             }
         }
