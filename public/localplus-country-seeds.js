@@ -331,6 +331,17 @@
         }
       ]
     },
+    fr: {
+      code: 'fr',
+      name: 'France',
+      defaultUserPos: [48.8566, 2.3522],
+      ui: {
+        kycDocumentLabel: 'Valide par IA • Piece d identite verifiee',
+        verificationDocumentImage: 'https://images.unsplash.com/photo-1554224154-22dec7ec8818?auto=format&fit=crop&w=1200&q=80',
+        payThirdHintHtml: '💡 <b>Astuce :</b> Envoyez le lien de paiement a un proche. Il pourra payer directement pour vous !'
+      },
+      vendors: []
+    },
     default: {
       code: 'default',
       name: 'Local+',
