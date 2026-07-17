@@ -16,9 +16,9 @@
     <link rel="preconnect" href="https://ui-avatars.com">
     
     <script>
-      // STARTUP: Purge forcée du cache vendor – exécuté avant tout le reste
+      // STARTUP: Purge forcée du cache vendor obsolète – exécuté avant tout le reste
       (function() {
-        var vendorKeys = ['mangoo_vendors','mangoo_custom_vendors','mangoo_local_vendors_catalog','mangoo-local-country','mangoo_my_shop_id','mangoo-open-vendor-id','mangoo_local_provider_server_sync_sig_v1'];
+        var vendorKeys = ['mangoo_vendors','mangoo_local_vendors_catalog','mangoo_my_shop_id','mangoo-open-vendor-id','mangoo_local_provider_server_sync_sig_v1'];
         try {
           for (var i = 0; i < vendorKeys.length; i++) {
             try { localStorage.removeItem(vendorKeys[i]); } catch(e) {}
@@ -3797,11 +3797,32 @@
     <script>
     (function() {
       if (!('serviceWorker' in navigator)) return;
-      // Enregistrer le SW sur le domaine courant (necessaire pour les push notifications)
-      navigator.serviceWorker.register('/sw.js?v=3', { scope: '/' }).then(function(reg) {
-        console.log('[Push] Service Worker enregistre: ' + reg.scope);
+      var SW_URL = '/sw.js?v=3';
+      // Force unregister any old SW then register v3
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        var unregisterPromises = registrations.map(function(reg) {
+          return reg.unregister().then(function() {
+            console.log('[Push] Old SW unregistered: ' + reg.scope);
+          });
+        });
+        return Promise.all(unregisterPromises);
+      }).then(function() {
+        return navigator.serviceWorker.register(SW_URL, { scope: '/' });
+      }).then(function(reg) {
+        console.log('[Push] Service Worker v3 registered: ' + reg.scope);
+        // Listen for updates and auto-reload
+        reg.onupdatefound = function() {
+          var installing = reg.installing;
+          if (!installing) return;
+          installing.onstatechange = function() {
+            if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('[Push] New SW found, reloading...');
+              window.location.reload();
+            }
+          };
+        };
       }).catch(function(e) {
-        console.warn('[Push] Echec enregistrement SW:', e.message);
+        console.warn('[Push] SW setup error:', e.message);
       });
     })();
     </script>
@@ -5392,7 +5413,7 @@
         })();
         const LP_COUNTRY_CODE = String(LP_COUNTRY_CONTEXT?.code || 'cm').trim().toLowerCase();
         console.log('[STARTUP] Country:', LP_COUNTRY_CODE, '| pos:', LP_COUNTRY_CONTEXT?.defaultUserPos);
-        try { ['mangoo_vendors','mangoo_custom_vendors'].forEach(k => localStorage.removeItem(k)); console.log('[STARTUP] Vendor cache wiped'); } catch {}
+        try { localStorage.removeItem('mangoo_vendors'); console.log('[STARTUP] Stale vendor cache wiped'); } catch {}
         const LP_COUNTRY_NAME = String(LP_COUNTRY_CONTEXT?.name || 'Local+').trim();
         const LP_COUNTRY_UI = LP_COUNTRY_CONTEXT?.ui && typeof LP_COUNTRY_CONTEXT.ui === 'object' ? LP_COUNTRY_CONTEXT.ui : {};
 
@@ -5585,19 +5606,21 @@
             try {
                 if (!Array.isArray(VENDORS) || VENDORS.length === 0) return;
 
-                const any = VENDORS.find(v => typeof v?.lat === 'number' && typeof v?.lng === 'number');
-                if (!any) return;
+                // Find vendors far from user (skip user_me which is always near USER_POS)
+                const farVendors = VENDORS.filter(v => {
+                    if (String(v?.id) === 'user_me') return false;
+                    if (typeof v?.lat !== 'number' || typeof v?.lng !== 'number') return false;
+                    const d = haversineKm(USER_POS, [Number(v.lat), Number(v.lng)]);
+                    return Number.isFinite(d) && d >= 50;
+                });
 
-                const vendorPos = [Number(any.lat), Number(any.lng)];
-                const dist = haversineKm(USER_POS, vendorPos);
-
-                if (!Number.isFinite(dist) || dist < 50) return;
+                if (!farVendors.length) return;
 
                 const dLat = USER_POS[0] - BASE_USER_POS[0];
                 const dLng = USER_POS[1] - BASE_USER_POS[1];
 
-                VENDORS.forEach(v => {
-                    if (typeof v?.lat !== 'number' || typeof v?.lng !== 'number') return;
+                // Only relocate vendors that are still far away (preserves already-relocated seeds)
+                farVendors.forEach(v => {
                     v.lat = v.lat + dLat;
                     v.lng = v.lng + dLng;
                 });
