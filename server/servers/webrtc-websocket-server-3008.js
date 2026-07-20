@@ -547,17 +547,21 @@ wss.on('connection', (ws) => {
   }
 
   function handleProductPreview(ws, data) {
-    const { roomId, product } = data;
+    const { roomId, product, from: fromClient } = data;
     if (!roomId || !product) return;
 
-    // Trouver l'expediteur dans la room via sa connexion ws (pas currentUser qui est partage)
-    let senderUserId = null;
-    const room = rooms.get(roomId);
-    if (room) {
-      for (const [uid, userData] of room) {
-        if (userData.ws === ws) {
-          senderUserId = uid;
-          break;
+    // Priorite 1: from explicite envoye par le client (le plus fiable)
+    // Priorite 2: currentUser.id (per-connection, set lors du join-room)
+    // Fallback: matching par ws dans la room (echoue apres reconnexion)
+    let senderUserId = fromClient || currentUser?.id || null;
+    if (!senderUserId) {
+      const room = rooms.get(roomId);
+      if (room) {
+        for (const [uid, userData] of room) {
+          if (userData.ws === ws) {
+            senderUserId = uid;
+            break;
+          }
         }
       }
     }
@@ -575,16 +579,19 @@ wss.on('connection', (ws) => {
   // ===== PRODUCTS LIST SYNC (envoi de la liste complete du vendeur au client) =====
 
   function handleProductsList(ws, data) {
-    const { roomId, products } = data;
+    const { roomId, products, from: fromClient } = data;
     if (!roomId || !Array.isArray(products) || products.length === 0) return;
 
-    let senderUserId = null;
-    const room = rooms.get(roomId);
-    if (room) {
-      for (const [uid, userData] of room) {
-        if (userData.ws === ws) {
-          senderUserId = uid;
-          break;
+    // Priorite: from explicite > currentUser.id > ws matching
+    let senderUserId = fromClient || currentUser?.id || null;
+    if (!senderUserId) {
+      const room = rooms.get(roomId);
+      if (room) {
+        for (const [uid, userData] of room) {
+          if (userData.ws === ws) {
+            senderUserId = uid;
+            break;
+          }
         }
       }
     }

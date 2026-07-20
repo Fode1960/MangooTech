@@ -3735,6 +3735,93 @@
             width: 100%; height: 100%; border: none;
         }
         /* === INCOMING CALL BANNER === */
+        /* === LIVE SHOP PRODUCT CARD === */
+        #liveShopProductCard {
+            position: fixed;
+            bottom: 24px; left: 16px; right: 16px;
+            z-index: 23001;
+            display: none;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+            padding: 16px;
+            max-width: 380px;
+            margin: 0 auto;
+            border: 2px solid var(--ml-brand, #1b5e20);
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(120%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        #liveShopProductCard .lsp-close {
+            position: absolute;
+            top: 8px; right: 12px;
+            background: none; border: none;
+            font-size: 1.4rem; cursor: pointer;
+            color: #636e72; padding: 4px 8px;
+            line-height: 1;
+        }
+        #liveShopProductCard .lsp-img {
+            width: 80px; height: 80px;
+            border-radius: 12px;
+            object-fit: cover;
+            background: #f0f0f0;
+            flex-shrink: 0;
+        }
+        #liveShopProductCard .lsp-info {
+            flex: 1; min-width: 0;
+        }
+        #liveShopProductCard .lsp-name {
+            font-size: 1rem; font-weight: 800;
+            color: var(--ml-text, #2d3436);
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        #liveShopProductCard .lsp-price {
+            font-size: 1.2rem; font-weight: 950;
+            color: var(--ml-brand, #1b5e20);
+            margin-top: 4px;
+        }
+        #liveShopProductCard .lsp-row {
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 12px;
+        }
+        #liveShopProductCard .lsp-qty {
+            display: flex; align-items: center; gap: 6px;
+            margin-top: 8px;
+        }
+        #liveShopProductCard .lsp-qty button {
+            width: 32px; height: 32px;
+            border: 2px solid #dfe6e9;
+            border-radius: 8px;
+            background: #fff;
+            font-size: 1.1rem; font-weight: bold;
+            cursor: pointer;
+            color: var(--ml-text, #2d3436);
+            display: flex; align-items: center; justify-content: center;
+        }
+        #liveShopProductCard .lsp-qty span {
+            font-size: 1rem; font-weight: 800;
+            min-width: 28px; text-align: center;
+            color: var(--ml-text, #2d3436);
+        }
+        #liveShopProductCard .lsp-buy {
+            width: 100%; padding: 12px;
+            background: var(--ml-brand, #1b5e20);
+            color: #fff; border: none;
+            border-radius: 12px;
+            font-size: 1rem; font-weight: 800;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: opacity 0.2s;
+        }
+        #liveShopProductCard .lsp-buy:hover { opacity: 0.9; }
+        #liveShopProductCard .lsp-buy:disabled {
+            opacity: 0.5; cursor: not-allowed;
+        }
         #incomingCallBanner {
             position: fixed;
             top: 0; left: 0; right: 0;
@@ -5130,6 +5217,24 @@
         <iframe id="callFrame" src="" allow="microphone; camera; autoplay"></iframe>
     </div>
 
+    <!-- LIVE SHOP PRODUCT CARD -->
+    <div id="liveShopProductCard">
+        <button class="lsp-close" onclick="lpHideProductCard()">✕</button>
+        <div class="lsp-row">
+            <img id="lspProductImg" class="lsp-img" src="" alt="Produit" />
+            <div class="lsp-info">
+                <div id="lspProductName" class="lsp-name"></div>
+                <div id="lspProductPrice" class="lsp-price"></div>
+                <div class="lsp-qty">
+                    <button onclick="lpChangeQty(-1)">−</button>
+                    <span id="lspQty">1</span>
+                    <button onclick="lpChangeQty(1)">+</button>
+                </div>
+            </div>
+        </div>
+        <button class="lsp-buy" id="lspBuyBtn" onclick="lpBuySharedProduct()">🛒 Acheter</button>
+    </div>
+
     <!-- INCOMING CALL BANNER -->
     <div id="incomingCallBanner">
         <div class="icb-label">Appel entrant</div>
@@ -5214,7 +5319,7 @@
     </div>
 
     <!-- PAYMENT MODAL (NEW) -->
-    <div class="modal-overlay" id="paymentModal" onclick="closePaymentModal(event)" style="z-index: 9000;">
+    <div class="modal-overlay" id="paymentModal" onclick="closePaymentModal(event)" style="z-index: 25000;">
         <div class="modal-card lp-modal-card" onclick="event.stopPropagation()" style="max-width: 420px;">
             <div class="lp-modal-head">
                 <button type="button" class="lp-modal-close" onclick="document.getElementById('paymentModal').style.display='none'">✕</button>
@@ -6034,52 +6139,52 @@
                 const iframeRole = (event.data.role || '').trim().toLowerCase();
                 const callFrame = document.getElementById('callFrame');
                 
-                // Seul le callee (vendeur) envoie sa liste de produits
-                // Le caller (client) les recoit via WebSocket products-list
-                if (iframeRole === 'callee') {
+                // Les deux cotes (caller et callee) peuvent partager leurs produits
+                // Le cote vendeur envoie, le cote client recoit
+                {
                     // S'assurer que les produits sont charges (dont Supabase)
                     await _loadProductsFromServer();
                     const allProducts = _getProductsForCall();
-                    console.log('[Call] _getProductsForCall callee: ' + allProducts.length + ' produit(s)');
+                    console.log('[Call] _getProductsForCall (' + iframeRole + '): ' + allProducts.length + ' produit(s)');
                     
-                    // Envoyer a l'iframe du vendeur (pour son propre selecteur)
+                    // Envoyer a l'iframe local (pour son propre selecteur)
                     if (allProducts.length > 0 && callFrame && callFrame.contentWindow) {
                         try {
                             callFrame.contentWindow.postMessage({
                                 type: 'init-products',
                                 products: allProducts
                             }, '*');
-                            console.log('[Call] Liste de ' + allProducts.length + ' produit(s) envoyee a l\'iframe vendeur');
+                            console.log('[Call] Liste de ' + allProducts.length + ' produit(s) envoyee a l\'iframe local');
                         } catch(e) { console.error('[Call] Erreur envoi liste produits a iframe:', e); }
                     }
                     
-                    // Envoyer au caller (client) via WebSocket
+                    // Envoyer au destinataire via WebSocket
                     if (allProducts.length > 0 && webrtcMgmtWs && webrtcMgmtWsConnected) {
                         try {
                             const roomId = activeCallData ? activeCallData.roomId : null;
+                            const fromUserId = (activeCallData && activeCallData.from) ? activeCallData.from : (typeof getChatClientId === 'function' ? getChatClientId() : 'vendor');
                             if (roomId) {
                                 webrtcMgmtWs.send(JSON.stringify({
                                     type: 'products-list',
                                     roomId: roomId,
-                                    products: allProducts
+                                    products: allProducts,
+                                    from: fromUserId
                                 }));
-                                console.log('[Call] Liste de ' + allProducts.length + ' produit(s) envoyee au caller via WebSocket');
+                                console.log('[Call] Liste de ' + allProducts.length + ' produit(s) envoyee au destinataire via WebSocket (from=' + fromUserId + ')');
                             }
-                        } catch(e) { console.error('[Call] Erreur envoi produits-list au caller:', e); }
+                        } catch(e) { console.error('[Call] Erreur envoi produits-list:', e); }
                     }
-                } else {
-                    console.log('[Call] Caller - pas d\'envoi de produits (reception via WebSocket du vendeur)');
                 }
                 
-                // Backward compat: envoyer aussi le 1er produit comme init-product au callee
-                if (iframeRole === 'callee' && _pendingProductForIframe && _pendingProductForIframe.name) {
+                // Backward compat: envoyer aussi le 1er produit comme init-product
+                if (_pendingProductForIframe && _pendingProductForIframe.name) {
                     try {
                         if (callFrame && callFrame.contentWindow) {
                             callFrame.contentWindow.postMessage({
                                 type: 'init-product',
                                 product: _pendingProductForIframe
                             }, '*');
-                            console.log('[Call] Produit (backward compat) envoye a l\'iframe (callee): ' + _pendingProductForIframe.name);
+                            console.log('[Call] Produit (backward compat) envoye a l\'iframe: ' + _pendingProductForIframe.name);
                         }
                     } catch(e) { console.error('[Call] Erreur envoi produit a iframe:', e); }
                 }
@@ -6103,12 +6208,15 @@
             if (event.data && typeof event.data === 'object' && event.data.type === 'share-product') {
                 if (webrtcMgmtWs && webrtcMgmtWsConnected && webrtcMgmtWs.readyState === WebSocket.OPEN) {
                     try {
+                        // Inclure explicitement le from pour que le serveur exclue l'expediteur du broadcast
+                        const fromUserId = (activeCallData && activeCallData.from) ? activeCallData.from : (typeof getChatClientId === 'function' ? getChatClientId() : 'vendor');
                         webrtcMgmtWs.send(JSON.stringify({
                             type: 'product-preview',
                             roomId: event.data.roomId,
-                            product: event.data.product
+                            product: event.data.product,
+                            from: fromUserId
                         }));
-                        console.log('[Call] Produit relaye vers WS: ' + (event.data.product && event.data.product.name || '?'));
+                        console.log('[Call] Produit relaye vers WS (from=' + fromUserId + '): ' + (event.data.product && event.data.product.name || '?'));
                     } catch(e) { console.error('[Call] Erreur relay produit:', e); }
                 }
                 return;
@@ -13605,6 +13713,133 @@
             }
         }
 
+        // ===== LIVE SHOP: Produit partagé pendant un appel =====
+        let _lspSharedProduct = null;
+        let _lspQty = 1;
+        let _lspRoomId = '';
+        let _lspVendorId = '';
+        let _lspShopSlug = '';
+        let _lspShopName = '';
+
+        function lpHideProductCard() {
+            const card = document.getElementById('liveShopProductCard');
+            if (card) card.style.display = 'none';
+            _lspSharedProduct = null;
+            _lspQty = 1;
+            _lspRoomId = '';
+            _lspVendorId = '';
+            _lspShopSlug = '';
+            _lspShopName = '';
+        }
+
+        function lpChangeQty(delta) {
+            _lspQty = Math.max(1, _lspQty + delta);
+            const el = document.getElementById('lspQty');
+            if (el) el.textContent = _lspQty;
+        }
+
+        function lpShowSharedProduct(product, meta) {
+            if (!product || !product.name) return;
+            _lspSharedProduct = product;
+            _lspQty = 1;
+            // Stocker le contexte vendeur depuis le message WebRTC
+            if (meta) {
+                _lspRoomId = String(meta.roomId || '').trim();
+                _lspVendorId = String(meta.from || meta.vendorId || '').trim();
+                _lspShopSlug = String(meta.shopSlug || '').trim();
+                _lspShopName = String(meta.shopName || '').trim();
+                // Résoudre le shopSlug/shopName depuis le roomId (format: call:vendorId)
+                if (!_lspShopSlug || !_lspShopName) {
+                    try {
+                        const parts = _lspRoomId.split(':');
+                        const roomVendorId = parts.length > 1 ? parts[1] : parts[0];
+                        const vendorsArr = (typeof VENDORS !== 'undefined' && Array.isArray(VENDORS)) ? VENDORS :
+                            (typeof window !== 'undefined' && Array.isArray(window.VENDORS)) ? window.VENDORS : [];
+                        const vendor = vendorsArr.find(function(v) { return String(v?.id || '').trim() === roomVendorId; }) || null;
+                        if (vendor) {
+                            if (!_lspShopSlug) _lspShopSlug = String(vendor.shopSlug || vendor.slug || '').trim();
+                            if (!_lspShopName) _lspShopName = String(vendor.name || '').trim();
+                        }
+                    } catch(e) { console.warn('[LiveShop] Erreur resolution vendeur depuis roomId:', e); }
+                }
+            }
+
+            const card = document.getElementById('liveShopProductCard');
+            const img = document.getElementById('lspProductImg');
+            const name = document.getElementById('lspProductName');
+            const price = document.getElementById('lspProductPrice');
+            const qty = document.getElementById('lspQty');
+            const btn = document.getElementById('lspBuyBtn');
+
+            if (!card || !img || !name || !price) return;
+
+            img.src = product.img || product.photo || '';
+            img.onerror = function() { this.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect fill="%23f0f0f0" width="80" height="80"/><text x="40" y="45" text-anchor="middle" fill="%23aaa" font-size="12">Produit</text></svg>'; };
+            name.textContent = product.name;
+            const priceVal = parseFloat(product.price) || 0;
+            price.textContent = priceVal > 0 ? priceVal.toLocaleString() + ' FCFA' : 'Prix sur demande';
+            if (qty) qty.textContent = '1';
+            if (btn) { btn.textContent = '🛒 Acheter'; btn.disabled = false; }
+            card.style.display = 'block';
+            console.log('[LiveShop] Produit affiche: ' + product.name + ' (' + (priceVal || '?') + ' FCFA)');
+        }
+
+        function lpBuySharedProduct() {
+            if (!_lspSharedProduct || !_lspSharedProduct.name) return;
+
+            const product = _lspSharedProduct;
+            const priceVal = parseFloat(product.price) || 0;
+            const qty = _lspQty || 1;
+            const amount = priceVal > 0 ? priceVal * qty : 0;
+
+            // Résoudre le contexte vendeur : priorité au contexte stocké du message WebRTC
+            const ctxVendor = lpResolveShopVendorContext();
+            const currentUser = getLpCurrentUser ? getLpCurrentUser() : null;
+            
+            // Utiliser le contexte du produit reçu si plus précis que le contexte local
+            const roomId = _lspRoomId || ctxVendor.roomId || 'live-room-123';
+            const shopSlug = _lspShopSlug || ctxVendor.shopSlug || '';
+            const shopName = _lspShopName || ctxVendor.shopName || 'Boutique';
+
+            // Préparer la commande en attente
+            lpSetPendingDirectPurchase({
+                kind: 'direct_purchase',
+                productId: product.id || ('lp-' + Date.now()),
+                productName: product.name,
+                productImg: product.img || product.photo || '',
+                amountCfa: amount || priceVal,
+                qty: qty,
+                roomId: roomId,
+                shopSlug: shopSlug,
+                shopName: shopName,
+                vendorName: shopName,
+                buyerId: currentUser?.id || '',
+                buyerName: currentUser?.name || 'Client',
+                buyerEmail: currentUser?.email || '',
+                createdAt: new Date().toISOString(),
+            });
+
+            // Ouvrir le modal de paiement
+            openPaymentModal(amount || priceVal, async function(paymentResult) {
+                const btn = document.getElementById('lspBuyBtn');
+                if (btn) { btn.textContent = '⏳ Traitement...'; btn.disabled = true; }
+                try {
+                    const order = await lpFinalizePendingDirectPurchase(paymentResult);
+                    if (order) {
+                        if (btn) btn.textContent = '✓ Acheté !';
+                        lpHideProductCard();
+                        try { lpSpeak ? lpSpeak('Achat confirmé. Merci !') : null; } catch(e) {}
+                    } else {
+                        if (btn) { btn.textContent = '🛒 Acheter'; btn.disabled = false; }
+                        alert('Paiement échoué. Veuillez réessayer.');
+                    }
+                } catch(err) {
+                    console.error('[LiveShop] Erreur achat:', err);
+                    if (btn) { btn.textContent = '🛒 Acheter'; btn.disabled = false; }
+                }
+            });
+        }
+
         async function lpFetchVendorLiveOrders() {
             const ctx = lpResolveShopVendorContext();
             if (!ctx.roomId) return { ctx, orders: [] };
@@ -14623,6 +14858,38 @@
         let _pendingJoinRoomTimeout = null;
         let _pendingProductForIframe = null; // Produit a envoyer a l'iframe pour le partage WebRTC
         let _amCaller = false; // true = ce cote a initie l'appel, false = ce cote a recu l'appel
+
+        // Intercepte les produits partages pendant un appel pour le Live Shopping
+        (function() {
+            setTimeout(function() {
+                const _origRelay = relayWebRTCToIframe;
+                relayWebRTCToIframe = function(data) {
+                    _origRelay(data);
+                    // Le serveur broadcast deja uniquement au destinataire (hors expediteur)
+                    // Afficher la carte produit pour les messages recus
+                    if (data && (data.type === 'product-preview' || data.type === 'products-list')) {
+                        console.log('[LiveShop] Interception ' + data.type, JSON.stringify(data).substring(0, 200));
+                        try {
+                            const meta = {
+                                roomId: data.roomId || '',
+                                from: data.from || '',
+                                vendorId: data.from || ''
+                            };
+                            if (data.type === 'product-preview' && data.product) {
+                                console.log('[LiveShop] Appel lpShowSharedProduct', data.product.name, data.product.price);
+                                lpShowSharedProduct(data.product, meta);
+                            } else if (data.type === 'products-list' && Array.isArray(data.products) && data.products.length > 0) {
+                                console.log('[LiveShop] Appel lpShowSharedProduct (products-list[0])', data.products[0].name);
+                                lpShowSharedProduct(data.products[0], meta);
+                            } else {
+                                console.log('[LiveShop] Pas de produit valide dans le message');
+                            }
+                        } catch(e) { console.error('[LiveShop] Erreur interception produit:', e); }
+                    }
+                };
+                console.log('[LiveShop] Intercepteur relayWebRTCToIframe installe');
+            }, 500);
+        })();
 
         // Recupere le premier produit disponible pour le partage WebRTC (Voir produit)
         function _getProductForCall() {
@@ -23297,7 +23564,7 @@
             btn.style.opacity = '0.7';
             btn.disabled = true;
 
-            // Simulation
+            // Simulation (delai reduit pour reactivite Live Shopping)
             setTimeout(() => {
                 // If Balance, deduct
                 if(currentPaymentMethod === 'mangoo_balance') {
@@ -23306,12 +23573,6 @@
                 }
 
                 // CHECK FOR FULL PAYMENT (Direct Buy)
-                // We consider it a "Full Payment" only if the amount being paid covers the TOTAL cost AND
-                // we are NOT in a context where we just want to pay a split part.
-                
-                // If currentPaymentCallback is defined, it means this payment is part of a larger flow (like splitting).
-                // In that case, we should strictly respect the callback and NOT assume it's a full order completion yet.
-                
                 const isFullPayment = !currentPaymentCallback && (currentPaymentAmount >= (window.pendingTotalAmount || 15000));
 
                 btn.innerText = 'Paiement Validé !';
@@ -23348,8 +23609,12 @@
                         `;
                         document.body.appendChild(successOverlay);
                     } else {
-                        // PARTIAL PAYMENT -> CONTINUE TO CONTRACT OR CALLBACK
-                        if(currentPaymentCallback) currentPaymentCallback(true);
+                        // CALLBACK AVEC DETAILS PAIEMENT (LiveShop, Tontine, etc.)
+                        if(currentPaymentCallback) currentPaymentCallback({
+                            amount: currentPaymentAmount,
+                            method: currentPaymentMethod || 'mobile_money',
+                            paidAt: new Date().toISOString()
+                        });
                     }
                     
                     // Reset Button
@@ -23357,8 +23622,8 @@
                     btn.style.background = '#1b5e20';
                     btn.style.opacity = '1';
                     btn.disabled = false;
-                }, 1500);
-            }, 2500);
+                }, 500);
+            }, 900);
         }
         
         // === SPLIT PAYMENT LOGIC ===
