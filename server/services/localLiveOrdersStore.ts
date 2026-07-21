@@ -130,7 +130,7 @@ export function createLiveOrder(input: {
   const imageUrl = safeString((input?.product as any)?.imageUrl) || undefined
   const qty = Math.max(1, Math.round(safeNumber(input?.qty ?? 1)) || 1)
 
-  if (!productId || !productTitle || !Number.isFinite(priceCfa) || priceCfa <= 0) return null
+  if (!productId || !productTitle || !Number.isFinite(priceCfa) || priceCfa < 0) return null
 
   const now = new Date().toISOString()
   const id = newId()

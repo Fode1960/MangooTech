@@ -3822,6 +3822,86 @@
         #liveShopProductCard .lsp-buy:disabled {
             opacity: 0.5; cursor: not-allowed;
         }
+        /* Ecran de confirmation de commande */
+        #liveShopConfirmCard {
+            position: fixed;
+            bottom: 24px; left: 16px; right: 16px;
+            z-index: 23002;
+            display: none;
+            background: linear-gradient(135deg, #f0fff4 0%, #ffffff 100%);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+            padding: 20px 16px 16px;
+            max-width: 400px;
+            margin: 0 auto;
+            border: 2px solid #27ae60;
+            animation: slideUpConfirm 0.35s ease;
+        }
+        @keyframes slideUpConfirm {
+            from { transform: translateY(120%) scale(0.95); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        #liveShopConfirmCard .lsc-close {
+            position: absolute;
+            top: 8px; right: 12px;
+            background: none; border: none;
+            font-size: 1.3rem; cursor: pointer;
+            color: #636e72; padding: 4px 8px;
+            line-height: 1;
+        }
+        #liveShopConfirmCard .lsc-icon {
+            text-align: center;
+            font-size: 2.8rem;
+            margin-bottom: 6px;
+        }
+        #liveShopConfirmCard .lsc-title {
+            text-align: center;
+            font-size: 1.15rem; font-weight: 900;
+            color: #27ae60;
+            margin-bottom: 12px;
+        }
+        #liveShopConfirmCard .lsc-summary {
+            background: #fff;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #d5f5e3;
+        }
+        #liveShopConfirmCard .lsc-summary-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 6px 0;
+            font-size: 0.9rem;
+            color: #2d3436;
+        }
+        #liveShopConfirmCard .lsc-summary-row.lsc-total {
+            border-top: 1px dashed #b2bec3;
+            margin-top: 6px; padding-top: 8px;
+            font-weight: 800; font-size: 1rem;
+            color: #1b5e20;
+        }
+        #liveShopConfirmCard .lsc-summary-row .lsc-label {
+            color: #636e72;
+        }
+        #liveShopConfirmCard .lsc-thanks {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #636e72;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+        #liveShopConfirmCard .lsc-track {
+            display: block;
+            width: 100%; padding: 12px;
+            text-align: center;
+            background: #27ae60;
+            color: #fff; border: none;
+            border-radius: 12px;
+            font-size: 0.95rem; font-weight: 800;
+            cursor: pointer;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+        #liveShopConfirmCard .lsc-track:hover { opacity: 0.9; }
         #incomingCallBanner {
             position: fixed;
             top: 0; left: 0; right: 0;
@@ -5235,6 +5315,35 @@
         <button class="lsp-buy" id="lspBuyBtn" onclick="lpBuySharedProduct()">🛒 Acheter</button>
     </div>
 
+    <!-- LIVE SHOP CONFIRMATION CARD -->
+    <div id="liveShopConfirmCard">
+        <button class="lsc-close" onclick="lpHideConfirmCard()">✕</button>
+        <div class="lsc-icon">✅</div>
+        <div class="lsc-title">Commande confirmée !</div>
+        <div class="lsc-summary">
+            <div class="lsc-summary-row">
+                <span class="lsc-label">Produit</span>
+                <span id="lscProductName">—</span>
+            </div>
+            <div class="lsc-summary-row">
+                <span class="lsc-label">Quantité</span>
+                <span id="lscQty">1</span>
+            </div>
+            <div class="lsc-summary-row">
+                <span class="lsc-label">Boutique</span>
+                <span id="lscShopName">—</span>
+            </div>
+            <div class="lsc-summary-row lsc-total">
+                <span class="lsc-label">Total payé</span>
+                <span id="lscTotal">0 FCFA</span>
+            </div>
+        </div>
+        <div class="lsc-thanks" id="lscThanks">
+            Merci pour votre achat !<br>Le vendeur prépare votre commande.
+        </div>
+        <a class="lsc-track" id="lscTrackBtn" href="#" onclick="lpOpenOrderTracking(); return false;">📋 Suivre ma commande</a>
+    </div>
+
     <!-- INCOMING CALL BANNER -->
     <div id="incomingCallBanner">
         <div class="icb-label">Appel entrant</div>
@@ -6162,7 +6271,7 @@
                     if (allProducts.length > 0 && webrtcMgmtWs && webrtcMgmtWsConnected) {
                         try {
                             const roomId = activeCallData ? activeCallData.roomId : null;
-                            const fromUserId = (activeCallData && activeCallData.from) ? activeCallData.from : (typeof getChatClientId === 'function' ? getChatClientId() : 'vendor');
+                            const fromUserId = (typeof getChatClientId === 'function') ? getChatClientId() : 'vendor';
                             if (roomId) {
                                 webrtcMgmtWs.send(JSON.stringify({
                                     type: 'products-list',
@@ -6209,7 +6318,7 @@
                 if (webrtcMgmtWs && webrtcMgmtWsConnected && webrtcMgmtWs.readyState === WebSocket.OPEN) {
                     try {
                         // Inclure explicitement le from pour que le serveur exclue l'expediteur du broadcast
-                        const fromUserId = (activeCallData && activeCallData.from) ? activeCallData.from : (typeof getChatClientId === 'function' ? getChatClientId() : 'vendor');
+                        const fromUserId = (typeof getChatClientId === 'function') ? getChatClientId() : 'vendor';
                         webrtcMgmtWs.send(JSON.stringify({
                             type: 'product-preview',
                             roomId: event.data.roomId,
@@ -13630,7 +13739,11 @@
 
         async function lpFinalizePendingDirectPurchase(paymentLike) {
             const pending = lpGetPendingDirectPurchase();
-            if (!pending || String(pending?.kind || '') !== 'direct_purchase') return null;
+            console.log('[LiveShop] lpFinalizePendingDirectPurchase: paymentLike=' + JSON.stringify(paymentLike) + ' pending=' + JSON.stringify(pending ? {kind: pending.kind, productName: pending.productName, amountCfa: pending.amountCfa, serverOrderId: pending.serverOrderId} : null));
+            if (!pending || String(pending?.kind || '') !== 'direct_purchase') {
+                console.warn('[LiveShop] lpFinalizePendingDirectPurchase: pas de pending direct_purchase');
+                return null;
+            }
             if (String(pending?.serverOrderId || '').trim()) {
                 const existing = lpReadClientOrders().find((item) => String(item?.id || '').trim() === String(pending.serverOrderId || '').trim()) || null;
                 return existing;
@@ -13675,8 +13788,11 @@
                 const createdPayload = await createResponse.json().catch(() => ({}));
                 const createdOrder = createdPayload?.order;
                 const createdId = String(createdOrder?.id || '').trim();
+                console.log('[LiveShop] createResponse: ok=' + createResponse.ok + ' success=' + createdPayload?.success + ' error=' + (createdPayload?.error || 'none') + ' createdId=' + createdId);
                 if (!createResponse.ok || !createdPayload?.success || !createdId) {
-                    throw new Error(String(createdPayload?.error || 'order_create_failed'));
+                    const errorMsg = String(createdPayload?.error || 'order_create_failed');
+                    console.error('[LiveShop] Echec création commande: ' + errorMsg);
+                    throw new Error(errorMsg);
                 }
 
                 const paymentResponse = await fetch(`/api/live-orders/${encodeURIComponent(createdId)}/set-payment`, {
@@ -13732,6 +13848,92 @@
             _lspShopName = '';
         }
 
+        // Variables pour la confirmation de commande
+        let _lscLastOrderId = '';
+        let _lscLastOrderAmount = 0;
+
+        function lpHideConfirmCard() {
+            const card = document.getElementById('liveShopConfirmCard');
+            if (card) card.style.display = 'none';
+            _lscLastOrderId = '';
+            _lscLastOrderAmount = 0;
+        }
+
+        function lpShowConfirmCard(orderData) {
+            const card = document.getElementById('liveShopConfirmCard');
+            if (!card) return;
+            // Remplir les champs
+            const prodEl = document.getElementById('lscProductName');
+            const qtyEl = document.getElementById('lscQty');
+            const shopEl = document.getElementById('lscShopName');
+            const totalEl = document.getElementById('lscTotal');
+            const thanksEl = document.getElementById('lscThanks');
+            const trackBtn = document.getElementById('lscTrackBtn');
+
+            if (prodEl) prodEl.textContent = orderData.productName || _lspSharedProduct?.name || 'Produit';
+            if (qtyEl) qtyEl.textContent = orderData.qty || _lspQty || 1;
+            if (shopEl) shopEl.textContent = orderData.shopName || _lspShopName || 'Boutique';
+            const total = orderData.amount || _lscLastOrderAmount || 0;
+            if (totalEl) totalEl.textContent = (total > 0 ? total.toLocaleString() : '0') + ' FCFA';
+            if (thanksEl) {
+                thanksEl.innerHTML = 'Merci pour votre achat !<br>Le vendeur ' + (orderData.shopName || _lspShopName || '') + ' prépare votre commande.';
+            }
+
+            _lscLastOrderId = orderData.orderId || '';
+            _lscLastOrderAmount = total;
+            if (trackBtn) {
+                if (_lscLastOrderId) {
+                    trackBtn.style.display = 'block';
+                    trackBtn.textContent = '📋 Suivre ma commande';
+                } else {
+                    trackBtn.style.display = 'none';
+                }
+            }
+
+            card.style.display = 'block';
+            // Annonce vocale pour accessibilité (bimodale)
+            try {
+                if (typeof lpSpeak === 'function') {
+                    lpSpeak('Commande confirmée. ' + (orderData.productName || '') + '. Montant ' + total.toLocaleString() + ' FCFA. Merci !');
+                }
+            } catch(e) {}
+        }
+
+        function lpOpenOrderTracking() {
+            if (!_lscLastOrderId) return;
+            lpHideConfirmCard();
+            // Determiner si l'utilisateur est vendeur ou client
+            let isVendor = false;
+            try { isVendor = isLpVendorUser(getLpCurrentUser()) } catch(e) {}
+            if (isVendor) {
+                // Vendeur : ouvrir le panneau Vente → sous-onglet Commandes
+                try { if (typeof switchAccountTab === 'function') switchAccountTab('sell'); } catch(e) {}
+                setTimeout(function() {
+                    try { if (typeof switchVendorTab === 'function') switchVendorTab('orders'); } catch(e) {}
+                    // Scroll jusqu'à la commande
+                    setTimeout(function() {
+                        const orderEl = document.getElementById('order-' + _lscLastOrderId);
+                        if (orderEl) {
+                            orderEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            orderEl.style.boxShadow = '0 0 0 3px #27ae60';
+                            setTimeout(function() { orderEl.style.boxShadow = ''; }, 2500);
+                        }
+                    }, 600);
+                }, 300);
+            } else {
+                // Client : ouvrir l'onglet Commandes
+                try { if (typeof switchAccountTab === 'function') switchAccountTab('orders'); } catch(e) {}
+                setTimeout(function() {
+                    const orderEl = document.getElementById('order-' + _lscLastOrderId);
+                    if (orderEl) {
+                        orderEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        orderEl.style.boxShadow = '0 0 0 3px #27ae60';
+                        setTimeout(function() { orderEl.style.boxShadow = ''; }, 2500);
+                    }
+                }, 600);
+            }
+        }
+
         function lpChangeQty(delta) {
             _lspQty = Math.max(1, _lspQty + delta);
             const el = document.getElementById('lspQty');
@@ -13785,12 +13987,17 @@
         }
 
         function lpBuySharedProduct() {
-            if (!_lspSharedProduct || !_lspSharedProduct.name) return;
+            if (!_lspSharedProduct || !_lspSharedProduct.name) {
+                console.warn('[LiveShop] lpBuySharedProduct: pas de produit partagé');
+                return;
+            }
 
             const product = _lspSharedProduct;
             const priceVal = parseFloat(product.price) || 0;
             const qty = _lspQty || 1;
             const amount = priceVal > 0 ? priceVal * qty : 0;
+
+            console.log('[LiveShop] lpBuySharedProduct: produit=' + product.name + ' price=' + priceVal + ' qty=' + qty + ' amount=' + amount);
 
             // Résoudre le contexte vendeur : priorité au contexte stocké du message WebRTC
             const ctxVendor = lpResolveShopVendorContext();
@@ -13828,6 +14035,14 @@
                     if (order) {
                         if (btn) btn.textContent = '✓ Acheté !';
                         lpHideProductCard();
+                        // Afficher l'écran de confirmation
+                        lpShowConfirmCard({
+                            productName: product.name,
+                            qty: qty,
+                            shopName: shopName,
+                            amount: amount || priceVal,
+                            orderId: order?.id || ''
+                        });
                         try { lpSpeak ? lpSpeak('Achat confirmé. Merci !') : null; } catch(e) {}
                     } else {
                         if (btn) { btn.textContent = '🛒 Acheter'; btn.disabled = false; }
@@ -13836,6 +14051,8 @@
                 } catch(err) {
                     console.error('[LiveShop] Erreur achat:', err);
                     if (btn) { btn.textContent = '🛒 Acheter'; btn.disabled = false; }
+                    const errMsg = err?.message || String(err || 'Erreur inconnue');
+                    alert('Paiement échoué : ' + errMsg + '\n\nVeuillez réessayer ou contacter le vendeur.');
                 }
             });
         }
@@ -14879,8 +15096,14 @@
                                 console.log('[LiveShop] Appel lpShowSharedProduct', data.product.name, data.product.price);
                                 lpShowSharedProduct(data.product, meta);
                             } else if (data.type === 'products-list' && Array.isArray(data.products) && data.products.length > 0) {
-                                console.log('[LiveShop] Appel lpShowSharedProduct (products-list[0])', data.products[0].name);
-                                lpShowSharedProduct(data.products[0], meta);
+                                // Mono-produit : affichage automatique (pas d'ambiguite)
+                                // Multi-produits : ne pas afficher, attendre que le vendeur partage explicitement
+                                if (data.products.length === 1) {
+                                    console.log('[LiveShop] Mono-produit auto-affichage:', data.products[0].name);
+                                    lpShowSharedProduct(data.products[0], meta);
+                                } else {
+                                    console.log('[LiveShop] Multi-produits (' + data.products.length + ') - attente partage explicite');
+                                }
                             } else {
                                 console.log('[LiveShop] Pas de produit valide dans le message');
                             }
@@ -15310,7 +15533,8 @@
                     callMode: callMode || 'audio',
                     message: 'Appel ' + (callMode === 'video' ? 'video' : 'audio') + ' de ' + clientLabel,
                     callId,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    originUrl: window.location.origin
                 };
                 if (!webrtcMgmtWs || !webrtcMgmtWsConnected || webrtcMgmtWs.readyState !== WebSocket.OPEN) {
                     console.log('[Call] WebSocket non connecte, mise en file');
@@ -23610,6 +23834,7 @@
                         document.body.appendChild(successOverlay);
                     } else {
                         // CALLBACK AVEC DETAILS PAIEMENT (LiveShop, Tontine, etc.)
+                        console.log('[Payment] Appel callback avec amount=' + currentPaymentAmount + ' method=' + currentPaymentMethod);
                         if(currentPaymentCallback) currentPaymentCallback({
                             amount: currentPaymentAmount,
                             method: currentPaymentMethod || 'mobile_money',
@@ -25162,7 +25387,7 @@
                 const pillBg = statusIsDone ? 'rgba(22,163,74,0.14)' : 'rgba(250,204,21,0.18)';
                 const pillColor = statusIsDone ? 'rgb(22,163,74)' : 'rgb(161,98,7)';
                 ordersHtml += `
-                    <button type="button" onclick="${order.action}" style="width:100%; text-align:left; background:var(--ml-panel); border:1px solid var(--ml-border); border-radius:var(--ml-radius-2xl); padding:14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; cursor:pointer; box-shadow: var(--ml-shadow-sm);">
+                    <button type="button" id="order-${order.id}" onclick="${order.action}" style="width:100%; text-align:left; background:var(--ml-panel); border:1px solid var(--ml-border); border-radius:var(--ml-radius-2xl); padding:14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; cursor:pointer; box-shadow: var(--ml-shadow-sm); transition: box-shadow 0.3s;">
                         <div style="flex:1; min-width:0;">
                             <div style="font-weight:950; color:var(--ml-text);">${order.product}</div>
                             <div style="font-size:0.82rem; color:var(--ml-muted); font-weight:800; margin-top:2px;">#${order.id} • ${order.date}</div>

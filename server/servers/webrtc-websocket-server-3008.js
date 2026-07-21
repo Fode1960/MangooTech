@@ -548,6 +548,7 @@ wss.on('connection', (ws) => {
 
   function handleProductPreview(ws, data) {
     const { roomId, product, from: fromClient } = data;
+    console.log(`[WebRTC-3008] DEBUG Product-preview raw data.from=${JSON.stringify(fromClient)}`);
     if (!roomId || !product) return;
 
     // Priorite 1: from explicite envoye par le client (le plus fiable)
@@ -580,6 +581,7 @@ wss.on('connection', (ws) => {
 
   function handleProductsList(ws, data) {
     const { roomId, products, from: fromClient } = data;
+    console.log(`[WebRTC-3008] DEBUG Products-list raw data.from=${JSON.stringify(fromClient)}`);
     if (!roomId || !Array.isArray(products) || products.length === 0) return;
 
     // Priorite: from explicite > currentUser.id > ws matching
@@ -702,6 +704,9 @@ wss.on('connection', (ws) => {
       if (Date.now() - ts > PUSH_DEDUP_WINDOW) recentPushCallIds.delete(key);
     }
 
+    // URL absolue prioritaire (fournie par le client appelant) pour eviter les tunnels obsoletes
+    const originUrl = typeof data.originUrl === 'string' && data.originUrl.trim() ? data.originUrl.trim() : '';
+
     const pushPayload = {
       title: 'Appel entrant',
       body: `${fromLabel || 'Un client'} souhaite vous appeler en ${cm === 'video' ? 'video' : 'audio'}`,
@@ -719,9 +724,18 @@ wss.on('connection', (ws) => {
     };
 
     sendPushToVendor(vendorId, (sub) => {
-      // URL relative : le Service Worker resoudra vers le domaine courant
       const customPayload = { ...pushPayload };
-      customPayload.url = '/mangoo-local.html';
+      // Priorite 1: originUrl fourni par le client appelant (tunnel actuel)
+      // Priorite 2: baseUrl stocke dans la souscription (dernier tunnel connu)
+      // Priorite 3: URL relative (fallback)
+      if (originUrl) {
+        customPayload.url = originUrl + '/mangoo-local.html';
+      } else if (sub.baseUrl) {
+        customPayload.url = sub.baseUrl + '/mangoo-local.html';
+      } else {
+        customPayload.url = '/mangoo-local.html';
+      }
+      console.log(`[WebRTC-3008] Push URL: ${customPayload.url}`);
       return customPayload;
     }).then(pushSent => {
       if (!pushSent) {
