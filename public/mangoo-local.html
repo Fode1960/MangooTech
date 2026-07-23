@@ -3964,34 +3964,28 @@
     <script>
     (function() {
       if (!('serviceWorker' in navigator)) return;
-      var SW_URL = '/sw.js?v=3';
-      // Force unregister any old SW then register v3
-      navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        var unregisterPromises = registrations.map(function(reg) {
-          return reg.unregister().then(function() {
-            console.log('[Push] Old SW unregistered: ' + reg.scope);
-          });
-        });
-        return Promise.all(unregisterPromises);
-      }).then(function() {
-        return navigator.serviceWorker.register(SW_URL, { scope: '/' });
-      }).then(function(reg) {
-        console.log('[Push] Service Worker v3 registered: ' + reg.scope);
-        // Listen for updates and auto-reload
+      var SW_URL = '/sw.js?v=13';
+      console.log('[Push] Registering SW (no unregister)...');
+      navigator.serviceWorker.register(SW_URL, { scope: '/', updateViaCache: 'none' }).then(function(reg) {
+        console.log('[Push] SW registered: ' + reg.scope);
+        if (reg.waiting) { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); }
         reg.onupdatefound = function() {
           var installing = reg.installing;
           if (!installing) return;
           installing.onstatechange = function() {
             if (installing.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('[Push] New SW found, reloading...');
+              console.log('[Push] New SW, reloading...');
               window.location.reload();
             }
           };
         };
       }).catch(function(e) {
-        console.warn('[Push] SW setup error:', e.message);
+        console.warn('[Push] SW error:', e.message);
       });
     })();
+    navigator.serviceWorker.addEventListener('message', function(event) {
+      console.log('[SW→Page] ' + JSON.stringify(event.data));
+    });
     </script>
 
     <!-- LOADER -->
@@ -14768,9 +14762,18 @@
                 var reg = await navigator.serviceWorker.ready;
                 var existingSub = await reg.pushManager.getSubscription();
                 if (existingSub) {
-                    console.log('[Push] Deja abonne, endpoint: ' + (existingSub.endpoint || '').substring(0, 60));
-                    await lpSavePushSubscription(existingSub);
-                    return;
+                    var pushCleaned = localStorage.getItem('lp_push_cleaned');
+                    if (!pushCleaned) {
+                        console.log('[Push] Nettoyage unique de l\'ancien abonnement...');
+                        try { await existingSub.unsubscribe(); } catch(e) { console.warn('[Push] Erreur desabonnement:', e.message); }
+                        localStorage.setItem('lp_push_cleaned', '1');
+                        console.log('[Push] Nettoyage termine, creation d\'un nouvel abonnement frais');
+                        // Ne pas retourner - continuer pour creer un nouvel abonnement frais
+                    } else {
+                        console.log('[Push] Abonnement existant reutilise, endpoint: ' + (existingSub.endpoint || '').substring(0, 60));
+                        await lpSavePushSubscription(existingSub);
+                        return;
+                    }
                 }
                 // Verifier vendorId
                 var vendorId = lpGetVendorWsVendorId();

@@ -725,15 +725,16 @@ wss.on('connection', (ws) => {
 
     sendPushToVendor(vendorId, (sub) => {
       const customPayload = { ...pushPayload };
+      const vendorParam = '?vendor=' + vendorId + '&lpRole=vendor';
       // Priorite 1: originUrl fourni par le client appelant (tunnel actuel)
       // Priorite 2: baseUrl stocke dans la souscription (dernier tunnel connu)
       // Priorite 3: URL relative (fallback)
       if (originUrl) {
-        customPayload.url = originUrl + '/mangoo-local.html';
+        customPayload.url = originUrl + '/mangoo-local.html' + vendorParam;
       } else if (sub.baseUrl) {
-        customPayload.url = sub.baseUrl + '/mangoo-local.html';
+        customPayload.url = sub.baseUrl + '/mangoo-local.html' + vendorParam;
       } else {
-        customPayload.url = '/mangoo-local.html';
+        customPayload.url = '/mangoo-local.html' + vendorParam;
       }
       console.log(`[WebRTC-3008] Push URL: ${customPayload.url}`);
       return customPayload;
