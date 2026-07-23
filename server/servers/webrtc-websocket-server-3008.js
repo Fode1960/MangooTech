@@ -710,8 +710,8 @@ wss.on('connection', (ws) => {
     const pushPayload = {
       title: 'Appel entrant',
       body: `${fromLabel || 'Un client'} souhaite vous appeler en ${cm === 'video' ? 'video' : 'audio'}`,
-      icon: '/mangoo-logo-192.png',
-      badge: '/mangoo-logo-192.png',
+      icon: '/favicon.svg',
+      badge: '/favicon.svg',
       tag: 'mangoo-call-' + (callId || Date.now()),
       url: '/mangoo-local.html',
       roomId,
@@ -943,8 +943,8 @@ wss.on('connection', (ws) => {
       kind: 'chat',
       title: 'Nouveau message',
       body: `${incomingChatMsg.fromLabel}: ${preview}`,
-      icon: '/mangoo-logo-192.png',
-      badge: '/mangoo-logo-192.png',
+      icon: '/favicon.svg',
+      badge: '/favicon.svg',
       tag: 'mangoo-chat-' + dedupId,
       url: '/mangoo-local.html',
       roomId,
@@ -1085,27 +1085,7 @@ server.on('request', async (req, res) => {
           sendJson(res, 400, { error: 'vendorId et subscription requis' });
           return;
         }
-        const { ok, isNew } = saveSubscription(vendorId, subscription);
-        if (isNew) {
-          // Envoyer un push de confirmation SEULEMENT pour les NOUVEAUX abonnements
-          try {
-            await webpush.sendNotification(subscription, JSON.stringify({
-              title: 'MangooTech - Notifications activées',
-              body: 'Vous recevrez désormais les appels même quand le dashboard est fermé.',
-              icon: '/mangoo-logo-192.png',
-              badge: '/mangoo-logo-192.png',
-              tag: 'mangoo-sub-confirm',
-              kind: 'system',
-              requireInteraction: false,
-              data: { url: '/mangoo-local.html', kind: 'system' }
-            }));
-            console.log(`[PushStore] Test push envoye a ${vendorId} avec succes (nouvel abonnement)`);
-          } catch (e) {
-            console.warn(`[PushStore] Test push echoue pour ${vendorId}:`, e.statusCode, e.message);
-          }
-        } else {
-          console.log(`[PushStore] Abonnement existant mis a jour pour ${vendorId}, pas de test push`);
-        }
+        const { ok } = saveSubscription(vendorId, subscription);
         sendJson(res, ok ? 200 : 500, { success: ok });
       } else {
         sendJson(res, 405, { error: 'Method not allowed' });

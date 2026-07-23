@@ -28,19 +28,13 @@ function writeStore(data) {
  */
 export function saveSubscription(vendorId, subscription) {
   const store = readStore();
-  if (!store[vendorId]) store[vendorId] = [];
-  // Éviter les doublons (même endpoint)
-  const idx = store[vendorId].findIndex(s => s.endpoint === subscription.endpoint);
-  let isNew = false;
-  if (idx >= 0) {
-    store[vendorId][idx] = { ...subscription, updatedAt: new Date().toISOString() };
-  } else {
-    store[vendorId].push({ ...subscription, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
-    isNew = true;
-  }
+  const oldCount = store[vendorId] ? store[vendorId].length : 0;
+  // Remplacer TOUTES les anciennes souscriptions pour ce vendor
+  // Évite les doublons de push quand plusieurs souscriptions s'accumulent
+  store[vendorId] = [{ ...subscription, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }];
   writeStore(store);
-  console.log(`[PushStore] Souscription sauvegardée pour vendor ${vendorId} (total: ${store[vendorId].length}, nouveau: ${isNew})`);
-  return { ok: true, isNew };
+  console.log(`[PushStore] Souscription sauvegardée pour vendor ${vendorId} (${oldCount} anciennes remplacées, total: 1)`);
+  return { ok: true, isNew: true };
 }
 
 /**

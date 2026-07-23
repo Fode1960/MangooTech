@@ -14761,20 +14761,35 @@
                 // Verifier si deja abonne avec le bon domaine
                 var reg = await navigator.serviceWorker.ready;
                 var existingSub = await reg.pushManager.getSubscription();
+                var currentOrigin = window.location.origin;
+                var lastOrigin = localStorage.getItem('lp_push_origin');
+                var originChanged = lastOrigin && lastOrigin !== currentOrigin;
+
                 if (existingSub) {
-                    var pushCleaned = localStorage.getItem('lp_push_cleaned');
-                    if (!pushCleaned) {
-                        console.log('[Push] Nettoyage unique de l\'ancien abonnement...');
+                    // Si l'origine a change (nouveau tunnel), forcer le nettoyage
+                    if (originChanged) {
+                        console.log('[Push] Changement d\'origine detecte (' + lastOrigin + ' → ' + currentOrigin + '), nettoyage...');
                         try { await existingSub.unsubscribe(); } catch(e) { console.warn('[Push] Erreur desabonnement:', e.message); }
-                        localStorage.setItem('lp_push_cleaned', '1');
-                        console.log('[Push] Nettoyage termine, creation d\'un nouvel abonnement frais');
+                        localStorage.removeItem('lp_push_cleaned');
+                        console.log('[Push] Ancien abonnement nettoye, creation d\'un nouveau');
                         // Ne pas retourner - continuer pour creer un nouvel abonnement frais
                     } else {
-                        console.log('[Push] Abonnement existant reutilise, endpoint: ' + (existingSub.endpoint || '').substring(0, 60));
-                        await lpSavePushSubscription(existingSub);
-                        return;
+                        var pushCleaned = localStorage.getItem('lp_push_cleaned');
+                        if (!pushCleaned) {
+                            console.log('[Push] Nettoyage unique de l\'ancien abonnement...');
+                            try { await existingSub.unsubscribe(); } catch(e) { console.warn('[Push] Erreur desabonnement:', e.message); }
+                            localStorage.setItem('lp_push_cleaned', '1');
+                            console.log('[Push] Nettoyage termine, creation d\'un nouvel abonnement frais');
+                            // Ne pas retourner - continuer pour creer un nouvel abonnement frais
+                        } else {
+                            console.log('[Push] Abonnement existant reutilise, endpoint: ' + (existingSub.endpoint || '').substring(0, 60));
+                            await lpSavePushSubscription(existingSub);
+                            return;
+                        }
                     }
                 }
+                // Memoriser l'origine actuelle
+                localStorage.setItem('lp_push_origin', currentOrigin);
                 // Verifier vendorId
                 var vendorId = lpGetVendorWsVendorId();
                 if (!vendorId) {

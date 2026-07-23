@@ -74,8 +74,8 @@ self.addEventListener('push', (event) => {
   const notifKind = data.kind || 'call';
   const options = {
     body: data.body || 'Un client souhaite vous contacter',
-    icon: data.icon || '/mangoo-logo-192.png',
-    badge: data.badge || '/mangoo-logo-192.png',
+    icon: data.icon || '/favicon.svg',
+    badge: data.badge || '/favicon.svg',
     tag: data.tag || (notifKind === 'chat' ? 'mangoo-chat-' : 'mangoo-call-') + (data.roomId || Date.now()),
     requireInteraction: data.requireInteraction !== undefined ? data.requireInteraction : (notifKind !== 'system'),
     vibrate: notifKind === 'system' ? [100] : [200, 100, 200, 100, 200],
