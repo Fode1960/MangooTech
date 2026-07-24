@@ -3712,7 +3712,7 @@
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: #1b5e20;
-            z-index: 22000;
+            z-index: 22100;
             display: none;
             flex-direction: column;
         }
@@ -3902,6 +3902,288 @@
             transition: opacity 0.2s;
         }
         #liveShopConfirmCard .lsc-track:hover { opacity: 0.9; }
+
+        /* === LIVE SHOPPING PANEL === */
+        .lp-live-header {
+            background: linear-gradient(135deg, #1b5e20, #14521b);
+            color: #fff; padding: 10px 16px;
+            font-weight: 700; font-size: 0.95rem;
+            border-radius: 14px 14px 0 0;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .lp-live-dot { width: 10px; height: 10px; border-radius: 50%; background: #fff; animation: lpPulse 1.5s infinite; }
+        @keyframes lpPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        .lp-live-share-bar {
+            display: flex; align-items: center; gap: 6px; padding: 8px 12px;
+            background: rgba(27,94,32,0.06); border-bottom: 1px solid var(--ml-border);
+        }
+        .lp-live-share-bar span { color: var(--ml-muted); white-space: nowrap; }
+        .lp-live-share-bar input {
+            flex: 1; padding: 6px 10px; border: 1px solid var(--ml-border); border-radius: 20px;
+            background: var(--ml-panel); color: var(--ml-text); font-size: 0.72rem; outline: none;
+            cursor: text; min-width: 0;
+        }
+        .lp-live-share-bar button {
+            padding: 6px 10px; background: var(--ml-brand-from); color: #fff; border: none;
+            border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 0.8rem;
+        }
+        .lp-live-row { display: flex; flex-direction: column; gap: 12px; padding: 12px; background: var(--ml-panel); }
+        .lp-live-cam { width: 100%; height: 180px; border-radius: 10px; background: #000; object-fit: cover; border: 2px solid var(--ml-brand-from); flex-shrink: 0; }
+        .lp-live-products { display: flex; flex-direction: column; gap: 10px; max-height: 280px; overflow-y: auto; }
+        .lp-live-product-card {
+            background: var(--ml-bg); border-radius: 12px; padding: 12px;
+            display: flex; align-items: center; gap: 14px; cursor: pointer;
+            border: 2px solid transparent; transition: all 0.2s;
+            min-height: 72px;
+        }
+        .lp-live-product-card:hover { border-color: var(--ml-brand-from); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .lp-live-product-card.lp-live-product-selected {
+            border-color: var(--ml-brand-from) !important;
+            box-shadow: 0 0 0 3px rgba(27,94,32,0.25);
+            background: #e8f5e9;
+        }
+        .lp-live-product-img { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; background: #e5e7eb; flex-shrink: 0; }
+        .lp-live-product-info { flex: 1; }
+        .lp-live-product-name { font-size: 0.9rem; font-weight: 700; color: var(--ml-text); margin-bottom: 4px; }
+        .lp-live-product-price { font-size: 0.85rem; color: var(--ml-brand-from); font-weight: 700; }
+        .lp-live-product-action { font-size: 0.75rem; color: var(--ml-muted); margin-top: 2px; }
+        .lp-live-chat { background: var(--ml-panel); border-top: 1px solid var(--ml-border); }
+        .lp-live-chat-msgs { max-height: 150px; overflow-y: auto; padding: 8px 12px; background: var(--ml-bg); }
+        .lp-live-chat-msg { margin-bottom: 6px; font-size: 0.82rem; line-height: 1.4; color: var(--ml-text); }
+        .lp-live-chat-msg strong { color: var(--ml-brand-from); }
+        .lp-live-chat-inp { display: flex; gap: 6px; padding: 8px 12px; }
+        .lp-live-chat-inp input { flex: 1; padding: 8px 12px; border: 1px solid var(--ml-border); border-radius: 20px; background: var(--ml-bg); color: var(--ml-text); font-size: 0.85rem; outline: none; }
+        .lp-live-chat-inp input:focus { border-color: var(--ml-brand-from); }
+        .lp-live-chat-inp button { padding: 8px 16px; background: var(--ml-brand-from); color: #fff; border: none; border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 0.85rem; }
+        .lp-live-actions, .lp-live-actions-client { display: flex; gap: 5px; padding: 10px 12px; background: var(--ml-panel); border-top: 1px solid var(--ml-border); border-radius: 0 0 14px 14px; flex-wrap: nowrap; }
+        .lp-live-copy-link { background: var(--ml-bg); color: var(--ml-text); border: 1px solid var(--ml-border); padding: 8px 6px; border-radius: 18px; cursor: pointer; font-size: 0.72rem; font-weight: 600; white-space: nowrap; flex: 1; text-align: center; }
+        .lp-live-select-products { background: #f59e0b; color: #fff; border: none; padding: 8px 6px; border-radius: 18px; cursor: pointer; font-size: 0.72rem; font-weight: 700; white-space: nowrap; flex: 1; text-align: center; }
+        .lp-live-stop { background: var(--ml-danger); color: #fff; border: none; padding: 8px 6px; border-radius: 18px; cursor: pointer; font-size: 0.72rem; font-weight: 700; white-space: nowrap; flex: 1; text-align: center; }
+        .lp-live-call-vendor { background: var(--ml-brand-from); color: #fff; border: none; padding: 10px 20px; border-radius: 22px; cursor: pointer; font-size: 0.9rem; font-weight: 700; flex: 1; }
+        .lp-live-leave { background: var(--ml-muted); color: #fff; border: none; padding: 10px 16px; border-radius: 22px; cursor: pointer; font-size: 0.85rem; }
+        #lpLiveVendorPanel, #lpLiveClientPanel {
+            position: fixed; bottom: 20px; right: 20px; z-index: 22000;
+            width: 420px; max-width: calc(100vw - 40px); max-height: 85vh;
+            border-radius: 14px; overflow-y: auto;
+            display: none; flex-direction: column;
+            box-shadow: var(--ml-shadow-md);
+        }
+        /* Client panel en mode fullscreen immersif */
+        #lpLiveClientPanel.lp-live-fullscreen {
+            position: fixed; inset: 0; z-index: 22000;
+            width: 100%; max-width: 100%; max-height: 100%;
+            border-radius: 0; overflow: hidden;
+            display: none; flex-direction: column;
+            background: #0a0f0a; /* fond sombre neutre derrière l'image produit */
+            box-shadow: none;
+        }
+        .lp-live-fs-bg {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(ellipse at 50% 25%, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 70%, rgba(0,0,0,0.8) 100%);
+        }
+        .lp-live-fs-bg img {
+            width: 100%; height: 100%;
+            object-fit: contain;
+            position: relative; z-index: 1;
+        }
+        .lp-live-fs-bg .lp-live-fs-placeholder {
+            position: absolute; inset: 0; z-index: 1;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: rgba(255,255,255,0.25); opacity: 0.7;
+        }
+        .lp-live-fs-bg .lp-live-fs-placeholder .lp-live-fs-ph-icon {
+            font-size: 5rem; margin-bottom: 16px;
+        }
+        .lp-live-fs-bg .lp-live-fs-placeholder .lp-live-fs-ph-text {
+            font-size: 1rem; font-weight: 500;
+        }
+        /* Panneau bas — blanc comme chez le vendeur */
+        .lp-live-fs-bottom-sheet {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            z-index: 8;
+            background: #ffffff;
+            border-radius: 20px 20px 0 0;
+            padding: 16px 14px 20px;
+            box-shadow: 0 -4px 24px rgba(0,0,0,0.2);
+            min-height: 140px;
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        /* Header — en haut à gauche, style Mangoo */
+        .lp-live-fs-header {
+            position: absolute; top: 14px; left: 14px;
+            z-index: 10; max-width: calc(100% - 210px);
+            background: rgba(27,94,32,0.85); backdrop-filter: blur(10px);
+            color: #fff; padding: 7px 16px; border-radius: 20px;
+            font-size: 0.78rem; font-weight: 700;
+            display: flex; align-items: center; gap: 6px;
+            pointer-events: none;
+            border: 1px solid rgba(255,255,255,0.15);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .lp-live-fs-header .lp-live-dot {
+            width: 7px; height: 7px; min-width: 7px; background: #4caf50;
+            border-radius: 50%; animation: livePulse 1.5s ease-in-out infinite;
+            box-shadow: 0 0 6px rgba(76,175,80,0.7);
+        }
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(1.5); }
+        }
+        /* Video PiP containers — insérés dans le panneau blanc */
+        .lp-live-fs-pip-row {
+            display: flex; gap: 36px; justify-content: center;
+        }
+        .lp-live-fs-pip {
+            width: 100px; height: 135px;
+            border-radius: 12px; overflow: hidden;
+            border: 2px solid #e5e7eb;
+            background: #1a1a1a;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+            position: relative; flex-shrink: 0;
+        }
+        .lp-live-fs-pip video {
+            width: 100%; height: 100%; object-fit: cover;
+            position: relative; z-index: 1;
+        }
+        .lp-live-fs-pip-placeholder {
+            position: absolute; inset: 0; z-index: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: rgba(255,255,255,0.35); font-size: 0.62rem; gap: 4px;
+        }
+        .lp-live-fs-pip-placeholder .lp-live-fs-pip-icon {
+            font-size: 1.5rem; opacity: 0.5;
+        }
+        .lp-live-fs-pip.has-stream .lp-live-fs-pip-placeholder { display: none; }
+        .lp-live-fs-pip-label {
+            position: absolute; bottom: 3px; left: 4px; right: 4px; z-index: 2;
+            background: rgba(0,0,0,0.7); color: #fff;
+            font-size: 0.55rem; font-weight: 800; padding: 2px 5px;
+            border-radius: 4px; text-align: center;
+        }
+        .lp-live-fs-pip-left .lp-live-fs-pip-label { color: #66bb6a; }
+        .lp-live-fs-pip-right .lp-live-fs-pip-label { color: #81c784; }
+        /* Top action bar — en haut à droite, séparé du header */
+        .lp-live-fs-top-actions {
+            position: absolute; top: 12px; right: 12px; z-index: 20;
+            display: flex; gap: 8px; align-items: center;
+        }
+        /* Quit button */
+        .lp-live-fs-quit {
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+            color: #ffcdd2; border: 1px solid rgba(239,68,68,0.25);
+            padding: 7px 14px; border-radius: 20px;
+            font-size: 0.76rem; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; gap: 4px;
+            transition: all 0.2s;
+        }
+        .lp-live-fs-quit:hover { background: rgba(239,68,68,0.2); color: #fff; border-color: rgba(239,68,68,0.5); }
+        /* Chat toggle button */
+        .lp-live-fs-chat-btn {
+            width: 40px; height: 40px;
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+            color: #c8e6c9; border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50%; font-size: 1.1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .lp-live-fs-chat-btn:hover { background: rgba(76,175,80,0.25); border-color: rgba(76,175,80,0.4); }
+        /* Call vendor button — combiné rouge 📞 sur fond vert Mangoo */
+        .lp-live-fs-call-btn {
+            width: 42px; height: 42px;
+            background: var(--ml-brand-from, #1b5e20);
+            color: #fff; border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            font-size: 1.3rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+            box-shadow: 0 0 12px rgba(27,94,32,0.35);
+        }
+        .lp-live-fs-call-btn:hover { background: #14521b; border-color: rgba(255,255,255,0.55); transform: scale(1.08); box-shadow: 0 0 18px rgba(27,94,32,0.5); }
+        /* Filtre pour rendre l'emoji 📞 entièrement rouge */
+        .lp-call-icon-red {
+            display: inline-block;
+            filter: brightness(0) saturate(100%) invert(14%) sepia(95%) saturate(6932%) hue-rotate(358deg) brightness(94%) contrast(112%);
+        }
+        /* Chat overlay — clair comme le chat vendeur, dans le panneau bas */
+        .lp-live-fs-chat-overlay {
+            z-index: 15;
+            background: #ffffff;
+            border-top: 1px solid #e5e7eb;
+            display: none; flex-direction: column;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .lp-live-fs-chat-overlay.open { display: flex; }
+        .lp-live-fs-chat-msgs {
+            flex: 1; overflow-y: auto; padding: 10px 14px; min-height: 60px;
+            max-height: 200px;
+            background: #f6faf3;
+        }
+        .lp-live-fs-chat-msg { margin-bottom: 6px; font-size: 0.82rem; line-height: 1.4; color: #2d3436; }
+        .lp-live-fs-chat-msg strong { color: #1b5e20; }
+        .lp-live-fs-chat-inp {
+            display: flex; gap: 6px; padding: 8px 12px;
+            border-top: 1px solid #e5e7eb;
+            background: #ffffff;
+        }
+        .lp-live-fs-chat-inp input {
+            flex: 1; padding: 8px 14px;
+            border: 1px solid #d1d5db; border-radius: 20px;
+            background: #f6faf3; color: #2d3436; font-size: 0.85rem; outline: none;
+        }
+        .lp-live-fs-chat-inp input::placeholder { color: #9ca3af; }
+        .lp-live-fs-chat-inp input:focus { border-color: #1b5e20; }
+        .lp-live-fs-chat-inp button {
+            padding: 8px 16px; background: #1b5e20; color: #fff;
+            border: none; border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 0.85rem;
+        }
+        .lp-live-fs-chat-inp button:hover { background: #14521b; }
+        /* Product picker modal */
+        #lpLiveProductPicker {
+            display: none; position: fixed; inset: 0; z-index: 23000;
+            background: rgba(0,0,0,0.5); align-items: center; justify-content: center;
+        }
+        #lpLiveProductPicker.active { display: flex; }
+        #lpLiveProductPicker .picker-card {
+            background: var(--ml-panel); border-radius: 16px; padding: 20px;
+            width: 90%; max-width: 450px; max-height: 70vh; overflow-y: auto;
+        }
+        #lpLiveProductPicker .picker-title { color: var(--ml-text); font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; }
+        #lpLiveProductPicker .picker-item {
+            display: flex; align-items: center; gap: 10px; padding: 8px;
+            border-radius: 10px; cursor: pointer; margin-bottom: 6px;
+            border: 1px solid var(--ml-border); transition: all 0.2s;
+            background: var(--ml-bg);
+        }
+        #lpLiveProductPicker .picker-item:hover { border-color: var(--ml-brand-from); }
+        #lpLiveProductPicker .picker-item.selected { border-color: var(--ml-brand-from); background: rgba(27,94,32,0.08); }
+        #lpLiveProductPicker .picker-img { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: #e5e7eb; }
+        #lpLiveProductPicker .picker-name { color: var(--ml-text); font-size: 0.85rem; flex: 1; }
+        #lpLiveProductPicker .picker-price { color: var(--ml-brand-from); font-size: 0.8rem; font-weight: 700; }
+        #lpLiveProductPicker .picker-actions { display: flex; gap: 10px; margin-top: 16px; }
+        #lpLiveProductPicker .picker-actions button { flex: 1; padding: 10px; border-radius: 20px; font-weight: 700; cursor: pointer; border: none; }
+        #lpLiveProductPicker .picker-actions .picker-confirm { background: var(--ml-brand-from); color: #fff; }
+        #lpLiveProductPicker .picker-actions .picker-cancel { background: var(--ml-muted); color: #fff; }
+        /* Go Live Button */
+        .lp-go-live-wrapper {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 21900;
+        }
+        .lp-go-live-btn-main {
+            background: var(--ml-danger);
+            color: #fff; border: none; padding: 10px 22px;
+            border-radius: var(--ml-radius-xl);
+            font-weight: 600; font-size: 0.86rem;
+            cursor: pointer; display: flex; align-items: center; gap: 6px;
+            box-shadow: var(--ml-shadow-md);
+            transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+        .lp-go-live-btn-main:hover {
+            background: #b91c1c;
+            transform: translateY(-1px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.15);
+        }
         #incomingCallBanner {
             position: fixed;
             top: 0; left: 0; right: 0;
@@ -5338,6 +5620,90 @@
         <a class="lsc-track" id="lscTrackBtn" href="#" onclick="lpOpenOrderTracking(); return false;">📋 Suivre ma commande</a>
     </div>
 
+    <!-- LIVE SHOPPING PANEL - VENDOR -->
+    <div id="lpLiveVendorPanel" style="display:none;">
+        <div class="lp-live-header">
+            <span class="lp-live-dot"></span> En direct - <span id="lpLiveViewerCount">0</span> spectateur(s)
+        </div>
+        <div class="lp-live-share-bar" id="lpLiveShareBar">
+            <span style="font-size:0.78rem;opacity:0.8;">🔗 Lien du live :</span>
+            <input id="lpLiveShareLink" type="text" readonly value="" onclick="this.select()" title="Cliquez pour copier" />
+            <button onclick="lpCopyLiveLink()" title="Copier le lien">📋</button>
+        </div>
+        <div id="lpLiveShareNote" style="display:none; padding:6px 12px; background:#fff3cd; color:#856404; font-size:0.72rem; font-weight:600; border-bottom:1px solid #ffc107;">
+            ⚠️ Vous êtes sur localhost. Pour que le lien fonctionne sur Android, ouvrez le dashboard depuis l'adresse IP de votre PC (ex: <b>http://192.168.1.18:3015/mangoo-local.html?vendor=1784327703839&lpRole=vendor</b>).
+        </div>
+        <div class="lp-live-row">
+            <video id="lpLivePreview" class="lp-live-cam" autoplay muted playsinline></video>
+            <div class="lp-live-products" id="lpLiveProducts"></div>
+        </div>
+        <div class="lp-live-chat" id="lpLiveChatVendor">
+            <div class="lp-live-chat-msgs" id="lpLiveChatMsgsVendor"></div>
+            <div class="lp-live-chat-inp">
+                <input id="lpLiveChatInputVendor" type="text" placeholder="Message..." onkeydown="if(event.key==='Enter')lpSendLiveChat()">
+                <button onclick="lpSendLiveChat()">Envoyer</button>
+            </div>
+        </div>
+        <div class="lp-live-actions">
+            <button class="lp-live-copy-link" onclick="lpCopyLiveLink()">📋 Copier le lien</button>
+            <button class="lp-live-select-products" onclick="lpShowLiveProductPicker()">📦 Choisir produits</button>
+            <button class="lp-live-stop" onclick="lpStopLive()">⏹️ Arrêter le Live</button>
+        </div>
+    </div>
+
+    <!-- LIVE SHOPPING PANEL - CLIENT -->
+    <div id="lpLiveClientPanel" class="lp-live-fullscreen" style="display:none;">
+        <!-- Fond avec la photo du produit en grand -->
+        <div class="lp-live-fs-bg" id="lpLiveClientBg">
+            <img id="lpLiveClientProductImg" src="" alt="Produit" style="display:none;" />
+            <div class="lp-live-fs-placeholder" id="lpLiveClientPlaceholder">
+                <div class="lp-live-fs-ph-icon">🛍️</div>
+                <div class="lp-live-fs-ph-text">En attente du produit...</div>
+            </div>
+        </div>
+        <!-- Header -->
+        <div class="lp-live-fs-header">
+            <span class="lp-live-dot"></span> Live de <span id="lpLiveVendorName">...</span>
+        </div>
+        <!-- Top action buttons -->
+        <div class="lp-live-fs-top-actions">
+            <button class="lp-live-fs-call-btn" onclick="lpCallLiveVendor()" title="Appeler le vendeur"><span class="lp-call-icon-red">📞</span></button>
+            <button class="lp-live-fs-chat-btn" id="lpLiveChatToggle" onclick="lpToggleLiveChat()" title="Messagerie">💬</button>
+            <button class="lp-live-fs-quit" onclick="lpLeaveLive()">✕ Quitter</button>
+        </div>
+        <!-- Panneau bas blanc -->
+        <div class="lp-live-fs-bottom-sheet" id="lpLiveBottomSheet">
+            <!-- Video PiPs -->
+            <div class="lp-live-fs-pip-row">
+                <div class="lp-live-fs-pip lp-live-fs-pip-left" id="lpLiveRemoteVideoPip">
+                    <div class="lp-live-fs-pip-placeholder"><span class="lp-live-fs-pip-icon">📡</span>En direct</div>
+                    <video id="lpLiveRemoteVideo" autoplay playsinline muted></video>
+                    <div class="lp-live-fs-pip-label">🔴 En direct</div>
+                </div>
+                <div class="lp-live-fs-pip lp-live-fs-pip-right" id="lpLiveSelfVideoPip">
+                    <div class="lp-live-fs-pip-placeholder"><span class="lp-live-fs-pip-icon">📷</span>Vous</div>
+                    <video id="lpLiveSelfVideo" autoplay playsinline muted></video>
+                    <div class="lp-live-fs-pip-label">👤 Vous</div>
+                </div>
+            </div>
+            <!-- Chat overlay -->
+            <div class="lp-live-fs-chat-overlay" id="lpLiveClientChatOverlay">
+                <div class="lp-live-fs-chat-msgs" id="lpLiveChatMsgsClient"></div>
+                <div class="lp-live-fs-chat-inp">
+                    <input id="lpLiveChatInputClient" type="text" placeholder="Votre message..." onkeydown="if(event.key==='Enter')lpSendLiveChatClient()">
+                    <button onclick="lpSendLiveChatClient()">Envoyer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GO LIVE BUTTON (shown in vendor toolbar) -->
+    <div id="lpGoLiveBtn" style="display:none;" class="lp-go-live-wrapper">
+        <button class="lp-go-live-btn-main" onclick="lpStartLive()">
+            <span>🔴</span> Démarrer le Live
+        </button>
+    </div>
+
     <!-- INCOMING CALL BANNER -->
     <div id="incomingCallBanner">
         <div class="icb-label">Appel entrant</div>
@@ -6144,7 +6510,7 @@
             selectionOverlay.style.width = '100%';
             selectionOverlay.style.height = '100%';
             selectionOverlay.style.backgroundColor = 'rgba(0,0,0,0.8)';
-            selectionOverlay.style.zIndex = '22000';
+            selectionOverlay.style.zIndex = '22500';
             selectionOverlay.style.display = 'flex';
             selectionOverlay.style.alignItems = 'center';
             selectionOverlay.style.justifyContent = 'center';
@@ -13834,6 +14200,8 @@
         function lpHideProductCard() {
             const card = document.getElementById('liveShopProductCard');
             if (card) card.style.display = 'none';
+            var overlay = document.getElementById('lpProductOverlay');
+            if (overlay) overlay.style.display = 'none';
             _lspSharedProduct = null;
             _lspQty = 1;
             _lspRoomId = '';
@@ -13978,6 +14346,14 @@
             if (btn) { btn.textContent = '🛒 Acheter'; btn.disabled = false; }
             card.style.display = 'block';
             console.log('[LiveShop] Produit affiche: ' + product.name + ' (' + (priceVal || '?') + ' FCFA)');
+
+            // Afficher l'overlay photo grand format derriere la carte de paiement
+            var overlay = document.getElementById('lpProductOverlay');
+            var overlayImg = overlay ? overlay.querySelector('img') : null;
+            if (overlay && overlayImg) {
+                var imgSrc = product.img || product.photo || product.image || '';
+                if (imgSrc) { overlayImg.src = imgSrc; overlay.style.display = 'flex'; }
+            }
         }
 
         function lpBuySharedProduct() {
@@ -15007,6 +15383,10 @@
                     relayWebRTCToIframe(data);
                     break;
                 default:
+                    // Rediriger les messages live vers leur handler
+                    if (data.type && data.type.startsWith('live:')) {
+                        if (typeof lpHandleLiveMessage === 'function') lpHandleLiveMessage(data);
+                    }
                     break;
             }
         }
@@ -15438,6 +15818,7 @@
                         const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
                         const acceptedRoomId = data.roomId || (activeCallData ? activeCallData.roomId : '');
                         const role = _amCaller ? 'caller' : 'callee';
+                        callOverlay.style.display = 'flex';
                         callOverlay.classList.add('loading');
                         callFrame.onload = function() { callOverlay.classList.remove('loading'); };
                         callFrame.src = 'webrtc-audio.html?callee=' + encodeURIComponent(calleeName) + '&theme=' + isDark + '&mode=audio&autoConnect=true&t=' + Date.now() + '&role=' + role + '&roomId=' + encodeURIComponent(acceptedRoomId);
@@ -22822,6 +23203,865 @@
                 }
             }
         }
+
+        // ===== NOUVELLES FONCTIONS LIVE SHOPPING (in-dashboard) =====
+        var _lpLiveActive = false;
+        var _lpLiveVendorId = null;
+        var _lpLiveProducts = [];
+        var _lpLiveViewerCount = 0;
+        var _lpLiveIsVendor = false;
+        var _lpLiveStream = null;
+        var _lpLiveProductPickerSelected = [];
+
+        // Afficher le bouton Go Live si l'utilisateur est un vendeur connecte
+        function lpInitGoLiveButton() {
+            var btn = document.getElementById('lpGoLiveBtn');
+            if (!btn) return;
+            try {
+                var params = new URLSearchParams(window.location.search);
+                var isVendor = params.get('lpRole') === 'vendor' || params.get('role') === 'vendor';
+                var vendorId = params.get('vendor') || '';
+
+                // Fallback: activeVendor peut ne pas etre encore charge
+                if (!isVendor && typeof activeVendor !== 'undefined' && activeVendor && activeVendor.id) {
+                    isVendor = true;
+                    if (!vendorId) vendorId = activeVendor.id;
+                }
+                // Fallback: localStorage
+                if (!vendorId) {
+                    try {
+                        var stored = localStorage.getItem('lp_vendor_id');
+                        if (stored) vendorId = stored;
+                    } catch(e) {}
+                }
+                // Fallback: verifier si l'URL contient un parametre indiquant un dashboard vendeur
+                if (!isVendor) {
+                    var path = window.location.pathname;
+                    if (path.includes('mangoo-local') && vendorId) isVendor = true;
+                }
+
+                if (isVendor && vendorId && !_lpLiveActive) {
+                    btn.style.display = 'block';
+                    _lpLiveVendorId = vendorId;
+                    _lpLiveIsVendor = true;
+                    console.log('[Live] Bouton Go Live active pour vendor', vendorId);
+                }
+            } catch(e) { console.warn('[Live] Erreur init bouton:', e); }
+        }
+
+        // Demarrer un live (vendeur)
+        async function lpStartLive() {
+            if (_lpLiveActive) return;
+            var vendorId = _lpLiveVendorId;
+            if (!vendorId) {
+                try {
+                    var params = new URLSearchParams(window.location.search);
+                    vendorId = params.get('vendor') || '';
+                } catch(e) {}
+            }
+            if (!vendorId) { alert('Vendeur non identifié. Rechargez la page.'); return; }
+            _lpLiveVendorId = vendorId;
+            _lpLiveIsVendor = true;
+
+            // Ouvrir le picker de produits d'abord
+            lpShowLiveProductPicker();
+        }
+
+        // Afficher le picker de produits
+        async function lpShowLiveProductPicker() {
+            var picker = document.getElementById('lpLiveProductPicker');
+            if (!picker) {
+                // Creer le modal si pas encore dans le DOM
+                var div = document.createElement('div');
+                div.id = 'lpLiveProductPicker';
+                div.innerHTML = '<div class="picker-card"><div class="picker-title">📦 Choisir les produits à présenter</div><div id="lpLivePickerList">Chargement...</div><div class="picker-actions"><button class="picker-cancel" onclick="lpCloseProductPicker()">Annuler</button><button class="picker-confirm" onclick="lpConfirmLiveProducts()">✅ Confirmer</button></div></div>';
+                document.body.appendChild(div);
+                picker = div;
+            }
+            picker.classList.add('active');
+            _lpLiveProductPickerSelected = [..._lpLiveProducts];
+
+            // Charger les produits de la boutique
+            var listEl = document.getElementById('lpLivePickerList');
+            if (!listEl) return;
+            listEl.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px;">Chargement...</div>';
+
+            try {
+                var vendorId = '';
+                var vendorSlug = '';
+                if (typeof activeVendor !== 'undefined' && activeVendor) {
+                    vendorId = activeVendor.id || '';
+                    vendorSlug = activeVendor.slug || '';
+                }
+                if (!vendorId) vendorId = _lpLiveVendorId;
+                if (!vendorSlug) vendorSlug = vendorId;
+
+                var products = [];
+                var loaded = false;
+
+                // 1. Essayer le fichier JSON local (produits my-products) SANS photos pour rapidité
+                try {
+                    var myResp = await fetch('/api/my-products?shopId=' + encodeURIComponent(vendorId) + '&stripPhotos=1');
+                    var myData = await myResp.json();
+                    if (myData.success && Array.isArray(myData.products) && myData.products.length > 0) {
+                        products = myData.products;
+                        loaded = true;
+                    }
+                } catch(e) {
+                    console.warn('[Live Picker] Echec my-products:', e.message);
+                }
+
+                // 2. Fallback: Supabase via slug
+                if (!loaded) {
+                    try {
+                        var resp = await fetch('/api/shops/slug/' + encodeURIComponent(vendorSlug) + '/products');
+                        var data = await resp.json();
+                        products = (data && data.products) ? data.products : (Array.isArray(data) ? data : []);
+                    } catch(e) {
+                        console.warn('[Live Picker] Echec shops/slug:', e.message);
+                    }
+                }
+
+                if (products.length === 0) {
+                    listEl.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px;">Aucun produit trouvé</div>';
+                    return;
+                }
+                listEl.innerHTML = '';
+                products.forEach(function(p) {
+                    var name = p.name || p.title || 'Produit';
+                    // Normaliser le prix (supporte '25 000', 25000, '25000 FCFA')
+                    var rawPrice = p.price;
+                    if (typeof rawPrice === 'string') {
+                        rawPrice = parseFloat(String(rawPrice).replace(/[^\d.,]/g, '').replace(',', '.'));
+                    }
+                    var price = (typeof rawPrice === 'number' && !isNaN(rawPrice)) ? rawPrice : (p.priceCfa || 0);
+                    var img = p.img || p.photo || p.image || (p.images && p.images[0]) || '';
+                    var pid = p.id || p._id || '';
+                    var isSel = _lpLiveProductPickerSelected.some(function(sp) { return (sp.id || sp._id) === pid; });
+                    var item = document.createElement('div');
+                    item.className = 'picker-item' + (isSel ? ' selected' : '');
+                    item.setAttribute('data-pid', pid);
+                    item.innerHTML = '<img class="picker-img" src="' + lpEscapeAttr(img) + '" onerror="this.style.display=\'none\'" /><span class="picker-name">' + lpEscapeHtml(name) + '</span><span class="picker-price">' + (price > 0 ? price.toLocaleString() + ' FCFA' : 'Sur demande') + '</span>';
+                    item.onclick = function() {
+                        var idx = _lpLiveProductPickerSelected.findIndex(function(sp) { return (sp.id || sp._id) === pid; });
+                        if (idx >= 0) {
+                            _lpLiveProductPickerSelected.splice(idx, 1);
+                            item.classList.remove('selected');
+                        } else {
+                            _lpLiveProductPickerSelected.push(p);
+                            item.classList.add('selected');
+                        }
+                    };
+                    listEl.appendChild(item);
+                });
+
+                // 3. Charger les photos en arrière-plan (sans stripPhotos) et patcher les images
+                (async function patchPhotos() {
+                    try {
+                        var fullResp = await fetch('/api/my-products?shopId=' + encodeURIComponent(vendorId));
+                        var fullData = await fullResp.json();
+                        if (fullData.success && Array.isArray(fullData.products)) {
+                            fullData.products.forEach(function(fp) {
+                                var fpid = fp.id || fp._id || '';
+                                var photoSrc = fp.photo || fp.img || fp.image || (fp.images && fp.images[0]) || '';
+                                if (photoSrc) {
+                                    var items = listEl.querySelectorAll('.picker-item[data-pid="' + fpid + '"] .picker-img');
+                                    items.forEach(function(imgEl) {
+                                        imgEl.src = photoSrc;
+                                        imgEl.style.display = '';
+                                    });
+                                }
+                            });
+                        }
+                    } catch(e) {
+                        console.warn('[Live Picker] Echec chargement photos:', e.message);
+                    }
+                })();
+            } catch(e) {
+                listEl.innerHTML = '<div style="color:#e53935;text-align:center;padding:20px;">Erreur: ' + e.message + '</div>';
+            }
+        }
+
+        function lpCloseProductPicker() {
+            var picker = document.getElementById('lpLiveProductPicker');
+            if (picker) picker.classList.remove('active');
+        }
+
+        async function lpConfirmLiveProducts() {
+            _lpLiveProducts = _lpLiveProductPickerSelected;
+            lpCloseProductPicker();
+
+            var vendorId = _lpLiveVendorId;
+            if (!vendorId || _lpLiveProducts.length === 0) {
+                if (_lpLiveProducts.length === 0) alert('Sélectionnez au moins un produit.');
+                return;
+            }
+
+            // Recharger les produits AVEC photos pour le live (le picker les a chargés sans)
+            try {
+                var fullResp = await fetch('/api/my-products?shopId=' + encodeURIComponent(vendorId));
+                var fullData = await fullResp.json();
+                if (fullData.success && Array.isArray(fullData.products)) {
+                    var fullProducts = fullData.products;
+                    // Fusionner les photos dans les produits sélectionnés
+                    _lpLiveProducts = _lpLiveProducts.map(function(sp) {
+                        var pid = sp.id || sp._id;
+                        var full = fullProducts.find(function(fp) { return (fp.id || fp._id) === pid; });
+                        if (full) {
+                            sp.photo = full.photo || sp.photo || '';
+                            sp.img = full.img || full.photo || sp.img || '';
+                        }
+                        return sp;
+                    });
+                }
+            } catch(e) { console.warn('[Live] Echec rechargement photos:', e.message); }
+
+            var productsPayload = _lpLiveProducts.map(function(p) { return { id: p.id || p._id, name: p.name || p.title, price: p.price || p.priceCfa || 0, img: p.img || p.photo || p.image || '' }; });
+
+            if (!_lpLiveActive) {
+                // PREMIER DEMARRAGE : activer camera + envoyer live:start
+                try {
+                    _lpLiveStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                    var preview = document.getElementById('lpLivePreview');
+                    if (preview) { preview.srcObject = _lpLiveStream; }
+                } catch(e) { console.warn('[Live] Camera non disponible:', e.message); }
+
+                if (typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                    webrtcMgmtWs.send(JSON.stringify({
+                        type: 'live:start',
+                        vendorId: vendorId,
+                        products: productsPayload
+                    }));
+                }
+
+                _lpLiveActive = true;
+                _lpLiveViewerCount = 0;
+
+                // Afficher le panneau vendeur
+                var panel = document.getElementById('lpLiveVendorPanel');
+                if (panel) { panel.style.display = 'flex'; }
+                var btn = document.getElementById('lpGoLiveBtn');
+                if (btn) btn.style.display = 'none';
+
+                // Remplir le lien de partage
+                var link = _lpGetLiveUrl();
+                var linkInput = document.getElementById('lpLiveShareLink');
+                if (linkInput) linkInput.value = link;
+            } else {
+                // MISE A JOUR : le live est deja actif, envoyer live:products
+                if (typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                    webrtcMgmtWs.send(JSON.stringify({
+                        type: 'live:products',
+                        vendorId: vendorId,
+                        products: productsPayload
+                    }));
+                }
+            }
+
+            lpRenderLiveProducts('lpLiveProducts');
+            document.getElementById('lpLiveViewerCount').textContent = _lpLiveViewerCount || 0;
+        }
+
+        // Arreter le live (vendeur)
+        function lpStopLive() {
+            if (!_lpLiveActive) return;
+            var vendorId = _lpLiveVendorId;
+            if (typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                webrtcMgmtWs.send(JSON.stringify({ type: 'live:stop', vendorId: vendorId }));
+            }
+            lpCleanupLive();
+        }
+
+        function lpCleanupLive() {
+            _lpLiveActive = false;
+            _lpLiveViewerCount = 0;
+            if (_lpLiveStream) { _lpLiveStream.getTracks().forEach(function(t) { t.stop(); }); _lpLiveStream = null; }
+            var preview = document.getElementById('lpLivePreview');
+            if (preview) preview.srcObject = null;
+            // Nettoyer la camera self-view
+            if (_lpSelfStream) { _lpSelfStream.getTracks().forEach(function(t) { t.stop(); }); _lpSelfStream = null; }
+            var selfVideo = document.getElementById('lpLiveSelfVideo');
+            if (selfVideo) selfVideo.srcObject = null;
+
+            var vendorPanel = document.getElementById('lpLiveVendorPanel');
+            if (vendorPanel) vendorPanel.style.display = 'none';
+            var clientPanel = document.getElementById('lpLiveClientPanel');
+            if (clientPanel) clientPanel.style.display = 'none';
+            var chatV = document.getElementById('lpLiveChatMsgsVendor');
+            if (chatV) chatV.innerHTML = '';
+            var chatC = document.getElementById('lpLiveChatMsgsClient');
+            if (chatC) chatC.innerHTML = '';
+            // Fermer le chat overlay client
+            var chatOverlay = document.getElementById('lpLiveClientChatOverlay');
+            if (chatOverlay) chatOverlay.classList.remove('open');
+            // Réinitialiser le fond produit client
+            var bgImg = document.getElementById('lpLiveClientProductImg');
+            if (bgImg) { bgImg.src = ''; bgImg.style.display = 'none'; }
+            var placeholder = document.getElementById('lpLiveClientPlaceholder');
+            if (placeholder) placeholder.style.display = 'flex';
+            // Cacher la carte produit
+            lpHideProductCard();
+
+            lpInitGoLiveButton();
+        }
+
+        // Rejoindre un live (client)
+        function lpJoinLive(vendorId) {
+            if (!vendorId) return;
+            _lpLiveVendorId = vendorId;
+            _lpLiveIsVendor = false;
+
+            if (typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                webrtcMgmtWs.send(JSON.stringify({ type: 'live:join', vendorId: vendorId, userId: 'client-' + Date.now() }));
+            } else {
+                // Si WebSocket pas encore connecte, attendre
+                setTimeout(function() { lpJoinLive(vendorId); }, 500);
+            }
+        }
+
+        // Quitter le live (client)
+        function lpLeaveLive() {
+            if (!_lpLiveVendorId) return;
+            if (typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                webrtcMgmtWs.send(JSON.stringify({ type: 'live:leave', vendorId: _lpLiveVendorId, userId: 'client-viewer' }));
+            }
+            lpCleanupLive();
+        }
+
+        // Détecter l'IP réseau du PC (pour les liens partagés vers Android)
+        var _lpNetworkIp = localStorage.getItem('lp_network_ip') || '';
+        function lpDetectNetworkIp() {
+            return new Promise(function(resolve) {
+                var stored = localStorage.getItem('lp_network_ip');
+                if (stored) { _lpNetworkIp = stored; resolve(stored); return; }
+                try {
+                    var pc = new RTCPeerConnection({ iceServers: [] });
+                    pc.createDataChannel('');
+                    pc.createOffer().then(function(offer) { pc.setLocalDescription(offer); });
+                    pc.onicecandidate = function(e) {
+                        if (e.candidate) {
+                            var ip = e.candidate.candidate.match(/([0-9]{1,3}\.){3}[0-9]{1,3}/);
+                            if (ip && ip[0] && ip[0] !== '0.0.0.0' && !ip[0].startsWith('127.')) {
+                                _lpNetworkIp = ip[0];
+                                localStorage.setItem('lp_network_ip', ip[0]);
+                            }
+                        }
+                        if (!e.candidate) {
+                            pc.close();
+                            resolve(_lpNetworkIp || '');
+                        }
+                    };
+                    setTimeout(function() { pc.close(); resolve(_lpNetworkIp || ''); }, 3000);
+                } catch(e) {
+                    resolve('');
+                }
+            });
+        }
+        // Lancer la détection au chargement
+        setTimeout(function() { lpDetectNetworkIp(); }, 2000);
+
+        // Construire l'URL du live (gérer localhost vs IP)
+        function _lpGetLiveUrl() {
+            var protocol = window.location.protocol;
+            var host = window.location.host;
+            var port = window.location.port || '3015';
+            // Détecter si on est sur localhost
+            var isLocalhost = host.indexOf('localhost') >= 0 || host.indexOf('127.0.0.1') >= 0;
+            if (isLocalhost && _lpNetworkIp) {
+                // Utiliser l'IP réseau détectée
+                host = _lpNetworkIp + ':' + port;
+            }
+            var link = protocol + '//' + host + '/mangoo-local.html?live=' + _lpLiveVendorId;
+
+            if (isLocalhost && !_lpNetworkIp) {
+                // Pas d'IP détectée : lancer la détection et afficher un avertissement
+                lpDetectNetworkIp().then(function() {
+                    var fixedLink = protocol + '//' + _lpNetworkIp + ':' + port + '/mangoo-local.html?live=' + _lpLiveVendorId;
+                    var linkInput = document.getElementById('lpLiveShareLink');
+                    if (linkInput) linkInput.value = fixedLink;
+                });
+                var note = document.getElementById('lpLiveShareNote');
+                if (note) note.style.display = 'block';
+            }
+            return link;
+        }
+
+        // Copier le lien du live
+        function lpCopyLiveLink() {
+            var link = _lpGetLiveUrl();
+            var linkInput = document.getElementById('lpLiveShareLink');
+            if (linkInput) { linkInput.value = link; linkInput.select(); }
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(link).then(function() {
+                    var copyBtn = document.querySelector('.lp-live-share-bar button');
+                    if (copyBtn) { var orig = copyBtn.textContent; copyBtn.textContent = '✓'; setTimeout(function() { copyBtn.textContent = orig; }, 1500); }
+                });
+            } else {
+                prompt('Copiez ce lien pour partager votre live :', link);
+            }
+        }
+
+        // Envoyer un message dans le chat (vendeur)
+        function lpSendLiveChat() {
+            var input = document.getElementById('lpLiveChatInputVendor');
+            if (!input || !input.value.trim()) return;
+            if (typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                webrtcMgmtWs.send(JSON.stringify({
+                    type: 'live:chat',
+                    vendorId: _lpLiveVendorId,
+                    message: input.value.trim(),
+                    from: 'vendor',
+                    fromLabel: 'Vendeur'
+                }));
+            }
+            input.value = '';
+        }
+
+        // Envoyer un message dans le chat (client)
+        function lpSendLiveChatClient() {
+            var input = document.getElementById('lpLiveChatInputClient');
+            if (!input || !input.value.trim()) return;
+            if (typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                webrtcMgmtWs.send(JSON.stringify({
+                    type: 'live:chat',
+                    vendorId: _lpLiveVendorId,
+                    message: input.value.trim(),
+                    from: 'client-viewer',
+                    fromLabel: 'Client'
+                }));
+            }
+            input.value = '';
+        }
+
+        function _lpAppendLiveChatMsg(containerId, from, msg, isMine) {
+            var el = document.getElementById(containerId);
+            if (!el) return;
+            var div = document.createElement('div');
+            // Adapter la classe CSS selon le mode (vendeur = panneau flottant, client = fullscreen)
+            div.className = (!_lpLiveIsVendor && containerId === 'lpLiveChatMsgsClient') ? 'lp-live-fs-chat-msg' : 'lp-live-chat-msg';
+            div.innerHTML = '<strong>' + lpEscapeHtml(from) + '</strong> ' + lpEscapeHtml(msg);
+            el.appendChild(div);
+            el.scrollTop = el.scrollHeight;
+        }
+        // Compatibilité : l'ancien nom appelle le nouveau
+        function lpAppendLiveChatMsg(containerId, from, msg, isMine) {
+            _lpAppendLiveChatMsg(containerId, from, msg, isMine);
+        }
+
+        // Variable pour le flux self-view
+        var _lpSelfStream = null;
+
+        // Démarrer la caméra self-view ("Vous")
+        async function _lpStartSelfVideo() {
+            if (_lpSelfStream) return;
+            var pip = document.getElementById('lpLiveSelfVideoPip');
+            try {
+                _lpSelfStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+                var selfVideo = document.getElementById('lpLiveSelfVideo');
+                if (selfVideo) {
+                    selfVideo.srcObject = _lpSelfStream;
+                    if (pip) pip.classList.add('has-stream');
+                }
+                console.log('[Live] Camera self-view démarrée');
+            } catch(e) {
+                console.warn('[Live] Camera self-view non disponible:', e.message);
+                console.warn('[Live] Cause probable: HTTPS requis pour getUserMedia (page chargée en HTTP)');
+                // Mettre à jour le placeholder pour indiquer l'erreur
+                if (pip) {
+                    var ph = pip.querySelector('.lp-live-fs-pip-placeholder');
+                    if (ph) {
+                        ph.querySelector('.lp-live-fs-pip-icon').textContent = '🔒';
+                        ph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'HTTP bloqué';
+                    }
+                }
+            }
+        }
+
+        // Afficher un produit en grand sur la page client
+        function _lpShowClientProduct(product) {
+            if (!product) return;
+            var name = product.name || product.title || 'Produit';
+            var img = product.img || product.photo || product.image || '';
+
+            // Mettre à jour l'image de fond
+            var bgImg = document.getElementById('lpLiveClientProductImg');
+            var placeholder = document.getElementById('lpLiveClientPlaceholder');
+            if (bgImg && img) {
+                bgImg.src = img;
+                bgImg.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'none';
+            } else if (bgImg && !img) {
+                bgImg.style.display = 'none';
+                if (placeholder) placeholder.style.display = 'flex';
+            }
+
+            // Afficher la carte Acheter en bas (sans l'overlay - le fond fait office)
+            lpShowSharedProduct({ name: name, price: product.price, img: img });
+            // Cacher l'overlay produit (on utilise le fond fullscreen à la place)
+            var overlay = document.getElementById('lpProductOverlay');
+            if (overlay) overlay.style.display = 'none';
+        }
+
+        // Toggle du chat overlay sur la page client
+        function lpToggleLiveChat() {
+            var overlay = document.getElementById('lpLiveClientChatOverlay');
+            if (!overlay) return;
+            if (overlay.classList.contains('open')) {
+                overlay.classList.remove('open');
+            } else {
+                overlay.classList.add('open');
+                // Scroll to bottom
+                var msgs = document.getElementById('lpLiveChatMsgsClient');
+                if (msgs) msgs.scrollTop = msgs.scrollHeight;
+            }
+        }
+
+        // Appeler le vendeur depuis le live
+        function lpCallLiveVendor() {
+            if (!_lpLiveVendorId) return;
+            // Utiliser le flux d'appel existant
+            var vendorId = _lpLiveVendorId;
+            if (typeof startAudioCall === 'function') {
+                // Definir activeVendor temporairement si necessaire
+                if (!activeVendor || activeVendor.id !== vendorId) {
+                    activeVendor = { id: vendorId, name: 'Vendeur Live' };
+                }
+                startAudioCall();
+            } else {
+                window.location.href = '/mangoo-local.html?vendor=' + vendorId + '&lpRole=client';
+            }
+        }
+
+        // Rendre les produits dans le panneau live
+        function lpRenderLiveProducts(containerId) {
+            var el = document.getElementById(containerId);
+            if (!el) return;
+            el.innerHTML = '';
+            _lpLiveProducts.forEach(function(p) {
+                var name = p.name || p.title || 'Produit';
+                // Normaliser le prix
+                var rawPrice = p.price;
+                if (typeof rawPrice === 'string') {
+                    rawPrice = parseFloat(String(rawPrice).replace(/[^\d.,]/g, '').replace(',', '.'));
+                }
+                var price = (typeof rawPrice === 'number' && !isNaN(rawPrice)) ? rawPrice : (p.priceCfa || 0);
+                var img = p.img || p.photo || p.image || '';
+                var div = document.createElement('div');
+                div.className = 'lp-live-product-card';
+                div.onclick = function() {
+                    // Vendeur : switcher le produit affiché chez les clients
+                    if (_lpLiveIsVendor && typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                        webrtcMgmtWs.send(JSON.stringify({
+                            type: 'live:switch-product',
+                            vendorId: _lpLiveVendorId,
+                            product: { name: name, price: price, img: img }
+                        }));
+                        // Feedback visuel sur le produit sélectionné
+                        var cards = document.getElementById('lpLiveProducts').querySelectorAll('.lp-live-product-card');
+                        cards.forEach(function(c) { c.classList.remove('lp-live-product-selected'); });
+                        div.classList.add('lp-live-product-selected');
+                    }
+                };
+                div.innerHTML = '<img class="lp-live-product-img" src="' + lpEscapeAttr(img) + '" onerror="this.style.display=\'none\'" /><div class="lp-live-product-info"><div class="lp-live-product-name">' + lpEscapeHtml(name) + '</div><div class="lp-live-product-price">' + (price > 0 ? price.toLocaleString() + ' FCFA' : 'Sur demande') + '</div><div class="lp-live-product-action">👆 Cliquer pour voir le détail</div></div>';
+                el.appendChild(div);
+            });
+        }
+
+        // === HANDLERS DES MESSAGES LIVE DU WEBSOCKET ===
+        // Ces handlers sont appeles depuis la boucle principale de messages WebSocket
+
+        function lpHandleLiveMessage(msg) {
+            switch(msg.type) {
+                case 'live:started':
+                    _lpLiveActive = true;
+                    _lpLiveViewerCount = msg.viewerCount || 0;
+                    _lpLiveProducts = msg.products || [];
+                    lpRenderLiveProducts('lpLiveProducts');
+                    document.getElementById('lpLiveViewerCount').textContent = _lpLiveViewerCount;
+                    var panel = document.getElementById('lpLiveVendorPanel');
+                    if (panel) panel.style.display = 'flex';
+                    break;
+
+                case 'live:stopped':
+                case 'live:ended':
+                    lpCleanupLive();
+                    if (msg.type === 'live:ended') alert(msg.message || 'Le live est terminé.');
+                    break;
+
+                case 'live:joined':
+                    _lpLiveActive = true;
+                    _lpLiveViewerCount = msg.viewerCount || 0;
+                    _lpLiveProducts = msg.products || [];
+                    // Afficher le nom du vendeur
+                    var vName = document.getElementById('lpLiveVendorName');
+                    if (vName) {
+                        if (typeof activeVendor !== 'undefined' && activeVendor && activeVendor.name) {
+                            vName.textContent = activeVendor.name;
+                        } else {
+                            vName.textContent = 'Boutique ' + _lpLiveVendorId;
+                        }
+                    }
+                    var panelC = document.getElementById('lpLiveClientPanel');
+                    if (panelC) panelC.style.display = 'flex';
+                    // Lancer la camera self-view
+                    _lpStartSelfVideo();
+                    // Timeout pour le stream distant : si pas de flux apres 10s, afficher un message
+                    setTimeout(function() {
+                        var remotePip = document.getElementById('lpLiveRemoteVideoPip');
+                        if (remotePip && !remotePip.classList.contains('has-stream')) {
+                            var rph = remotePip.querySelector('.lp-live-fs-pip-placeholder');
+                            if (rph) {
+                                rph.querySelector('.lp-live-fs-pip-icon').textContent = '📡';
+                                rph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'Stream en attente...';
+                            }
+                        }
+                    }, 10000);
+                    // Auto-afficher le dernier produit en grand
+                    if (_lpLiveProducts.length > 0) {
+                        _lpShowClientProduct(_lpLiveProducts[_lpLiveProducts.length - 1]);
+                    }
+                    break;
+
+                case 'live:viewer-joined':
+                case 'live:viewer-left':
+                    _lpLiveViewerCount = msg.viewerCount || 0;
+                    var vcEl = document.getElementById('lpLiveViewerCount');
+                    if (vcEl) vcEl.textContent = _lpLiveViewerCount;
+
+                    // Si le vendeur recoit un nouveau viewer, initier le streaming WebRTC
+                    if (msg.type === 'live:viewer-joined' && _lpLiveIsVendor && msg.viewerId && _lpLiveStream) {
+                        _lpStartLiveStreamToViewer(msg.viewerId);
+                    }
+                    // Si un viewer part, nettoyer sa connexion WebRTC
+                    if (msg.type === 'live:viewer-left' && msg.viewerId) {
+                        var pc = _lpLivePeerConnections[msg.viewerId];
+                        if (pc) { pc.close(); delete _lpLivePeerConnections[msg.viewerId]; }
+                    }
+                    break;
+
+                case 'live:products-updated':
+                    _lpLiveProducts = msg.products || [];
+                    lpRenderLiveProducts('lpLiveProducts');
+                    // Client : auto-afficher le dernier produit ajouté en grand
+                    if (!_lpLiveIsVendor && _lpLiveProducts.length > 0) {
+                        _lpShowClientProduct(_lpLiveProducts[_lpLiveProducts.length - 1]);
+                    }
+                    break;
+
+                case 'live:switch-product':
+                    // Le vendeur a sélectionné un produit → l'afficher en grand
+                    if (!_lpLiveIsVendor && msg.product) {
+                        _lpShowClientProduct(msg.product);
+                    }
+                    break;
+
+                case 'live:chat-message':
+                    var chatId = _lpLiveIsVendor ? 'lpLiveChatMsgsVendor' : 'lpLiveChatMsgsClient';
+                    _lpAppendLiveChatMsg(chatId, msg.fromLabel || msg.from, msg.message, msg.from === 'vendor');
+                    break;
+
+                case 'live:error':
+                    console.warn('[Live] Erreur:', msg.error);
+                    break;
+
+                // === LIVE WEBRTC ===
+                case 'live:webrtc-offer':
+                    _lpHandleLiveWebrtcOffer(msg);
+                    break;
+
+                case 'live:webrtc-answer':
+                    _lpHandleLiveWebrtcAnswer(msg);
+                    break;
+
+                case 'live:webrtc-ice-candidate':
+                    _lpHandleLiveWebrtcIce(msg);
+                    break;
+            }
+        }
+
+        // === WEBRTC LIVE STREAMING ===
+        var _lpLivePeerConnections = {}; // viewerUserId -> RTCPeerConnection
+
+        // Vendeur : initier une connexion WebRTC vers un viewer
+        function _lpStartLiveStreamToViewer(viewerUserId) {
+            console.log('[Live WebRTC] Demarrage stream vers viewer:', viewerUserId, 'stream actif:', !!(_lpLiveStream && _lpLiveStream.active));
+            if (!_lpLiveStream || !_lpLiveStream.active) {
+                console.warn('[Live WebRTC] Camera vendeur non disponible - cause probable: HTTP (getUserMedia bloque)');
+                return;
+            }
+            if (_lpLivePeerConnections[viewerUserId]) return; // deja connecte
+
+            var pc = new RTCPeerConnection({
+                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+            });
+            _lpLivePeerConnections[viewerUserId] = pc;
+
+            // Ajouter les tracks de la camera
+            _lpLiveStream.getTracks().forEach(function(track) {
+                pc.addTrack(track, _lpLiveStream);
+            });
+
+            // Envoyer les candidats ICE
+            pc.onicecandidate = function(e) {
+                if (e.candidate && typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                    webrtcMgmtWs.send(JSON.stringify({
+                        type: 'live:webrtc-relay',
+                        vendorId: _lpLiveVendorId,
+                        targetUserId: viewerUserId,
+                        type: 'live:webrtc-ice-candidate',
+                        candidate: e.candidate
+                    }));
+                }
+            };
+
+            // Creer et envoyer l'offre
+            pc.createOffer().then(function(offer) {
+                return pc.setLocalDescription(offer);
+            }).then(function() {
+                if (typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                    webrtcMgmtWs.send(JSON.stringify({
+                        type: 'live:webrtc-relay',
+                        vendorId: _lpLiveVendorId,
+                        targetUserId: viewerUserId,
+                        type: 'live:webrtc-offer',
+                        offer: pc.localDescription
+                    }));
+                }
+            }).catch(function(e) {
+                console.warn('[Live WebRTC] Erreur createOffer:', e.message);
+            });
+        }
+
+        // Client : gerer l'offre WebRTC recue du vendeur
+        function _lpHandleLiveWebrtcOffer(msg) {
+            console.log('[Live WebRTC] Offre recue du vendeur, targetUserId:', msg.targetUserId);
+            var myUserId = msg.targetUserId || ('client-viewer-' + Date.now());
+            // Stocker notre userId pour les relais ultérieurs
+            _lpLiveViewerUserId = myUserId;
+
+            var pc = new RTCPeerConnection({
+                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+            });
+
+            pc.ontrack = function(e) {
+                console.log('[Live WebRTC] Track distant recu:', e.streams[0] ? 'ok' : 'vide');
+                var remoteVideo = document.getElementById('lpLiveRemoteVideo');
+                if (remoteVideo && e.streams[0]) {
+                    remoteVideo.srcObject = e.streams[0];
+                    var pip = document.getElementById('lpLiveRemoteVideoPip');
+                    if (pip) pip.classList.add('has-stream');
+                    console.log('[Live WebRTC] Stream distant applique au player');
+                }
+            };
+
+            pc.onicecandidate = function(e) {
+                if (e.candidate && typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                    webrtcMgmtWs.send(JSON.stringify({
+                        type: 'live:webrtc-relay',
+                        vendorId: _lpLiveVendorId,
+                        targetUserId: _lpLiveViewerUserId,
+                        type: 'live:webrtc-ice-candidate',
+                        candidate: e.candidate
+                    }));
+                }
+            };
+
+            pc.setRemoteDescription(new RTCSessionDescription(msg.offer))
+                .then(function() { return pc.createAnswer(); })
+                .then(function(answer) { return pc.setLocalDescription(answer); })
+                .then(function() {
+                    if (typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                        webrtcMgmtWs.send(JSON.stringify({
+                            type: 'live:webrtc-relay',
+                            vendorId: _lpLiveVendorId,
+                            targetUserId: _lpLiveViewerUserId,
+                            type: 'live:webrtc-answer',
+                            answer: pc.localDescription
+                        }));
+                    }
+                })
+                .catch(function(e) {
+                    console.warn('[Live WebRTC] Erreur client:', e.message);
+                });
+
+            _lpLivePeerConnections['__client__'] = pc;
+        }
+
+        // Vendeur : gerer la reponse WebRTC du client
+        function _lpHandleLiveWebrtcAnswer(msg) {
+            var viewerId = msg.targetUserId;
+            var pc = viewerId ? _lpLivePeerConnections[viewerId] : null;
+            if (!pc) {
+                // Fallback: prendre le premier PC disponible
+                for (var key in _lpLivePeerConnections) { pc = _lpLivePeerConnections[key]; break; }
+            }
+            if (pc && msg.answer) {
+                pc.setRemoteDescription(new RTCSessionDescription(msg.answer))
+                    .catch(function(e) { console.warn('[Live WebRTC] Erreur setRemote:', e.message); });
+            }
+        }
+
+        // Gérer les candidats ICE recus
+        function _lpHandleLiveWebrtcIce(msg) {
+            if (!msg.candidate) return;
+            var viewerId = msg.targetUserId;
+            var pc = viewerId ? _lpLivePeerConnections[viewerId] : null;
+            if (!pc) {
+                // Fallback: prendre le premier PC disponible
+                for (var key in _lpLivePeerConnections) { pc = _lpLivePeerConnections[key]; break; }
+            }
+            if (pc) {
+                pc.addIceCandidate(new RTCIceCandidate(msg.candidate))
+                    .catch(function(e) { console.warn('[Live WebRTC] Erreur ICE:', e.message); });
+            }
+        }
+
+        // Flag anti-double appel (evite l'enregistrement multiple du meme viewer)
+        var _lpLiveJoinSent = false;
+
+        // Initialisation automatique : detecter ?live= dans l'URL
+        function lpInitLiveFromUrl() {
+            try {
+                var params = new URLSearchParams(window.location.search);
+                var liveVendor = params.get('live');
+                if (liveVendor) {
+                    console.log('[Live] Detection parametre live=' + liveVendor);
+                    _lpLiveVendorId = liveVendor;
+                    _lpLiveIsVendor = false;
+                    // Masquer le bouton Go Live (on est client)
+                    var btn = document.getElementById('lpGoLiveBtn');
+                    if (btn) btn.style.display = 'none';
+                    // Attendre que le WebSocket soit pret puis rejoindre
+                    var maxAttempts = 30;
+                    var attempt = 0;
+                    function tryJoin() {
+                        if (_lpLiveJoinSent) return;
+                        if (typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                            _lpLiveJoinSent = true;
+                            lpJoinLive(liveVendor);
+                        } else if (attempt < maxAttempts) {
+                            attempt++;
+                            setTimeout(tryJoin, 500);
+                        } else {
+                            console.warn('[Live] WebSocket non disponible apres ' + maxAttempts + ' tentatives');
+                        }
+                    }
+                    tryJoin();
+                } else {
+                    // Mode vendeur : afficher le bouton Go Live
+                    lpInitGoLiveButton();
+                }
+            } catch(e) { console.warn('[Live] Erreur init:', e); }
+        }
+
+        // Invoquer l'init automatique au chargement (une seule tentative de join)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                lpInitLiveFromUrl();
+            });
+        } else {
+            lpInitLiveFromUrl();
+        }
         
         // === AUDIO RECORDING LOGIC (NATIVE) ===
         let mediaRecorder;
@@ -25674,6 +26914,18 @@
                 .replace(/'/g, '&#39;')
         }
 
+        function lpEscapeAttr(value) {
+            var str = String(value == null ? '' : value);
+            // Ne pas échapper les data: URIs (base64 contient des & qui seraient corrompus)
+            if (str.startsWith('data:')) return str;
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+        }
+
         function lpReadSavedUsers() {
             try {
                 const raw = localStorage.getItem('mangoo_lp_saved_users')
@@ -26993,6 +28245,10 @@
             </div>
             <iframe id="lpBoostFrame" title="Boost" style="flex:1; width:100%; border:0; background:white;"></iframe>
         </div>
-    </div>
+</div>
+<!-- Overlay produit grand format - hors conteneur pour stacking context -->
+<div id="lpProductOverlay" style="display:none; position:fixed; inset:0; z-index:23000; background:rgba(0,0,0,0.85); align-items:center; justify-content:center; cursor:pointer;" onclick="this.style.display='none'">
+    <img id="lpProductOverlayImg" src="" style="max-width:90vw; max-height:85vh; border-radius:12px; object-fit:contain;" onerror="this.parentElement.style.display='none'" />
+</div>
 </body>
 </html>

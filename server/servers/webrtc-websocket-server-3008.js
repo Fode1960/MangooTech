@@ -6,6 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import webpush from 'web-push';
 import { saveSubscription, removeSubscription, getSubscriptions } from './webrtc-push-store.js';
+import { startLiveSession, endLiveSession, joinLiveSession, leaveLiveSession, updateLiveProducts, getLiveSession, isVendorLive, broadcastToLiveViewers, removeViewerFromAllSessions, sendToViewer } from './webrtc-live-sessions.js';
 
 // Configuration VAPID pour Web Push
 const VAPID_KEYS = {
@@ -320,6 +321,39 @@ wss.on('connection', (ws) => {
           handleChatNotification(ws, data);
           break;
 
+        // ===== LIVE SHOPPING =====
+        case 'live:start':
+          handleLiveStart(ws, data);
+          break;
+
+        case 'live:stop':
+          handleLiveStop(ws, data);
+          break;
+
+        case 'live:join':
+          handleLiveJoin(ws, data);
+          break;
+
+        case 'live:leave':
+          handleLiveLeave(ws, data);
+          break;
+
+        case 'live:products':
+          handleLiveProducts(ws, data);
+          break;
+
+        case 'live:switch-product':
+          handleLiveSwitchProduct(ws, data);
+          break;
+
+        case 'live:chat':
+          handleLiveChat(ws, data);
+          break;
+
+        case 'live:webrtc-relay':
+          handleLiveWebrtcRelay(ws, data);
+          break;
+
         case 'ping':
           ws.send(JSON.stringify({ type: 'pong', timestamp: Date.now() }));
           break;
@@ -354,6 +388,15 @@ wss.on('connection', (ws) => {
       if (existing && existing.ws === ws) {
         vendorPresence.delete(currentUser.vendorId);
         console.log(`[WebRTC-3008] Presence retirée pour vendor ${currentUser.vendorId}`);
+      }
+    }
+    // Nettoyer les sessions live
+    if (currentUser) {
+      const uid = currentUser.id || currentUser.userId || '';
+      if (uid) removeViewerFromAllSessions(uid);
+      // Si le vendeur se déconnecte, arrêter sa session live
+      if (currentUser.vendorId && isVendorLive(currentUser.vendorId)) {
+        endLiveSession(currentUser.vendorId);
       }
     }
   });
@@ -1016,6 +1059,169 @@ wss.on('connection', (ws) => {
         user.ws.send(JSON.stringify(message));
       }
     });
+  }
+
+  // ===== LIVE SHOPPING HANDLERS =====
+
+  function handleLiveStart(ws, data) {
+    const { vendorId, products } = data;
+    if (!vendorId) return;
+    // Verifier que le WS est bien celui du vendeur
+    if (!currentUser || currentUser.vendorId !== vendorId) {
+      ws.send(JSON.stringify({ type: 'live:error', error: 'Non autorisé à démarrer un live pour ce vendeur' }));
+      return;
+    }
+    startLiveSession(vendorId, ws, Array.isArray(products) ? products : []);
+    // Confirmer au vendeur
+    ws.send(JSON.stringify({
+      type: 'live:started',
+      vendorId,
+      viewerCount: 0,
+      products: products || [],
+      shareUrl: '/mangoo-local.html?live=' + vendorId
+    }));
+    console.log(`[WebRTC-3008] Live démarré par vendor ${vendorId}`);
+  }
+
+  function handleLiveStop(ws, data) {
+    const { vendorId } = data;
+    if (!vendorId) return;
+    // Notifier tous les viewers que le live est terminé
+    broadcastToLiveViewers(vendorId, {
+      type: 'live:ended',
+      vendorId,
+      message: 'Le live est terminé. Merci d\'avoir participé !'
+    });
+    endLiveSession(vendorId);
+    ws.send(JSON.stringify({ type: 'live:stopped', vendorId }));
+    console.log(`[WebRTC-3008] Live arrêté par vendor ${vendorId}`);
+  }
+
+  function handleLiveJoin(ws, data) {
+    const { vendorId, userId } = data;
+    if (!vendorId) return;
+    const viewerId = userId || (currentUser ? currentUser.id : null) || ('viewer-' + Date.now());
+    const result = joinLiveSession(vendorId, ws, viewerId);
+    if (!result) {
+      ws.send(JSON.stringify({ type: 'live:error', error: 'Ce live n\'existe pas ou est terminé' }));
+      return;
+    }
+    // Mettre à jour currentUser pour le tracking
+    if (!currentUser) currentUser = { id: viewerId, ws };
+    // Envoyer l'état actuel au nouveau viewer
+    ws.send(JSON.stringify({
+      type: 'live:joined',
+      vendorId,
+      viewerId: result.viewerId,
+      viewerCount: result.viewerCount,
+      products: result.products,
+      startedAt: result.startedAt
+    }));
+    // Notifier le vendeur du nouveau viewer
+    const session = getLiveSession(vendorId);
+    if (session && session.vendorWs && session.vendorWs.readyState === WebSocket.OPEN) {
+      session.vendorWs.send(JSON.stringify({
+        type: 'live:viewer-joined',
+        vendorId,
+        viewerId: result.viewerId,
+        viewerCount: result.viewerCount
+      }));
+    }
+  }
+
+  function handleLiveLeave(ws, data) {
+    const { vendorId, userId } = data;
+    if (!vendorId) return;
+    const viewerId = userId || (currentUser ? currentUser.id : '');
+    if (!viewerId) return;
+    const result = leaveLiveSession(vendorId, viewerId);
+    if (!result) return;
+    // Notifier le vendeur
+    const session = getLiveSession(vendorId);
+    if (session && session.vendorWs && session.vendorWs.readyState === WebSocket.OPEN) {
+      session.vendorWs.send(JSON.stringify({
+        type: 'live:viewer-left',
+        vendorId,
+        viewerId,
+        viewerCount: result.viewerCount
+      }));
+    }
+  }
+
+  function handleLiveProducts(ws, data) {
+    const { vendorId, products } = data;
+    if (!vendorId || !Array.isArray(products)) return;
+    // Vérifier que c'est bien le vendeur
+    if (!currentUser || currentUser.vendorId !== vendorId) {
+      ws.send(JSON.stringify({ type: 'live:error', error: 'Seul le vendeur peut modifier les produits' }));
+      return;
+    }
+    updateLiveProducts(vendorId, products);
+    // Diffuser les nouveaux produits à tous les viewers
+    broadcastToLiveViewers(vendorId, {
+      type: 'live:products-updated',
+      vendorId,
+      products
+    });
+    ws.send(JSON.stringify({ type: 'live:products-saved', vendorId, count: products.length }));
+  }
+
+  // Vendeur clique sur un produit de sa liste → le diffuser aux clients
+  function handleLiveSwitchProduct(ws, data) {
+    const { vendorId, product } = data;
+    if (!vendorId || !product) return;
+    broadcastToLiveViewers(vendorId, {
+      type: 'live:switch-product',
+      vendorId,
+      product: {
+        name: product.name || '',
+        price: product.price || 0,
+        img: product.img || ''
+      }
+    });
+  }
+
+  function handleLiveChat(ws, data) {
+    const { vendorId, message, from, fromLabel } = data;
+    if (!vendorId || !message) return;
+    const chatMsg = {
+      type: 'live:chat-message',
+      vendorId,
+      from: from || (currentUser ? currentUser.id : 'anonyme'),
+      fromLabel: fromLabel || 'Client',
+      message: String(message).trim(),
+      timestamp: Date.now()
+    };
+    // Diffuser à TOUS (vendeur + viewers)
+    broadcastToLiveViewers(vendorId, chatMsg);
+    // Envoyer aussi au vendeur
+    const session = getLiveSession(vendorId);
+    if (session && session.vendorWs && session.vendorWs.readyState === WebSocket.OPEN) {
+      session.vendorWs.send(JSON.stringify(chatMsg));
+    }
+  }
+
+  // Relayer les messages WebRTC entre le vendeur et un client spécifique
+  function handleLiveWebrtcRelay(ws, data) {
+    const { vendorId, targetUserId } = data;
+    var offer = data.offer, answer = data.answer, candidate = data.candidate, msgType = data.type;
+    if (!vendorId || !targetUserId || !msgType) return;
+
+    var relayMsg = { type: msgType, vendorId: vendorId, targetUserId: targetUserId };
+    if (offer) relayMsg.offer = offer;
+    if (answer) relayMsg.answer = answer;
+    if (candidate) relayMsg.candidate = candidate;
+
+    // Si le message vient du vendeur, envoyer au viewer cible
+    if (currentUser && currentUser.vendorId === vendorId) {
+      sendToViewer(vendorId, targetUserId, relayMsg);
+      return;
+    }
+    // Si le message vient d'un viewer, envoyer au vendeur
+    var session = getLiveSession(vendorId);
+    if (session && session.vendorWs && session.vendorWs.readyState === WebSocket.OPEN) {
+      session.vendorWs.send(JSON.stringify(relayMsg));
+    }
   }
 });
 

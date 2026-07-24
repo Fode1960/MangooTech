@@ -19,10 +19,11 @@ function getFilePath(shopId: string): string {
   return path.join(dataDir, `my-products-${safe}.json`)
 }
 
-// GET /api/my-products?shopId=xxx
+// GET /api/my-products?shopId=xxx&stripPhotos=1
 router.get('/', (req: Request, res: Response): void => {
   try {
     const shopId = String(req.query.shopId || '').trim()
+    const stripPhotos = String(req.query.stripPhotos || '') === '1'
     if (!shopId) {
       res.status(400).json({ success: false, error: 'shopId requis' })
       return
@@ -33,8 +34,15 @@ router.get('/', (req: Request, res: Response): void => {
       return
     }
     const raw = fs.readFileSync(filePath, 'utf-8')
-    const products = JSON.parse(raw)
-    res.status(200).json({ success: true, products: Array.isArray(products) ? products : [] })
+    let products = JSON.parse(raw)
+    products = Array.isArray(products) ? products : []
+    if (stripPhotos) {
+      products = products.map((p: any) => {
+        const { photo, ...rest } = p
+        return rest
+      })
+    }
+    res.status(200).json({ success: true, products })
   } catch (e: any) {
     console.error('[my-products] GET error:', e?.message || e)
     res.status(500).json({ success: false, error: 'Erreur serveur' })
