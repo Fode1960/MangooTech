@@ -10,7 +10,7 @@ export default defineConfig({
     tsconfigPaths(),
   ],
   server: {
-    allowedHosts: ['.trycloudflare.com', 'localhost', '127.0.0.1'],
+    allowedHosts: ['.trycloudflare.com', 'localhost', '127.0.0.1', '192.168.0.0/16', '10.0.0.0/8', '172.16.0.0/12'],
     https: (() => {
       if (String(process.env.DEV_HTTPS || '').trim() !== '1') return undefined
       const pfxPath = String(process.env.DEV_HTTPS_PFX || '').trim()

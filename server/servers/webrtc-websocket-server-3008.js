@@ -1064,7 +1064,7 @@ wss.on('connection', (ws) => {
   // ===== LIVE SHOPPING HANDLERS =====
 
   function handleLiveStart(ws, data) {
-    const { vendorId, products } = data;
+    const { vendorId, products, vendorName, vendorSlug } = data;
     if (!vendorId) return;
     // Verifier que le WS est bien celui du vendeur
     if (!currentUser || currentUser.vendorId !== vendorId) {
@@ -1072,6 +1072,8 @@ wss.on('connection', (ws) => {
       return;
     }
     startLiveSession(vendorId, ws, Array.isArray(products) ? products : []);
+    // Broadcast live status to ALL connected clients for badge display
+    broadcastVendorLiveStatus(vendorId, true, vendorName || '', vendorSlug || '');
     // Confirmer au vendeur
     ws.send(JSON.stringify({
       type: 'live:started',
@@ -1094,6 +1096,8 @@ wss.on('connection', (ws) => {
     });
     endLiveSession(vendorId);
     ws.send(JSON.stringify({ type: 'live:stopped', vendorId }));
+    // Broadcast live status to ALL connected clients for badge display
+    broadcastVendorLiveStatus(vendorId, false);
     console.log(`[WebRTC-3008] Live arrêté par vendor ${vendorId}`);
   }
 
@@ -1204,7 +1208,7 @@ wss.on('connection', (ws) => {
   // Relayer les messages WebRTC entre le vendeur et un client spécifique
   function handleLiveWebrtcRelay(ws, data) {
     const { vendorId, targetUserId } = data;
-    var offer = data.offer, answer = data.answer, candidate = data.candidate, msgType = data.type;
+    var offer = data.offer, answer = data.answer, candidate = data.candidate, msgType = data.signalType || data.type;
     if (!vendorId || !targetUserId || !msgType) return;
 
     var relayMsg = { type: msgType, vendorId: vendorId, targetUserId: targetUserId };
@@ -1222,6 +1226,22 @@ wss.on('connection', (ws) => {
     if (session && session.vendorWs && session.vendorWs.readyState === WebSocket.OPEN) {
       session.vendorWs.send(JSON.stringify(relayMsg));
     }
+  }
+
+  // Broadcast le statut live d'un vendor à TOUS les clients connectés
+  // (utilisé pour les badges Live sur les cartes Local+)
+  function broadcastVendorLiveStatus(vendorId, live, vendorName, vendorSlug) {
+    var payload = { type: 'live:vendor-status', vendorId: vendorId, live: live };
+    if (vendorName) payload.vendorName = vendorName;
+    if (vendorSlug) payload.vendorSlug = vendorSlug;
+    var msg = JSON.stringify(payload);
+    var count = 0;
+    wss.clients.forEach(function(client) {
+      if (client.readyState === WebSocket.OPEN) {
+        try { client.send(msg); count++; } catch {}
+      }
+    });
+    console.log(`[WebRTC-3008] Broadcast live:vendor-status vendor=${vendorId} live=${live} name=${vendorName||'?'} (${count} client(s))`);
   }
 });
 

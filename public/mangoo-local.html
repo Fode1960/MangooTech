@@ -3928,7 +3928,25 @@
             border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 0.8rem;
         }
         .lp-live-row { display: flex; flex-direction: column; gap: 12px; padding: 12px; background: var(--ml-panel); }
-        .lp-live-cam { width: 100%; height: 180px; border-radius: 10px; background: #000; object-fit: cover; border: 2px solid var(--ml-brand-from); flex-shrink: 0; }
+        .lp-live-cam-wrap { position: relative; width: 100%; flex-shrink: 0; }
+        .lp-live-cam { width: 100%; height: 180px; border-radius: 10px; background: #000; object-fit: cover; border: 2px solid var(--ml-brand-from); display: block; transition: all 0.3s ease; }
+        .lp-live-fs-btn {
+            position: absolute; bottom: 10px; right: 10px; z-index: 10;
+            background: rgba(0,0,0,0.55); color: white; border: 1px solid rgba(255,255,255,0.35);
+            border-radius: 8px; padding: 5px 8px; cursor: pointer; font-size: 1.1rem;
+            line-height: 1; transition: all 0.2s; backdrop-filter: blur(4px);
+        }
+        .lp-live-fs-btn:hover { background: rgba(0,0,0,0.75); border-color: rgba(255,255,255,0.6); transform: scale(1.08); }
+        .lp-live-cam.lp-live-cam-fs {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            border-radius: 0; border: none; z-index: 9998; object-fit: contain;
+            background: #000;
+        }
+        .lp-live-cam-wrap.lp-live-cam-wrap-fs { position: static; }
+        .lp-live-cam-wrap.lp-live-cam-wrap-fs .lp-live-fs-btn {
+            position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+            font-size: 1.3rem; padding: 8px 12px;
+        }
         .lp-live-products { display: flex; flex-direction: column; gap: 10px; max-height: 280px; overflow-y: auto; }
         .lp-live-product-card {
             background: var(--ml-bg); border-radius: 12px; padding: 12px;
@@ -4167,7 +4185,7 @@
         #lpLiveProductPicker .picker-actions .picker-cancel { background: var(--ml-muted); color: #fff; }
         /* Go Live Button */
         .lp-go-live-wrapper {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
             z-index: 21900;
         }
         .lp-go-live-btn-main {
@@ -5634,7 +5652,10 @@
             ⚠️ Vous êtes sur localhost. Pour que le lien fonctionne sur Android, ouvrez le dashboard depuis l'adresse IP de votre PC (ex: <b>http://192.168.1.18:3015/mangoo-local.html?vendor=1784327703839&lpRole=vendor</b>).
         </div>
         <div class="lp-live-row">
-            <video id="lpLivePreview" class="lp-live-cam" autoplay muted playsinline></video>
+            <div class="lp-live-cam-wrap">
+                <video id="lpLivePreview" class="lp-live-cam" autoplay muted playsinline></video>
+                <button class="lp-live-fs-btn" onclick="lpToggleLiveFullscreen()" title="Plein écran">⛶</button>
+            </div>
             <div class="lp-live-products" id="lpLiveProducts"></div>
         </div>
         <div class="lp-live-chat" id="lpLiveChatVendor">
@@ -5677,7 +5698,7 @@
             <div class="lp-live-fs-pip-row">
                 <div class="lp-live-fs-pip lp-live-fs-pip-left" id="lpLiveRemoteVideoPip">
                     <div class="lp-live-fs-pip-placeholder"><span class="lp-live-fs-pip-icon">📡</span>En direct</div>
-                    <video id="lpLiveRemoteVideo" autoplay playsinline muted></video>
+                    <video id="lpLiveRemoteVideo" autoplay playsinline></video>
                     <div class="lp-live-fs-pip-label">🔴 En direct</div>
                 </div>
                 <div class="lp-live-fs-pip lp-live-fs-pip-right" id="lpLiveSelfVideoPip">
@@ -10817,7 +10838,7 @@
                     borderColor = '#d63031'; // Red
                     bgColor = '#1b5e20';
                     animation = 'animation: pulse-live 1.5s infinite;';
-                    badge = '<span style="position:absolute; top:-8px; right:-8px; background:#d63031; color:white; font-size:9px; padding:2px 4px; border-radius:4px; font-weight:bold; z-index:10;">LIVE</span>';
+                    badge = '<span style="display:inline-block; background:#d63031; color:white; font-size:12px; padding:4px 10px; border-radius:6px; font-weight:900; box-shadow:0 3px 10px rgba(0,0,0,0.5); white-space:nowrap;">🔴 LIVE</span>';
                 } else {
                     if (promoActive) {
                         borderColor = '#ffe082'; // Gold
@@ -10871,9 +10892,13 @@
                 const displayName = String(vendor.name || '').trim() || 'Boutique';
                 const safeVendorId = lpEscapeInlineArg(vendor.id);
 
+                const rootH = vendor.live ? 100 : 78;
+                const circleTop = vendor.live ? 22 : 0;
+                const labelTop = vendor.live ? 78 : 56;
                 let markerHtml = `
-                    <div style="position:relative; width:140px; height:78px;" onclick="try{openVendorSheetById('${safeVendorId}')}catch{}; event.stopPropagation();">
-                        <div style="position:absolute; left:50%; top:0; transform:translateX(-50%); width:50px; height:50px;">
+                    <div style="position:relative; width:140px; height:${rootH}px;" onclick="try{openVendorSheetById('${safeVendorId}')}catch{}; event.stopPropagation();">
+                        ${vendor.live ? '<div style="position:absolute; top:0; left:50%; transform:translateX(-50%); z-index:9999; pointer-events:none;">' + badge + '</div>' : ''}
+                        <div style="position:absolute; left:50%; top:${circleTop}px; transform:translateX(-50%); width:50px; height:50px;">
                             ${ringHtml}
                             <div style="
                                 background: ${bgColor};
@@ -10890,16 +10915,16 @@
                                 position: relative;
                             ">
                                 <img src="${lpResolveVendorAvatar(vendor)}" style="width:44px; height:44px; border-radius:50%; object-fit:cover;">
-                                ${badge}
                                 ${badge2}
                                 ${kindBadge}
                                 ${sponsoredBadge}
                             </div>
+                            ${vendor.live ? '' : badge}
                         </div>
                         <div style="
                             position:absolute;
                             left:50%;
-                            top:56px;
+                            top:${labelTop}px;
                             transform:translateX(-50%);
                             max-width: 140px;
                             padding: 4px 10px;
@@ -10918,10 +10943,11 @@
                     </div>
                 `;
 
+                const iconH = vendor.live ? 100 : 78;
                 const icon = L.divIcon({
                     className: 'custom-pin',
                     html: markerHtml,
-                    iconSize: [140, 78],
+                    iconSize: [140, iconH],
                     iconAnchor: [70, 78]
                 });
 
@@ -15104,6 +15130,8 @@
                 const userId = getChatClientId();
                 webrtcMgmtWs.send(JSON.stringify({ type: 'register-presence', vendorId: shopId, userId }));
                 console.log('[MgmtWS] Presence enregistree pour vendor', shopId);
+                // Afficher le bouton Go Live si identifie comme vendeur
+                try { lpInitGoLiveButton(); } catch(e) {}
                 // Flush queued messages
                 while (webrtcMsgQueue.length > 0) {
                     const msg = webrtcMsgQueue.shift();
@@ -15382,6 +15410,9 @@
                 case 'products-list':
                     relayWebRTCToIframe(data);
                     break;
+                case 'live:vendor-status':
+                    handleVendorLiveStatus(data);
+                    break;
                 default:
                     // Rediriger les messages live vers leur handler
                     if (data.type && data.type.startsWith('live:')) {
@@ -15389,6 +15420,73 @@
                     }
                     break;
             }
+        }
+
+        // Met à jour le badge Live sur les cartes Local+ quand un vendor démarre/arrête un live
+        function handleVendorLiveStatus(data) {
+            try {
+                var vendorId = String(data.vendorId || '').trim();
+                var live = Boolean(data.live);
+                if (!vendorId) return;
+                console.warn('🔴 [LiveBadge] RECU vendor-status: vendorId=' + vendorId + ' live=' + live + ' | VENDORS.length=' + (typeof VENDORS !== 'undefined' ? VENDORS.length : 'undefined'));
+                // Mettre à jour le vendor dans l'array VENDORS
+                // Chercher par ID exact, slug, ou nom (priorité aux infos du broadcast)
+                var dataVendorSlug = String(data.vendorSlug || '').trim();
+                var dataVendorName = String(data.vendorName || '').trim().toLowerCase();
+                var found = false;
+                for (var i = 0; i < VENDORS.length; i++) {
+                    var v = VENDORS[i];
+                    var vid = String(v.id || v.slug || '').trim();
+                    var vSlug = String(v.slug || '').trim();
+                    var vName = String(v.name || '').trim().toLowerCase();
+                    // Match: ID exact, slug exact, ou nom exact (insensible à la casse)
+                    if (vid === vendorId || vSlug === vendorId ||
+                        (dataVendorSlug && vSlug === dataVendorSlug) ||
+                        (dataVendorName && vName === dataVendorName)) {
+                        VENDORS[i].live = live;
+                        found = true;
+                        console.warn('🔴 [LiveBadge] Vendor ' + VENDORS[i].name + ' (id=' + vid + ' slug=' + vSlug + ') live=' + live);
+                        break;
+                    }
+                }
+                if (!found) {
+                    console.warn('🔴 [LiveBadge] AUCUN vendor trouve pour vendorId=' + vendorId + ' | IDs VENDORS: ' + VENDORS.map(function(v){return v.id}).join(', '));
+                }
+                // Si la fiche vendeur est ouverte, mettre à jour le badge en direct
+                try {
+                    var statusBadge = document.getElementById('vStatus');
+                    if (statusBadge && typeof activeVendor !== 'undefined' && activeVendor) {
+                        var avId = String(activeVendor.id || activeVendor.slug || '').trim();
+                        var avSlug = String(activeVendor.slug || '').trim();
+                        var avName = String(activeVendor.name || '').trim().toLowerCase();
+                        if (avId === vendorId || avSlug === vendorId ||
+                            (dataVendorSlug && avSlug === dataVendorSlug) ||
+                            (dataVendorName && avName === dataVendorName)) {
+                            if (live) {
+                                statusBadge.className = 'status-badge status-live';
+                                statusBadge.innerText = 'EN LIVE 🔴';
+                            } else {
+                                statusBadge.className = 'status-badge status-open';
+                                statusBadge.innerText = 'OUVERT 🟢';
+                            }
+                        }
+                    }
+                } catch {}
+                // Re-rendre la vue courante pour mettre a jour les badges sur les cartes
+                // Toujours re-rendre map ET list (meme si la vue n'est pas active)
+                try {
+                    if (typeof renderVendorsOnMap === 'function') {
+                        console.warn('🔴 [LiveBadge] Re-rendu MAP force avec VENDORS (' + (typeof VENDORS !== 'undefined' ? VENDORS.length : 0) + ' vendors)');
+                        renderVendorsOnMap(VENDORS);
+                    }
+                } catch(e) { console.warn('[LiveBadge] Erreur re-rendu map:', e.message); }
+                try {
+                    if (typeof renderListView === 'function') {
+                        console.warn('🔴 [LiveBadge] Re-rendu LIST force avec VENDORS (' + (typeof VENDORS !== 'undefined' ? VENDORS.length : 0) + ' vendors)');
+                        renderListView(VENDORS);
+                    }
+                } catch(e) { console.warn('[LiveBadge] Erreur re-rendu list:', e.message); }
+            } catch(e) { console.warn('[LiveBadge] Erreur:', e.message); }
         }
 
         function relayWebRTCToIframe(data) {
@@ -23182,24 +23280,13 @@
             if (activeVendor && activeVendor.live) {
                 try {
                     const vendor = activeVendor;
-                    const roomId = String(vendor?.liveRoomId || vendor?.roomId || vendor?.name || '').trim() || 'live-room-123';
-                    const shopSlug = (typeof lpGetShopSlugForVendor === 'function' ? lpGetShopSlugForVendor(vendor) : '') || '';
-
-                    let userName = '';
-                    try { userName = String(getLpCurrentUser()?.name || '').trim(); } catch {}
-
-                    const qs = new URLSearchParams();
-                    qs.set('role', 'client');
-                    qs.set('ui', 'simple');
-                    qs.set('roomId', roomId);
-                    if (shopSlug) qs.set('shopSlug', shopSlug);
-                    if (userName) qs.set('name', userName);
-
-                    const url = `${window.location.origin}/live-shopping?${qs.toString()}`;
+                    const vendorId = String(vendor.id || '').trim();
+                    // Nouvelle version simplifiée du Live Shopping (dans mangoo-local.html)
+                    const url = `${window.location.origin}/mangoo-local.html?live=${encodeURIComponent(vendorId)}`;
                     if (typeof lpNavigate === 'function') lpNavigate(url);
                     else window.location.href = url;
                 } catch {
-                    window.location.href = `${window.location.origin}/live-shopping?role=client&ui=simple&roomId=${encodeURIComponent(String(activeVendor?.name || 'live-room-123'))}`;
+                    window.location.href = `${window.location.origin}/mangoo-local.html?live=${encodeURIComponent(String(activeVendor?.id || ''))}`;
                 }
             }
         }
@@ -23218,33 +23305,67 @@
             var btn = document.getElementById('lpGoLiveBtn');
             if (!btn) return;
             try {
-                var params = new URLSearchParams(window.location.search);
-                var isVendor = params.get('lpRole') === 'vendor' || params.get('role') === 'vendor';
-                var vendorId = params.get('vendor') || '';
-
-                // Fallback: activeVendor peut ne pas etre encore charge
-                if (!isVendor && typeof activeVendor !== 'undefined' && activeVendor && activeVendor.id) {
-                    isVendor = true;
-                    if (!vendorId) vendorId = activeVendor.id;
-                }
-                // Fallback: localStorage
+                var vendorId = '';
+                // 1. URL params
+                try {
+                    var params = new URLSearchParams(window.location.search);
+                    vendorId = params.get('vendor') || '';
+                    if (params.get('lpRole') === 'vendor' || params.get('role') === 'vendor') {
+                        _lpLiveIsVendor = true;
+                    }
+                } catch(e) {}
+                // 2. localStorage (multiples cles)
                 if (!vendorId) {
                     try {
-                        var stored = localStorage.getItem('lp_vendor_id');
-                        if (stored) vendorId = stored;
+                        vendorId = localStorage.getItem('mangoo_my_shop_id') || localStorage.getItem('mangoo_my_provider_id') || localStorage.getItem('lp_vendor_id') || '';
                     } catch(e) {}
                 }
-                // Fallback: verifier si l'URL contient un parametre indiquant un dashboard vendeur
-                if (!isVendor) {
-                    var path = window.location.pathname;
-                    if (path.includes('mangoo-local') && vendorId) isVendor = true;
+                // 2b. getLpCurrentUser (objet utilisateur stocke dans mangoo-current-user)
+                if (!vendorId) {
+                    try {
+                        var cu = getLpCurrentUser();
+                        if (cu && cu.vendorId) vendorId = String(cu.vendorId).trim();
+                    } catch(e) {}
+                }
+                // 2b2. lpGetStoredShopIdsForCurrentUser (survit a la purge startup)
+                if (!vendorId && typeof lpGetStoredShopIdsForCurrentUser === 'function') {
+                    try {
+                        var ids = lpGetStoredShopIdsForCurrentUser();
+                        if (Array.isArray(ids) && ids.length > 0) {
+                            vendorId = String(ids[0]).trim();
+                            _lpLiveIsVendor = true;
+                        }
+                    } catch(e) {}
+                }
+                // 2c. Debug dump all localStorage keys
+                if (!vendorId) {
+                    try {
+                        var keys = [];
+                        for (var k in localStorage) {
+                            if (k.indexOf('mangoo') >= 0 || k.indexOf('shop') >= 0 || k.indexOf('vendor') >= 0 || k.indexOf('provider') >= 0 || k.indexOf('lp_') >= 0) {
+                                keys.push(k + '=' + localStorage[k].substring(0, 30));
+                            }
+                        }
+                        console.warn('[Live] DBG localStorage cles Mangoo:', keys);
+                    } catch(e) {}
+                }
+                // 3. activeVendor fallback
+                if (!vendorId && typeof activeVendor !== 'undefined' && activeVendor && activeVendor.id) {
+                    vendorId = activeVendor.id;
+                    _lpLiveIsVendor = true;
                 }
 
-                if (isVendor && vendorId && !_lpLiveActive) {
+                console.log('[Live] lpInitGoLiveButton: vendorId=', vendorId, 'isVendor=', _lpLiveIsVendor, 'active=', !_lpLiveActive);
+
+                if (vendorId && !_lpLiveActive) {
                     btn.style.display = 'block';
                     _lpLiveVendorId = vendorId;
                     _lpLiveIsVendor = true;
                     console.log('[Live] Bouton Go Live active pour vendor', vendorId);
+                } else if (!vendorId) {
+                    console.warn('[Live] Bouton Go Live NON affiche: aucun vendorId trouve');
+                } else {
+                    console.warn('[Live] Bouton Go Live NON affiche: _lpLiveActive=', _lpLiveActive);
                 }
             } catch(e) { console.warn('[Live] Erreur init bouton:', e); }
         }
@@ -23421,17 +23542,44 @@
             if (!_lpLiveActive) {
                 // PREMIER DEMARRAGE : activer camera + envoyer live:start
                 try {
-                    _lpLiveStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                    _lpLiveStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                     var preview = document.getElementById('lpLivePreview');
                     if (preview) { preview.srcObject = _lpLiveStream; }
                 } catch(e) { console.warn('[Live] Camera non disponible:', e.message); }
 
                 if (typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN) {
-                    webrtcMgmtWs.send(JSON.stringify({
+                    var liveMsg = {
                         type: 'live:start',
                         vendorId: vendorId,
                         products: productsPayload
-                    }));
+                    };
+                    // Ajouter le nom et slug du vendeur pour un matching fiable des badges
+                    var vendorName = '';
+                    var vendorSlug = '';
+                    try {
+                        if (typeof activeVendor !== 'undefined' && activeVendor) {
+                            vendorName = String(activeVendor.name || '').trim();
+                            vendorSlug = String(activeVendor.slug || activeVendor.id || '').trim();
+                        }
+                    } catch(e) {}
+                    // Fallback: si activeVendor est null (dashboard vendeur), chercher via localStorage
+                    if (!vendorName || !vendorSlug) {
+                        try {
+                            var shopId = localStorage.getItem('mangoo_my_shop_id') || '';
+                            if (shopId) {
+                                var fallbackVendor = VENDORS.find(function(v) { return String(v.id) === String(shopId); });
+                                if (fallbackVendor) {
+                                    if (!vendorName) vendorName = String(fallbackVendor.name || '').trim();
+                                    if (!vendorSlug) vendorSlug = String(fallbackVendor.slug || fallbackVendor.id || '').trim();
+                                    console.warn('🔴 [LiveBadge] Fallback vendor trouve via localStorage: ' + vendorName + ' slug=' + vendorSlug);
+                                }
+                            }
+                        } catch(e) {}
+                    }
+                    if (vendorName) liveMsg.vendorName = vendorName;
+                    if (vendorSlug) liveMsg.vendorSlug = vendorSlug;
+                    console.warn('🔴 [LiveBadge] Envoi live:start vendorId=' + vendorId + ' name=' + vendorName + ' slug=' + vendorSlug);
+                    webrtcMgmtWs.send(JSON.stringify(liveMsg));
                 }
 
                 _lpLiveActive = true;
@@ -23864,6 +24012,10 @@
                     console.warn('[Live] Erreur:', msg.error);
                     break;
 
+                case 'live:vendor-status':
+                    handleVendorLiveStatus(msg);
+                    break;
+
                 // === LIVE WEBRTC ===
                 case 'live:webrtc-offer':
                     _lpHandleLiveWebrtcOffer(msg);
@@ -23908,7 +24060,7 @@
                         type: 'live:webrtc-relay',
                         vendorId: _lpLiveVendorId,
                         targetUserId: viewerUserId,
-                        type: 'live:webrtc-ice-candidate',
+                        signalType: 'live:webrtc-ice-candidate',
                         candidate: e.candidate
                     }));
                 }
@@ -23923,7 +24075,7 @@
                         type: 'live:webrtc-relay',
                         vendorId: _lpLiveVendorId,
                         targetUserId: viewerUserId,
-                        type: 'live:webrtc-offer',
+                        signalType: 'live:webrtc-offer',
                         offer: pc.localDescription
                     }));
                 }
@@ -23960,7 +24112,7 @@
                         type: 'live:webrtc-relay',
                         vendorId: _lpLiveVendorId,
                         targetUserId: _lpLiveViewerUserId,
-                        type: 'live:webrtc-ice-candidate',
+                        signalType: 'live:webrtc-ice-candidate',
                         candidate: e.candidate
                     }));
                 }
@@ -23975,7 +24127,7 @@
                             type: 'live:webrtc-relay',
                             vendorId: _lpLiveVendorId,
                             targetUserId: _lpLiveViewerUserId,
-                            type: 'live:webrtc-answer',
+                            signalType: 'live:webrtc-answer',
                             answer: pc.localDescription
                         }));
                     }
@@ -27246,7 +27398,7 @@
                 const timer = ctrl ? setTimeout(() => {
                     try { ctrl.abort() } catch {
                     }
-                }, 7000) : null
+                }, 15000) : null
                 const response = await fetch('/api/local-sync/localplus/identity/resolve', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -27273,6 +27425,14 @@
                 try { switchAccountTab(role === 'vendor' ? 'sell' : 'profile') } catch {}
                 try { loadLpProfile(true) } catch {}
                 try { lpToast(`Connecte en tant que ${String(nextUser?.name || 'Utilisateur')}.`, 'ok') } catch {}
+                // Afficher le bouton Go Live si vendeur
+                if (role === 'vendor') {
+                    try { lpInitGoLiveButton() } catch(e) { console.warn('[Live] erreur init bouton apres login:', e); }
+                    // Retry apres switchView (delai pour eviter conflit UI)
+                    setTimeout(function() {
+                        try { lpInitGoLiveButton(); } catch(e) {}
+                    }, 500);
+                }
             } catch (e) {
                 const msg = e?.name === 'AbortError'
                     ? 'Verification trop longue. Reessayez.'
