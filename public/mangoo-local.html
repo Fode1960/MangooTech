@@ -4081,6 +4081,40 @@
         }
         .lp-live-fs-pip-left .lp-live-fs-pip-label { color: #66bb6a; }
         .lp-live-fs-pip-right .lp-live-fs-pip-label { color: #81c784; }
+        /* Remote video fullscreen (vendeur agrandit → client voit en grand) */
+        .lp-live-remote-fs {
+            position: fixed !important; top: 0 !important; left: 0 !important;
+            right: 0 !important; bottom: 0 !important;
+            width: auto !important; height: auto !important;
+            max-width: 100vw !important; max-height: 100vh !important;
+            margin: 0 !important; padding: 0 !important;
+            z-index: 22001 !important; border-radius: 0 !important;
+            border: none !important; background: #000 !important;
+            transform: none !important; overflow: visible !important;
+        }
+        .lp-live-remote-fs video {
+             width: 100%; height: 100%; object-fit: cover;
+             object-position: center;
+         }
+        .lp-live-remote-fs .lp-live-fs-pip-placeholder,
+        .lp-live-remote-fs .lp-live-fs-pip-label {
+            display: none;
+        }
+        .lp-live-fs-remote-close {
+            display: none;
+            position: fixed; bottom: 24px; right: 24px; z-index: 22002;
+            background: rgba(0,0,0,0.55); color: white; border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 10px; padding: 6px 12px; font-size: 0.9rem; cursor: pointer;
+            backdrop-filter: blur(4px);
+        }
+        .lp-live-remote-fs ~ .lp-live-fs-remote-close { display: block; }
+        /* Masquer le reste du panel client quand remote fullscreen actif */
+        .lp-live-remote-active .lp-live-fs-bg,
+        .lp-live-remote-active .lp-live-fs-header,
+        .lp-live-remote-active .lp-live-fs-top-actions,
+        .lp-live-remote-active .lp-live-fs-bottom-sheet > :not(.lp-live-fs-pip-row) { display: none; }
+        /* Cacher uniquement le self-PiP (droit), pas le remote */
+        .lp-live-remote-active .lp-live-fs-pip-right { display: none; }
         /* Top action bar — en haut à droite, séparé du header */
         .lp-live-fs-top-actions {
             position: absolute; top: 12px; right: 12px; z-index: 20;
@@ -15413,6 +15447,9 @@
                 case 'live:vendor-status':
                     handleVendorLiveStatus(data);
                     break;
+                case 'live:vendor-fullscreen':
+                    handleVendorFullscreenMsg(data);
+                    break;
                 default:
                     // Rediriger les messages live vers leur handler
                     if (data.type && data.type.startsWith('live:')) {
@@ -15487,6 +15524,36 @@
                     }
                 } catch(e) { console.warn('[LiveBadge] Erreur re-rendu list:', e.message); }
             } catch(e) { console.warn('[LiveBadge] Erreur:', e.message); }
+        }
+
+        // Quand le vendeur passe en plein écran → expandre la vidéo distante chez les clients
+        function handleVendorFullscreenMsg(data) {
+            try {
+                var fs = !!data.fullscreen;
+                var pip = document.getElementById('lpLiveRemoteVideoPip');
+                var panel = document.getElementById('lpLiveClientPanel');
+                if (!pip) return;
+                if (fs) {
+                    pip.classList.add('lp-live-remote-fs');
+                    if (panel) panel.classList.add('lp-live-remote-active');
+                    // Créer un bouton de fermeture (info seulement, le vendeur contrôle)
+                    var btn = document.getElementById('lpLiveRemoteFsClose');
+                    if (!btn) {
+                        btn = document.createElement('button');
+                        btn.id = 'lpLiveRemoteFsClose';
+                        btn.className = 'lp-live-fs-remote-close';
+                        btn.textContent = '⛶ Le vendeur présente en grand';
+                        btn.style.cursor = 'default';
+                        document.body.appendChild(btn);
+                    }
+                } else {
+                    pip.classList.remove('lp-live-remote-fs');
+                    if (panel) panel.classList.remove('lp-live-remote-active');
+                    var btn2 = document.getElementById('lpLiveRemoteFsClose');
+                    if (btn2) btn2.remove();
+                }
+                console.warn('[Live FS] Vendor fullscreen=' + fs);
+            } catch(e) { console.warn('[Live FS] Erreur:', e.message); }
         }
 
         function relayWebRTCToIframe(data) {
@@ -23651,6 +23718,41 @@
             lpHideProductCard();
 
             lpInitGoLiveButton();
+        }
+
+        // Basculer la video live en plein ecran / taille normale (comme TikTok)
+        function lpToggleLiveFullscreen() {
+            var cam = document.getElementById('lpLivePreview');
+            var wrap = cam ? cam.parentElement : null;
+            if (!cam || !wrap) return;
+            var isFs = cam.classList.contains('lp-live-cam-fs');
+            if (isFs) {
+                cam.classList.remove('lp-live-cam-fs');
+                wrap.classList.remove('lp-live-cam-wrap-fs');
+                var btn = wrap.querySelector('.lp-live-fs-btn');
+                if (btn) { btn.innerHTML = '⛶'; btn.title = 'Plein écran'; }
+                // Notifier les clients
+                _lpSendVendorFullscreen(false);
+            } else {
+                cam.classList.add('lp-live-cam-fs');
+                wrap.classList.add('lp-live-cam-wrap-fs');
+                var btn2 = wrap.querySelector('.lp-live-fs-btn');
+                if (btn2) { btn2.innerHTML = '✕'; btn2.title = 'Réduire'; }
+                // Notifier les clients
+                _lpSendVendorFullscreen(true);
+            }
+        }
+
+        function _lpSendVendorFullscreen(fs) {
+            try {
+                if (webrtcMgmtWs && webrtcMgmtWs.readyState === 1 && _lpLiveVendorId) {
+                    webrtcMgmtWs.send(JSON.stringify({
+                        type: 'live:vendor-fullscreen',
+                        vendorId: _lpLiveVendorId,
+                        fullscreen: fs
+                    }));
+                }
+            } catch(e) {}
         }
 
         // Rejoindre un live (client)

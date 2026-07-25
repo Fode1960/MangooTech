@@ -354,6 +354,10 @@ wss.on('connection', (ws) => {
           handleLiveWebrtcRelay(ws, data);
           break;
 
+        case 'live:vendor-fullscreen':
+          handleVendorFullscreen(ws, data);
+          break;
+
         case 'ping':
           ws.send(JSON.stringify({ type: 'pong', timestamp: Date.now() }));
           break;
@@ -1226,6 +1230,23 @@ wss.on('connection', (ws) => {
     if (session && session.vendorWs && session.vendorWs.readyState === WebSocket.OPEN) {
       session.vendorWs.send(JSON.stringify(relayMsg));
     }
+  }
+
+  function handleVendorFullscreen(ws, data) {
+    const { vendorId, fullscreen } = data;
+    if (!vendorId) return;
+    // Vérifier que c'est bien le vendeur
+    if (!currentUser || currentUser.vendorId !== vendorId) {
+      ws.send(JSON.stringify({ type: 'live:error', error: 'Non autorisé' }));
+      return;
+    }
+    // Diffuser à tous les viewers
+    broadcastToLiveViewers(vendorId, {
+      type: 'live:vendor-fullscreen',
+      vendorId,
+      fullscreen: !!fullscreen
+    });
+    console.log(`[WebRTC-3008] Vendor ${vendorId} fullscreen=${!!fullscreen}, broadcast aux viewers`);
   }
 
   // Broadcast le statut live d'un vendor à TOUS les clients connectés
