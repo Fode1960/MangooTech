@@ -4579,7 +4579,7 @@
             <div style="padding: 0 16px 12px; position: sticky; top: 0; z-index: 20; background: var(--ml-bg);">
                 <div class="lp-tabs" aria-label="Boussole compte client">
                     <button type="button" onclick="try{lpGoToClientAccount('orders')}catch{}" class="lp-tab active" id="lp-tab-orders">📦 Commandes</button>
-                    <button type="button" onclick="try{lpGoToVendorDashboard('overview')}catch{}" class="lp-tab" id="lp-tab-sell">🏪 Vendre</button>
+                    <button type="button" onclick="try{lpGoToVendorTab('overview')}catch{}" class="lp-tab" id="lp-tab-sell">🏪 Vendre</button>
                     <button type="button" onclick="try{lpGoToClientAccount('profile')}catch{}" class="lp-tab" id="lp-tab-profile">👤 Profil</button>
                     <button type="button" onclick="try{lpGoToClientAccount('wishlist')}catch{}" class="lp-tab" id="lp-tab-favorites">❤️ Favoris</button>
                     <button type="button" onclick="try{lpGoToClientAccount('wallet')}catch{}" class="lp-tab" id="lp-tab-pay">💳 Mangoo Pay</button>
@@ -4625,34 +4625,19 @@
                         </div>
                     </div>
 
-                    <div id="providerSection" style="margin-top:14px; display:none;">
-                        <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
-                            <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">👤 Mon compte</div>
-                            <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Ouvrir mon compte ou l'espace livreur.</div>
-                            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px;">
-                                <button type="button" class="lp-btn lp-btn-primary" onclick="lpOpenClientAccountProfile()">👤 Mon compte</button>
-                                <button type="button" class="lp-btn lp-btn-secondary" onclick="lpOpenDriverSpace()">🛵 Espace Livreur</button>
-                            </div>
-                        </div>
-                    </div>
-
                     <div id="vendorSection" style="margin-top:14px; display:block;">
 
                         <div class="lp-tabs" style="margin-bottom: 12px;" aria-label="Boussole compte vendeur">
-                            <button type="button" onclick="try{lpGoToVendorDashboard('overview')}catch{}; try{switchVendorTab('overview')}catch{}" class="lp-tab active" id="lp-vtab-overview">📊 Vue d’ensemble</button>
-                            <button type="button" onclick="try{lpGoToVendorDashboard('stock')}catch{}; try{switchVendorTab('stock')}catch{}" class="lp-tab" id="lp-vtab-stock">📦 Gestion Stock</button>
-                            <button type="button" onclick="try{lpGoToVendorDashboard('products')}catch{}; try{switchVendorTab('products')}catch{}" class="lp-tab" id="lp-vtab-products">🧾 Produits</button>
-                            <button type="button" onclick="try{lpGoToVendorDashboard('orders')}catch{}; try{switchVendorTab('orders')}catch{}" class="lp-tab" id="lp-vtab-orders">🛒 Commandes</button>
-                            <button type="button" onclick="try{lpGoToVendorDashboard('notifications')}catch{}; try{switchVendorTab('notifications')}catch{}" class="lp-tab" id="lp-vtab-notifications">🔔 Notifications</button>
-                            <button type="button" onclick="try{lpGoToVendorDashboard('communication')}catch{}; try{switchVendorTab('communication')}catch{}" class="lp-tab" id="lp-vtab-communication">📞 Communication</button>
-                            <button type="button" onclick="try{lpGoToVendorDashboard('shops')}catch{}; try{switchVendorTab('shops')}catch{}" class="lp-tab" id="lp-vtab-shops">🏪 Mes boutiques</button>
-                            <button type="button" onclick="try{lpGoToVendorDashboard('supply')}catch{}; try{switchVendorTab('supply')}catch{}" class="lp-tab" id="lp-vtab-supply">🏭 Appro</button>
+                            <button type="button" onclick="try{lpGoToVendorTab('overview')}catch{}" class="lp-tab active" id="lp-vtab-overview">📊 Vue d’ensemble</button>
+                            <button type="button" onclick="try{lpGoToVendorTab('products')}catch{}" class="lp-tab" id="lp-vtab-products">🧾 Produits</button>
+                            <button type="button" onclick="try{lpGoToVendorTab('communication')}catch{}" class="lp-tab" id="lp-vtab-communication">💬 Chat</button>
+                            <button type="button" onclick="try{lpGoToVendorTab('supply')}catch{}" class="lp-tab" id="lp-vtab-supply">🏭 Appro</button>
                         </div>
 
                         <div id="lp-vendor-overview" class="lp-pane active" data-vpane="overview">
                             <div style="display:flex; gap:10px; flex-wrap:wrap; margin:-6px 0 18px;">
-                                <button type="button" class="lp-btn lp-btn-primary" onclick="try{lpGoToVendorDashboard('orders')}catch{}">🚚 Gérer livraisons</button>
-                                <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpGoToVendorDashboard('orders')}catch{}">🧾 Voir commandes</button>
+                                <button type="button" class="lp-btn lp-btn-primary" onclick="try{switchVendorTab('orders')}catch{}">📦 Voir mes commandes</button>
+                                <button type="button" class="lp-btn lp-btn-secondary" onclick="try{switchVendorTab('products')}catch{}">🧾 Gérer mes produits</button>
                             </div>
 
                             <div style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:16px; margin-bottom:18px;">
@@ -4661,62 +4646,25 @@
                                     Le client paie, renseigne son adresse, puis la boutique confirme la commande et Mangoo Express prend le relais.
                                 </div>
                                 <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
-                                    <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpGoToVendorDashboard('orders')}catch{}">📦 Commandes a preparer</button>
+                                    <button type="button" class="lp-btn lp-btn-secondary" onclick="try{switchVendorTab('orders')}catch{}">📦 Commandes a preparer</button>
                                     <button type="button" class="lp-btn lp-btn-secondary" onclick="openSupplyModal()">🏭 Voir appro</button>
                                 </div>
                             </div>
 
-                            <div id="boostAdminCard" style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:16px; margin-bottom:20px; box-shadow:var(--ml-shadow-sm); display:none;">
-                                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;">
-                                    <div>
-                                        <div style="font-weight:950; color:var(--ml-text);">📍 Boost Carte</div>
-                                        <div style="font-size:0.85rem; color:var(--ml-muted);">Sponsorisé, promo ou nouveau.</div>
-                                    </div>
-                                    <button onclick="refreshBoostPanel()" style="border:1px solid var(--ml-border); background:var(--ml-panel); color:var(--ml-text); padding:10px 12px; border-radius:12px; font-weight:900; cursor:pointer;">↻</button>
+                            <div id="boostSimpleCard" style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:16px; margin-bottom:20px; box-shadow:var(--ml-shadow-sm); display:none;">
+                                <div style="font-weight:950; color:var(--ml-text); margin-bottom:10px;">📍 Visibilité Carte</div>
+                                <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                                    <button onclick="setSponsorBoost(24)" style="flex:1; min-width:130px; padding:10px 12px; border-radius:12px; border:1px solid rgba(17,24,39,0.10); background:#111827; color:white; font-weight:900; cursor:pointer; font-size:0.88rem;">🏷️ Sponsor 24h</button>
+                                    <button onclick="setNewBoost(24)" style="flex:1; min-width:130px; padding:10px 12px; border-radius:12px; border:1px solid rgba(55,48,163,0.16); background:#1b5e20; color:#ffffff; font-weight:900; cursor:pointer; font-size:0.88rem;">🆕 Nouveau 24h</button>
                                 </div>
-
-                                <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
-                                    <select id="boostVendorSelect" style="flex:1; padding:12px; border:1px solid var(--ml-border); border-radius:12px; font-weight:900; background:var(--ml-panel); color:var(--ml-text);" onchange="refreshBoostPanel()"></select>
-                                    <select id="boostTierSelect" style="width:120px; padding:12px; border:1px solid var(--ml-border); border-radius:12px; font-weight:900; background:var(--ml-panel); color:var(--ml-text);" onchange="refreshBoostPanel()">
-                                        <option value="1">Bronze</option>
-                                        <option value="2">Argent</option>
-                                        <option value="3">Or</option>
-                                    </select>
-                                </div>
-
-                                <div style="display:flex; flex-wrap:wrap; gap:10px;">
-                                    <button onclick="setSponsorBoost(12)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid rgba(17,24,39,0.10); background:#111827; color:white; font-weight:950; cursor:pointer;">🏷️ Sponsor 12h</button>
-                                    <button onclick="setSponsorBoost(24)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid rgba(17,24,39,0.10); background:#111827; color:white; font-weight:950; cursor:pointer;">🏷️ Sponsor 24h</button>
-                                    <button onclick="setSponsorBoost(72)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid rgba(17,24,39,0.10); background:#111827; color:white; font-weight:950; cursor:pointer;">🏷️ Sponsor 72h</button>
-                                    <button onclick="clearSponsorBoost()" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid var(--ml-border); background:var(--ml-panel); color:var(--ml-text); font-weight:950; cursor:pointer;">✖ Stop Sponsor</button>
-                                </div>
-
-                                <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
-                                    <button onclick="setPromoBoost(24)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid rgba(146,64,14,0.18); background:#fff4d6; color:#1b5e20; font-weight:950; cursor:pointer;">✨ Promo 24h</button>
-                                    <button onclick="clearPromoBoost()" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid var(--ml-border); background:var(--ml-panel); color:var(--ml-text); font-weight:950; cursor:pointer;">✖ Stop Promo</button>
-                                    <button onclick="setNewBoost(24)" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid rgba(55,48,163,0.16); background:#1b5e20; color:#ffffff; font-weight:950; cursor:pointer;">🆕 Nouveau 24h</button>
-                                    <button onclick="clearNewBoost()" style="flex:1; min-width:140px; padding:12px; border-radius:12px; border:1px solid var(--ml-border); background:var(--ml-panel); color:var(--ml-text); font-weight:950; cursor:pointer;">✖ Stop Nouveau</button>
-                                </div>
-
-                                <div style="margin-top:12px; background:rgba(17,24,39,0.03); border:1px solid var(--ml-border); border-radius:12px; padding:12px; color:var(--ml-text);">
-                                    <div style="display:flex; justify-content:space-between; gap:10px; font-weight:900;">
-                                        <div>État</div>
-                                        <div id="boostStatusText" style="text-align:right; color:var(--ml-muted);">—</div>
-                                    </div>
-                                    <div style="display:flex; justify-content:space-between; gap:10px; margin-top:6px; font-weight:900;">
-                                        <div>Stats (session)</div>
-                                        <div id="boostStatsText" style="text-align:right; color:var(--ml-muted);">—</div>
-                                    </div>
+                                <div style="margin-top:10px; display:flex; justify-content:space-between; gap:10px; font-weight:700; font-size:0.85rem; color:var(--ml-muted);">
+                                    <span>État</span>
+                                    <span id="boostStatusText">—</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div id="lp-vendor-stock" class="lp-pane" data-vpane="stock">
-                            <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
-                                <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Gestion Stock</div>
-                                <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Module stock Local+. Utilisez « Produits » pour publier.</div>
-                            </div>
-                        </div>
+                        
 
                         <div id="lp-vendor-products" class="lp-pane" data-vpane="products">
                             <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
@@ -4735,12 +4683,7 @@
                             </div>
                         </div>
 
-                        <div id="lp-vendor-notifications" class="lp-pane" data-vpane="notifications">
-                            <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
-                                <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Notifications</div>
-                                <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Aucune notification.</div>
-                            </div>
-                        </div>
+                        
 
                         <div id="lp-vendor-communication" class="lp-pane" data-vpane="communication">
                             <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
@@ -4752,12 +4695,7 @@
                             </div>
                         </div>
 
-                        <div id="lp-vendor-shops" class="lp-pane" data-vpane="shops">
-                            <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
-                                <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Mes boutiques</div>
-                                <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Créez et gérez vos boutiques Local+.</div>
-                            </div>
-                        </div>
+                        
 
                         <div id="lp-vendor-supply" class="lp-pane" data-vpane="supply">
                             <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
@@ -4771,6 +4709,63 @@
                         </div>
                     </div>
                 </div>
+
+                                    <div id="providerSection" style="margin-top:14px; display:none;">
+                        <div class="lp-tabs" style="margin-bottom: 12px;" aria-label="Boussole compte prestataire">
+                            <button type="button" onclick="try{switchProviderTab('overview')}catch{}" class="lp-tab active" id="lp-ptab-overview">📊 Vue d'ensemble</button>
+                            <button type="button" onclick="try{switchProviderTab('services')}catch{}" class="lp-tab" id="lp-ptab-services">🛠️ Prestations</button>
+                            <button type="button" onclick="try{switchProviderTab('communication')}catch{}" class="lp-tab" id="lp-ptab-communication">💬 Chat</button>
+                            <button type="button" onclick="try{switchProviderTab('supply')}catch{}" class="lp-tab" id="lp-ptab-supply">🏭 Appro</button>
+                        </div>
+
+                        <div id="lp-provider-overview" class="lp-pane active" data-pvpane="overview">
+                            <div style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:16px; margin-bottom:18px;">
+                                <div style="font-weight:950; color:var(--ml-text); font-size:1.02rem;">📋 Résumé activité</div>
+                                <div style="color:var(--ml-muted); font-size:0.9rem; margin-top:6px; line-height:1.45;">
+                                    Gérez vos prestations de service, suivez vos commandes et communiquez avec vos clients.
+                                </div>
+                                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+                                    <button type="button" class="lp-btn lp-btn-primary" onclick="try{switchProviderTab('services')}catch{}">🛠️ Mes prestations</button>
+                                    <button type="button" class="lp-btn lp-btn-secondary" onclick="try{switchProviderTab('communication')}catch{}">💬 Chat clients</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="lp-provider-services" class="lp-pane" data-pvpane="services">
+                            <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
+                                <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">🛠️ Prestations</div>
+                                <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Gérez vos services proposés aux clients Local+.</div>
+                                <div style="margin-top: 14px;">
+                                    <button type="button" class="lp-btn lp-btn-primary" onclick="openAddProviderServiceModal()">📸 Ajouter une prestation</button>
+                                </div>
+                                <div id="lp-provider-services-list" style="margin-top:16px;"></div>
+                            </div>
+                        </div>
+
+                        <div id="lp-provider-orders" class="lp-pane" data-pvpane="orders">
+                            <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
+                                <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">🛒 Commandes prestataire</div>
+                                <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Historique des commandes reçues.</div>
+                            </div>
+                        </div>
+
+                        <div id="lp-provider-communication" class="lp-pane" data-pvpane="communication">
+                            <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
+                                <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">💬 Communication</div>
+                                <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Contactez vos clients via Mangoo Connect+.</div>
+                                <div style="margin-top: 14px;">
+                                    <button type="button" class="lp-btn lp-btn-primary" onclick="try{lpOpenVendorCommunication()}catch{}">💬 Ouvrir le chat</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="lp-provider-supply" class="lp-pane" data-pvpane="supply">
+                            <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
+                                <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">🏭 Approvisionnement</div>
+                                <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Ouvrez Mangoo Supply pour vos besoins professionnels.</div>
+                            </div>
+                        </div>
+                    </div>
 
                 <!-- TAB: ORDERS -->
                 <div id="dash-orders" class="lp-pane active" data-pane="orders">
@@ -4867,6 +4862,9 @@
                 </div>
 
             </div>
+
+            <!-- FOOTER COMPTE (masqué en mode dashboard prestataire) -->
+            <div id="accountFooter">
 
             <!-- SETTINGS FOOTER -->
             <div style="padding:16px; background:var(--ml-bg);">
@@ -5017,6 +5015,10 @@
             <p style="text-align:center; color:#b2bec3; font-size:0.8rem; margin-top:30px;">
                 Version 2.0.23 (PWA)
             </p>
+
+            </div>
+            <!-- FIN accountFooter -->
+
         </div>
     </div>
 
@@ -6553,7 +6555,14 @@
         // === MANGOO CONNECT+ AUDIO CALL SIMULATION ===
         function startAudioCall() {
             // Check if activeVendor exists
-            const vendorName = activeVendor ? activeVendor.name : "le vendeur";
+            var _isProvider = false;
+            try { var _ps = document.getElementById('providerSection'); _isProvider = !!(_ps && _ps.style.display === 'block'); } catch(e) {}
+            // Prestataire sans boutique active : pas d'appel possible
+            if (_isProvider && !activeVendor) {
+                try { showLocalToast('Appel indisponible en mode prestataire. Utilisez le chat texte.', 'info'); } catch {}
+                return;
+            }
+            const vendorName = activeVendor ? activeVendor.name : (_isProvider ? "le prestataire" : "le vendeur");
             console.log('[Call] startAudioCall declenche, activeVendor=', activeVendor ? (activeVendor.name + ' | slug=' + activeVendor.slug + ' | id=' + activeVendor.id) : 'null');
             
             // Show selection modal instead of direct call
@@ -6604,7 +6613,9 @@
             activeCallData = null;
             _amCaller = true; // Ce cote initie l'appel
             
-            const vendorName = activeVendor ? activeVendor.name : "le vendeur";
+            var _isProvider2 = false;
+            try { var _ps2 = document.getElementById('providerSection'); _isProvider2 = !!(_ps2 && _ps2.style.display === 'block'); } catch(e) {}
+            const vendorName = activeVendor ? activeVendor.name : (_isProvider2 ? "le prestataire" : "le vendeur");
             const vendorId = activeVendor ? (String(activeVendor.slug || activeVendor.id || '').trim()) : '';
             console.log('[Call] launchCall declenche, type=' + type + ', vendorId=' + vendorId + ', activeVendor=', activeVendor ? (activeVendor.name + ' | slug=' + activeVendor.slug + ' | id=' + activeVendor.id) : 'null');
             console.log('[Call] WebSocket state: connected=' + webrtcMgmtWsConnected + ', readyState=' + (webrtcMgmtWs ? webrtcMgmtWs.readyState : 'null') + ', queue=' + webrtcMsgQueue.length);
@@ -11317,11 +11328,6 @@
             const isAccountView = String(currentView || '').trim() === 'account'
             btn.style.display = isAccountView ? 'none' : 'flex';
             try {
-                const section = document.getElementById('providerSection');
-                if (section) section.style.display = 'block';
-            } catch {
-            }
-            try {
                 let shopId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
                 const scopedShopIds = lpGetStoredShopIdsForCurrentUser();
                 const ownedShopIds = scopedShopIds.length ? scopedShopIds : lpGetOwnedShopIds();
@@ -11333,6 +11339,80 @@
                 if (shopBtn) shopBtn.style.display = shopId || ownedShopIds.length ? '' : 'none';
             } catch {
             }
+        }
+
+        function showProviderDashboardInline() {
+            try {
+                // 1. Afficher la vue compte et masquer toutes les autres vues
+                var accountDiv = document.getElementById('accountView');
+                var mapDiv = document.getElementById('map');
+                var listDiv = document.getElementById('listView');
+                var espaceDiv = document.getElementById('espaceView');
+                var introDiv = document.getElementById('introView');
+                if (accountDiv) accountDiv.style.display = 'block';
+                if (mapDiv) mapDiv.style.display = 'none';
+                if (listDiv) listDiv.style.display = 'none';
+                if (espaceDiv) espaceDiv.style.display = 'none';
+                if (introDiv) introDiv.style.display = 'none';
+                // Masquer aussi la fiche vendeur si ouverte
+                try { var vs = document.getElementById('vendorSheet'); if (vs) { vs.classList.remove('active'); vs.style.display = 'none'; } } catch(e) {}
+                // Masquer le footer compte (menu grid, onboarding) en mode prestataire
+                try {
+                    var af = document.getElementById('accountFooter');
+                    if (af) { af.style.display = 'none'; }
+                    // Masquer tout ce qui est dans accountView mais hors de accountFooter
+                    document.querySelectorAll('#accountView .menu-grid, #accountView .lp-hub-card, #accountView .action-list, #accountView button.btn-seller').forEach(function(el) {
+                        if (!el.closest('#accountFooter')) {
+                            el.style.display = 'none';
+                        }
+                    });
+                    // Masquer le paragraphe version (hors accountFooter)
+                    var allPs = document.querySelectorAll('#accountView p');
+                    allPs.forEach(function(p) {
+                        if (!p.closest('#accountFooter') && (p.textContent || '').indexOf('Version') >= 0) {
+                            p.style.display = 'none';
+                        }
+                    });
+                } catch(e) { console.warn('[Provider] Erreur masquage footer:', e); }
+                // Masquer barre de recherche et filtres (vue map)
+                try { var sb = document.querySelector('.search-container'); if (sb) sb.style.display = 'none'; } catch(e) {}
+                try { var fb = document.getElementById('metiersFamiliesBar'); if (fb) fb.style.display = 'none'; } catch(e) {}
+                try { currentView = 'account'; window.currentView = 'account'; } catch {}
+
+                // 2. Masquer les onglets compte (le prestataire a ses propres onglets lp-ptab-*)
+                document.querySelectorAll('#accountView .lp-tab[id^="lp-tab-"]').forEach(function(t) {
+                    t.style.display = 'none';
+                });
+
+                // 3. Masquer TOUS les panes de compte (orders, wallet, etc.) + dash-sell
+                //    providerSection est maintenant HORS de dash-sell, donc on cache dash-sell completement
+                //    On utilise uniquement les classes CSS (.lp-pane / .lp-pane.active) pour que
+                //    switchAccountTab puisse les ré-afficher correctement plus tard
+                document.querySelectorAll('#accountView .lp-pane[data-pane]').forEach(function(el) {
+                    el.classList.remove('active');
+                });
+
+                // 4. Afficher providerSection + cacher vendorSection
+                var provSec = document.getElementById('providerSection');
+                var vendSec = document.getElementById('vendorSection');
+                if (provSec) provSec.style.display = 'block';
+                if (vendSec) vendSec.style.display = 'none';
+
+                // 5. Activer onglet overview du provider
+                var allowedProv = ['overview', 'services', 'orders', 'communication', 'supply'];
+                allowedProv.forEach(function(k) {
+                    var btn = document.getElementById('lp-ptab-' + k);
+                    if (btn) btn.classList.toggle('active', k === 'overview');
+                });
+                document.querySelectorAll('.lp-pane[data-pvpane]').forEach(function(el) {
+                    el.classList.toggle('active', String(el.getAttribute('data-pvpane') || '') === 'overview');
+                });
+
+                // Masquer le bouton Go Live (reserve aux vendeurs)
+                try { var glBtn = document.getElementById('lpGoLiveBtn'); if (glBtn) glBtn.style.display = 'none'; } catch(e) {}
+
+                try { lpSpeak('Ouverture de votre espace prestataire.', { lang: 'fr-FR' }) } catch {}
+            } catch(e) { console.warn('Erreur ouverture dashboard prestataire:', e); }
         }
 
         function openMyProviderDashboard() {
@@ -11383,7 +11463,8 @@
                         } catch {
                         }
                     }
-                    openProviderDashboard(providerId, backVendorId);
+                    // Appeler showProviderDashboardInline (action explicite Espace pro)
+                    showProviderDashboardInline();
                     return;
                 }
                 const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
@@ -11530,6 +11611,14 @@
         }
 
         function lpOpenVendorCommunication() {
+            // Si dashboard prestataire actif, ouvrir le chat directement
+            try {
+                var _psProv = document.getElementById('providerSection');
+                if (_psProv && _psProv.style.display === 'block') {
+                    try { openChat(); } catch {}
+                    return;
+                }
+            } catch(e) {}
             let shopId = '';
             try { shopId = String(lpGetPreferredShopAccountId() || '').trim(); } catch {}
             if (shopId) {
@@ -11540,8 +11629,7 @@
                 } catch {
                 }
             }
-            try { lpGoToVendorDashboard('communication'); } catch {}
-            try { switchVendorTab('communication'); } catch {}
+            try { lpGoToVendorTab('communication'); } catch {}
             try { openChat(); } catch {}
         }
 
@@ -13188,26 +13276,108 @@
 
         function lpGoToVendorDashboard(tab) {
             const nextTab = String(tab || 'overview')
-            try {
-                const isLocalPlus = /mangoo-local\.html$/i.test(String(location?.pathname || '')) || String(location?.pathname || '').includes('/mangoo-local.html')
-                if (isLocalPlus) {
-                    try { switchView('account') } catch {}
-                    try { switchAccountTab('sell') } catch {}
-                    try { switchVendorTab(nextTab) } catch {}
+            const isLocalPlus = /mangoo-local\.html$/i.test(String(location?.pathname || '')) || String(location?.pathname || '').includes('/mangoo-local.html')
+            if (isLocalPlus) {
+                try {
+                    // Utiliser le flow standard (switchView gere vues, nav, onglets)
+                    try { switchView('account'); } catch(e) {}
+                    try { switchVendorTab(nextTab); } catch(e) {}
                     return
+                } catch (e) {
+                    console.warn('[Vendor] Erreur setup dashboard local:', e);
+                    return;
                 }
-            } catch {
             }
+            // Fallback externe (hors Mangoo Local+)
             try { lpEnsureFormalRole('vendor') } catch {}
             try { localStorage.setItem('mangoo-vendor-active-tab', nextTab) } catch {}
             try {
                 const u = getLpCurrentUser()
                 const email = String(u?.email || '').trim().toLowerCase()
                 if (email) localStorage.setItem(`mangoo-active-role:${email}`, 'vendor')
-            } catch {
-            }
+            } catch {}
             try { localStorage.setItem('mangoo-last-view', 'marketplace') } catch {}
             try { lpRedirectToApp({ lp_role: 'vendor', lp_vendor_tab: nextTab }) } catch {}
+        }
+
+        // Helper leger pour changer d'onglet vendeur sans refaire tout le setup DOM
+        // (evite le bug de freeze des boutons quand on est deja sur le dashboard vendeur)
+        function lpGoToVendorTab(tabName) {
+            const next = String(tabName || 'overview');
+            var onAccount = false;
+            var sellTabActive = false;
+            var provActive = false;
+            try { onAccount = String(currentView || '').trim() === 'account'; } catch(e) {}
+            try {
+                var st = document.getElementById('lp-tab-sell');
+                if (st) sellTabActive = st.classList.contains('active');
+            } catch(e) {}
+            try {
+                var ps = document.getElementById('providerSection');
+                provActive = !!(ps && ps.style.display === 'block');
+            } catch(e) {}
+
+            if (provActive) {
+                // Transition prestataire → vendeur : nettoyer + setup vendeur direct
+                try {
+                    var _ps2 = document.getElementById('providerSection');
+                    if (_ps2) _ps2.style.display = 'none';
+                    // Restaurer les onglets compte masqués par showProviderDashboardInline
+                    document.querySelectorAll('#accountView .lp-tab[id^="lp-tab-"]').forEach(function(t) {
+                        t.style.display = '';
+                    });
+                    document.querySelectorAll('#accountView .menu-grid, #accountView .lp-hub-card, #accountView .action-list, #accountView button.btn-seller').forEach(function(el) {
+                        el.style.display = '';
+                    });
+                    var _af = document.getElementById('accountFooter');
+                    if (_af) _af.style.display = '';
+                    document.querySelectorAll('#accountView p').forEach(function(p) {
+                        if ((p.textContent || '').indexOf('Version') >= 0) p.style.display = '';
+                    });
+                } catch(e) {}
+                // Setup vendeur direct (bypass isLpVendorUser qui peut ne pas reconnaitre le provider)
+                try {
+                    currentView = 'account'; window.currentView = 'account';
+                    var _m = document.getElementById('map'); if (_m) _m.style.display = 'none';
+                    var _lv = document.getElementById('listView'); if (_lv) _lv.style.display = 'none';
+                    var _ev2 = document.getElementById('espaceView'); if (_ev2) _ev2.style.display = 'none';
+                    var _iv2 = document.getElementById('introView'); if (_iv2) _iv2.style.display = 'none';
+                    var _av = document.getElementById('accountView'); if (_av) _av.style.display = 'block';
+                    var _ts = document.querySelector('.top-section'); if (_ts) _ts.style.display = 'none';
+                    var _sb = document.querySelector('.search-container'); if (_sb) _sb.style.display = 'none';
+                    var _fb = document.getElementById('metiersFamiliesBar'); if (_fb) _fb.style.display = 'none';
+                    var _bb = document.getElementById('floatingBackBtn'); if (_bb) _bb.style.display = 'none';
+                    document.querySelectorAll('.nav-item').forEach(function(i) { i.classList.remove('active'); });
+                    var _ni = document.querySelectorAll('.nav-item');
+                    if (_ni[3]) _ni[3].classList.add('active');
+                    try { applyLpHeaderUser() } catch(_e) {}
+                    try { updateLpSellTabVisibility() } catch(_e) {}
+                    // Activer onglet Vendre + dash-sell
+                    var _stb = document.getElementById('lp-tab-sell');
+                    if (_stb) { _stb.style.display = ''; _stb.classList.add('active'); }
+                    document.querySelectorAll('#accountView .lp-tab').forEach(function(t) {
+                        if (t.id !== 'lp-tab-sell') t.classList.remove('active');
+                    });
+                    document.querySelectorAll('.lp-pane[data-pane]').forEach(function(el) {
+                        el.classList.toggle('active', String(el.getAttribute('data-pane') || '') === 'sell');
+                        el.style.display = '';
+                    });
+                    var _vs = document.getElementById('vendorSection');
+                    if (_vs) _vs.style.display = 'block';
+                } catch(_err) {
+                    console.warn('[Vendor] Erreur transition provider→vendeur:', _err);
+                }
+                try { switchVendorTab(next); } catch(e) {}
+                return;
+            }
+
+            if (onAccount && sellTabActive) {
+                // Deja sur le dashboard vendeur : juste changer d'onglet
+                try { switchVendorTab(next) } catch {}
+                return;
+            }
+            // Premier acces ou switch depuis une autre vue : setup complet
+            try { lpGoToVendorDashboard(next) } catch {}
         }
 
         function lpGoToClientAccount(section, opts) {
@@ -13215,6 +13385,21 @@
             const allowed = ['orders', 'profile', 'wishlist', 'wallet', 'communication']
             const safeSection = allowed.includes(nextSection) ? nextSection : 'orders'
             const options = opts && typeof opts === 'object' ? opts : {}
+
+            // Garde : si dashboard prestataire actif, rediriger vers onglet prestataire equivalent
+            try {
+                var _psProv = document.getElementById('providerSection');
+                if (_psProv && _psProv.style.display === 'block') {
+                    if (safeSection === 'communication') {
+                        try { openChat(); } catch {}
+                        return;
+                    }
+                    var _provMap = { orders: 'orders' };
+                    var _provTab = _provMap[safeSection] || 'overview';
+                    try { switchProviderTab(_provTab) } catch {}
+                    return;
+                }
+            } catch(e) {}
 
             try {
                 const isLocalPlus = /mangoo-local\.html$/i.test(String(location?.pathname || '')) || String(location?.pathname || '').includes('/mangoo-local.html')
@@ -13236,7 +13421,12 @@
                         } catch {
                         }
                     }
-                    try { switchView('account') } catch {}
+                    // Ne pas rappeler switchView si deja sur la vue compte
+                    var alreadyOnAccount2 = false;
+                    try { alreadyOnAccount2 = String(currentView || '').trim() === 'account'; } catch(e) {}
+                    if (!alreadyOnAccount2) {
+                        try { switchView('account') } catch {}
+                    }
                     try { switchAccountTab(localTab) } catch {}
                     return
                 }
@@ -16617,6 +16807,228 @@
                 if (e && e.target === overlay) overlay.remove();
             });
             document.body.appendChild(overlay);
+        }
+
+        // === PROVIDER SERVICE MANAGEMENT (PRESTATIONS) ===
+        function openAddProviderServiceModal() {
+            var overlay = document.createElement('div');
+            overlay.id = 'addProviderServiceOverlay';
+            overlay.className = 'modal-overlay';
+            overlay.style.display = 'flex';
+
+            overlay.innerHTML = '\
+                <div class="modal-card lp-modal-card" onclick="event.stopPropagation()">\
+                    <div class="lp-modal-head">\
+                        <button type="button" class="lp-modal-close" onclick="document.getElementById(\'addProviderServiceOverlay\')?.remove()">✕</button>\
+                        <div class="lp-modal-hero">\
+                            <span class="modal-icon">🛠️</span>\
+                            <div style="min-width:0;">\
+                                <h2 class="lp-modal-title">Proposer une prestation</h2>\
+                                <p class="lp-modal-sub">Nom • Catégorie • Prix</p>\
+                            </div>\
+                        </div>\
+                    </div>\
+                    <div class="lp-modal-body">\
+                        <div class="input-group">\
+                            <label>Photo (optionnel)</label>\
+                            <div class="lp-upload-row">\
+                                <div style="width:72px; height:72px; background:rgba(17,24,39,0.06); border-radius:14px; display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px dashed rgba(17,24,39,0.20); position:relative;">\
+                                    <img id="psPreviewImg" style="width:100%; height:100%; object-fit:cover; display:none;">\
+                                    <span id="psCameraIcon" style="font-size:1.8rem; opacity:0.7;">🛠️</span>\
+                                </div>\
+                                <label for="psCameraInput" class="lp-file-pill">📸 Prendre une photo</label>\
+                                <input type="file" id="psCameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handlePSImageUpload(this)">\
+                            </div>\
+                        </div>\
+                        <div class="input-group">\
+                            <label>Nom de la prestation</label>\
+                            <input type="text" id="psName" class="input-field" placeholder="Ex: Coiffure Dame Mariage">\
+                        </div>\
+                        <div class="input-group">\
+                            <label>Catégorie</label>\
+                            <select id="psCategory" class="input-field">\
+                                <option value="💇 Coiffure & Beauté">💇 Coiffure & Beauté</option>\
+                                <option value="🧵 Couture & Mode">🧵 Couture & Mode</option>\
+                                <option value="🔧 Plomberie">🔧 Plomberie</option>\
+                                <option value="⚡ Électricité">⚡ Électricité</option>\
+                                <option value="🏗️ Maçonnerie">🏗️ Maçonnerie</option>\
+                                <option value="🎨 Peinture & Déco">🎨 Peinture & Déco</option>\
+                                <option value="🧹 Ménage & Nettoyage">🧹 Ménage & Nettoyage</option>\
+                                <option value="📱 Réparation Téléphone">📱 Réparation Téléphone</option>\
+                                <option value="💻 Informatique & Réseaux">💻 Informatique & Réseaux</option>\
+                                <option value="🚗 Mécanique Auto">🚗 Mécanique Auto</option>\
+                                <option value="📸 Photographie">📸 Photographie</option>\
+                                <option value="🎵 Musique & Animation">🎵 Musique & Animation</option>\
+                                <option value="🍽️ Traiteur & Cuisine">🍽️ Traiteur & Cuisine</option>\
+                                <option value="📚 Cours & Formation">📚 Cours & Formation</option>\
+                                <option value="🏠 Jardinage">🏠 Jardinage</option>\
+                                <option value="🚚 Transport & Déménagement">🚚 Transport & Déménagement</option>\
+                                <option value="📦 Autre service">📦 Autre service</option>\
+                            </select>\
+                        </div>\
+                        <div class="input-group">\
+                            <label>Prix (FCFA)</label>\
+                            <input type="number" id="psPrice" class="input-field" placeholder="Ex: 10000 — laisser vide si prix sur demande">\
+                            <div style="font-size:0.75rem; color:var(--ml-muted); margin-top:2px;">Laissez vide pour un prix sur demande.</div>\
+                        </div>\
+                        <div class="lp-section">\
+                            <div class="lp-section-title">🎙️ Description vocale</div>\
+                            <div class="lp-section-desc">Parlez avec votre voix pour décrire votre prestation.</div>\
+                            <div style="display:flex; align-items:center; gap:12px;">\
+                                <button id="btnRecordPSAudio" onclick="togglePSAudioRecord()" style="width:60px; height:60px; border-radius:50%; border:none; background:#1b5e20; color:white; font-size:1.8rem; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 15px rgba(27,94,32,0.4); transition:all 0.2s;">🎙️</button>\
+                                <div id="psAudioPreviewContainer" style="display:none; align-items:center; gap:10px; flex:1;">\
+                                    <audio id="psAudioPreview" controls style="height:40px; width:100%; border-radius:20px;"></audio>\
+                                    <button onclick="deletePSAudio()" style="background:var(--ml-panel); border:1px solid var(--ml-border); border-radius:50%; width:36px; height:36px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; color:var(--ml-danger);">🗑️</button>\
+                                </div>\
+                            </div>\
+                        </div>\
+                        <div class="input-group">\
+                            <label>Description écrite</label>\
+                            <textarea class="input-field" id="psDesc" rows="3" placeholder="Décrivez votre prestation, votre expérience, vos disponibilités..."></textarea>\
+                        </div>\
+                    </div>\
+                    <div class="lp-modal-foot">\
+                        <button class="btn-submit" onclick="publishProviderService()" style="background: #1b5e20;">Publier</button>\
+                        <button type="button" class="lp-btn lp-btn-secondary" onclick="document.getElementById(\'addProviderServiceOverlay\')?.remove()" style="width:100%; margin-top:10px;">Annuler</button>\
+                    </div>\
+                </div>\
+            ';
+            overlay.addEventListener('click', function(e) {
+                if (e && e.target === overlay) overlay.remove();
+            });
+            document.body.appendChild(overlay);
+        }
+
+        function handlePSImageUpload(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var icon = document.getElementById('psCameraIcon');
+                    var img = document.getElementById('psPreviewImg');
+                    var container = img.parentElement;
+                    if (icon) icon.style.display = 'none';
+                    if (img) {
+                        img.src = e.target.result;
+                        img.style.display = 'block';
+                        container.style.border = '2px solid #1b5e20';
+                    }
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        var psAudioRecorder = null;
+        var psAudioChunks = [];
+
+        async function togglePSAudioRecord() {
+            var btn = document.getElementById('btnRecordPSAudio');
+            if (!btn) return;
+            if (psAudioRecorder && psAudioRecorder.state === 'recording') {
+                psAudioRecorder.stop();
+                btn.textContent = '🎙️';
+                btn.style.background = '#1b5e20';
+                return;
+            }
+            try {
+                var stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                psAudioChunks = [];
+                psAudioRecorder = new MediaRecorder(stream);
+                psAudioRecorder.ondataavailable = function(e) {
+                    if (e.data.size > 0) psAudioChunks.push(e.data);
+                };
+                psAudioRecorder.onstop = function() {
+                    var blob = new Blob(psAudioChunks, { type: 'audio/webm' });
+                    var url = URL.createObjectURL(blob);
+                    var audioEl = document.getElementById('psAudioPreview');
+                    var container = document.getElementById('psAudioPreviewContainer');
+                    if (audioEl) audioEl.src = url;
+                    if (container) container.style.display = 'flex';
+                    stream.getTracks().forEach(function(t) { t.stop(); });
+                };
+                psAudioRecorder.start();
+                btn.textContent = '⏺️';
+                btn.style.background = '#d63031';
+            } catch(err) {
+                console.error('[PS] Erreur micro:', err);
+                alert('Impossible d\'accéder au microphone.');
+            }
+        }
+
+        function deletePSAudio() {
+            var audioEl = document.getElementById('psAudioPreview');
+            var container = document.getElementById('psAudioPreviewContainer');
+            if (audioEl) audioEl.src = '';
+            if (container) container.style.display = 'none';
+        }
+
+        function publishProviderService() {
+            var name = document.getElementById('psName').value.trim();
+            var category = document.getElementById('psCategory').value;
+            var price = document.getElementById('psPrice').value.trim();
+            var desc = document.getElementById('psDesc').value.trim();
+            var imgPreview = document.getElementById('psPreviewImg');
+            var serviceImg = null;
+            if (imgPreview && imgPreview.style.display === 'block') {
+                serviceImg = imgPreview.src;
+            }
+            if (!name) {
+                alert('Veuillez saisir le nom de la prestation.');
+                return;
+            }
+            // Récupérer l'ID prestataire
+            var providerId = '';
+            try {
+                var urlParams = new URLSearchParams(window.location.search);
+                providerId = urlParams.get('provider') || localStorage.getItem('mangoo_my_provider_id') || '';
+            } catch(e) {}
+            var service = {
+                id: 'ps_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                name: name,
+                category: category,
+                price: price || 0,
+                priceCfa: price ? parseInt(price, 10) : 0,
+                description: desc,
+                image: serviceImg,
+                providerId: providerId,
+                createdAt: new Date().toISOString()
+            };
+            // Sauvegarder dans localStorage
+            try {
+                var services = JSON.parse(localStorage.getItem('mangoo_provider_services') || '[]');
+                services.unshift(service);
+                localStorage.setItem('mangoo_provider_services', JSON.stringify(services));
+            } catch(e) {
+                console.error('[PS] Erreur sauvegarde prestation:', e);
+            }
+            // Fermer le modal
+            var overlay = document.getElementById('addProviderServiceOverlay');
+            if (overlay) overlay.remove();
+            // Rafraîchir l'affichage
+            try { if (typeof refreshProviderServicesPane === 'function') refreshProviderServicesPane(); } catch(e) {}
+            alert('✅ Prestation publiée avec succès !');
+        }
+
+        function refreshProviderServicesPane() {
+            var listEl = document.getElementById('lp-provider-services-list');
+            if (!listEl) return;
+            try {
+                var services = JSON.parse(localStorage.getItem('mangoo_provider_services') || '[]');
+                if (!services.length) {
+                    listEl.innerHTML = '<div style="color:var(--ml-muted); font-size:0.85rem; text-align:center; padding:12px;">Aucune prestation publiée.</div>';
+                    return;
+                }
+                var html = '';
+                services.forEach(function(s) {
+                    html += '<div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--ml-border);border-radius:14px;margin-bottom:8px;">';
+                    html += '<div style="width:48px;height:48px;border-radius:12px;background:rgba(17,24,39,0.06);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">' + (s.image ? '<img src="' + s.image + '" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">' : '🛠️') + '</div>';
+                    html += '<div style="flex:1;min-width:0;"><div style="font-weight:700;color:var(--ml-text);">' + (s.name || 'Sans nom') + '</div><div style="font-size:0.8rem;color:var(--ml-muted);">' + (s.category || '') + '</div></div>';
+                    html += '<div style="font-weight:800;color:var(--ml-price);font-size:0.95rem;">' + (s.priceCfa ? s.priceCfa.toLocaleString() + ' FCFA' : 'Sur demande') + '</div>';
+                    html += '</div>';
+                });
+                listEl.innerHTML = html;
+            } catch(e) {
+                listEl.innerHTML = '<div style="color:var(--ml-muted);">Erreur chargement prestations.</div>';
+            }
         }
 
         function triggerCameraInput() {
@@ -23404,6 +23816,16 @@
                         }
                     } catch(e) {}
                 }
+                // 2b3. lpGetStoredProviderIdsForCurrentUser (prestataires)
+                if (!vendorId && typeof lpGetStoredProviderIdsForCurrentUser === 'function') {
+                    try {
+                        var provIds = lpGetStoredProviderIdsForCurrentUser();
+                        if (Array.isArray(provIds) && provIds.length > 0) {
+                            vendorId = String(provIds[0]).trim();
+                            _lpLiveIsVendor = true;
+                        }
+                    } catch(e) {}
+                }
                 // 2c. Debug dump all localStorage keys
                 if (!vendorId) {
                     try {
@@ -23428,7 +23850,7 @@
                     btn.style.display = 'block';
                     _lpLiveVendorId = vendorId;
                     _lpLiveIsVendor = true;
-                    console.log('[Live] Bouton Go Live active pour vendor', vendorId);
+                    console.log('[Live] Bouton Go Live active pour', vendorId);
                 } else if (!vendorId) {
                     console.warn('[Live] Bouton Go Live NON affiche: aucun vendorId trouve');
                 } else {
@@ -24316,6 +24738,16 @@
         } else {
             lpInitLiveFromUrl();
         }
+        
+        // Ouvrir le dashboard prestataire si lpRole=provider dans l'URL
+        try {
+            var _pvParams = new URLSearchParams(window.location.search);
+            if (_pvParams.get('lpRole') === 'provider') {
+                setTimeout(function() {
+                    try { showProviderDashboardInline(); } catch(e) { console.warn('[Provider] Erreur init:', e); }
+                }, 800);
+            }
+        } catch(e) {}
         
         // === AUDIO RECORDING LOGIC (NATIVE) ===
         let mediaRecorder;
@@ -26978,6 +27410,14 @@
             const allowed = allowSell
                 ? ['orders', 'sell', 'profile', 'favorites', 'pay', 'communication']
                 : ['orders', 'profile', 'favorites', 'pay', 'communication']
+
+            // Garde : si le dashboard prestataire est actif, ne pas changer d'onglet
+            // (evite que switchView('account') → switchAccountTab('orders') ecrase le dashboard)
+            try {
+                var _ps = document.getElementById('providerSection');
+                if (_ps && _ps.style.display === 'block') return;
+            } catch(e) {}
+
             const next = allowSell && wantsOrders
                 ? 'sell'
                 : (allowed.includes(String(tabName || '')) ? String(tabName) : 'orders')
@@ -27136,6 +27576,11 @@
         }
 
         function updateLpSellTabVisibility() {
+            // Garde : ne pas interferer si le dashboard prestataire est actif
+            try {
+                var _provSec = document.getElementById('providerSection');
+                if (_provSec && _provSec.style.display === 'block') return;
+            } catch(e) {}
             const u = getLpCurrentUser()
             const allowSell = isLpVendorUser(u)
             const tab = document.getElementById('lp-tab-sell')
@@ -27597,8 +28042,37 @@
         }
 
         function switchVendorTab(tabName) {
-            const allowed = ['overview', 'stock', 'products', 'orders', 'notifications', 'communication', 'shops', 'supply']
+            const allowed = ['overview', 'products', 'orders', 'communication', 'supply']
             const next = allowed.includes(String(tabName || '')) ? String(tabName) : 'overview'
+
+            // Masquer le dashboard prestataire
+            try { var ps = document.getElementById('providerSection'); if (ps) ps.style.display = 'none'; } catch(e) {}
+            try { var vs = document.getElementById('vendorSection'); if (vs) vs.style.display = 'block'; } catch(e) {}
+
+            // S'assurer que dash-sell est bien actif et visible
+            try {
+                var ds = document.getElementById('dash-sell');
+                if (ds) {
+                    ds.style.display = '';
+                    ds.classList.add('active');
+                }
+            } catch(e) {}
+            // S'assurer que l'onglet principal Vendre est actif
+            try {
+                var sellTabBtn = document.getElementById('lp-tab-sell');
+                if (sellTabBtn) { sellTabBtn.style.display = ''; sellTabBtn.classList.add('active'); }
+                document.querySelectorAll('#accountView .lp-tab').forEach(function(t) {
+                    if (t.id !== 'lp-tab-sell') t.classList.remove('active');
+                });
+                // Activer aussi dash-sell parmi les panneaux de compte
+                document.querySelectorAll('.lp-pane[data-pane]').forEach(function(el) {
+                    el.classList.toggle('active', String(el.getAttribute('data-pane') || '') === 'sell');
+                    el.style.display = '';
+                });
+            } catch(e) {}
+
+            // Restaurer le bouton Go Live pour le dashboard vendeur
+            try { lpInitGoLiveButton() } catch(e) {}
 
             allowed.forEach((k) => {
                 const btn = document.getElementById('lp-vtab-' + k)
@@ -27614,6 +28088,31 @@
             }
             if (next === 'products') {
                 try { refreshVendorProductsPane() } catch {}
+            }
+        }
+
+        function switchProviderTab(tabName) {
+            const allowed = ['overview', 'services', 'orders', 'communication', 'supply']
+            const next = allowed.includes(String(tabName || '')) ? String(tabName) : 'overview'
+
+            // Masquer le dashboard vendeur
+            try { var vs = document.getElementById('vendorSection'); if (vs) vs.style.display = 'none'; } catch(e) {}
+            try { var ps = document.getElementById('providerSection'); if (ps) ps.style.display = 'block'; } catch(e) {}
+
+            allowed.forEach((k) => {
+                const btn = document.getElementById('lp-ptab-' + k)
+                if (btn) btn.classList.toggle('active', k === next)
+            })
+
+            document.querySelectorAll('.lp-pane[data-pvpane]').forEach((el) => {
+                el.classList.toggle('active', String(el.getAttribute('data-pvpane') || '') === next)
+            })
+
+            if (next === 'orders') {
+                try { lpRefreshVendorOrders() } catch {}
+            }
+            if (next === 'services') {
+                try { refreshProviderServicesPane() } catch {}
             }
         }
 
