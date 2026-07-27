@@ -8263,7 +8263,10 @@
                 }
                 try { refreshProviderDashboardFab(); } catch {}
                 try {
-                    if (kind === 'service') openProviderDashboard(String(id));
+                    if (kind === 'service') {
+                        // Ouvrir le dashboard prestataire inline (pas de redirection React)
+                        try { openMyProviderDashboard(); } catch(e) { openProviderDashboard(String(id)); }
+                    }
                     else lpOpenVendorById(String(id));
                 } catch {
                 }
@@ -28226,6 +28229,16 @@
                     setTimeout(function() {
                         try { lpInitGoLiveButton(); } catch(e) {}
                     }, 500);
+                    // Si prestataire, ouvrir le dashboard prestataire inline
+                    setTimeout(function() {
+                        try {
+                            var _pid = getMyProviderId();
+                            var _owned = lpGetOwnedProviderIds();
+                            if (_pid || _owned.length) {
+                                try { openMyProviderDashboard(); } catch(e) {}
+                            }
+                        } catch(e) {}
+                    }, 400);
                 }
             } catch (e) {
                 const msg = e?.name === 'AbortError'
