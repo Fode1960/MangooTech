@@ -15282,6 +15282,22 @@
                         console.log('[LP] lp_last_product initialise depuis mangoo_my_products: ' + first.name + ' (img=' + (img ? 'oui' : 'non') + ')');
                     }
                 }
+                // Fallback prestataire: mangoo_provider_services
+                if (!localStorage.getItem('lp_last_product')) {
+                    const provStored = localStorage.getItem('mangoo_provider_services');
+                    if (provStored) {
+                        const provProducts = JSON.parse(provStored);
+                        if (provProducts.length > 0) {
+                            const first = provProducts[0];
+                            const img = first.image || first.img || '';
+                            localStorage.setItem('lp_last_product', JSON.stringify({
+                                name: first.name || '',
+                                img: img
+                            }));
+                            console.log('[LP] lp_last_product initialise depuis mangoo_provider_services: ' + first.name + ' (img=' + (img ? 'oui' : 'non') + ')');
+                        }
+                    }
+                }
             } catch(e) { console.error('[LP] Erreur init lp_last_product:', e); }
         });
 
@@ -15326,6 +15342,11 @@
             try {
                 const myShopId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
                 if (myShopId) return myShopId;
+            } catch {}
+            // Fallback: mangoo_my_provider_id (prestataire)
+            try {
+                const myProvId = String(localStorage.getItem('mangoo_my_provider_id') || '').trim();
+                if (myProvId) return myProvId;
             } catch {}
             try {
                 const myShopId2 = String((typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('mangoo_my_shop_id') : null) || '').trim();
@@ -15925,6 +15946,18 @@
                         const p = products[0];
                         const img = p.photo || p.img || '';
                         console.log('[LP] Produit trouve dans localStorage mangoo_my_products: ' + p.name + ' (img=' + (img ? 'oui' : 'non') + ')');
+                        return { name: p.name || '', img: img };
+                    }
+                }
+                // 2b. localStorage mangoo_provider_services (prestataire)
+                const provStored = localStorage.getItem('mangoo_provider_services');
+                console.log('[LP]   localStorage mangoo_provider_services=' + (provStored ? ('present (' + provStored.length + ' chars)') : 'null'));
+                if (provStored) {
+                    const provProducts = JSON.parse(provStored);
+                    if (provProducts.length > 0) {
+                        const p = provProducts[0];
+                        const img = p.image || p.img || '';
+                        console.log('[LP] Produit trouve dans localStorage mangoo_provider_services: ' + p.name + ' (img=' + (img ? 'oui' : 'non') + ')');
                         return { name: p.name || '', img: img };
                     }
                 }
