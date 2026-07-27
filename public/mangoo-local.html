@@ -11184,7 +11184,7 @@
             try {
                 const scoped = lpGetStoredProviderIdsForCurrentUser()
                 if (scoped.length === 1) return String(scoped[0] || '').trim()
-                if (scoped.length > 1) return ''
+                // Si plusieurs IDs scopés, on vérifie le owned (plus fiable via VENDORS)
                 const owned = lpGetOwnedProviderIds()
                 if (owned.length === 1) return String(owned[0] || '').trim()
                 if (owned.length > 1) return ''
@@ -11258,7 +11258,7 @@
                 if (!email) return []
                 const list = Array.isArray(VENDORS) ? VENDORS : []
                 const ids = list
-                    .filter((v) => String(v?.kind || '').trim().toLowerCase() === 'service')
+                    .filter((v) => lpGetVendorKind(v) === 'service')
                     .filter((v) => String(v?.id || '') !== 'user_me')
                     .filter((v) => lpEmailsMatch(v?.ownerEmail, email))
                     .map((v) => String(v?.id || '').trim())
