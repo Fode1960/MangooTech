@@ -11183,14 +11183,19 @@
         function getMyProviderId() {
             try {
                 const scoped = lpGetStoredProviderIdsForCurrentUser()
+                console.log('[PROV-DEBUG] getMyProviderId - scoped:', JSON.stringify(scoped));
                 if (scoped.length === 1) return String(scoped[0] || '').trim()
                 if (scoped.length > 1) return ''
                 const owned = lpGetOwnedProviderIds()
+                console.log('[PROV-DEBUG] getMyProviderId - owned:', JSON.stringify(owned));
                 if (owned.length === 1) return String(owned[0] || '').trim()
                 if (owned.length > 1) return ''
                 const raw = localStorage.getItem('mangoo_my_provider_id');
-                return raw ? String(raw) : '';
-            } catch {
+                const result = raw ? String(raw) : '';
+                console.log('[PROV-DEBUG] getMyProviderId - localStorage fallback:', result);
+                return result;
+            } catch(e) {
+                console.error('[PROV-DEBUG] getMyProviderId error:', e);
                 return '';
             }
         }
@@ -11428,30 +11433,21 @@
         function openMyProviderDashboard() {
             try {
                 const isAccountView = String(currentView || '').trim() === 'account'
+                console.log('[PROV-DEBUG] openMyProviderDashboard - currentView:', currentView, 'isAccountView:', isAccountView);
                 if (isAccountView) {
+                    console.log('[PROV-DEBUG] -> identity modal (deja sur accountView)');
                     try { openLpIdentityModal() } catch {}
                     try { lpSpeak('Choisissez votre acces Local plus par PIN, telephone ou e-mail.', { lang: 'fr-FR' }) } catch {}
                     try { lpToast('Utilisez Identite Local+ pour client ou vendeur.', 'info') } catch {}
                     return
                 }
-                const scopedShopIds = lpGetStoredShopIdsForCurrentUser();
-                const ownedShopIds = scopedShopIds.length ? scopedShopIds : lpGetOwnedShopIds();
-                if (ownedShopIds.length) {
-                    const shopId = String(localStorage.getItem('mangoo_my_shop_id') || ownedShopIds[0] || '').trim()
-                    if (shopId) {
-                        try { localStorage.setItem('mangoo_my_shop_id', shopId) } catch {}
-                        try { switchView('account') } catch {}
-                        try { switchAccountTab('sell') } catch {}
-                        try { switchVendorTab('overview') } catch {}
-                        try { lpSpeak('Ouverture de votre espace vendeur.', { lang: 'fr-FR' }) } catch {}
-                        return
-                    }
-                }
-                // 1. Verifier d'abord si prestataire (AVANT le check vendeur)
+                // 1. D'ABORD verifier si prestataire (AVANT le check vendeur)
                 const id = getMyProviderId();
                 const scoped = lpGetStoredProviderIdsForCurrentUser();
                 const owned = scoped.length ? scoped : lpGetOwnedProviderIds();
+                console.log('[PROV-DEBUG] Provider check - getMyProviderId:', id, 'scoped:', JSON.stringify(scoped), 'owned:', JSON.stringify(owned));
                 if (id || owned.length) {
+                    console.log('[PROV-DEBUG] -> showProviderDashboardInline (prestataire detecte)');
                     const providerId = String(id || owned[0] || '').trim()
                     let backVendorId = ''
                     try {
@@ -11467,25 +11463,43 @@
                         } catch {
                         }
                     }
-                    // Appeler showProviderDashboardInline (action explicite Espace pro)
                     showProviderDashboardInline();
-                    // Afficher le bouton Go Live
                     setTimeout(function() { try { lpInitGoLiveButton(); } catch(e) {} }, 500);
                     return;
                 }
-                // 2. Sinon, utilisateur connecte -> dashboard vendeur
-                if (lpHasSignedInUser()) {
+                // 2. Ensuite verifier si vendeur (shop)
+                const scopedShopIds = lpGetStoredShopIdsForCurrentUser();
+                const ownedShopIds = scopedShopIds.length ? scopedShopIds : lpGetOwnedShopIds();
+                console.log('[PROV-DEBUG] Shop check - ownedShopIds:', JSON.stringify(ownedShopIds));
+                if (ownedShopIds.length) {
+                    console.log('[PROV-DEBUG] -> vendor dashboard (vendeur detecte)');
+                    const shopId = String(localStorage.getItem('mangoo_my_shop_id') || ownedShopIds[0] || '').trim()
+                    if (shopId) {
+                        try { localStorage.setItem('mangoo_my_shop_id', shopId) } catch {}
+                        try { switchView('account') } catch {}
+                        try { switchAccountTab('sell') } catch {}
+                        try { switchVendorTab('overview') } catch {}
+                        try { lpSpeak('Ouverture de votre espace vendeur.', { lang: 'fr-FR' }) } catch {}
+                        return
+                    }
+                }
+                // 3. Sinon, utilisateur connecte -> dashboard vendeur
+                var hasUser = lpHasSignedInUser();
+                console.log('[PROV-DEBUG] lpHasSignedInUser:', hasUser);
+                if (hasUser) {
+                    console.log('[PROV-DEBUG] -> vendor dashboard (connecte sans role specifique)');
                     try { switchView('account') } catch {}
                     try { switchAccountTab('sell') } catch {}
                     try { switchVendorTab('overview') } catch {}
                     try { lpSpeak('Ouverture de votre espace vendeur.', { lang: 'fr-FR' }) } catch {}
                     return
                 }
+                console.log('[PROV-DEBUG] -> identity modal (non connecte)');
                 const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
                 try { lpSpeak('Connectez-vous avec Identite Local plus pour ouvrir votre espace pro.', { lang: 'fr-FR' }) } catch {}
                 try { openLpIdentityModal() } catch {}
                 try { lpToast('Identifiez-vous pour ouvrir votre espace pro.', 'info') } catch {}
-            } catch {}
+            } catch(e) { console.error('[PROV-DEBUG] Erreur openMyProviderDashboard:', e); }
         }
 
         function lpGetPreferredShopAccountId() {
