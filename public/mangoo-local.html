@@ -11183,24 +11183,14 @@
         function getMyProviderId() {
             try {
                 const scoped = lpGetStoredProviderIdsForCurrentUser()
-                // Filtrer pour ne garder que les vrais prestataires (kind=service/provider)
-                const filtered = scoped.filter(function(sid) {
-                    try {
-                        return lpGetVendorKind(VENDORS.find(function(x) { return String(x?.id) === String(sid); }) || null) === 'service';
-                    } catch(e) { return false; }
-                });
-                console.log('[PROV-DEBUG] getMyProviderId - scoped:', JSON.stringify(scoped), 'filtered:', JSON.stringify(filtered));
-                if (filtered.length === 1) return String(filtered[0] || '').trim()
+                if (scoped.length === 1) return String(scoped[0] || '').trim()
+                if (scoped.length > 1) return ''
                 const owned = lpGetOwnedProviderIds()
-                console.log('[PROV-DEBUG] getMyProviderId - owned:', JSON.stringify(owned));
                 if (owned.length === 1) return String(owned[0] || '').trim()
                 if (owned.length > 1) return ''
                 const raw = localStorage.getItem('mangoo_my_provider_id');
-                const result = raw ? String(raw) : '';
-                console.log('[PROV-DEBUG] getMyProviderId - localStorage fallback:', result);
-                return result;
-            } catch(e) {
-                console.error('[PROV-DEBUG] getMyProviderId error:', e);
+                return raw ? String(raw) : '';
+            } catch {
                 return '';
             }
         }
@@ -11268,7 +11258,7 @@
                 if (!email) return []
                 const list = Array.isArray(VENDORS) ? VENDORS : []
                 const ids = list
-                    .filter((v) => lpGetVendorKind(v) === 'service')
+                    .filter((v) => String(v?.kind || '').trim().toLowerCase() === 'service')
                     .filter((v) => String(v?.id || '') !== 'user_me')
                     .filter((v) => lpEmailsMatch(v?.ownerEmail, email))
                     .map((v) => String(v?.id || '').trim())
@@ -11371,7 +11361,7 @@
                     var af = document.getElementById('accountFooter');
                     if (af) { af.style.display = 'none'; }
                     // Masquer tout ce qui est dans accountView mais hors de accountFooter
-                    document.querySelectorAll('#accountView .menu-grid, #accountView .lp-hub-card, #accountView .action-list:not(#lp-prov-logout-actions), #accountView button.btn-seller').forEach(function(el) {
+                    document.querySelectorAll('#accountView .menu-grid, #accountView .lp-hub-card, #accountView .action-list, #accountView button.btn-seller').forEach(function(el) {
                         if (!el.closest('#accountFooter')) {
                             el.style.display = 'none';
                         }
@@ -11418,18 +11408,8 @@
                     el.classList.toggle('active', String(el.getAttribute('data-pvpane') || '') === 'overview');
                 });
 
-                // Injecter les actions Déconnexion dans le providerSection (evite de modifier le HTML)
-                try {
-                    var provSec = document.getElementById('providerSection');
-                    if (provSec && !document.getElementById('lp-prov-logout-actions')) {
-                        var actDiv = document.createElement('div');
-                        actDiv.id = 'lp-prov-logout-actions';
-                        actDiv.className = 'action-list';
-                        actDiv.style.marginTop = '18px';
-                        actDiv.innerHTML = '<div class="action-row" onclick="lpDisconnectProvider()"><span>🧰 Quitter mon compte</span><span class="arrow">›</span></div><div class="action-row" style="color:#d63031;" onclick="lpLogout()"><span>🚪 Déconnexion</span><span class="arrow">›</span></div>';
-                        provSec.appendChild(actDiv);
-                    }
-                } catch(e) {}
+                // Masquer le bouton Go Live (reserve aux vendeurs)
+                try { var glBtn = document.getElementById('lpGoLiveBtn'); if (glBtn) glBtn.style.display = 'none'; } catch(e) {}
 
                 try { lpSpeak('Ouverture de votre espace prestataire.', { lang: 'fr-FR' }) } catch {}
             } catch(e) { console.warn('Erreur ouverture dashboard prestataire:', e); }
@@ -11437,45 +11417,61 @@
 
         function openMyProviderDashboard() {
             try {
-                // Meme logique que lpClaimVendorByPin : parcourir VENDORS par email
-                const u = getLpCurrentUser ? getLpCurrentUser() : null;
-                const email = lpNormalizeEmail(u?.email);
-                if (!email) {
+                const isAccountView = String(currentView || '').trim() === 'account'
+                if (isAccountView) {
                     try { openLpIdentityModal() } catch {}
-                    try { lpSpeak('Connectez-vous avec Identite Local+ pour ouvrir votre espace pro.', { lang: 'fr-FR' }) } catch {}
-                    return;
+                    try { lpSpeak('Choisissez votre acces Local plus par PIN, telephone ou e-mail.', { lang: 'fr-FR' }) } catch {}
+                    try { lpToast('Utilisez Identite Local+ pour client ou vendeur.', 'info') } catch {}
+                    return
                 }
-                const list = Array.isArray(VENDORS) ? VENDORS : [];
-                // 1. Chercher un prestataire
-                for (var i = 0; i < list.length; i++) {
-                    var v = list[i];
-                    if (lpGetVendorKind(v) === 'service' && lpEmailsMatch(v?.ownerEmail, email)) {
-                        openProviderDashboard(String(v.id));
-                        return;
-                    }
-                }
-                // 2. Chercher une boutique
-                for (var j = 0; j < list.length; j++) {
-                    var shop = list[j];
-                    if (lpGetVendorKind(shop) === 'shop' && lpEmailsMatch(shop?.ownerEmail, email)) {
-                        try { localStorage.setItem('mangoo_my_shop_id', String(shop.id)) } catch {}
+                const scopedShopIds = lpGetStoredShopIdsForCurrentUser();
+                const ownedShopIds = scopedShopIds.length ? scopedShopIds : lpGetOwnedShopIds();
+                if (ownedShopIds.length) {
+                    const shopId = String(localStorage.getItem('mangoo_my_shop_id') || ownedShopIds[0] || '').trim()
+                    if (shopId) {
+                        try { localStorage.setItem('mangoo_my_shop_id', shopId) } catch {}
                         try { switchView('account') } catch {}
                         try { switchAccountTab('sell') } catch {}
                         try { switchVendorTab('overview') } catch {}
-                        return;
+                        try { lpSpeak('Ouverture de votre espace vendeur.', { lang: 'fr-FR' }) } catch {}
+                        return
                     }
                 }
-                // 3. Utilisateur connecte mais aucun compte pro
                 if (lpHasSignedInUser()) {
                     try { switchView('account') } catch {}
                     try { switchAccountTab('sell') } catch {}
                     try { switchVendorTab('overview') } catch {}
+                    try { lpSpeak('Ouverture de votre espace vendeur.', { lang: 'fr-FR' }) } catch {}
+                    return
+                }
+                const id = getMyProviderId();
+                const scoped = lpGetStoredProviderIdsForCurrentUser();
+                const owned = scoped.length ? scoped : lpGetOwnedProviderIds();
+                if (id || owned.length) {
+                    const providerId = String(id || owned[0] || '').trim()
+                    let backVendorId = ''
+                    try {
+                        const shopId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim()
+                        if (shopId) backVendorId = shopId
+                    } catch {
+                    }
+                    if (!backVendorId) {
+                        try {
+                            const activeId = String(activeVendor?.id || '').trim()
+                            const k = activeId ? lpGetVendorKind(activeVendor) : ''
+                            if (activeId && String(k || '') === 'shop') backVendorId = activeId
+                        } catch {
+                        }
+                    }
+                    // Appeler showProviderDashboardInline (action explicite Espace pro)
+                    showProviderDashboardInline();
                     return;
                 }
+                const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+                try { lpSpeak('Connectez-vous avec Identite Local plus pour ouvrir votre espace pro.', { lang: 'fr-FR' }) } catch {}
                 try { openLpIdentityModal() } catch {}
-            } catch(e) {
-                try { openLpIdentityModal() } catch {}
-            }
+                try { lpToast('Identifiez-vous pour ouvrir votre espace pro.', 'info') } catch {}
+            } catch {}
         }
 
         function lpGetPreferredShopAccountId() {
