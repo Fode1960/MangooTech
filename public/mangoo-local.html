@@ -11258,7 +11258,7 @@
                 if (!email) return []
                 const list = Array.isArray(VENDORS) ? VENDORS : []
                 const ids = list
-                    .filter((v) => String(v?.kind || '').trim().toLowerCase() === 'service')
+                    .filter((v) => lpGetVendorKind(v) === 'service')
                     .filter((v) => String(v?.id || '') !== 'user_me')
                     .filter((v) => lpEmailsMatch(v?.ownerEmail, email))
                     .map((v) => String(v?.id || '').trim())
