@@ -11361,7 +11361,7 @@
                     var af = document.getElementById('accountFooter');
                     if (af) { af.style.display = 'none'; }
                     // Masquer tout ce qui est dans accountView mais hors de accountFooter
-                    document.querySelectorAll('#accountView .menu-grid, #accountView .lp-hub-card, #accountView .action-list, #accountView button.btn-seller').forEach(function(el) {
+                    document.querySelectorAll('#accountView .menu-grid, #accountView .lp-hub-card, #accountView .action-list:not(#lp-prov-logout-actions), #accountView button.btn-seller').forEach(function(el) {
                         if (!el.closest('#accountFooter')) {
                             el.style.display = 'none';
                         }
@@ -11408,8 +11408,18 @@
                     el.classList.toggle('active', String(el.getAttribute('data-pvpane') || '') === 'overview');
                 });
 
-                // Masquer le bouton Go Live (reserve aux vendeurs)
-                try { var glBtn = document.getElementById('lpGoLiveBtn'); if (glBtn) glBtn.style.display = 'none'; } catch(e) {}
+                // Injecter les actions Déconnexion dans le providerSection (evite de modifier le HTML)
+                try {
+                    var provSec = document.getElementById('providerSection');
+                    if (provSec && !document.getElementById('lp-prov-logout-actions')) {
+                        var actDiv = document.createElement('div');
+                        actDiv.id = 'lp-prov-logout-actions';
+                        actDiv.className = 'action-list';
+                        actDiv.style.marginTop = '18px';
+                        actDiv.innerHTML = '<div class="action-row" onclick="lpDisconnectProvider()"><span>🧰 Quitter mon compte</span><span class="arrow">›</span></div><div class="action-row" style="color:#d63031;" onclick="lpLogout()"><span>🚪 Déconnexion</span><span class="arrow">›</span></div>';
+                        provSec.appendChild(actDiv);
+                    }
+                } catch(e) {}
 
                 try { lpSpeak('Ouverture de votre espace prestataire.', { lang: 'fr-FR' }) } catch {}
             } catch(e) { console.warn('Erreur ouverture dashboard prestataire:', e); }
@@ -11465,6 +11475,8 @@
                     }
                     // Appeler showProviderDashboardInline (action explicite Espace pro)
                     showProviderDashboardInline();
+                    // Afficher le bouton Go Live
+                    setTimeout(function() { try { lpInitGoLiveButton(); } catch(e) {} }, 500);
                     return;
                 }
                 const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
@@ -28211,11 +28223,6 @@
         }
 
         function switchVendorTab(tabName) {
-            // Garde : si le dashboard prestataire est actif, ne pas basculer en mode vendeur
-            try {
-                var _ps = document.getElementById('providerSection');
-                if (_ps && _ps.style.display === 'block') return;
-            } catch(e) {}
             const allowed = ['overview', 'products', 'orders', 'communication', 'supply']
             const next = allowed.includes(String(tabName || '')) ? String(tabName) : 'overview'
 
