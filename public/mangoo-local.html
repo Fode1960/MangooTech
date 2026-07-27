@@ -11437,59 +11437,45 @@
 
         function openMyProviderDashboard() {
             try {
-                const isAccountView = String(currentView || '').trim() === 'account'
-                console.log('[PROV-DEBUG] openMyProviderDashboard - currentView:', currentView, 'isAccountView:', isAccountView);
-                if (isAccountView) {
-                    console.log('[PROV-DEBUG] -> identity modal (deja sur accountView)');
+                // Meme logique que lpClaimVendorByPin : parcourir VENDORS par email
+                const u = getLpCurrentUser ? getLpCurrentUser() : null;
+                const email = lpNormalizeEmail(u?.email);
+                if (!email) {
                     try { openLpIdentityModal() } catch {}
-                    try { lpSpeak('Choisissez votre acces Local plus par PIN, telephone ou e-mail.', { lang: 'fr-FR' }) } catch {}
-                    try { lpToast('Utilisez Identite Local+ pour client ou vendeur.', 'info') } catch {}
-                    return
-                }
-                // 1. D'ABORD verifier si prestataire -> rediriger vers le dashboard React qui fonctionne
-                const id = getMyProviderId();
-                const scoped = lpGetStoredProviderIdsForCurrentUser();
-                const owned = scoped.length ? scoped : lpGetOwnedProviderIds();
-                console.log('[PROV-DEBUG] Provider check - getMyProviderId:', id, 'owned:', JSON.stringify(owned));
-                if (id || owned.length) {
-                    const providerId = String(id || owned[0] || '').trim();
-                    console.log('[PROV-DEBUG] -> openProviderDashboard(' + providerId + ') navigation React');
-                    openProviderDashboard(providerId);
+                    try { lpSpeak('Connectez-vous avec Identite Local+ pour ouvrir votre espace pro.', { lang: 'fr-FR' }) } catch {}
                     return;
                 }
-                // 2. Ensuite verifier si vendeur (shop)
-                const scopedShopIds = lpGetStoredShopIdsForCurrentUser();
-                const ownedShopIds = scopedShopIds.length ? scopedShopIds : lpGetOwnedShopIds();
-                console.log('[PROV-DEBUG] Shop check - ownedShopIds:', JSON.stringify(ownedShopIds));
-                if (ownedShopIds.length) {
-                    console.log('[PROV-DEBUG] -> vendor dashboard (vendeur detecte)');
-                    const shopId = String(localStorage.getItem('mangoo_my_shop_id') || ownedShopIds[0] || '').trim()
-                    if (shopId) {
-                        try { localStorage.setItem('mangoo_my_shop_id', shopId) } catch {}
+                const list = Array.isArray(VENDORS) ? VENDORS : [];
+                // 1. Chercher un prestataire
+                for (var i = 0; i < list.length; i++) {
+                    var v = list[i];
+                    if (lpGetVendorKind(v) === 'service' && lpEmailsMatch(v?.ownerEmail, email)) {
+                        openProviderDashboard(String(v.id));
+                        return;
+                    }
+                }
+                // 2. Chercher une boutique
+                for (var j = 0; j < list.length; j++) {
+                    var shop = list[j];
+                    if (lpGetVendorKind(shop) === 'shop' && lpEmailsMatch(shop?.ownerEmail, email)) {
+                        try { localStorage.setItem('mangoo_my_shop_id', String(shop.id)) } catch {}
                         try { switchView('account') } catch {}
                         try { switchAccountTab('sell') } catch {}
                         try { switchVendorTab('overview') } catch {}
-                        try { lpSpeak('Ouverture de votre espace vendeur.', { lang: 'fr-FR' }) } catch {}
-                        return
+                        return;
                     }
                 }
-                // 3. Sinon, utilisateur connecte -> dashboard vendeur
-                var hasUser = lpHasSignedInUser();
-                console.log('[PROV-DEBUG] lpHasSignedInUser:', hasUser);
-                if (hasUser) {
-                    console.log('[PROV-DEBUG] -> vendor dashboard (connecte sans role specifique)');
+                // 3. Utilisateur connecte mais aucun compte pro
+                if (lpHasSignedInUser()) {
                     try { switchView('account') } catch {}
                     try { switchAccountTab('sell') } catch {}
                     try { switchVendorTab('overview') } catch {}
-                    try { lpSpeak('Ouverture de votre espace vendeur.', { lang: 'fr-FR' }) } catch {}
-                    return
+                    return;
                 }
-                console.log('[PROV-DEBUG] -> identity modal (non connecte)');
-                const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-                try { lpSpeak('Connectez-vous avec Identite Local plus pour ouvrir votre espace pro.', { lang: 'fr-FR' }) } catch {}
                 try { openLpIdentityModal() } catch {}
-                try { lpToast('Identifiez-vous pour ouvrir votre espace pro.', 'info') } catch {}
-            } catch(e) { console.error('[PROV-DEBUG] Erreur openMyProviderDashboard:', e); }
+            } catch(e) {
+                try { openLpIdentityModal() } catch {}
+            }
         }
 
         function lpGetPreferredShopAccountId() {
