@@ -11361,7 +11361,7 @@
                     var af = document.getElementById('accountFooter');
                     if (af) { af.style.display = 'none'; }
                     // Masquer tout ce qui est dans accountView mais hors de accountFooter
-                    document.querySelectorAll('#accountView .menu-grid, #accountView .lp-hub-card, #accountView .action-list, #accountView button.btn-seller').forEach(function(el) {
+                    document.querySelectorAll('#accountView .menu-grid, #accountView .lp-hub-card, #accountView .action-list:not(#lp-prov-logout-actions), #accountView button.btn-seller').forEach(function(el) {
                         if (!el.closest('#accountFooter')) {
                             el.style.display = 'none';
                         }
@@ -11408,8 +11408,18 @@
                     el.classList.toggle('active', String(el.getAttribute('data-pvpane') || '') === 'overview');
                 });
 
-                // Masquer le bouton Go Live (reserve aux vendeurs)
-                try { var glBtn = document.getElementById('lpGoLiveBtn'); if (glBtn) glBtn.style.display = 'none'; } catch(e) {}
+                // Injecter les actions Déconnexion dans le providerSection (evite de modifier le HTML)
+                try {
+                    var provSec = document.getElementById('providerSection');
+                    if (provSec && !document.getElementById('lp-prov-logout-actions')) {
+                        var actDiv = document.createElement('div');
+                        actDiv.id = 'lp-prov-logout-actions';
+                        actDiv.className = 'action-list';
+                        actDiv.style.marginTop = '18px';
+                        actDiv.innerHTML = '<div class="action-row" onclick="lpDisconnectProvider()"><span>🧰 Quitter mon compte</span><span class="arrow">›</span></div><div class="action-row" style="color:#d63031;" onclick="lpLogout()"><span>🚪 Déconnexion</span><span class="arrow">›</span></div>';
+                        provSec.appendChild(actDiv);
+                    }
+                } catch(e) {}
 
                 try { lpSpeak('Ouverture de votre espace prestataire.', { lang: 'fr-FR' }) } catch {}
             } catch(e) { console.warn('Erreur ouverture dashboard prestataire:', e); }
@@ -11465,6 +11475,8 @@
                     }
                     // Appeler showProviderDashboardInline (action explicite Espace pro)
                     showProviderDashboardInline();
+                    // Afficher le bouton Go Live
+                    setTimeout(function() { try { lpInitGoLiveButton(); } catch(e) {} }, 500);
                     return;
                 }
                 const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
@@ -16981,6 +16993,38 @@
                 var urlParams = new URLSearchParams(window.location.search);
                 providerId = urlParams.get('provider') || localStorage.getItem('mangoo_my_provider_id') || '';
             } catch(e) {}
+
+            // Mode édition : mettre à jour une prestation existante
+            var overlay = document.getElementById('addProviderServiceOverlay');
+            var editId = overlay ? overlay.getAttribute('data-edit-id') : null;
+            var isEdit = !!editId;
+
+            if (isEdit) {
+                try {
+                    var services = JSON.parse(localStorage.getItem('mangoo_provider_services') || '[]');
+                    for (var i = 0; i < services.length; i++) {
+                        if (services[i].id === editId) {
+                            services[i].name = name;
+                            services[i].category = category;
+                            services[i].price = price || 0;
+                            services[i].priceCfa = price ? parseInt(price, 10) : 0;
+                            services[i].description = desc;
+                            services[i].image = serviceImg;
+                            services[i].updatedAt = new Date().toISOString();
+                            break;
+                        }
+                    }
+                    localStorage.setItem('mangoo_provider_services', JSON.stringify(services));
+                } catch(e) {
+                    console.error('[PS] Erreur mise à jour prestation:', e);
+                }
+                if (overlay) overlay.remove();
+                try { if (typeof refreshProviderServicesPane === 'function') refreshProviderServicesPane(); } catch(e) {}
+                try { syncProviderServicesToMyProducts(); } catch(e) {}
+                alert('✅ Prestation mise à jour avec succès !');
+                return;
+            }
+
             var service = {
                 id: 'ps_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
                 name: name,
@@ -17001,10 +17045,11 @@
                 console.error('[PS] Erreur sauvegarde prestation:', e);
             }
             // Fermer le modal
-            var overlay = document.getElementById('addProviderServiceOverlay');
             if (overlay) overlay.remove();
             // Rafraîchir l'affichage
             try { if (typeof refreshProviderServicesPane === 'function') refreshProviderServicesPane(); } catch(e) {}
+            // Synchroniser vers my-products pour le Live Shopping (comme les vendeurs)
+            try { syncProviderServicesToMyProducts(); } catch(e) {}
             alert('✅ Prestation publiée avec succès !');
         }
 
@@ -17013,16 +17058,21 @@
             if (!listEl) return;
             try {
                 var services = JSON.parse(localStorage.getItem('mangoo_provider_services') || '[]');
+                // Synchroniser vers my-products pour le Live Shopping
+                try { syncProviderServicesToMyProducts(); } catch(e) {}
                 if (!services.length) {
                     listEl.innerHTML = '<div style="color:var(--ml-muted); font-size:0.85rem; text-align:center; padding:12px;">Aucune prestation publiée.</div>';
                     return;
                 }
                 var html = '';
                 services.forEach(function(s) {
+                    var sid = (s.id || '').replace(/'/g, "\\'");
                     html += '<div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--ml-border);border-radius:14px;margin-bottom:8px;">';
                     html += '<div style="width:48px;height:48px;border-radius:12px;background:rgba(17,24,39,0.06);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">' + (s.image ? '<img src="' + s.image + '" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">' : '🛠️') + '</div>';
                     html += '<div style="flex:1;min-width:0;"><div style="font-weight:700;color:var(--ml-text);">' + (s.name || 'Sans nom') + '</div><div style="font-size:0.8rem;color:var(--ml-muted);">' + (s.category || '') + '</div></div>';
                     html += '<div style="font-weight:800;color:var(--ml-price);font-size:0.95rem;">' + (s.priceCfa ? s.priceCfa.toLocaleString() + ' FCFA' : 'Sur demande') + '</div>';
+                    html += '<button type="button" onclick="editProviderService(\'' + sid + '\')" title="Modifier" style="background:var(--ml-panel);border:1px solid var(--ml-border);border-radius:10px;width:36px;height:36px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;color:var(--ml-primary);flex-shrink:0;">✏️</button>';
+                    html += '<button type="button" onclick="deleteProviderService(\'' + sid + '\')" title="Supprimer" style="background:var(--ml-panel);border:1px solid var(--ml-border);border-radius:10px;width:36px;height:36px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;color:var(--ml-danger);flex-shrink:0;">🗑️</button>';
                     html += '</div>';
                 });
                 listEl.innerHTML = html;
@@ -17031,8 +17081,112 @@
             }
         }
 
+        function deleteProviderService(serviceId) {
+            if (!confirm('Supprimer cette prestation ?')) return;
+            try {
+                var services = JSON.parse(localStorage.getItem('mangoo_provider_services') || '[]');
+                services = services.filter(function(s) { return s.id !== serviceId; });
+                localStorage.setItem('mangoo_provider_services', JSON.stringify(services));
+            } catch(e) {}
+            refreshProviderServicesPane();
+            try { syncProviderServicesToMyProducts(); } catch(e) {}
+        }
+
+        function editProviderService(serviceId) {
+            try {
+                var services = JSON.parse(localStorage.getItem('mangoo_provider_services') || '[]');
+                var svc = services.find(function(s) { return s.id === serviceId; });
+                if (!svc) return;
+                // Ouvrir le modal et pre-remplir
+                openAddProviderServiceModal();
+                setTimeout(function() {
+                    try {
+                        var nameEl = document.getElementById('psName');
+                        var catEl = document.getElementById('psCategory');
+                        var priceEl = document.getElementById('psPrice');
+                        var descEl = document.getElementById('psDesc');
+                        var icon = document.getElementById('psCameraIcon');
+                        var img = document.getElementById('psPreviewImg');
+                        if (nameEl) nameEl.value = svc.name || '';
+                        if (catEl && svc.category) { for (var i = 0; i < catEl.options.length; i++) { if (catEl.options[i].value === svc.category) { catEl.selectedIndex = i; break; } } }
+                        if (priceEl) priceEl.value = svc.priceCfa ? String(svc.priceCfa) : '';
+                        if (descEl) descEl.value = svc.description || '';
+                        if (svc.image && img) {
+                            img.src = svc.image;
+                            img.style.display = 'block';
+                            if (icon) icon.style.display = 'none';
+                            img.parentElement.style.border = '2px solid #1b5e20';
+                        }
+                        // Stocker l'ID pour mise à jour au lieu de création
+                        var modal = document.getElementById('addProviderServiceOverlay');
+                        if (modal) modal.setAttribute('data-edit-id', serviceId);
+                    } catch(e2) {}
+                }, 100);
+            } catch(e) {}
+        }
+
         function triggerCameraInput() {
             document.getElementById('cameraInput').click();
+        }
+
+        // Synchronise les prestations provider vers /api/my-products (comme les vendeurs)
+        function syncProviderServicesToMyProducts() {
+            try {
+                var providerId = lpGetCurrentProviderId();
+                if (!providerId) return;
+                var services = JSON.parse(localStorage.getItem('mangoo_provider_services') || '[]');
+                var products = services.map(function(s) {
+                    return {
+                        id: s.id || '',
+                        name: s.name || 'Prestation',
+                        img: s.image || '',
+                        photo: s.image || '',
+                        price: s.priceCfa || s.price || 0,
+                        category: s.category || '',
+                        description: s.description || ''
+                    };
+                });
+                fetch('/api/my-products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ shopId: providerId, products: products })
+                }).catch(function(e) {
+                    console.warn('[Sync] Echec sync my-products:', e.message);
+                });
+            } catch(e) {
+                console.warn('[Sync] Erreur sync provider services:', e);
+            }
+        }
+
+        // Recupere l'ID du prestataire courant (multi-source)
+        function lpGetCurrentProviderId() {
+            try {
+                // 1. URL
+                var params = new URLSearchParams(window.location.search);
+                var pid = params.get('provider') || '';
+                if (pid) return pid;
+            } catch(e) {}
+            try {
+                // 2. localStorage
+                var pid2 = localStorage.getItem('mangoo_my_provider_id') || '';
+                if (pid2) return pid2;
+            } catch(e) {}
+            try {
+                // 3. _lpLiveVendorId (utilisé dans le flow Live)
+                if (typeof _lpLiveVendorId !== 'undefined' && _lpLiveVendorId) return _lpLiveVendorId;
+            } catch(e) {}
+            try {
+                // 4. activeVendor
+                if (typeof activeVendor !== 'undefined' && activeVendor && activeVendor.kind === 'provider') return activeVendor.id;
+            } catch(e) {}
+            try {
+                // 5. lpGetStoredProviderIdsForCurrentUser
+                if (typeof lpGetStoredProviderIdsForCurrentUser === 'function') {
+                    var ids = lpGetStoredProviderIdsForCurrentUser();
+                    if (Array.isArray(ids) && ids.length > 0) return String(ids[0]).trim();
+                }
+            } catch(e) {}
+            return '';
         }
 
         function handleImageUpload(input) {
@@ -23897,6 +24051,9 @@
             listEl.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px;">Chargement...</div>';
 
             try {
+                // 0. Synchro prestataire en arriere-plan (fire-and-forget, ne bloque pas)
+                try { syncProviderServicesToMyProducts(); } catch(e) {}
+
                 var vendorId = '';
                 var vendorSlug = '';
                 if (typeof activeVendor !== 'undefined' && activeVendor) {
@@ -23927,8 +24084,31 @@
                         var resp = await fetch('/api/shops/slug/' + encodeURIComponent(vendorSlug) + '/products');
                         var data = await resp.json();
                         products = (data && data.products) ? data.products : (Array.isArray(data) ? data : []);
+                        if (products.length > 0) loaded = true;
                     } catch(e) {
                         console.warn('[Live Picker] Echec shops/slug:', e.message);
+                    }
+                }
+
+                // 3. Fallback: Prestations provider en localStorage
+                if (!loaded) {
+                    try {
+                        var provServices = JSON.parse(localStorage.getItem('mangoo_provider_services') || '[]');
+                        if (Array.isArray(provServices) && provServices.length > 0) {
+                            products = provServices.map(function(s) {
+                                return {
+                                    id: s.id || '',
+                                    name: s.name || 'Prestation',
+                                    price: s.priceCfa || s.price || 0,
+                                    img: s.image || '',
+                                    photo: s.image || '',
+                                    category: s.category || ''
+                                };
+                            });
+                            loaded = true;
+                        }
+                    } catch(e) {
+                        console.warn('[Live Picker] Echec provider services:', e.message);
                     }
                 }
 
@@ -24745,6 +24925,7 @@
             if (_pvParams.get('lpRole') === 'provider') {
                 setTimeout(function() {
                     try { showProviderDashboardInline(); } catch(e) { console.warn('[Provider] Erreur init:', e); }
+                    try { lpInitGoLiveButton(); } catch(e) {}
                 }, 800);
             }
         } catch(e) {}
