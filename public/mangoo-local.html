@@ -28225,6 +28225,11 @@
         }
 
         function switchVendorTab(tabName) {
+            // Garde : si le dashboard prestataire est actif, ne pas basculer en mode vendeur
+            try {
+                var _ps = document.getElementById('providerSection');
+                if (_ps && _ps.style.display === 'block') return;
+            } catch(e) {}
             const allowed = ['overview', 'products', 'orders', 'communication', 'supply']
             const next = allowed.includes(String(tabName || '')) ? String(tabName) : 'overview'
 
