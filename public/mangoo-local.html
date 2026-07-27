@@ -11446,30 +11446,15 @@
                     try { lpToast('Utilisez Identite Local+ pour client ou vendeur.', 'info') } catch {}
                     return
                 }
-                // 1. D'ABORD verifier si prestataire (AVANT le check vendeur)
+                // 1. D'ABORD verifier si prestataire -> rediriger vers le dashboard React qui fonctionne
                 const id = getMyProviderId();
                 const scoped = lpGetStoredProviderIdsForCurrentUser();
                 const owned = scoped.length ? scoped : lpGetOwnedProviderIds();
-                console.log('[PROV-DEBUG] Provider check - getMyProviderId:', id, 'scoped:', JSON.stringify(scoped), 'owned:', JSON.stringify(owned));
+                console.log('[PROV-DEBUG] Provider check - getMyProviderId:', id, 'owned:', JSON.stringify(owned));
                 if (id || owned.length) {
-                    console.log('[PROV-DEBUG] -> showProviderDashboardInline (prestataire detecte)');
-                    const providerId = String(id || owned[0] || '').trim()
-                    let backVendorId = ''
-                    try {
-                        const shopId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim()
-                        if (shopId) backVendorId = shopId
-                    } catch {
-                    }
-                    if (!backVendorId) {
-                        try {
-                            const activeId = String(activeVendor?.id || '').trim()
-                            const k = activeId ? lpGetVendorKind(activeVendor) : ''
-                            if (activeId && String(k || '') === 'shop') backVendorId = activeId
-                        } catch {
-                        }
-                    }
-                    showProviderDashboardInline();
-                    setTimeout(function() { try { lpInitGoLiveButton(); } catch(e) {} }, 500);
+                    const providerId = String(id || owned[0] || '').trim();
+                    console.log('[PROV-DEBUG] -> openProviderDashboard(' + providerId + ') navigation React');
+                    openProviderDashboard(providerId);
                     return;
                 }
                 // 2. Ensuite verifier si vendeur (shop)
