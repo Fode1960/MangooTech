@@ -3478,6 +3478,7 @@
         }
         .msg-sent {
             background: #1b5e20;
+            color: white;
             align-self: flex-end;
             border-bottom-right-radius: 5px;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
@@ -6554,10 +6555,19 @@
 
         // === MANGOO CONNECT+ AUDIO CALL SIMULATION ===
         function startAudioCall() {
-            // Check if activeVendor exists
+            // Verifier si dashboard prestataire actif -> definir activeVendor
             var _isProvider = false;
+            var _providerId = '';
             try { var _ps = document.getElementById('providerSection'); _isProvider = !!(_ps && _ps.style.display === 'block'); } catch(e) {}
-            // Prestataire sans boutique active : pas d'appel possible
+            if (_isProvider) {
+                try { _providerId = getMyProviderId(); } catch(e) {}
+                if (!activeVendor && _providerId) {
+                    try {
+                        var pv = (Array.isArray(VENDORS) ? VENDORS : []).find(function(x) { return String(x?.id) === String(_providerId); });
+                        if (pv) activeVendor = pv;
+                    } catch(e) {}
+                }
+            }
             if (_isProvider && !activeVendor) {
                 try { showLocalToast('Appel indisponible en mode prestataire. Utilisez le chat texte.', 'info'); } catch {}
                 return;
@@ -11628,10 +11638,19 @@
         }
 
         function lpOpenVendorCommunication() {
-            // Si dashboard prestataire actif, ouvrir le chat directement
+            // Si dashboard prestataire actif, definir activeVendor puis ouvrir le chat
             try {
                 var _psProv = document.getElementById('providerSection');
                 if (_psProv && _psProv.style.display === 'block') {
+                    if (!activeVendor) {
+                        try {
+                            var _pid = getMyProviderId();
+                            if (_pid) {
+                                var _pv = (Array.isArray(VENDORS) ? VENDORS : []).find(function(x) { return String(x?.id) === String(_pid); });
+                                if (_pv) activeVendor = _pv;
+                            }
+                        } catch(e) {}
+                    }
                     try { openChat(); } catch {}
                     return;
                 }
@@ -24009,6 +24028,13 @@
                     btn.style.display = 'block';
                     _lpLiveVendorId = vendorId;
                     _lpLiveIsVendor = true;
+                    // Definir activeVendor pour le prestataire (comme pour le vendeur)
+                    if (!activeVendor || String(activeVendor.id) !== String(vendorId)) {
+                        try {
+                            var _matchV = (Array.isArray(VENDORS) ? VENDORS : []).find(function(x) { return String(x?.id) === String(vendorId); });
+                            if (_matchV) activeVendor = _matchV;
+                        } catch(e) {}
+                    }
                     console.log('[Live] Bouton Go Live active pour', vendorId);
                 } else if (!vendorId) {
                     console.warn('[Live] Bouton Go Live NON affiche: aucun vendorId trouve');
@@ -24028,7 +24054,7 @@
                     vendorId = params.get('vendor') || '';
                 } catch(e) {}
             }
-            if (!vendorId) { alert('Vendeur non identifié. Rechargez la page.'); return; }
+            if (!vendorId) { alert('Vendeur / Prestataire non identifié. Rechargez la page.'); return; }
             _lpLiveVendorId = vendorId;
             _lpLiveIsVendor = true;
 
@@ -24236,10 +24262,10 @@
                             vendorSlug = String(activeVendor.slug || activeVendor.id || '').trim();
                         }
                     } catch(e) {}
-                    // Fallback: si activeVendor est null (dashboard vendeur), chercher via localStorage
+                    // Fallback: si activeVendor est null (dashboard vendeur/prestataire), chercher via localStorage
                     if (!vendorName || !vendorSlug) {
                         try {
-                            var shopId = localStorage.getItem('mangoo_my_shop_id') || '';
+                            var shopId = localStorage.getItem('mangoo_my_shop_id') || localStorage.getItem('mangoo_my_provider_id') || '';
                             if (shopId) {
                                 var fallbackVendor = VENDORS.find(function(v) { return String(v.id) === String(shopId); });
                                 if (fallbackVendor) {
