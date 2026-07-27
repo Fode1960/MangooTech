@@ -11183,9 +11183,14 @@
         function getMyProviderId() {
             try {
                 const scoped = lpGetStoredProviderIdsForCurrentUser()
-                console.log('[PROV-DEBUG] getMyProviderId - scoped:', JSON.stringify(scoped));
-                if (scoped.length === 1) return String(scoped[0] || '').trim()
-                if (scoped.length > 1) return ''
+                // Filtrer pour ne garder que les vrais prestataires (kind=service/provider)
+                const filtered = scoped.filter(function(sid) {
+                    try {
+                        return lpGetVendorKind(VENDORS.find(function(x) { return String(x?.id) === String(sid); }) || null) === 'service';
+                    } catch(e) { return false; }
+                });
+                console.log('[PROV-DEBUG] getMyProviderId - scoped:', JSON.stringify(scoped), 'filtered:', JSON.stringify(filtered));
+                if (filtered.length === 1) return String(filtered[0] || '').trim()
                 const owned = lpGetOwnedProviderIds()
                 console.log('[PROV-DEBUG] getMyProviderId - owned:', JSON.stringify(owned));
                 if (owned.length === 1) return String(owned[0] || '').trim()
