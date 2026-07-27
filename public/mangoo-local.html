@@ -11447,13 +11447,7 @@
                         return
                     }
                 }
-                if (lpHasSignedInUser()) {
-                    try { switchView('account') } catch {}
-                    try { switchAccountTab('sell') } catch {}
-                    try { switchVendorTab('overview') } catch {}
-                    try { lpSpeak('Ouverture de votre espace vendeur.', { lang: 'fr-FR' }) } catch {}
-                    return
-                }
+                // 1. Verifier d'abord si prestataire (AVANT le check vendeur)
                 const id = getMyProviderId();
                 const scoped = lpGetStoredProviderIdsForCurrentUser();
                 const owned = scoped.length ? scoped : lpGetOwnedProviderIds();
@@ -11478,6 +11472,14 @@
                     // Afficher le bouton Go Live
                     setTimeout(function() { try { lpInitGoLiveButton(); } catch(e) {} }, 500);
                     return;
+                }
+                // 2. Sinon, utilisateur connecte -> dashboard vendeur
+                if (lpHasSignedInUser()) {
+                    try { switchView('account') } catch {}
+                    try { switchAccountTab('sell') } catch {}
+                    try { switchVendorTab('overview') } catch {}
+                    try { lpSpeak('Ouverture de votre espace vendeur.', { lang: 'fr-FR' }) } catch {}
+                    return
                 }
                 const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
                 try { lpSpeak('Connectez-vous avec Identite Local plus pour ouvrir votre espace pro.', { lang: 'fr-FR' }) } catch {}
