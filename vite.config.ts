@@ -55,6 +55,11 @@ export default defineConfig({
         target: 'http://localhost:3045',
         changeOrigin: true,
         secure: false,
+        configure: (proxy, _options) => {
+          proxy.on('proxyReq', (proxyReq) => {
+            proxyReq.setHeader('Connection', 'close');
+          });
+        },
       }
     }
   },
