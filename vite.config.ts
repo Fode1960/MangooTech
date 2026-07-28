@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tsconfigPaths from "vite-tsconfig-paths";
 import fs from 'node:fs'
+import http from 'node:http'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -55,6 +56,7 @@ export default defineConfig({
         target: 'http://localhost:3045',
         changeOrigin: true,
         secure: false,
+        agent: new http.Agent({ keepAlive: false }),
         configure: (proxy, _options) => {
           proxy.on('proxyReq', (proxyReq) => {
             proxyReq.setHeader('Connection', 'close');
