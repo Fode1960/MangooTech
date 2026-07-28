@@ -16030,9 +16030,15 @@
         
         // Charge les produits depuis le serveur (JSON prioritaire, Supabase en fallback)
         async function _loadProductsFromServer() {
+            // Determiner le shopId : prestataire ou boutique
+            var shopId = localStorage.getItem('mangoo_my_shop_id') || '';
+            try {
+                var provId = getMyProviderId ? getMyProviderId() : localStorage.getItem('mangoo_my_provider_id');
+                if (provId) shopId = provId;
+            } catch(e) {}
+            if (!shopId) shopId = 'default';
             // 1. Fichier JSON serveur (source de verite pour les produits geres localement, dont PC4)
             try {
-                const shopId = localStorage.getItem('mangoo_my_shop_id') || 'default';
                 const resp = await fetch('/api/my-products?shopId=' + encodeURIComponent(shopId));
                 const json = await resp.json();
                 if (json.success && Array.isArray(json.products) && json.products.length > 0) {
@@ -16047,7 +16053,7 @@
             
             // 2. Supabase (fallback pour les shops geres via Supabase)
             try {
-                const shopId = localStorage.getItem('mangoo_my_shop_id') || 'default';
+                // shopId deja determine en haut de fonction (prestataire ou boutique)
                 const shopVendor = (window.VENDORS || []).find(v => v.id === shopId || v.slug === shopId);
                 const shopSlug = shopVendor ? (shopVendor.slug || '') : '';
                 const slugParam = shopSlug ? ('shop_slug=' + encodeURIComponent(shopSlug)) : ('shop_id=' + encodeURIComponent(shopId));
