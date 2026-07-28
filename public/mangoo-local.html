@@ -11370,6 +11370,8 @@
                     }
                     showProviderDashboardInline();
                     setTimeout(function() { try { lpInitGoLiveButton(); } catch(e) {} }, 500);
+                    // Enregistrer la presence WebSocket pour le prestataire (badge LIVE sur la carte)
+                    setTimeout(function() { try { lpTryRegisterVendorPresence(); } catch(e) {} }, 800);
                     return;
                 }
 
@@ -16075,6 +16077,24 @@
         function _getProductsForCall() {
             const products = [];
             try {
+                // Verifier si on est en contexte prestataire
+                var isProvider = false;
+                try { isProvider = !!(getMyProviderId ? getMyProviderId() : localStorage.getItem('mangoo_my_provider_id')); } catch(e) {}
+                // Priorite prestataire : mangoo_provider_services d'abord
+                if (isProvider) {
+                    const provStored = localStorage.getItem('mangoo_provider_services');
+                    if (provStored) {
+                        const parsed = JSON.parse(provStored);
+                        parsed.forEach(p => {
+                            const img = p.image || p.img || '';
+                            if (p.name) products.push({ name: p.name, img: img, price: p.price || '', category: p.category || '', id: p.id || '' });
+                        });
+                    }
+                    if (products.length > 0) {
+                        console.log('[LP] _getProductsForCall (prestataire): ' + products.length + ' produit(s) depuis mangoo_provider_services');
+                        return products;
+                    }
+                }
                 // 1. window.MY_PRODUCTS (en memoire)
                 if (window.MY_PRODUCTS && window.MY_PRODUCTS.length > 0) {
                     window.MY_PRODUCTS.forEach(p => {
@@ -16093,7 +16113,18 @@
                         });
                     }
                 }
-                // 3. DOM: cartes produit de la fiche vendeur
+                // 3. localStorage mangoo_provider_services (prestataire - fallback)
+                if (products.length === 0) {
+                    const provStored = localStorage.getItem('mangoo_provider_services');
+                    if (provStored) {
+                        const parsed = JSON.parse(provStored);
+                        parsed.forEach(p => {
+                            const img = p.image || p.img || '';
+                            if (p.name) products.push({ name: p.name, img: img, price: p.price || '', category: p.category || '', id: p.id || '' });
+                        });
+                    }
+                }
+                // 4. DOM: cartes produit de la fiche vendeur
                 if (products.length === 0) {
                     const cards = document.querySelectorAll('#vendorProductsList .product-card');
                     cards.forEach(card => {
@@ -16109,8 +16140,6 @@
                         if (name) products.push({ name: name, img: img, price: '', category: '', id: '' });
                     });
                 }
-                // Pas de fallback: si aucun produit reel, retourner vide
-                // (le selecteur affichera "Aucun produit dans la boutique")
                 console.log('[LP] _getProductsForCall: ' + products.length + ' produit(s) trouve(s)');
             } catch(e) { console.error('[LP] Erreur _getProductsForCall:', e); }
             return products;
