@@ -16077,6 +16077,31 @@
             } catch(e) {
                 console.warn('[LP] Echec chargement produits Supabase:', e.message);
             }
+            // 3. Fallback: mangoo_provider_services (prestataire sans API)
+            try {
+                var provStored = localStorage.getItem('mangoo_provider_services');
+                if (provStored) {
+                    var parsed = JSON.parse(provStored);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        var prods = parsed.map(function(p) {
+                            return {
+                                id: p.id || '',
+                                name: p.name || 'Prestation',
+                                photo: p.image || p.img || '',
+                                price: p.price || p.priceCfa || 0,
+                                currency: 'XOF',
+                                category: p.category || ''
+                            };
+                        });
+                        window.MY_PRODUCTS = prods;
+                        localStorage.setItem('mangoo_my_products', JSON.stringify(prods));
+                        console.log('[LP] ' + prods.length + ' produit(s) charges depuis mangoo_provider_services');
+                        return true;
+                    }
+                }
+            } catch(e) {
+                console.warn('[LP] Echec chargement provider services:', e.message);
+            }
             return false;
         }
 
