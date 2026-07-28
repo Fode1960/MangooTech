@@ -11353,25 +11353,12 @@
                 const scoped = lpGetStoredProviderIdsForCurrentUser();
                 const owned = scoped.length ? scoped : lpGetOwnedProviderIds();
                 if (id || owned.length) {
-                    const providerId = String(id || owned[0] || '').trim()
-                    let backVendorId = ''
-                    try {
-                        const shopId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim()
-                        if (shopId) backVendorId = shopId
-                    } catch {
-                    }
-                    if (!backVendorId) {
-                        try {
-                            const activeId = String(activeVendor?.id || '').trim()
-                            const k = activeId ? lpGetVendorKind(activeVendor) : ''
-                            if (activeId && String(k || '') === 'shop') backVendorId = activeId
-                        } catch {
-                        }
-                    }
-                    showProviderDashboardInline();
-                    setTimeout(function() { try { lpInitGoLiveButton(); } catch(e) {} }, 500);
-                    // Enregistrer la presence WebSocket pour le prestataire (badge LIVE sur la carte)
-                    setTimeout(function() { try { lpTryRegisterVendorPresence(); } catch(e) {} }, 800);
+                    // Ne plus appeler showProviderDashboardInline() ici :
+                    // cette fonction est appelee a chaque switchView via lpRefreshFloatingUi(),
+                    // ce qui forcait systematiquement le dashboard prestataire et empechait
+                    // toute navigation vers Carte / Espace / Intro.
+                    // Le dashboard prestataire est maintenant ouvert uniquement via
+                    // openMyProviderDashboard() (clic FAB) ou l'auto-open au chargement.
                     return;
                 }
 
