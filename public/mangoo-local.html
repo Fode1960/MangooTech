@@ -4211,6 +4211,8 @@
         }
         #lpLiveProductPicker .picker-item:hover { border-color: var(--ml-brand-from); }
         #lpLiveProductPicker .picker-item.selected { border-color: var(--ml-brand-from); background: rgba(27,94,32,0.08); }
+        #lpLiveProductPicker .picker-check { width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 700; color: transparent; border-radius: 50%; border: 2px solid var(--ml-border); flex-shrink: 0; transition: all 0.15s; }
+        #lpLiveProductPicker .picker-item.selected .picker-check { color: #fff; background: #2e7d32; border-color: #2e7d32; }
         #lpLiveProductPicker .picker-img { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: #e5e7eb; }
         #lpLiveProductPicker .picker-name { color: var(--ml-text); font-size: 0.85rem; flex: 1; }
         #lpLiveProductPicker .picker-price { color: var(--ml-brand-from); font-size: 0.8rem; font-weight: 700; }
@@ -4221,7 +4223,7 @@
         /* Go Live Button */
         .lp-go-live-wrapper {
             position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
-            z-index: 21900;
+            z-index: 21900; display: none; /* caché par défaut, affiché uniquement si vendor authentifié */
         }
         .lp-go-live-btn-main {
             background: var(--ml-danger);
@@ -4717,6 +4719,7 @@
                             <button type="button" onclick="try{switchProviderTab('services')}catch{}" class="lp-tab" id="lp-ptab-services">🛠️ Prestations</button>
                             <button type="button" onclick="try{switchProviderTab('communication')}catch{}" class="lp-tab" id="lp-ptab-communication">💬 Chat</button>
                             <button type="button" onclick="try{switchProviderTab('supply')}catch{}" class="lp-tab" id="lp-ptab-supply">🏭 Appro</button>
+                            <button type="button" onclick="try{switchProviderTab('live')}catch{}" class="lp-tab" id="lp-ptab-live">🔴 Live</button>
                         </div>
 
                         <div id="lp-provider-overview" class="lp-pane active" data-pvpane="overview">
@@ -4764,6 +4767,39 @@
                             <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
                                 <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">🏭 Approvisionnement</div>
                                 <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Ouvrez Mangoo Supply pour vos besoins professionnels.</div>
+                            </div>
+                        </div>
+
+                        <div id="lp-provider-live" class="lp-pane" data-pvpane="live">
+                            <div style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:18px; box-shadow:var(--ml-shadow-sm);">
+                                <div style="margin-bottom:8px;">
+                                    <span style="display:inline-block; background:linear-gradient(135deg,#1b5e20,#2e7d32); color:#fff; padding:4px 12px; border-radius:9px; font-weight:750; font-size:0.82rem; white-space:nowrap;">
+                                        🔴 Live Shopping
+                                    </span>
+                                </div>
+                                <div style="color:var(--ml-muted); font-size:0.88rem; line-height:1.45;">
+                                    Lancez un live pour interagir avec vos clients en temps réel. Présentez vos services, répondez aux questions et concluez des ventes instantanément.
+                                </div>
+                                <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+                                    <button type="button" class="lp-btn lp-btn-primary" onclick="try{lpStartProviderLive()}catch{}" id="lp-provider-start-live-btn" style="background:linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color:#fff; font-weight:700; padding:8px 16px; border:none; border-radius:11px; font-size:0.83rem; cursor:pointer; box-shadow:0 3px 10px rgba(220,38,38,0.25); transition:transform 0.15s, box-shadow 0.15s;" onmouseover="this.style.transform='scale(1.03)';this.style.boxShadow='0 5px 14px rgba(220,38,38,0.35)'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 3px 10px rgba(220,38,38,0.25)'">
+                                        <span style="margin-right:4px;">🔴</span> Démarrer le Live
+                                    </button>
+                                </div>
+                                <div id="lp-provider-live-status" style="margin-top:14px;display:none;">
+                                    <div style="padding:12px 14px; background:linear-gradient(135deg, rgba(220,38,38,0.06), rgba(185,28,28,0.04)); border:1px solid rgba(220,38,38,0.2); border-radius:13px; display:flex; align-items:center; gap:9px;">
+                                        <span style="display:inline-flex; width:9px; height:9px; background:#dc2626; border-radius:50%; animation:pulse 1.5s infinite; flex-shrink:0;"></span>
+                                        <div style="flex:1;">
+                                            <div style="color:#b91c1c; font-weight:700; font-size:0.9rem;">Live en cours</div>
+                                            <div style="color:var(--ml-muted); font-size:0.8rem; margin-top:1px;">Badge Live activé sur la carte · Clients peuvent vous rejoindre</div>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top:10px;display:flex;gap:7px;flex-wrap:wrap;">
+                                        <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpShowMapFromProvider()}catch{}" style="border-radius:11px;">🗺️ Voir sur la carte</button>
+                                        <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpCopyLiveLink()}catch{}" style="border-radius:11px;">📋 Copier le lien</button>
+                                        <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpShowLiveProductPicker()}catch{}" style="border-radius:11px;">📦 Produits</button>
+                                        <button type="button" class="lp-btn lp-btn-secondary" onclick="try{lpStopLive()}catch{}" style="border-radius:11px; color:#dc2626; border-color:rgba(220,38,38,0.3);">⏹️ Arrêter</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -10732,6 +10768,42 @@
                 window.currentMarkers.forEach(m => map.removeLayer(m));
             }
             window.currentMarkers = [];
+            // Déduplication renforcée : vérifier les correspondances croisées id/slug
+            // (ex: entrée1 id="1780950564842" slug=""  et  entrée2 id="mangoo-elect" slug="1780950564842")
+            var dedupSeenIds = {};       // id → true
+            var dedupSeenSlugs = {};     // slug → true
+            var uniqueVendors = [];
+            for (var _ri = 0; _ri < vendors.length; _ri++) {
+                var _rvId = String(vendors[_ri].id || '').trim();
+                var _rvSlug = String(vendors[_ri].slug || '').trim();
+                var _rvName = String(vendors[_ri].name || '').trim().toLowerCase();
+                var isDup = false;
+                var dupReason = '';
+                // Vérifier si l'ID ou le slug est déjà connu (direct ou croisé)
+                if (_rvId && (dedupSeenIds[_rvId] || dedupSeenSlugs[_rvId])) { isDup = true; dupReason = 'id/seenAsIdOrSlug'; }
+                else if (_rvSlug && (dedupSeenSlugs[_rvSlug] || dedupSeenIds[_rvSlug])) { isDup = true; dupReason = 'slug/seenAsIdOrSlug'; }
+                // Vérifier si le nom + coordonnées correspondent à une entrée déjà gardée (même prestataire, clé différente)
+                if (!isDup && _rvName && vendors[_ri].lat != null && vendors[_ri].lng != null) {
+                    for (var _uj = 0; _uj < uniqueVendors.length; _uj++) {
+                        var _uv = uniqueVendors[_uj];
+                        var _uvName = String(_uv.name || '').trim().toLowerCase();
+                        if (_uvName === _rvName && _uv.lat === vendors[_ri].lat && _uv.lng === vendors[_ri].lng) {
+                            isDup = true; dupReason = 'name+coords(match entry '+_uj+')'; break;
+                        }
+                    }
+                }
+                if (!isDup) {
+                    if (_rvId) dedupSeenIds[_rvId] = true;
+                    if (_rvSlug) dedupSeenSlugs[_rvSlug] = true;
+                    // Ajouter aussi l'ID au set des slugs et vice-versa pour les correspondances croisées futures
+                    if (_rvId && !dedupSeenSlugs[_rvId]) dedupSeenSlugs[_rvId] = true;
+                    if (_rvSlug && !dedupSeenIds[_rvSlug]) dedupSeenIds[_rvSlug] = true;
+                    uniqueVendors.push(vendors[_ri]);
+                } else {
+                    console.warn('[Map] Doublon VENDORS ignoré (renforcé): id=' + _rvId + ' slug=' + _rvSlug + ' name=' + _rvName + ' raison=' + dupReason);
+                }
+            }
+            vendors = uniqueVendors;
 
             // Add Promo Style
             if (!document.getElementById('promo-style')) {
@@ -10845,6 +10917,9 @@
             const newSet = new Set(newCandidates);
 
             vendors.forEach(vendor => {
+                // Ignorer le marqueur "user_me" (position utilisateur), il n'est pas un vrai prestataire
+                // et crée un badge fantôme quand le nom du user matche un vendor réel
+                if (String(vendor?.id || '') === 'user_me') return;
                 const lat = Number(vendor?.lat);
                 const lng = Number(vendor?.lng);
                 if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
@@ -10957,8 +11032,8 @@
                 const circleTop = vendor.live ? 22 : 0;
                 const labelTop = vendor.live ? 78 : 56;
                 let markerHtml = `
-                    <div style="position:relative; width:140px; height:${rootH}px;" onclick="try{openVendorSheetById('${safeVendorId}')}catch{}; event.stopPropagation();">
-                        ${vendor.live ? '<div style="position:absolute; top:0; left:50%; transform:translateX(-50%); z-index:9999; pointer-events:none;">' + badge + '</div>' : ''}
+                    <div style="position:relative; width:140px; height:${rootH}px; overflow:visible;" onclick="try{openVendorSheetById('${safeVendorId}')}catch{}; event.stopPropagation();">
+                        ${vendor.live ? '<div style="position:absolute; top:0; left:50%; transform:translateX(-50%); z-index:99999; pointer-events:none;">' + badge + '</div>' : ''}
                         <div style="position:absolute; left:50%; top:${circleTop}px; transform:translateX(-50%); width:50px; height:50px;">
                             ${ringHtml}
                             <div style="
@@ -10974,13 +11049,14 @@
                                 ${animation}
                                 transition: transform 0.2s;
                                 position: relative;
+                                overflow: visible;
                             ">
                                 <img src="${lpResolveVendorAvatar(vendor)}" style="width:44px; height:44px; border-radius:50%; object-fit:cover;">
+                                ${vendor.live ? '<div style="position:absolute; bottom:-6px; left:50%; transform:translateX(-50%); background:#d63031; color:white; font-size:8px; padding:1px 6px; border-radius:4px; font-weight:900; white-space:nowrap; z-index:10; box-shadow:0 2px 6px rgba(0,0,0,0.4);">LIVE</div>' : ''}
                                 ${badge2}
                                 ${kindBadge}
                                 ${sponsoredBadge}
                             </div>
-                            ${vendor.live ? '' : badge}
                         </div>
                         <div style="
                             position:absolute;
@@ -11005,11 +11081,12 @@
                 `;
 
                 const iconH = vendor.live ? 100 : 78;
+                const iconAnchorY = vendor.live ? 78 : 78;
                 const icon = L.divIcon({
                     className: 'custom-pin',
                     html: markerHtml,
                     iconSize: [140, iconH],
-                    iconAnchor: [70, 78]
+                    iconAnchor: [70, iconAnchorY]
                 });
 
                 const marker = L.marker([lat, lng], {
@@ -11374,6 +11451,19 @@
         }
 
         function showProviderDashboardInline() {
+            // Garde de sécurité : ne jamais afficher le dashboard sans authentification
+            // sauf si l'URL force explicitement lpRole=provider
+            try {
+                var _cuCheck3 = null;
+                try { _cuCheck3 = getLpCurrentUser(); } catch(e) {}
+                var _isAuth3 = !!(_cuCheck3 && String(_cuCheck3.email || '').trim());
+                var _forceRole3 = '';
+                try { _forceRole3 = new URLSearchParams(window.location.search).get('lpRole') || ''; } catch(e) {}
+                if (!_isAuth3 && _forceRole3 !== 'provider' && _forceRole3 !== 'vendor') {
+                    console.warn('[Provider] showProviderDashboardInline bloqué: utilisateur non identifié');
+                    return;
+                }
+            } catch(e) {}
             try {
                 // 1. Afficher la vue compte et masquer toutes les autres vues
                 var accountDiv = document.getElementById('accountView');
@@ -11409,6 +11499,9 @@
                 // Masquer barre de recherche et filtres (vue map)
                 try { var sb = document.querySelector('.search-container'); if (sb) sb.style.display = 'none'; } catch(e) {}
                 try { var fb = document.getElementById('metiersFamiliesBar'); if (fb) fb.style.display = 'none'; } catch(e) {}
+                // Masquer le panneau Simple qui n'a rien à faire sur le dashboard
+                try { var sp = document.getElementById('lpSimplePanel'); if (sp) sp.style.display = 'none'; } catch(e) {}
+                try { var sr = document.getElementById('lpSimpleReopenBtn'); if (sr) sr.style.display = 'none'; } catch(e) {}
                 try { currentView = 'account'; window.currentView = 'account'; } catch {}
 
                 // 2. Masquer les onglets compte (le prestataire a ses propres onglets lp-ptab-*)
@@ -11454,19 +11547,113 @@
                 } catch(e) {}
 
                 try { lpSpeak('Ouverture de votre espace prestataire.', { lang: 'fr-FR' }) } catch {}
+                // Enregistrer la presence WebSocket pour le badge LIVE sur la carte
+                setTimeout(function() { try { lpTryRegisterVendorPresence(); } catch(e) {} }, 800);
             } catch(e) { console.warn('Erreur ouverture dashboard prestataire:', e); }
+        }
+
+        // Affiche temporairement la carte Local+ depuis le dashboard prestataire
+        // pour vérifier le badge Live
+        function lpShowMapFromProvider() {
+            try {
+                // 1. Cacher le dashboard prestataire
+                var provSec = document.getElementById('providerSection');
+                if (provSec) provSec.style.display = 'none';
+
+                // 2. Réafficher les éléments de la carte
+                var mapDiv = document.getElementById('map');
+                var listDiv = document.getElementById('listView');
+                var accountDiv = document.getElementById('accountView');
+                var selTab = document.getElementById('lpTabList') || document.querySelector('.lp-tab-list');
+                var srch = document.querySelector('.search-container');
+                var mfb = document.getElementById('metiersFamiliesBar');
+                var footer = document.getElementById('accountFooter');
+
+                if (srch) srch.style.display = '';
+                if (mfb) mfb.style.display = '';
+                if (footer) footer.style.display = '';
+
+                // Réafficher les onglets compte
+                document.querySelectorAll('#accountView .lp-tab[id^="lp-tab-"]').forEach(function(t) {
+                    t.style.display = '';
+                });
+
+                // Réafficher les éléments masqués dans accountView
+                document.querySelectorAll('#accountView .menu-grid, #accountView .lp-hub-card, #accountView .action-list, #accountView button.btn-seller').forEach(function(el) {
+                    el.style.display = '';
+                });
+                document.querySelectorAll('#accountView p').forEach(function(p) {
+                    p.style.display = '';
+                });
+
+                // Basculer en vue map/list
+                try { currentView = 'map'; window.currentView = 'map'; } catch {}
+                if (accountDiv) accountDiv.style.display = 'none';
+                if (mapDiv) mapDiv.style.display = 'block';
+                if (listDiv) listDiv.style.display = 'none';
+
+                // 3. Cacher le panneau "Simple" qui couvre la carte
+                var simplePanel = document.getElementById('lpSimplePanel');
+                var simpleReopen = document.getElementById('lpSimpleReopenBtn');
+                if (simplePanel) simplePanel.style.display = 'none';
+                if (simpleReopen) simpleReopen.style.display = 'none';
+
+                // 4. Forcer le recalcul de la carte Leaflet (était masquée) + re-rendu des badges
+                try {
+                    if (typeof map !== 'undefined' && map) { map.invalidateSize(); }
+                } catch(e) {}
+                try {
+                    if (typeof renderVendorsOnMap === 'function' && typeof VENDORS !== 'undefined') {
+                        console.warn('🔴 [LiveBadge] Re-rendu MAP depuis Voir sur la carte (' + VENDORS.length + ' vendors)');
+                        renderVendorsOnMap(VENDORS);
+                    }
+                } catch(e) {}
+
+                // Recentrer sur le prestataire
+                try {
+                    var pid = _lpLiveVendorId || String(localStorage.getItem('mangoo_my_provider_id') || '').trim();
+                    var _mv = (Array.isArray(VENDORS) ? VENDORS : []).find(function(x) { return String(x?.id) === String(pid); });
+                    if (_mv && _mv.lat && _mv.lng && typeof map !== 'undefined' && map) {
+                        map.setView([_mv.lat, _mv.lng], 16);
+                    }
+                } catch(e) {}
+
+                // 4. Ajouter bouton flottant "Retour dashboard"
+                if (!document.getElementById('lp-back-to-prov-dash')) {
+                    var backBtn = document.createElement('button');
+                    backBtn.id = 'lp-back-to-prov-dash';
+                    backBtn.textContent = '🧰 Retour dashboard';
+                    backBtn.style.cssText = 'position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:99999; background:var(--ml-card); color:var(--ml-text); border:1px solid var(--ml-border); border-radius:14px; padding:10px 20px; font-weight:700; font-size:0.9rem; cursor:pointer; box-shadow:0 4px 16px rgba(0,0,0,0.15);';
+                    backBtn.onclick = function() {
+                        try { showProviderDashboardInline(); } catch(e) {}
+                        try { backBtn.remove(); } catch(e) {}
+                        // Restaurer la visibilité du panneau Simple
+                        try { lpApplySimplePanelVisibility(); } catch(e) {}
+                    };
+                    document.body.appendChild(backBtn);
+                }
+            } catch(e) {}
         }
 
         function openMyProviderDashboard() {
             try {
-                const isAccountView = String(currentView || '').trim() === 'account'
-                if (isAccountView) {
-                    try { openLpIdentityModal() } catch {}
-                    try { lpSpeak('Choisissez votre acces Local plus par PIN, telephone ou e-mail.', { lang: 'fr-FR' }) } catch {}
-                    try { lpToast('Utilisez Identite Local+ pour client ou vendeur.', 'info') } catch {}
-                    return
+                // Garde de sécurité : ne pas ouvrir le dashboard sans authentification
+                var _cuCheck2 = null;
+                try { _cuCheck2 = getLpCurrentUser(); } catch(e) {}
+                if (!_cuCheck2 || !String(_cuCheck2.email || '').trim()) {
+                    // Vérifier si un paramètre URL force l'ouverture (lpRole=vendor ou provider)
+                    var _forceRole = '';
+                    try { _forceRole = new URLSearchParams(window.location.search).get('lpRole') || ''; } catch(e) {}
+                    if (_forceRole !== 'vendor' && _forceRole !== 'provider') {
+                        console.warn('[Provider] Dashboard non ouvert: utilisateur non authentifie → redirection connexion');
+                        // Rediriger vers la page de connexion/identité
+                        try { switchView('account'); } catch(e) {}
+                        try { openLpIdentityModal(); } catch(e) {}
+                        try { lpSpeak('Connectez-vous pour accéder à votre espace pro.', { lang: 'fr-FR' }); } catch(e) {}
+                        return;
+                    }
                 }
-                // 1. D'ABORD : Prestataire
+                // 1. D'ABORD : Prestataire (peu importe la vue courante)
                 const providerId_check = getMyProviderId();
                 const providerScoped = lpGetStoredProviderIdsForCurrentUser();
                 const providerOwned = providerScoped.length ? providerScoped : lpGetOwnedProviderIds();
@@ -11489,7 +11676,15 @@
                         return
                     }
                 }
-                const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+                // 3. Si sur accountView sans role identifie, montrer la modale identite
+                const isAccountView = String(currentView || '').trim() === 'account'
+                if (isAccountView) {
+                    try { openLpIdentityModal() } catch {}
+                    try { lpSpeak('Choisissez votre acces Local plus par PIN, telephone ou e-mail.', { lang: 'fr-FR' }) } catch {}
+                    try { lpToast('Utilisez Identite Local+ pour client ou vendeur.', 'info') } catch {}
+                    return
+                }
+                // 4. Aucun role, proposer l'identite
                 try { lpSpeak('Connectez-vous avec Identite Local plus pour ouvrir votre espace pro.', { lang: 'fr-FR' }) } catch {}
                 try { openLpIdentityModal() } catch {}
                 try { lpToast('Identifiez-vous pour ouvrir votre espace pro.', 'info') } catch {}
@@ -11642,7 +11837,23 @@
                         var _pid = getMyProviderId();
                         if (_pid) {
                             var _pv = (Array.isArray(VENDORS) ? VENDORS : []).find(function(x) { return String(x?.id) === String(_pid); });
-                            if (_pv) activeVendor = _pv;
+                            if (_pv) {
+                                activeVendor = _pv;
+                            } else {
+                                // Prestataire non trouve dans VENDORS (ex: providers),
+                                // creer un objet vendor minimal a partir du localStorage
+                                var _pName = '';
+                                try {
+                                    var _pData = localStorage.getItem('mangoo_provider_services');
+                                    if (!_pData) _pData = localStorage.getItem('mangoo_local_provider_sync_v1');
+                                    if (!_pData) {
+                                        var _pRaw = localStorage.getItem('mangoo_providers');
+                                        if (_pRaw) { var _pArr = JSON.parse(_pRaw); var _pf = _pArr.find(function(x) { return String(x.id) === String(_pid); }); if (_pf) _pName = _pf.name || ''; }
+                                    }
+                                } catch(e) {}
+                                if (!_pName) _pName = 'Mangoo Re\u0301par';
+                                activeVendor = { id: _pid, name: _pName, kind: 'provider', slug: _pid, avatar: '', photo: '', category: '', coverage: [] };
+                            }
                         }
                     } catch(e) {}
                     try { openChat(); } catch {}
@@ -13266,6 +13477,23 @@
                 if(topSection) topSection.style.display = 'none';
                 if (searchBar) searchBar.style.display = 'none';
                 if (familiesBar) familiesBar.style.display = 'none';
+                
+                // Sécurité : forcer l'affichage correct selon l'état d'authentification
+                try {
+                    var _cuAuth = null;
+                    try { _cuAuth = getLpCurrentUser(); } catch(e) {}
+                    var _isIdentified = !!(_cuAuth && String(_cuAuth.email || '').trim());
+                    var _isProvider = false;
+                    try { _isProvider = !!(getMyProviderId ? String(getMyProviderId() || '') : ''); } catch(e) {}
+                    try { if (!_isProvider) _isProvider = (lpGetOwnedProviderIds ? lpGetOwnedProviderIds() : []).length > 0; } catch(e) {}
+                    if (_isIdentified && _isProvider) {
+                        showProviderDashboardInline();
+                        return;
+                    }
+                } catch(e) { console.warn('[Account] Erreur auth check:', e); }
+                // Fallback : forcer le masquage du dashboard + restaurer footer
+                try { var _ps = document.getElementById('providerSection'); if (_ps) _ps.style.display = 'none'; } catch(e) {}
+                try { var _af = document.getElementById('accountFooter'); if (_af) _af.style.display = ''; } catch(e) {}
                 
                 // Initialize Account UI
                 try { applyLpHeaderUser() } catch {}
@@ -15313,67 +15541,88 @@
         const webrtcMsgQueue = [];
 
         function lpGetVendorWsVendorId() {
+            console.log('[WS-vendorId] DEBUT recherche vendorId...');
+            // 0. _lpLiveVendorId deja resolu par lpInitGoLiveButton
+            try {
+                if (_lpLiveVendorId) {
+                    console.log('[WS-vendorId] Via _lpLiveVendorId:', _lpLiveVendorId);
+                    return String(_lpLiveVendorId);
+                }
+            } catch(e) { console.warn('[WS-vendorId] Erreur _lpLiveVendorId:', e); }
+            // Garde de sécurité : ne pas identifier de vendeur sans authentification
+            try {
+                var _cuWs = null;
+                try { _cuWs = getLpCurrentUser(); } catch(e) {}
+                if (!_cuWs || !String(_cuWs.email || '').trim()) {
+                    var _forceRole2 = '';
+                    try { _forceRole2 = new URLSearchParams(window.location.search).get('lpRole') || ''; } catch(e) {}
+                    console.log('[WS-vendorId] Auth guard: auth=' + !!(_cuWs && String(_cuWs.email || '').trim()) + ' lpRole=' + _forceRole2);
+                    if (_forceRole2 !== 'vendor' && _forceRole2 !== 'provider') return ''; // Pas de vendorId pour les non-connectés
+                }
+            } catch {}
             // Try multiple sources to find the vendor's shop ID
             try {
                 const pref = String(typeof lpGetPreferredShopAccountId === 'function' ? (lpGetPreferredShopAccountId() || '') : '').trim();
-                if (pref) return pref;
+                if (pref) { console.log('[WS-vendorId] Via lpGetPreferredShopAccountId:', pref); return pref; }
             } catch {}
             // Fallback: paramètre URL ?vendor=... UNIQUEMENT pour les vendeurs authentifies
             try {
                 const urlVendor = new URLSearchParams(window.location.search).get('vendor');
                 const urlRole = new URLSearchParams(window.location.search).get('lpRole');
-                // Ne jamais enregistrer un simple client comme vendeur !
-                if (urlVendor && urlRole === 'vendor') return String(urlVendor).trim();
-            } catch {}
+                console.log('[WS-vendorId] URL check: vendor=' + urlVendor + ' lpRole=' + urlRole);
+                // Accepter aussi lpRole=provider (prestataire)
+                if (urlVendor && (urlRole === 'vendor' || urlRole === 'provider')) return String(urlVendor).trim();
+            } catch(e) { console.warn('[WS-vendorId] Erreur URL check:', e); }
             // Fallback direct: mangoo_my_shop_id (ne necessite pas lpIsOwnedShopVendor qui echoue sur domaine frais)
             try {
                 const qsVendor = new URLSearchParams(window.location.search).get('lpRole');
-                if (qsVendor === 'vendor') {
+                if (qsVendor === 'vendor' || qsVendor === 'provider') {
                     const myShopId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
-                    if (myShopId) return myShopId;
+                    if (myShopId) { console.log('[WS-vendorId] Via localStorage + lpRole:', myShopId); return myShopId; }
                 }
             } catch {}
             try {
                 const myShopId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
-                if (myShopId) return myShopId;
+                if (myShopId) { console.log('[WS-vendorId] Via localStorage mangoo_my_shop_id:', myShopId); return myShopId; }
             } catch {}
             // Fallback: mangoo_my_provider_id (prestataire)
             try {
                 const myProvId = String(localStorage.getItem('mangoo_my_provider_id') || '').trim();
-                if (myProvId) return myProvId;
+                if (myProvId) { console.log('[WS-vendorId] Via localStorage mangoo_my_provider_id:', myProvId); return myProvId; }
             } catch {}
             try {
                 const myShopId2 = String((typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('mangoo_my_shop_id') : null) || '').trim();
-                if (myShopId2) return myShopId2;
+                if (myShopId2) { console.log('[WS-vendorId] Via sessionStorage:', myShopId2); return myShopId2; }
             } catch {}
             try {
                 if (typeof lpGetStoredShopIdsForCurrentUser === 'function') {
                     const ids = lpGetStoredShopIdsForCurrentUser();
-                    if (Array.isArray(ids) && ids.length > 0) return String(ids[0]);
+                    if (Array.isArray(ids) && ids.length > 0) { console.log('[WS-vendorId] Via lpGetStoredShopIdsForCurrentUser:', ids[0]); return String(ids[0]); }
                 }
             } catch {}
             try {
                 if (typeof lpGetOwnedShopIds === 'function') {
                     const ids = lpGetOwnedShopIds();
-                    if (Array.isArray(ids) && ids.length > 0) return String(ids[0]);
+                    if (Array.isArray(ids) && ids.length > 0) { console.log('[WS-vendorId] Via lpGetOwnedShopIds:', ids[0]); return String(ids[0]); }
                 }
             } catch {}
-            // Si lpRole=vendor est present, utiliser activeVendor sans verification de propriete
-            // (le param lpRole=vendor est deja une preuve suffisante du role vendeur)
+            // Si lpRole=vendor ou provider est present, utiliser activeVendor sans verification de propriete
             try {
                 const urlRole2 = new URLSearchParams(window.location.search).get('lpRole');
-                if (urlRole2 === 'vendor' && activeVendor && typeof activeVendor === 'object') {
+                if ((urlRole2 === 'vendor' || urlRole2 === 'provider') && activeVendor && typeof activeVendor === 'object') {
                     const aid = String(activeVendor.id || '').trim();
-                    if (aid && lpGetVendorKind(activeVendor) === 'shop') return aid;
+                    // Accepter aussi les prestataires (service)
+                    if (aid) { console.log('[WS-vendorId] Via activeVendor + lpRole:', aid); return aid; }
                 }
             } catch {}
             // Dernier recours : activeVendor (boutique actuellement affichée ET possédée)
             try {
                 if (activeVendor && typeof activeVendor === 'object') {
                     const aid = String(activeVendor.id || '').trim();
-                    if (aid && lpGetVendorKind(activeVendor) === 'shop' && lpIsOwnedShopVendor(activeVendor)) return aid;
+                    if (aid && lpGetVendorKind(activeVendor) === 'shop' && lpIsOwnedShopVendor(activeVendor)) { console.log('[WS-vendorId] Via activeVendor owned shop:', aid); return aid; }
                 }
             } catch {}
+            console.log('[WS-vendorId] Aucun vendorId trouve, retour vide');
             return '';
         }
 
@@ -15661,6 +15910,10 @@
         }
 
         function handleMgmtWsMessage(data) {
+            // Log TOUS les messages pour debug badge Live
+            if (data.type && data.type.indexOf('live:') === 0) {
+                console.error('🔴🔴 [MgmtWS] MESSAGE LIVE RECU: type=' + data.type + ' vendorId=' + (data.vendorId || '?') + ' live=' + data.live);
+            }
             switch(data.type) {
                 case 'incoming-chat':
                     handleIncomingChat(data);
@@ -15706,29 +15959,97 @@
                 var vendorId = String(data.vendorId || '').trim();
                 var live = Boolean(data.live);
                 if (!vendorId) return;
+                // Protection : ignorer live=false si ce client a un live actif pour ce vendor
+                // (evite qu'un live:stop parasite ou un broadcast d'un autre client n'eteigne le badge)
+                if (!live && typeof _lpLiveActive !== 'undefined' && _lpLiveActive && typeof _lpLiveVendorId !== 'undefined') {
+                    if (String(_lpLiveVendorId) === vendorId) {
+                        console.warn('🔴 [LiveBadge] live=false IGNORE (live local actif pour vendorId=' + vendorId + ')');
+                        return;
+                    }
+                }
                 console.warn('🔴 [LiveBadge] RECU vendor-status: vendorId=' + vendorId + ' live=' + live + ' | VENDORS.length=' + (typeof VENDORS !== 'undefined' ? VENDORS.length : 'undefined'));
-                // Mettre à jour le vendor dans l'array VENDORS
-                // Chercher par ID exact, slug, ou nom (priorité aux infos du broadcast)
+                // Mettre a jour TOUS les vendors correspondants (pas de break : eliminer les doublons)
                 var dataVendorSlug = String(data.vendorSlug || '').trim();
                 var dataVendorName = String(data.vendorName || '').trim().toLowerCase();
-                var found = false;
+                var broadcastLat = typeof data.lat === 'number' ? data.lat : null;
+                var broadcastLng = typeof data.lng === 'number' ? data.lng : null;
+                var broadcastKind = String(data.kind || '').trim();
+                var broadcastCategory = String(data.category || '').trim();
+                var matchedIndices = [];
                 for (var i = 0; i < VENDORS.length; i++) {
                     var v = VENDORS[i];
+                    // Ignorer le marqueur user_me (position utilisateur, pas un vrai vendor)
+                    if (String(v.id || '') === 'user_me' || v.isUserOwned) continue;
                     var vid = String(v.id || v.slug || '').trim();
                     var vSlug = String(v.slug || '').trim();
                     var vName = String(v.name || '').trim().toLowerCase();
-                    // Match: ID exact, slug exact, ou nom exact (insensible à la casse)
                     if (vid === vendorId || vSlug === vendorId ||
                         (dataVendorSlug && vSlug === dataVendorSlug) ||
                         (dataVendorName && vName === dataVendorName)) {
                         VENDORS[i].live = live;
-                        found = true;
-                        console.warn('🔴 [LiveBadge] Vendor ' + VENDORS[i].name + ' (id=' + vid + ' slug=' + vSlug + ') live=' + live);
-                        break;
+                        if (broadcastLat !== null && broadcastLng !== null) {
+                            VENDORS[i].lat = broadcastLat;
+                            VENDORS[i].lng = broadcastLng;
+                        }
+                        if (broadcastKind) VENDORS[i].kind = broadcastKind;
+                        if (broadcastCategory) VENDORS[i].category = broadcastCategory;
+                        matchedIndices.push(i);
+                        console.warn('🔴 [LiveBadge] Vendor ' + VENDORS[i].name + ' (id=' + vid + ') live=' + live + ' lat=' + VENDORS[i].lat + ' lng=' + VENDORS[i].lng);
+                    }
+                }
+                var found = matchedIndices.length > 0;
+                // Supprimer les doublons (garder seulement le premier)
+                if (matchedIndices.length > 1) {
+                    console.warn('🔴 [LiveBadge] ' + matchedIndices.length + ' doublons pour vendorId=' + vendorId + ', suppression...');
+                    for (var d = matchedIndices.length - 1; d >= 1; d--) {
+                        VENDORS.splice(matchedIndices[d], 1);
                     }
                 }
                 if (!found) {
                     console.warn('🔴 [LiveBadge] AUCUN vendor trouve pour vendorId=' + vendorId + ' | IDs VENDORS: ' + VENDORS.map(function(v){return v.id}).join(', '));
+                    var providerLat = broadcastLat;
+                    var providerLng = broadcastLng;
+                    var providerName = dataVendorName || String(data.vendorName || '').trim();
+                    var providerKind = broadcastKind || 'provider';
+                    if (providerLat === null || providerLng === null) {
+                        try {
+                            var _providersRaw = localStorage.getItem('mangoo_providers');
+                            if (_providersRaw) {
+                                var _providersArr = JSON.parse(_providersRaw);
+                                if (Array.isArray(_providersArr)) {
+                                    var _pFound = _providersArr.find(function(x) { return String(x.id) === vendorId; });
+                                    if (_pFound && typeof _pFound.lat === 'number' && typeof _pFound.lng === 'number') {
+                                        providerLat = _pFound.lat;
+                                        providerLng = _pFound.lng;
+                                        if (!providerName) providerName = String(_pFound.name || '').trim();
+                                        if (!providerKind || providerKind === 'provider') providerKind = String(_pFound.kind || 'provider').trim();
+                                    }
+                                }
+                            }
+                        } catch(e) {}
+                    }
+                    var alreadyExists = VENDORS.some(function(v) { return String(v.id || v.slug || '') === vendorId; });
+                    if (!alreadyExists && providerLat !== null && providerLng !== null) {
+                        var newVendor = {
+                            id: vendorId,
+                            name: providerName || ('Prestataire ' + vendorId),
+                            slug: dataVendorSlug || vendorId,
+                            lat: providerLat,
+                            lng: providerLng,
+                            kind: providerKind || 'provider',
+                            category: broadcastCategory || data.category || '',
+                            avatar: '',
+                            photo: '',
+                            coverage: [],
+                            live: live
+                        };
+                        VENDORS.push(newVendor);
+                        console.warn('🔴 [LiveBadge] Prestataire ajoute dynamiquement: ' + newVendor.name + ' live=' + live + ' lat=' + providerLat + ' lng=' + providerLng);
+                    } else if (alreadyExists) {
+                        console.warn('🔴 [LiveBadge] Prestataire deja dans VENDORS, ajout dynamique ignore');
+                    } else {
+                        console.warn('🔴 [LiveBadge] Impossible d\'ajouter le prestataire: coordonnees manquantes pour vendorId=' + vendorId);
+                    }
                 }
                 // Si la fiche vendeur est ouverte, mettre à jour le badge en direct
                 try {
@@ -24044,9 +24365,33 @@
 
         // Afficher le bouton Go Live si l'utilisateur est un vendeur connecte
         function lpInitGoLiveButton() {
+            var wrapper = document.getElementById('lpGoLiveWrapper');
             var btn = document.getElementById('lpGoLiveBtn');
             if (!btn) return;
+            // Sécurité : wrapper toujours masqué par défaut (CSS), ne l'afficher que si auth OK
             try {
+                // Garde de sécurité : ne jamais afficher le bouton si l'utilisateur n'est pas authentifié
+                var _cuCheck = null;
+                try { _cuCheck = getLpCurrentUser(); } catch(e) {}
+                var _isAuth = !!(_cuCheck && String(_cuCheck.email || '').trim());
+                var _urlRole = '';
+                try { _urlRole = new URLSearchParams(window.location.search).get('lpRole') || ''; } catch(e) {}
+                // Le bouton ne doit JAMAIS s'afficher sur la carte publique (map/list) sans lpRole=vendor
+                var _curView = '';
+                try { _curView = String(currentView || '').trim(); } catch(e) {}
+                if ((_curView === 'map' || _curView === 'list' || _curView === 'fav') && _urlRole !== 'vendor' && _urlRole !== 'provider') {
+                    if (wrapper) wrapper.style.display = 'none';
+                    if (btn) btn.style.display = 'none';
+                    console.warn('[Live] Bouton Go Live NON affiche: vue publique (map/list) sans lpRole');
+                    return;
+                }
+                // L'utilisateur doit être connecté (email présent) OU avoir lpRole=vendor dans l'URL
+                if (!_isAuth && _urlRole !== 'vendor' && _urlRole !== 'provider') {
+                    if (wrapper) wrapper.style.display = 'none';
+                    if (btn) btn.style.display = 'none';
+                    console.warn('[Live] Bouton Go Live NON affiche: utilisateur non authentifie');
+                    return;
+                }
                 var vendorId = '';
                 // 1. URL params
                 try {
@@ -24110,7 +24455,6 @@
                 console.log('[Live] lpInitGoLiveButton: vendorId=', vendorId, 'isVendor=', _lpLiveIsVendor, 'active=', !_lpLiveActive);
 
                 if (vendorId && !_lpLiveActive) {
-                    btn.style.display = 'block';
                     _lpLiveVendorId = vendorId;
                     _lpLiveIsVendor = true;
                     // Definir activeVendor pour le prestataire (comme pour le vendeur)
@@ -24119,6 +24463,16 @@
                             var _matchV = (Array.isArray(VENDORS) ? VENDORS : []).find(function(x) { return String(x?.id) === String(vendorId); });
                             if (_matchV) activeVendor = _matchV;
                         } catch(e) {}
+                    }
+                    // Garde : ne pas afficher le bouton flottant si le dashboard prestataire est actif
+                    var _provSec2 = document.getElementById('providerSection');
+                    if (_provSec2 && _provSec2.style.display === 'block') {
+                        if (wrapper) wrapper.style.display = 'none';
+                        btn.style.display = 'none';
+                        console.log('[Live] Bouton Go Live masque (dashboard prestataire actif), vendorId=', vendorId);
+                    } else {
+                        if (wrapper) wrapper.style.display = 'block';
+                        btn.style.display = 'block';
                     }
                     console.log('[Live] Bouton Go Live active pour', vendorId);
                 } else if (!vendorId) {
@@ -24144,6 +24498,52 @@
             _lpLiveIsVendor = true;
 
             // Ouvrir le picker de produits d'abord
+            lpShowLiveProductPicker();
+        }
+
+        // Demarrer un live depuis le dashboard prestataire
+        async function lpStartProviderLive() {
+            if (_lpLiveActive) return;
+            var vendorId = _lpLiveVendorId;
+
+            // Source 1 : mangoo_my_provider_id (le plus direct et fiable)
+            if (!vendorId) {
+                vendorId = String(localStorage.getItem('mangoo_my_provider_id') || '').trim();
+            }
+
+            // Source 2 : getMyProviderId() (chaîne de résolution complète)
+            if (!vendorId) {
+                try { vendorId = getMyProviderId(); } catch(e) {}
+            }
+
+            // Source 3 : mangoo-current-user.vendorId
+            if (!vendorId) {
+                try {
+                    var _cu = JSON.parse(localStorage.getItem('mangoo-current-user') || '{}');
+                    vendorId = String(_cu.vendorId || '').trim();
+                } catch(e) {}
+            }
+
+            // Source 4 : URL parameter
+            if (!vendorId) {
+                try {
+                    var _params2 = new URLSearchParams(window.location.search);
+                    vendorId = _params2.get('vendor') || '';
+                } catch(_e) {}
+            }
+
+            if (!vendorId) { alert('Prestataire non identifié. Veuillez vous reconnecter.'); return; }
+
+            _lpLiveVendorId = vendorId;
+            _lpLiveIsVendor = true;
+
+            // Définir activeVendor
+            try {
+                var _mv2 = (Array.isArray(VENDORS) ? VENDORS : []).find(function(x) { return String(x?.id) === String(vendorId); });
+                if (_mv2) activeVendor = _mv2;
+            } catch(e) {}
+
+            // Ouvrir le picker de produits
             lpShowLiveProductPicker();
         }
 
@@ -24242,22 +24642,37 @@
                     }
                     var price = (typeof rawPrice === 'number' && !isNaN(rawPrice)) ? rawPrice : (p.priceCfa || 0);
                     var img = p.img || p.photo || p.image || (p.images && p.images[0]) || '';
-                    var pid = p.id || p._id || '';
-                    var isSel = _lpLiveProductPickerSelected.some(function(sp) { return (sp.id || sp._id) === pid; });
+                    var pid = String(p.id || p._id || '');
+                    var isSel = _lpLiveProductPickerSelected.some(function(sp) { return String(sp.id || sp._id || '') === pid; });
                     var item = document.createElement('div');
                     item.className = 'picker-item' + (isSel ? ' selected' : '');
                     item.setAttribute('data-pid', pid);
-                    item.innerHTML = '<img class="picker-img" src="' + lpEscapeAttr(img) + '" onerror="this.style.display=\'none\'" /><span class="picker-name">' + lpEscapeHtml(name) + '</span><span class="picker-price">' + (price > 0 ? price.toLocaleString() + ' FCFA' : 'Sur demande') + '</span>';
-                    item.onclick = function() {
-                        var idx = _lpLiveProductPickerSelected.findIndex(function(sp) { return (sp.id || sp._id) === pid; });
-                        if (idx >= 0) {
-                            _lpLiveProductPickerSelected.splice(idx, 1);
-                            item.classList.remove('selected');
-                        } else {
-                            _lpLiveProductPickerSelected.push(p);
-                            item.classList.add('selected');
+                    item.setAttribute('data-selected', isSel ? '1' : '0');
+                    item.innerHTML = '<span class="picker-check">' + (isSel ? '✓' : '') + '</span><img class="picker-img" src="' + lpEscapeAttr(img) + '" onerror="this.style.display=\'none\'" /><span class="picker-name">' + lpEscapeHtml(name) + '</span><span class="picker-price">' + (price > 0 ? price.toLocaleString() + ' FCFA' : 'Sur demande') + '</span>';
+                    item.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        try {
+                            var idx = _lpLiveProductPickerSelected.findIndex(function(sp) { return String(sp.id || sp._id || '') === pid; });
+                            console.log('[Picker] Click pid=', pid, 'idx=', idx, 'total=', _lpLiveProductPickerSelected.length);
+                            if (idx >= 0) {
+                                _lpLiveProductPickerSelected.splice(idx, 1);
+                                item.classList.remove('selected');
+                                item.setAttribute('data-selected', '0');
+                                var checkEl = item.querySelector('.picker-check');
+                                if (checkEl) checkEl.textContent = '';
+                            } else {
+                                _lpLiveProductPickerSelected.push(p);
+                                item.classList.add('selected');
+                                item.setAttribute('data-selected', '1');
+                                var checkEl2 = item.querySelector('.picker-check');
+                                if (checkEl2) checkEl2.textContent = '✓';
+                            }
+                            console.log('[Picker] Apres toggle: ' + _lpLiveProductPickerSelected.length + ' produit(s) selectionne(s)');
+                        } catch(err) {
+                            console.error('[Picker] Erreur click:', err);
                         }
-                    };
+                    });
                     listEl.appendChild(item);
                 });
 
@@ -24298,8 +24713,10 @@
             lpCloseProductPicker();
 
             var vendorId = _lpLiveVendorId;
+            console.log('[Picker] Confirm: vendorId=', vendorId, 'produits selectionnes=', _lpLiveProducts.length);
             if (!vendorId || _lpLiveProducts.length === 0) {
                 if (_lpLiveProducts.length === 0) alert('Sélectionnez au moins un produit.');
+                else if (!vendorId) alert('Prestataire non identifié. Veuillez vous reconnecter.');
                 return;
             }
 
@@ -24311,8 +24728,8 @@
                     var fullProducts = fullData.products;
                     // Fusionner les photos dans les produits sélectionnés
                     _lpLiveProducts = _lpLiveProducts.map(function(sp) {
-                        var pid = sp.id || sp._id;
-                        var full = fullProducts.find(function(fp) { return (fp.id || fp._id) === pid; });
+                        var pid = String(sp.id || sp._id || '');
+                        var full = fullProducts.find(function(fp) { return String(fp.id || fp._id || '') === pid; });
                         if (full) {
                             sp.photo = full.photo || sp.photo || '';
                             sp.img = full.img || full.photo || sp.img || '';
@@ -24322,10 +24739,99 @@
                 }
             } catch(e) { console.warn('[Live] Echec rechargement photos:', e.message); }
 
-            var productsPayload = _lpLiveProducts.map(function(p) { return { id: p.id || p._id, name: p.name || p.title, price: p.price || p.priceCfa || 0, img: p.img || p.photo || p.image || '' }; });
+            var productsPayload = _lpLiveProducts.map(function(p) { return { id: String(p.id || p._id || ''), name: p.name || p.title, price: p.price || p.priceCfa || 0, img: p.img || p.photo || p.image || '' }; });
 
             if (!_lpLiveActive) {
-                // PREMIER DEMARRAGE : activer camera + envoyer live:start
+                // PREMIER DEMARRAGE : enregistrer la presence AVANT live:start
+                // (le serveur verifie currentUser.vendorId dans handleLiveStart)
+                try { lpTryRegisterVendorPresence(); } catch(e) {}
+
+                // === AJOUTER LE PRESTATAIRE DANS VENDORS AVANT live:start ===
+                // (meme pattern que pour les shops : le vendor doit etre dans VENDORS
+                //  pour que handleVendorLiveStatus puisse mettre le badge LIVE)
+                try {
+                    // Nettoyer les doublons eventuels dans VENDORS (meme ID) avant d'ajouter
+                    try {
+                        var _seen = {};
+                        for (var _vi = VENDORS.length - 1; _vi >= 0; _vi--) {
+                            var _vid = String(VENDORS[_vi].id || '');
+                            var _vslug = String(VENDORS[_vi].slug || '');
+                            // Cle composite id|slug pour eviter les faux doublons
+                            var _vkey = (_vid || _vslug || '');
+                            if (!_vkey) continue; // ignorer les entrees sans identifiant
+                            if (_seen[_vkey]) { console.warn('[LiveBadge] Doublon VENDORS supprime:', _vkey); VENDORS.splice(_vi, 1); }
+                            else { _seen[_vkey] = true; }
+                        }
+                    } catch(e) {}
+
+                    var _provAlreadyInVendors = VENDORS.some(function(v) { return String(v.id || v.slug || '') === String(vendorId); });
+                    if (!_provAlreadyInVendors) {
+                        // Chercher les infos du prestataire
+                        var _pvName = '';
+                        var _pvLat = null;
+                        var _pvLng = null;
+                        // Source 1 (prioritaire) : activeVendor (deja defini par lpStartProviderLive)
+                        try {
+                            if (typeof activeVendor !== 'undefined' && activeVendor) {
+                                _pvName = String(activeVendor.name || '').trim();
+                                if (typeof activeVendor.lat === 'number') _pvLat = activeVendor.lat;
+                                if (typeof activeVendor.lng === 'number') _pvLng = activeVendor.lng;
+                                console.log('[LiveBadge] Infos prestataire depuis activeVendor: name=' + _pvName + ' lat=' + _pvLat + ' lng=' + _pvLng);
+                            }
+                        } catch(e) {}
+                        // Source 2 : localStorage
+                        try {
+                            if (!_pvName || _pvLat === null || _pvLng === null) {
+                                var _pvData = localStorage.getItem('mangoo_provider_services');
+                                if (!_pvData) _pvData = localStorage.getItem('mangoo_local_provider_sync_v1');
+                                if (!_pvData) {
+                                    var _pvRaw = localStorage.getItem('mangoo_providers');
+                                    if (_pvRaw) {
+                                        var _pvArr = JSON.parse(_pvRaw);
+                                        var _pvFound = _pvArr.find(function(x) { return String(x.id) === String(vendorId); });
+                                        if (_pvFound) {
+                                            if (!_pvName) _pvName = _pvFound.name || '';
+                                            if (_pvLat === null && typeof _pvFound.lat === 'number') _pvLat = _pvFound.lat;
+                                            if (_pvLng === null && typeof _pvFound.lng === 'number') _pvLng = _pvFound.lng;
+                                        }
+                                    }
+                                }
+                            }
+                        } catch(e) {}
+                        // Source 3 : VENDORS existant
+                        if (_pvLat === null || _pvLng === null) {
+                            try {
+                                var _existV = VENDORS.find(function(v) { return String(v.id) === String(vendorId); });
+                                if (_existV) {
+                                    if (!_pvName) _pvName = String(_existV.name || '').trim();
+                                    if (_pvLat === null && typeof _existV.lat === 'number') _pvLat = _existV.lat;
+                                    if (_pvLng === null && typeof _existV.lng === 'number') _pvLng = _existV.lng;
+                                }
+                            } catch(e) {}
+                        }
+                        // Fallback: utiliser l'ID comme nom, ne jamais utiliser un nom hardcode
+                        if (!_pvName) _pvName = 'Prestataire ' + vendorId;
+                        if (_pvLat !== null && _pvLng !== null) {
+                            VENDORS.push({
+                                id: vendorId,
+                                name: _pvName,
+                                slug: vendorId,
+                                lat: _pvLat,
+                                lng: _pvLng,
+                                kind: 'provider',
+                                category: '',
+                                avatar: '',
+                                photo: '',
+                                coverage: [],
+                                live: false
+                            });
+                            console.warn('🔴 [LiveBadge] Prestataire ajoute dans VENDORS avant live:start: ' + _pvName + ' lat=' + _pvLat + ' lng=' + _pvLng);
+                        } else {
+                            console.warn('🔴 [LiveBadge] Impossible d\'ajouter le prestataire dans VENDORS: pas de coordonnees');
+                        }
+                    }
+                } catch(e) { console.warn('🔴 [LiveBadge] Erreur ajout prestataire VENDORS:', e.message); }
+
                 try {
                     _lpLiveStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                     var preview = document.getElementById('lpLivePreview');
@@ -24348,15 +24854,35 @@
                         }
                     } catch(e) {}
                     // Fallback: si activeVendor est null (dashboard vendeur/prestataire), chercher via localStorage
+                    // MEME PATTERN que lpOpenVendorCommunication pour les prestataires
                     if (!vendorName || !vendorSlug) {
                         try {
-                            var shopId = localStorage.getItem('mangoo_my_shop_id') || localStorage.getItem('mangoo_my_provider_id') || '';
-                            if (shopId) {
-                                var fallbackVendor = VENDORS.find(function(v) { return String(v.id) === String(shopId); });
+                            var shopId = localStorage.getItem('mangoo_my_shop_id') || '';
+                            var providerId = localStorage.getItem('mangoo_my_provider_id') || '';
+                            var lookupId = shopId || providerId;
+                            if (lookupId) {
+                                // 1. Chercher dans VENDORS (boutiques)
+                                var fallbackVendor = VENDORS.find(function(v) { return String(v.id) === String(lookupId); });
                                 if (fallbackVendor) {
                                     if (!vendorName) vendorName = String(fallbackVendor.name || '').trim();
                                     if (!vendorSlug) vendorSlug = String(fallbackVendor.slug || fallbackVendor.id || '').trim();
-                                    console.warn('🔴 [LiveBadge] Fallback vendor trouve via localStorage: ' + vendorName + ' slug=' + vendorSlug);
+                                    console.warn('🔴 [LiveBadge] Fallback vendor trouve dans VENDORS: ' + vendorName + ' slug=' + vendorSlug);
+                                }
+                                // 2. Si prestataire non trouve dans VENDORS, chercher dans localStorage
+                                if (!fallbackVendor && providerId) {
+                                    var _pName = '';
+                                    try {
+                                        var _pData = localStorage.getItem('mangoo_provider_services');
+                                        if (!_pData) _pData = localStorage.getItem('mangoo_local_provider_sync_v1');
+                                        if (!_pData) {
+                                            var _pRaw = localStorage.getItem('mangoo_providers');
+                                            if (_pRaw) { var _pArr = JSON.parse(_pRaw); var _pf = _pArr.find(function(x) { return String(x.id) === String(providerId); }); if (_pf) _pName = _pf.name || ''; }
+                                        }
+                                    } catch(e) {}
+                                    if (!_pName) _pName = 'Mangoo Répar';
+                                    if (!vendorName) vendorName = _pName;
+                                    if (!vendorSlug) vendorSlug = providerId;
+                                    console.warn('🔴 [LiveBadge] Fallback prestataire depuis localStorage: ' + vendorName + ' slug=' + vendorSlug);
                                 }
                             }
                         } catch(e) {}
@@ -24375,6 +24901,11 @@
                 if (panel) { panel.style.display = 'flex'; }
                 var btn = document.getElementById('lpGoLiveBtn');
                 if (btn) btn.style.display = 'none';
+                var gw = document.getElementById('lpGoLiveWrapper');
+                if (gw) gw.style.display = 'none';
+
+                // Mettre à jour l'UI prestataire si applicable
+                lpUpdateProviderLiveStatus(true);
 
                 // Remplir le lien de partage
                 var link = _lpGetLiveUrl();
@@ -24435,7 +24966,23 @@
             // Cacher la carte produit
             lpHideProductCard();
 
+            lpUpdateProviderLiveStatus(false);
             lpInitGoLiveButton();
+        }
+
+        // Met à jour l'UI du dashboard prestataire quand le live démarre/s'arrête
+        function lpUpdateProviderLiveStatus(isActive) {
+            try {
+                var startBtn = document.getElementById('lp-provider-start-live-btn');
+                var statusDiv = document.getElementById('lp-provider-live-status');
+                if (isActive) {
+                    if (startBtn) startBtn.style.display = 'none';
+                    if (statusDiv) statusDiv.style.display = 'block';
+                } else {
+                    if (startBtn) startBtn.style.display = '';
+                    if (statusDiv) statusDiv.style.display = 'none';
+                }
+            } catch(e) {}
         }
 
         // Basculer la video live en plein ecran / taille normale (comme TikTok)
@@ -24748,6 +25295,15 @@
                     document.getElementById('lpLiveViewerCount').textContent = _lpLiveViewerCount;
                     var panel = document.getElementById('lpLiveVendorPanel');
                     if (panel) panel.style.display = 'flex';
+                    // Afficher automatiquement la carte pour que le prestataire voie son badge Live
+                    setTimeout(function() {
+                        try {
+                            if (_lpLiveActive && typeof lpShowMapFromProvider === 'function') {
+                                console.warn('🔴 [LiveBadge] Affichage auto de la carte apres live:started');
+                                lpShowMapFromProvider();
+                            }
+                        } catch(e) {}
+                    }, 800);
                     break;
 
                 case 'live:stopped':
@@ -25003,6 +25559,8 @@
                     // Masquer le bouton Go Live (on est client)
                     var btn = document.getElementById('lpGoLiveBtn');
                     if (btn) btn.style.display = 'none';
+                    var gw2 = document.getElementById('lpGoLiveWrapper');
+                    if (gw2) gw2.style.display = 'none';
                     // Attendre que le WebSocket soit pret puis rejoindre
                     var maxAttempts = 30;
                     var attempt = 0;
@@ -28271,18 +28829,27 @@
                 try { lpToast(`Connecte en tant que ${String(nextUser?.name || 'Utilisateur')}.`, 'ok') } catch {}
                 // Afficher le bouton Go Live si vendeur
                 if (role === 'vendor') {
-                    try { lpInitGoLiveButton() } catch(e) { console.warn('[Live] erreur init bouton apres login:', e); }
-                    // Retry apres switchView (delai pour eviter conflit UI)
-                    setTimeout(function() {
-                        try { lpInitGoLiveButton(); } catch(e) {}
-                    }, 500);
+                    // Pour les prestataires (service), ne pas afficher le bouton flottant :
+                    // le dashboard prestataire a son propre onglet Live.
+                    var _isProvider = String(nextUser?.vendorKind || '').toLowerCase() === 'service';
+                    if (!_isProvider) {
+                        try { lpInitGoLiveButton() } catch(e) { console.warn('[Live] erreur init bouton apres login:', e); }
+                        // Retry apres switchView (delai pour eviter conflit UI)
+                        setTimeout(function() {
+                            try { lpInitGoLiveButton(); } catch(e) {}
+                        }, 500);
+                    }
                     // Si prestataire, ouvrir le dashboard prestataire inline
                     setTimeout(function() {
                         try {
-                            var _pid = getMyProviderId();
-                            var _owned = lpGetOwnedProviderIds();
-                            if (_pid || _owned.length) {
-                                try { openMyProviderDashboard(); } catch(e) {}
+                            var _u = getLpCurrentUser();
+                            // N'ouvrir le dashboard prestataire QUE si vendorKind === 'service'
+                            if (_u && _u.vendorKind === 'service') {
+                                var _pid = getMyProviderId();
+                                var _owned = lpGetOwnedProviderIds();
+                                if (_pid || _owned.length) {
+                                    try { openMyProviderDashboard(); } catch(e) {}
+                                }
                             }
                         } catch(e) {}
                     }, 400);
@@ -28399,7 +28966,7 @@
         }
 
         function switchProviderTab(tabName) {
-            const allowed = ['overview', 'services', 'orders', 'communication', 'supply']
+            const allowed = ['overview', 'services', 'orders', 'communication', 'supply', 'live']
             const next = allowed.includes(String(tabName || '')) ? String(tabName) : 'overview'
 
             // Masquer le dashboard vendeur
@@ -28420,6 +28987,9 @@
             }
             if (next === 'services') {
                 try { refreshProviderServicesPane() } catch {}
+            }
+            if (next === 'live') {
+                try { lpInitGoLiveButton() } catch {}
             }
         }
 
