@@ -220,6 +220,13 @@ app.use((error: Error, _req: Request, res: Response, _next: NextFunction) => {
 })
 
 /**
+ * Servir mangoo-local.html directement (evite le proxy Vite defaillant)
+ */
+app.get('/mangoo-local.html', (_req: Request, res: Response) => {
+  res.sendFile(path.resolve(publicDir, 'mangoo-local.html'));
+});
+
+/**
  * 404 handler
  */
 app.use((req: Request, res: Response) => {
