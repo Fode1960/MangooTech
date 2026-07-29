@@ -15978,14 +15978,10 @@
                     }
                 }
                 console.warn('🔴 [LiveBadge] RECU vendor-status: vendorId=' + vendorId + ' live=' + live + ' | VENDORS.length=' + (typeof VENDORS !== 'undefined' ? VENDORS.length : 'undefined'));
-                // Mettre a jour TOUS les vendors correspondants (pas de break : eliminer les doublons)
+                // Chercher par ID exact, slug, ou nom (v1 : break après premier match = un seul vendor mis à jour)
                 var dataVendorSlug = String(data.vendorSlug || '').trim();
                 var dataVendorName = String(data.vendorName || '').trim().toLowerCase();
-                var broadcastLat = typeof data.lat === 'number' ? data.lat : null;
-                var broadcastLng = typeof data.lng === 'number' ? data.lng : null;
-                var broadcastKind = String(data.kind || '').trim();
-                var broadcastCategory = String(data.category || '').trim();
-                var matchedIndices = [];
+                var found = false;
                 for (var i = 0; i < VENDORS.length; i++) {
                     var v = VENDORS[i];
                     // Ignorer le marqueur user_me (position utilisateur, pas un vrai vendor)
@@ -15993,32 +15989,18 @@
                     var vid = String(v.id || v.slug || '').trim();
                     var vSlug = String(v.slug || '').trim();
                     var vName = String(v.name || '').trim().toLowerCase();
+                    // Match: ID exact, slug exact, ou nom exact (insensible à la casse)
                     if (vid === vendorId || vSlug === vendorId ||
                         (dataVendorSlug && vSlug === dataVendorSlug) ||
                         (dataVendorName && vName === dataVendorName)) {
                         VENDORS[i].live = live;
-                        if (broadcastLat !== null && broadcastLng !== null) {
-                            VENDORS[i].lat = broadcastLat;
-                            VENDORS[i].lng = broadcastLng;
-                        }
-                        if (broadcastKind) VENDORS[i].kind = broadcastKind;
-                        if (broadcastCategory) VENDORS[i].category = broadcastCategory;
-                        matchedIndices.push(i);
-                        console.warn('🔴 [LiveBadge] Vendor ' + VENDORS[i].name + ' (id=' + vid + ') live=' + live + ' lat=' + VENDORS[i].lat + ' lng=' + VENDORS[i].lng);
-                    }
-                }
-                var found = matchedIndices.length > 0;
-                // Supprimer les doublons (garder seulement le premier)
-                if (matchedIndices.length > 1) {
-                    console.warn('🔴 [LiveBadge] ' + matchedIndices.length + ' doublons pour vendorId=' + vendorId + ', suppression...');
-                    for (var d = matchedIndices.length - 1; d >= 1; d--) {
-                        VENDORS.splice(matchedIndices[d], 1);
+                        found = true;
+                        console.warn('🔴 [LiveBadge] Vendor ' + VENDORS[i].name + ' (id=' + vid + ' slug=' + vSlug + ') live=' + live);
+                        break;  // v1 : UN SEUL vendor, pas de déduplication risquée
                     }
                 }
                 if (!found) {
-                    // Vendor/pas dans VENDORS : ne pas ajouter dynamiquement.
-                    // Le prestataire doit etre charge dans VENDORS via le chargement normal (comme les shops).
-                    console.warn('[LiveBadge] Vendor ' + vendorId + ' non trouve dans VENDORS — badge LIVE non affiche');
+                    console.warn('🔴 [LiveBadge] AUCUN vendor trouve pour vendorId=' + vendorId);
                 }
                 // Si la fiche vendeur est ouverte, mettre à jour le badge en direct
                 try {
