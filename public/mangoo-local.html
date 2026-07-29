@@ -10763,68 +10763,11 @@
         }
 
         function renderVendorsOnMap(vendors) {
-            // AUDIT TRAIL — identifiant unique par appel
-            var _renderId = 'R' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
-            // 1. Compter les marqueurs vendor AVANT nettoyage
-            var _beforeCount = 0;
-            try {
-                map.eachLayer(function(layer) { if (layer instanceof L.Marker && layer._lpVendorMarker) _beforeCount++; });
-            } catch(e) {}
-            console.warn('🔴 [Map:' + _renderId + '] AVANT nettoyage: ' + _beforeCount + ' marqueurs _lpVendorMarker sur la carte');
-            // Nettoyage RADICAL : parcourir tous les layers de la carte pour virer
-            // les marqueurs vendor (y compris les zombies créés sur carte cachée)
-            var _removedCount = 0;
-            try {
-                map.eachLayer(function(layer) {
-                    if (layer instanceof L.Marker && layer._lpVendorMarker) {
-                        map.removeLayer(layer);
-                        _removedCount++;
-                    }
-                });
-            } catch(e) { console.warn('🔴 [Map:' + _renderId + '] Erreur nettoyage eachLayer:', e.message); }
-            console.warn('🔴 [Map:' + _renderId + '] Nettoyage eachLayer: ' + _removedCount + ' marqueurs retires');
-            // Nettoyage classique via currentMarkers (fallback)
-            if (window.currentMarkers && window.currentMarkers.length > 0) {
-                console.warn('🔴 [Map:' + _renderId + '] Nettoyage currentMarkers: ' + window.currentMarkers.length + ' marqueurs');
-                window.currentMarkers.forEach(function(m) { try { map.removeLayer(m); } catch(e) {} });
+            // Clear existing markers
+            if (window.currentMarkers) {
+                window.currentMarkers.forEach(m => map.removeLayer(m));
             }
             window.currentMarkers = [];
-            // Déduplication renforcée : vérifier les correspondances croisées id/slug
-            // (ex: entrée1 id="1780950564842" slug=""  et  entrée2 id="mangoo-elect" slug="1780950564842")
-            var dedupSeenIds = {};       // id → true
-            var dedupSeenSlugs = {};     // slug → true
-            var uniqueVendors = [];
-            for (var _ri = 0; _ri < vendors.length; _ri++) {
-                var _rvId = String(vendors[_ri].id || '').trim();
-                var _rvSlug = String(vendors[_ri].slug || '').trim();
-                var _rvName = String(vendors[_ri].name || '').trim().toLowerCase();
-                var isDup = false;
-                var dupReason = '';
-                // Vérifier si l'ID ou le slug est déjà connu (direct ou croisé)
-                if (_rvId && (dedupSeenIds[_rvId] || dedupSeenSlugs[_rvId])) { isDup = true; dupReason = 'id/seenAsIdOrSlug'; }
-                else if (_rvSlug && (dedupSeenSlugs[_rvSlug] || dedupSeenIds[_rvSlug])) { isDup = true; dupReason = 'slug/seenAsIdOrSlug'; }
-                // Vérifier si le nom + coordonnées correspondent à une entrée déjà gardée (même prestataire, clé différente)
-                if (!isDup && _rvName && vendors[_ri].lat != null && vendors[_ri].lng != null) {
-                    for (var _uj = 0; _uj < uniqueVendors.length; _uj++) {
-                        var _uv = uniqueVendors[_uj];
-                        var _uvName = String(_uv.name || '').trim().toLowerCase();
-                        if (_uvName === _rvName && _uv.lat === vendors[_ri].lat && _uv.lng === vendors[_ri].lng) {
-                            isDup = true; dupReason = 'name+coords(match entry '+_uj+')'; break;
-                        }
-                    }
-                }
-                if (!isDup) {
-                    if (_rvId) dedupSeenIds[_rvId] = true;
-                    if (_rvSlug) dedupSeenSlugs[_rvSlug] = true;
-                    // Ajouter aussi l'ID au set des slugs et vice-versa pour les correspondances croisées futures
-                    if (_rvId && !dedupSeenSlugs[_rvId]) dedupSeenSlugs[_rvId] = true;
-                    if (_rvSlug && !dedupSeenIds[_rvSlug]) dedupSeenIds[_rvSlug] = true;
-                    uniqueVendors.push(vendors[_ri]);
-                } else {
-                    console.warn('[Map] Doublon VENDORS ignoré (renforcé): id=' + _rvId + ' slug=' + _rvSlug + ' name=' + _rvName + ' raison=' + dupReason);
-                }
-            }
-            vendors = uniqueVendors;
 
             // Add Promo Style
             if (!document.getElementById('promo-style')) {
@@ -10938,9 +10881,6 @@
             const newSet = new Set(newCandidates);
 
             vendors.forEach(vendor => {
-                // Ignorer le marqueur "user_me" (position utilisateur), il n'est pas un vrai prestataire
-                // et crée un badge fantôme quand le nom du user matche un vendor réel
-                if (String(vendor?.id || '') === 'user_me') return;
                 const lat = Number(vendor?.lat);
                 const lng = Number(vendor?.lng);
                 if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
@@ -11114,7 +11054,6 @@
                     icon: icon,
                     zIndexOffset: vendor.live || promoFeatured || newShown || sponsoredFeatured ? 1000 : 100
                 }).addTo(map);
-                marker._lpVendorMarker = true;  // tag pour nettoyage radical anti-zombie
 
                 if (sponsoredFeatured) recordAdImpression(vendor.id);
 
@@ -11145,16 +11084,7 @@
                 });
 
                 window.currentMarkers.push(marker);
-            }); // fin vendors.forEach
-
-            // AUDIT TRAIL : compter les marqueurs créés et les vendors live
-            var _liveVendorsRendered = [];
-            try {
-                for (var _ai = 0; _ai < vendors.length; _ai++) {
-                    if (vendors[_ai].live) _liveVendorsRendered.push(vendors[_ai].name + '#' + vendors[_ai].id);
-                }
-            } catch(e) {}
-            console.warn('🔴 [Map:' + _renderId + '] FIN: ' + window.currentMarkers.length + ' marqueurs créés, live=[' + _liveVendorsRendered.join(', ') + ']');
+            });
         }
 
         // === STORIES RENDERER ===
@@ -11629,16 +11559,12 @@
                 if (simplePanel) simplePanel.style.display = 'none';
                 if (simpleReopen) simpleReopen.style.display = 'none';
 
-                // 4. Forcer le recalcul de la carte Leaflet (était masquée) + re-rendu des badges
+                // 4. Forcer le recalcul de la carte Leaflet (était masquée)
                 try {
                     if (typeof map !== 'undefined' && map) { map.invalidateSize(); }
                 } catch(e) {}
-                try {
-                    if (typeof renderVendorsOnMap === 'function' && typeof VENDORS !== 'undefined') {
-                        console.warn('🔴 [LiveBadge] Re-rendu MAP depuis Voir sur la carte (' + VENDORS.length + ' vendors)');
-                        renderVendorsOnMap(VENDORS);
-                    }
-                } catch(e) {}
+                // IMPORTANT : ne pas appeler renderVendorsOnMap ici - deja fait par handleVendorLiveStatus
+                // (sinon double rendu = double badge)
 
                 // Recentrer sur le prestataire
                 try {
@@ -15990,23 +15916,14 @@
                 var vendorId = String(data.vendorId || '').trim();
                 var live = Boolean(data.live);
                 if (!vendorId) return;
-                // Protection : ignorer live=false si ce client a un live actif pour ce vendor
-                // (evite qu'un live:stop parasite ou un broadcast d'un autre client n'eteigne le badge)
-                if (!live && typeof _lpLiveActive !== 'undefined' && _lpLiveActive && typeof _lpLiveVendorId !== 'undefined') {
-                    if (String(_lpLiveVendorId) === vendorId) {
-                        console.warn('🔴 [LiveBadge] live=false IGNORE (live local actif pour vendorId=' + vendorId + ')');
-                        return;
-                    }
-                }
                 console.warn('🔴 [LiveBadge] RECU vendor-status: vendorId=' + vendorId + ' live=' + live + ' | VENDORS.length=' + (typeof VENDORS !== 'undefined' ? VENDORS.length : 'undefined'));
-                // Chercher par ID exact, slug, ou nom (v1 : break après premier match = un seul vendor mis à jour)
+                // Mettre à jour le vendor dans l'array VENDORS
+                // Chercher par ID exact, slug, ou nom (priorité aux infos du broadcast)
                 var dataVendorSlug = String(data.vendorSlug || '').trim();
                 var dataVendorName = String(data.vendorName || '').trim().toLowerCase();
                 var found = false;
                 for (var i = 0; i < VENDORS.length; i++) {
                     var v = VENDORS[i];
-                    // Ignorer le marqueur user_me (position utilisateur, pas un vrai vendor)
-                    if (String(v.id || '') === 'user_me' || v.isUserOwned) continue;
                     var vid = String(v.id || v.slug || '').trim();
                     var vSlug = String(v.slug || '').trim();
                     var vName = String(v.name || '').trim().toLowerCase();
@@ -16017,11 +15934,11 @@
                         VENDORS[i].live = live;
                         found = true;
                         console.warn('🔴 [LiveBadge] Vendor ' + VENDORS[i].name + ' (id=' + vid + ' slug=' + vSlug + ') live=' + live);
-                        break;  // v1 : UN SEUL vendor, pas de déduplication risquée
+                        break;
                     }
                 }
                 if (!found) {
-                    console.warn('🔴 [LiveBadge] AUCUN vendor trouve pour vendorId=' + vendorId);
+                    console.warn('🔴 [LiveBadge] AUCUN vendor trouve pour vendorId=' + vendorId + ' | IDs VENDORS: ' + VENDORS.map(function(v){return v.id}).join(', '));
                 }
                 // Si la fiche vendeur est ouverte, mettre à jour le badge en direct
                 try {
@@ -16044,24 +15961,11 @@
                     }
                 } catch {}
                 // Re-rendre la vue courante pour mettre a jour les badges sur les cartes
-                // IMPORTANT : ne pas render sur une carte cachee (ex: dashboard prestataire ouvert)
-                // car map.removeLayer() ne fonctionne pas -> marqueurs zombies -> double badge
-                var _mapVisible = true;
-                try {
-                    var _mapDiv = document.getElementById('map');
-                    if (_mapDiv) {
-                        var _mapStyle = window.getComputedStyle(_mapDiv);
-                        _mapVisible = _mapStyle.display !== 'none' && _mapStyle.visibility !== 'hidden';
-                    }
-                } catch(e) {}
+                // Toujours re-rendre map ET list (meme si la vue n'est pas active)
                 try {
                     if (typeof renderVendorsOnMap === 'function') {
-                        if (_mapVisible) {
-                            console.warn('🔴 [LiveBadge] Re-rendu MAP (carte visible)');
-                            renderVendorsOnMap(VENDORS);
-                        } else {
-                            console.warn('🔴 [LiveBadge] Re-rendu MAP DIFFERE (carte cachee)');
-                        }
+                        console.warn('🔴 [LiveBadge] Re-rendu MAP force avec VENDORS (' + (typeof VENDORS !== 'undefined' ? VENDORS.length : 0) + ' vendors)');
+                        renderVendorsOnMap(VENDORS);
                     }
                 } catch(e) { console.warn('[LiveBadge] Erreur re-rendu map:', e.message); }
                 try {
@@ -24727,15 +24631,32 @@
             var productsPayload = _lpLiveProducts.map(function(p) { return { id: String(p.id || p._id || ''), name: p.name || p.title, price: p.price || p.priceCfa || 0, img: p.img || p.photo || p.image || '' }; });
 
             if (!_lpLiveActive) {
-                // PREMIER DEMARRAGE : enregistrer la presence AVANT live:start
-                // (le serveur verifie currentUser.vendorId dans handleLiveStart)
-                try { lpTryRegisterVendorPresence(); } catch(e) {}
-
+                // PREMIER DEMARRAGE : activer camera + envoyer live:start
                 try {
                     _lpLiveStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                     var preview = document.getElementById('lpLivePreview');
                     if (preview) { preview.srcObject = _lpLiveStream; }
                 } catch(e) { console.warn('[Live] Camera non disponible:', e.message); }
+
+                // Afficher la carte AVANT d'envoyer live:start (sinon renderVendorsOnMap
+                // cree des marqueurs zombies sur carte cachee -> double badge)
+                try {
+                    var _provSec = document.getElementById('providerSection');
+                    if (_provSec && _provSec.style.display !== 'none') {
+                        // Cacher le dashboard prestataire
+                        _provSec.style.display = 'none';
+                        // Afficher la carte
+                        var _mapDiv2 = document.getElementById('map');
+                        if (_mapDiv2) { _mapDiv2.style.display = 'block'; }
+                        var _acctDiv2 = document.getElementById('accountView');
+                        if (_acctDiv2) _acctDiv2.style.display = 'none';
+                        var _listDiv2 = document.getElementById('listView');
+                        if (_listDiv2) _listDiv2.style.display = 'none';
+                        try { currentView = 'map'; window.currentView = 'map'; } catch(e) {}
+                        try { if (typeof map !== 'undefined' && map) { map.invalidateSize(); } } catch(e) {}
+                        console.warn('🔴 [LiveBadge] Carte affichee AVANT live:start');
+                    }
+                } catch(e) {}
 
                 if (typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN) {
                     var liveMsg = {
@@ -24752,36 +24673,16 @@
                             vendorSlug = String(activeVendor.slug || activeVendor.id || '').trim();
                         }
                     } catch(e) {}
-                    // Fallback: si activeVendor est null (dashboard vendeur/prestataire), chercher via localStorage
-                    // MEME PATTERN que lpOpenVendorCommunication pour les prestataires
+                    // Fallback: si activeVendor est null (dashboard vendeur), chercher via localStorage
                     if (!vendorName || !vendorSlug) {
                         try {
                             var shopId = localStorage.getItem('mangoo_my_shop_id') || '';
-                            var providerId = localStorage.getItem('mangoo_my_provider_id') || '';
-                            var lookupId = shopId || providerId;
-                            if (lookupId) {
-                                // 1. Chercher dans VENDORS (boutiques)
-                                var fallbackVendor = VENDORS.find(function(v) { return String(v.id) === String(lookupId); });
+                            if (shopId) {
+                                var fallbackVendor = VENDORS.find(function(v) { return String(v.id) === String(shopId); });
                                 if (fallbackVendor) {
                                     if (!vendorName) vendorName = String(fallbackVendor.name || '').trim();
                                     if (!vendorSlug) vendorSlug = String(fallbackVendor.slug || fallbackVendor.id || '').trim();
-                                    console.warn('🔴 [LiveBadge] Fallback vendor trouve dans VENDORS: ' + vendorName + ' slug=' + vendorSlug);
-                                }
-                                // 2. Si prestataire non trouve dans VENDORS, chercher dans localStorage
-                                if (!fallbackVendor && providerId) {
-                                    var _pName = '';
-                                    try {
-                                        var _pData = localStorage.getItem('mangoo_provider_services');
-                                        if (!_pData) _pData = localStorage.getItem('mangoo_local_provider_sync_v1');
-                                        if (!_pData) {
-                                            var _pRaw = localStorage.getItem('mangoo_providers');
-                                            if (_pRaw) { var _pArr = JSON.parse(_pRaw); var _pf = _pArr.find(function(x) { return String(x.id) === String(providerId); }); if (_pf) _pName = _pf.name || ''; }
-                                        }
-                                    } catch(e) {}
-                                    if (!_pName) _pName = 'Mangoo Répar';
-                                    if (!vendorName) vendorName = _pName;
-                                    if (!vendorSlug) vendorSlug = providerId;
-                                    console.warn('🔴 [LiveBadge] Fallback prestataire depuis localStorage: ' + vendorName + ' slug=' + vendorSlug);
+                                    console.warn('🔴 [LiveBadge] Fallback vendor trouve via localStorage: ' + vendorName + ' slug=' + vendorSlug);
                                 }
                             }
                         } catch(e) {}
@@ -24803,7 +24704,7 @@
                 var gw = document.getElementById('lpGoLiveWrapper');
                 if (gw) gw.style.display = 'none';
 
-                // Mettre à jour l'UI prestataire si applicable
+                // Mettre à jour l'UI prestataire
                 lpUpdateProviderLiveStatus(true);
 
                 // Remplir le lien de partage
@@ -25194,15 +25095,6 @@
                     document.getElementById('lpLiveViewerCount').textContent = _lpLiveViewerCount;
                     var panel = document.getElementById('lpLiveVendorPanel');
                     if (panel) panel.style.display = 'flex';
-                    // Afficher automatiquement la carte pour que le prestataire voie son badge Live
-                    setTimeout(function() {
-                        try {
-                            if (_lpLiveActive && typeof lpShowMapFromProvider === 'function') {
-                                console.warn('🔴 [LiveBadge] Affichage auto de la carte apres live:started');
-                                lpShowMapFromProvider();
-                            }
-                        } catch(e) {}
-                    }, 800);
                     break;
 
                 case 'live:stopped':
