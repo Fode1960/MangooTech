@@ -24638,6 +24638,10 @@
                     if (preview) { preview.srcObject = _lpLiveStream; }
                 } catch(e) { console.warn('[Live] Camera non disponible:', e.message); }
 
+                // Enregistrer la presence WebSocket AVANT live:start
+                // (le serveur vérifie currentUser.vendorId dans handleLiveStart)
+                try { lpTryRegisterVendorPresence(); } catch(e) {}
+
                 // Afficher la carte AVANT d'envoyer live:start (sinon renderVendorsOnMap
                 // cree des marqueurs zombies sur carte cachee -> double badge)
                 try {
