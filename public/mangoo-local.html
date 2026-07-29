@@ -10763,17 +10763,29 @@
         }
 
         function renderVendorsOnMap(vendors) {
+            // AUDIT TRAIL — identifiant unique par appel
+            var _renderId = 'R' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+            // 1. Compter les marqueurs vendor AVANT nettoyage
+            var _beforeCount = 0;
+            try {
+                map.eachLayer(function(layer) { if (layer instanceof L.Marker && layer._lpVendorMarker) _beforeCount++; });
+            } catch(e) {}
+            console.warn('🔴 [Map:' + _renderId + '] AVANT nettoyage: ' + _beforeCount + ' marqueurs _lpVendorMarker sur la carte');
             // Nettoyage RADICAL : parcourir tous les layers de la carte pour virer
             // les marqueurs vendor (y compris les zombies créés sur carte cachée)
+            var _removedCount = 0;
             try {
                 map.eachLayer(function(layer) {
                     if (layer instanceof L.Marker && layer._lpVendorMarker) {
                         map.removeLayer(layer);
+                        _removedCount++;
                     }
                 });
-            } catch(e) {}
+            } catch(e) { console.warn('🔴 [Map:' + _renderId + '] Erreur nettoyage eachLayer:', e.message); }
+            console.warn('🔴 [Map:' + _renderId + '] Nettoyage eachLayer: ' + _removedCount + ' marqueurs retires');
             // Nettoyage classique via currentMarkers (fallback)
-            if (window.currentMarkers) {
+            if (window.currentMarkers && window.currentMarkers.length > 0) {
+                console.warn('🔴 [Map:' + _renderId + '] Nettoyage currentMarkers: ' + window.currentMarkers.length + ' marqueurs');
                 window.currentMarkers.forEach(function(m) { try { map.removeLayer(m); } catch(e) {} });
             }
             window.currentMarkers = [];
@@ -11133,7 +11145,16 @@
                 });
 
                 window.currentMarkers.push(marker);
-            });
+            }); // fin vendors.forEach
+
+            // AUDIT TRAIL : compter les marqueurs créés et les vendors live
+            var _liveVendorsRendered = [];
+            try {
+                for (var _ai = 0; _ai < vendors.length; _ai++) {
+                    if (vendors[_ai].live) _liveVendorsRendered.push(vendors[_ai].name + '#' + vendors[_ai].id);
+                }
+            } catch(e) {}
+            console.warn('🔴 [Map:' + _renderId + '] FIN: ' + window.currentMarkers.length + ' marqueurs créés, live=[' + _liveVendorsRendered.join(', ') + ']');
         }
 
         // === STORIES RENDERER ===
