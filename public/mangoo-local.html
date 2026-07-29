@@ -10768,6 +10768,24 @@
                 window.currentMarkers.forEach(m => map.removeLayer(m));
             }
             window.currentMarkers = [];
+            window._lpRenderedVendorKeys = new Set(); // Reset dedup pour ce rendu
+
+            // Déduplication par nom (cas de vendors en double dans VENDORS avec IDs différents)
+            var seenNames = new Set();
+            var dedupedVendors = [];
+            for (var di = 0; di < vendors.length; di++) {
+                var dv = vendors[di];
+                var dvId = String(dv?.id || '');
+                if (dvId === 'user_me' || dv?.isUserOwned) { dedupedVendors.push(dv); continue; }
+                var dvName = String(dv?.name || '').trim().toLowerCase();
+                if (!dvName) { dedupedVendors.push(dv); continue; }
+                if (!seenNames.has(dvName)) {
+                    seenNames.add(dvName);
+                    dedupedVendors.push(dv);
+                }
+                // else: doublon nom, ignoré
+            }
+            vendors = dedupedVendors;
 
             // Add Promo Style
             if (!document.getElementById('promo-style')) {
@@ -10886,6 +10904,12 @@
                 const lat = Number(vendor?.lat);
                 const lng = Number(vendor?.lng);
                 if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+                // Déduplication par coordonnées : un seul marqueur par position
+                // (evite les doublons quand un vendor apparait en double dans VENDORS avec des IDs differents)
+                var _dupKey = lat.toFixed(6) + '|' + lng.toFixed(6);
+                if (!window._lpRenderedVendorKeys) window._lpRenderedVendorKeys = new Set();
+                if (window._lpRenderedVendorKeys.has(_dupKey)) return;
+                window._lpRenderedVendorKeys.add(_dupKey);
                 // Determine style based on status
                 let borderColor = '#1b5e20';
                 let bgColor = '#fff';
@@ -11015,7 +11039,7 @@
                                 overflow: visible;
                             ">
                                 <img src="${lpResolveVendorAvatar(vendor)}" style="width:44px; height:44px; border-radius:50%; object-fit:cover;">
-                                ${vendor.live ? '<div style="position:absolute; bottom:-6px; left:50%; transform:translateX(-50%); background:#d63031; color:white; font-size:8px; padding:1px 6px; border-radius:4px; font-weight:900; white-space:nowrap; z-index:10; box-shadow:0 2px 6px rgba(0,0,0,0.4);">LIVE</div>' : ''}
+                                
                                 ${badge2}
                                 ${kindBadge}
                                 ${sponsoredBadge}
@@ -11238,17 +11262,40 @@
 
         function getMyProviderId() {
             try {
+                // PRIORITÉ 1 : mangoo_my_provider_id (défini explicitement par login/claim/create)
+                // C'est la source la plus fiable car elle reflète le dernier prestataire sélectionné
+                const raw = localStorage.getItem('mangoo_my_provider_id');
+                if (raw) {
+                    const id = String(raw).trim();
+                    if (id) return id;
+                }
+            } catch {}
+            // PRIORITÉ 2 : mangoo-current-user.vendorId (dernier login actif)
+            try {
+                var _cu3 = JSON.parse(localStorage.getItem('mangoo-current-user') || '{}');
+                var _vid3 = String(_cu3.vendorId || '').trim();
+                var _vkind3 = String(_cu3.vendorKind || '').trim().toLowerCase();
+                if (_vid3 && _vkind3 === 'service') return _vid3;
+            } catch {}
+            try {
                 const scoped = lpGetStoredProviderIdsForCurrentUser()
                 if (scoped.length === 1) return String(scoped[0] || '').trim()
                 // Si plusieurs IDs scopés, on vérifie le owned (plus fiable via VENDORS)
                 const owned = lpGetOwnedProviderIds()
                 if (owned.length === 1) return String(owned[0] || '').trim()
-                if (owned.length > 1) return ''
-                const raw = localStorage.getItem('mangoo_my_provider_id');
-                return raw ? String(raw) : '';
-            } catch {
-                return '';
-            }
+                if (owned.length > 1) {
+                    // Plusieurs prestataires : essayer VENDORS pour trouver le bon
+                    // Priorité : le dernier vendorId du current-user, puis le premier trouvé dans VENDORS
+                    try {
+                        var _cu4 = JSON.parse(localStorage.getItem('mangoo-current-user') || '{}');
+                        var _vid4 = String(_cu4.vendorId || '').trim();
+                        if (_vid4 && owned.indexOf(_vid4) >= 0) return _vid4;
+                    } catch {}
+                    // Fallback : retourner le premier owned (le dashboard identifiera le bon plus tard)
+                    return String(owned[0] || '').trim();
+                }
+            } catch {}
+            return '';
         }
 
         function lpNormalizeEmail(value) {
@@ -11506,6 +11553,32 @@
                         actDiv.style.marginTop = '18px';
                         actDiv.innerHTML = '<div class="action-row" onclick="lpDisconnectProvider()"><span>🧰 Quitter mon compte</span><span class="arrow">›</span></div><div class="action-row" style="color:#d63031;" onclick="lpLogout()"><span>🚪 Déconnexion</span><span class="arrow">›</span></div>';
                         provSec.appendChild(actDiv);
+                    }
+                } catch(e) {}
+
+                // Définir activeVendor pour le prestataire actif (evite les incohérences Chat/Badge/Produits)
+                try {
+                    var _pid3 = getMyProviderId();
+                    if (_pid3) {
+                        var _pv3 = (Array.isArray(VENDORS) ? VENDORS : []).find(function(x) { return String(x?.id) === String(_pid3); });
+                        if (_pv3) {
+                            activeVendor = _pv3;
+                            console.warn('[Provider] activeVendor defini sur:', _pv3.name, 'id=', _pid3);
+                        } else {
+                            // Prestataire non trouvé dans VENDORS, créer un objet minimal
+                            var _pName3 = '';
+                            try {
+                                var _pData3 = localStorage.getItem('mangoo_provider_services');
+                                if (!_pData3) _pData3 = localStorage.getItem('mangoo_local_provider_sync_v1');
+                                if (!_pData3) {
+                                    var _pRaw3 = localStorage.getItem('mangoo_providers');
+                                    if (_pRaw3) { var _pArr3 = JSON.parse(_pRaw3); var _pf3 = _pArr3.find(function(x) { return String(x.id) === String(_pid3); }); if (_pf3) _pName3 = _pf3.name || ''; }
+                                }
+                            } catch(e2) {}
+                            if (!_pName3) _pName3 = 'Mangoo Répar';
+                            activeVendor = { id: _pid3, name: _pName3, kind: 'provider', slug: _pid3, avatar: '', photo: '', category: '', coverage: [] };
+                            console.warn('[Provider] activeVendor cree (fallback):', _pName3, 'id=', _pid3);
+                        }
                     }
                 } catch(e) {}
 
@@ -15519,6 +15592,26 @@
                     if (_forceRole2 !== 'vendor' && _forceRole2 !== 'provider') return ''; // Pas de vendorId pour les non-connectés
                 }
             } catch {}
+            // PRIORITÉ PROVIDER : si dashboard prestataire actif, prioriser mangoo_my_provider_id
+            try {
+                var _psProv2 = document.getElementById('providerSection');
+                if (_psProv2 && _psProv2.style.display === 'block') {
+                    var _provId2 = '';
+                    try { _provId2 = getMyProviderId(); } catch(e2) {}
+                    if (!_provId2) _provId2 = String(localStorage.getItem('mangoo_my_provider_id') || '').trim();
+                    if (_provId2) { console.log('[WS-vendorId] Via provider dashboard:', _provId2); return _provId2; }
+                }
+            } catch {}
+            // PRIORITÉ PROVIDER : si lpRole=provider, utiliser mangoo_my_provider_id d'abord
+            try {
+                var _urlRole3 = new URLSearchParams(window.location.search).get('lpRole') || '';
+                if (_urlRole3 === 'provider') {
+                    var _provId3 = '';
+                    try { _provId3 = getMyProviderId(); } catch(e3) {}
+                    if (!_provId3) _provId3 = String(localStorage.getItem('mangoo_my_provider_id') || '').trim();
+                    if (_provId3) { console.log('[WS-vendorId] Via lpRole=provider + getMyProviderId:', _provId3); return _provId3; }
+                }
+            } catch {}
             // Try multiple sources to find the vendor's shop ID
             try {
                 const pref = String(typeof lpGetPreferredShopAccountId === 'function' ? (lpGetPreferredShopAccountId() || '') : '').trim();
@@ -15535,7 +15628,7 @@
             // Fallback direct: mangoo_my_shop_id (ne necessite pas lpIsOwnedShopVendor qui echoue sur domaine frais)
             try {
                 const qsVendor = new URLSearchParams(window.location.search).get('lpRole');
-                if (qsVendor === 'vendor' || qsVendor === 'provider') {
+                if (qsVendor === 'vendor') {
                     const myShopId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
                     if (myShopId) { console.log('[WS-vendorId] Via localStorage + lpRole:', myShopId); return myShopId; }
                 }
@@ -15918,12 +16011,12 @@
                 var vendorId = String(data.vendorId || '').trim();
                 var live = Boolean(data.live);
                 if (!vendorId) return;
-                console.warn('🔴 [LiveBadge] RECU vendor-status: vendorId=' + vendorId + ' live=' + live + ' | VENDORS.length=' + (typeof VENDORS !== 'undefined' ? VENDORS.length : 'undefined'));
                 // Mettre à jour le vendor dans l'array VENDORS
                 // Chercher par ID exact, slug, ou nom (priorité aux infos du broadcast)
                 var dataVendorSlug = String(data.vendorSlug || '').trim();
                 var dataVendorName = String(data.vendorName || '').trim().toLowerCase();
                 var found = false;
+                var changed = false; // Evite les doubles badges
                 for (var i = 0; i < VENDORS.length; i++) {
                     var v = VENDORS[i];
                     // Ignorer le marqueur user_me (position utilisateur) - evite badge fantome
@@ -15935,14 +16028,13 @@
                     if (vid === vendorId || vSlug === vendorId ||
                         (dataVendorSlug && vSlug === dataVendorSlug) ||
                         (dataVendorName && vName === dataVendorName)) {
-                        VENDORS[i].live = live;
+                        if (VENDORS[i].live !== live) {
+                            VENDORS[i].live = live;
+                            changed = true;
+                        }
                         found = true;
-                        console.warn('🔴 [LiveBadge] Vendor ' + VENDORS[i].name + ' (id=' + vid + ' slug=' + vSlug + ') live=' + live);
                         break;
                     }
-                }
-                if (!found) {
-                    console.warn('🔴 [LiveBadge] AUCUN vendor trouve pour vendorId=' + vendorId + ' | IDs VENDORS: ' + VENDORS.map(function(v){return v.id}).join(', '));
                 }
                 // Si la fiche vendeur est ouverte, mettre à jour le badge en direct
                 try {
@@ -15964,21 +16056,20 @@
                         }
                     }
                 } catch {}
-                // Re-rendre la vue courante pour mettre a jour les badges sur les cartes
-                // Toujours re-rendre map ET list (meme si la vue n'est pas active)
-                try {
-                    if (typeof renderVendorsOnMap === 'function') {
-                        console.warn('🔴 [LiveBadge] Re-rendu MAP force avec VENDORS (' + (typeof VENDORS !== 'undefined' ? VENDORS.length : 0) + ' vendors)');
-                        renderVendorsOnMap(VENDORS);
-                    }
-                } catch(e) { console.warn('[LiveBadge] Erreur re-rendu map:', e.message); }
-                try {
-                    if (typeof renderListView === 'function') {
-                        console.warn('🔴 [LiveBadge] Re-rendu LIST force avec VENDORS (' + (typeof VENDORS !== 'undefined' ? VENDORS.length : 0) + ' vendors)');
-                        renderListView(VENDORS);
-                    }
-                } catch(e) { console.warn('[LiveBadge] Erreur re-rendu list:', e.message); }
-            } catch(e) { console.warn('[LiveBadge] Erreur:', e.message); }
+                // Ne re-rendre que si le statut a changé (evite les doubles badges)
+                if (changed) {
+                    try {
+                        if (typeof renderVendorsOnMap === 'function') {
+                            renderVendorsOnMap(VENDORS);
+                        }
+                    } catch(e) {}
+                    try {
+                        if (typeof renderListView === 'function') {
+                            renderListView(VENDORS);
+                        }
+                    } catch(e) {}
+                }
+            } catch(e) {}
         }
 
         // Quand le vendeur passe en plein écran → expandre la vidéo distante chez les clients
@@ -24399,14 +24490,14 @@
             if (_lpLiveActive) return;
             var vendorId = _lpLiveVendorId;
 
-            // Source 1 : mangoo_my_provider_id (le plus direct et fiable)
-            if (!vendorId) {
-                vendorId = String(localStorage.getItem('mangoo_my_provider_id') || '').trim();
-            }
-
-            // Source 2 : getMyProviderId() (chaîne de résolution complète)
+            // Source 1 : getMyProviderId() (chaîne de résolution complète, priorise mangoo_my_provider_id)
             if (!vendorId) {
                 try { vendorId = getMyProviderId(); } catch(e) {}
+            }
+
+            // Source 2 : mangoo_my_provider_id (fallback direct)
+            if (!vendorId) {
+                vendorId = String(localStorage.getItem('mangoo_my_provider_id') || '').trim();
             }
 
             // Source 3 : mangoo-current-user.vendorId
@@ -24465,11 +24556,16 @@
 
                 var vendorId = '';
                 var vendorSlug = '';
-                if (typeof activeVendor !== 'undefined' && activeVendor) {
+                // Priorité 1 : _lpLiveVendorId (fraîchement résolu par lpStartLive/lpStartProviderLive)
+                if (_lpLiveVendorId) {
+                    vendorId = String(_lpLiveVendorId);
+                    vendorSlug = vendorId;
+                }
+                // Priorité 2 : activeVendor (fallback)
+                if (!vendorId && typeof activeVendor !== 'undefined' && activeVendor) {
                     vendorId = activeVendor.id || '';
                     vendorSlug = activeVendor.slug || '';
                 }
-                if (!vendorId) vendorId = _lpLiveVendorId;
                 if (!vendorSlug) vendorSlug = vendorId;
 
                 var products = [];
