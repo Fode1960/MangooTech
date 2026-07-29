@@ -10881,6 +10881,8 @@
             const newSet = new Set(newCandidates);
 
             vendors.forEach(vendor => {
+                // Ignorer le marqueur user_me (position utilisateur, pas un vrai vendor)
+                if (String(vendor?.id || '') === 'user_me' || vendor?.isUserOwned) return;
                 const lat = Number(vendor?.lat);
                 const lng = Number(vendor?.lng);
                 if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
@@ -15924,6 +15926,8 @@
                 var found = false;
                 for (var i = 0; i < VENDORS.length; i++) {
                     var v = VENDORS[i];
+                    // Ignorer le marqueur user_me (position utilisateur) - evite badge fantome
+                    if (String(v.id || '') === 'user_me' || v.isUserOwned) continue;
                     var vid = String(v.id || v.slug || '').trim();
                     var vSlug = String(v.slug || '').trim();
                     var vName = String(v.name || '').trim().toLowerCase();
@@ -24669,24 +24673,32 @@
                         products: productsPayload
                     };
                     // Ajouter le nom et slug du vendeur pour un matching fiable des badges
+                    // CHERCHER DIRECTEMENT dans VENDORS par vendorId (activeVendor peut etre stale)
                     var vendorName = '';
                     var vendorSlug = '';
-                    try {
-                        if (typeof activeVendor !== 'undefined' && activeVendor) {
-                            vendorName = String(activeVendor.name || '').trim();
-                            vendorSlug = String(activeVendor.slug || activeVendor.id || '').trim();
-                        }
-                    } catch(e) {}
-                    // Fallback: si activeVendor est null (dashboard vendeur), chercher via localStorage
+                    var lookupId = vendorId; // _lpLiveVendorId
+                    if (lookupId) {
+                        try {
+                            var myVendor = VENDORS.find(function(v) {
+                                return String(v.id) === String(lookupId) || String(v.slug) === String(lookupId);
+                            });
+                            if (myVendor) {
+                                vendorName = String(myVendor.name || '').trim();
+                                vendorSlug = String(myVendor.slug || myVendor.id || '').trim();
+                                console.warn('🔴 [LiveBadge] Vendor trouve dans VENDORS: ' + vendorName + ' slug=' + vendorSlug);
+                            }
+                        } catch(e) {}
+                    }
+                    // Fallback : chercher via localStorage (mangoo_my_shop_id ou mangoo_my_provider_id)
                     if (!vendorName || !vendorSlug) {
                         try {
-                            var shopId = localStorage.getItem('mangoo_my_shop_id') || '';
+                            var shopId = localStorage.getItem('mangoo_my_shop_id') || localStorage.getItem('mangoo_my_provider_id') || '';
                             if (shopId) {
                                 var fallbackVendor = VENDORS.find(function(v) { return String(v.id) === String(shopId); });
                                 if (fallbackVendor) {
                                     if (!vendorName) vendorName = String(fallbackVendor.name || '').trim();
                                     if (!vendorSlug) vendorSlug = String(fallbackVendor.slug || fallbackVendor.id || '').trim();
-                                    console.warn('🔴 [LiveBadge] Fallback vendor trouve via localStorage: ' + vendorName + ' slug=' + vendorSlug);
+                                    console.warn('🔴 [LiveBadge] Fallback vendor via localStorage: ' + vendorName + ' slug=' + vendorSlug);
                                 }
                             }
                         } catch(e) {}
