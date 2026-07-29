@@ -16006,50 +16006,9 @@
                     }
                 }
                 if (!found) {
-                    console.warn('🔴 [LiveBadge] AUCUN vendor trouve pour vendorId=' + vendorId + ' | IDs VENDORS: ' + VENDORS.map(function(v){return v.id}).join(', '));
-                    var providerLat = broadcastLat;
-                    var providerLng = broadcastLng;
-                    var providerName = dataVendorName || String(data.vendorName || '').trim();
-                    var providerKind = broadcastKind || 'provider';
-                    if (providerLat === null || providerLng === null) {
-                        try {
-                            var _providersRaw = localStorage.getItem('mangoo_providers');
-                            if (_providersRaw) {
-                                var _providersArr = JSON.parse(_providersRaw);
-                                if (Array.isArray(_providersArr)) {
-                                    var _pFound = _providersArr.find(function(x) { return String(x.id) === vendorId; });
-                                    if (_pFound && typeof _pFound.lat === 'number' && typeof _pFound.lng === 'number') {
-                                        providerLat = _pFound.lat;
-                                        providerLng = _pFound.lng;
-                                        if (!providerName) providerName = String(_pFound.name || '').trim();
-                                        if (!providerKind || providerKind === 'provider') providerKind = String(_pFound.kind || 'provider').trim();
-                                    }
-                                }
-                            }
-                        } catch(e) {}
-                    }
-                    var alreadyExists = VENDORS.some(function(v) { return String(v.id || v.slug || '') === vendorId; });
-                    if (!alreadyExists && providerLat !== null && providerLng !== null) {
-                        var newVendor = {
-                            id: vendorId,
-                            name: providerName || ('Prestataire ' + vendorId),
-                            slug: dataVendorSlug || vendorId,
-                            lat: providerLat,
-                            lng: providerLng,
-                            kind: providerKind || 'provider',
-                            category: broadcastCategory || data.category || '',
-                            avatar: '',
-                            photo: '',
-                            coverage: [],
-                            live: live
-                        };
-                        VENDORS.push(newVendor);
-                        console.warn('🔴 [LiveBadge] Prestataire ajoute dynamiquement: ' + newVendor.name + ' live=' + live + ' lat=' + providerLat + ' lng=' + providerLng);
-                    } else if (alreadyExists) {
-                        console.warn('🔴 [LiveBadge] Prestataire deja dans VENDORS, ajout dynamique ignore');
-                    } else {
-                        console.warn('🔴 [LiveBadge] Impossible d\'ajouter le prestataire: coordonnees manquantes pour vendorId=' + vendorId);
-                    }
+                    // Vendor/pas dans VENDORS : ne pas ajouter dynamiquement.
+                    // Le prestataire doit etre charge dans VENDORS via le chargement normal (comme les shops).
+                    console.warn('[LiveBadge] Vendor ' + vendorId + ' non trouve dans VENDORS — badge LIVE non affiche');
                 }
                 // Si la fiche vendeur est ouverte, mettre à jour le badge en direct
                 try {
@@ -16072,11 +16031,24 @@
                     }
                 } catch {}
                 // Re-rendre la vue courante pour mettre a jour les badges sur les cartes
-                // Toujours re-rendre map ET list (meme si la vue n'est pas active)
+                // IMPORTANT : ne pas render sur une carte cachee (ex: dashboard prestataire ouvert)
+                // car map.removeLayer() ne fonctionne pas -> marqueurs zombies -> double badge
+                var _mapVisible = true;
+                try {
+                    var _mapDiv = document.getElementById('map');
+                    if (_mapDiv) {
+                        var _mapStyle = window.getComputedStyle(_mapDiv);
+                        _mapVisible = _mapStyle.display !== 'none' && _mapStyle.visibility !== 'hidden';
+                    }
+                } catch(e) {}
                 try {
                     if (typeof renderVendorsOnMap === 'function') {
-                        console.warn('🔴 [LiveBadge] Re-rendu MAP force avec VENDORS (' + (typeof VENDORS !== 'undefined' ? VENDORS.length : 0) + ' vendors)');
-                        renderVendorsOnMap(VENDORS);
+                        if (_mapVisible) {
+                            console.warn('🔴 [LiveBadge] Re-rendu MAP (carte visible)');
+                            renderVendorsOnMap(VENDORS);
+                        } else {
+                            console.warn('🔴 [LiveBadge] Re-rendu MAP DIFFERE (carte cachee)');
+                        }
                     }
                 } catch(e) { console.warn('[LiveBadge] Erreur re-rendu map:', e.message); }
                 try {
@@ -24745,92 +24717,6 @@
                 // PREMIER DEMARRAGE : enregistrer la presence AVANT live:start
                 // (le serveur verifie currentUser.vendorId dans handleLiveStart)
                 try { lpTryRegisterVendorPresence(); } catch(e) {}
-
-                // === AJOUTER LE PRESTATAIRE DANS VENDORS AVANT live:start ===
-                // (meme pattern que pour les shops : le vendor doit etre dans VENDORS
-                //  pour que handleVendorLiveStatus puisse mettre le badge LIVE)
-                try {
-                    // Nettoyer les doublons eventuels dans VENDORS (meme ID) avant d'ajouter
-                    try {
-                        var _seen = {};
-                        for (var _vi = VENDORS.length - 1; _vi >= 0; _vi--) {
-                            var _vid = String(VENDORS[_vi].id || '');
-                            var _vslug = String(VENDORS[_vi].slug || '');
-                            // Cle composite id|slug pour eviter les faux doublons
-                            var _vkey = (_vid || _vslug || '');
-                            if (!_vkey) continue; // ignorer les entrees sans identifiant
-                            if (_seen[_vkey]) { console.warn('[LiveBadge] Doublon VENDORS supprime:', _vkey); VENDORS.splice(_vi, 1); }
-                            else { _seen[_vkey] = true; }
-                        }
-                    } catch(e) {}
-
-                    var _provAlreadyInVendors = VENDORS.some(function(v) { return String(v.id || v.slug || '') === String(vendorId); });
-                    if (!_provAlreadyInVendors) {
-                        // Chercher les infos du prestataire
-                        var _pvName = '';
-                        var _pvLat = null;
-                        var _pvLng = null;
-                        // Source 1 (prioritaire) : activeVendor (deja defini par lpStartProviderLive)
-                        try {
-                            if (typeof activeVendor !== 'undefined' && activeVendor) {
-                                _pvName = String(activeVendor.name || '').trim();
-                                if (typeof activeVendor.lat === 'number') _pvLat = activeVendor.lat;
-                                if (typeof activeVendor.lng === 'number') _pvLng = activeVendor.lng;
-                                console.log('[LiveBadge] Infos prestataire depuis activeVendor: name=' + _pvName + ' lat=' + _pvLat + ' lng=' + _pvLng);
-                            }
-                        } catch(e) {}
-                        // Source 2 : localStorage
-                        try {
-                            if (!_pvName || _pvLat === null || _pvLng === null) {
-                                var _pvData = localStorage.getItem('mangoo_provider_services');
-                                if (!_pvData) _pvData = localStorage.getItem('mangoo_local_provider_sync_v1');
-                                if (!_pvData) {
-                                    var _pvRaw = localStorage.getItem('mangoo_providers');
-                                    if (_pvRaw) {
-                                        var _pvArr = JSON.parse(_pvRaw);
-                                        var _pvFound = _pvArr.find(function(x) { return String(x.id) === String(vendorId); });
-                                        if (_pvFound) {
-                                            if (!_pvName) _pvName = _pvFound.name || '';
-                                            if (_pvLat === null && typeof _pvFound.lat === 'number') _pvLat = _pvFound.lat;
-                                            if (_pvLng === null && typeof _pvFound.lng === 'number') _pvLng = _pvFound.lng;
-                                        }
-                                    }
-                                }
-                            }
-                        } catch(e) {}
-                        // Source 3 : VENDORS existant
-                        if (_pvLat === null || _pvLng === null) {
-                            try {
-                                var _existV = VENDORS.find(function(v) { return String(v.id) === String(vendorId); });
-                                if (_existV) {
-                                    if (!_pvName) _pvName = String(_existV.name || '').trim();
-                                    if (_pvLat === null && typeof _existV.lat === 'number') _pvLat = _existV.lat;
-                                    if (_pvLng === null && typeof _existV.lng === 'number') _pvLng = _existV.lng;
-                                }
-                            } catch(e) {}
-                        }
-                        // Fallback: utiliser l'ID comme nom, ne jamais utiliser un nom hardcode
-                        if (!_pvName) _pvName = 'Prestataire ' + vendorId;
-                        if (_pvLat !== null && _pvLng !== null) {
-                            VENDORS.push({
-                                id: vendorId,
-                                name: _pvName,
-                                slug: vendorId,
-                                lat: _pvLat,
-                                lng: _pvLng,
-                                kind: 'provider',
-                                category: '',
-                                avatar: '',
-                                photo: '',
-                                coverage: [],
-                                live: false
-                            });
-                            console.warn('🔴 [LiveBadge] Prestataire ajoute dans VENDORS avant live:start: ' + _pvName + ' lat=' + _pvLat + ' lng=' + _pvLng);
-                        } else {
-                            console.warn('🔴 [LiveBadge] Impossible d\'ajouter le prestataire dans VENDORS: pas de coordonnees');
-                        }
-                    }
-                } catch(e) { console.warn('🔴 [LiveBadge] Erreur ajout prestataire VENDORS:', e.message); }
 
                 try {
                     _lpLiveStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
