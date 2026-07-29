@@ -10763,9 +10763,18 @@
         }
 
         function renderVendorsOnMap(vendors) {
-            // Clear existing markers
+            // Nettoyage RADICAL : parcourir tous les layers de la carte pour virer
+            // les marqueurs vendor (y compris les zombies créés sur carte cachée)
+            try {
+                map.eachLayer(function(layer) {
+                    if (layer instanceof L.Marker && layer._lpVendorMarker) {
+                        map.removeLayer(layer);
+                    }
+                });
+            } catch(e) {}
+            // Nettoyage classique via currentMarkers (fallback)
             if (window.currentMarkers) {
-                window.currentMarkers.forEach(m => map.removeLayer(m));
+                window.currentMarkers.forEach(function(m) { try { map.removeLayer(m); } catch(e) {} });
             }
             window.currentMarkers = [];
             // Déduplication renforcée : vérifier les correspondances croisées id/slug
@@ -11093,6 +11102,7 @@
                     icon: icon,
                     zIndexOffset: vendor.live || promoFeatured || newShown || sponsoredFeatured ? 1000 : 100
                 }).addTo(map);
+                marker._lpVendorMarker = true;  // tag pour nettoyage radical anti-zombie
 
                 if (sponsoredFeatured) recordAdImpression(vendor.id);
 
