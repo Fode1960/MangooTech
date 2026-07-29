@@ -24858,6 +24858,29 @@
             if (_lpSelfStream) { _lpSelfStream.getTracks().forEach(function(t) { t.stop(); }); _lpSelfStream = null; }
             var selfVideo = document.getElementById('lpLiveSelfVideo');
             if (selfVideo) selfVideo.srcObject = null;
+            // Nettoyer le bouton Réessayer self-view
+            var retryBtn = document.getElementById('lpSelfRetryBtn');
+            if (retryBtn) retryBtn.remove();
+            // Réinitialiser le placeholder self-view
+            var selfPip = document.getElementById('lpLiveSelfVideoPip');
+            if (selfPip) {
+                selfPip.classList.remove('has-stream');
+                var sph = selfPip.querySelector('.lp-live-fs-pip-placeholder');
+                if (sph) {
+                    sph.querySelector('.lp-live-fs-pip-icon').textContent = '📷';
+                    sph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'Vous';
+                }
+            }
+            // Réinitialiser le placeholder remote
+            var remotePip = document.getElementById('lpLiveRemoteVideoPip');
+            if (remotePip) {
+                remotePip.classList.remove('has-stream');
+                var rph = remotePip.querySelector('.lp-live-fs-pip-placeholder');
+                if (rph) {
+                    rph.querySelector('.lp-live-fs-pip-icon').textContent = '📡';
+                    rph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'En direct';
+                }
+            }
 
             var vendorPanel = document.getElementById('lpLiveVendorPanel');
             if (vendorPanel) vendorPanel.style.display = 'none';
@@ -24987,15 +25010,27 @@
         // Lancer la détection au chargement
         setTimeout(function() { lpDetectNetworkIp(); }, 2000);
 
-        // Construire l'URL du live (gérer localhost vs IP)
+        // Construire l'URL du live (gérer localhost, IP réseau, tunnel Cloudflare)
         function _lpGetLiveUrl() {
             var protocol = window.location.protocol;
             var host = window.location.host;
             var port = window.location.port || '3015';
-            // Détecter si on est sur localhost
             var isLocalhost = host.indexOf('localhost') >= 0 || host.indexOf('127.0.0.1') >= 0;
+
+            // Priorité 0 : tunnel Cloudflare stocké (accessible depuis mobile partout)
+            var storedOrigin = '';
+            try { storedOrigin = localStorage.getItem('lp_push_origin') || ''; } catch {}
+            if (storedOrigin && storedOrigin.indexOf('trycloudflare.com') >= 0) {
+                return storedOrigin + '/mangoo-local.html?live=' + _lpLiveVendorId;
+            }
+
+            // Priorité 1 : détecter si l'hôte courant est un tunnel Cloudflare
+            if (host.indexOf('trycloudflare.com') >= 0) {
+                return protocol + '//' + host + '/mangoo-local.html?live=' + _lpLiveVendorId;
+            }
+
+            // Priorité 2 : IP réseau locale (même WiFi)
             if (isLocalhost && _lpNetworkIp) {
-                // Utiliser l'IP réseau détectée
                 host = _lpNetworkIp + ':' + port;
             }
             var link = protocol + '//' + host + '/mangoo-local.html?live=' + _lpLiveVendorId;
@@ -25082,6 +25117,14 @@
         async function _lpStartSelfVideo() {
             if (_lpSelfStream) return;
             var pip = document.getElementById('lpLiveSelfVideoPip');
+            // Afficher un indicateur de chargement
+            if (pip) {
+                var ph = pip.querySelector('.lp-live-fs-pip-placeholder');
+                if (ph) {
+                    ph.querySelector('.lp-live-fs-pip-icon').textContent = '⏳';
+                    ph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'Activation caméra...';
+                }
+            }
             try {
                 _lpSelfStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
                 var selfVideo = document.getElementById('lpLiveSelfVideo');
@@ -25092,13 +25135,27 @@
                 console.log('[Live] Camera self-view démarrée');
             } catch(e) {
                 console.warn('[Live] Camera self-view non disponible:', e.message);
-                console.warn('[Live] Cause probable: HTTPS requis pour getUserMedia (page chargée en HTTP)');
-                // Mettre à jour le placeholder pour indiquer l'erreur
+                var errMsg = 'Caméra refusée';
+                if (e.name === 'NotAllowedError') errMsg = 'Permission refusée';
+                else if (e.name === 'NotFoundError') errMsg = 'Pas de caméra';
+                else if (e.name === 'NotReadableError') errMsg = 'Caméra occupée';
+                else if (e.name === 'OverconstrainedError') errMsg = 'Caméra incompatible';
+                else if (!window.isSecureContext) errMsg = 'HTTPS requis';
+                // Mettre à jour le placeholder avec un bouton Réessayer
                 if (pip) {
-                    var ph = pip.querySelector('.lp-live-fs-pip-placeholder');
-                    if (ph) {
-                        ph.querySelector('.lp-live-fs-pip-icon').textContent = '🔒';
-                        ph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'HTTP bloqué';
+                    var ph2 = pip.querySelector('.lp-live-fs-pip-placeholder');
+                    if (ph2) {
+                        ph2.querySelector('.lp-live-fs-pip-icon').textContent = '📷';
+                        ph2.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = errMsg;
+                    }
+                    // Ajouter un bouton Réessayer si pas déjà présent
+                    if (!document.getElementById('lpSelfRetryBtn')) {
+                        var retryBtn = document.createElement('button');
+                        retryBtn.id = 'lpSelfRetryBtn';
+                        retryBtn.textContent = '🔄 Réessayer';
+                        retryBtn.style.cssText = 'position:absolute;bottom:4px;left:50%;transform:translateX(-50%);background:#1b5e20;color:white;border:none;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;cursor:pointer;z-index:20;white-space:nowrap;';
+                        retryBtn.onclick = function(e) { e.stopPropagation(); _lpSelfStream = null; _lpStartSelfVideo(); };
+                        pip.appendChild(retryBtn);
                     }
                 }
             }
@@ -25232,17 +25289,28 @@
                     if (panelC) panelC.style.display = 'flex';
                     // Lancer la camera self-view
                     _lpStartSelfVideo();
-                    // Timeout pour le stream distant : si pas de flux apres 10s, afficher un message
+                    // Mettre à jour le placeholder distant pendant la connexion
+                    var remotePipPre = document.getElementById('lpLiveRemoteVideoPip');
+                    if (remotePipPre) {
+                        var rphPre = remotePipPre.querySelector('.lp-live-fs-pip-placeholder');
+                        if (rphPre) {
+                            rphPre.querySelector('.lp-live-fs-pip-icon').textContent = '📡';
+                            rphPre.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'Connexion au vendeur...';
+                        }
+                    }
+                    // WebSocket state tracking pour debug
+                    console.log('[Live] Client join OK - attente WebRTC. WS connected:', typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN);
+                    // Timeout pour le stream distant : si pas de flux apres 15s, proposer de rafraichir
                     setTimeout(function() {
                         var remotePip = document.getElementById('lpLiveRemoteVideoPip');
                         if (remotePip && !remotePip.classList.contains('has-stream')) {
                             var rph = remotePip.querySelector('.lp-live-fs-pip-placeholder');
                             if (rph) {
                                 rph.querySelector('.lp-live-fs-pip-icon').textContent = '📡';
-                                rph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'Stream en attente...';
+                                rph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'Pas de flux reçu';
                             }
                         }
-                    }, 10000);
+                    }, 15000);
                     // Auto-afficher le dernier produit en grand
                     if (_lpLiveProducts.length > 0) {
                         _lpShowClientProduct(_lpLiveProducts[_lpLiveProducts.length - 1]);
