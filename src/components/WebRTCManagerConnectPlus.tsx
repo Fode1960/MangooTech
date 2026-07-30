@@ -508,7 +508,20 @@ export default function WebRTCManagerConnectPlus({
   }, [forceOffline, offlineMessageOpen, offlineNoAnswer, offlinePromptOpen, hasClientOnline, hasVendorOnline, role])
 
   const iceServers = useMemo(
-    () => [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }],
+    () => [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      {
+        urls: 'turn:openrelay.metered.ca:80',
+        username: 'openrelayproject',
+        credential: 'openrelayproject',
+      },
+      {
+        urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+        username: 'openrelayproject',
+        credential: 'openrelayproject',
+      },
+    ],
     [],
   )
 
@@ -1683,7 +1696,16 @@ export default function WebRTCManagerConnectPlus({
         if (remoteVideoRef.current) {
           remoteVideoRef.current.srcObject = remoteVideoStreamRef.current
           remoteVideoRef.current.muted = true
-          remoteVideoRef.current.play().catch(() => {})
+          remoteVideoRef.current.play().catch((e) => {
+            console.warn('[WebRTC] Echec autoplay video distante:', e.message)
+            // Fallback Android : tap pour declencher le play
+            if (remoteVideoRef.current) {
+              const vid = remoteVideoRef.current
+              const tapToPlay = () => { vid.play().catch(() => {}); vid.removeEventListener('click', tapToPlay) }
+              vid.addEventListener('click', tapToPlay)
+              vid.style.cursor = 'pointer'
+            }
+          })
         }
         // Nettoyer quand la piste vidéo se termine
         track.onended = () => {
@@ -3048,6 +3070,10 @@ export default function WebRTCManagerConnectPlus({
           ref={remoteVideoRef as any}
           autoPlay
           playsInline
+          muted
+          x5-video-player-type="h5"
+          x5-video-player-fullscreen="true"
+          webkit-playsinline="true"
           className={
             !showVideoUi
               ? 'hidden'

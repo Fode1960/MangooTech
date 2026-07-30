@@ -340,7 +340,66 @@
         verificationDocumentImage: 'https://images.unsplash.com/photo-1554224154-22dec7ec8818?auto=format&fit=crop&w=1200&q=80',
         payThirdHintHtml: '💡 <b>Astuce :</b> Envoyez le lien de paiement a un proche. Il pourra payer directement pour vous !'
       },
-      vendors: []
+      vendors: [
+        {
+          id: 'fr_shop_1',
+          name: 'Epicerie du Quartier',
+          category: '🛒 Epicerie',
+          kind: 'shop',
+          lat: 48.8580,
+          lng: 2.3480,
+          status: 'open',
+          live: false,
+          avatar: 'https://ui-avatars.com/api/?name=Epicerie+Q&background=1a5f3f&color=fff',
+          voicePitch: 'Produits frais et epicerie du quotidien. Livraison rapide dans le quartier.'
+        },
+        {
+          id: 'fr_shop_2',
+          name: 'Boulangerie Parisienne',
+          category: '🥖 Boulangerie',
+          kind: 'shop',
+          lat: 48.8550,
+          lng: 2.3550,
+          status: 'open',
+          live: false,
+          avatar: 'https://ui-avatars.com/api/?name=Boulangerie+P&background=d4a574&color=fff',
+          voicePitch: 'Pains artisanaux, viennoiseries et patisseries. Frais du jour !'
+        },
+        {
+          id: 'fr_service_1',
+          name: 'Electricien Pro IDF',
+          category: '🔧 Services',
+          trade: 'Electricien',
+          kind: 'service',
+          verified: true,
+          rating: 4.7,
+          isMobile: true,
+          coverage: ['Paris', 'Banlieue', 'IDF'],
+          lat: 48.8600,
+          lng: 2.3400,
+          status: 'open',
+          live: false,
+          avatar: 'https://ui-avatars.com/api/?name=Elec+IDF&background=0ea5e9&color=fff',
+          voicePitch: 'Depannage et installation electrique sur Paris et Ile-de-France.'
+        },
+        {
+          id: 'fr_service_2',
+          name: 'Plombier Express Paris',
+          category: '🔧 Services',
+          trade: 'Plombier',
+          kind: 'service',
+          verified: true,
+          rating: 4.5,
+          isMobile: true,
+          coverage: ['Paris Centre', 'Paris Nord', 'Paris Sud'],
+          lat: 48.8530,
+          lng: 2.3600,
+          status: 'open',
+          live: false,
+          avatar: 'https://ui-avatars.com/api/?name=Plombier+Paris&background=16a085&color=fff',
+          voicePitch: 'Intervention rapide pour fuite, debouchage et installation.'
+        }
+      ]
     },
     default: {
       code: 'default',
