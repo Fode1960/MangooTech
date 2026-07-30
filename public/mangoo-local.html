@@ -6070,6 +6070,24 @@
                 if (!window.MangooLocalCountrySeeds || typeof window.MangooLocalCountrySeeds.resolveContext !== 'function') {
                     return null;
                 }
+                // Priorité au paramètre URL ?lpCountry=XX : court-circuite TOUTE la chaîne de résolution
+                var _urlCountry = '';
+                try { _urlCountry = new URLSearchParams(window.location.search).get('lpCountry') || ''; } catch {}
+                if (_urlCountry) {
+                    var _packs = window.MangooLocalCountrySeeds.packs;
+                    var _pack = _packs && _packs[_urlCountry];
+                    if (_pack) {
+                        // Construire le contexte directement depuis le pack, sans passer par resolveContext
+                        // (qui pourrait être influencé par localStorage mangoo-local-country, etc.)
+                        return {
+                            code: String(_pack.code || _urlCountry).trim().toLowerCase(),
+                            name: String(_pack.name || 'Local+').trim(),
+                            defaultUserPos: Array.isArray(_pack.defaultUserPos) ? [_pack.defaultUserPos[0], _pack.defaultUserPos[1]] : [4.051056, 9.767869],
+                            vendors: Array.isArray(_pack.vendors) ? _pack.vendors.map(function(v) { var c = {}; for (var k in v) { if (Object.prototype.hasOwnProperty.call(v, k)) c[k] = v[k]; } return c; }) : [],
+                            ui: _pack.ui && typeof _pack.ui === 'object' ? (function() { var c = {}; for (var k in _pack.ui) { if (Object.prototype.hasOwnProperty.call(_pack.ui, k)) c[k] = _pack.ui[k]; } return c; })() : {}
+                        };
+                    }
+                }
                 return window.MangooLocalCountrySeeds.resolveContext({
                     search: window.location.search,
                     storage: window.localStorage,
@@ -6079,7 +6097,14 @@
                 return null;
             }
         })();
-        const LP_COUNTRY_CODE = String(LP_COUNTRY_CONTEXT?.code || 'cm').trim().toLowerCase();
+        const LP_COUNTRY_CODE = (() => {
+            // Priorité au paramètre URL lpCountry (développement)
+            try {
+                const urlCountry = new URLSearchParams(window.location.search).get('lpCountry');
+                if (urlCountry) return String(urlCountry).trim().toLowerCase();
+            } catch {}
+            return String(LP_COUNTRY_CONTEXT?.code || 'cm').trim().toLowerCase();
+        })();
         console.log('[STARTUP] Country:', LP_COUNTRY_CODE, '| pos:', LP_COUNTRY_CONTEXT?.defaultUserPos);
         try { localStorage.removeItem('mangoo_vendors'); console.log('[STARTUP] Stale vendor cache wiped'); } catch {}
         const LP_COUNTRY_NAME = String(LP_COUNTRY_CONTEXT?.name || 'Local+').trim();
@@ -6411,6 +6436,11 @@
         }
 
         const VENDORS = lpCloneCountryVendors(LP_COUNTRY_CONTEXT?.vendors);
+        // Réinitialiser tous les statuts live à false au démarrage
+        // Le WebSocket mettra à jour uniquement les vendors réellement en live
+        for (var _lvi = 0; _lvi < VENDORS.length; _lvi++) {
+            try { VENDORS[_lvi].live = false; } catch {}
+        }
         if (!VENDORS.length && LP_COUNTRY_CODE !== 'fr') {
             VENDORS.push(
                 {
@@ -11261,6 +11291,11 @@
         }
 
         function getMyProviderId() {
+            // PRIORITÉ 0 : URL vendor param (source la plus fiable)
+            try {
+                var _urlV = new URLSearchParams(window.location.search).get('vendor') || '';
+                if (_urlV) { try { localStorage.setItem('mangoo_my_provider_id', _urlV); } catch(_e) {} return _urlV; }
+            } catch(_e) {}
             try {
                 // PRIORITÉ 1 : mangoo_my_provider_id (défini explicitement par login/claim/create)
                 // C'est la source la plus fiable car elle reflète le dernier prestataire sélectionné
@@ -11284,8 +11319,16 @@
                 const owned = lpGetOwnedProviderIds()
                 if (owned.length === 1) return String(owned[0] || '').trim()
                 if (owned.length > 1) {
-                    // Plusieurs prestataires : essayer VENDORS pour trouver le bon
-                    // Priorité : le dernier vendorId du current-user, puis le premier trouvé dans VENDORS
+                    // Plusieurs prestataires : chercher "Mangoo Répar" en priorité absolue
+                    // car c'est le prestataire principal de la plateforme
+                    try {
+                        var _mangooReparId = owned.find(function(oid) {
+                            var _v = (Array.isArray(VENDORS) ? VENDORS : []).find(function(x) { return String(x?.id) === String(oid); });
+                            return _v && String(_v?.name || '').trim() === 'Mangoo Répar';
+                        });
+                        if (_mangooReparId) return _mangooReparId;
+                    } catch {}
+                    // Essayer le vendorId du current-user
                     try {
                         var _cu4 = JSON.parse(localStorage.getItem('mangoo-current-user') || '{}');
                         var _vid4 = String(_cu4.vendorId || '').trim();
@@ -11366,7 +11409,8 @@
                     .filter((v) => lpEmailsMatch(v?.ownerEmail, email))
                     .map((v) => String(v?.id || '').trim())
                     .filter(Boolean)
-                return Array.from(new Set(ids))
+                const result = Array.from(new Set(ids))
+                return result
             } catch {
                 return []
             }
@@ -11581,6 +11625,19 @@
                         }
                     }
                 } catch(e) {}
+
+                // Sauvegarder le vendorId choisi pour les appels futurs (evite les ambiguites multi-prestataires)
+                try {
+                    if (activeVendor && activeVendor.id) {
+                        localStorage.setItem('mangoo_my_provider_id', String(activeVendor.id));
+                        try {
+                            var _cuSave = JSON.parse(localStorage.getItem('mangoo-current-user') || '{}');
+                            _cuSave.vendorId = String(activeVendor.id);
+                            _cuSave.vendorKind = 'service';
+                            localStorage.setItem('mangoo-current-user', JSON.stringify(_cuSave));
+                        } catch {}
+                    }
+                } catch {}
 
                 try { lpSpeak('Ouverture de votre espace prestataire.', { lang: 'fr-FR' }) } catch {}
                 // Enregistrer la presence WebSocket pour le badge LIVE sur la carte
@@ -24614,6 +24671,19 @@
                         }
                     } catch(e) {
                         console.warn('[Live Picker] Echec provider services:', e.message);
+                    }
+                }
+
+                // 4. Fallback: mangoo_my_products localStorage (produits charges par le Chat)
+                if (!loaded) {
+                    try {
+                        var myProds = JSON.parse(localStorage.getItem('mangoo_my_products') || '[]');
+                        if (Array.isArray(myProds) && myProds.length > 0) {
+                            products = myProds;
+                            loaded = true;
+                        }
+                    } catch(e) {
+                        console.warn('[Live Picker] Echec mangoo_my_products:', e.message);
                     }
                 }
 

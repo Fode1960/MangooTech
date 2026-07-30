@@ -136,7 +136,10 @@ const buildResolvedIdentityFromUser = (params: {
   const ownedShops = shops.filter((s: any) => String(s?.userId || '').trim() === String(user?.id || '').trim())
   const ownedVendors = getOwnedVendorsForEmail(vendors, email)
   const ownedShopVendor = ownedVendors.find((v: any) => getNormalizedVendorKind(v) === 'shop') || null
-  const ownedProviderVendor = ownedVendors.find((v: any) => getNormalizedVendorKind(v) === 'service') || null
+  // Prioriser "Mangoo Répar" parmi les prestataires service (prestataire principal de la plateforme)
+  const ownedProviderVendor = ownedVendors.find((v: any) => getNormalizedVendorKind(v) === 'service' && String(v?.name || '').trim() === 'Mangoo Répar')
+    || ownedVendors.find((v: any) => getNormalizedVendorKind(v) === 'service')
+    || null
 
   const requestedRole = String(params.preferredRole || '').trim().toLowerCase()
   const defaultRole = ownedShops.length || ownedShopVendor || ownedProviderVendor ? 'vendor' : 'client'
@@ -825,8 +828,12 @@ router.post('/localplus/identity/resolve', async (req, res) => {
       const user = findLocalUserByEmail(users as any[], emailValue)
       if (user) return buildResolvedIdentityFromUser({ user, vendors: vendors as any[], shops: shops as any[], preferredRole })
 
-      const vendor = getOwnedVendorsForEmail(vendors as any[], emailValue)
-        .sort((a: any, b: any) => new Date(String(b?.updatedAt || 0)).getTime() - new Date(String(a?.updatedAt || 0)).getTime())[0] || null
+      const ownedVendors = getOwnedVendorsForEmail(vendors as any[], emailValue)
+        .sort((a: any, b: any) => new Date(String(b?.updatedAt || 0)).getTime() - new Date(String(a?.updatedAt || 0)).getTime())
+      // Prioriser "Mangoo Répar" (prestataire principal de la plateforme)
+      const vendor = ownedVendors.find((v: any) => String(v?.name || '').trim() === 'Mangoo Répar')
+        || ownedVendors[0]
+        || null
       if (vendor) return buildResolvedIdentityFromVendor(vendor, preferredRole)
       return null
     }

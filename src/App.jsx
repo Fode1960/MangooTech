@@ -9453,7 +9453,7 @@ const AdminLayout = () => {
 };
 
 // Composant optimisé pour l'iframe Mangoo Local+
-const MANGOO_LOCAL_VERSION = 153;
+const MANGOO_LOCAL_VERSION = 154;
 const MangooLocalFrame = React.memo(({ user, onBack }) => {
   const persistCreatorLocation = useCallback(async (payload) => {
     try {
@@ -9510,7 +9510,19 @@ const MangooLocalFrame = React.memo(({ user, onBack }) => {
     <div style={{ width: '100%', maxWidth: '100%', height: 'var(--app-height, 100vh)', overflow: 'hidden' }}>
       <iframe 
         key={`mangoo-local-${MANGOO_LOCAL_VERSION}`}
-        src={`/mangoo-local.html?v=${MANGOO_LOCAL_VERSION}`} 
+        src={(() => {
+          const u = new URL('/mangoo-local.html', window.location.origin);
+          u.searchParams.set('v', MANGOO_LOCAL_VERSION);
+          try {
+            const parentParams = new URLSearchParams(window.location.search);
+            const fwd = ['lpCountry'];
+            for (let i = 0; i < fwd.length; i++) {
+              const val = parentParams.get(fwd[i]);
+              if (val) u.searchParams.set(fwd[i], val);
+            }
+          } catch {}
+          return u.pathname + u.search;
+        })()}
         style={{ width: '100%', height: '100%', border: 'none' }}
         title="Mangoo Local+"
       />
