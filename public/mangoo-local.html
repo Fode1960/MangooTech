@@ -17524,11 +17524,34 @@
             alert('✅ Prestation publiée avec succès !');
         }
 
-        function refreshProviderServicesPane() {
+        async function refreshProviderServicesPane() {
             var listEl = document.getElementById('lp-provider-services-list');
             if (!listEl) return;
             try {
                 var services = JSON.parse(localStorage.getItem('mangoo_provider_services') || '[]');
+                
+                // Si localStorage vide, restaurer depuis le serveur (JSON persistant)
+                if (!services.length) {
+                    try {
+                        var pid = (typeof getMyProviderId === 'function')
+                            ? getMyProviderId()
+                            : (localStorage.getItem('mangoo_my_provider_id') || localStorage.getItem('mangoo_my_shop_id') || '');
+                        if (pid) {
+                            var resp = await fetch('/api/my-products?shopId=' + encodeURIComponent(pid));
+                            var json = await resp.json();
+                            if (json.success && Array.isArray(json.products) && json.products.length > 0) {
+                                services = json.products.map(function(p) {
+                                    return { id: p.id || '', name: p.name || p.title || '', priceCfa: p.priceCfa || p.price || 0, image: p.image || p.img || p.photo || '', category: p.category || '' };
+                                });
+                                localStorage.setItem('mangoo_provider_services', JSON.stringify(services));
+                                console.log('[LP] ' + services.length + ' prestation(s) restaurees du serveur');
+                            }
+                        }
+                    } catch(e) {
+                        console.warn('[LP] Echec restauration prestations serveur:', e.message);
+                    }
+                }
+
                 // Synchroniser vers my-products pour le Live Shopping
                 try { syncProviderServicesToMyProducts(); } catch(e) {}
                 if (!services.length) {
@@ -24799,6 +24822,23 @@
             } catch(e) { console.warn('[Live] Echec rechargement photos:', e.message); }
 
             var productsPayload = _lpLiveProducts.map(function(p) { return { id: String(p.id || p._id || ''), name: p.name || p.title, price: p.price || p.priceCfa || 0, img: p.img || p.photo || p.image || '' }; });
+
+            // === SYNCHRO PRODUITS LIVE → Chat "Voir produit" ===
+            // Met à jour window.MY_PRODUCTS + localStorage pour que le Chat/Appel
+            // "Voir produit" affiche la même liste que le Live Shopping
+            try {
+                window.MY_PRODUCTS = _lpLiveProducts.map(function(p) {
+                    return {
+                        id: String(p.id || p._id || ''),
+                        name: p.name || p.title || '',
+                        photo: p.photo || p.img || p.image || '',
+                        img: p.img || p.photo || p.image || '',
+                        price: p.price || p.priceCfa || 0
+                    };
+                });
+                localStorage.setItem('mangoo_my_products', JSON.stringify(window.MY_PRODUCTS));
+                console.log('[Live] ' + window.MY_PRODUCTS.length + ' produit(s) sync vers Chat (Voir produit)');
+            } catch(e) { console.warn('[Live] Erreur sync produits Chat:', e.message); }
 
             if (!_lpLiveActive) {
                 // PREMIER DEMARRAGE : activer camera + envoyer live:start
