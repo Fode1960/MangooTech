@@ -5771,7 +5771,7 @@
             <div class="lp-live-fs-pip-row">
                 <div class="lp-live-fs-pip lp-live-fs-pip-left" id="lpLiveRemoteVideoPip">
                     <div class="lp-live-fs-pip-placeholder"><span class="lp-live-fs-pip-icon">📡</span>En direct</div>
-                    <video id="lpLiveRemoteVideo" autoplay playsinline></video>
+                    <video id="lpLiveRemoteVideo" autoplay playsinline webkit-playsinline x5-video-player-type="h5" x5-video-player-fullscreen="true"></video>
                     <div class="lp-live-fs-pip-label">🔴 En direct</div>
                 </div>
                 <div class="lp-live-fs-pip lp-live-fs-pip-right" id="lpLiveSelfVideoPip">
@@ -25559,6 +25559,26 @@
                     remoteVideo.srcObject = e.streams[0];
                     var pip = document.getElementById('lpLiveRemoteVideoPip');
                     if (pip) pip.classList.add('has-stream');
+                    // Lecture explicite pour compatibilite mobile
+                    remoteVideo.play().catch(function(playErr) {
+                        console.warn('[Live WebRTC] Play bloque, tentative user gesture:', playErr.name);
+                        // Sur mobile, play() peut echouer sans user gesture -> tap-to-play
+                        var tapHandler = function() {
+                            remoteVideo.play().catch(function(){});
+                            remoteVideo.removeEventListener('click', tapHandler);
+                            document.removeEventListener('touchstart', tapHandler);
+                        };
+                        remoteVideo.addEventListener('click', tapHandler);
+                        document.addEventListener('touchstart', tapHandler, { once: true });
+                        // Mettre a jour le placeholder
+                        if (pip) {
+                            var ph = pip.querySelector('.lp-live-fs-pip-placeholder');
+                            if (ph && !pip.classList.contains('has-stream')) {
+                                ph.querySelector('.lp-live-fs-pip-icon').textContent = '▶️';
+                                ph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'Toucher pour voir';
+                            }
+                        }
+                    });
                     console.log('[Live WebRTC] Stream distant applique au player');
                 }
             };

@@ -38,6 +38,7 @@ type Props = {
   pipSize?: 'sm' | 'md' | 'lg' | 'xl'
   hangupSignal?: number
   startCallSignal?: number
+  autoAnswer?: boolean
   onIncomingCall?: (payload: { from: string; label: string }) => void
   onCallEnd?: () => void
 }
@@ -68,6 +69,7 @@ export default function WebRTCManagerConnectPlus({
   pipSize = 'sm',
   hangupSignal,
   startCallSignal,
+  autoAnswer,
   onIncomingCall,
   onCallEnd,
 }: Props) {
@@ -188,6 +190,7 @@ export default function WebRTCManagerConnectPlus({
   const unlockAudioRef = useRef<() => Promise<void>>(async () => {})
   const cleanupPeerRef = useRef<() => void>(() => {})
   const startCallRef = useRef<() => Promise<void>>(async () => {})
+  const answerCallRef = useRef<() => Promise<void>>(async () => {})
   const rejectCallRef = useRef<() => void>(() => {})
   const endCallRef = useRef<() => void>(() => {})
   const lastIncomingHistoryCallIdRef = useRef('')
@@ -2084,6 +2087,8 @@ export default function WebRTCManagerConnectPlus({
     }
   }
 
+  answerCallRef.current = answerCall
+
   const rejectCall = () => {
     clearIncomingTimeout()
     finalizeHistory('rejected')
@@ -2233,6 +2238,13 @@ export default function WebRTCManagerConnectPlus({
     startCallSignalRef.current = s
     void startCallRef.current()
   }, [startCallSignal, isConnected, incomingCall, isInCall, isCalling])
+
+  // Auto-answer incoming calls (Live Shopping client mode)
+  useEffect(() => {
+    if (autoAnswer && incomingCall) {
+      void answerCallRef.current()
+    }
+  }, [autoAnswer, incomingCall])
 
   useEffect(() => {
     if (incomingCall || isInCall || isCalling) return

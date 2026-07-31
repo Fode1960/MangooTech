@@ -500,11 +500,15 @@ const LiveShoppingUltraSimple: React.FC<{
   const callRoomId = useMemo(() => `${String(roomId || '').trim()}__private`, [roomId])
 
   useEffect(() => {
-    if (role !== 'vendor') return
-    if (live) {
+    if (role === 'vendor') {
+      if (live) {
+        setShowCallDock(true)
+        setCallDockMinimized(true)
+        setCallStartSignal((v) => v + 1)
+      }
+    } else if (role === 'client' && live) {
       setShowCallDock(true)
       setCallDockMinimized(true)
-      setCallStartSignal((v) => v + 1)
     }
   }, [role, live])
 
@@ -2428,6 +2432,7 @@ const LiveShoppingUltraSimple: React.FC<{
               pipSize={callDockMinimized ? 'md' : 'xl'}
               hangupSignal={callHangupSignal}
               startCallSignal={callStartSignal}
+              autoAnswer={role === 'client'}
               onIncomingCall={() => {
                 setShowCallDock(true)
                 setCallDockMinimized(false)
