@@ -504,6 +504,7 @@ const LiveShoppingUltraSimple: React.FC<{
     if (live) {
       setShowCallDock(true)
       setCallDockMinimized(true)
+      setCallStartSignal((v) => v + 1)
     }
   }, [role, live])
 
