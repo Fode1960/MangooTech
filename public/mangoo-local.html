@@ -25056,8 +25056,8 @@
             lpUpdateProviderLiveStatus(false);
             lpInitGoLiveButton();
             // Réinitialiser l'état pour permettre une future reconnexion
-            _lpLiveVendorId = null;
             _lpLiveJoinSent = false;
+            _lpLiveVendorId = null;
         }
 
         // Met à jour l'UI du dashboard prestataire quand le live démarre/s'arrête
@@ -25125,12 +25125,18 @@
         }
 
         // Quitter le live (client)
-        function lpLeaveLive() {
-            if (!_lpLiveVendorId) return;
-            if (typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+        function lpLeaveLive(dontSend) {
+            if (!dontSend && _lpLiveVendorId && typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN) {
                 webrtcMgmtWs.send(JSON.stringify({ type: 'live:leave', vendorId: _lpLiveVendorId, userId: 'client-viewer' }));
             }
             lpCleanupLive();
+            // Supprimer ?live= de l'URL pour eviter bug reconnexion
+            // (openLive navigue vers ?live=XXX, si on est deja sur cette URL le navigateur ne recharge pas)
+            setTimeout(function() {
+                try { window.top.location.href = window.location.origin + '/mangoo-local.html'; } catch(e) {
+                    window.location.href = window.location.origin + '/mangoo-local.html';
+                }
+            }, 300);
         }
 
         // Détecter l'IP réseau du PC (pour les liens partagés vers Android)
