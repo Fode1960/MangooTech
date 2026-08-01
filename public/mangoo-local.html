@@ -24876,17 +24876,15 @@
 
             if (!_lpLiveActive) {
                 // PREMIER DEMARRAGE : activer camera + envoyer live:start
-                // VIDEO d'abord (evite blocage silencieux {audio:true} sur PC sans micro)
+                // APPEL UNIQUE {video+audio} = les 2 permissions apparaissent ensemble (pattern 9cce9ee)
                 try {
-                    _lpLiveStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-                    // Ajouter l'audio separement (echoue silencieusement si pas de micro)
-                    try {
-                        var _audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                        _audioStream.getAudioTracks().forEach(function(t) { _lpLiveStream.addTrack(t); });
-                    } catch(_ae) { console.warn('[Live] Audio non disponible:', _ae.message); }
+                    _lpLiveStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                     var preview = document.getElementById('lpLivePreview');
                     if (preview) { preview.srcObject = _lpLiveStream; preview.play().catch(function(){}); }
-                } catch(e) { console.warn('[Live] Camera non disponible:', e.message); }
+                } catch(e) {
+                    console.warn('[Live] Camera non disponible:', e.name, e.message);
+                    if (!window.isSecureContext) console.error('[Live] Contexte non securise - HTTPS requis pour getUserMedia');
+                }
 
                 // Enregistrer la presence WebSocket AVANT live:start
                 // (le serveur vérifie currentUser.vendorId dans handleLiveStart)
