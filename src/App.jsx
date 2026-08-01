@@ -9724,6 +9724,12 @@ function AppShell() {
         }
         if (nextRole === 'client' && nextRoles.includes('vendor')) nextRole = 'vendor'
         const nextUser = { ...(user || {}), email, roles: nextRoles, role: nextRole }
+        // Nettoyer les champs herites du guest (evite "Invite" pour un prestataire/boutique)
+        if (nextUser.name === 'Invité' || nextUser.email === 'guest@mangoo.tech' || !nextUser.name) {
+          nextUser.name = String(email || '').split('@')[0] || 'Mon compte';
+          nextUser.avatar = (nextUser.name || '?').substring(0, 2).toUpperCase();
+        }
+        if (nextUser.email === 'guest@mangoo.tech') nextUser.email = email;
         if (cancelled) return
         setUser(nextUser)
         try {
