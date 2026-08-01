@@ -4073,6 +4073,13 @@
         .lp-live-fs-pip-placeholder .lp-live-fs-pip-icon {
             font-size: 1.5rem; opacity: 0.5;
         }
+        .lp-live-fs-pip-placeholder.loading .lp-live-fs-pip-icon {
+            animation: lpPulseIcon 1.2s ease-in-out infinite;
+        }
+        @keyframes lpPulseIcon {
+            0%, 100% { opacity: 0.3; transform: scale(0.9); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
         .lp-live-fs-pip.has-stream .lp-live-fs-pip-placeholder { display: none; }
         .lp-live-fs-pip-label {
             position: absolute; bottom: 3px; left: 4px; right: 4px; z-index: 2;
@@ -25328,7 +25335,7 @@
                 _lpLiveStream = stream;
                 var preview = document.getElementById('lpLivePreview');
                 var ph = document.getElementById('lpLivePreviewPlaceholder');
-                if (preview) { preview.srcObject = stream; preview.style.display = ''; preview.play().catch(function(){}); }
+                if (preview) { preview.srcObject = stream; preview.style.display = ''; preview.muted = true; preview.play().catch(function(){}); }
                 if (ph) { ph.style.display = 'none'; }
                 // Initier les connexions WebRTC pour les viewers en attente
                 _lpFlushPendingViewers();
@@ -25339,16 +25346,22 @@
                 navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
                     console.log('[Live] Video seule OK');
                     _lpLiveStream = stream;
-                    // Essayer d'ajouter l'audio
-                    navigator.mediaDevices.getUserMedia({ audio: true }).then(function(aStream) {
-                        aStream.getAudioTracks().forEach(function(t) { stream.addTrack(t); });
-                    }).catch(function(){});
                     var preview = document.getElementById('lpLivePreview');
                     var ph = document.getElementById('lpLivePreviewPlaceholder');
-                    if (preview) { preview.srcObject = stream; preview.style.display = ''; preview.play().catch(function(){}); }
+                    if (preview) { preview.srcObject = stream; preview.style.display = ''; preview.muted = true; preview.play().catch(function(){}); }
                     if (ph) { ph.style.display = 'none'; }
-                    // Initier les connexions WebRTC pour les viewers en attente
-                    _lpFlushPendingViewers();
+                    // Essayer d'ajouter l'audio AVANT de flusher les viewers
+                    navigator.mediaDevices.getUserMedia({ audio: true }).then(function(aStream) {
+                        var audioTracks = aStream.getAudioTracks();
+                        console.log('[Live] Audio ajoute apres video: ' + audioTracks.length + ' piste(s)');
+                        audioTracks.forEach(function(t) { stream.addTrack(t); });
+                        // Flusher APRES avoir ajoute l'audio
+                        _lpFlushPendingViewers();
+                    }).catch(function(audioErr){
+                        console.warn('[Live] Audio non disponible: ' + audioErr.message);
+                        // Flusher sans audio
+                        _lpFlushPendingViewers();
+                    });
                 }).catch(function(e2) {
                     console.error('[Live] Camera video seule aussi echouee (' + e2.name + '): ' + e2.message);
                     if (placeholder) {
@@ -25674,6 +25687,7 @@
                     if (remotePipPre) {
                         var rphPre = remotePipPre.querySelector('.lp-live-fs-pip-placeholder');
                         if (rphPre) {
+                            rphPre.classList.add('loading');
                             rphPre.querySelector('.lp-live-fs-pip-icon').textContent = '📡';
                             rphPre.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'Connexion au vendeur...';
                         }
@@ -25686,11 +25700,12 @@
                         if (remotePip && !remotePip.classList.contains('has-stream')) {
                             var rph = remotePip.querySelector('.lp-live-fs-pip-placeholder');
                             if (rph) {
+                                rph.classList.remove('loading');
                                 rph.querySelector('.lp-live-fs-pip-icon').textContent = '📡';
                                 rph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'Cliquez ici';
                             }
                         }
-                    }, 15000);
+                    }, 12000);
                     // Auto-afficher le dernier produit en grand
                     if (_lpLiveProducts.length > 0) {
                         _lpShowClientProduct(_lpLiveProducts[_lpLiveProducts.length - 1]);
@@ -25906,20 +25921,31 @@
                 var remoteVideo = document.getElementById('lpLiveRemoteVideo');
                 if (remoteVideo && e.streams[0]) {
                     remoteVideo.srcObject = e.streams[0];
-                    remoteVideo.muted = false;
+                    // Stratégie audio : démarrer en muet (toujours autorisé), puis démutifier
+                    remoteVideo.muted = true;
                     var playPromise = remoteVideo.play();
                     if (playPromise) {
                         playPromise.then(function() {
-                            console.log('[Live WebRTC] Audio+Video joue avec son');
-                            _lpUpdateAudioBtn(true);
+                            console.log('[Live WebRTC] Video joue (muet), tentative demutifier...');
+                            // Une fois la lecture démarrée, on peut démutifier sans restriction
+                            remoteVideo.muted = false;
+                            // Vérifier si la démute a été effective
+                            setTimeout(function() {
+                                var hasAudio = e.streams[0].getAudioTracks().length > 0 && e.streams[0].getAudioTracks().some(function(t) { return t.enabled; });
+                                console.log('[Live WebRTC] Audio actif: ' + hasAudio + ' mute=' + remoteVideo.muted);
+                                _lpUpdateAudioBtn(!remoteVideo.muted && hasAudio);
+                            }, 300);
                         }).catch(function(err) {
-                            console.warn('[Live WebRTC] Autoplay bloque, son en attente de clic:', err.name);
+                            console.warn('[Live WebRTC] Lecture echouee:', err.name);
                             _lpUpdateAudioBtn(false);
-                            // L'utilisateur pourra cliquer sur le bouton son pour débloquer
                         });
                     }
                     var pip = document.getElementById('lpLiveRemoteVideoPip');
-                    if (pip) pip.classList.add('has-stream');
+                    if (pip) {
+                        pip.classList.add('has-stream');
+                        var ph = pip.querySelector('.lp-live-fs-pip-placeholder');
+                        if (ph) ph.classList.remove('loading');
+                    }
                     console.log('[Live WebRTC] Stream distant applique au player');
                 } else {
                     console.warn('[Live WebRTC] Aucun stream dans ontrack');
