@@ -4153,6 +4153,20 @@
             box-shadow: 0 0 12px rgba(27,94,32,0.35);
         }
         .lp-live-fs-call-btn:hover { background: #14521b; border-color: rgba(255,255,255,0.55); transform: scale(1.08); box-shadow: 0 0 18px rgba(27,94,32,0.5); }
+        /* Bouton Acheter — positionné en dessous du header pour ne pas le cacher */
+        .lp-live-fs-buy-wrap {
+            position: absolute; top: 56px; right: 12px; z-index: 20;
+        }
+        .lp-live-fs-buy-btn {
+            background: linear-gradient(135deg, #ff6f00, #e65100);
+            color: #fff; border: none;
+            padding: 8px 18px; border-radius: 22px;
+            font-size: 0.82rem; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; gap: 6px;
+            box-shadow: 0 2px 12px rgba(230,81,0,0.35);
+            transition: all 0.2s;
+        }
+        .lp-live-fs-buy-btn:hover { transform: scale(1.05); box-shadow: 0 4px 18px rgba(230,81,0,0.5); }
         /* Filtre pour rendre l'emoji 📞 entièrement rouge */
         .lp-call-icon-red {
             display: inline-block;
@@ -5727,7 +5741,7 @@
         <div class="lp-live-row">
             <div class="lp-live-cam-wrap" id="lpLiveCamWrap">
                 <video id="lpLivePreview" class="lp-live-cam" autoplay muted playsinline style="display:none;"></video>
-                <div class="lp-live-cam-placeholder" id="lpLivePreviewPlaceholder" onclick="_lpActivateVendorCamera()" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:#1a1a2e;border-radius:12px;cursor:pointer;flex-direction:column;gap:8px;">
+                <div class="lp-live-cam-placeholder" id="lpLivePreviewPlaceholder" onclick="_lpActivateVendorCamera()" style="display:flex;align-items:center;justify-content:center;width:100%;height:180px;background:#1a1a2e;border-radius:12px;cursor:pointer;flex-direction:column;gap:8px;">
                     <span style="font-size:2rem;">📷</span>
                     <span style="color:#ccc;font-size:0.85rem;">Cliquez pour activer la caméra</span>
                 </div>
@@ -5769,17 +5783,21 @@
             <button class="lp-live-fs-chat-btn" id="lpLiveChatToggle" onclick="lpToggleLiveChat()" title="Messagerie">💬</button>
             <button class="lp-live-fs-quit" onclick="lpLeaveLive()">✕ Quitter</button>
         </div>
+        <!-- Bouton Acheter séparé (en dessous pour ne pas cacher le nom de la boutique) -->
+        <div class="lp-live-fs-buy-wrap" id="lpLiveBuyWrap" style="display:none;">
+            <button class="lp-live-fs-buy-btn" onclick="lpBuyLiveProduct()" title="Acheter ce produit">🛒 Acheter ce produit</button>
+        </div>
         <!-- Panneau bas blanc -->
         <div class="lp-live-fs-bottom-sheet" id="lpLiveBottomSheet">
             <!-- Video PiPs -->
             <div class="lp-live-fs-pip-row">
-                <div class="lp-live-fs-pip lp-live-fs-pip-left" id="lpLiveRemoteVideoPip">
-                    <div class="lp-live-fs-pip-placeholder"><span class="lp-live-fs-pip-icon">📡</span>En direct</div>
+                <div class="lp-live-fs-pip lp-live-fs-pip-left" id="lpLiveRemoteVideoPip" onclick="_lpRetryRemoteStream()" style="cursor:pointer;">
+                    <div class="lp-live-fs-pip-placeholder"><span class="lp-live-fs-pip-icon">📡</span>Cliquez pour voir le vendeur</div>
                     <video id="lpLiveRemoteVideo" autoplay playsinline muted></video>
                     <div class="lp-live-fs-pip-label">🔴 En direct</div>
                 </div>
-                <div class="lp-live-fs-pip lp-live-fs-pip-right" id="lpLiveSelfVideoPip">
-                    <div class="lp-live-fs-pip-placeholder"><span class="lp-live-fs-pip-icon">📷</span>Vous</div>
+                <div class="lp-live-fs-pip lp-live-fs-pip-right" id="lpLiveSelfVideoPip" onclick="_lpActivateClientCamera()" style="cursor:pointer;">
+                    <div class="lp-live-fs-pip-placeholder"><span class="lp-live-fs-pip-icon">📷</span>Cliquez pour activer la caméra</div>
                     <video id="lpLiveSelfVideo" autoplay playsinline muted></video>
                     <div class="lp-live-fs-pip-label">👤 Vous</div>
                 </div>
@@ -24464,6 +24482,8 @@
         var _lpLiveIsVendor = false;
         var _lpLiveStream = null;
         var _lpLiveProductPickerSelected = [];
+        var _lpPendingViewers = []; // viewers en attente de connexion WebRTC (caméra pas encore activée)
+        var _lpLiveCurrentProduct = null; // produit actuellement affiché dans le live client
 
         // Afficher le bouton Go Live si l'utilisateur est un vendeur connecte
         function lpInitGoLiveButton() {
@@ -24966,6 +24986,9 @@
                 var link = _lpGetLiveUrl();
                 var linkInput = document.getElementById('lpLiveShareLink');
                 if (linkInput) linkInput.value = link;
+
+                // Activer automatiquement la caméra vendeur
+                try { _lpActivateVendorCamera(); } catch(e) { console.warn('[Live] Activation auto camera echouee:', e); }
             } else {
                 // MISE A JOUR : le live est deja actif, envoyer live:products
                 if (typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN) {
@@ -25011,7 +25034,7 @@
                 var sph = selfPip.querySelector('.lp-live-fs-pip-placeholder');
                 if (sph) {
                     sph.querySelector('.lp-live-fs-pip-icon').textContent = '📷';
-                    sph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'Vous';
+                    sph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'Cliquez pour activer la caméra';
                 }
             }
             // Réinitialiser le placeholder remote
@@ -25021,7 +25044,7 @@
                 var rph = remotePip.querySelector('.lp-live-fs-pip-placeholder');
                 if (rph) {
                     rph.querySelector('.lp-live-fs-pip-icon').textContent = '📡';
-                    rph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'En direct';
+                    rph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'Cliquez pour voir le vendeur';
                 }
             }
 
@@ -25058,6 +25081,18 @@
             // Réinitialiser l'état pour permettre une future reconnexion
             _lpLiveJoinSent = false;
             _lpLiveVendorId = null;
+            _lpPendingViewers = [];
+            _lpLiveCurrentProduct = null;
+            // Annuler le timeout de retry
+            if (_lpLiveRetryTimeout) { clearTimeout(_lpLiveRetryTimeout); _lpLiveRetryTimeout = null; }
+            _lpLiveViewerUserId = null;
+            // Fermer toutes les connexions WebRTC
+            Object.keys(_lpLivePeerConnections).forEach(function(k) {
+                try { _lpLivePeerConnections[k].close(); } catch(e) {}
+                delete _lpLivePeerConnections[k];
+            });
+            var buyWrap = document.getElementById('lpLiveBuyWrap');
+            if (buyWrap) buyWrap.style.display = 'none';
         }
 
         // Met à jour l'UI du dashboard prestataire quand le live démarre/s'arrête
@@ -25291,6 +25326,8 @@
                 var ph = document.getElementById('lpLivePreviewPlaceholder');
                 if (preview) { preview.srcObject = stream; preview.style.display = ''; preview.play().catch(function(){}); }
                 if (ph) { ph.style.display = 'none'; }
+                // Initier les connexions WebRTC pour les viewers en attente
+                _lpFlushPendingViewers();
             }).catch(function(e1) {
                 console.warn('[Live] Camera+audio echoue (' + e1.name + '): ' + e1.message);
                 // Fallback: video seule
@@ -25306,6 +25343,8 @@
                     var ph = document.getElementById('lpLivePreviewPlaceholder');
                     if (preview) { preview.srcObject = stream; preview.style.display = ''; preview.play().catch(function(){}); }
                     if (ph) { ph.style.display = 'none'; }
+                    // Initier les connexions WebRTC pour les viewers en attente
+                    _lpFlushPendingViewers();
                 }).catch(function(e2) {
                     console.error('[Live] Camera video seule aussi echouee (' + e2.name + '): ' + e2.message);
                     if (placeholder) {
@@ -25313,6 +25352,117 @@
                     }
                 });
             });
+        }
+
+        // Initier les connexions WebRTC pour tous les viewers en attente
+        function _lpFlushPendingViewers() {
+            if (_lpPendingViewers.length === 0) return;
+            console.log('[Live] Connexion WebRTC pour ' + _lpPendingViewers.length + ' viewer(s) en attente');
+            var viewers = _lpPendingViewers.slice();
+            _lpPendingViewers = [];
+            viewers.forEach(function(viewerId) {
+                _lpStartLiveStreamToViewer(viewerId);
+            });
+        }
+
+        // Activation de la caméra côté CLIENT (appelée via onclick pour préserver le geste utilisateur)
+        function _lpActivateClientCamera() {
+            if (_lpSelfStream) return;
+            var pip = document.getElementById('lpLiveSelfVideoPip');
+            if (pip) {
+                var ph = pip.querySelector('.lp-live-fs-pip-placeholder');
+                if (ph) {
+                    ph.querySelector('.lp-live-fs-pip-icon').textContent = '⏳';
+                    ph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'Activation...';
+                }
+            }
+            console.log('[Live] Activation camera client... isSecureContext=' + !!window.isSecureContext);
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false }).then(function(stream) {
+                console.log('[Live] Camera client OK');
+                _lpSelfStream = stream;
+                var selfVideo = document.getElementById('lpLiveSelfVideo');
+                if (selfVideo) {
+                    selfVideo.srcObject = stream;
+                    selfVideo.play().catch(function(){});
+                }
+                if (pip) pip.classList.add('has-stream');
+            }).catch(function(e) {
+                console.warn('[Live] Camera client echouee (' + e.name + '): ' + e.message);
+                var errMsg = 'Caméra refusée';
+                if (e.name === 'NotAllowedError') errMsg = 'Permission refusée';
+                else if (e.name === 'NotFoundError') errMsg = 'Pas de caméra';
+                else if (e.name === 'NotReadableError') errMsg = 'Caméra occupée';
+                if (pip) {
+                    var ph2 = pip.querySelector('.lp-live-fs-pip-placeholder');
+                    if (ph2) {
+                        ph2.querySelector('.lp-live-fs-pip-icon').textContent = '📷';
+                        ph2.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = errMsg + ' - Recliquez';
+                    }
+                }
+            });
+        }
+
+        // Réessayer d'obtenir le flux distant (cliqué sur "En direct")
+        function _lpRetryRemoteStream() {
+            var remotePip = document.getElementById('lpLiveRemoteVideoPip');
+            // Si le flux est déjà là, ne rien faire
+            if (remotePip && remotePip.classList.contains('has-stream')) return;
+            console.log('[Live] Retry remote stream - nettoyage + demande au vendeur');
+
+            // Annuler tout timeout de retry précédent
+            if (_lpLiveRetryTimeout) { clearTimeout(_lpLiveRetryTimeout); _lpLiveRetryTimeout = null; }
+
+            // Nettoyer l'ancienne connexion WebRTC côté client
+            Object.keys(_lpLivePeerConnections).forEach(function(k) {
+                try { _lpLivePeerConnections[k].close(); } catch(e) {}
+                delete _lpLivePeerConnections[k];
+            });
+            // Réinitialiser aussi la vidéo distante
+            var remoteVideo = document.getElementById('lpLiveRemoteVideo');
+            if (remoteVideo) { try { remoteVideo.srcObject = null; } catch(e) {} }
+
+            // Mettre à jour le placeholder
+            if (remotePip) {
+                remotePip.classList.remove('has-stream');
+                var rph = remotePip.querySelector('.lp-live-fs-pip-placeholder');
+                if (rph) {
+                    rph.querySelector('.lp-live-fs-pip-icon').textContent = '📡';
+                    rph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = ' Reconnexion...';
+                    rph.style.display = '';
+                }
+            }
+
+            // Vérifier que le WebSocket est connecté
+            if (!(typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN)) {
+                console.warn('[Live] Retry impossible: WebSocket non connecté');
+                if (remotePip) {
+                    var rphErr = remotePip.querySelector('.lp-live-fs-pip-placeholder');
+                    if (rphErr) {
+                        rphErr.querySelector('.lp-live-fs-pip-icon').textContent = '⚠️';
+                        rphErr.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = ' Pas connecté - Recliquez';
+                    }
+                }
+                return;
+            }
+
+            // Demander au vendeur de flusher les viewers en attente
+            webrtcMgmtWs.send(JSON.stringify({
+                type: 'live:request-stream',
+                vendorId: _lpLiveVendorId
+            }));
+
+            // Timeout : si pas de flux après 12s, afficher une erreur
+            _lpLiveRetryTimeout = setTimeout(function() {
+                var pip = document.getElementById('lpLiveRemoteVideoPip');
+                if (pip && !pip.classList.contains('has-stream')) {
+                    var rph = pip.querySelector('.lp-live-fs-pip-placeholder');
+                    if (rph) {
+                        rph.querySelector('.lp-live-fs-pip-icon').textContent = '⚠️';
+                        rph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = ' Vendeur injoignable - Réessayez';
+                    }
+                }
+                _lpLiveRetryTimeout = null;
+            }, 12000);
         }
 
         async function _lpStartSelfVideo() {
@@ -25366,6 +25516,7 @@
         // Afficher un produit en grand sur la page client
         function _lpShowClientProduct(product) {
             if (!product) return;
+            _lpLiveCurrentProduct = product; // stocker pour le bouton Acheter
             var name = product.name || product.title || 'Produit';
             var img = product.img || product.photo || product.image || '';
 
@@ -25381,11 +25532,18 @@
                 if (placeholder) placeholder.style.display = 'flex';
             }
 
-            // Afficher la carte Acheter en bas (sans l'overlay - le fond fait office)
-            lpShowSharedProduct({ name: name, price: product.price, img: img });
-            // Cacher l'overlay produit (on utilise le fond fullscreen à la place)
-            var overlay = document.getElementById('lpProductOverlay');
-            if (overlay) overlay.style.display = 'none';
+            // Cacher la carte Acheter fixed (bloquait les PIPs) — un bouton Achat est dans le panneau client
+            lpHideProductCard();
+            // Afficher le bouton Acheter
+            var buyWrap = document.getElementById('lpLiveBuyWrap');
+            if (buyWrap) buyWrap.style.display = '';
+        }
+
+        // Acheter le produit affiché dans le live
+        function lpBuyLiveProduct() {
+            if (!_lpLiveCurrentProduct) return;
+            var p = _lpLiveCurrentProduct;
+            lpShowSharedProduct({ name: p.name || p.title || 'Produit', price: p.price || p.priceCfa || 0, img: p.img || p.photo || p.image || '' });
         }
 
         // Toggle du chat overlay sur la page client
@@ -25489,7 +25647,7 @@
                     }
                     var panelC = document.getElementById('lpLiveClientPanel');
                     if (panelC) panelC.style.display = 'flex';
-                    // Lancer la camera self-view
+                    // Lancer la camera self-view automatiquement
                     _lpStartSelfVideo();
                     // Mettre à jour le placeholder distant pendant la connexion
                     var remotePipPre = document.getElementById('lpLiveRemoteVideoPip');
@@ -25509,7 +25667,7 @@
                             var rph = remotePip.querySelector('.lp-live-fs-pip-placeholder');
                             if (rph) {
                                 rph.querySelector('.lp-live-fs-pip-icon').textContent = '📡';
-                                rph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'Pas de flux reçu';
+                                rph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'Cliquez ici';
                             }
                         }
                     }, 15000);
@@ -25526,13 +25684,61 @@
                     if (vcEl) vcEl.textContent = _lpLiveViewerCount;
 
                     // Si le vendeur recoit un nouveau viewer, initier le streaming WebRTC
-                    if (msg.type === 'live:viewer-joined' && _lpLiveIsVendor && msg.viewerId && _lpLiveStream) {
-                        _lpStartLiveStreamToViewer(msg.viewerId);
+                    if (msg.type === 'live:viewer-joined' && _lpLiveIsVendor && msg.viewerId) {
+                        if (_lpLiveStream) {
+                            _lpStartLiveStreamToViewer(msg.viewerId);
+                        } else {
+                            // Caméra pas encore activée : mettre en attente
+                            if (_lpPendingViewers.indexOf(msg.viewerId) === -1) {
+                                _lpPendingViewers.push(msg.viewerId);
+                            }
+                            console.log('[Live] Viewer ' + msg.viewerId + ' en attente (camera pas encore activee)');
+                        }
                     }
                     // Si un viewer part, nettoyer sa connexion WebRTC
                     if (msg.type === 'live:viewer-left' && msg.viewerId) {
                         var pc = _lpLivePeerConnections[msg.viewerId];
                         if (pc) { pc.close(); delete _lpLivePeerConnections[msg.viewerId]; }
+                        // Retirer aussi de la file d'attente
+                        var pidx = _lpPendingViewers.indexOf(msg.viewerId);
+                        if (pidx !== -1) _lpPendingViewers.splice(pidx, 1);
+                    }
+                    break;
+
+                case 'live:flush-viewers':
+                    // Le client demande à revoir le flux — réessayer toutes les connexions
+                    if (_lpLiveIsVendor && _lpLiveStream) {
+                        console.log('[Live] Flush viewers demande par le serveur');
+                        // Fermer et réessayer toutes les connexions existantes
+                        Object.keys(_lpLivePeerConnections).forEach(function(vid) {
+                            try { _lpLivePeerConnections[vid].close(); } catch(e) {}
+                            delete _lpLivePeerConnections[vid];
+                        });
+                        // Réessayer pour tous les viewers en attente + existants
+                        _lpFlushPendingViewers();
+                        // Si pas de pending viewers, demander au serveur la liste des viewers
+                        if (_lpPendingViewers.length === 0 && typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN) {
+                            webrtcMgmtWs.send(JSON.stringify({ type: 'live:get-viewers', vendorId: _lpLiveVendorId }));
+                        }
+                    }
+                    break;
+
+                case 'live:viewers-list':
+                    // Le serveur renvoie la liste des viewers connectés
+                    if (_lpLiveIsVendor && _lpLiveStream && msg.viewers && msg.viewers.length > 0) {
+                        console.log('[Live] Liste viewers recue:', msg.viewers.length);
+                        msg.viewers.forEach(function(viewerId) {
+                            // Supprimer l'ancienne connexion si elle existe (vendor ou client)
+                            var oldPc = _lpLivePeerConnections['vendor:' + viewerId] || _lpLivePeerConnections[viewerId];
+                            if (oldPc) { try { oldPc.close(); } catch(e) {} }
+                            delete _lpLivePeerConnections['vendor:' + viewerId];
+                            delete _lpLivePeerConnections[viewerId];
+                            // Ajouter comme pending et flusher
+                            if (_lpPendingViewers.indexOf(viewerId) === -1) {
+                                _lpPendingViewers.push(viewerId);
+                            }
+                        });
+                        _lpFlushPendingViewers();
                     }
                     break;
 
@@ -25582,6 +25788,8 @@
 
         // === WEBRTC LIVE STREAMING ===
         var _lpLivePeerConnections = {}; // viewerUserId -> RTCPeerConnection
+        var _lpLiveViewerUserId = null; // userId du viewer courant (côté client)
+        var _lpLiveRetryTimeout = null; // timeout pour le retry du stream distant
 
         // Vendeur : initier une connexion WebRTC vers un viewer
         function _lpStartLiveStreamToViewer(viewerUserId) {
@@ -25590,17 +25798,28 @@
                 console.warn('[Live WebRTC] Camera vendeur non disponible - cause probable: HTTP (getUserMedia bloque)');
                 return;
             }
-            if (_lpLivePeerConnections[viewerUserId]) return; // deja connecte
+            if (_lpLivePeerConnections['vendor:' + viewerUserId]) return; // deja connecte
 
             var pc = new RTCPeerConnection({
                 iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
             });
-            _lpLivePeerConnections[viewerUserId] = pc;
+            _lpLivePeerConnections['vendor:' + viewerUserId] = pc;
 
             // Ajouter les tracks de la camera
             _lpLiveStream.getTracks().forEach(function(track) {
                 pc.addTrack(track, _lpLiveStream);
             });
+
+            // Suivre l'état de la connexion ICE
+            pc.oniceconnectionstatechange = function() {
+                console.log('[Live WebRTC] Vendor ICE state:', pc.iceConnectionState, 'viewer:', viewerUserId);
+                if (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'disconnected') {
+                    console.warn('[Live WebRTC] Connexion ICE perdue avec viewer:', viewerUserId);
+                }
+                if (pc.iceConnectionState === 'connected') {
+                    console.log('[Live WebRTC] Connexion ICE etablie avec viewer:', viewerUserId);
+                }
+            };
 
             // Envoyer les candidats ICE
             pc.onicecandidate = function(e) {
@@ -25627,6 +25846,9 @@
                         signalType: 'live:webrtc-offer',
                         offer: pc.localDescription
                     }));
+                    console.log('[Live WebRTC] Offre envoyee pour viewer:', viewerUserId);
+                } else {
+                    console.warn('[Live WebRTC] Offre BLOQUEE: WS readyState=' + (typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs ? webrtcMgmtWs.readyState : 'undefined'));
                 }
             }).catch(function(e) {
                 console.warn('[Live WebRTC] Erreur createOffer:', e.message);
@@ -25635,17 +25857,32 @@
 
         // Client : gerer l'offre WebRTC recue du vendeur
         function _lpHandleLiveWebrtcOffer(msg) {
-            console.log('[Live WebRTC] Offre recue du vendeur, targetUserId:', msg.targetUserId);
+            console.warn('🔴 [Live WebRTC] Offre recue du vendeur, targetUserId:', msg.targetUserId, 'vendorId:', msg.vendorId, 'offerPresent:', !!msg.offer);
             var myUserId = msg.targetUserId || ('client-viewer-' + Date.now());
             // Stocker notre userId pour les relais ultérieurs
             _lpLiveViewerUserId = myUserId;
 
+            // Annuler le timeout de retry si actif
+            if (_lpLiveRetryTimeout) { clearTimeout(_lpLiveRetryTimeout); _lpLiveRetryTimeout = null; }
+
+            // Nettoyer UNIQUEMENT l'ancienne connexion pour ce viewer specifique
+            // Ne pas toucher aux autres PC (ex: connexions sortantes du vendeur)
+            var oldPc = _lpLivePeerConnections[myUserId];
+            if (oldPc) {
+                try { oldPc.close(); } catch(e) {}
+                delete _lpLivePeerConnections[myUserId];
+            }
+
             var pc = new RTCPeerConnection({
                 iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
             });
+            // Stocker avec notre vrai userId (pas '__client__') pour que les ICE arrivent au bon PC
+            _lpLivePeerConnections[myUserId] = pc;
 
             pc.ontrack = function(e) {
                 console.log('[Live WebRTC] Track distant recu:', e.streams[0] ? 'ok' : 'vide');
+                // Annuler le timeout de retry
+                if (_lpLiveRetryTimeout) { clearTimeout(_lpLiveRetryTimeout); _lpLiveRetryTimeout = null; }
                 var remoteVideo = document.getElementById('lpLiveRemoteVideo');
                 if (remoteVideo && e.streams[0]) {
                     remoteVideo.srcObject = e.streams[0];
@@ -25653,6 +25890,15 @@
                     var pip = document.getElementById('lpLiveRemoteVideoPip');
                     if (pip) pip.classList.add('has-stream');
                     console.log('[Live WebRTC] Stream distant applique au player');
+                } else {
+                    console.warn('[Live WebRTC] Aucun stream dans ontrack');
+                }
+            };
+
+            pc.oniceconnectionstatechange = function() {
+                console.log('[Live WebRTC] Client ICE state:', pc.iceConnectionState);
+                if (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'disconnected') {
+                    console.warn('[Live WebRTC] Connexion ICE perdue - le client peut recliquer sur En direct');
                 }
             };
 
@@ -25681,18 +25927,27 @@
                             answer: pc.localDescription
                         }));
                     }
+                    console.log('[Live WebRTC] Réponse envoyée au vendeur, attente connexion ICE...');
                 })
                 .catch(function(e) {
                     console.warn('[Live WebRTC] Erreur client:', e.message);
+                    // En cas d'erreur, proposer de réessayer
+                    var pip = document.getElementById('lpLiveRemoteVideoPip');
+                    if (pip) {
+                        var rph = pip.querySelector('.lp-live-fs-pip-placeholder');
+                        if (rph) {
+                            rph.querySelector('.lp-live-fs-pip-icon').textContent = '⚠️';
+                            rph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = ' Erreur - Recliquez';
+                        }
+                    }
                 });
-
-            _lpLivePeerConnections['__client__'] = pc;
         }
 
         // Vendeur : gerer la reponse WebRTC du client
         function _lpHandleLiveWebrtcAnswer(msg) {
+            console.warn('🔴 [Live WebRTC] Reponse recue du viewer, targetUserId:', msg.targetUserId, 'answerPresent:', !!msg.answer);
             var viewerId = msg.targetUserId;
-            var pc = viewerId ? _lpLivePeerConnections[viewerId] : null;
+            var pc = viewerId ? (_lpLivePeerConnections['vendor:' + viewerId] || _lpLivePeerConnections[viewerId]) : null;
             if (!pc) {
                 // Fallback: prendre le premier PC disponible
                 for (var key in _lpLivePeerConnections) { pc = _lpLivePeerConnections[key]; break; }
@@ -25707,7 +25962,7 @@
         function _lpHandleLiveWebrtcIce(msg) {
             if (!msg.candidate) return;
             var viewerId = msg.targetUserId;
-            var pc = viewerId ? _lpLivePeerConnections[viewerId] : null;
+            var pc = viewerId ? (_lpLivePeerConnections['vendor:' + viewerId] || _lpLivePeerConnections[viewerId]) : null;
             if (!pc) {
                 // Fallback: prendre le premier PC disponible
                 for (var key in _lpLivePeerConnections) { pc = _lpLivePeerConnections[key]; break; }
@@ -29140,6 +29395,28 @@
         }
 
         function switchProviderTab(tabName) {
+            // Garde de sécurité : ne jamais afficher le dashboard prestataire sans authentification
+            // sauf si l'URL force explicitement lpRole=provider ou lpRole=vendor
+            try {
+                var _cuCheck = null;
+                try { _cuCheck = getLpCurrentUser(); } catch(e) {}
+                var _isAuth = !!(_cuCheck && String(_cuCheck.email || '').trim());
+                var _forceRole = '';
+                try { _forceRole = new URLSearchParams(window.location.search).get('lpRole') || ''; } catch(e) {}
+                if (!_isAuth && _forceRole !== 'provider' && _forceRole !== 'vendor') {
+                    console.warn('[Provider] switchProviderTab bloqué: utilisateur non identifié');
+                    return;
+                }
+                // Vérifier aussi que l'utilisateur a bien un prestataire
+                var _hasProvider = false;
+                try { _hasProvider = !!(getMyProviderId ? String(getMyProviderId() || '') : ''); } catch(e) {}
+                try { if (!_hasProvider) _hasProvider = (lpGetOwnedProviderIds ? lpGetOwnedProviderIds() : []).length > 0; } catch(e) {}
+                if (!_hasProvider && _forceRole !== 'provider' && _forceRole !== 'vendor') {
+                    console.warn('[Provider] switchProviderTab bloqué: aucun prestataire trouvé');
+                    return;
+                }
+            } catch(e) { console.warn('[Provider] Erreur garde switchProviderTab:', e); return; }
+
             const allowed = ['overview', 'services', 'orders', 'communication', 'supply', 'live']
             const next = allowed.includes(String(tabName || '')) ? String(tabName) : 'overview'
 

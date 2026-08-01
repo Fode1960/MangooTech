@@ -32,6 +32,10 @@ const pendingOffers = new Map();
 // Map: vendorId -> { incomingCallMsg, roomId, from, fromLabel, callId, callMode, timestamp }
 const pendingCalls = new Map();
 
+// Grace period avant de terminer un live quand le vendeur se déconnecte
+// Permet au vendeur de se reconnecter sans perdre sa session
+const liveDisconnectTimers = new Map(); // vendorId -> timeoutId
+
 // Stockage des sessions d'appel actives: roomId -> WebSocket du client appelant
 // Permet d'envoyer call-accepted / call-ended directement au client
 const callSessions = new Map();
@@ -350,6 +354,14 @@ wss.on('connection', (ws) => {
           handleLiveChat(ws, data);
           break;
 
+        case 'live:request-stream':
+          handleLiveRequestStream(ws, data);
+          break;
+
+        case 'live:get-viewers':
+          handleLiveGetViewers(ws, data);
+          break;
+
         case 'live:webrtc-relay':
           handleLiveWebrtcRelay(ws, data);
           break;
@@ -398,9 +410,27 @@ wss.on('connection', (ws) => {
     if (currentUser) {
       const uid = currentUser.id || currentUser.userId || '';
       if (uid) removeViewerFromAllSessions(uid);
-      // Si le vendeur se déconnecte, arrêter sa session live
+      // Si le vendeur se déconnecte, grace period avant d'arrêter sa session live
       if (currentUser.vendorId && isVendorLive(currentUser.vendorId)) {
-        endLiveSession(currentUser.vendorId);
+        const vid = currentUser.vendorId;
+        console.log(`[WebRTC-3008] Déconnexion vendor ${vid} — grace period 15s avant arrêt live`);
+        // Annuler un éventuel timer précédent
+        if (liveDisconnectTimers.has(vid)) {
+          clearTimeout(liveDisconnectTimers.get(vid));
+        }
+        liveDisconnectTimers.set(vid, setTimeout(() => {
+          liveDisconnectTimers.delete(vid);
+          // Vérifier si le vendeur s'est reconnecté entre-temps
+          if (!isVendorLive(vid)) return;
+          broadcastToLiveViewers(vid, {
+            type: 'live:ended',
+            vendorId: vid,
+            message: 'Le live est terminé. Merci d\'avoir participé !'
+          });
+          endLiveSession(vid);
+          broadcastVendorLiveStatus(vid, false);
+          console.log(`[WebRTC-3008] Live arrêté (grace period expirée) vendor ${vid}`);
+        }, 15000));
       }
     }
   });
@@ -428,6 +458,20 @@ wss.on('connection', (ws) => {
     });
 
     console.log(`[WebRTC-3008] Presence enregistree: vendor ${vendorId} (user ${userId})`);
+
+    // Annuler le grace timer si le vendeur se reconnecte (son live est toujours actif)
+    if (liveDisconnectTimers.has(vendorId)) {
+      clearTimeout(liveDisconnectTimers.get(vendorId));
+      liveDisconnectTimers.delete(vendorId);
+      console.log(`[WebRTC-3008] Reconnexion vendor ${vendorId} — grace timer annulé, live préservé`);
+      // Restaurer le badge live pour les clients
+      const session = getLiveSession(vendorId);
+      if (session) {
+        // Mettre à jour la référence WebSocket du vendeur dans la session
+        session.vendorWs = ws;
+        broadcastVendorLiveStatus(vendorId, true);
+      }
+    }
 
     // Replay des appels en attente si le vendeur se reconnecte apres un push (dashboard ferme)
     const pendingCall = pendingCalls.get(vendorId);
@@ -1112,6 +1156,11 @@ wss.on('connection', (ws) => {
   function handleLiveStop(ws, data) {
     const { vendorId } = data;
     if (!vendorId) return;
+    // Annuler le grace timer si présent (arrêt explicite)
+    if (liveDisconnectTimers.has(vendorId)) {
+      clearTimeout(liveDisconnectTimers.get(vendorId));
+      liveDisconnectTimers.delete(vendorId);
+    }
     // Notifier tous les viewers que le live est terminé
     broadcastToLiveViewers(vendorId, {
       type: 'live:ended',
@@ -1129,13 +1178,18 @@ wss.on('connection', (ws) => {
     const { vendorId, userId } = data;
     if (!vendorId) return;
     const viewerId = userId || (currentUser ? currentUser.id : null) || ('viewer-' + Date.now());
+    console.log(`[WebRTC-3008] live:join vendorId=${vendorId} userId=${userId} viewerId=${viewerId}`);
     const result = joinLiveSession(vendorId, ws, viewerId);
     if (!result) {
+      console.warn(`[WebRTC-3008] live:join ECHEC: session inexistante pour vendor ${vendorId}`);
       ws.send(JSON.stringify({ type: 'live:error', error: 'Ce live n\'existe pas ou est terminé' }));
       return;
     }
-    // Mettre à jour currentUser pour le tracking
-    if (!currentUser) currentUser = { id: viewerId, ws };
+    console.log(`[WebRTC-3008] live:join OK: ${result.viewerId} dans le live de ${vendorId} (${result.viewerCount} viewer(s))`);
+    // IMPORTANT: forcer currentUser en mode viewer (sans vendorId)
+    // pour que handleLiveWebrtcRelay identifie correctement l'expéditeur
+    // et relaye la réponse WebRTC vers le vendeur, pas vers le viewer.
+    currentUser = { id: viewerId, ws, isLiveViewer: true };
     // Envoyer l'état actuel au nouveau viewer
     ws.send(JSON.stringify({
       type: 'live:joined',
@@ -1209,6 +1263,38 @@ wss.on('connection', (ws) => {
     });
   }
 
+  // Un client demande au vendeur de renvoyer le flux vidéo
+  function handleLiveRequestStream(ws, data) {
+    const { vendorId } = data;
+    if (!vendorId) return;
+    // Relayer au vendeur pour qu'il flushe les viewers en attente
+    const session = getLiveSession(vendorId);
+    if (session && session.vendorWs && session.vendorWs.readyState === WebSocket.OPEN) {
+      session.vendorWs.send(JSON.stringify({
+        type: 'live:flush-viewers',
+        vendorId
+      }));
+      console.log(`[WebRTC-3008] Demande de stream relayée au vendor ${vendorId}`);
+    } else {
+      console.warn(`[WebRTC-3008] Demande stream IGNOREE: vendorWs indispo (session=${!!session})`);
+    }
+  }
+
+  // Renvoyer la liste des viewers au vendeur
+  function handleLiveGetViewers(ws, data) {
+    const { vendorId } = data;
+    if (!vendorId) return;
+    const session = getLiveSession(vendorId);
+    if (!session) return;
+    const viewerIds = Array.from(session.viewers.keys());
+    ws.send(JSON.stringify({
+      type: 'live:viewers-list',
+      vendorId,
+      viewers: viewerIds
+    }));
+    console.log(`[WebRTC-3008] Liste viewers pour ${vendorId}: ${viewerIds.length} viewer(s)`);
+  }
+
   function handleLiveChat(ws, data) {
     const { vendorId, message, from, fromLabel } = data;
     if (!vendorId || !message) return;
@@ -1233,22 +1319,33 @@ wss.on('connection', (ws) => {
   function handleLiveWebrtcRelay(ws, data) {
     const { vendorId, targetUserId } = data;
     var offer = data.offer, answer = data.answer, candidate = data.candidate, msgType = data.signalType || data.type;
-    if (!vendorId || !targetUserId || !msgType) return;
+    if (!vendorId || !targetUserId || !msgType) {
+      console.warn(`[WebRTC-3008] RELAY IGNORE: vendorId=${vendorId} targetUserId=${targetUserId} msgType=${msgType}`);
+      return;
+    }
 
     var relayMsg = { type: msgType, vendorId: vendorId, targetUserId: targetUserId };
     if (offer) relayMsg.offer = offer;
     if (answer) relayMsg.answer = answer;
     if (candidate) relayMsg.candidate = candidate;
 
-    // Si le message vient du vendeur, envoyer au viewer cible
-    if (currentUser && currentUser.vendorId === vendorId) {
-      sendToViewer(vendorId, targetUserId, relayMsg);
+    var curVendorId = currentUser ? currentUser.vendorId : null;
+    var isViewer = currentUser ? currentUser.isLiveViewer : false;
+    console.log(`[WebRTC-3008] RELAY: msgType=${msgType} senderVendorId=${curVendorId} msgVendorId=${vendorId} targetUserId=${targetUserId} isViewer=${!!isViewer}`);
+
+    // Si le message vient du vendeur (currentUser a vendorId et n'est PAS marqué viewer), envoyer au viewer cible
+    if (currentUser && !currentUser.isLiveViewer && String(currentUser.vendorId) === String(vendorId)) {
+      var sent = sendToViewer(vendorId, targetUserId, relayMsg);
+      console.log(`[WebRTC-3008] RELAY vendor->viewer: ${sent ? 'OK' : 'ECHEC'} targetUserId=${targetUserId}`);
       return;
     }
     // Si le message vient d'un viewer, envoyer au vendeur
     var session = getLiveSession(vendorId);
     if (session && session.vendorWs && session.vendorWs.readyState === WebSocket.OPEN) {
       session.vendorWs.send(JSON.stringify(relayMsg));
+      console.log(`[WebRTC-3008] RELAY viewer->vendor: OK msgType=${msgType}`);
+    } else {
+      console.warn(`[WebRTC-3008] RELAY viewer->vendor ECHEC: session=${!!session} vendorWs=${session ? !!session.vendorWs : false} readyState=${session && session.vendorWs ? session.vendorWs.readyState : 'N/A'}`);
     }
   }
 

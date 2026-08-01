@@ -115,11 +115,18 @@ export function isVendorLive(vendorId) {
  */
 export function sendToViewer(vendorId, userId, message) {
   const session = liveSessions.get(vendorId);
-  if (!session) return false;
+  if (!session) { console.warn(`[LiveSessions] sendToViewer ECHEC: pas de session pour vendor ${vendorId}`); return false; }
   const viewer = session.viewers.get(userId);
-  if (!viewer || viewer.ws.readyState !== 1) return false;
+  if (!viewer) {
+    // Lister les viewers disponibles pour debug
+    var availableIds = Array.from(session.viewers.keys()).join(', ');
+    console.warn(`[LiveSessions] sendToViewer ECHEC: viewer ${userId} introuvable. Viewers disponibles: [${availableIds}]`);
+    return false;
+  }
+  if (viewer.ws.readyState !== 1) { console.warn(`[LiveSessions] sendToViewer ECHEC: WS viewer readyState=${viewer.ws.readyState}`); return false; }
   try {
     viewer.ws.send(JSON.stringify(message));
+    console.log(`[LiveSessions] sendToViewer OK: vendor=${vendorId} viewer=${userId} msgType=${message.type}`);
     return true;
   } catch (e) {
     console.warn(`[LiveSessions] Erreur sendToViewer ${userId}:`, e.message);
