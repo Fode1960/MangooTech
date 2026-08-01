@@ -5793,8 +5793,8 @@
             <div class="lp-live-fs-pip-row">
                 <div class="lp-live-fs-pip lp-live-fs-pip-left" id="lpLiveRemoteVideoPip" onclick="_lpRetryRemoteStream()" style="cursor:pointer;">
                     <div class="lp-live-fs-pip-placeholder"><span class="lp-live-fs-pip-icon">📡</span>Cliquez pour voir le vendeur</div>
-                    <video id="lpLiveRemoteVideo" autoplay playsinline muted></video>
-                    <div class="lp-live-fs-pip-label">🔴 En direct</div>
+                    <video id="lpLiveRemoteVideo" autoplay playsinline></video>
+                    <div class="lp-live-fs-pip-label"><span id="lpLiveAudioBtn" onclick="event.stopPropagation();_lpToggleLiveAudio()" style="cursor:pointer;margin-right:4px;" title="Couper/Activer le son">🔊</span>🔴 En direct</div>
                 </div>
                 <div class="lp-live-fs-pip lp-live-fs-pip-right" id="lpLiveSelfVideoPip" onclick="_lpActivateClientCamera()" style="cursor:pointer;">
                     <div class="lp-live-fs-pip-placeholder"><span class="lp-live-fs-pip-icon">📷</span>Cliquez pour activer la caméra</div>
@@ -25047,6 +25047,10 @@
                     rph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'Cliquez pour voir le vendeur';
                 }
             }
+            // Réinitialiser le bouton audio
+            _lpUpdateAudioBtn(false);
+            var remoteVideo = document.getElementById('lpLiveRemoteVideo');
+            if (remoteVideo) remoteVideo.muted = true;
 
             // Réinitialiser le placeholder preview vendeur
             var previewPlaceholder = document.getElementById('lpLivePreviewPlaceholder');
@@ -25465,6 +25469,22 @@
             }, 12000);
         }
 
+        // Bascule audio Live (muet/son)
+        function _lpToggleLiveAudio() {
+            var video = document.getElementById('lpLiveRemoteVideo');
+            if (!video) return;
+            video.muted = !video.muted;
+            _lpUpdateAudioBtn(!video.muted);
+        }
+
+        // Met a jour l'icone du bouton audio
+        function _lpUpdateAudioBtn(hasSound) {
+            var btn = document.getElementById('lpLiveAudioBtn');
+            if (!btn) return;
+            btn.textContent = hasSound ? '🔊' : '🔇';
+            btn.title = hasSound ? 'Couper le son' : 'Activer le son';
+        }
+
         async function _lpStartSelfVideo() {
             if (_lpSelfStream) return;
             var pip = document.getElementById('lpLiveSelfVideoPip');
@@ -25880,13 +25900,24 @@
             _lpLivePeerConnections[myUserId] = pc;
 
             pc.ontrack = function(e) {
-                console.log('[Live WebRTC] Track distant recu:', e.streams[0] ? 'ok' : 'vide');
+                console.log('[Live WebRTC] Track distant recu:', e.streams[0] ? 'ok' : 'vide', 'audioTracks=' + (e.streams[0] ? e.streams[0].getAudioTracks().length : 0));
                 // Annuler le timeout de retry
                 if (_lpLiveRetryTimeout) { clearTimeout(_lpLiveRetryTimeout); _lpLiveRetryTimeout = null; }
                 var remoteVideo = document.getElementById('lpLiveRemoteVideo');
                 if (remoteVideo && e.streams[0]) {
                     remoteVideo.srcObject = e.streams[0];
-                    remoteVideo.play().catch(function(){});
+                    remoteVideo.muted = false;
+                    var playPromise = remoteVideo.play();
+                    if (playPromise) {
+                        playPromise.then(function() {
+                            console.log('[Live WebRTC] Audio+Video joue avec son');
+                            _lpUpdateAudioBtn(true);
+                        }).catch(function(err) {
+                            console.warn('[Live WebRTC] Autoplay bloque, son en attente de clic:', err.name);
+                            _lpUpdateAudioBtn(false);
+                            // L'utilisateur pourra cliquer sur le bouton son pour débloquer
+                        });
+                    }
                     var pip = document.getElementById('lpLiveRemoteVideoPip');
                     if (pip) pip.classList.add('has-stream');
                     console.log('[Live WebRTC] Stream distant applique au player');
