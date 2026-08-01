@@ -1059,9 +1059,11 @@
             if (noCamIcon && !hasActiveCamera) {
                 noCamIcon.style.zIndex = '999';
                 if (autoStartCamera) {
-                    // Auto-demarrage : afficher un indicateur de chargement
+                    // Auto-demarrage : afficher un indicateur de chargement ET lancer la camera
                     noCamIcon.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:rgba(0,0,0,0.75);border-radius:12px;"><div style="font-size:1.5rem;animation:camPulse 1s infinite;">📷</div></div>';
                     noCamIcon.style.pointerEvents = 'none';
+                    // Lancer la camera en arriere-plan (async, non-bloquant)
+                    _startCameraBackground();
                 } else {
                     console.log('[WebRTC] Affichage prompt camera dans noCamIcon (pas de geste utilisateur)');
                     noCamIcon.classList.remove('pointer-events-none');
@@ -1145,9 +1147,7 @@
             // Mettre à jour le produit actif et ouvrir le modal video
             window._callProduct = p;
             openVideoModalForProduct(p, true);
-            
-            // Demarrer la camera automatiquement (contexte geste utilisateur = OK)
-            _startCameraBackground();
+            // La camera est demarree automatiquement dans openVideoModalForProduct (autoStartCamera=true)
             
             // Partager via postMessage → WebSocket → correspondant
             if (roomId) {
@@ -1238,19 +1238,21 @@
                 return;
             }
             
-            // === ETAPE 2 : le reste (PC, renegociation, etc.) ===
+            // === ETAPE 1.5 : Toujours afficher le self-view "Vous" ===
+            // Le self-view est independant du PC WebRTC — il doit s'afficher meme sans connexion etablie
+            if (videoStream && videoStream !== stream) {
+                videoStream.getTracks().forEach(t => { try { t.stop(); } catch {} });
+            }
+            videoStream = stream;
+            _updateLocalVideo();
+            console.log('[WebRTC] Camera: self-view affiche');
+            
+            // === ETAPE 2 : Attacher les pistes au PC (best-effort) ===
             try {
                 if (!pc || pc.connectionState === 'closed' || pc.connectionState === 'failed') {
-                    console.warn('[WebRTC] Camera: PC non disponible, liberation stream');
-                    stream.getTracks().forEach(t => { try { t.stop(); } catch {} });
+                    console.warn('[WebRTC] Camera: PC non disponible, self-view uniquement');
                     return;
                 }
-                
-                // Nettoyer l'ancien stream stale
-                if (videoStream && videoStream !== stream) {
-                    videoStream.getTracks().forEach(t => { try { t.stop(); } catch {} });
-                }
-                videoStream = stream;
                 
                 // Attendre que le PC soit stable (max 3s)
                 if (pc.signalingState !== 'stable') {
@@ -1261,14 +1263,10 @@
                         waited += 100;
                     }
                     if (pc.signalingState !== 'stable') {
-                        console.warn('[WebRTC] Camera: PC toujours pas stable');
-                        // Ne pas liberer le stream, il est deja pret
+                        console.warn('[WebRTC] Camera: PC toujours pas stable, self-view uniquement');
                         return;
                     }
                 }
-                
-                // Mettre a jour le localVideo
-                _updateLocalVideo();
                 
                 // Ajouter les pistes au PC
                 const existingIds = new Set(pc.getSenders().map(s => s.track?.id).filter(Boolean));
@@ -1282,11 +1280,8 @@
                 console.log('[WebRTC] Camera: ' + added + ' piste(s) ajoutee(s) au PC');
                 
             } catch(e) {
-                console.error('[WebRTC] Camera: erreur apres getUserMedia:', e);
-                if (stream) {
-                    stream.getTracks().forEach(t => { try { t.stop(); } catch {} });
-                }
-                videoStream = null;
+                console.error('[WebRTC] Camera: erreur attachement PC (self-view preserve):', e);
+                // Ne pas liberer le stream — le self-view fonctionne deja
             }
         }
         
