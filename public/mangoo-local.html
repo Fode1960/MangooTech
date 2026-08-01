@@ -5725,8 +5725,12 @@
             ⚠️ Vous êtes sur localhost. Pour que le lien fonctionne sur Android, ouvrez le dashboard depuis l'adresse IP de votre PC (ex: <b>http://192.168.1.18:3015/mangoo-local.html?vendor=1784327703839&lpRole=vendor</b>).
         </div>
         <div class="lp-live-row">
-            <div class="lp-live-cam-wrap">
-                <video id="lpLivePreview" class="lp-live-cam" autoplay muted playsinline></video>
+            <div class="lp-live-cam-wrap" id="lpLiveCamWrap">
+                <video id="lpLivePreview" class="lp-live-cam" autoplay muted playsinline style="display:none;"></video>
+                <div class="lp-live-cam-placeholder" id="lpLivePreviewPlaceholder" onclick="_lpActivateVendorCamera()" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:#1a1a2e;border-radius:12px;cursor:pointer;flex-direction:column;gap:8px;">
+                    <span style="font-size:2rem;">📷</span>
+                    <span style="color:#ccc;font-size:0.85rem;">Cliquez pour activer la caméra</span>
+                </div>
                 <button class="lp-live-fs-btn" onclick="lpToggleLiveFullscreen()" title="Plein écran">⛶</button>
             </div>
             <div class="lp-live-products" id="lpLiveProducts"></div>
@@ -24875,31 +24879,7 @@
             } catch(e) { console.warn('[Live] Erreur sync produits Chat:', e.message); }
 
             if (!_lpLiveActive) {
-                // PREMIER DEMARRAGE : activer camera + envoyer live:start
-                // Essayer d'abord video+audio ensemble (les 2 permissions apparaissent)
-                try {
-                    _lpLiveStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                } catch(e1) {
-                    console.warn('[Live] Camera+audio echoue (' + e1.name + '), tentative video seule...');
-                    if (!window.isSecureContext) console.error('[Live] Contexte non securise - HTTPS requis');
-                    // Fallback : video seule (si pas de micro sur le PC)
-                    try {
-                        _lpLiveStream = await navigator.mediaDevices.getUserMedia({ video: true });
-                    } catch(e2) {
-                        console.warn('[Live] Camera video seule aussi echouee:', e2.name, e2.message);
-                    }
-                }
-                if (_lpLiveStream) {
-                    // Essayer d'ajouter l'audio si pas deja present
-                    if (!_lpLiveStream.getAudioTracks().length) {
-                        try {
-                            var _aStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                            _aStream.getAudioTracks().forEach(function(t) { _lpLiveStream.addTrack(t); });
-                        } catch(_ae) { console.warn('[Live] Audio non disponible:', _ae.message); }
-                    }
-                    var preview = document.getElementById('lpLivePreview');
-                    if (preview) { preview.srcObject = _lpLiveStream; preview.play().catch(function(){}); }
-                }
+                // PREMIER DEMARRAGE : envoyer live:start (la camera sera activee par clic sur le placeholder)
 
                 // Enregistrer la presence WebSocket AVANT live:start
                 // (le serveur vérifie currentUser.vendorId dans handleLiveStart)
@@ -25044,6 +25024,15 @@
                     rph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'En direct';
                 }
             }
+
+            // Réinitialiser le placeholder preview vendeur
+            var previewPlaceholder = document.getElementById('lpLivePreviewPlaceholder');
+            if (previewPlaceholder) {
+                previewPlaceholder.style.display = 'flex';
+                previewPlaceholder.innerHTML = '<span style="font-size:2rem;">📷</span><span style="color:#ccc;font-size:0.85rem;">Cliquez pour activer la caméra</span>';
+            }
+            var previewVideo = document.getElementById('lpLivePreview');
+            if (previewVideo) { previewVideo.style.display = 'none'; previewVideo.srcObject = null; }
 
             var vendorPanel = document.getElementById('lpLiveVendorPanel');
             if (vendorPanel) vendorPanel.style.display = 'none';
@@ -25280,6 +25269,46 @@
         var _lpSelfStream = null;
 
         // Démarrer la caméra self-view ("Vous")
+        // Activation camera vendeur - appelee DIRECTEMENT par onclick (user gesture preserve)
+        // NON-async pour que getUserMedia beneficie du clic utilisateur
+        function _lpActivateVendorCamera() {
+            var placeholder = document.getElementById('lpLivePreviewPlaceholder');
+            if (placeholder) { placeholder.innerHTML = '<span style="font-size:2rem;">⏳</span><span style="color:#ccc;font-size:0.85rem;">Activation...</span>'; }
+            
+            var constraints = { video: true, audio: true };
+            console.log('[Live] Activation camera vendeur... isSecureContext=' + !!window.isSecureContext);
+            
+            navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
+                console.log('[Live] Camera vendeur OK, pistes video=' + stream.getVideoTracks().length + ' audio=' + stream.getAudioTracks().length);
+                _lpLiveStream = stream;
+                var preview = document.getElementById('lpLivePreview');
+                var ph = document.getElementById('lpLivePreviewPlaceholder');
+                if (preview) { preview.srcObject = stream; preview.style.display = ''; preview.play().catch(function(){}); }
+                if (ph) { ph.style.display = 'none'; }
+            }).catch(function(e1) {
+                console.warn('[Live] Camera+audio echoue (' + e1.name + '): ' + e1.message);
+                // Fallback: video seule
+                console.log('[Live] Tentative video seule...');
+                navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+                    console.log('[Live] Video seule OK');
+                    _lpLiveStream = stream;
+                    // Essayer d'ajouter l'audio
+                    navigator.mediaDevices.getUserMedia({ audio: true }).then(function(aStream) {
+                        aStream.getAudioTracks().forEach(function(t) { stream.addTrack(t); });
+                    }).catch(function(){});
+                    var preview = document.getElementById('lpLivePreview');
+                    var ph = document.getElementById('lpLivePreviewPlaceholder');
+                    if (preview) { preview.srcObject = stream; preview.style.display = ''; preview.play().catch(function(){}); }
+                    if (ph) { ph.style.display = 'none'; }
+                }).catch(function(e2) {
+                    console.error('[Live] Camera video seule aussi echouee (' + e2.name + '): ' + e2.message);
+                    if (placeholder) {
+                        placeholder.innerHTML = '<span style="font-size:2rem;">❌</span><span style="color:#f66;font-size:0.8rem;">' + (e2.name === 'NotAllowedError' ? 'Permission refusée' : e2.name === 'NotFoundError' ? 'Aucune caméra détectée' : e2.message) + '</span><span style="color:#ccc;font-size:0.75rem;margin-top:4px;">Recliquez pour réessayer</span>';
+                    }
+                });
+            });
+        }
+
         async function _lpStartSelfVideo() {
             if (_lpSelfStream) return;
             var pip = document.getElementById('lpLiveSelfVideoPip');
