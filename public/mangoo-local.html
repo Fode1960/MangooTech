@@ -24876,8 +24876,14 @@
 
             if (!_lpLiveActive) {
                 // PREMIER DEMARRAGE : activer camera + envoyer live:start
+                // VIDEO d'abord (evite blocage silencieux {audio:true} sur PC sans micro)
                 try {
-                    _lpLiveStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                    _lpLiveStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                    // Ajouter l'audio separement (echoue silencieusement si pas de micro)
+                    try {
+                        var _audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        _audioStream.getAudioTracks().forEach(function(t) { _lpLiveStream.addTrack(t); });
+                    } catch(_ae) { console.warn('[Live] Audio non disponible:', _ae.message); }
                     var preview = document.getElementById('lpLivePreview');
                     if (preview) { preview.srcObject = _lpLiveStream; preview.play().catch(function(){}); }
                 } catch(e) { console.warn('[Live] Camera non disponible:', e.message); }
