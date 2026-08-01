@@ -5771,7 +5771,7 @@
             <div class="lp-live-fs-pip-row">
                 <div class="lp-live-fs-pip lp-live-fs-pip-left" id="lpLiveRemoteVideoPip">
                     <div class="lp-live-fs-pip-placeholder"><span class="lp-live-fs-pip-icon">📡</span>En direct</div>
-                    <video id="lpLiveRemoteVideo" autoplay playsinline webkit-playsinline x5-video-player-type="h5" x5-video-player-fullscreen="true"></video>
+                    <video id="lpLiveRemoteVideo" autoplay playsinline muted></video>
                     <div class="lp-live-fs-pip-label">🔴 En direct</div>
                 </div>
                 <div class="lp-live-fs-pip lp-live-fs-pip-right" id="lpLiveSelfVideoPip">
@@ -10269,11 +10269,33 @@
                 }
 
                 if (!merged.length) return;
+                // Préserver les statuts live existants avant le remplacement
+                var liveStatusBefore = {};
+                try {
+                    for (var _li = 0; _li < VENDORS.length; _li++) {
+                        var _lv = VENDORS[_li];
+                        if (_lv.live) {
+                            liveStatusBefore[String(_lv.id || _lv.slug || '')] = true;
+                        }
+                    }
+                } catch(e) {}
                 try {
                     VENDORS.splice(0, VENDORS.length, ...merged);
                 } catch {
                     VENDORS.length = 0;
                     merged.forEach((v) => VENDORS.push(v));
+                }
+                // Réappliquer les statuts live préservés
+                var liveRestored = false;
+                if (Object.keys(liveStatusBefore).length > 0) {
+                    for (var _li2 = 0; _li2 < VENDORS.length; _li2++) {
+                        var _lv2 = VENDORS[_li2];
+                        var _key = String(_lv2.id || _lv2.slug || '');
+                        if (liveStatusBefore[_key]) {
+                            _lv2.live = true;
+                            liveRestored = true;
+                        }
+                    }
                 }
                 try { lpBackfillPinMapFromVendors(); } catch {}
                 try { applyBoostConfigToVendors(); } catch {}
@@ -15974,6 +15996,16 @@
                             }
                         } catch {}
                     }, 25000);
+                    // Reconnexion live : si ?live= est dans l'URL et qu'on ne l'a pas encore rejoint
+                    try {
+                        var _urlParams = new URL(window.location.href).searchParams;
+                        var _liveVendor = _urlParams.get('live');
+                        if (_liveVendor && !_lpLiveJoinSent) {
+                            _lpLiveJoinSent = true;
+                            // Attendre que la présence soit enregistrée
+                            setTimeout(function() { lpJoinLive(_liveVendor); }, 800);
+                        }
+                    } catch(e) {}
                     // Flush queued messages (call notifications, etc.) — même sans présence vendeur
                     while (webrtcMsgQueue.length > 0) {
                         const msg = webrtcMsgQueue.shift();
@@ -15998,6 +16030,7 @@
                     console.log('[MgmtWS] Deconnecte (code', event.code, ')');
                     webrtcMgmtWsConnected = false;
                     webrtcMgmtWsReconnecting = false;
+                    _lpLiveJoinSent = false;
                     if (webrtcMgmtWsPingInterval) { clearInterval(webrtcMgmtWsPingInterval); webrtcMgmtWsPingInterval = null; }
                     const delay = Math.min(1000 * Math.pow(1.5, webrtcMgmtWsReconnectAttempt), 15000);
                     webrtcMgmtWsReconnectAttempt++;
@@ -16073,7 +16106,6 @@
                 var dataVendorSlug = String(data.vendorSlug || '').trim();
                 var dataVendorName = String(data.vendorName || '').trim().toLowerCase();
                 var found = false;
-                var changed = false; // Evite les doubles badges
                 for (var i = 0; i < VENDORS.length; i++) {
                     var v = VENDORS[i];
                     // Ignorer le marqueur user_me (position utilisateur) - evite badge fantome
@@ -16085,13 +16117,14 @@
                     if (vid === vendorId || vSlug === vendorId ||
                         (dataVendorSlug && vSlug === dataVendorSlug) ||
                         (dataVendorName && vName === dataVendorName)) {
-                        if (VENDORS[i].live !== live) {
-                            VENDORS[i].live = live;
-                            changed = true;
-                        }
+                        VENDORS[i].live = live;
                         found = true;
+                        console.warn('[LiveBadge] Vendor ' + VENDORS[i].name + ' (id=' + vid + ' slug=' + vSlug + ') live=' + live);
                         break;
                     }
+                }
+                if (!found) {
+                    console.warn('[LiveBadge] AUCUN vendor trouve pour vendorId=' + vendorId + ' | IDs VENDORS: ' + VENDORS.map(function(v){return v.id}).join(', '));
                 }
                 // Si la fiche vendeur est ouverte, mettre à jour le badge en direct
                 try {
@@ -16113,19 +16146,20 @@
                         }
                     }
                 } catch {}
-                // Ne re-rendre que si le statut a changé (evite les doubles badges)
-                if (changed) {
-                    try {
-                        if (typeof renderVendorsOnMap === 'function') {
-                            renderVendorsOnMap(VENDORS);
-                        }
-                    } catch(e) {}
-                    try {
-                        if (typeof renderListView === 'function') {
-                            renderListView(VENDORS);
-                        }
-                    } catch(e) {}
-                }
+                // Re-rendre la vue courante pour mettre a jour les badges sur les cartes
+                // Toujours re-rendre map ET list (meme si la vue n'est pas active)
+                try {
+                    if (typeof renderVendorsOnMap === 'function') {
+                        console.warn('[LiveBadge] Re-rendu MAP force avec VENDORS (' + (typeof VENDORS !== 'undefined' ? VENDORS.length : 0) + ' vendors)');
+                        renderVendorsOnMap(VENDORS);
+                    }
+                } catch(e) { console.warn('[LiveBadge] Erreur re-rendu map:', e.message); }
+                try {
+                    if (typeof renderListView === 'function') {
+                        console.warn('[LiveBadge] Re-rendu LIST force avec VENDORS (' + (typeof VENDORS !== 'undefined' ? VENDORS.length : 0) + ' vendors)');
+                        renderListView(VENDORS);
+                    }
+                } catch(e) { console.warn('[LiveBadge] Erreur re-rendu list:', e.message); }
             } catch(e) {}
         }
 
@@ -24845,7 +24879,7 @@
                 try {
                     _lpLiveStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                     var preview = document.getElementById('lpLivePreview');
-                    if (preview) { preview.srcObject = _lpLiveStream; }
+                    if (preview) { preview.srcObject = _lpLiveStream; preview.play().catch(function(){}); }
                 } catch(e) { console.warn('[Live] Camera non disponible:', e.message); }
 
                 // Enregistrer la presence WebSocket AVANT live:start
@@ -25013,6 +25047,9 @@
 
             lpUpdateProviderLiveStatus(false);
             lpInitGoLiveButton();
+            // Réinitialiser l'état pour permettre une future reconnexion
+            _lpLiveVendorId = null;
+            _lpLiveJoinSent = false;
         }
 
         // Met à jour l'UI du dashboard prestataire quand le live démarre/s'arrête
@@ -25240,6 +25277,7 @@
                 var selfVideo = document.getElementById('lpLiveSelfVideo');
                 if (selfVideo) {
                     selfVideo.srcObject = _lpSelfStream;
+                    selfVideo.play().catch(function(){});
                     if (pip) pip.classList.add('has-stream');
                 }
                 console.log('[Live] Camera self-view démarrée');
@@ -25557,28 +25595,9 @@
                 var remoteVideo = document.getElementById('lpLiveRemoteVideo');
                 if (remoteVideo && e.streams[0]) {
                     remoteVideo.srcObject = e.streams[0];
+                    remoteVideo.play().catch(function(){});
                     var pip = document.getElementById('lpLiveRemoteVideoPip');
                     if (pip) pip.classList.add('has-stream');
-                    // Lecture explicite pour compatibilite mobile
-                    remoteVideo.play().catch(function(playErr) {
-                        console.warn('[Live WebRTC] Play bloque, tentative user gesture:', playErr.name);
-                        // Sur mobile, play() peut echouer sans user gesture -> tap-to-play
-                        var tapHandler = function() {
-                            remoteVideo.play().catch(function(){});
-                            remoteVideo.removeEventListener('click', tapHandler);
-                            document.removeEventListener('touchstart', tapHandler);
-                        };
-                        remoteVideo.addEventListener('click', tapHandler);
-                        document.addEventListener('touchstart', tapHandler, { once: true });
-                        // Mettre a jour le placeholder
-                        if (pip) {
-                            var ph = pip.querySelector('.lp-live-fs-pip-placeholder');
-                            if (ph && !pip.classList.contains('has-stream')) {
-                                ph.querySelector('.lp-live-fs-pip-icon').textContent = '▶️';
-                                ph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'Toucher pour voir';
-                            }
-                        }
-                    });
                     console.log('[Live WebRTC] Stream distant applique au player');
                 }
             };

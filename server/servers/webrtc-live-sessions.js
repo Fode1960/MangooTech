@@ -180,6 +180,23 @@ export function removeViewerFromAllSessions(userId) {
   }
 }
 
+/**
+ * Retourne la liste de tous les vendors actuellement en live
+ */
+export function getAllActiveLiveVendors() {
+  const vendors = [];
+  for (const [vendorId, session] of liveSessions) {
+    vendors.push({
+      vendorId,
+      vendorName: session.vendorName || '',
+      vendorSlug: session.vendorSlug || '',
+      products: session.products || [],
+      viewerCount: session.viewers.size
+    });
+  }
+  return vendors;
+}
+
 export default {
   startLiveSession,
   endLiveSession,
@@ -190,5 +207,6 @@ export default {
   isVendorLive,
   broadcastToLiveViewers,
   getLiveSessionSummary,
-  removeViewerFromAllSessions
+  removeViewerFromAllSessions,
+  getAllActiveLiveVendors
 };

@@ -6,7 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import webpush from 'web-push';
 import { saveSubscription, removeSubscription, getSubscriptions } from './webrtc-push-store.js';
-import { startLiveSession, endLiveSession, joinLiveSession, leaveLiveSession, updateLiveProducts, getLiveSession, isVendorLive, broadcastToLiveViewers, removeViewerFromAllSessions, sendToViewer } from './webrtc-live-sessions.js';
+import { startLiveSession, endLiveSession, joinLiveSession, leaveLiveSession, updateLiveProducts, getLiveSession, isVendorLive, broadcastToLiveViewers, removeViewerFromAllSessions, sendToViewer, getAllActiveLiveVendors } from './webrtc-live-sessions.js';
 
 // Configuration VAPID pour Web Push
 const VAPID_KEYS = {
@@ -444,6 +444,26 @@ wss.on('connection', (ws) => {
       vendorId,
       status: 'online'
     }));
+
+    // Envoyer les statuts live de TOUS les vendors actifs au client qui vient de se connecter
+    try {
+      const activeVendors = getAllActiveLiveVendors();
+      if (activeVendors.length > 0) {
+        console.log(`[WebRTC-3008] Envoi statuts live pour ${activeVendors.length} vendor(s) au client reconnecté (user ${userId})`);
+        for (const av of activeVendors) {
+          const statusPayload = {
+            type: 'live:vendor-status',
+            vendorId: av.vendorId,
+            live: true,
+            vendorName: av.vendorName || '',
+            vendorSlug: av.vendorSlug || ''
+          };
+          ws.send(JSON.stringify(statusPayload));
+        }
+      }
+    } catch(e) {
+      console.warn('[WebRTC-3008] Erreur envoi statuts live au client reconnecté:', e.message);
+    }
   }
 
   // ===== ROOM MANAGEMENT =====
