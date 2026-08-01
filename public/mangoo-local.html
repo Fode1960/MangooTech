@@ -24876,14 +24876,29 @@
 
             if (!_lpLiveActive) {
                 // PREMIER DEMARRAGE : activer camera + envoyer live:start
-                // APPEL UNIQUE {video+audio} = les 2 permissions apparaissent ensemble (pattern 9cce9ee)
+                // Essayer d'abord video+audio ensemble (les 2 permissions apparaissent)
                 try {
                     _lpLiveStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                } catch(e1) {
+                    console.warn('[Live] Camera+audio echoue (' + e1.name + '), tentative video seule...');
+                    if (!window.isSecureContext) console.error('[Live] Contexte non securise - HTTPS requis');
+                    // Fallback : video seule (si pas de micro sur le PC)
+                    try {
+                        _lpLiveStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    } catch(e2) {
+                        console.warn('[Live] Camera video seule aussi echouee:', e2.name, e2.message);
+                    }
+                }
+                if (_lpLiveStream) {
+                    // Essayer d'ajouter l'audio si pas deja present
+                    if (!_lpLiveStream.getAudioTracks().length) {
+                        try {
+                            var _aStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                            _aStream.getAudioTracks().forEach(function(t) { _lpLiveStream.addTrack(t); });
+                        } catch(_ae) { console.warn('[Live] Audio non disponible:', _ae.message); }
+                    }
                     var preview = document.getElementById('lpLivePreview');
                     if (preview) { preview.srcObject = _lpLiveStream; preview.play().catch(function(){}); }
-                } catch(e) {
-                    console.warn('[Live] Camera non disponible:', e.name, e.message);
-                    if (!window.isSecureContext) console.error('[Live] Contexte non securise - HTTPS requis pour getUserMedia');
                 }
 
                 // Enregistrer la presence WebSocket AVANT live:start
