@@ -25384,39 +25384,19 @@
 
         // Activation de la caméra côté CLIENT (appelée via onclick pour préserver le geste utilisateur)
         function _lpActivateClientCamera() {
-            if (_lpSelfStream) return;
-            var pip = document.getElementById('lpLiveSelfVideoPip');
-            if (pip) {
-                var ph = pip.querySelector('.lp-live-fs-pip-placeholder');
-                if (ph) {
-                    ph.querySelector('.lp-live-fs-pip-icon').textContent = '⏳';
-                    ph.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = 'Activation...';
+            // Si le stream existe mais a des pistes arrêtées, le nettoyer
+            if (_lpSelfStream) {
+                var activeTracks = _lpSelfStream.getTracks().filter(function(t) { return t.readyState === 'live'; });
+                if (activeTracks.length > 0) {
+                    console.log('[Live] Camera self-view deja active, pistes live=' + activeTracks.length);
+                    return;
                 }
+                // Pistes arrêtées, nettoyer et relancer
+                console.log('[Live] Camera self-view: pistes arretees, relance...');
+                _lpSelfStream.getTracks().forEach(function(t) { try { t.stop(); } catch(e) {} });
+                _lpSelfStream = null;
             }
-            console.log('[Live] Activation camera client... isSecureContext=' + !!window.isSecureContext);
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false }).then(function(stream) {
-                console.log('[Live] Camera client OK');
-                _lpSelfStream = stream;
-                var selfVideo = document.getElementById('lpLiveSelfVideo');
-                if (selfVideo) {
-                    selfVideo.srcObject = stream;
-                    selfVideo.play().catch(function(){});
-                }
-                if (pip) pip.classList.add('has-stream');
-            }).catch(function(e) {
-                console.warn('[Live] Camera client echouee (' + e.name + '): ' + e.message);
-                var errMsg = 'Caméra refusée';
-                if (e.name === 'NotAllowedError') errMsg = 'Permission refusée';
-                else if (e.name === 'NotFoundError') errMsg = 'Pas de caméra';
-                else if (e.name === 'NotReadableError') errMsg = 'Caméra occupée';
-                if (pip) {
-                    var ph2 = pip.querySelector('.lp-live-fs-pip-placeholder');
-                    if (ph2) {
-                        ph2.querySelector('.lp-live-fs-pip-icon').textContent = '📷';
-                        ph2.querySelector('.lp-live-fs-pip-icon').nextSibling.textContent = errMsg + ' - Recliquez';
-                    }
-                }
-            });
+            _lpStartSelfVideo();
         }
 
         // Réessayer d'obtenir le flux distant (cliqué sur "En direct")

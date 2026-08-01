@@ -1022,7 +1022,7 @@
         }
 
         // === PRODUCT PICKER (selecteur de produit pour "Voir produit") ===
-        function openVideoModalForProduct(product) {
+        function openVideoModalForProduct(product, autoStartCamera) {
             if (!product) return;
             const videoModal = document.getElementById('videoModal');
             if (!videoModal) return;
@@ -1051,34 +1051,38 @@
                 }
             } catch {}
             
-            // Toujours afficher un prompt "Touchez pour activer" dans "Vous"
-            // L'initiateur appelle _startCameraBackground() separement (user gesture = OK)
-            // Le destinataire voit ce prompt et tape pour activer (user gesture = OK)
+            // Afficher un indicateur dans le self-view "Vous"
+            // Si autoStartCamera=true (geste utilisateur dispo), afficher chargement (la camera demarre automatiquement)
+            // Sinon (pas de geste utilisateur), afficher un prompt cliquable
             const noCamIcon = document.getElementById('noCamIcon');
             const hasActiveCamera = videoStream && videoStream.getVideoTracks().some(t => t.readyState === 'live');
             if (noCamIcon && !hasActiveCamera) {
-                console.log('[WebRTC] Affichage prompt camera dans noCamIcon');
-                // Forcer pointer-events auto (supprime la classe Tailwind)
-                noCamIcon.classList.remove('pointer-events-none');
-                noCamIcon.style.pointerEvents = 'auto';
-                noCamIcon.style.cursor = 'pointer';
                 noCamIcon.style.zIndex = '999';
-                noCamIcon.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:8px;cursor:pointer;background:rgba(0,0,0,0.75);border-radius:12px;width:100%;height:100%;box-sizing:border-box;animation:camPulse 2s infinite;" id="noCamPrompt"><div style="font-size:2rem;">📷</div><div style="font-weight:bold;font-size:13px;text-align:center;color:white;">Touchez pour<br>activer votre caméra</div></div>';
-                
-                // Handler separe pour debug
-                function camPromptClick(ev) {
-                    console.log('[WebRTC] CLIC sur prompt camera !');
-                    ev.stopPropagation();
-                    ev.preventDefault();
-                    const nic = document.getElementById('noCamIcon');
-                    if (nic) {
-                        nic.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:rgba(0,0,0,0.75);border-radius:12px;"><div style="font-size:1.5rem;">⏳</div></div>';
-                        nic.style.pointerEvents = 'none';
-                        nic.style.cursor = 'default';
+                if (autoStartCamera) {
+                    // Auto-demarrage : afficher un indicateur de chargement
+                    noCamIcon.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:rgba(0,0,0,0.75);border-radius:12px;"><div style="font-size:1.5rem;animation:camPulse 1s infinite;">📷</div></div>';
+                    noCamIcon.style.pointerEvents = 'none';
+                } else {
+                    console.log('[WebRTC] Affichage prompt camera dans noCamIcon (pas de geste utilisateur)');
+                    noCamIcon.classList.remove('pointer-events-none');
+                    noCamIcon.style.pointerEvents = 'auto';
+                    noCamIcon.style.cursor = 'pointer';
+                    noCamIcon.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:8px;cursor:pointer;background:rgba(0,0,0,0.75);border-radius:12px;width:100%;height:100%;box-sizing:border-box;animation:camPulse 2s infinite;" id="noCamPrompt"><div style="font-size:2rem;">📷</div><div style="font-weight:bold;font-size:13px;text-align:center;color:white;">Touchez pour<br>activer votre caméra</div></div>';
+                    
+                    function camPromptClick(ev) {
+                        console.log('[WebRTC] CLIC sur prompt camera !');
+                        ev.stopPropagation();
+                        ev.preventDefault();
+                        const nic = document.getElementById('noCamIcon');
+                        if (nic) {
+                            nic.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:rgba(0,0,0,0.75);border-radius:12px;"><div style="font-size:1.5rem;">⏳</div></div>';
+                            nic.style.pointerEvents = 'none';
+                            nic.style.cursor = 'default';
+                        }
+                        _startCameraBackground();
                     }
-                    _startCameraBackground();
+                    noCamIcon.onclick = camPromptClick;
                 }
-                noCamIcon.onclick = camPromptClick;
             }
         }
         
@@ -1140,9 +1144,9 @@
             
             // Mettre à jour le produit actif et ouvrir le modal video
             window._callProduct = p;
-            openVideoModalForProduct(p);
+            openVideoModalForProduct(p, true);
             
-            // Demarrer la camera (contexte geste utilisateur = OK)
+            // Demarrer la camera automatiquement (contexte geste utilisateur = OK)
             _startCameraBackground();
             
             // Partager via postMessage → WebSocket → correspondant
