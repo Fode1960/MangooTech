@@ -423,6 +423,8 @@ export default function ProviderPhoneAccess() {
     setLoading(true)
     setError('')
     setInfo('')
+    // Detruire toute session Supabase anterieure (evite conflit de provider)
+    try { await supabase.auth.signOut() } catch(e) {}
     try {
       const probe = await checkPhoneExists()
       if (probe?.networkError) {
