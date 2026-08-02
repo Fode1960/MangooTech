@@ -461,6 +461,12 @@ export default function ProviderPhoneAccess() {
         const shopName = String(verifiedProvider?.name || resolved?.provider?.name || probe?.provider?.name || 'Boutique').trim() || 'Boutique'
         persistPrestataireUser({ id: verifiedProviderId, email: shopEmail, name: shopName, role: 'vendor' })
         persistLocalModeUser({ id: verifiedProviderId, email: shopEmail, name: shopName, role: 'vendor' })
+        // Forcer le bon provider ID + nettoyer les vieilles donnees
+        try { localStorage.setItem('mangoo_my_provider_id', String(verifiedProviderId || '')) } catch(e) {}
+        try { localStorage.removeItem('mangoo_provider_services'); } catch(e) {}
+        try { localStorage.removeItem('mangoo_provider_services_vendor'); } catch(e) {}
+        try { localStorage.removeItem('mangoo_my_products'); } catch(e) {}
+        try { localStorage.removeItem('mangoo_my_products_vendor'); } catch(e) {}
         try {
           localStorage.setItem('mangoo_my_shop_id', verifiedProviderId)
           if (shopEmail) {
@@ -536,6 +542,13 @@ export default function ProviderPhoneAccess() {
 
       persistPrestataireUser({ id: userId, email: ownerEmailUsed || candidates[0], name: fullName, role: 'prestataire' })
       if (usedLocalSync) persistLocalModeUser({ id: userId, email: ownerEmailUsed || candidates[0], name: fullName, role: 'prestataire' })
+      // Forcer le bon provider ID pour eviter les conflits de doublons
+      try { localStorage.setItem('mangoo_my_provider_id', String(verifiedProviderId || '')) } catch(e) {}
+      // Nettoyer les donnees d'autres providers (evite contamination croisee)
+      try { localStorage.removeItem('mangoo_provider_services'); } catch(e) {}
+      try { localStorage.removeItem('mangoo_provider_services_vendor'); } catch(e) {}
+      try { localStorage.removeItem('mangoo_my_products'); } catch(e) {}
+      try { localStorage.removeItem('mangoo_my_products_vendor'); } catch(e) {}
       await syncResolvedProviderOwner({
         ownerEmail: ownerEmailUsed || candidates[0],
         secretUsed: secret,
