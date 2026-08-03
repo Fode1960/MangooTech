@@ -4315,6 +4315,90 @@
             color: white;
             border: 1.5px solid rgba(255,255,255,0.5) !important;
         }
+        /* Booster ultra-simple — modal */
+        #lpBoostSimpleOverlay {
+            position: fixed; inset: 0; z-index: 26000;
+            background: rgba(0,0,0,0.65);
+            display: none; align-items: center; justify-content: center;
+            padding: 16px;
+        }
+        #lpBoostSimpleOverlay.open { display: flex; }
+        #lpBoostSimpleCard {
+            width: 100%; max-width: 400px;
+            background: linear-gradient(135deg, #0f172a 0%, #1a2332 100%);
+            border-radius: 20px; border: 1px solid rgba(255,255,255,0.08);
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+            animation: boostSlideUp 0.3s ease-out;
+        }
+        @keyframes boostSlideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        #lpBoostSimpleCard .lbs-header {
+            background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 50%, #1b5e20 100%);
+            padding: 20px 20px 16px;
+            text-align: center;
+        }
+        #lpBoostSimpleCard .lbs-header h2 {
+            margin: 0; font-size: 1.2rem; font-weight: 950; color: white;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        #lpBoostSimpleCard .lbs-header .lbs-vendor {
+            margin-top: 6px; font-size: 0.82rem; color: rgba(255,255,255,0.8);
+            font-weight: 600;
+        }
+        #lpBoostSimpleCard .lbs-body {
+            padding: 16px;
+        }
+        #lpBoostSimpleCard .lbs-option {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #lpBoostSimpleCard .lbs-option:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.15);
+            transform: translateY(-1px);
+        }
+        #lpBoostSimpleCard .lbs-option:last-child { margin-bottom: 0; }
+        #lpBoostSimpleCard .lbs-option .lbs-icon {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; flex-shrink: 0;
+        }
+        #lpBoostSimpleCard .lbs-option .lbs-icon.sponsor { background: rgba(255,152,0,0.15); }
+        #lpBoostSimpleCard .lbs-option .lbs-icon.promo { background: rgba(76,175,80,0.15); }
+        #lpBoostSimpleCard .lbs-option .lbs-icon.nouveau { background: rgba(33,150,243,0.15); }
+        #lpBoostSimpleCard .lbs-option .lbs-info { flex: 1; min-width: 0; }
+        #lpBoostSimpleCard .lbs-option .lbs-info .lbs-name {
+            font-size: 0.95rem; font-weight: 800; color: #e2e8f0;
+            margin-bottom: 2px;
+        }
+        #lpBoostSimpleCard .lbs-option .lbs-info .lbs-desc {
+            font-size: 0.75rem; color: #94a3b8;
+        }
+        #lpBoostSimpleCard .lbs-option .lbs-price {
+            font-size: 1.1rem; font-weight: 950; color: #4caf50;
+            white-space: nowrap;
+        }
+        #lpBoostSimpleCard .lbs-close {
+            position: absolute; top: 14px; right: 14px;
+            width: 32px; height: 32px;
+            border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.2); color: white;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; font-weight: bold;
+            transition: background 0.2s;
+        }
+        #lpBoostSimpleCard .lbs-close:hover { background: rgba(255,255,255,0.15); }
+        #lpBoostSimpleCard .lbs-header { position: relative; }
     </style>
 </head>
 <body>
@@ -4754,6 +4838,8 @@
                                     <button type="button" class="lp-btn lp-btn-secondary" onclick="try{switchProviderTab('communication')}catch{}">💬 Chat clients</button>
                                 </div>
                             </div>
+                            <!-- Actions proprietaire injectees dynamiquement -->
+                            <div id="lp-provider-owner-actions"></div>
                         </div>
 
                         <div id="lp-provider-services" class="lp-pane" data-pvpane="services">
@@ -5730,6 +5816,43 @@
             Merci pour votre achat !<br>Le vendeur prépare votre commande.
         </div>
         <a class="lsc-track" id="lscTrackBtn" href="#" onclick="lpOpenOrderTracking(); return false;">📋 Suivre ma commande</a>
+    </div>
+
+    <!-- BOOSTER ULTRA-SIMPLE — Modal de choix de boost -->
+    <div id="lpBoostSimpleOverlay" onclick="if(event.target===this) lpCloseBoostSimple()">
+        <div id="lpBoostSimpleCard">
+            <div class="lbs-header">
+                <button class="lbs-close" onclick="lpCloseBoostSimple()" title="Fermer">&times;</button>
+                <h2>🚀 Booster ma visibilité</h2>
+                <div class="lbs-vendor" id="lbsVendorName"></div>
+            </div>
+            <div class="lbs-body">
+                <div class="lbs-option" onclick="lpBuyBoost('sponsor')">
+                    <div class="lbs-icon sponsor">🔥</div>
+                    <div class="lbs-info">
+                        <div class="lbs-name">Sponsorisé 24h</div>
+                        <div class="lbs-desc">Apparaît en tête des résultats</div>
+                    </div>
+                    <div class="lbs-price">2 000 F</div>
+                </div>
+                <div class="lbs-option" onclick="lpBuyBoost('promo')">
+                    <div class="lbs-icon promo">🎯</div>
+                    <div class="lbs-info">
+                        <div class="lbs-name">En Promo 3 jours</div>
+                        <div class="lbs-desc">Badge "Promo" visible par tous</div>
+                    </div>
+                    <div class="lbs-price">3 000 F</div>
+                </div>
+                <div class="lbs-option" onclick="lpBuyBoost('new')">
+                    <div class="lbs-icon nouveau">✨</div>
+                    <div class="lbs-info">
+                        <div class="lbs-name">Nouveau 48h</div>
+                        <div class="lbs-desc">Badge "Nouveau" pour attirer les clients</div>
+                    </div>
+                    <div class="lbs-price">1 000 F</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- LIVE SHOPPING PANEL - VENDOR -->
@@ -8354,6 +8477,27 @@
                 try {
                     if (kind === 'service') localStorage.setItem('mangoo_my_provider_id', String(id));
                     else localStorage.setItem('mangoo_my_shop_id', String(id));
+                } catch {
+                }
+                // Mettre à jour mangoo-current-user pour que getLpCurrentUser() retourne l'utilisateur authentifié
+                // → indispensable pour les vérifications email dans isOwnerProvider
+                try {
+                    const ownerEmail = String(v?.ownerEmail || '').trim().toLowerCase();
+                    const vendorName = String(v?.name || v?.shop_name || v?.vendor_name || v?.displayName || '').trim();
+                    const vendorPhone = String(v?.phone || v?.telephone || '').trim();
+                    if (ownerEmail && ownerEmail.includes('@')) {
+                        const nextUser = {
+                            id: String(id),
+                            name: vendorName || ownerEmail.split('@')[0],
+                            email: ownerEmail,
+                            role: 'vendor',
+                            roles: ['vendor', 'client'],
+                            avatar: kind === 'service' ? '🔧' : '🏪',
+                            phone: vendorPhone
+                        };
+                        localStorage.setItem('mangoo-current-user', JSON.stringify(nextUser));
+                        localStorage.setItem('user', JSON.stringify(nextUser));
+                    }
                 } catch {
                 }
                 try { refreshProviderDashboardFab(); } catch {}
@@ -11647,6 +11791,27 @@
                     }
                 } catch(e) {}
 
+                // Injecter les actions proprietaire (Booster, Ma fiche, Paiement, Mon compte, Quitter)
+                // dans l'onglet Vue d'ensemble du Dashboard
+                try {
+                    var ownerActionsDiv = document.getElementById('lp-provider-owner-actions');
+                    if (ownerActionsDiv && !document.getElementById('lp-owner-actions-injected')) {
+                        var _pidOwner = getMyProviderId();
+                        if (_pidOwner) {
+                            var safeId = String(_pidOwner).replace(/'/g, "\\'");
+                            ownerActionsDiv.innerHTML = '<div id="lp-owner-actions-injected" style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:16px;">' +
+                                '<div style="font-weight:950; color:var(--ml-text); font-size:1.02rem; margin-bottom:12px;">⚙️ Actions</div>' +
+                                '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+                                    '<button type="button" onclick="event&&event.stopPropagation&&event.stopPropagation();lpTryOpenBoostFromLocal(\'' + safeId + '\',\'provider\');" style="background:#1b5e20;color:#fff;font-size:0.95rem;border:none;padding:10px 16px;border-radius:999px;font-weight:950;cursor:pointer;">🚀 Booster</button>' +
+                                    '<button type="button" onclick="openProviderModalForVendor(\'' + safeId + '\')" style="color:#636e72;font-size:0.85rem;border:1px solid #dfe6e9;padding:8px 15px;border-radius:20px;background:transparent;font-weight:700;cursor:pointer;">🏪 Ma fiche</button>' +
+                                    '<button type="button" onclick="startServicePayment(\'' + safeId + '\')" style="color:#1b5e20;font-size:0.85rem;border:1px solid #1b5e20;padding:8px 15px;border-radius:20px;background:transparent;font-weight:700;cursor:pointer;">💳 Paiement</button>' +
+                                    '<button type="button" onclick="openProviderDashboard(\'' + safeId + '\')" style="color:#1b5e20;font-size:0.85rem;border:1px solid #1b5e20;padding:8px 15px;border-radius:20px;background:transparent;font-weight:700;cursor:pointer;">👤 Mon compte</button>' +
+                                    '<button type="button" onclick="lpDisconnectProvider()" style="color:#d63031;font-size:0.85rem;border:1px solid #d63031;padding:8px 15px;border-radius:20px;background:transparent;font-weight:700;cursor:pointer;">🚪 Quitter</button>' +
+                                '</div></div>';
+                        }
+                    }
+                } catch(e) {}
+
                 // Définir activeVendor pour le prestataire actif (evite les incohérences Chat/Badge/Produits)
                 try {
                     var _pid3 = getMyProviderId();
@@ -11767,6 +11932,28 @@
                         try { lpApplySimplePanelVisibility(); } catch(e) {}
                     };
                     document.body.appendChild(backBtn);
+                }
+            } catch(e) {}
+        }
+
+        // Ouvre la fiche du prestataire sur la carte depuis le dashboard
+        function lpShowMyProviderSheet() {
+            try {
+                // 1. Afficher la carte (cache le dashboard)
+                lpShowMapFromProvider();
+                // 2. Ouvrir la fiche du prestataire avec les boutons proprio
+                //    Delai plus long pour laisser la carte s'initialiser
+                var pid = String(localStorage.getItem('mangoo_my_provider_id') || '').trim();
+                if (pid) {
+                    setTimeout(function() {
+                        try {
+                            // Forcer le rechargement de la carte avant d'ouvrir la fiche
+                            if (typeof map !== 'undefined' && map) { map.invalidateSize(); }
+                        } catch(e) {}
+                        try {
+                            openVendorSheetById(pid, { retries: 8, retryDelay: 300 });
+                        } catch(e) {}
+                    }, 800);
                 }
             } catch(e) {}
         }
@@ -11964,34 +12151,35 @@
         }
 
         function lpOpenVendorCommunication() {
+            // Si l'utilisateur est un prestataire, toujours forcer activeVendor sur son propre profil
+            try {
+                var _pid = getMyProviderId();
+                if (_pid) {
+                    var _pv = (Array.isArray(VENDORS) ? VENDORS : []).find(function(x) { return String(x?.id) === String(_pid); });
+                    if (_pv) {
+                        activeVendor = _pv;
+                    } else {
+                        // Prestataire non trouve dans VENDORS, creer un objet vendor minimal
+                        var _pName = '';
+                        try {
+                            var _pData = localStorage.getItem('mangoo_provider_services');
+                            if (!_pData) _pData = localStorage.getItem('mangoo_local_provider_sync_v1');
+                            if (!_pData) {
+                                var _pRaw = localStorage.getItem('mangoo_providers');
+                                if (_pRaw) { var _pArr = JSON.parse(_pRaw); var _pf = _pArr.find(function(x) { return String(x.id) === String(_pid); }); if (_pf) _pName = _pf.name || ''; }
+                            }
+                        } catch(e) {}
+                        if (!_pName) _pName = 'Mangoo R\u00e9par';
+                        activeVendor = { id: _pid, name: _pName, kind: 'provider', slug: _pid, avatar: '', photo: '', category: '', coverage: [] };
+                    }
+                    try { openChat(); } catch {}
+                    return;
+                }
+            } catch(e) {}
             // Si dashboard prestataire actif, FORCER activeVendor puis ouvrir le chat
             try {
                 var _psProv = document.getElementById('providerSection');
                 if (_psProv && _psProv.style.display === 'block') {
-                    // Toujours forcer activeVendor au prestataire actuel
-                    try {
-                        var _pid = getMyProviderId();
-                        if (_pid) {
-                            var _pv = (Array.isArray(VENDORS) ? VENDORS : []).find(function(x) { return String(x?.id) === String(_pid); });
-                            if (_pv) {
-                                activeVendor = _pv;
-                            } else {
-                                // Prestataire non trouve dans VENDORS (ex: providers),
-                                // creer un objet vendor minimal a partir du localStorage
-                                var _pName = '';
-                                try {
-                                    var _pData = localStorage.getItem('mangoo_provider_services');
-                                    if (!_pData) _pData = localStorage.getItem('mangoo_local_provider_sync_v1');
-                                    if (!_pData) {
-                                        var _pRaw = localStorage.getItem('mangoo_providers');
-                                        if (_pRaw) { var _pArr = JSON.parse(_pRaw); var _pf = _pArr.find(function(x) { return String(x.id) === String(_pid); }); if (_pf) _pName = _pf.name || ''; }
-                                    }
-                                } catch(e) {}
-                                if (!_pName) _pName = 'Mangoo Re\u0301par';
-                                activeVendor = { id: _pid, name: _pName, kind: 'provider', slug: _pid, avatar: '', photo: '', category: '', coverage: [] };
-                            }
-                        }
-                    } catch(e) {}
                     try { openChat(); } catch {}
                     return;
                 }
@@ -13047,7 +13235,7 @@
                             background: #1b5e20; color: white; border: none; 
                             border-radius: 10px; font-weight: bold; cursor: pointer;
                             box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3);
-                            animation: pulse 2s infinite;
+                            animation: schedulePulse 2s infinite;
                         ">
                             💳 Payer ${stepLabelBase} (${shareAmount.toLocaleString()} F)
                         </button>
@@ -13090,7 +13278,7 @@
             
             overlay.innerHTML = `
                 <style>
-                    @keyframes pulse {
+                    @keyframes schedulePulse {
                         0% { transform: scale(1); }
                         50% { transform: scale(1.02); }
                         100% { transform: scale(1); }
@@ -15039,6 +15227,10 @@
                 buyerEmail: currentUser?.email || '',
                 createdAt: new Date().toISOString(),
             });
+
+            // Cacher la carte produit AVANT d'ouvrir le modal de paiement
+            // pour eviter le chevauchement sur mobile
+            lpHideProductCard();
 
             // Ouvrir le modal de paiement
             openPaymentModal(amount || priceVal, async function(paymentResult) {
@@ -18283,15 +18475,28 @@
                         isOwnerProvider = false;
                     }
                 }
-                if (!isOwnerProvider && myProviderId && String(vendor.id) === String(myProviderId)) isOwnerProvider = true;
+                // Check #2 securise : exige que l'email corresponde au ownerEmail du vendor
+                // (evite les faux positifs quand un utilisateur quelconque a mangoo_my_provider_id dans son localStorage)
+                if (!isOwnerProvider && currentUser && email && myProviderId && String(vendor.id) === String(myProviderId) && email === String(vendor?.ownerEmail || '').toLowerCase()) isOwnerProvider = true;
+                // Check #3 : email === ownerEmail (check direct)
                 if (!isOwnerProvider && email && String(vendor?.ownerEmail || '').toLowerCase() === email) isOwnerProvider = true;
                 try {
                     isOwnerShop = kindMode === 'shop' && lpIsOwnedShopVendor(vendor);
                 } catch {
-                    isOwnerShop = false;
-                }
+                isOwnerShop = false;
+            }
 
-                const isAdmin = isAdminUser() && lpIsAdminToolsEnabled();
+            // Quand le proprietaire regarde sa propre fiche, masquer les actions client
+            // (Discuter, Itineraire, Appeler...) pour ne garder que les actions proprio
+            // (Booster, Ma fiche, Paiement, Mon compte, Quitter)
+            if (isOwnerProvider || isOwnerShop) {
+                try {
+                    const clientActions = document.getElementById('vendorPrimaryActions');
+                    if (clientActions) clientActions.style.display = 'none';
+                } catch {}
+            }
+
+            const isAdmin = isAdminUser() && lpIsAdminToolsEnabled();
 
                 if (kindMode === 'service' && isAdmin) {
                     ownerLink.style.display = 'block';
@@ -19258,36 +19463,104 @@
             } catch {
             }
             try {
-                const opened = !!lpOpenBoostOverlay(target);
-                if (opened) {
-                    try { lpToast("Boost ouvert.", 'ok'); } catch {}
-                    setTimeout(() => {
-                        try {
-                            const overlay = document.getElementById('lpBoostOverlay');
-                            if (!overlay) throw new Error('overlay_missing');
-                            const style = window.getComputedStyle ? window.getComputedStyle(overlay) : null;
-                            const rect = overlay.getBoundingClientRect ? overlay.getBoundingClientRect() : null;
-                            const visible = !!overlay && (!style || (style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0')) && (!!rect && rect.width > 10 && rect.height > 10);
-                            if (!visible) {
-                                const topWin = window.top && window.top.location ? window.top : window;
-                                topWin.location.href = target;
-                            }
-                        } catch {
-                            try {
-                                const topWin = window.top && window.top.location ? window.top : window;
-                                topWin.location.href = target;
-                            } catch {
-                                try { window.location.href = target; } catch {}
+                // Ultra-simple : ouvrir le modal de boost directement (plus d'overlay iframe)
+                const vendorName = String(v?.name || v?.shop_name || v?.vendor_name || v?.displayName || '').trim() || 'Ma boutique';
+                lpOpenBoostSimpleModal(String(v.id), String(resolvedKind || ''), vendorName, email);
+            } catch {
+                // fallback : ouvrir l'ancien overlay en cas d'erreur
+                try { window.location.href = target; } catch {}
+            }
+        }
+
+        // ─── Booster Ultra-Simple : modal direct ───
+        let __lbsVendorId = '';
+        let __lbsVendorKind = '';
+        let __lbsVendorEmail = '';
+
+        function lpOpenBoostSimpleModal(vendorId, vendorKind, vendorName, email) {
+            __lbsVendorId = String(vendorId || '').trim();
+            __lbsVendorKind = String(vendorKind || '').trim();
+            __lbsVendorEmail = String(email || '').trim();
+
+            // Afficher le nom du vendeur dans le header
+            const nameEl = document.getElementById('lbsVendorName');
+            if (nameEl) nameEl.textContent = '🏪 ' + vendorName;
+
+            // Afficher le modal
+            const overlay = document.getElementById('lpBoostSimpleOverlay');
+            if (overlay) overlay.classList.add('open');
+        }
+
+        function lpCloseBoostSimple() {
+            const overlay = document.getElementById('lpBoostSimpleOverlay');
+            if (overlay) overlay.classList.remove('open');
+            // Rafraîchir l'affichage des vendors
+            try { if (typeof filterVendors === 'function') filterVendors(); } catch {}
+            try { if (typeof refreshBoostPanel === 'function') refreshBoostPanel(); } catch {}
+        }
+
+        function lpBuyBoost(type) {
+            const vid = __lbsVendorId;
+            const vkind = __lbsVendorKind;
+            if (!vid) { lpToast('Erreur : boutique introuvable.', 'error'); return; }
+
+            const boostPrices = { sponsor: 2000, promo: 3000, 'new': 1000 };
+            const boostNames = { sponsor: 'Sponsorisé 24h', promo: 'En Promo 3j', 'new': 'Nouveau 48h' };
+            const amount = boostPrices[type] || 1000;
+            const boostName = boostNames[type] || type;
+
+            // Fermer le modal boost avant d'ouvrir le paiement
+            lpCloseBoostSimple();
+
+            // Ouvrir le modal de paiement
+            openPaymentModal(amount, async function(paymentResult) {
+                try {
+                    const patch = {};
+                    const now = new Date();
+                    if (type === 'sponsor') {
+                        const until = new Date(now.getTime() + 24 * 3600 * 1000);
+                        patch.sponsored_until = until.toISOString();
+                        patch.sponsored_tier = 1;
+                    } else if (type === 'promo') {
+                        const until = new Date(now.getTime() + 72 * 3600 * 1000);
+                        patch.promo_until = until.toISOString();
+                    } else if (type === 'new') {
+                        const until = new Date(now.getTime() + 48 * 3600 * 1000);
+                        patch.new_until = until.toISOString();
+                    }
+
+                    // Activer le boost
+                    if (typeof setVendorBoost === 'function') {
+                        setVendorBoost(vid, patch);
+                    } else {
+                        // Fallback direct localStorage
+                        let config = {};
+                        try { config = JSON.parse(localStorage.getItem('mangoo_boost_config') || '{}'); } catch {}
+                        if (!config[vid]) config[vid] = {};
+                        Object.assign(config[vid], patch);
+                        try { localStorage.setItem('mangoo_boost_config', JSON.stringify(config)); } catch {}
+                    }
+
+                    // Mettre à jour le VENDORS array
+                    try {
+                        if (typeof VENDORS !== 'undefined' && Array.isArray(VENDORS)) {
+                            const vendor = VENDORS.find(function(v) { return String(v?.id) === String(vid); });
+                            if (vendor) {
+                                Object.assign(vendor, patch);
                             }
                         }
-                    }, 220);
-                    return;
+                    } catch {}
+
+                    // Rafraîchir l'affichage
+                    try { if (typeof filterVendors === 'function') filterVendors(); } catch {}
+                    try { if (typeof refreshBoostPanel === 'function') refreshBoostPanel(); } catch {}
+
+                    lpToast('✅ Boost ' + boostName + ' activé !', 'ok');
+                } catch (e) {
+                    console.error('[Booster] Erreur activation', e);
+                    lpToast('Erreur activation boost.', 'error');
                 }
-                const topWin = window.top && window.top.location ? window.top : window;
-                topWin.location.href = target;
-            } catch {
-                window.location.href = target;
-            }
+            });
         }
 
         function lpTryOpenBoostFromLocal(vendorId, vendorKind) {
