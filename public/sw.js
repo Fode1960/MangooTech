@@ -1,5 +1,5 @@
 // Service Worker pour Mangoo Tech - avec Push Notifications
-const CACHE_NAME = 'mangoo-tech-v3';
+const CACHE_NAME = 'mangoo-tech-v4';
 
 // Installation du service worker
 self.addEventListener('install', (event) => {
@@ -37,17 +37,19 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-first for HTML documents – never serve stale HTML
+  // For documents, just go network — SW n'interfère pas
   if (event.request.destination === 'document') {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request))
+      fetch(event.request).catch(() => {
+        return new Response('Page temporairement indisponible', { status: 503, statusText: 'Service Unavailable' });
+      })
     );
     return;
   }
 
   event.respondWith(
     caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
+      return response || fetch(event.request).catch(() => new Response('', { status: 503 }));
     })
   );
 });

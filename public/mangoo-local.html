@@ -4406,7 +4406,7 @@
     <script>
     (function() {
       if (!('serviceWorker' in navigator)) return;
-      var SW_URL = '/sw.js?v=13';
+      var SW_URL = '/sw.js?v=14';
       console.log('[Push] Registering SW (no unregister)...');
       navigator.serviceWorker.register(SW_URL, { scope: '/', updateViaCache: 'none' }).then(function(reg) {
         console.log('[Push] SW registered: ' + reg.scope);
@@ -11791,7 +11791,7 @@
                     }
                 } catch(e) {}
 
-                // Injecter les actions proprietaire (Booster, Ma fiche, Paiement, Mon compte, Quitter)
+                // Injecter les actions proprietaire (Booster, Ma fiche, Paiement, Quitter)
                 // dans l'onglet Vue d'ensemble du Dashboard
                 try {
                     var ownerActionsDiv = document.getElementById('lp-provider-owner-actions');
@@ -11799,15 +11799,11 @@
                         var _pidOwner = getMyProviderId();
                         if (_pidOwner) {
                             var safeId = String(_pidOwner).replace(/'/g, "\\'");
-                            ownerActionsDiv.innerHTML = '<div id="lp-owner-actions-injected" style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:16px;">' +
-                                '<div style="font-weight:950; color:var(--ml-text); font-size:1.02rem; margin-bottom:12px;">⚙️ Actions</div>' +
-                                '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
-                                    '<button type="button" onclick="event&&event.stopPropagation&&event.stopPropagation();lpTryOpenBoostFromLocal(\'' + safeId + '\',\'provider\');" style="background:#1b5e20;color:#fff;font-size:0.95rem;border:none;padding:10px 16px;border-radius:999px;font-weight:950;cursor:pointer;">🚀 Booster</button>' +
-                                    '<button type="button" onclick="openProviderModalForVendor(\'' + safeId + '\')" style="color:#636e72;font-size:0.85rem;border:1px solid #dfe6e9;padding:8px 15px;border-radius:20px;background:transparent;font-weight:700;cursor:pointer;">🏪 Ma fiche</button>' +
-                                    '<button type="button" onclick="startServicePayment(\'' + safeId + '\')" style="color:#1b5e20;font-size:0.85rem;border:1px solid #1b5e20;padding:8px 15px;border-radius:20px;background:transparent;font-weight:700;cursor:pointer;">💳 Paiement</button>' +
-                                    '<button type="button" onclick="openProviderDashboard(\'' + safeId + '\')" style="color:#1b5e20;font-size:0.85rem;border:1px solid #1b5e20;padding:8px 15px;border-radius:20px;background:transparent;font-weight:700;cursor:pointer;">👤 Mon compte</button>' +
-                                    '<button type="button" onclick="lpDisconnectProvider()" style="color:#d63031;font-size:0.85rem;border:1px solid #d63031;padding:8px 15px;border-radius:20px;background:transparent;font-weight:700;cursor:pointer;">🚪 Quitter</button>' +
-                                '</div></div>';
+                            ownerActionsDiv.innerHTML = '<div id="lp-owner-actions-injected" style="display:flex;gap:8px;flex-wrap:wrap;padding:0;">' +
+                                '<button type="button" onclick="event&&event.stopPropagation&&event.stopPropagation();lpTryOpenBoostFromLocal(\'' + safeId + '\',\'provider\');" class="lp-tab" style="background:linear-gradient(135deg,#1b5e20,#2e7d32);color:#fff;border-color:transparent;">🚀 Booster</button>' +
+                                '<button type="button" onclick="openProviderModalForVendor(\'' + safeId + '\')" class="lp-tab">🏪 Ma fiche</button>' +
+                                '<button type="button" onclick="startServicePayment(\'' + safeId + '\')" class="lp-tab">💳 Paiement</button>' +
+                                '</div>';
                         }
                     }
                 } catch(e) {}
@@ -13802,22 +13798,21 @@
                 if (searchBar) searchBar.style.display = 'none';
                 if (familiesBar) familiesBar.style.display = 'none';
                 
-                // Sécurité : forcer l'affichage correct selon l'état d'authentification
-                try {
-                    var _cuAuth = null;
-                    try { _cuAuth = getLpCurrentUser(); } catch(e) {}
-                    var _isIdentified = !!(_cuAuth && String(_cuAuth.email || '').trim());
-                    var _isProvider = false;
-                    try { _isProvider = !!(getMyProviderId ? String(getMyProviderId() || '') : ''); } catch(e) {}
-                    try { if (!_isProvider) _isProvider = (lpGetOwnedProviderIds ? lpGetOwnedProviderIds() : []).length > 0; } catch(e) {}
-                    if (_isIdentified && _isProvider) {
-                        showProviderDashboardInline();
-                        return;
-                    }
-                } catch(e) { console.warn('[Account] Erreur auth check:', e); }
-                // Fallback : forcer le masquage du dashboard + restaurer footer
+                // Toujours masquer le dashboard explicitement quand on ouvre "Mon compte"
                 try { var _ps = document.getElementById('providerSection'); if (_ps) _ps.style.display = 'none'; } catch(e) {}
+                try { var _vs = document.getElementById('vendorSection'); if (_vs) _vs.style.display = 'block'; } catch(e) {}
+                // Réafficher onglets compte et panes client
+                try {
+                    document.querySelectorAll('#accountView .lp-tab[id^="lp-tab-"]').forEach(function(t) { t.style.display = ''; });
+                    document.querySelectorAll('#accountView .lp-pane[data-pane]').forEach(function(el) { el.classList.remove('active'); });
+                    try { var dashSell = document.getElementById('dash-sell'); if (dashSell) { dashSell.classList.add('active'); } } catch(e) {}
+                    try { var tabSell = document.getElementById('lp-tab-sell'); if (tabSell) tabSell.classList.add('active'); } catch(e) {}
+                } catch(e) {}
+                // Restaurer le footer
                 try { var _af = document.getElementById('accountFooter'); if (_af) _af.style.display = ''; } catch(e) {}
+                // Nettoyer les actions injectées par showProviderDashboardInline
+                try { var _inj = document.getElementById('lp-owner-actions-injected'); if (_inj) _inj.remove(); } catch(e) {}
+                try { var _logout = document.getElementById('lp-prov-logout-actions'); if (_logout) _logout.remove(); } catch(e) {}
                 
                 // Initialize Account UI
                 try { applyLpHeaderUser() } catch {}
@@ -18480,6 +18475,10 @@
                 if (!isOwnerProvider && currentUser && email && myProviderId && String(vendor.id) === String(myProviderId) && email === String(vendor?.ownerEmail || '').toLowerCase()) isOwnerProvider = true;
                 // Check #3 : email === ownerEmail (check direct)
                 if (!isOwnerProvider && email && String(vendor?.ownerEmail || '').toLowerCase() === email) isOwnerProvider = true;
+                // Log diagnostic pour debugger les faux positifs client
+                if (isOwnerProvider && vendor) {
+                    console.log('[isOwnerProvider] OWNER DETECTED vendor=' + (vendor.name||vendor.id) + ' id=' + vendor.id + ' email=' + email + ' myProviderId=' + myProviderId + ' ownerEmail=' + (vendor.ownerEmail||''));
+                }
                 try {
                     isOwnerShop = kindMode === 'shop' && lpIsOwnedShopVendor(vendor);
                 } catch {
