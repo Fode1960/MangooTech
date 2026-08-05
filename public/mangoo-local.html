@@ -6060,7 +6060,7 @@
     <div class="modal-overlay" id="paymentModal" onclick="closePaymentModal(event)" style="z-index: 25000;">
         <div class="modal-card lp-modal-card" onclick="event.stopPropagation()" style="max-width: 420px;">
             <div class="lp-modal-head">
-                <button type="button" class="lp-modal-close" onclick="document.getElementById('paymentModal').style.display='none'">✕</button>
+                <button type="button" class="lp-modal-close" onclick="try{document.getElementById('paymentPhone').value='';}catch(e){};document.getElementById('paymentModal').style.display='none'">✕</button>
                 <div class="lp-modal-hero">
                     <span class="modal-icon">💳</span>
                     <div style="min-width:0;">
@@ -27373,6 +27373,9 @@
             document.getElementById('userBalanceDisplay').innerText = userBalance.toLocaleString() + ' FCFA';
             document.getElementById('paymentAmountDisplay').innerText = amount.toLocaleString() + ' FCFA';
             document.getElementById('paymentModal').style.display = 'flex';
+
+            // SECURITE : effacer toute donnee de paiement du client precedent (RGPD / anti-fraude)
+            try { document.getElementById('paymentPhone').value = ''; } catch(e) {}
             
             // LOGIC FOR "RESTE À PAYER" BOX - FORCE HIDE
             // We force hide it using CSS first, then decide to show it.
@@ -27414,6 +27417,8 @@
 
         function closePaymentModal(e) {
             if (e.target.id === 'paymentModal') {
+                // SECURITE : effacer les donnees de paiement du client a la fermeture
+                try { document.getElementById('paymentPhone').value = ''; } catch(e) {}
                 document.getElementById('paymentModal').style.display = 'none';
             }
         }
@@ -27560,6 +27565,9 @@
                     userBalance -= currentPaymentAmount;
                     localStorage.setItem('mangoo_user_balance', userBalance);
                 }
+
+                // SECURITE : effacer le numero de telephone du client apres paiement (anti-fraude)
+                try { document.getElementById('paymentPhone').value = ''; } catch(e) {}
 
                 // CHECK FOR FULL PAYMENT (Direct Buy)
                 const isFullPayment = !currentPaymentCallback && (currentPaymentAmount >= (window.pendingTotalAmount || 15000));
@@ -27841,6 +27849,9 @@
             document.getElementById('userBalanceDisplay').innerText = userBalance.toLocaleString() + ' FCFA';
             document.getElementById('paymentAmountDisplay').innerText = amount.toLocaleString() + ' FCFA';
             document.getElementById('paymentModal').style.display = 'flex';
+
+            // SECURITE : effacer toute donnee de paiement du client precedent (RGPD / anti-fraude)
+            try { document.getElementById('paymentPhone').value = ''; } catch(e) {}
             
             // LOGIC FOR "RESTE À PAYER" BOX - FORCE HIDE
             // We force hide it using CSS first, then decide to show it.
