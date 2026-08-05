@@ -10609,6 +10609,16 @@
             if (appInitialized) return;
             appInitialized = true;
 
+            // Nettoyer la session si l'URL n'a pas de params d'authentification
+            // (evite que lp_auth_session d'une session precedente persiste au refresh)
+            try {
+                var _qsInit = new URLSearchParams(String(window.location.search || ''));
+                var _hasAuthParam = _qsInit.get('lpRole') || _qsInit.get('vendor') || _qsInit.get('lpEmail');
+                if (!_hasAuthParam) {
+                    sessionStorage.removeItem('lp_auth_session');
+                }
+            } catch(e) {}
+
             // Force l'affichage de la carte au demarrage pour eviter le chevauchement des vues
             try { switchView('map'); } catch(e) {}
 
@@ -29287,7 +29297,10 @@
                 if (_provSec && _provSec.style.display === 'block') return;
             } catch(e) {}
             const u = getLpCurrentUser()
-            const allowSell = isLpVendorUser(u)
+            // SECURITE : ne pas autoriser l'onglet Vendre sans session active
+            let hasSessionU = false;
+            try { hasSessionU = sessionStorage.getItem('lp_auth_session') === '1'; } catch(e) {}
+            const allowSell = hasSessionU && isLpVendorUser(u)
             const tab = document.getElementById('lp-tab-sell')
             const pane = document.getElementById('dash-sell')
             if (tab) tab.style.display = allowSell ? '' : 'none'
@@ -29761,7 +29774,12 @@
             const elPhone = document.getElementById('lpUserPhone')
             const elAvatar = document.getElementById('lpUserAvatar')
 
-            const u = getLpCurrentUser()
+            // SECURITE : ne pas afficher l'identite mise en cache sans session active
+            // (empeche d'afficher "DAN Electricien" apres fermeture/reouverture d'onglet)
+            let hasSession = false;
+            try { hasSession = sessionStorage.getItem('lp_auth_session') === '1'; } catch(e) {}
+
+            const u = hasSession ? getLpCurrentUser() : null;
             const key = lpProfileStorageKey()
             let p = {}
             try {
