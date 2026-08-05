@@ -19478,27 +19478,25 @@
         function startServicePayment(vendorId) {
             const vendor = VENDORS.find((v) => String(v?.id) === String(vendorId)) || activeVendor;
             if (!vendor) return;
-            const amountRaw = prompt('Montant de la prestation (FCFA) :', '5000');
-            const cleaned = String(amountRaw || '').replace(/[^\d]/g, '');
-            const amount = Number(cleaned);
-            if (!Number.isFinite(amount) || amount <= 0) {
-                alert('Montant invalide.');
-                return;
-            }
-            const returnTo = `${window.location.origin}${window.location.pathname}${window.location.search}${window.location.hash}`;
-            const params = new URLSearchParams({
-                vendorId: String(vendor.id),
-                vendorName: String(vendor.name || ''),
-                amount: String(amount),
-                return: returnTo,
-            });
-            const target = `/service-checkout?${params.toString()}`;
-            try {
-                const topWin = window.top && window.top.location ? window.top : window;
-                topWin.location.href = target;
-            } catch {
-                window.location.href = target;
-            }
+
+            // Modal stylisé Mangoo pour saisir le montant (remplace l'ancien prompt() + redirection /service-checkout)
+            var vName = String(vendor.name || 'Prestataire').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            var vPhone = String(vendor.phone || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            var html = '<div style="padding:16px; border-radius:16px; border:1px solid var(--ml-border); background:rgba(17,24,39,0.04);">' +
+                '<div style="font-weight:950; font-size:1.1rem; margin-bottom:4px;">💳 Paiement de prestation</div>' +
+                '<div style="color:var(--ml-muted); font-size:0.9rem; margin-bottom:14px;">' + vName + (vPhone ? ' &middot; ' + vPhone : '') + '</div>' +
+                '<label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:6px; color:var(--ml-text);">Montant (FCFA)</label>' +
+                '<input id="lpServicePayAmount" inputmode="numeric" placeholder="ex: 5000" style="width:100%; padding:14px; border:2px solid var(--ml-border); border-radius:14px; background:var(--ml-panel); color:var(--ml-text); font-weight:900; font-size:1.2rem; text-align:center;" />' +
+                '<div style="display:flex; gap:10px; margin-top:16px;">' +
+                    '<button type="button" class="lp-btn lp-btn-primary" style="flex:1; background:linear-gradient(135deg,#1b5e20,#2e7d32); font-weight:950; font-size:1rem; padding:14px;" onclick="var el=document.getElementById(\'lpServicePayAmount\');var v=String(el?.value||\'\').replace(/[^\\d]/g,\'\');var a=Number(v);if(!Number.isFinite(a)||a<=0){alert(\'Montant invalide.\');return;}lpCloseModalShell();setTimeout(function(){openPaymentModal(a,function(r){console.log(\'[ServicePay] Paiement effectue:\',r);try{lpToast(\'Paiement de \'+a.toLocaleString()+\' FCFA réussi.\',\'ok\');}catch{}});},200);">✅ Payer</button>' +
+                    '<button type="button" class="lp-btn lp-btn-secondary" style="flex:1; padding:14px;" onclick="lpCloseModalShell();">Annuler</button>' +
+                '</div>' +
+            '</div>';
+            lpOpenModalShell('💳 Paiement', html);
+            setTimeout(function(){
+                var inp = document.getElementById('lpServicePayAmount');
+                if(inp){ try{inp.focus();}catch{} }
+            }, 150);
         }
 
         function openProviderDashboard(vendorId, returnVendorId) {
