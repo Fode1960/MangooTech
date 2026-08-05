@@ -10617,15 +10617,36 @@
                 var _hasAuthParam = _qsInit.get('lpRole') || _qsInit.get('vendor') || _qsInit.get('lpEmail');
                 var _hasSession = false;
                 try { _hasSession = sessionStorage.getItem('lp_auth_session') === '1'; } catch(e) {}
+                console.log('[INIT] Auth state:', { hasAuthParam: !!_hasAuthParam, hasSession: _hasSession });
                 if (!_hasAuthParam && !_hasSession) {
                     localStorage.removeItem('mangoo-current-user');
                     localStorage.removeItem('user');
                     localStorage.removeItem('mangoo_my_provider_id');
                     localStorage.removeItem('mangoo_my_shop_id');
+                    localStorage.removeItem('mangoo-open-vendor-id');
                     sessionStorage.removeItem('lp_auth_session');
                     console.log('[INIT] Identite en cache nettoyee (pas de session active)');
                 }
             } catch(e) {}
+
+            // Double nettoyage differe (1s apres init) : ecrase toute reecriture asynchrone
+            setTimeout(function() {
+                try {
+                    var _h2 = sessionStorage.getItem('lp_auth_session') === '1';
+                    var _qs2 = new URLSearchParams(String(window.location.search || ''));
+                    var _a2 = _qs2.get('lpRole') || _qs2.get('vendor') || _qs2.get('lpEmail');
+                    if (!_a2 && !_h2) {
+                        if (localStorage.getItem('mangoo-current-user')) {
+                            localStorage.removeItem('mangoo-current-user');
+                            localStorage.removeItem('user');
+                            localStorage.removeItem('mangoo_my_provider_id');
+                            localStorage.removeItem('mangoo_my_shop_id');
+                            try { applyLpHeaderUser(); } catch(e) {}
+                            console.log('[INIT] Late cleanup: forçage identite re-nettoyee + header mis a jour');
+                        }
+                    }
+                } catch(e) {}
+            }, 1200);
 
             // Force l'affichage de la carte au demarrage pour eviter le chevauchement des vues
             try { switchView('map'); } catch(e) {}
@@ -29788,6 +29809,7 @@
             try { hasSession = sessionStorage.getItem('lp_auth_session') === '1'; } catch(e) {}
 
             const u = hasSession ? getLpCurrentUser() : null;
+            console.log('[HEADER] applyLpHeaderUser session=' + hasSession + ' user=' + (u ? (u.name||'?') : 'null'));
             const key = lpProfileStorageKey()
             let p = {}
             try {

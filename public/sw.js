@@ -35,8 +35,8 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request).then((networkResponse) => {
       // Mettre en cache les assets statiques (JS, CSS, images, fonts)
-      // Ne JAMAIS mettre en cache les documents HTML
-      if (event.request.destination !== 'document' && networkResponse.ok) {
+      // Ne JAMAIS mettre en cache les documents HTML ni les requetes POST
+      if (event.request.method === 'GET' && event.request.destination !== 'document' && networkResponse.ok) {
         const responseClone = networkResponse.clone();
         caches.open(CACHE_NAME).then((cache) => {
           cache.put(event.request, responseClone);
