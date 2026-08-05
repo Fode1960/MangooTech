@@ -1,15 +1,15 @@
 // Service Worker pour Mangoo Tech - avec Push Notifications
-const CACHE_NAME = 'mangoo-tech-v8';
+const CACHE_NAME = 'mangoo-tech-v10';
 
 // Installation du service worker
 self.addEventListener('install', (event) => {
-  console.log('[SW v8] Installation');
+  console.log('[SW v10] Installation');
   self.skipWaiting();
 });
 
 // Activation du service worker – supprimer tous les anciens caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW v8] Activation – suppression de tous les anciens caches');
+  console.log('[SW v10] Activation – suppression de tous les anciens caches');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(

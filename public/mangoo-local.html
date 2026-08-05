@@ -4406,7 +4406,7 @@
     <script>
     (function() {
       if (!('serviceWorker' in navigator)) return;
-      var SW_URL = '/sw.js?v=8';
+      var SW_URL = '/sw.js?v=10';
       console.log('[Push] Registering SW (no unregister)...');
       navigator.serviceWorker.register(SW_URL, { scope: '/', updateViaCache: 'none' }).then(function(reg) {
         console.log('[Push] SW registered: ' + reg.scope);
@@ -4683,6 +4683,50 @@
                 <h2 id="lpUserName" class="hub-title" style="margin:10px 0 5px;">Mon compte</h2>
                 <div id="lpUserPhone" class="hub-subtitle" style="font-size:0.9rem;">Identifiez-vous pour continuer</div>
             </div>
+            <!-- SECURITE HEADER : filet de securite contre les ecrasures sans session -->
+            <script>
+            (function() {
+                var _hdrName = document.getElementById('lpUserName');
+                var _hdrPhone = document.getElementById('lpUserPhone');
+                var _hdrAvatar = document.getElementById('lpUserAvatar');
+                function _hasSession() {
+                    try { return sessionStorage.getItem('lp_auth_session') === '1'; } catch(e) { return false; }
+                }
+                function _resetHeader() {
+                    try {
+                        if (!_hasSession()) {
+                            if (_hdrName && _hdrName.textContent !== 'Mon compte') {
+                                _hdrName.textContent = 'Mon compte';
+                            }
+                            if (_hdrPhone && _hdrPhone.textContent !== 'Identifiez-vous pour continuer') {
+                                _hdrPhone.textContent = 'Identifiez-vous pour continuer';
+                            }
+                            if (_hdrAvatar) {
+                                _hdrAvatar.src = 'https://ui-avatars.com/api/?name=Mon+compte&background=1a5f3f&color=fff';
+                            }
+                        }
+                    } catch(e) {}
+                }
+                function _hideDisconnectActions() {
+                    // Masquer Quitter ma boutique / Quitter mon compte / Déconnexion si pas de session
+                    try {
+                        var _rows = document.querySelectorAll('#accountFooter .action-row');
+                        _rows.forEach(function(row) {
+                            var txt = (row.textContent || '').trim();
+                            if (txt.includes('Quitter') || txt.includes('Déconnexion')) {
+                                row.style.display = _hasSession() ? '' : 'none';
+                            }
+                        });
+                    } catch(e) {}
+                }
+                // Reset immediat + rattrapages différés (500ms / 1500ms / 3000ms)
+                _resetHeader();
+                _hideDisconnectActions();
+                setTimeout(function() { _resetHeader(); _hideDisconnectActions(); }, 500);
+                setTimeout(function() { _resetHeader(); _hideDisconnectActions(); }, 1500);
+                setTimeout(function() { _resetHeader(); _hideDisconnectActions(); }, 3000);
+            })();
+            </script>
 
             <div style="padding: 0 16px 12px; position: sticky; top: 0; z-index: 20; background: var(--ml-bg);">
                 <div class="lp-tabs" aria-label="Boussole compte client">
@@ -5117,47 +5161,26 @@
                 <div class="hub-chevron" style="font-size:1.6rem;">›</div>
             </div>
 
-            <div class="action-list">
-                <div class="action-row" onclick="openLpNotificationsModal()">
-                    <span>🔔 Notifications</span>
-                    <span class="arrow">›</span>
+            <div class="hub-card lp-hub-card" style="margin-top:20px;" onclick="lpStartOnboarding('shop')">
+                <div class="hub-card-icon hub-card-icon--list">🚀</div>
+                <div style="flex:1; min-width:0;">
+                    <div class="hub-card-title">Devenir Vendeur</div>
+                    <div class="hub-card-subtitle" style="font-size:0.9rem;">Créez votre boutique en ligne</div>
                 </div>
-                <div class="action-row" onclick="openLpLanguageModal()">
-                    <span>🌍 Langue (Français)</span>
-                    <span class="arrow">›</span>
-                </div>
-                <div class="action-row" onclick="openLpSecurityModal()">
-                    <span>🔒 Sécurité</span>
-                    <span class="arrow">›</span>
-                </div>
-                <div class="action-row" onclick="openLpHelpModal()">
-                    <span>❓ Aide & Support</span>
-                    <span class="arrow">›</span>
-                </div>
-                <div class="action-row" onclick="lpDisconnectShop()">
-                    <span>🏪 Quitter ma boutique</span>
-                    <span class="arrow">›</span>
-                </div>
-                <div class="action-row" onclick="lpDisconnectProvider()">
-                    <span>🧰 Quitter mon compte</span>
-                    <span class="arrow">›</span>
-                </div>
-                <div class="action-row" style="color: #d63031;" onclick="lpLogout()">
-                    <span>🚪 Déconnexion</span>
-                    <span class="arrow">›</span>
-                </div>
+                <div class="hub-chevron" style="font-size:1.6rem;">›</div>
             </div>
 
-            <button class="btn-seller" onclick="lpStartOnboarding('shop')">
-                🚀 Devenir Vendeur
-            </button>
-
-            <button class="btn-seller" onclick="lpStartOnboarding('service')" style="margin-top:10px; background:#1b5e20;">
-                🧰 Créer ma fiche
-            </button>
+            <div class="hub-card lp-hub-card" style="margin-top:10px;" onclick="lpStartOnboarding('service')">
+                <div class="hub-card-icon hub-card-icon--fav">🧰</div>
+                <div style="flex:1; min-width:0;">
+                    <div class="hub-card-title">Créer ma fiche</div>
+                    <div class="hub-card-subtitle" style="font-size:0.9rem;">Proposez vos services</div>
+                </div>
+                <div class="hub-chevron" style="font-size:1.6rem;">›</div>
+            </div>
 
             <p id="lpAccountVersion" style="text-align:center; color:#b2bec3; font-size:0.8rem; margin-top:30px;">
-                Local+ 2.0.44 • build v166
+                Local+ 2.0.44 • build v167
             </p>
 
             </div>
@@ -5260,7 +5283,7 @@
             <span class="nav-icon">✨</span>
             Intro
         </div>
-        <div class="nav-item" onclick="switchView('account', this)">
+        <div class="nav-item" onclick="lpNavAccount()">
             <span class="nav-icon">👤</span>
             Mon compte
         </div>
@@ -10691,34 +10714,17 @@
 
             try { requestUserGeolocation(); } catch {}
 
+            // Labels de version (build v167)
             try {
-                const el = document.getElementById('lpBuild');
-                if (el) el.textContent = 'build v166';
-            } catch {
-            }
-            // DIAGNOSTIC : prouver que le code v166 est bien charge
-            console.log('=== MANGOO build v166 charge ===');
-            try {
-                var _diagBanner = document.createElement('div');
-                _diagBanner.id = '_lpDiagBanner';
-                _diagBanner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#ff5722;color:#fff;text-align:center;padding:4px;font-size:12px;font-weight:bold;';
-                _diagBanner.textContent = 'build v166 | SW v8 | ' + new Date().toLocaleTimeString();
-                document.body.insertBefore(_diagBanner, document.body.firstChild);
-                setTimeout(function(){ try { _diagBanner.remove(); } catch(e){} }, 8000);
-            } catch(e) {}
-            // DIAGNOSTIC : surveiller les appels a switchView('account')
-            var _origSwitchView = window.switchView;
-            window.switchView = function(v) {
-                console.log('[DIAG] switchView("' + v + '") appele | providerSection.display=' + 
-                    (function(){try{var p=document.getElementById('providerSection');return p?p.style.display:'?';}catch(e){return 'err';}})());
-                return _origSwitchView.apply(this, arguments);
-            };
+                const buildEl = document.getElementById('lpBuild');
+                if (buildEl) buildEl.textContent = 'build v167';
+            } catch {}
             try {
                 const hud = document.getElementById('lpVersionHud');
-                window.__lpVersionLabel = 'Local+ 2.0.44 • build v166';
-                if (hud) hud.textContent = String(window.__lpVersionLabel || 'Local+ 2.0.44 • build v166');
+                window.__lpVersionLabel = 'Local+ 2.0.44 • build v167';
+                if (hud) hud.textContent = String(window.__lpVersionLabel || 'Local+ 2.0.44 • build v167');
                 const acv = document.getElementById('lpAccountVersion');
-                if (acv) acv.textContent = String(window.__lpVersionLabel || 'Local+ 2.0.44 • build v166');
+                if (acv) acv.textContent = String(window.__lpVersionLabel || 'Local+ 2.0.44 • build v167');
             } catch {
             }
             try {
@@ -11762,6 +11768,28 @@
             }
         }
 
+        // Helper : navigation "Mon compte" avec gestion session
+        function lpNavAccount() {
+            var hasSession = false;
+            try { hasSession = sessionStorage.getItem('lp_auth_session') === '1'; } catch(e) {}
+            if (hasSession && typeof showProviderDashboardInline === 'function') {
+                showProviderDashboardInline();
+                // Double garantie : rappeler la surbrillance apres un court delai
+                setTimeout(function() { try { lpHighlightAccountNav(); } catch(e) {} }, 150);
+            } else {
+                switchView('account');
+            }
+        }
+
+        // Helper : met le bouton "Mon compte" en surbrillance dans la barre de navigation
+        function lpHighlightAccountNav() {
+            try {
+                var items = document.querySelectorAll('.nav-item');
+                items.forEach(function(i) { i.classList.remove('active'); });
+                if (items[3]) items[3].classList.add('active');
+            } catch(e) {}
+        }
+
         function showProviderDashboardInline() {
             console.log('[DIAG] showProviderDashboardInline() appele');
             // Garde de sécurité : ne jamais afficher le dashboard sans authentification
@@ -11919,6 +11947,10 @@
                 } catch {}
 
                 try { lpSpeak('Ouverture de votre espace prestataire.', { lang: 'fr-FR' }) } catch {}
+                // Rafraichir le header avec l'identite du prestataire
+                try { applyLpHeaderUser() } catch {}
+                // Mettre le bouton "Mon compte" en surbrillance
+                try { lpHighlightAccountNav() } catch(e) {}
                 // Enregistrer la presence WebSocket pour le badge LIVE sur la carte
                 setTimeout(function() { try { lpTryRegisterVendorPresence(); } catch(e) {} }, 800);
             } catch(e) { console.warn('Erreur ouverture dashboard prestataire:', e); }
@@ -13907,6 +13939,62 @@
                 try { applyLpHeaderUser() } catch {}
                 switchAccountTab('orders');
                 loadLpProfile();
+
+                // SECURITE : sans session, masquer les onglets/panes non pertinents
+                // et adapter l'onglet Communication au support
+                try {
+                    var _hasAccSession = sessionStorage.getItem('lp_auth_session') === '1';
+                    var _commPane = document.querySelector('#accountView .lp-pane[data-pane="communication"]');
+                    // Sauvegarder le contenu original du pane Communication (une seule fois)
+                    if (!window._lpCommPaneOriginal && _commPane) {
+                        window._lpCommPaneOriginal = _commPane.innerHTML;
+                    }
+                    if (!_hasAccSession) {
+                        // Masquer les onglets non pertinents sans session
+                        ['lp-tab-orders', 'lp-tab-profile', 'lp-tab-favorites', 'lp-tab-pay', 'lp-tab-communication'].forEach(function(id) {
+                            var tab = document.getElementById(id);
+                            if (tab) tab.style.display = 'none';
+                        });
+                        // Masquer les panes correspondants
+                        ['orders', 'profile', 'favorites', 'pay', 'communication'].forEach(function(pane) {
+                            document.querySelectorAll('#accountView .lp-pane[data-pane="' + pane + '"]').forEach(function(el) {
+                                el.style.display = 'none';
+                                el.classList.remove('active');
+                            });
+                        });
+                        // Masquer Quitter ma boutique / Quitter mon compte / Déconnexion + Sécurité (PIN sans session inutile)
+                        var _rows = document.querySelectorAll('#accountFooter .action-row');
+                        _rows.forEach(function(row) {
+                            var txt = (row.textContent || '').trim();
+                            if (txt.includes('Quitter') || txt.includes('Déconnexion') || txt.includes('Sécurité')) {
+                                row.style.display = 'none';
+                            }
+                        });
+                        // Vider le conteneur de commandes (securite supplementaire)
+                        var _oc = document.getElementById('ordersListContainer');
+                        if (_oc) {
+                            _oc.innerHTML = '<div style="text-align:center; padding:40px 0; color:var(--ml-muted);"><div style="font-size:3rem; margin-bottom:10px;">🔒</div><div style="font-weight:900;">Identifiez-vous pour voir vos commandes</div></div>';
+                        }
+                        // Masquer les cartes menu-grid (Mes Commandes & Suivi, Mes Favoris) sans session
+                        document.querySelectorAll('#accountView .menu-grid .menu-item').forEach(function(el) {
+                            var txt = (el.textContent || '').trim();
+                            if (txt.includes('Mes Commandes') || txt.includes('Mes Favoris')) {
+                                el.style.display = 'none';
+                            }
+                        });
+                        // Onglet Communication masque (doublon avec ❓ Aide & Support dans les parametres)
+                    } else {
+                        // Restaurer le contenu original du pane Communication
+                        if (_commPane && window._lpCommPaneOriginal) {
+                            _commPane.innerHTML = window._lpCommPaneOriginal;
+                        }
+                        // Restaurer l'onclick original de l'onglet Communication
+                        var commTab = document.getElementById('lp-tab-communication');
+                        if (commTab) {
+                            commTab.setAttribute('onclick', "try{lpGoToClientAccount('communication',{mode:'chat'})}catch{}");
+                        }
+                    }
+                } catch(e) {}
             }
 
             try {
@@ -29181,7 +29269,11 @@
                 try { updateDashboard() } catch {}
             }
             if (next === 'profile') {
-                try { loadLpProfile() } catch {}
+                var _hasProfileSession = false;
+                try { _hasProfileSession = sessionStorage.getItem('lp_auth_session') === '1'; } catch(e) {}
+                if (_hasProfileSession) {
+                    try { loadLpProfile() } catch {}
+                }
             }
             if (next === 'sell') {
                 try { switchVendorTab(wantsOrders ? 'orders' : 'overview') } catch {}
@@ -29433,6 +29525,13 @@
                     if (metiersToggleFab) metiersToggleFab.style.display = 'none'
                     if (metiersListFab) metiersListFab.style.display = 'none'
                     if (fabAddLabel) fabAddLabel.style.display = 'none'
+                } else {
+                    const metiersToggleFab = document.getElementById('metiersToggleFab')
+                    const metiersListFab = document.getElementById('metiersListFab')
+                    const fabAddLabel = document.getElementById('fabAddLabel')
+                    if (metiersToggleFab) metiersToggleFab.style.display = ''
+                    if (metiersListFab) metiersListFab.style.display = ''
+                    if (fabAddLabel) fabAddLabel.style.display = ''
                 }
             } catch {
             }
@@ -29739,9 +29838,9 @@
                     lpSetIdentityEntryStatus('Compte introuvable avec cet acces.', 'error')
                     return
                 }
-                const nextUser = lpApplyResolvedIdentity(payload.identity)
-                // Marquer la session comme authentifiee (empeche les acces non autorises)
+                // Marquer la session AVANT d'appliquer l'identite (pour que applyLpHeaderUser la detecte)
                 try { sessionStorage.setItem('lp_auth_session', '1'); } catch(e) {}
+                const nextUser = lpApplyResolvedIdentity(payload.identity)
                 lpSetIdentityEntryStatus('Connexion reussie.', 'success')
                 try { closeLpIdentityModal() } catch {}
                 try { lpToast(`Connecte en tant que ${String(nextUser?.name || 'Utilisateur')}.`, 'ok') } catch {}
@@ -29754,17 +29853,38 @@
                         setTimeout(function() { try { showProviderDashboardInline(); } catch(e) {} }, 50);
                     }
                 } catch(e) {}
-                // Pour les clients : ouvrir la vue compte normalement
-                if (role !== 'vendor') {
+                // Déterminer le type de compte à partir de l'identité RÉELLE (pas du dropdown UI)
+                var _isProviderIdentity = false;
+                try {
+                    _isProviderIdentity = String(payload?.identity?.vendorKind || '').trim().toLowerCase() === 'service';
+                } catch(e) {}
+                // Fallback 1 : vérifier si un provider_id a été enregistré par lpApplyResolvedIdentity
+                if (!_isProviderIdentity) {
+                    try { _isProviderIdentity = !!localStorage.getItem('mangoo_my_provider_id'); } catch(e) {}
+                }
+                // Fallback 2 : vérifier l'utilisateur résolu (getLpCurrentUser)
+                if (!_isProviderIdentity) {
+                    try {
+                        var _cu = getLpCurrentUser();
+                        if (_cu && (String(_cu.vendorKind || '').toLowerCase() === 'service'
+                            || String(_cu.role || '').toLowerCase() === 'vendor'
+                            || String(_cu.role || '').toLowerCase() === 'provider')) {
+                            _isProviderIdentity = true;
+                        }
+                    } catch(e) {}
+                }
+
+                if (_isProviderIdentity) {
+                    // Prestataire → Dashboard (appel immédiat + secours 500ms)
+                    try { showProviderDashboardInline(); } catch(e) {}
+                    setTimeout(function() {
+                        try { showProviderDashboardInline(); } catch(e) {}
+                    }, 500);
+                } else {
+                    // Client → page compte générique
                     try { switchView('account') } catch {}
                     try { switchAccountTab('profile') } catch {}
                     try { loadLpProfile(true) } catch {}
-                }
-                // Pour TOUS les vendeurs : ouvrir le dashboard prestataire apres connexion
-                if (role === 'vendor') {
-                    setTimeout(function() {
-                        try { showProviderDashboardInline(); } catch(e) {}
-                    }, 300);
                 }
             } catch (e) {
                 const msg = e?.name === 'AbortError'
@@ -29822,8 +29942,13 @@
             const email = String(u?.email || '').trim().toLowerCase()
             const emailPrefix = email && email.includes('@') ? email.split('@')[0] : ''
             const rawUserName = String(u?.name || '').trim()
-            const name = (rawUserName && rawUserName !== 'Invité' ? rawUserName : emailPrefix || p?.name || 'Mon compte').trim() || 'Mon compte'
-            const phone = String(u?.phone || p?.phone || (u ? 'Téléphone non renseigné' : 'Identifiez-vous pour continuer')).trim() || (u ? 'Téléphone non renseigné' : 'Identifiez-vous pour continuer')
+            // SECURITE : si pas de session active, ne JAMAIS utiliser le profil (p.name) → Mon compte
+            const name = u
+                ? ((rawUserName && rawUserName !== 'Invité' ? rawUserName : emailPrefix || p?.name || 'Mon compte').trim() || 'Mon compte')
+                : 'Mon compte'
+            const phone = u
+                ? (String(u?.phone || p?.phone || 'Téléphone non renseigné').trim() || 'Téléphone non renseigné')
+                : 'Identifiez-vous pour continuer'
 
             if (elName) elName.textContent = name
             if (elPhone) elPhone.textContent = phone
@@ -30658,9 +30783,9 @@
                 <div style="padding:14px; border-radius:16px; border:1px solid var(--ml-border); background:rgba(17,24,39,0.04);">
                     <div style="font-weight:950; margin-bottom:6px;">❓ Aide & Support</div>
                     <div style="display:grid; gap:10px; margin-top:10px;">
-                        <button type="button" class="lp-btn lp-btn-primary" onclick="try{window.location.href='mailto:support@mangoo.cm'}catch{}">📧 Email support</button>
+                        <button type="button" class="lp-btn lp-btn-primary" onclick="try{window.location.href='mailto:support@mangoo.tech'}catch{}">📧 Email support</button>
                         <button type="button" class="lp-btn lp-btn-secondary" onclick="try{window.location.href='https://wa.me/'}catch{}">💬 WhatsApp</button>
-                        <button type="button" class="lp-btn lp-btn-secondary" onclick="try{alert('Support : support@mangoo.cm')}catch{}">ℹ️ Infos</button>
+                        <button type="button" class="lp-btn lp-btn-secondary" onclick="try{alert('Support : support@mangoo.tech')}catch{}">ℹ️ Infos</button>
                     </div>
                 </div>
             `
@@ -30703,6 +30828,17 @@
         }
 
         function updateDashboard() {
+            // Garde : ne pas charger les commandes sans session authentifiee
+            // + NETTOYAGE : vider le conteneur s'il contient des commandes d'une session precedente
+            var _hasDashSession = false;
+            try { _hasDashSession = sessionStorage.getItem('lp_auth_session') === '1'; } catch(e) {}
+            if (!_hasDashSession) {
+                const ordersContainer = document.getElementById('ordersListContainer');
+                if (ordersContainer) {
+                    ordersContainer.innerHTML = '<div style="text-align:center; padding:40px 0; color:var(--ml-muted);"><div style="font-size:3rem; margin-bottom:10px;">🔒</div><div style="font-weight:900;">Identifiez-vous pour voir vos commandes</div></div>';
+                }
+                return;
+            }
             // 1. ORDERS
             const ordersContainer = document.getElementById('ordersListContainer');
             if(ordersContainer) {
