@@ -27905,6 +27905,28 @@
             document.getElementById('splitThirdPart').innerText = amount.toLocaleString() + " FCFA";
         }
 
+        // Helper : modal de confirmation stylisé Mangoo (remplace confirm() natif)
+        function _lpConfirmModal(title, message, onConfirm) {
+            var overlay = document.createElement('div');
+            overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:27000; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.25s;";
+            overlay.innerHTML = '<div style="background:var(--ml-panel); padding:24px; border-radius:20px; width:90%; max-width:360px; text-align:center; border:1px solid var(--ml-border); box-shadow:0 20px 60px rgba(0,0,0,0.3);">' +
+                '<div style="font-weight:950; font-size:1.1rem; color:var(--ml-text); margin-bottom:10px;">' + String(title).replace(/</g,'&lt;') + '</div>' +
+                '<div style="color:var(--ml-muted); font-size:0.9rem; margin-bottom:20px; line-height:1.5;">' + String(message) + '</div>' +
+                '<div style="display:flex; gap:10px;">' +
+                    '<button id="_lpBtnCancel" style="flex:1; padding:12px; border:1px solid var(--ml-border); border-radius:12px; background:var(--ml-panel); color:var(--ml-text); font-weight:700; font-size:0.95rem; cursor:pointer;">Annuler</button>' +
+                    '<button id="_lpBtnConfirm" style="flex:1; padding:12px; background:linear-gradient(135deg,#1b5e20,#2e7d32); color:#fff; border:none; border-radius:12px; font-weight:950; font-size:0.95rem; cursor:pointer;">Confirmer</button>' +
+                '</div>' +
+            '</div>';
+            document.body.appendChild(overlay);
+            var close = function(){ try{overlay.remove();}catch(e){} };
+            document.getElementById('_lpBtnCancel').onclick = close;
+            document.getElementById('_lpBtnConfirm').onclick = function(){
+                close();
+                try { onConfirm(); } catch(e) { console.error('[lpConfirmModal]', e); }
+            };
+            overlay.addEventListener('click', function(e){ if(e.target === overlay) close(); });
+        }
+
         function generatePaymentLink() {
             const total = currentPaymentAmount;
             const myPart = parseInt(document.getElementById('splitMyPart').value) || 0;
@@ -27921,77 +27943,63 @@
             sessionStorage.setItem('mangoo_raised', 0);
             sessionStorage.setItem('mangoo_total', thirdPart);
 
+            // === CAS 1 : Je paie tout (myPart >= total) ===
             if(myPart >= total) {
-                if(!confirm(`Vous allez payer la totalité (${total.toLocaleString()} F) maintenant. Confirmer ?`)) return;
-                
-                // Direct Full Payment Simulation
-                setTimeout(() => {
-                    // Deduct if Mangoo Balance
-                    if(currentPaymentMethod === 'mangoo_balance') {
-                        userBalance -= total;
-                        localStorage.setItem('mangoo_user_balance', userBalance);
+                _lpConfirmModal(
+                    '💳 Paiement total',
+                    `Vous allez payer la totalité de <b>${total.toLocaleString()} FCFA</b> maintenant.`,
+                    function() {
+                        setTimeout(() => {
+                            if(currentPaymentMethod === 'mangoo_balance') {
+                                userBalance -= total;
+                                localStorage.setItem('mangoo_user_balance', userBalance);
+                            }
+                            document.getElementById('paymentModal').style.display = 'none';
+                            try { document.getElementById('paymentPhone').value = ''; } catch(e) {}
+                            
+                            const sOverlay = document.createElement('div');
+                            sOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:27000; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.3s;";
+                            sOverlay.innerHTML = '<div style="background:var(--ml-panel); padding:28px; border-radius:20px; width:90%; max-width:380px; text-align:center; border:1px solid var(--ml-border); box-shadow:0 20px 60px rgba(0,0,0,0.3);">' +
+                                '<div style="font-size:3.5rem; margin-bottom:12px;">✅</div>' +
+                                '<h3 style="color:var(--ml-text); font-weight:950; margin:0 0 8px;">Paiement effectué !</h3>' +
+                                '<p style="color:var(--ml-muted); margin-bottom:20px;">Votre paiement de <b style="color:var(--ml-text);">' + total.toLocaleString() + ' FCFA</b> a été reçu.</p>' +
+                                '<button onclick="this.closest(\'div\').parentElement.remove();" style="width:100%; padding:14px; background:linear-gradient(135deg,#1b5e20,#2e7d32); color:#fff; border:none; border-radius:14px; font-weight:950; font-size:1rem; cursor:pointer;">OK</button>' +
+                            '</div>';
+                            document.body.appendChild(sOverlay);
+                            try { new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3').play().catch(function(){}); } catch(e) {}
+                        }, 600);
                     }
-                    
-                    // Show Full Success Modal instead of Contract
-                    document.getElementById('paymentModal').style.display = 'none';
-                    
-                    const successOverlay = document.createElement('div');
-                    successOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.3s;";
-                    successOverlay.innerHTML = `
-                        <div style="background:white; padding:30px; border-radius:20px; width:90%; max-width:400px; text-align:center; position:relative;">
-                            <div style="font-size:4rem; margin-bottom:15px;">🛍️</div>
-                            <h2 style="color:#2d3436; margin-bottom:10px;">Commande Confirmée !</h2>
-                            <p style="color:#636e72; margin-bottom:20px;">
-                                Votre paiement de <b>${total.toLocaleString()} FCFA</b> a été reçu avec succès.
-                            </p>
-                            
-                            <div style="background:#1b5e20; padding:15px; border-radius:10px; margin-bottom:20px; text-align:left;">
-                                <div style="font-size:0.9rem; color:#1b5e20; font-weight:bold; margin-bottom:5px;">Statut : Payé (100%)</div>
-                                <div style="font-size:0.8rem; color:#1b5e20;">Le vendeur va préparer votre commande pour expédition.</div>
-                            </div>
-                            
-                            <button onclick="this.parentElement.parentElement.remove(); document.getElementById('paymentModal').style.display='none'; document.getElementById('supplyModal').style.display='none'; document.getElementById('tontineModal').style.display='none'; document.getElementById('negotiationModal').style.display='none'; alert('Redirection vers la page Mes Commandes...');" style="width:100%; padding:15px; background:#1b5e20; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1rem;">
-                                Voir ma commande
-                            </button>
-                        </div>
-                    `;
-                    document.body.appendChild(successOverlay);
-                    
-                    // Play Sound
-                    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3'); 
-                    audio.play().catch(e => {});
-                    
-                }, 1000);
-                
+                );
                 return;
             }
             
-            // Logic: If I pay a part, I pay it first, then link is generated
+            // === CAS 2 : Je paie une partie (myPart > 0) ===
             if(myPart > 0) {
-                 if(!confirm(`Vous allez d'abord payer votre part (${myPart.toLocaleString()} F) maintenant. Continuer ?`)) return;
-                 
-                 // Open Payment Modal for the partial amount
-                 document.getElementById('paymentModal').style.display = 'none';
-                 
-                 // Wait a bit then open the payment modal for 'myPart'
-                 setTimeout(() => {
-                     // We need a callback that will be triggered AFTER this payment is successful
-                     // This callback will generate the link for the rest (thirdPart)
-                     openPaymentModal(myPart, (success) => {
-                         if(success) {
-                             alert(`✅ Votre part (${myPart.toLocaleString()} F) a été payée avec succès ! \nLe lien pour les ${thirdPart.toLocaleString()} F restants va maintenant être généré.`);
-                             
-                             // Generate Link Logic (The rest of the function)
-                             showShareSheet(thirdPart);
-                         }
-                     });
-                 }, 300);
-                 
-                 return; // Stop here, wait for payment
+                _lpConfirmModal(
+                    '💳 Paiement partiel',
+                    'Vous allez d\'abord payer <b>' + myPart.toLocaleString() + ' FCFA</b>.<br><br>Ensuite, un lien de cagnotte sera généré pour les <b>' + thirdPart.toLocaleString() + ' FCFA</b> restants à envoyer à un tiers.',
+                    function() {
+                        document.getElementById('paymentModal').style.display = 'none';
+                        try { document.getElementById('paymentPhone').value = ''; } catch(e) {}
+                        setTimeout(function() {
+                            openPaymentModal(myPart, function(result) {
+                                if(result) {
+                                    // Fermer le modal de paiement avant d'afficher le share sheet
+                                    try { document.getElementById('paymentPhone').value = ''; } catch(e) {}
+                                    document.getElementById('paymentModal').style.display = 'none';
+                                    setTimeout(function() {
+                                        try { lpToast('Part de ' + myPart.toLocaleString() + ' FCFA payée. Lien généré !', 'ok'); } catch(e) {}
+                                        showShareSheet(thirdPart);
+                                    }, 300);
+                                }
+                            });
+                        }, 250);
+                    }
+                );
+                return;
             }
             
-            // If myPart is 0, generate link immediately
-            // SECURITE : fermer le modal de paiement et nettoyer les donnees client avant d'afficher le lien
+            // === CAS 3 : Je ne paie rien (myPart == 0) → lien direct ===
             try { document.getElementById('paymentPhone').value = ''; } catch(e) {}
             document.getElementById('paymentModal').style.display = 'none';
             setTimeout(function(){ showShareSheet(thirdPart); }, 200);
