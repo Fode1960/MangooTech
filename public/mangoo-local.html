@@ -14304,6 +14304,7 @@
             } catch {
             }
             try { sessionStorage.setItem('mangoo_force_logged_out', '1') } catch {}
+            try { sessionStorage.removeItem('lp_auth_session') } catch {}
             try {
                 closeLpIdentityModal()
             } catch {
@@ -14333,6 +14334,7 @@
                 localStorage.removeItem('mangoo_my_shop_id')
             } catch {
             }
+            try { sessionStorage.removeItem('lp_auth_session') } catch {}
             try { checkUserShop() } catch {}
             try { renderVendorsOnMap(VENDORS) } catch {}
             try { renderListView(VENDORS) } catch {}
@@ -14356,6 +14358,7 @@
                 localStorage.removeItem('mangoo_my_provider_id')
             } catch {
             }
+            try { sessionStorage.removeItem('lp_auth_session') } catch {}
             try { refreshProviderDashboardFab() } catch {}
             try { renderVendorsOnMap(VENDORS) } catch {}
             try { renderListView(VENDORS) } catch {}
@@ -29098,7 +29101,16 @@
 
         function switchAccountTab(tabName) {
             let allowSell = false
-            try { allowSell = isLpVendorUser(getLpCurrentUser()) } catch {}
+            // SECURITE : ne permettre l'onglet Vendre QUE si l'utilisateur
+            // s'est authentifie dans cette session (lp_auth_session en sessionStorage).
+            // Evite que des donnees en cache localStorage d'une session precedente
+            // (ex: DAN Electricien) declenchent le dashboard sans authentification.
+            try {
+                const hasSessionAuth = sessionStorage.getItem('lp_auth_session') === '1'
+                if (hasSessionAuth) {
+                    allowSell = isLpVendorUser(getLpCurrentUser())
+                }
+            } catch {}
             const wantsOrders = String(tabName || '') === 'orders'
             const allowed = allowSell
                 ? ['orders', 'sell', 'profile', 'favorites', 'pay', 'communication']
@@ -29686,6 +29698,8 @@
                     return
                 }
                 const nextUser = lpApplyResolvedIdentity(payload.identity)
+                // Marquer la session comme authentifiee (empeche les acces non autorises)
+                try { sessionStorage.setItem('lp_auth_session', '1'); } catch(e) {}
                 lpSetIdentityEntryStatus('Connexion reussie.', 'success')
                 try { closeLpIdentityModal() } catch {}
                 try { lpToast(`Connecte en tant que ${String(nextUser?.name || 'Utilisateur')}.`, 'ok') } catch {}
