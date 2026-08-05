@@ -27635,6 +27635,16 @@
              input.value = Math.floor(total * val);
              updateSplitCalc();
         }
+
+        function updateSplitCalc() {
+            try {
+                const total = currentPaymentAmount || 0;
+                const myPart = parseInt(document.getElementById('splitMyPart')?.value) || 0;
+                const thirdPart = total - myPart;
+                const display = document.getElementById('splitThirdPart');
+                if (display) display.innerText = (thirdPart >= 0 ? thirdPart : 0).toLocaleString() + ' FCFA';
+            } catch(e) {}
+        }
         
         // State for Crowdfunding (Global & Persistent)
         const savedState = localStorage.getItem('mangoo_crowdfunding_state');
@@ -27981,46 +27991,52 @@
             }
             
             // If myPart is 0, generate link immediately
-            showShareSheet(thirdPart);
+            // SECURITE : fermer le modal de paiement et nettoyer les donnees client avant d'afficher le lien
+            try { document.getElementById('paymentPhone').value = ''; } catch(e) {}
+            document.getElementById('paymentModal').style.display = 'none';
+            setTimeout(function(){ showShareSheet(thirdPart); }, 200);
         }
 
         function showShareSheet(amountNeeded) {
             const link = `https://mangoo.ci/pay/${Date.now()}`;
             
-            // Show Share Sheet
+            // Show Share Sheet avec charte Mangoo
             const shareOverlay = document.createElement('div');
             shareOverlay.id = 'mangoo-share-overlay';
-            shareOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; display:flex; align-items:center; justify-content:center;";
+            shareOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:26000; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.3s;";
             shareOverlay.innerHTML = `
-                <div style="background:white; padding:25px; border-radius:15px; width:90%; max-width:350px; text-align:center;">
-                    <div style="font-size:3rem;">🔗</div>
-                    <h3 style="color:#2d3436;">Lien de Paiement (Cagnotte)</h3>
-                    <p style="color:#636e72; font-size:0.9rem;">Partagez ce lien avec vos proches. Plusieurs personnes peuvent cotiser pour atteindre les <b>${amountNeeded.toLocaleString()} FCFA</b>.</p>
+                <div style="background:var(--ml-panel); padding:28px; border-radius:20px; width:90%; max-width:380px; text-align:center; border:1px solid var(--ml-border); box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                    <div style="font-size:3.5rem; margin-bottom:8px;">🔗</div>
+                    <h3 style="color:var(--ml-text); font-weight:950; margin:0 0 6px; font-size:1.15rem;">Lien de Paiement (Cagnotte)</h3>
+                    <p style="color:var(--ml-muted); font-size:0.9rem; margin-bottom:16px; line-height:1.4;">Partagez ce lien avec vos proches. Plusieurs personnes peuvent cotiser pour atteindre les <b style="color:var(--ml-text);">${amountNeeded.toLocaleString()} FCFA</b>.</p>
                     
-                    <div style="background:#f1f2f6; padding:10px; border-radius:8px; word-break:break-all; font-family:monospace; margin:15px 0; color:#1b5e20;">
+                    <div style="background:rgba(27,94,32,0.08); padding:14px; border-radius:12px; word-break:break-all; font-family:monospace; margin:0 0 16px; color:#1b5e20; font-size:0.85rem; border:1px solid rgba(27,94,32,0.2);">
                         ${link}
                     </div>
 
-                    <div style="margin-bottom:15px; text-align:left;">
-                        <div style="font-size:0.8rem; font-weight:bold; color:#2d3436; margin-bottom:5px;">Moyens de paiement acceptés :</div>
-                        <div style="display:flex; flex-wrap:wrap; gap:5px;">
-                            <span style="background:#1b5e20; color:#ffffff; padding:4px 8px; border-radius:15px; font-size:0.75rem; border:1px solid #1b5e20;">🌍 Mobile Money</span>
-                            <span style="background:#1b5e20; color:#ffffff; padding:4px 8px; border-radius:15px; font-size:0.75rem; border:1px solid #1b5e20;">💳 Visa/Mastercard</span>
-                            <span style="background:#1b5e20; color:#ffffff; padding:4px 8px; border-radius:15px; font-size:0.75rem; border:1px solid #1b5e20;">💰 Solde Mangoo</span>
-                            <span style="background:#1b5e20; color:#ffffff; padding:4px 8px; border-radius:15px; font-size:0.75rem; border:1px solid #1b5e20;">🅿️ PayPal</span>
+                    <div style="margin-bottom:16px; text-align:left;">
+                        <div style="font-size:0.8rem; font-weight:700; color:var(--ml-text); margin-bottom:8px;">Moyens de paiement acceptés :</div>
+                        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                            <span style="background:linear-gradient(135deg,#1b5e20,#2e7d32); color:#fff; padding:5px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">🌍 Mobile Money</span>
+                            <span style="background:linear-gradient(135deg,#1b5e20,#2e7d32); color:#fff; padding:5px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">💳 Carte Bancaire</span>
+                            <span style="background:linear-gradient(135deg,#1b5e20,#2e7d32); color:#fff; padding:5px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">💰 Solde Mangoo</span>
                         </div>
                     </div>
 
-                    <div style="margin-bottom:15px; font-size:0.8rem; color:#ffffff; background:#1b5e20; padding:8px; border-radius:8px; border:1px dashed #1b5e20;">
+                    <div style="margin-bottom:16px; font-size:0.8rem; background:rgba(27,94,32,0.06); padding:10px 12px; border-radius:12px; border:1px solid rgba(27,94,32,0.15); color:var(--ml-text);">
                         🔒 <b>Sécurité :</b> Les fonds sont sécurisés par Mangoo jusqu'à ce que le montant total soit atteint.
                     </div>
                     
-                    <button onclick="copyToClip('${link}')" style="width:100%; padding:12px; background:#1b5e20; color:white; border:none; border-radius:8px; font-weight:bold; margin-bottom:10px;">
-                        Copier le Lien
+                    <button onclick="copyToClip('${link}')" style="width:100%; padding:14px; background:linear-gradient(135deg,#1b5e20,#2e7d32); color:white; border:none; border-radius:14px; font-weight:950; margin-bottom:10px; font-size:1rem; cursor:pointer;">
+                        📋 Copier le Lien
                     </button>
                     
-                    <button onclick="simulateThirdPartyPay(${amountNeeded})" style="width:100%; padding:12px; background:#dfe6e9; color:#2d3436; border:none; border-radius:8px; font-weight:bold;">
-                        Simuler Paiement Tiers
+                    <button onclick="window.simulateThirdPartyPay(${amountNeeded})" style="width:100%; padding:14px; background:var(--ml-panel); color:var(--ml-text); border:1px solid var(--ml-border); border-radius:14px; font-weight:700; font-size:1rem; cursor:pointer;">
+                        💳 Simuler Paiement Tiers
+                    </button>
+                    
+                    <button onclick="var el=document.getElementById('mangoo-share-overlay');if(el)el.remove();" style="margin-top:12px; background:transparent; border:none; color:var(--ml-muted); cursor:pointer; font-size:0.85rem;">
+                        Fermer
                     </button>
                 </div>
             `;
