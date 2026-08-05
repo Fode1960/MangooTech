@@ -1,29 +1,22 @@
 // Service Worker pour Mangoo Tech - avec Push Notifications
-const CACHE_NAME = 'mangoo-tech-v4';
+const CACHE_NAME = 'mangoo-tech-v7';
 
 // Installation du service worker
 self.addEventListener('install', (event) => {
-  console.log('[SW v3] Installation');
+  console.log('[SW v4] Installation');
   self.skipWaiting();
 });
 
-// Activation du service worker – delete ALL caches, then claim & reload
+// Activation du service worker – nettoyer caches et prendre le contrôle
 self.addEventListener('activate', (event) => {
-  console.log('[SW v3] Activation – wiping all caches');
+  console.log('[SW v4] Activation – wiping old caches');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map((cacheName) => caches.delete(cacheName))
+        cacheNames.filter(name => name !== CACHE_NAME).map((cacheName) => caches.delete(cacheName))
       );
     }).then(() => {
       return self.clients.claim();
-    }).then(() => {
-      // Force reload all controlled clients to get fresh HTML
-      return self.clients.matchAll({ type: 'window' }).then((clients) => {
-        clients.forEach((client) => {
-          client.navigate(client.url);
-        });
-      });
     })
   );
 });

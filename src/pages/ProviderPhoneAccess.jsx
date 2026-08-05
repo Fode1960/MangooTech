@@ -242,7 +242,7 @@ export default function ProviderPhoneAccess() {
             voiceAudio: source?.voiceAudio || null,
             avatar: String(source?.avatar || '').trim(),
             trade: String(source?.trade || '').trim(),
-            phone: normalizedPhone,
+            phone: String(source?.phone || '').trim() || normalizedPhone,
             city: String(source?.city || '').trim(),
             country: String(source?.country || '').trim(),
             isMobile: Boolean(source?.isMobile ?? source?.is_mobile),
@@ -488,7 +488,7 @@ export default function ProviderPhoneAccess() {
         return
       }
 
-      const candidates = forcedEmail ? [forcedEmail] : defaultCandidates
+      const candidates = Array.from(new Set([forcedEmail, ...defaultCandidates].filter(Boolean)))
       let userId = ''
       let ownerEmailUsed = ''
       let fullName = String(verifiedProvider?.name || resolved?.provider?.name || probe?.provider?.name || 'Prestataire')
@@ -635,6 +635,7 @@ export default function ProviderPhoneAccess() {
       if (usedLocalSync) persistLocalModeUser({ id: userId, email: ownerEmail, name: displayName })
       const next = new URLSearchParams()
       next.set('phone', normalizedPhone)
+      next.set('secret', String(secret || '').trim())
       if (returnTo) next.set('return', returnTo)
       goNext(`/provider/apply?${next.toString()}`)
     } catch (e) {

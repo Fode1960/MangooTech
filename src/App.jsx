@@ -19,10 +19,7 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import { supabase, supabaseConfig } from './config/supabase';
 import { getWsUrl } from './utils/realtimeUrls';
 import mangooLogo from './assets/mangoo-logo.svg'
-
-const PaymentMethods = React.lazy(() =>
-  import('./components/PaymentMethodsStable').then((module) => ({ default: module.PaymentMethods }))
-);
+import { PaymentMethods } from './components/PaymentMethodsStable'
 const QRCodeCanvas = React.lazy(() =>
   import('qrcode.react').then((module) => ({ default: module.QRCodeCanvas }))
 );
@@ -6244,16 +6241,14 @@ const ClientMarketplace = ({ user }) => {
               
               {/* Méthodes de paiement */}
               <ErrorBoundary>
-                <React.Suspense fallback={<div className={`${isDark ? 'bg-gray-800 border-gray-700 text-gray-300' : 'bg-white border-gray-200 text-gray-600'} border rounded-xl p-6 mt-4`}>Chargement des moyens de paiement…</div>}>
-                  <PaymentMethods
-                    amount={cartTotal}
-                    currency="XOF"
-                    country="CI"
-                    userId={user?.id || user?.email || 'demo-user'}
-                    onPaymentSuccess={handlePaymentSuccess}
-                    onPaymentError={handlePaymentError}
-                  />
-                </React.Suspense>
+                <PaymentMethods
+                  amount={cartTotal}
+                  currency="XOF"
+                  country="CI"
+                  userId={user?.id || user?.email || 'demo-user'}
+                  onPaymentSuccess={handlePaymentSuccess}
+                  onPaymentError={handlePaymentError}
+                />
               </ErrorBoundary>
             </div>
           </div>

@@ -618,7 +618,7 @@ router.get('/localplus/vendors', async (req, res) => {
 router.post('/localplus/vendors', async (req, res) => {
   try {
     const user = await maybeUserFromRequest(req)
-    const ownerEmail = user?.email || normalizeEmail(req.body?.ownerEmail || req.body?.vendor?.ownerEmail) || null
+    const ownerEmail = normalizeEmail(req.body?.ownerEmail || req.body?.vendor?.ownerEmail) || user?.email || null
     const vendor = localSyncStore.upsertLocalPlusVendor(req.body?.vendor || req.body, ownerEmail)
     res.json({ success: true, vendor })
   } catch (e: any) {
@@ -729,7 +729,8 @@ router.post('/localplus/provider-verify-pin', async (req, res) => {
     const vendorId = ok ? String((winner as any)?.v?.id || '').trim() : ''
     const vendorKind = ok ? String((winner as any)?.kind || '').trim() : ''
     const scopedEmail = ok && vendorKind === 'service' ? providerScopedOwnerEmail(phoneDigits, vendorId) : ''
-    if (ok && scopedEmail) {
+    // Ne pas écraser le ownerEmail existant — le scopedEmail est une info de session, pas de stockage
+    if (ok) {
       try {
         localSyncStore.upsertLocalPlusVendor(
           {
@@ -737,7 +738,7 @@ router.post('/localplus/provider-verify-pin', async (req, res) => {
             id: vendorId,
             localPin: String((winner as any)?.stored || '').trim(),
           },
-          scopedEmail,
+          null, // ne pas écraser l'ownerEmail existant
         )
       } catch {
       }

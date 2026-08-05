@@ -409,7 +409,7 @@ export const localSyncStore = {
       voiceAudio,
       avatar,
       approvalStatus,
-      ownerEmail: ownerEmail ? normalizeEmail(ownerEmail) : prev?.ownerEmail || null,
+      ownerEmail: keepNonEmptyString(ownerEmail, prev?.ownerEmail),
       ownerName: keepNonEmptyString(v.ownerName, prev?.ownerName),
       userId: keepNonEmptyString(v.userId ?? v.user_id, prev?.userId),
       trade: keepNonEmptyString(v.trade, prev?.trade),

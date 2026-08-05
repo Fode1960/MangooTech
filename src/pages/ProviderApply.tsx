@@ -55,6 +55,7 @@ export default function ProviderApply() {
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
   const [phone, setPhone] = useState(() => String(searchParams.get('phone') || '').trim())
+  const secretFromPhone = String(searchParams.get('secret') || '').trim()
   const [city, setCity] = useState('')
   const [country, setCountry] = useState('BF')
   const [services, setServices] = useState('')
@@ -178,6 +179,7 @@ export default function ProviderApply() {
               coverage: [],
               isMobile: false,
               userId: String(user.id || '').trim(),
+              localPin: secretFromPhone || undefined,
               ownerName: String((user as any)?.user_metadata?.full_name || name || '').trim(),
               avatar: avatarDataUrl || undefined,
             },
@@ -196,7 +198,7 @@ export default function ProviderApply() {
       if (isMissingProvidersTable) {
         try {
           const id = String(Date.now())
-          const pin = reserveLocalPin(id)
+          const pin = secretFromPhone || reserveLocalPin(id)
           const servicesList = services
             .split(',')
             .map((s) => s.trim())
