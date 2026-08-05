@@ -1,15 +1,15 @@
 // Service Worker pour Mangoo Tech - avec Push Notifications
-const CACHE_NAME = 'mangoo-tech-v7';
+const CACHE_NAME = 'mangoo-tech-v8';
 
 // Installation du service worker
 self.addEventListener('install', (event) => {
-  console.log('[SW v4] Installation');
+  console.log('[SW v8] Installation');
   self.skipWaiting();
 });
 
-// Activation du service worker – nettoyer caches et prendre le contrôle
+// Activation du service worker – supprimer tous les anciens caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW v4] Activation – wiping old caches');
+  console.log('[SW v8] Activation – suppression de tous les anciens caches');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -21,8 +21,10 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Interception des requetes
+// Stratégie Network-first pour toutes les requêtes
+// Le réseau est toujours prioritaire, le cache ne sert qu'en fallback
 self.addEventListener('fetch', (event) => {
+  // Ignorer les requêtes Vite HMR, WebSocket et ping
   if (event.request.url.includes('/@vite/') ||
       event.request.url.includes('/__vite_ping') ||
       event.request.url.includes('ws://') ||
@@ -30,19 +32,22 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For documents, just go network — SW n'interfère pas
-  if (event.request.destination === 'document') {
-    event.respondWith(
-      fetch(event.request).catch(() => {
-        return new Response('Page temporairement indisponible', { status: 503, statusText: 'Service Unavailable' });
-      })
-    );
-    return;
-  }
-
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request).catch(() => new Response('', { status: 503 }));
+    fetch(event.request).then((networkResponse) => {
+      // Mettre en cache les assets statiques (JS, CSS, images, fonts)
+      // Ne JAMAIS mettre en cache les documents HTML
+      if (event.request.destination !== 'document' && networkResponse.ok) {
+        const responseClone = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseClone);
+        });
+      }
+      return networkResponse;
+    }).catch(() => {
+      // Fallback : servir depuis le cache si le réseau est indisponible
+      return caches.match(event.request).then((cachedResponse) => {
+        return cachedResponse || new Response('', { status: 503 });
+      });
     })
   );
 });

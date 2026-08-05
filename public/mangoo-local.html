@@ -5156,8 +5156,8 @@
                 🧰 Créer ma fiche
             </button>
 
-            <p style="text-align:center; color:#b2bec3; font-size:0.8rem; margin-top:30px;">
-                Version 2.0.23 (PWA)
+            <p id="lpAccountVersion" style="text-align:center; color:#b2bec3; font-size:0.8rem; margin-top:30px;">
+                Local+ 2.0.44 • build v166
             </p>
 
             </div>
@@ -10663,7 +10663,7 @@
                 var _diagBanner = document.createElement('div');
                 _diagBanner.id = '_lpDiagBanner';
                 _diagBanner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#ff5722;color:#fff;text-align:center;padding:4px;font-size:12px;font-weight:bold;';
-                _diagBanner.textContent = 'build v166 | SW v17 | ' + new Date().toLocaleTimeString();
+                _diagBanner.textContent = 'build v166 | SW v8 | ' + new Date().toLocaleTimeString();
                 document.body.insertBefore(_diagBanner, document.body.firstChild);
                 setTimeout(function(){ try { _diagBanner.remove(); } catch(e){} }, 8000);
             } catch(e) {}
@@ -10678,6 +10678,8 @@
                 const hud = document.getElementById('lpVersionHud');
                 window.__lpVersionLabel = 'Local+ 2.0.44 • build v166';
                 if (hud) hud.textContent = String(window.__lpVersionLabel || 'Local+ 2.0.44 • build v166');
+                const acv = document.getElementById('lpAccountVersion');
+                if (acv) acv.textContent = String(window.__lpVersionLabel || 'Local+ 2.0.44 • build v166');
             } catch {
             }
             try {
