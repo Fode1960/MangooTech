@@ -10654,16 +10654,16 @@
 
             try {
                 const el = document.getElementById('lpBuild');
-                if (el) el.textContent = 'build v165';
+                if (el) el.textContent = 'build v166';
             } catch {
             }
-            // DIAGNOSTIC : prouver que le code v165 est bien charge
-            console.log('=== MANGOO build v165 charge ===');
+            // DIAGNOSTIC : prouver que le code v166 est bien charge
+            console.log('=== MANGOO build v166 charge ===');
             try {
                 var _diagBanner = document.createElement('div');
                 _diagBanner.id = '_lpDiagBanner';
                 _diagBanner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#ff5722;color:#fff;text-align:center;padding:4px;font-size:12px;font-weight:bold;';
-                _diagBanner.textContent = 'build v165 | SW v17 | ' + new Date().toLocaleTimeString();
+                _diagBanner.textContent = 'build v166 | SW v17 | ' + new Date().toLocaleTimeString();
                 document.body.insertBefore(_diagBanner, document.body.firstChild);
                 setTimeout(function(){ try { _diagBanner.remove(); } catch(e){} }, 8000);
             } catch(e) {}
@@ -10676,8 +10676,8 @@
             };
             try {
                 const hud = document.getElementById('lpVersionHud');
-                window.__lpVersionLabel = 'Local+ 2.0.44 • build v165';
-                if (hud) hud.textContent = String(window.__lpVersionLabel || 'Local+ 2.0.44 • build v165');
+                window.__lpVersionLabel = 'Local+ 2.0.44 • build v166';
+                if (hud) hud.textContent = String(window.__lpVersionLabel || 'Local+ 2.0.44 • build v166');
             } catch {
             }
             try {
@@ -29688,73 +29688,25 @@
                 try { closeLpIdentityModal() } catch {}
                 try { lpToast(`Connecte en tant que ${String(nextUser?.name || 'Utilisateur')}.`, 'ok') } catch {}
                 // INTENTION DASHBOARD : si l'utilisateur a clique sur 🧰 Espace pro avant de se connecter,
-                // ouvrir le Dashboard immediatement (court-circuite la detection fragile)
-                var _intentDashboard = false;
-                try { _intentDashboard = sessionStorage.getItem('lp_intent_dashboard') === '1'; } catch(e) {}
-                if (_intentDashboard) {
-                    try { sessionStorage.removeItem('lp_intent_dashboard'); } catch(e) {}
-                    console.log('[DIAG] Intent Dashboard detecte → ouverture directe');
-                    // Appel direct avec delai pour laisser lpApplyResolvedIdentity se terminer
-                    setTimeout(function() {
-                        try { showProviderDashboardInline(); } catch(e) { console.error('[DIAG] showProviderDashboardInline erreur:', e); }
-                    }, 100);
-                }
+                // ouvrir le Dashboard immediatement (plus rapide que le timeout vendor ci-dessous)
+                try {
+                    if (sessionStorage.getItem('lp_intent_dashboard') === '1') {
+                        sessionStorage.removeItem('lp_intent_dashboard');
+                        console.log('[DIAG] Intent Dashboard detecte → ouverture directe');
+                        setTimeout(function() { try { showProviderDashboardInline(); } catch(e) {} }, 50);
+                    }
+                } catch(e) {}
                 // Pour les clients : ouvrir la vue compte normalement
-                // Pour les vendeurs : laisser le timeout ci-dessous ouvrir le dashboard (evite le flash Mon compte)
                 if (role !== 'vendor') {
                     try { switchView('account') } catch {}
                     try { switchAccountTab('profile') } catch {}
                     try { loadLpProfile(true) } catch {}
                 }
-                // Afficher le bouton Go Live si vendeur
+                // Pour TOUS les vendeurs : ouvrir le dashboard prestataire apres connexion
                 if (role === 'vendor') {
-                    // Pour les prestataires (service), ne pas afficher le bouton flottant :
-                    // le dashboard prestataire a son propre onglet Live.
-                    var _isProvider = String(nextUser?.vendorKind || '').toLowerCase() === 'service';
-                    // Fallback VENDORS : si l'API n'a pas renseigné vendorKind, chercher par email
-                    if (!_isProvider && nextUser?.email) {
-                        try {
-                            var _ownedFallback = lpGetOwnedProviderIds ? lpGetOwnedProviderIds() : [];
-                            _isProvider = _ownedFallback.length > 0;
-                        } catch(e) {}
-                    }
-                    if (!_isProvider) {
-                        try { lpInitGoLiveButton() } catch(e) { console.warn('[Live] erreur init bouton apres login:', e); }
-                        // Retry apres switchView (delai pour eviter conflit UI)
-                        setTimeout(function() {
-                            try { lpInitGoLiveButton(); } catch(e) {}
-                        }, 500);
-                    }
-                    // Si prestataire, ouvrir le dashboard prestataire inline
                     setTimeout(function() {
-                        try {
-                            var _u = getLpCurrentUser();
-                            console.log('[DIAG] Timeout 400ms: _u=', _u ? 'email=' + _u.email + ' vendorKind=' + _u.vendorKind : 'null');
-                            // Robuste : vendorKind API + fallback VENDORS
-                            var _isSvc = String(_u?.vendorKind || '').toLowerCase() === 'service';
-                            if (!_isSvc && _u?.email) {
-                                try {
-                                    var _owned2 = lpGetOwnedProviderIds ? lpGetOwnedProviderIds() : [];
-                                    _isSvc = _owned2.length > 0;
-                                    console.log('[DIAG] Timeout 400ms fallback: _owned2=' + JSON.stringify(_owned2) + ' _isSvc=' + _isSvc);
-                                } catch(e) {}
-                            }
-                            console.log('[DIAG] Timeout 400ms decision: _isSvc=' + _isSvc);
-                            if (_isSvc) {
-                                var _pid = getMyProviderId();
-                                var _owned = lpGetOwnedProviderIds();
-                                console.log('[DIAG] Timeout 400ms: _pid=' + _pid + ' _owned=' + JSON.stringify(_owned));
-                                if (_pid || _owned.length) {
-                                    console.log('[DIAG] Timeout 400ms → openMyProviderDashboard()');
-                                    try { openMyProviderDashboard(); } catch(e) {}
-                                } else {
-                                    console.log('[DIAG] Timeout 400ms: AUCUN provider trouve (_pid vide, _owned vide)');
-                                }
-                            } else {
-                                console.log('[DIAG] Timeout 400ms: PAS un prestataire → pas de dashboard');
-                            }
-                        } catch(e) { console.log('[DIAG] Timeout 400ms erreur:', e); }
-                    }, 400);
+                        try { showProviderDashboardInline(); } catch(e) {}
+                    }, 300);
                 }
             } catch (e) {
                 const msg = e?.name === 'AbortError'
