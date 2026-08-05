@@ -4406,7 +4406,7 @@
     <script>
     (function() {
       if (!('serviceWorker' in navigator)) return;
-      var SW_URL = '/sw.js?v=14';
+      var SW_URL = '/sw.js?v=17';
       console.log('[Push] Registering SW (no unregister)...');
       navigator.serviceWorker.register(SW_URL, { scope: '/', updateViaCache: 'none' }).then(function(reg) {
         console.log('[Push] SW registered: ' + reg.scope);
@@ -10609,6 +10609,9 @@
             if (appInitialized) return;
             appInitialized = true;
 
+            // Force l'affichage de la carte au demarrage pour eviter le chevauchement des vues
+            try { switchView('map'); } catch(e) {}
+
             try { lpBootstrapIdentityFromQuery(); } catch {}
             // Charger les produits du vendeur depuis localStorage (lpRole=vendor)
             // Puis rafraichir depuis Supabase (source de verite) pour harmoniser avec le Dashboard
@@ -10651,13 +10654,30 @@
 
             try {
                 const el = document.getElementById('lpBuild');
-                if (el) el.textContent = 'build v153';
+                if (el) el.textContent = 'build v165';
             } catch {
             }
+            // DIAGNOSTIC : prouver que le code v165 est bien charge
+            console.log('=== MANGOO build v165 charge ===');
+            try {
+                var _diagBanner = document.createElement('div');
+                _diagBanner.id = '_lpDiagBanner';
+                _diagBanner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#ff5722;color:#fff;text-align:center;padding:4px;font-size:12px;font-weight:bold;';
+                _diagBanner.textContent = 'build v165 | SW v17 | ' + new Date().toLocaleTimeString();
+                document.body.insertBefore(_diagBanner, document.body.firstChild);
+                setTimeout(function(){ try { _diagBanner.remove(); } catch(e){} }, 8000);
+            } catch(e) {}
+            // DIAGNOSTIC : surveiller les appels a switchView('account')
+            var _origSwitchView = window.switchView;
+            window.switchView = function(v) {
+                console.log('[DIAG] switchView("' + v + '") appele | providerSection.display=' + 
+                    (function(){try{var p=document.getElementById('providerSection');return p?p.style.display:'?';}catch(e){return 'err';}})());
+                return _origSwitchView.apply(this, arguments);
+            };
             try {
                 const hud = document.getElementById('lpVersionHud');
-                window.__lpVersionLabel = 'Local+ 2.0.41 • build v153';
-                if (hud) hud.textContent = String(window.__lpVersionLabel || 'Local+ 2.0.41 • build v153');
+                window.__lpVersionLabel = 'Local+ 2.0.44 • build v165';
+                if (hud) hud.textContent = String(window.__lpVersionLabel || 'Local+ 2.0.44 • build v165');
             } catch {
             }
             try {
@@ -11664,7 +11684,13 @@
                 }
             }
             const isAccountView = String(currentView || '').trim() === 'account'
-            btn.style.display = isAccountView ? 'none' : 'flex';
+            // FAB visible sauf si le dashboard prestataire est deja actif (providerSection visible)
+            var _dashboardActive = false;
+            try {
+                var _psFab = document.getElementById('providerSection');
+                _dashboardActive = _psFab && _psFab.style.display === 'block';
+            } catch(e) {}
+            btn.style.display = (isAccountView && _dashboardActive) ? 'none' : 'flex';
             try {
                 let shopId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
                 const scopedShopIds = lpGetStoredShopIdsForCurrentUser();
@@ -11696,11 +11722,13 @@
         }
 
         function showProviderDashboardInline() {
+            console.log('[DIAG] showProviderDashboardInline() appele');
             // Garde de sécurité : ne jamais afficher le dashboard sans authentification
             // sauf si l'URL force explicitement lpRole=provider
             try {
                 var _cuCheck3 = null;
                 try { _cuCheck3 = getLpCurrentUser(); } catch(e) {}
+                console.log('[DIAG] showProviderDashboardInline auth: ' + (_cuCheck3 ? 'email=' + _cuCheck3.email + ' vendorKind=' + _cuCheck3.vendorKind : 'null'));
                 var _isAuth3 = !!(_cuCheck3 && String(_cuCheck3.email || '').trim());
                 var _forceRole3 = '';
                 try { _forceRole3 = new URLSearchParams(window.location.search).get('lpRole') || ''; } catch(e) {}
@@ -11717,6 +11745,8 @@
                 var espaceDiv = document.getElementById('espaceView');
                 var introDiv = document.getElementById('introView');
                 if (accountDiv) accountDiv.style.display = 'block';
+                // Marqueur: le dashboard prestataire est actif
+                try { window._lpDashActive = true; } catch(e) {}
                 if (mapDiv) mapDiv.style.display = 'none';
                 if (listDiv) listDiv.style.display = 'none';
                 if (espaceDiv) espaceDiv.style.display = 'none';
@@ -11956,15 +11986,19 @@
 
         function openMyProviderDashboard() {
             try {
+                console.log('[DIAG] openMyProviderDashboard() appele');
                 // Garde de sécurité : ne pas ouvrir le dashboard sans authentification
                 var _cuCheck2 = null;
                 try { _cuCheck2 = getLpCurrentUser(); } catch(e) {}
+                console.log('[DIAG] getLpCurrentUser() =', _cuCheck2 ? 'email=' + _cuCheck2.email : 'null');
                 if (!_cuCheck2 || !String(_cuCheck2.email || '').trim()) {
                     // Vérifier si un paramètre URL force l'ouverture (lpRole=vendor ou provider)
                     var _forceRole = '';
                     try { _forceRole = new URLSearchParams(window.location.search).get('lpRole') || ''; } catch(e) {}
                     if (_forceRole !== 'vendor' && _forceRole !== 'provider') {
                         console.warn('[Provider] Dashboard non ouvert: utilisateur non authentifie → redirection connexion');
+                        // Sauvegarder l'intention : ouvrir le Dashboard apres authentification
+                        try { sessionStorage.setItem('lp_intent_dashboard', '1'); } catch(e) {}
                         // Rediriger vers la page de connexion/identité
                         try { switchView('account'); } catch(e) {}
                         try { openLpIdentityModal(); } catch(e) {}
@@ -11976,7 +12010,9 @@
                 const providerId_check = getMyProviderId();
                 const providerScoped = lpGetStoredProviderIdsForCurrentUser();
                 const providerOwned = providerScoped.length ? providerScoped : lpGetOwnedProviderIds();
+                console.log('[DIAG] Provider check: pid=' + providerId_check + ' owned=' + JSON.stringify(providerOwned) + ' scoped=' + JSON.stringify(providerScoped));
                 if (providerId_check || providerOwned.length) {
+                    console.log('[DIAG] → showProviderDashboardInline()');
                     showProviderDashboardInline();
                     setTimeout(function() { try { lpInitGoLiveButton(); } catch(e) {} }, 500);
                     return;
@@ -13728,6 +13764,8 @@
             if (espaceDiv) espaceDiv.style.display = 'none';
             if (introDiv) introDiv.style.display = 'none';
             accountDiv.style.display = 'none';
+            // Fermer la fiche vendeur si ouverte (sauf vue map)
+            if (view !== 'map') { try { closeSheet(); } catch(e) {} }
 
             if (searchBar) searchBar.style.display = 'flex';
             renderFamiliesBar();
@@ -13792,27 +13830,37 @@
                 if (searchBar) searchBar.style.display = 'none';
                 if (familiesBar) familiesBar.style.display = 'none';
             } else if (view === 'account') {
+                // Mon compte = page compte normale (commandes, profil, favoris...)
+                // Le Dashboard prestataire est accessible via le bouton flottant 🛠️ (FAB)
                 accountDiv.style.display = 'block';
                 // Hide filters/stories for account view
                 if(topSection) topSection.style.display = 'none';
                 if (searchBar) searchBar.style.display = 'none';
                 if (familiesBar) familiesBar.style.display = 'none';
                 
-                // Toujours masquer le dashboard explicitement quand on ouvre "Mon compte"
+                // REINITIALISATION COMPLETE : restaurer la vue compte normale
+                // Le dashboard prestataire est gere EXCLUSIVEMENT par showProviderDashboardInline()
+                // → on annule TOUT ce que showProviderDashboardInline a pu modifier
+                try { window._lpDashActive = false; } catch(e) {}
                 try { var _ps = document.getElementById('providerSection'); if (_ps) _ps.style.display = 'none'; } catch(e) {}
-                try { var _vs = document.getElementById('vendorSection'); if (_vs) _vs.style.display = 'block'; } catch(e) {}
-                // Réafficher onglets compte et panes client
-                try {
-                    document.querySelectorAll('#accountView .lp-tab[id^="lp-tab-"]').forEach(function(t) { t.style.display = ''; });
-                    document.querySelectorAll('#accountView .lp-pane[data-pane]').forEach(function(el) { el.classList.remove('active'); });
-                    try { var dashSell = document.getElementById('dash-sell'); if (dashSell) { dashSell.classList.add('active'); } } catch(e) {}
-                    try { var tabSell = document.getElementById('lp-tab-sell'); if (tabSell) tabSell.classList.add('active'); } catch(e) {}
-                } catch(e) {}
-                // Restaurer le footer
                 try { var _af = document.getElementById('accountFooter'); if (_af) _af.style.display = ''; } catch(e) {}
-                // Nettoyer les actions injectées par showProviderDashboardInline
-                try { var _inj = document.getElementById('lp-owner-actions-injected'); if (_inj) _inj.remove(); } catch(e) {}
-                try { var _logout = document.getElementById('lp-prov-logout-actions'); if (_logout) _logout.remove(); } catch(e) {}
+                // Restaurer les onglets compte (masques par showProviderDashboardInline → display:none)
+                try {
+                    document.querySelectorAll('#accountView .lp-tab[id^="lp-tab-"]').forEach(function(t) {
+                        t.style.display = '';
+                    });
+                } catch(e) {}
+                // Restaurer les panes compte (classe "active" retiree par showProviderDashboardInline)
+                try {
+                    document.querySelectorAll('#accountView .lp-pane[data-pane]').forEach(function(el) {
+                        el.style.display = '';
+                    });
+                } catch(e) {}
+                // Nettoyer les actions injectees par showProviderDashboardInline (Quitter/Deconnexion)
+                try {
+                    var _inj = document.getElementById('lp-prov-logout-actions');
+                    if (_inj) _inj.remove();
+                } catch(e) {}
                 
                 // Initialize Account UI
                 try { applyLpHeaderUser() } catch {}
@@ -18864,7 +18912,8 @@
         }
 
         function closeSheet() {
-            document.getElementById('vendorSheet').classList.remove('active');
+            const vs = document.getElementById('vendorSheet');
+            if (vs) { vs.classList.remove('active'); vs.style.display = 'none'; }
             try {
                 const url = new URL(window.location.href);
                 url.searchParams.delete('vendor');
@@ -29520,8 +29569,7 @@
             }
             localStorage.setItem('mangoo-current-user', JSON.stringify(nextUser))
             localStorage.setItem('user', JSON.stringify(nextUser))
-            try { localStorage.setItem(`mangoo-active-role:${email}`, role) } catch {}
-            try { sessionStorage.removeItem('mangoo_force_logged_out') } catch {}
+            // Nettoyer les IDs de l'ancien compte si l'email a change (AVANT de definir les nouveaux)
             try {
                 if (previousEmail && previousEmail !== email) {
                     localStorage.removeItem('mangoo_my_shop_id')
@@ -29531,6 +29579,34 @@
                 }
             } catch {
             }
+            // Prestataire : enregistrer le provider_id pour getMyProviderId() et switchView('account')
+            // Robuste : fallback sur VENDORS si l'API ne renvoie pas vendorKind/service
+            var _isProvider = String(identity.vendorKind || '').trim().toLowerCase() === 'service';
+            if (!_isProvider && email) {
+                try {
+                    var _ownedCheck = (Array.isArray(VENDORS) ? VENDORS : [])
+                        .filter(function(v) { try { return lpGetVendorKind(v) === 'service'; } catch(e) { return false; } })
+                        .filter(function(v) { try { return lpEmailsMatch(v.ownerEmail, email); } catch(e) { return false; } });
+                    _isProvider = _ownedCheck.length > 0;
+                } catch(e) {}
+            }
+            if (_isProvider) {
+                var _vendorId = String(identity.vendorId || '').trim();
+                if (!_vendorId) {
+                    // API n'a pas renvoyé vendorId → chercher dans VENDORS par email
+                    try {
+                        var _match = (Array.isArray(VENDORS) ? VENDORS : []).find(function(v) {
+                            try { return lpGetVendorKind(v) === 'service' && lpEmailsMatch(v.ownerEmail, email); } catch(e) { return false; }
+                        });
+                        if (_match) _vendorId = String(_match.id || '').trim();
+                    } catch(e) {}
+                }
+                if (_vendorId) {
+                    localStorage.setItem('mangoo_my_provider_id', _vendorId);
+                }
+            }
+            try { localStorage.setItem(`mangoo-active-role:${email}`, role) } catch {}
+            try { sessionStorage.removeItem('mangoo_force_logged_out') } catch {}
             try {
                 const profileKey = `mangoo_local_profile:${email}`
                 const raw = localStorage.getItem(profileKey) || localStorage.getItem('mangoo_local_profile')
@@ -29610,15 +29686,38 @@
                 const nextUser = lpApplyResolvedIdentity(payload.identity)
                 lpSetIdentityEntryStatus('Connexion reussie.', 'success')
                 try { closeLpIdentityModal() } catch {}
-                try { switchView('account') } catch {}
-                try { switchAccountTab(role === 'vendor' ? 'sell' : 'profile') } catch {}
-                try { loadLpProfile(true) } catch {}
                 try { lpToast(`Connecte en tant que ${String(nextUser?.name || 'Utilisateur')}.`, 'ok') } catch {}
+                // INTENTION DASHBOARD : si l'utilisateur a clique sur 🧰 Espace pro avant de se connecter,
+                // ouvrir le Dashboard immediatement (court-circuite la detection fragile)
+                var _intentDashboard = false;
+                try { _intentDashboard = sessionStorage.getItem('lp_intent_dashboard') === '1'; } catch(e) {}
+                if (_intentDashboard) {
+                    try { sessionStorage.removeItem('lp_intent_dashboard'); } catch(e) {}
+                    console.log('[DIAG] Intent Dashboard detecte → ouverture directe');
+                    // Appel direct avec delai pour laisser lpApplyResolvedIdentity se terminer
+                    setTimeout(function() {
+                        try { showProviderDashboardInline(); } catch(e) { console.error('[DIAG] showProviderDashboardInline erreur:', e); }
+                    }, 100);
+                }
+                // Pour les clients : ouvrir la vue compte normalement
+                // Pour les vendeurs : laisser le timeout ci-dessous ouvrir le dashboard (evite le flash Mon compte)
+                if (role !== 'vendor') {
+                    try { switchView('account') } catch {}
+                    try { switchAccountTab('profile') } catch {}
+                    try { loadLpProfile(true) } catch {}
+                }
                 // Afficher le bouton Go Live si vendeur
                 if (role === 'vendor') {
                     // Pour les prestataires (service), ne pas afficher le bouton flottant :
                     // le dashboard prestataire a son propre onglet Live.
                     var _isProvider = String(nextUser?.vendorKind || '').toLowerCase() === 'service';
+                    // Fallback VENDORS : si l'API n'a pas renseigné vendorKind, chercher par email
+                    if (!_isProvider && nextUser?.email) {
+                        try {
+                            var _ownedFallback = lpGetOwnedProviderIds ? lpGetOwnedProviderIds() : [];
+                            _isProvider = _ownedFallback.length > 0;
+                        } catch(e) {}
+                    }
                     if (!_isProvider) {
                         try { lpInitGoLiveButton() } catch(e) { console.warn('[Live] erreur init bouton apres login:', e); }
                         // Retry apres switchView (delai pour eviter conflit UI)
@@ -29630,15 +29729,31 @@
                     setTimeout(function() {
                         try {
                             var _u = getLpCurrentUser();
-                            // N'ouvrir le dashboard prestataire QUE si vendorKind === 'service'
-                            if (_u && _u.vendorKind === 'service') {
+                            console.log('[DIAG] Timeout 400ms: _u=', _u ? 'email=' + _u.email + ' vendorKind=' + _u.vendorKind : 'null');
+                            // Robuste : vendorKind API + fallback VENDORS
+                            var _isSvc = String(_u?.vendorKind || '').toLowerCase() === 'service';
+                            if (!_isSvc && _u?.email) {
+                                try {
+                                    var _owned2 = lpGetOwnedProviderIds ? lpGetOwnedProviderIds() : [];
+                                    _isSvc = _owned2.length > 0;
+                                    console.log('[DIAG] Timeout 400ms fallback: _owned2=' + JSON.stringify(_owned2) + ' _isSvc=' + _isSvc);
+                                } catch(e) {}
+                            }
+                            console.log('[DIAG] Timeout 400ms decision: _isSvc=' + _isSvc);
+                            if (_isSvc) {
                                 var _pid = getMyProviderId();
                                 var _owned = lpGetOwnedProviderIds();
+                                console.log('[DIAG] Timeout 400ms: _pid=' + _pid + ' _owned=' + JSON.stringify(_owned));
                                 if (_pid || _owned.length) {
+                                    console.log('[DIAG] Timeout 400ms → openMyProviderDashboard()');
                                     try { openMyProviderDashboard(); } catch(e) {}
+                                } else {
+                                    console.log('[DIAG] Timeout 400ms: AUCUN provider trouve (_pid vide, _owned vide)');
                                 }
+                            } else {
+                                console.log('[DIAG] Timeout 400ms: PAS un prestataire → pas de dashboard');
                             }
-                        } catch(e) {}
+                        } catch(e) { console.log('[DIAG] Timeout 400ms erreur:', e); }
                     }, 400);
                 }
             } catch (e) {
