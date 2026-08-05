@@ -10609,13 +10609,21 @@
             if (appInitialized) return;
             appInitialized = true;
 
-            // Nettoyer la session si l'URL n'a pas de params d'authentification
-            // (evite que lp_auth_session d'une session precedente persiste au refresh)
+            // NETTOYAGE IDENTITE : si l'URL n'a pas de params d'auth et qu'aucune session
+            // active n'existe, supprimer toute identite en cache (localStorage).
+            // Cela empeche l'affichage de "DAN Electricien" sans authentification.
             try {
                 var _qsInit = new URLSearchParams(String(window.location.search || ''));
                 var _hasAuthParam = _qsInit.get('lpRole') || _qsInit.get('vendor') || _qsInit.get('lpEmail');
-                if (!_hasAuthParam) {
+                var _hasSession = false;
+                try { _hasSession = sessionStorage.getItem('lp_auth_session') === '1'; } catch(e) {}
+                if (!_hasAuthParam && !_hasSession) {
+                    localStorage.removeItem('mangoo-current-user');
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('mangoo_my_provider_id');
+                    localStorage.removeItem('mangoo_my_shop_id');
                     sessionStorage.removeItem('lp_auth_session');
+                    console.log('[INIT] Identite en cache nettoyee (pas de session active)');
                 }
             } catch(e) {}
 
