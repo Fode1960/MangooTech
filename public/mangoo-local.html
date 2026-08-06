@@ -8550,6 +8550,8 @@
                 const v = VENDORS.find((x) => String(x?.id) === String(id)) || null;
                 if (!v) return false;
                 const kind = lpGetVendorKind(v);
+                // Persister la session pour que initApp() preserve l'identite au rechargement
+                localStorage.setItem('lp_auth_session', '1');
                 try {
                     if (kind === 'service') localStorage.setItem('mangoo_my_provider_id', String(id));
                     else localStorage.setItem('mangoo_my_shop_id', String(id));
