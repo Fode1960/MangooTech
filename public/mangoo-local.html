@@ -10742,6 +10742,63 @@
                 } catch(e) {}
             }, 500);
 
+            // ═══ SENTINELLE DOM ANTI-GÉNÉRIQUE ═══
+            // Surveillance permanente : si accountView devient visible alors qu'un
+            // prestataire a une session active, forcer le Dashboard immédiatement.
+            // Cette sentinelle est le DERNIER REMPART — aucun code ne peut la contourner.
+            (function _lpAntiGenericSentinel() {
+                var _lastDashCheck = 0;
+                function _lpCheckAndRedirect() {
+                    var now = Date.now();
+                    if (now - _lastDashCheck < 500) return; // max 2 fois/sec
+                    _lastDashCheck = now;
+                    try {
+                        var _hasSess = localStorage.getItem('lp_auth_session') === '1';
+                        var _provId = localStorage.getItem('mangoo_my_provider_id');
+                        if (!_hasSess || !_provId) return;
+                        var _acct = document.getElementById('accountView');
+                        if (!_acct) return;
+                        var _disp = window.getComputedStyle(_acct).display;
+                        if (_disp === 'none') return;
+                        if (window._lpDashActive === true) return;
+                        console.warn('[SENTINELLE] Page générique détectée pour prestataire → forçage Dashboard');
+                        if (typeof showProviderDashboardInline === 'function') {
+                            showProviderDashboardInline();
+                        }
+                    } catch(e) {}
+                }
+                // Vérification périodique toutes les 2 secondes
+                setInterval(_lpCheckAndRedirect, 2000);
+                // MutationObserver sur accountView (détecte les changements de style/display)
+                try {
+                    var _acctEl = document.getElementById('accountView');
+                    if (_acctEl && window.MutationObserver) {
+                        var _mo = new MutationObserver(function() {
+                            setTimeout(_lpCheckAndRedirect, 100);
+                        });
+                        _mo.observe(_acctEl, { attributes: true, attributeFilter: ['style', 'class'], childList: true, subtree: false });
+                    }
+                } catch(e) {}
+                console.log('[SENTINELLE] Observateur anti-générique activé');
+            })();
+
+            // ═══ PROTECTION BFCACHE ═══
+            // Quand Chrome restaure la page depuis le back-forward cache,
+            // initApp() n'est PAS ré-exécuté. On force une vérification.
+            window.addEventListener('pageshow', function(e) {
+                if (e.persisted) {
+                    console.log('[BFCACHE] Page restaurée depuis cache → vérification session');
+                    try {
+                        var _bfSess = localStorage.getItem('lp_auth_session') === '1';
+                        var _bfProv = localStorage.getItem('mangoo_my_provider_id');
+                        if (_bfSess && _bfProv && typeof openMyProviderDashboard === 'function') {
+                            console.log('[BFCACHE] Session prestataire → ouverture Dashboard');
+                            setTimeout(function() { openMyProviderDashboard(); }, 300);
+                        }
+                    } catch(_e) {}
+                }
+            });
+
             try { lpBootstrapIdentityFromQuery(); } catch {}
             // Charger les produits du vendeur depuis localStorage (lpRole=vendor)
             // Puis rafraichir depuis Supabase (source de verite) pour harmoniser avec le Dashboard
