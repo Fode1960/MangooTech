@@ -4406,8 +4406,8 @@
     <script>
     (function() {
       if (!('serviceWorker' in navigator)) return;
-      var SW_URL = '/sw.js?v=12';
-      var APP_VERSION = '12';
+      var SW_URL = '/sw.js?v=13';
+      var APP_VERSION = '13';
 
       // ═══ NETTOYAGE AUTO DES ANCIENNES VERSIONS ═══
       // Si la version en localStorage est dépassée, on désinstalle
@@ -4431,7 +4431,7 @@
       }
 
       // ═══ ENREGISTREMENT NORMAL ═══
-      console.log('[Push] Registering SW v12...');
+      console.log('[Push] Registering SW v13...');
       navigator.serviceWorker.register(SW_URL, { scope: '/', updateViaCache: 'none' }).then(function(reg) {
         console.log('[Push] SW registered: ' + reg.scope);
 
@@ -10729,6 +10729,19 @@
             // Force l'affichage de la carte au demarrage pour eviter le chevauchement des vues
             try { switchView('map'); } catch(e) {}
 
+            // AUTO-REDIRECT DASHBOARD : si une session prestataire est active, ouvrir le Dashboard
+            // apres un court delai (le temps que le DOM soit pret)
+            setTimeout(function() {
+                try {
+                    var _hasSess = localStorage.getItem('lp_auth_session') === '1';
+                    var _provId = localStorage.getItem('mangoo_my_provider_id');
+                    if (_hasSess && _provId && typeof openMyProviderDashboard === 'function') {
+                        console.log('[INIT] Session prestataire detectee → auto-ouverture Dashboard');
+                        openMyProviderDashboard();
+                    }
+                } catch(e) {}
+            }, 500);
+
             try { lpBootstrapIdentityFromQuery(); } catch {}
             // Charger les produits du vendeur depuis localStorage (lpRole=vendor)
             // Puis rafraichir depuis Supabase (source de verite) pour harmoniser avec le Dashboard
@@ -11827,9 +11840,9 @@
         function lpNavAccount() {
             var hasSession = false;
             try { hasSession = localStorage.getItem('lp_auth_session') === '1'; } catch(e) {}
-            if (hasSession && typeof showProviderDashboardInline === 'function') {
-                showProviderDashboardInline();
-                // Double garantie : rappeler la surbrillance apres un court delai
+            if (hasSession && typeof openMyProviderDashboard === 'function') {
+                // Utiliser openMyProviderDashboard (plus robuste : verifie auth + providerId)
+                openMyProviderDashboard();
                 setTimeout(function() { try { lpHighlightAccountNav(); } catch(e) {} }, 150);
             } else {
                 switchView('account');

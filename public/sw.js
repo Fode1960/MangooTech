@@ -1,15 +1,16 @@
 // Service Worker pour Mangoo Tech - avec Push Notifications
-const CACHE_NAME = 'mangoo-tech-v12';
+// ⚠️ CE SW NE GÈRE PAS LES DOCUMENTS HTML — le navigateur les récupère directement
+const CACHE_NAME = 'mangoo-tech-v13';
 
 // Installation du service worker
 self.addEventListener('install', (event) => {
-  console.log('[SW v12] Installation');
+  console.log('[SW v13] Installation');
   self.skipWaiting();
 });
 
 // Activation du service worker – supprimer tous les anciens caches + notifier les clients
 self.addEventListener('activate', (event) => {
-  console.log('[SW v12] Activation – suppression de tous les anciens caches');
+  console.log('[SW v13] Activation – suppression de tous les anciens caches');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -21,7 +22,7 @@ self.addEventListener('activate', (event) => {
       // Notifier TOUS les clients qu'une mise à jour est dispo → rechargement auto
       return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
         clients.forEach((client) => {
-          client.postMessage({ type: 'SW_UPDATED', version: 'v12' });
+          client.postMessage({ type: 'SW_UPDATED', version: 'v13' });
         });
       });
     })
@@ -31,13 +32,14 @@ self.addEventListener('activate', (event) => {
 // Écouter les messages du client (ex: SKIP_WAITING)
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
-    console.log('[SW v12] SKIP_WAITING reçu → skipWaiting');
+    console.log('[SW v13] SKIP_WAITING reçu → skipWaiting');
     self.skipWaiting();
   }
 });
 
-// Stratégie Network-first pour toutes les requêtes
-// Le réseau est toujours prioritaire, le cache ne sert qu'en fallback
+// Stratégie : NE PAS intercepter les documents HTML.
+// Le navigateur les récupère directement → toujours la dernière version.
+// Le SW ne gère que les assets statiques (JS, CSS, images) et les Push.
 self.addEventListener('fetch', (event) => {
   // Ignorer les requêtes Vite HMR, WebSocket et ping
   if (event.request.url.includes('/@vite/') ||
@@ -47,20 +49,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // DOCUMENTS HTML : forcer le bypass TOTAL du cache (navigateur + HTTP)
-  // cache:'reload' = toujours depuis le réseau, jamais de 304/If-None-Match
-  if (event.request.destination === 'document') {
-    event.respondWith(
-      fetch(event.request, { cache: 'reload' })
-    );
-    return;
+  // DOCUMENTS HTML + NAVIGATION : ne pas intercepter.
+  // Le navigateur gère directement → pas de cache SW → toujours frais.
+  if (event.request.destination === 'document' ||
+      event.request.mode === 'navigate') {
+    return; // pas de event.respondWith() → le navigateur fait le fetch lui-même
   }
 
+  // Assets statiques : network-first, cache en fallback
   event.respondWith(
     fetch(event.request).then((networkResponse) => {
-      // Mettre en cache les assets statiques (JS, CSS, images, fonts)
-      // Ne JAMAIS mettre en cache les documents HTML ni les requetes POST
-      if (event.request.method === 'GET' && event.request.destination !== 'document' && networkResponse.ok) {
+      if (event.request.method === 'GET' && networkResponse.ok) {
         const responseClone = networkResponse.clone();
         caches.open(CACHE_NAME).then((cache) => {
           cache.put(event.request, responseClone);
@@ -68,7 +67,6 @@ self.addEventListener('fetch', (event) => {
       }
       return networkResponse;
     }).catch(() => {
-      // Fallback : servir depuis le cache si le réseau est indisponible
       return caches.match(event.request).then((cachedResponse) => {
         return cachedResponse || new Response('', { status: 503 });
       });
