@@ -30305,8 +30305,11 @@
                         try { showProviderDashboardInline(); } catch(e) {}
                     }, 500);
                 } else {
-                    // Client → page compte générique
-                    try { switchView('account') } catch {}
+                    // Laisser openMyProviderDashboard() décider : il a son propre
+                    // fallback localStorage + getLpCurrentUser() + VENDORS.
+                    // Si ce n'est vraiment pas un prestataire, il appellera
+                    // switchView('account') pour la page générique client.
+                    try { openMyProviderDashboard(); } catch(e) { switchView('account'); }
                     try { switchAccountTab('profile') } catch {}
                     try { loadLpProfile(true) } catch {}
                 }
