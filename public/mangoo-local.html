@@ -4866,7 +4866,7 @@
                         <div class="lp-tabs" style="margin-bottom: 12px;" aria-label="Boussole compte prestataire">
                             <button type="button" onclick="try{switchProviderTab('overview')}catch{}" class="lp-tab active" id="lp-ptab-overview">📊 Vue d'ensemble</button>
                             <button type="button" onclick="try{switchProviderTab('services')}catch{}" class="lp-tab" id="lp-ptab-services">🛠️ Prestations</button>
-                            <button type="button" onclick="try{switchProviderTab('orders')}catch{}" class="lp-tab" id="lp-ptab-orders">🛒 Commandes</button>
+                            <button type="button" onclick="try{switchProviderTab('orders')}catch(e){console.error('[Tab orders]',e)};setTimeout(function(){try{var ps=document.getElementById('providerSection');if(ps)ps.style.display='block';document.querySelectorAll('.lp-pane[data-pvpane]').forEach(function(el){el.classList.toggle('active',el.getAttribute('data-pvpane')==='orders');});renderProviderOrders();}catch(e){}},350);" class="lp-tab" id="lp-ptab-orders">🛒 Commandes</button>
                             <button type="button" onclick="try{switchProviderTab('communication')}catch{}" class="lp-tab" id="lp-ptab-communication">💬 Chat</button>
                             <button type="button" onclick="try{switchProviderTab('supply')}catch{}" class="lp-tab" id="lp-ptab-supply">🏭 Appro</button>
                             <button type="button" onclick="try{switchProviderTab('live')}catch{}" class="lp-tab" id="lp-ptab-live">🔴 Live</button>
@@ -11954,6 +11954,8 @@
                 try { applyLpHeaderUser() } catch {}
                 // Mettre le bouton "Mon compte" en surbrillance
                 try { lpHighlightAccountNav() } catch(e) {}
+                // Pre-charger les commandes pour l'onglet 🛒 Commandes
+                setTimeout(function() { try { renderProviderOrders() } catch {} }, 300);
                 // Enregistrer la presence WebSocket pour le badge LIVE sur la carte
                 setTimeout(function() { try { lpTryRegisterVendorPresence(); } catch(e) {} }, 800);
             } catch(e) { console.warn('Erreur ouverture dashboard prestataire:', e); }
@@ -15636,14 +15638,17 @@
 
         // Rend les commandes recues par le prestataire dans le pane provider-orders
         function renderProviderOrders() {
+            console.log('[renderProviderOrders] APPELÉ');
             var container = document.getElementById('lpProviderOrdersContainer');
-            if (!container) return;
+            if (!container) { console.warn('[renderProviderOrders] Conteneur introuvable!'); return; }
             try {
                 var allOrders = typeof lpReadClientOrders === 'function' ? lpReadClientOrders() : [];
+                console.log('[renderProviderOrders] lpReadClientOrders →', allOrders?.length || 0, 'commandes');
                 var providerId = '';
                 try { providerId = String(localStorage.getItem('mangoo_my_provider_id') || '').trim(); } catch(e) {}
                 var providerName = '';
                 try { providerName = String(activeVendor?.name || '').trim(); } catch(e) {}
+                console.log('[renderProviderOrders] providerId=' + providerId + ' providerName=' + providerName);
 
                 // Filtrer les commandes pour ce prestataire
                 var myOrders = allOrders.filter(function(o) {
@@ -15654,6 +15659,7 @@
                     if (providerName && String(o.shopName || o.vendorName || '').trim().toLowerCase() === providerName.toLowerCase()) return true;
                     return false;
                 });
+                console.log('[renderProviderOrders] Après filtrage →', myOrders.length, 'commandes pour ce prestataire');
 
                 if (!myOrders.length) {
                     container.innerHTML = '<div style="text-align:center; padding:30px 0; color:var(--ml-muted);">' +
@@ -27657,6 +27663,20 @@
                     document.getElementById('paymentModal').style.display = 'none';
                     
                     if (isFullPayment) {
+                        // SAUVEGARDER la commande dans le localStorage pour l'onglet 🛒 Commandes
+                        try {
+                            var orderId = 'lp-pay-' + Date.now() + '-' + Math.random().toString(36).slice(2,8);
+                            lpRememberClientOrder({
+                                id: orderId,
+                                amountCfa: currentPaymentAmount,
+                                pricing: { totalCfa: currentPaymentAmount, currency: 'XAF' },
+                                paymentStatus: 'confirmed',
+                                payment: { status: 'confirmed', method: currentPaymentMethod || 'mobile_money' },
+                                createdAt: new Date().toISOString(),
+                            });
+                            console.log('[Payment] Commande sauvegardée:', orderId);
+                        } catch(e) { console.error('[Payment] Erreur sauvegarde commande:', e); }
+
                         // SHOW SUCCESS MODAL (COMMANDE CONFIRMÉE)
                         const successOverlay = document.createElement('div');
                         successOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.3s;";
@@ -27680,6 +27700,23 @@
                         `;
                         document.body.appendChild(successOverlay);
                     } else {
+                        // SAUVEGARDER la commande hors Live Shopping (le LiveShop a son propre flux API)
+                        try {
+                            var pendingLS = typeof lpGetPendingDirectPurchase === 'function' ? lpGetPendingDirectPurchase() : null;
+                            if (!pendingLS || String(pendingLS?.kind || '') !== 'direct_purchase') {
+                                var oId = 'lp-pay-' + Date.now() + '-' + Math.random().toString(36).slice(2,8);
+                                lpRememberClientOrder({
+                                    id: oId,
+                                    amountCfa: currentPaymentAmount,
+                                    pricing: { totalCfa: currentPaymentAmount, currency: 'XAF' },
+                                    paymentStatus: 'confirmed',
+                                    payment: { status: 'confirmed', method: currentPaymentMethod || 'mobile_money' },
+                                    createdAt: new Date().toISOString(),
+                                });
+                                console.log('[Payment] Commande sauvegardée:', oId);
+                            }
+                        } catch(e) { console.error('[Payment] Erreur sauvegarde commande:', e); }
+
                         // CALLBACK AVEC DETAILS PAIEMENT (LiveShop, Tontine, etc.)
                         console.log('[Payment] Appel callback avec amount=' + currentPaymentAmount + ' method=' + currentPaymentMethod);
                         if(currentPaymentCallback) currentPaymentCallback({
@@ -30110,6 +30147,7 @@
 
             if (next === 'orders') {
                 try { renderProviderOrders() } catch {}
+                setTimeout(function() { try { renderProviderOrders() } catch {} }, 200);
             }
             if (next === 'products') {
                 try { refreshVendorProductsPane() } catch {}
@@ -30117,14 +30155,17 @@
         }
 
         function switchProviderTab(tabName) {
+            console.log('[switchProviderTab] ' + (tabName || '?'));
             // Garde de sécurité : ne jamais afficher le dashboard prestataire sans authentification
             // sauf si l'URL force explicitement lpRole=provider ou lpRole=vendor
             try {
                 var _cuCheck = null;
                 try { _cuCheck = getLpCurrentUser(); } catch(e) {}
+                console.log('[switchProviderTab] getLpCurrentUser →', _cuCheck ? 'OK (email:'+_cuCheck.email+')' : 'NULL');
                 var _isAuth = !!(_cuCheck && String(_cuCheck.email || '').trim());
                 var _forceRole = '';
                 try { _forceRole = new URLSearchParams(window.location.search).get('lpRole') || ''; } catch(e) {}
+                console.log('[switchProviderTab] _isAuth='+_isAuth+' _forceRole='+_forceRole);
                 if (!_isAuth && _forceRole !== 'provider' && _forceRole !== 'vendor') {
                     console.warn('[Provider] switchProviderTab bloqué: utilisateur non identifié');
                     return;
@@ -30133,6 +30174,7 @@
                 var _hasProvider = false;
                 try { _hasProvider = !!(getMyProviderId ? String(getMyProviderId() || '') : ''); } catch(e) {}
                 try { if (!_hasProvider) _hasProvider = (lpGetOwnedProviderIds ? lpGetOwnedProviderIds() : []).length > 0; } catch(e) {}
+                console.log('[switchProviderTab] _hasProvider='+_hasProvider);
                 if (!_hasProvider && _forceRole !== 'provider' && _forceRole !== 'vendor') {
                     console.warn('[Provider] switchProviderTab bloqué: aucun prestataire trouvé');
                     return;
@@ -30157,6 +30199,8 @@
 
             if (next === 'orders') {
                 try { renderProviderOrders() } catch {}
+                // Double appel différé pour garantir le rendu après transition DOM
+                setTimeout(function() { try { renderProviderOrders() } catch {} }, 200);
             }
             if (next === 'services') {
                 try { refreshProviderServicesPane() } catch {}
