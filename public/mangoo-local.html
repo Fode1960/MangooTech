@@ -4740,7 +4740,7 @@
                 var _hdrPhone = document.getElementById('lpUserPhone');
                 var _hdrAvatar = document.getElementById('lpUserAvatar');
                 function _hasSession() {
-                    try { return sessionStorage.getItem('lp_auth_session') === '1'; } catch(e) { return false; }
+                    try { return localStorage.getItem('lp_auth_session') === '1'; } catch(e) { return false; }
                 }
                 function _resetHeader() {
                     try {
@@ -10692,7 +10692,7 @@
                 var _qsInit = new URLSearchParams(String(window.location.search || ''));
                 var _hasAuthParam = _qsInit.get('lpRole') || _qsInit.get('vendor') || _qsInit.get('lpEmail');
                 var _hasSession = false;
-                try { _hasSession = sessionStorage.getItem('lp_auth_session') === '1'; } catch(e) {}
+                try { _hasSession = localStorage.getItem('lp_auth_session') === '1'; } catch(e) {}
                 console.log('[INIT] Auth state:', { hasAuthParam: !!_hasAuthParam, hasSession: _hasSession });
                 if (!_hasAuthParam && !_hasSession) {
                     localStorage.removeItem('mangoo-current-user');
@@ -10700,7 +10700,7 @@
                     localStorage.removeItem('mangoo_my_provider_id');
                     localStorage.removeItem('mangoo_my_shop_id');
                     localStorage.removeItem('mangoo-open-vendor-id');
-                    sessionStorage.removeItem('lp_auth_session');
+                    localStorage.removeItem('lp_auth_session');
                     console.log('[INIT] Identite en cache nettoyee (pas de session active)');
                 }
             } catch(e) {}
@@ -10708,7 +10708,7 @@
             // Double nettoyage differe (1s apres init) : ecrase toute reecriture asynchrone
             setTimeout(function() {
                 try {
-                    var _h2 = sessionStorage.getItem('lp_auth_session') === '1';
+                    var _h2 = localStorage.getItem('lp_auth_session') === '1';
                     var _qs2 = new URLSearchParams(String(window.location.search || ''));
                     var _a2 = _qs2.get('lpRole') || _qs2.get('vendor') || _qs2.get('lpEmail');
                     if (!_a2 && !_h2) {
@@ -11824,7 +11824,7 @@
         // Helper : navigation "Mon compte" avec gestion session
         function lpNavAccount() {
             var hasSession = false;
-            try { hasSession = sessionStorage.getItem('lp_auth_session') === '1'; } catch(e) {}
+            try { hasSession = localStorage.getItem('lp_auth_session') === '1'; } catch(e) {}
             if (hasSession && typeof showProviderDashboardInline === 'function') {
                 showProviderDashboardInline();
                 // Double garantie : rappeler la surbrillance apres un court delai
@@ -13998,7 +13998,7 @@
                 // SECURITE : sans session, masquer les onglets/panes non pertinents
                 // et adapter l'onglet Communication au support
                 try {
-                    var _hasAccSession = sessionStorage.getItem('lp_auth_session') === '1';
+                    var _hasAccSession = localStorage.getItem('lp_auth_session') === '1';
                     var _commPane = document.querySelector('#accountView .lp-pane[data-pane="communication"]');
                     // Sauvegarder le contenu original du pane Communication (une seule fois)
                     if (!window._lpCommPaneOriginal && _commPane) {
@@ -14486,7 +14486,7 @@
             } catch {
             }
             try { sessionStorage.setItem('mangoo_force_logged_out', '1') } catch {}
-            try { sessionStorage.removeItem('lp_auth_session') } catch {}
+            try { localStorage.removeItem('lp_auth_session') } catch {}
             try {
                 closeLpIdentityModal()
             } catch {
@@ -14516,7 +14516,7 @@
                 localStorage.removeItem('mangoo_my_shop_id')
             } catch {
             }
-            try { sessionStorage.removeItem('lp_auth_session') } catch {}
+            try { localStorage.removeItem('lp_auth_session') } catch {}
             try { checkUserShop() } catch {}
             try { renderVendorsOnMap(VENDORS) } catch {}
             try { renderListView(VENDORS) } catch {}
@@ -14540,7 +14540,7 @@
                 localStorage.removeItem('mangoo_my_provider_id')
             } catch {
             }
-            try { sessionStorage.removeItem('lp_auth_session') } catch {}
+            try { localStorage.removeItem('lp_auth_session') } catch {}
             try { refreshProviderDashboardFab() } catch {}
             try { renderVendorsOnMap(VENDORS) } catch {}
             try { renderListView(VENDORS) } catch {}
@@ -29497,7 +29497,7 @@
             // Evite que des donnees en cache localStorage d'une session precedente
             // (ex: DAN Electricien) declenchent le dashboard sans authentification.
             try {
-                const hasSessionAuth = sessionStorage.getItem('lp_auth_session') === '1'
+                const hasSessionAuth = localStorage.getItem('lp_auth_session') === '1'
                 if (hasSessionAuth) {
                     allowSell = isLpVendorUser(getLpCurrentUser())
                 }
@@ -29534,7 +29534,7 @@
             }
             if (next === 'profile') {
                 var _hasProfileSession = false;
-                try { _hasProfileSession = sessionStorage.getItem('lp_auth_session') === '1'; } catch(e) {}
+                try { _hasProfileSession = localStorage.getItem('lp_auth_session') === '1'; } catch(e) {}
                 if (_hasProfileSession) {
                     try { loadLpProfile() } catch {}
                 }
@@ -29684,7 +29684,7 @@
             const u = getLpCurrentUser()
             // SECURITE : ne pas autoriser l'onglet Vendre sans session active
             let hasSessionU = false;
-            try { hasSessionU = sessionStorage.getItem('lp_auth_session') === '1'; } catch(e) {}
+            try { hasSessionU = localStorage.getItem('lp_auth_session') === '1'; } catch(e) {}
             const allowSell = hasSessionU && isLpVendorUser(u)
             const tab = document.getElementById('lp-tab-sell')
             const pane = document.getElementById('dash-sell')
@@ -30103,7 +30103,7 @@
                     return
                 }
                 // Marquer la session AVANT d'appliquer l'identite (pour que applyLpHeaderUser la detecte)
-                try { sessionStorage.setItem('lp_auth_session', '1'); } catch(e) {}
+                try { localStorage.setItem('lp_auth_session', '1'); } catch(e) {}
                 const nextUser = lpApplyResolvedIdentity(payload.identity)
                 lpSetIdentityEntryStatus('Connexion reussie.', 'success')
                 try { closeLpIdentityModal() } catch {}
@@ -30190,7 +30190,7 @@
             // SECURITE : ne pas afficher l'identite mise en cache sans session active
             // (empeche d'afficher "DAN Electricien" apres fermeture/reouverture d'onglet)
             let hasSession = false;
-            try { hasSession = sessionStorage.getItem('lp_auth_session') === '1'; } catch(e) {}
+            try { hasSession = localStorage.getItem('lp_auth_session') === '1'; } catch(e) {}
 
             const u = hasSession ? getLpCurrentUser() : null;
             console.log('[HEADER] applyLpHeaderUser session=' + hasSession + ' user=' + (u ? (u.name||'?') : 'null'));
@@ -31092,7 +31092,7 @@
             // Garde : ne pas charger les commandes sans session authentifiee
             // + NETTOYAGE : vider le conteneur s'il contient des commandes d'une session precedente
             var _hasDashSession = false;
-            try { _hasDashSession = sessionStorage.getItem('lp_auth_session') === '1'; } catch(e) {}
+            try { _hasDashSession = localStorage.getItem('lp_auth_session') === '1'; } catch(e) {}
             if (!_hasDashSession) {
                 const ordersContainer = document.getElementById('ordersListContainer');
                 if (ordersContainer) {
