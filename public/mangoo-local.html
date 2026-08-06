@@ -30173,14 +30173,14 @@
             }
             // Fallback nom : si l'email ne match pas (ex: email API ≠ ownerEmail VENDORS),
             // chercher par nom du prestataire (DAN Electricien, Mangoo Répar, etc.)
-            if (!_isProvider && nextUserName) {
+            if (!_isProvider && name) {
                 try {
                     var _nameCheck = (Array.isArray(VENDORS) ? VENDORS : [])
                         .filter(function(v) { try { return lpGetVendorKind(v) === 'service'; } catch(e) { return false; } })
-                        .filter(function(v) { try { return String(v.ownerName || '').trim().toLowerCase() === String(nextUserName || '').trim().toLowerCase(); } catch(e) { return false; } });
+                        .filter(function(v) { try { return String(v.ownerName || '').trim().toLowerCase() === String(name || '').trim().toLowerCase(); } catch(e) { return false; } });
                     if (_nameCheck.length > 0) {
                         _isProvider = true;
-                        console.log('[IDENTITY] Provider détecté par nom: ' + nextUserName);
+                        console.log('[IDENTITY] Provider détecté par nom: ' + name);
                     }
                 } catch(e) {}
             }
@@ -30196,10 +30196,10 @@
                     } catch(e) {}
                 }
                 // Fallback nom : si l'email ne match pas, chercher par ownerName
-                if (!_vendorId && nextUserName) {
+                if (!_vendorId && name) {
                     try {
                         var _matchName = (Array.isArray(VENDORS) ? VENDORS : []).find(function(v) {
-                            try { return lpGetVendorKind(v) === 'service' && String(v.ownerName || '').trim().toLowerCase() === String(nextUserName || '').trim().toLowerCase(); } catch(e) { return false; }
+                            try { return lpGetVendorKind(v) === 'service' && String(v.ownerName || '').trim().toLowerCase() === String(name || '').trim().toLowerCase(); } catch(e) { return false; }
                         });
                         if (_matchName) _vendorId = String(_matchName.id || '').trim();
                     } catch(e) {}
@@ -30234,7 +30234,11 @@
                     try { localStorage.setItem('mangoo-open-vendor-id', vendorId) } catch {}
                 } else {
                     try { localStorage.removeItem('mangoo_my_shop_id') } catch {}
-                    try { localStorage.removeItem('mangoo_my_provider_id') } catch {}
+                    // Ne pas effacer mangoo_my_provider_id si le fallback (lignes précédentes)
+                    // l'a déjà défini à partir du nom du prestataire.
+                    if (!_isProvider) {
+                        try { localStorage.removeItem('mangoo_my_provider_id') } catch {}
+                    }
                     try { localStorage.removeItem('mangoo-open-vendor-id') } catch {}
                 }
             } catch {
