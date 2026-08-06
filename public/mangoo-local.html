@@ -30160,13 +30160,28 @@
             }
             // Prestataire : enregistrer le provider_id pour getMyProviderId() et switchView('account')
             // Robuste : fallback sur VENDORS si l'API ne renvoie pas vendorKind/service
-            var _isProvider = String(identity.vendorKind || '').trim().toLowerCase() === 'service';
+            // Accepte les deux noms : 'service' (ancien) et 'provider' (nouveau système)
+            var _isProvider = String(identity.vendorKind || '').trim().toLowerCase() === 'service'
+                || String(identity.vendorKind || '').trim().toLowerCase() === 'provider';
             if (!_isProvider && email) {
                 try {
                     var _ownedCheck = (Array.isArray(VENDORS) ? VENDORS : [])
                         .filter(function(v) { try { return lpGetVendorKind(v) === 'service'; } catch(e) { return false; } })
                         .filter(function(v) { try { return lpEmailsMatch(v.ownerEmail, email); } catch(e) { return false; } });
                     _isProvider = _ownedCheck.length > 0;
+                } catch(e) {}
+            }
+            // Fallback nom : si l'email ne match pas (ex: email API ≠ ownerEmail VENDORS),
+            // chercher par nom du prestataire (DAN Electricien, Mangoo Répar, etc.)
+            if (!_isProvider && nextUserName) {
+                try {
+                    var _nameCheck = (Array.isArray(VENDORS) ? VENDORS : [])
+                        .filter(function(v) { try { return lpGetVendorKind(v) === 'service'; } catch(e) { return false; } })
+                        .filter(function(v) { try { return String(v.ownerName || '').trim().toLowerCase() === String(nextUserName || '').trim().toLowerCase(); } catch(e) { return false; } });
+                    if (_nameCheck.length > 0) {
+                        _isProvider = true;
+                        console.log('[IDENTITY] Provider détecté par nom: ' + nextUserName);
+                    }
                 } catch(e) {}
             }
             if (_isProvider) {
@@ -30178,6 +30193,15 @@
                             try { return lpGetVendorKind(v) === 'service' && lpEmailsMatch(v.ownerEmail, email); } catch(e) { return false; }
                         });
                         if (_match) _vendorId = String(_match.id || '').trim();
+                    } catch(e) {}
+                }
+                // Fallback nom : si l'email ne match pas, chercher par ownerName
+                if (!_vendorId && nextUserName) {
+                    try {
+                        var _matchName = (Array.isArray(VENDORS) ? VENDORS : []).find(function(v) {
+                            try { return lpGetVendorKind(v) === 'service' && String(v.ownerName || '').trim().toLowerCase() === String(nextUserName || '').trim().toLowerCase(); } catch(e) { return false; }
+                        });
+                        if (_matchName) _vendorId = String(_matchName.id || '').trim();
                     } catch(e) {}
                 }
                 if (_vendorId) {
@@ -30198,7 +30222,7 @@
             try {
                 const vendorId = String(identity.vendorId || '').trim()
                 const vendorKind = String(identity.vendorKind || '').trim().toLowerCase()
-                if (vendorKind === 'service' && vendorId) {
+                if ((vendorKind === 'service' || vendorKind === 'provider') && vendorId) {
                     try { localStorage.removeItem('mangoo_my_shop_id') } catch {}
                     localStorage.setItem('mangoo_my_provider_id', vendorId)
                     try { lpPersistMyProviderIds([vendorId]) } catch {}
@@ -30291,6 +30315,7 @@
                     try {
                         var _cu = getLpCurrentUser();
                         if (_cu && (String(_cu.vendorKind || '').toLowerCase() === 'service'
+                            || String(_cu.vendorKind || '').toLowerCase() === 'provider'
                             || String(_cu.role || '').toLowerCase() === 'vendor'
                             || String(_cu.role || '').toLowerCase() === 'provider')) {
                             _isProviderIdentity = true;
