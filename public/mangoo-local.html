@@ -4407,20 +4407,66 @@
     (function() {
       if (!('serviceWorker' in navigator)) return;
       var SW_URL = '/sw.js?v=11';
+      var APP_VERSION = '11';
+
+      // ═══ NETTOYAGE AUTO DES ANCIENNES VERSIONS ═══
+      // Si la version en localStorage est dépassée, on désinstalle
+      // TOUS les SW et on recharge pour repartir à zéro
+      var storedVersion = localStorage.getItem('mangoo_sw_version');
+      if (storedVersion !== APP_VERSION) {
+        console.log('[SW] Version stockée=' + storedVersion + ' actuelle=' + APP_VERSION + ' → nettoyage + reload');
+        localStorage.setItem('mangoo_sw_version', APP_VERSION);
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          return Promise.all(regs.map(function(r) { return r.unregister(); }));
+        }).then(function() {
+          // Vider tous les caches pour être sûr
+          if (window.caches) {
+            caches.keys().then(function(names) {
+              return Promise.all(names.map(function(n) { return caches.delete(n); }));
+            });
+          }
+          window.location.reload(true);
+        });
+        return;
+      }
+
+      // ═══ ENREGISTREMENT NORMAL ═══
       console.log('[Push] Registering SW v11...');
       navigator.serviceWorker.register(SW_URL, { scope: '/', updateViaCache: 'none' }).then(function(reg) {
         console.log('[Push] SW registered: ' + reg.scope);
-        if (reg.waiting) { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); }
+
+        // Forcer la vérification immédiate d'une mise à jour
+        reg.update().then(function() {
+          if (reg.waiting) {
+            console.log('[Push] Waiting worker trouvé → skipWaiting + reload');
+            reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            setTimeout(function() { window.location.reload(); }, 500);
+          }
+        });
+
+        // Détecter un nouveau SW pendant l'enregistrement
         reg.onupdatefound = function() {
           var installing = reg.installing;
           if (!installing) return;
+          console.log('[Push] Nouveau SW trouvé, attente installation...');
           installing.onstatechange = function() {
             if (installing.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('[Push] New SW detected, reloading...');
+              console.log('[Push] Nouveau SW installé, reloading...');
               window.location.reload();
             }
           };
         };
+
+        // Fallback : après 3s, si un waiting worker existe encore, on force
+        setTimeout(function() {
+          reg.update().then(function() {
+            if (reg.waiting) {
+              console.log('[Push] Fallback: waiting worker → skipWaiting + reload');
+              reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+              setTimeout(function() { window.location.reload(); }, 300);
+            }
+          });
+        }, 3000);
       }).catch(function(e) {
         console.warn('[Push] SW error:', e.message);
       });
