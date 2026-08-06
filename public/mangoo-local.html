@@ -8585,6 +8585,7 @@
                 try {
                     if (kind === 'service') {
                         // Ouvrir le dashboard prestataire inline (pas de redirection React)
+                        console.log('[PIN-LOGIN] lpClaimVendorByPin SUCCES | vendor=' + String(v?.name||'?') + ' id=' + id + ' | lpAuth=' + localStorage.getItem('lp_auth_session') + ' | provId=' + localStorage.getItem('mangoo_my_provider_id') + ' | forceLogout=' + (sessionStorage.getItem('mangoo_force_logged_out')||'0') + ' | LoadID=' + (sessionStorage.getItem('_lp_load_id')||'?'));
                         try { openMyProviderDashboard(); } catch(e) { openProviderDashboard(String(id)); }
                     }
                     else lpOpenVendorById(String(id));
@@ -10690,6 +10691,18 @@
             if (appInitialized) return;
             appInitialized = true;
 
+            // ═══ COMPTEUR DE CYCLE (sessionStorage) ═══
+            // Persiste à travers window.location.replace() — utile pour debugger
+            // les problèmes de page générique après multiples reconnexions.
+            var _cycleCount = 0;
+            try {
+                _cycleCount = parseInt(sessionStorage.getItem('_lp_cycle_count') || '0', 10) + 1;
+                sessionStorage.setItem('_lp_cycle_count', String(_cycleCount));
+            } catch(e) {}
+            var _loadId = 'L' + Date.now() + '_C' + _cycleCount;
+            try { sessionStorage.setItem('_lp_load_id', _loadId); } catch(e) {}
+            console.log('[INIT] ===== CYCLE ' + _cycleCount + ' | LoadID: ' + _loadId + ' =====');
+
             // NETTOYAGE IDENTITE : si l'URL n'a pas de params d'auth et qu'aucune session
             // active n'existe, supprimer toute identite en cache (localStorage).
             // Cela empeche l'affichage de "DAN Electricien" sans authentification.
@@ -12208,7 +12221,16 @@
 
         function openMyProviderDashboard() {
             try {
-                console.log('[DIAG] openMyProviderDashboard() appele');
+                // DIAGNOSTIC COMPLET
+                var _cycleId = '';
+                try { _cycleId = sessionStorage.getItem('_lp_load_id') || '?'; } catch(e) {}
+                var _forceLogout = '';
+                try { _forceLogout = sessionStorage.getItem('mangoo_force_logged_out') || '0'; } catch(e) {}
+                var _lpAuth = '';
+                try { _lpAuth = localStorage.getItem('lp_auth_session') || '0'; } catch(e) {}
+                var _provId = '';
+                try { _provId = localStorage.getItem('mangoo_my_provider_id') || ''; } catch(e) {}
+                console.log('[DIAG] openMyProviderDashboard() | LoadID=' + _cycleId + ' | forceLogout=' + _forceLogout + ' | lpAuth=' + _lpAuth + ' | provId=' + _provId);
                 // Garde de sécurité : ne pas ouvrir le dashboard sans authentification
                 var _cuCheck2 = null;
                 try { _cuCheck2 = getLpCurrentUser(); } catch(e) {}
@@ -14082,10 +14104,17 @@
                     return; // ← RETURN INCONDITIONNEL — page générique IMPOSSIBLE
                 }
 
+                // ═══ DOUBLE VERROU ═══
+                // Même si le guard ci-dessus échoue (ce qui ne devrait jamais arriver),
+                // le rendu générique est ENTIÈREMENT wrapper dans un if(!_isProviderAccount).
+                // Si on arrive ici et qu'on est prestataire → pas de rendu générique.
+                if (!_isProviderAccount) {
+                // TRACE : la page générique est en train de s'afficher
+                console.trace('[GENERIC-PAGE-RENDER] switchView(account) rendu page générique. LoadID=' + (sessionStorage.getItem('_lp_load_id')||'?') + ' Cycle=' + (sessionStorage.getItem('_lp_cycle_count')||'?'));
+
                 // Mon compte = page compte normale (commandes, profil, favoris...)
                 // Le Dashboard prestataire est accessible via le bouton flottant 🛠️ (FAB)
                 accountDiv.style.display = 'block';
-                // Hide filters/stories for account view
                 if(topSection) topSection.style.display = 'none';
                 if (searchBar) searchBar.style.display = 'none';
                 if (familiesBar) familiesBar.style.display = 'none';
@@ -14174,6 +14203,13 @@
                         }
                     }
                 } catch(e) {}
+                } // fin if (!_isProviderAccount) — double verrou anti-générique
+                else {
+                    // PRESTATAIRE DÉTECTÉ mais guard contourné → TRACE POUR DEBUG
+                    console.trace('[GENERIC-PAGE-BLOCKED] switchView(account) appelé pour un prestataire mais le guard n\'a pas bloqué. Callstack ci-dessus.');
+                    try { showProviderDashboardInline(); } catch(_e3) {}
+                    return;
+                }
             }
 
             try {
