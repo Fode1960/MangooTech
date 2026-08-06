@@ -4406,8 +4406,8 @@
     <script>
     (function() {
       if (!('serviceWorker' in navigator)) return;
-      var SW_URL = '/sw.js?v=11';
-      var APP_VERSION = '11';
+      var SW_URL = '/sw.js?v=12';
+      var APP_VERSION = '12';
 
       // ═══ NETTOYAGE AUTO DES ANCIENNES VERSIONS ═══
       // Si la version en localStorage est dépassée, on désinstalle
@@ -4431,7 +4431,7 @@
       }
 
       // ═══ ENREGISTREMENT NORMAL ═══
-      console.log('[Push] Registering SW v11...');
+      console.log('[Push] Registering SW v12...');
       navigator.serviceWorker.register(SW_URL, { scope: '/', updateViaCache: 'none' }).then(function(reg) {
         console.log('[Push] SW registered: ' + reg.scope);
 

@@ -1,15 +1,15 @@
 // Service Worker pour Mangoo Tech - avec Push Notifications
-const CACHE_NAME = 'mangoo-tech-v11';
+const CACHE_NAME = 'mangoo-tech-v12';
 
 // Installation du service worker
 self.addEventListener('install', (event) => {
-  console.log('[SW v11] Installation');
+  console.log('[SW v12] Installation');
   self.skipWaiting();
 });
 
 // Activation du service worker – supprimer tous les anciens caches + notifier les clients
 self.addEventListener('activate', (event) => {
-  console.log('[SW v11] Activation – suppression de tous les anciens caches');
+  console.log('[SW v12] Activation – suppression de tous les anciens caches');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -21,7 +21,7 @@ self.addEventListener('activate', (event) => {
       // Notifier TOUS les clients qu'une mise à jour est dispo → rechargement auto
       return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
         clients.forEach((client) => {
-          client.postMessage({ type: 'SW_UPDATED', version: 'v11' });
+          client.postMessage({ type: 'SW_UPDATED', version: 'v12' });
         });
       });
     })
@@ -31,7 +31,7 @@ self.addEventListener('activate', (event) => {
 // Écouter les messages du client (ex: SKIP_WAITING)
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
-    console.log('[SW v11] SKIP_WAITING reçu → skipWaiting');
+    console.log('[SW v12] SKIP_WAITING reçu → skipWaiting');
     self.skipWaiting();
   }
 });
@@ -47,11 +47,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // DOCUMENTS HTML : forcer le bypass du cache HTTP navigateur
-  // Sans ça, le navigateur peut servir une version obsolète du HTML
+  // DOCUMENTS HTML : forcer le bypass TOTAL du cache (navigateur + HTTP)
+  // cache:'reload' = toujours depuis le réseau, jamais de 304/If-None-Match
   if (event.request.destination === 'document') {
     event.respondWith(
-      fetch(event.request, { cache: 'no-cache' })
+      fetch(event.request, { cache: 'reload' })
     );
     return;
   }
