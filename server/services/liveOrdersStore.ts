@@ -3,6 +3,7 @@ export {
   createLiveOrder,
   getLiveOrder,
   listLiveOrdersByRoom,
+  listLiveOrdersByVendor,
   markLiveOrderDelivered,
   setLiveOrderPayment,
 } from './localLiveOrdersStore'

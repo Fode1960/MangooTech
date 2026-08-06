@@ -4,6 +4,7 @@ import {
   createLiveOrder,
   getLiveOrder,
   listLiveOrdersByRoom,
+  listLiveOrdersByVendor,
   markLiveOrderDelivered,
   setLiveOrderPayment,
 } from '../services/liveOrdersStore'
@@ -11,6 +12,41 @@ import {
 const router = express.Router()
 
 const safeString = (v: any) => String(v ?? '').trim()
+
+router.post('/record-payment', async (req, res) => {
+  try {
+    const vendorId = safeString(req.body?.vendorId)
+    const vendorName = safeString(req.body?.vendorName) || undefined
+    const amount = Number(req.body?.amount)
+    const method = safeString(req.body?.method) || 'mobile_money'
+
+    if (!vendorId || !Number.isFinite(amount) || amount <= 0) {
+      return res.status(400).json({ success: false, error: 'invalid_payment' })
+    }
+
+    const order = createLiveOrder({
+      roomId: 'payment-' + vendorId,
+      vendorId,
+      vendorName,
+      product: { id: 'generic-payment', title: 'Paiement ' + amount.toLocaleString() + ' FCFA', priceCfa: amount },
+      qty: 1,
+    })
+
+    if (!order) return res.status(400).json({ success: false, error: 'invalid_order' })
+
+    const withPayment = setLiveOrderPayment(order.id, {
+      provider: 'mobile_money',
+      method,
+      status: 'succeeded',
+      amount,
+      paidAt: new Date().toISOString(),
+    })
+
+    res.json({ success: true, order: withPayment || order })
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: 'internal_error', details: e?.message })
+  }
+})
 
 router.post('/create', async (req, res) => {
   try {
@@ -35,6 +71,8 @@ router.post('/create', async (req, res) => {
       shopSlug,
       shopName,
       shopCountry,
+      vendorId: safeString(req.body?.vendorId) || undefined,
+      vendorName: safeString(req.body?.vendorName) || undefined,
       product,
       qty: qtyRaw,
       pricing: pricingRaw,
@@ -57,6 +95,17 @@ router.get('/by-room/:roomId', async (req, res) => {
     if (!roomId) return res.status(400).json({ success: false, error: 'missing_roomId' })
     const orders = await listLiveOrdersByRoom(roomId)
 
+    res.json({ success: true, orders })
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: 'internal_error', details: e?.message })
+  }
+})
+
+router.get('/by-vendor/:vendorId', async (req, res) => {
+  try {
+    const vendorId = safeString(req.params.vendorId)
+    if (!vendorId) return res.status(400).json({ success: false, error: 'missing_vendorId' })
+    const orders = await listLiveOrdersByVendor(vendorId)
     res.json({ success: true, orders })
   } catch (e: any) {
     res.status(500).json({ success: false, error: 'internal_error', details: e?.message })

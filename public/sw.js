@@ -1,15 +1,15 @@
 // Service Worker pour Mangoo Tech - avec Push Notifications
-const CACHE_NAME = 'mangoo-tech-v10';
+const CACHE_NAME = 'mangoo-tech-v11';
 
 // Installation du service worker
 self.addEventListener('install', (event) => {
-  console.log('[SW v10] Installation');
+  console.log('[SW v11] Installation');
   self.skipWaiting();
 });
 
-// Activation du service worker – supprimer tous les anciens caches
+// Activation du service worker – supprimer tous les anciens caches + notifier les clients
 self.addEventListener('activate', (event) => {
-  console.log('[SW v10] Activation – suppression de tous les anciens caches');
+  console.log('[SW v11] Activation – suppression de tous les anciens caches');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -17,8 +17,23 @@ self.addEventListener('activate', (event) => {
       );
     }).then(() => {
       return self.clients.claim();
+    }).then(() => {
+      // Notifier TOUS les clients qu'une mise à jour est dispo → rechargement auto
+      return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({ type: 'SW_UPDATED', version: 'v11' });
+        });
+      });
     })
   );
+});
+
+// Écouter les messages du client (ex: SKIP_WAITING)
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[SW v11] SKIP_WAITING reçu → skipWaiting');
+    self.skipWaiting();
+  }
 });
 
 // Stratégie Network-first pour toutes les requêtes

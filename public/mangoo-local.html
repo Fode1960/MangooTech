@@ -4406,8 +4406,8 @@
     <script>
     (function() {
       if (!('serviceWorker' in navigator)) return;
-      var SW_URL = '/sw.js?v=10';
-      console.log('[Push] Registering SW (no unregister)...');
+      var SW_URL = '/sw.js?v=11';
+      console.log('[Push] Registering SW v11...');
       navigator.serviceWorker.register(SW_URL, { scope: '/', updateViaCache: 'none' }).then(function(reg) {
         console.log('[Push] SW registered: ' + reg.scope);
         if (reg.waiting) { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); }
@@ -4416,7 +4416,7 @@
           if (!installing) return;
           installing.onstatechange = function() {
             if (installing.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('[Push] New SW, reloading...');
+              console.log('[Push] New SW detected, reloading...');
               window.location.reload();
             }
           };
@@ -4426,6 +4426,10 @@
       });
     })();
     navigator.serviceWorker.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'SW_UPDATED') {
+        console.log('[SW→Page] Mise à jour détectée, rechargement auto...');
+        window.location.reload();
+      }
       console.log('[SW→Page] ' + JSON.stringify(event.data));
     });
     </script>
@@ -4866,7 +4870,7 @@
                         <div class="lp-tabs" style="margin-bottom: 12px;" aria-label="Boussole compte prestataire">
                             <button type="button" onclick="try{switchProviderTab('overview')}catch{}" class="lp-tab active" id="lp-ptab-overview">📊 Vue d'ensemble</button>
                             <button type="button" onclick="try{switchProviderTab('services')}catch{}" class="lp-tab" id="lp-ptab-services">🛠️ Prestations</button>
-                            <button type="button" onclick="try{switchProviderTab('orders')}catch(e){console.error('[Tab orders]',e)};setTimeout(function(){try{var ps=document.getElementById('providerSection');if(ps)ps.style.display='block';document.querySelectorAll('.lp-pane[data-pvpane]').forEach(function(el){el.classList.toggle('active',el.getAttribute('data-pvpane')==='orders');});renderProviderOrders();}catch(e){}},350);" class="lp-tab" id="lp-ptab-orders">🛒 Commandes</button>
+                            <button type="button" onclick="switchProviderTab('orders')" class="lp-tab" id="lp-ptab-orders">🛒 Commandes</button>
                             <button type="button" onclick="try{switchProviderTab('communication')}catch{}" class="lp-tab" id="lp-ptab-communication">💬 Chat</button>
                             <button type="button" onclick="try{switchProviderTab('supply')}catch{}" class="lp-tab" id="lp-ptab-supply">🏭 Appro</button>
                             <button type="button" onclick="try{switchProviderTab('live')}catch{}" class="lp-tab" id="lp-ptab-live">🔴 Live</button>
@@ -15017,14 +15021,17 @@
             // Injecter vendorId pour le filtrage des commandes prestataire
             try {
                 if (!order.vendorId) {
-                    var vid = localStorage.getItem('mangoo_my_provider_id');
+                    var vid = (typeof getMyProviderId === 'function' ? getMyProviderId() : '') || '';
+                    if (!vid) vid = String(activeVendor?.id || '').trim();
+                    if (!vid) vid = String(localStorage.getItem('mangoo_my_provider_id') || '').trim();
                     if (vid) { order.vendorId = String(vid).trim(); }
                 }
                 if (!order.vendorName) {
                     var vn = activeVendor?.name || '';
                     if (vn) { order.vendorName = String(vn).trim(); }
                 }
-            } catch(e) {}
+                console.log('[lpRememberClientOrder] orderId=' + id + ' vendorId=' + (order.vendorId || '?') + ' vendorName=' + (order.vendorName || '?'));
+            } catch(e) { console.error('[lpRememberClientOrder] Erreur injection:', e); }
             const next = lpReadClientOrders().filter((item) => String(item?.id || '').trim() !== id);
             next.unshift(order);
             next.sort((a, b) => String(b?.createdAt || '').localeCompare(String(a?.createdAt || '')));
@@ -15637,66 +15644,110 @@
         }
 
         // Rend les commandes recues par le prestataire dans le pane provider-orders
+        function _lpRenderOrderCards(orders, container) {
+            if (!orders.length) {
+                container.innerHTML = '<div style="text-align:center; padding:30px 0; color:var(--ml-muted);">' +
+                    '<div style="font-size:2.5rem; margin-bottom:8px;">📭</div>' +
+                    '<div style="font-weight:900;">Aucune commande reçue</div>' +
+                    '<div style="font-size:0.85rem; margin-top:6px;">Les commandes de vos clients apparaîtront ici.</div>' +
+                '</div>';
+                return;
+            }
+            var html = '<div style="font-weight:950; color:var(--ml-text); font-size:1.05rem; margin-bottom:12px;">🛒 ' + orders.length + ' commande' + (orders.length > 1 ? 's' : '') + ' reçue' + (orders.length > 1 ? 's' : '') + '</div>';
+            orders.forEach(function(o) {
+                var rawStatus = String(o.paymentStatus || (o.payment && o.payment.status) || 'confirmed');
+                // Normaliser les statuts serveur (succeeded → confirmed/payée)
+                var status = rawStatus === 'succeeded' ? 'confirmed' : rawStatus;
+                var statusColor = status === 'confirmed' || status === 'paid' ? '#1b5e20' : status === 'pending' ? '#e67e22' : 'var(--ml-muted)';
+                var statusIcon = status === 'confirmed' || status === 'paid' ? '✅' : status === 'pending' ? '⏳' : '📋';
+                var statusLabel = status === 'confirmed' || status === 'paid' ? 'Payée' : status === 'pending' ? 'En attente' : status.charAt(0).toUpperCase() + status.slice(1);
+                var productName = String((o.product && o.product.title) || o.productName || 'Produit').replace(/</g,'&lt;');
+                var price = Number((o.pricing && o.pricing.totalCfa) || o.amountCfa || o.amount || (o.payment && o.payment.amount) || 0) || 0;
+                var buyer = String(o.buyerName || o.buyerEmail || 'Client').replace(/</g,'&lt;');
+                var dateRaw = String(o.createdAt || o.date || '').replace(/</g,'&lt;') || 'Date inconnue';
+                // Formatage date lisible
+                var date = dateRaw;
+                try { if (dateRaw !== 'Date inconnue') { var d = new Date(dateRaw); date = d.toLocaleDateString('fr-FR', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}); } } catch(e) {}
+                html += '<div style="background:var(--ml-panel); border:1px solid var(--ml-border); border-radius:14px; padding:14px; margin-bottom:8px;">' +
+                    '<div style="display:flex; justify-content:space-between; align-items:flex-start;">' +
+                        '<div>' +
+                            '<div style="font-weight:700; color:var(--ml-text);">' + productName + '</div>' +
+                            '<div style="font-size:0.85rem; color:var(--ml-muted); margin-top:2px;">👤 ' + buyer + '</div>' +
+                            '<div style="font-size:0.8rem; color:var(--ml-muted);">📅 ' + date + '</div>' +
+                        '</div>' +
+                        '<div style="text-align:right;">' +
+                            '<div style="font-weight:950; color:var(--ml-text);">' + price.toLocaleString() + ' FCFA</div>' +
+                            '<div style="font-size:0.8rem; font-weight:700; margin-top:4px; color:' + statusColor + ';">' + statusIcon + ' ' + statusLabel + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            });
+            container.innerHTML = html;
+        }
+
         function renderProviderOrders() {
-            console.log('[renderProviderOrders] APPELÉ');
             var container = document.getElementById('lpProviderOrdersContainer');
-            if (!container) { console.warn('[renderProviderOrders] Conteneur introuvable!'); return; }
+            if (!container) return;
             try {
-                var allOrders = typeof lpReadClientOrders === 'function' ? lpReadClientOrders() : [];
-                console.log('[renderProviderOrders] lpReadClientOrders →', allOrders?.length || 0, 'commandes');
-                var providerId = '';
-                try { providerId = String(localStorage.getItem('mangoo_my_provider_id') || '').trim(); } catch(e) {}
+                var providerId = (typeof getMyProviderId === 'function' ? getMyProviderId() : '') || '';
+                if (!providerId) providerId = String(activeVendor?.id || '').trim();
+                if (!providerId) providerId = String(localStorage.getItem('mangoo_my_provider_id') || '').trim();
                 var providerName = '';
                 try { providerName = String(activeVendor?.name || '').trim(); } catch(e) {}
                 console.log('[renderProviderOrders] providerId=' + providerId + ' providerName=' + providerName);
 
-                // Filtrer les commandes pour ce prestataire
-                var myOrders = allOrders.filter(function(o) {
+                // === 1. Commandes du localStorage (backward compat) ===
+                var localOrders = typeof lpReadClientOrders === 'function' ? lpReadClientOrders() : [];
+                var localFiltered = localOrders.filter(function(o) {
                     if (!o) return false;
-                    // Correspondance par vendorId stocké dans la commande
                     if (providerId && String(o.vendorId || '').trim() === providerId) return true;
-                    // Correspondance par nom de boutique
                     if (providerName && String(o.shopName || o.vendorName || '').trim().toLowerCase() === providerName.toLowerCase()) return true;
                     return false;
                 });
-                console.log('[renderProviderOrders] Après filtrage →', myOrders.length, 'commandes pour ce prestataire');
 
-                if (!myOrders.length) {
-                    container.innerHTML = '<div style="text-align:center; padding:30px 0; color:var(--ml-muted);">' +
-                        '<div style="font-size:2.5rem; margin-bottom:8px;">📭</div>' +
-                        '<div style="font-weight:900;">Aucune commande reçue</div>' +
-                        '<div style="font-size:0.85rem; margin-top:6px;">Les commandes de vos clients apparaîtront ici.</div>' +
-                    '</div>';
-                    return;
+                // === 2. Fusion avec les commandes serveur (API) ===
+                if (providerId) {
+                    var seen = {};
+                    localFiltered.forEach(function(o) { if (o && o.id) seen[String(o.id)] = true; });
+
+                    fetch('/api/live-orders/by-vendor/' + encodeURIComponent(providerId))
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            var serverOrders = (data && data.success && Array.isArray(data.orders)) ? data.orders : [];
+                            console.log('[renderProviderOrders] API → ' + serverOrders.length + ' commandes serveur');
+                            // Convertir le format serveur → format frontend
+                            var normalized = serverOrders.map(function(so) {
+                                return {
+                                    id: so.id,
+                                    product: so.product,
+                                    productName: so.product && so.product.title,
+                                    amountCfa: (so.payment && so.payment.amount) || (so.pricing && so.pricing.totalCfa) || 0,
+                                    payment: so.payment,
+                                    paymentStatus: (so.payment && so.payment.status),
+                                    buyerName: so.buyerName,
+                                    buyerEmail: so.buyerId,
+                                    createdAt: so.createdAt,
+                                    vendorId: so.vendorId,
+                                    vendorName: so.vendorName,
+                                    _source: 'server'
+                                };
+                            }).filter(function(o) { return o.id && !seen[String(o.id)]; });
+                            // Fusionner : serveur en premier (plus fiables), localStorage ensuite
+                            var merged = normalized.concat(localFiltered);
+                            merged.sort(function(a, b) { return String(b.createdAt || '').localeCompare(String(a.createdAt || '')); });
+                            _lpRenderOrderCards(merged, container);
+                        }).catch(function(e) {
+                            console.error('[renderProviderOrders] Erreur fetch API:', e);
+                            // Fallback : afficher les commandes locales uniquement
+                            if (localFiltered.length) _lpRenderOrderCards(localFiltered, container);
+                        });
                 }
 
-                var html = '<div style="font-weight:950; color:var(--ml-text); font-size:1.05rem; margin-bottom:12px;">🛒 ' + myOrders.length + ' commande' + (myOrders.length > 1 ? 's' : '') + ' reçue' + (myOrders.length > 1 ? 's' : '') + '</div>';
-                myOrders.forEach(function(o, idx) {
-                    var status = String(o.paymentStatus || o.payment?.status || 'confirmed');
-                    var statusColor = status === 'confirmed' || status === 'paid' ? '#1b5e20' : status === 'pending' ? '#e67e22' : 'var(--ml-muted)';
-                    var statusIcon = status === 'confirmed' || status === 'paid' ? '✅' : status === 'pending' ? '⏳' : '📋';
-                    var productName = String(o.product?.title || o.productName || 'Produit').replace(/</g,'&lt;');
-                    var price = Number(o.pricing?.totalCfa || o.amountCfa || o.amount || 0) || 0;
-                    var buyer = String(o.buyerName || o.buyerEmail || 'Client').replace(/</g,'&lt;');
-                    var date = String(o.createdAt || o.date || '').replace(/</g,'&lt;') || 'Date inconnue';
-                    html += '<div style="background:var(--ml-panel); border:1px solid var(--ml-border); border-radius:14px; padding:14px; margin-bottom:8px;">' +
-                        '<div style="display:flex; justify-content:space-between; align-items:flex-start;">' +
-                            '<div>' +
-                                '<div style="font-weight:700; color:var(--ml-text);">' + productName + '</div>' +
-                                '<div style="font-size:0.85rem; color:var(--ml-muted); margin-top:2px;">👤 ' + buyer + '</div>' +
-                                '<div style="font-size:0.8rem; color:var(--ml-muted);">📅 ' + date + '</div>' +
-                            '</div>' +
-                            '<div style="text-align:right;">' +
-                                '<div style="font-weight:950; color:var(--ml-text);">' + price.toLocaleString() + ' FCFA</div>' +
-                                '<div style="font-size:0.8rem; font-weight:700; margin-top:4px; color:' + statusColor + ';">' + statusIcon + ' ' + (status === 'confirmed' || status === 'paid' ? 'Payée' : status === 'pending' ? 'En attente' : status).charAt(0).toUpperCase() + (status === 'confirmed' || status === 'paid' ? 'Payée' : status === 'pending' ? 'En attente' : status).slice(1) + '</div>' +
-                            '</div>' +
-                        '</div>' +
-                    '</div>';
-                });
-                container.innerHTML = html;
+                // === 3. Affichage immédiat avec les données locales (avant réponse API) ===
+                _lpRenderOrderCards(localFiltered, container);
             } catch(e) {
                 console.error('[renderProviderOrders]', e);
-                container.innerHTML = '<div style="text-align:center; padding:30px 0; color:var(--ml-muted);">⚠️ Erreur de chargement des commandes.</div>';
+                if (container) container.innerHTML = '<div style="text-align:center; padding:30px 0; color:var(--ml-muted);">⚠️ Erreur de chargement des commandes.</div>';
             }
         }
 
@@ -27607,6 +27658,23 @@
         }
 
 
+        function _lpSavePaymentToServer() {
+            // Sauvegarde la commande côté serveur pour que le prestataire la voie dans 🛒 Commandes
+            try {
+                var vid = (typeof getMyProviderId === 'function' ? getMyProviderId() : '') || '';
+                if (!vid) vid = String(activeVendor?.id || '').trim();
+                if (!vid) vid = String(localStorage.getItem('mangoo_my_provider_id') || '').trim();
+                console.log('[Payment] _lpSavePaymentToServer: vendorId=' + vid + ' activeVendor=' + (activeVendor?.name || '?') + ' amount=' + currentPaymentAmount);
+                if (!vid) { console.warn('[Payment] Impossible de sauvegarder: aucun vendorId'); return; }
+                var vnm = String(activeVendor?.name || '').trim();
+                fetch('/api/live-orders/record-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ vendorId: vid, vendorName: vnm, amount: currentPaymentAmount, method: currentPaymentMethod || 'mobile_money' })
+                }).then(function(r){ return r.json(); }).then(function(d){ console.log('[Payment] Serveur:', d.success ? 'OK' : 'FAIL', d); }).catch(function(e){ console.error('[Payment] Erreur API:', e); });
+            } catch(e) { console.error('[Payment] Erreur _lpSavePaymentToServer:', e); }
+        }
+
         function processRealPayment() {
             const btn = document.getElementById('btnPayConfirm');
             const originalText = btn.innerText;
@@ -27677,6 +27745,9 @@
                             console.log('[Payment] Commande sauvegardée:', orderId);
                         } catch(e) { console.error('[Payment] Erreur sauvegarde commande:', e); }
 
+                        // SAUVEGARDER côté serveur (API) pour que le prestataire voie la commande
+                        _lpSavePaymentToServer();
+
                         // SHOW SUCCESS MODAL (COMMANDE CONFIRMÉE)
                         const successOverlay = document.createElement('div');
                         successOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.3s;";
@@ -27716,6 +27787,9 @@
                                 console.log('[Payment] Commande sauvegardée:', oId);
                             }
                         } catch(e) { console.error('[Payment] Erreur sauvegarde commande:', e); }
+
+                        // SAUVEGARDER côté serveur (API) pour que le prestataire voie la commande
+                        _lpSavePaymentToServer();
 
                         // CALLBACK AVEC DETAILS PAIEMENT (LiveShop, Tontine, etc.)
                         console.log('[Payment] Appel callback avec amount=' + currentPaymentAmount + ' method=' + currentPaymentMethod);
@@ -30155,31 +30229,21 @@
         }
 
         function switchProviderTab(tabName) {
-            console.log('[switchProviderTab] ' + (tabName || '?'));
             // Garde de sécurité : ne jamais afficher le dashboard prestataire sans authentification
             // sauf si l'URL force explicitement lpRole=provider ou lpRole=vendor
             try {
                 var _cuCheck = null;
                 try { _cuCheck = getLpCurrentUser(); } catch(e) {}
-                console.log('[switchProviderTab] getLpCurrentUser →', _cuCheck ? 'OK (email:'+_cuCheck.email+')' : 'NULL');
                 var _isAuth = !!(_cuCheck && String(_cuCheck.email || '').trim());
                 var _forceRole = '';
                 try { _forceRole = new URLSearchParams(window.location.search).get('lpRole') || ''; } catch(e) {}
-                console.log('[switchProviderTab] _isAuth='+_isAuth+' _forceRole='+_forceRole);
-                if (!_isAuth && _forceRole !== 'provider' && _forceRole !== 'vendor') {
-                    console.warn('[Provider] switchProviderTab bloqué: utilisateur non identifié');
-                    return;
-                }
+                if (!_isAuth && _forceRole !== 'provider' && _forceRole !== 'vendor') return;
                 // Vérifier aussi que l'utilisateur a bien un prestataire
                 var _hasProvider = false;
                 try { _hasProvider = !!(getMyProviderId ? String(getMyProviderId() || '') : ''); } catch(e) {}
                 try { if (!_hasProvider) _hasProvider = (lpGetOwnedProviderIds ? lpGetOwnedProviderIds() : []).length > 0; } catch(e) {}
-                console.log('[switchProviderTab] _hasProvider='+_hasProvider);
-                if (!_hasProvider && _forceRole !== 'provider' && _forceRole !== 'vendor') {
-                    console.warn('[Provider] switchProviderTab bloqué: aucun prestataire trouvé');
-                    return;
-                }
-            } catch(e) { console.warn('[Provider] Erreur garde switchProviderTab:', e); return; }
+                if (!_hasProvider && _forceRole !== 'provider' && _forceRole !== 'vendor') return;
+            } catch(e) { return; }
 
             const allowed = ['overview', 'services', 'orders', 'communication', 'supply', 'live']
             const next = allowed.includes(String(tabName || '')) ? String(tabName) : 'overview'

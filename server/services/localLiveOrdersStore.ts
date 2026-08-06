@@ -47,6 +47,8 @@ export type LiveOrder = {
   shopSlug?: string
   shopName?: string
   shopCountry?: string
+  vendorId?: string
+  vendorName?: string
   product: LiveOrderProduct
   qty: number
   pricing?: LiveOrderPricing
@@ -117,6 +119,8 @@ export function createLiveOrder(input: {
   shopSlug?: string
   shopName?: string
   shopCountry?: string
+  vendorId?: string
+  vendorName?: string
   product: LiveOrderProduct
   qty?: number
   pricing?: Partial<LiveOrderPricing>
@@ -170,6 +174,8 @@ export function createLiveOrder(input: {
     shopSlug: safeString(input?.shopSlug) || undefined,
     shopName: safeString(input?.shopName) || undefined,
     shopCountry: safeString(input?.shopCountry) || undefined,
+    vendorId: safeString(input?.vendorId) || undefined,
+    vendorName: safeString(input?.vendorName) || undefined,
     product: { id: productId, title: productTitle, priceCfa, imageUrl },
     qty,
     pricing,
@@ -202,6 +208,16 @@ export function listLiveOrdersByRoom(roomId: string) {
   const all = Object.values(store.orders || {})
   return all
     .filter((o) => safeString(o?.roomId) === rid)
+    .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))
+}
+
+export function listLiveOrdersByVendor(vendorId: string) {
+  const vid = safeString(vendorId)
+  if (!vid) return []
+  const store = readStore()
+  const all = Object.values(store.orders || {})
+  return all
+    .filter((o) => safeString(o?.vendorId) === vid)
     .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))
 }
 
