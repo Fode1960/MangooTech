@@ -47,6 +47,15 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // DOCUMENTS HTML : forcer le bypass du cache HTTP navigateur
+  // Sans ça, le navigateur peut servir une version obsolète du HTML
+  if (event.request.destination === 'document') {
+    event.respondWith(
+      fetch(event.request, { cache: 'no-cache' })
+    );
+    return;
+  }
+
   event.respondWith(
     fetch(event.request).then((networkResponse) => {
       // Mettre en cache les assets statiques (JS, CSS, images, fonts)
