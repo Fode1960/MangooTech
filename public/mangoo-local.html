@@ -8550,6 +8550,9 @@
                 const v = VENDORS.find((x) => String(x?.id) === String(id)) || null;
                 if (!v) return false;
                 const kind = lpGetVendorKind(v);
+                // Nettoyer le flag de déconnexion forcée (posé par lpLogout) —
+                // sinon getLpCurrentUser() retourne null et le Dashboard ne s'affiche pas
+                try { sessionStorage.removeItem('mangoo_force_logged_out'); } catch(_e) {}
                 // Persister la session pour que initApp() preserve l'identite au rechargement
                 localStorage.setItem('lp_auth_session', '1');
                 try {
@@ -11927,8 +11930,16 @@
                 var _forceRole3 = '';
                 try { _forceRole3 = new URLSearchParams(window.location.search).get('lpRole') || ''; } catch(e) {}
                 if (!_isAuth3 && _forceRole3 !== 'provider' && _forceRole3 !== 'vendor') {
-                    console.warn('[Provider] showProviderDashboardInline bloqué: utilisateur non identifié');
-                    return;
+                    // Fallback : même sans getLpCurrentUser(), accepter si session + providerId existent
+                    var _sessFallback = false;
+                    try {
+                        _sessFallback = localStorage.getItem('lp_auth_session') === '1' && !!localStorage.getItem('mangoo_my_provider_id');
+                    } catch(_e1) {}
+                    if (!_sessFallback) {
+                        console.warn('[Provider] showProviderDashboardInline bloqué: utilisateur non identifié');
+                        return;
+                    }
+                    console.log('[Provider] showProviderDashboardInline: fallback session localStorage (getLpCurrentUser a retourné null)');
                 }
             } catch(e) {}
             try {
