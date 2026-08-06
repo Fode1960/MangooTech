@@ -13973,6 +13973,18 @@
                 if (searchBar) searchBar.style.display = 'none';
                 if (familiesBar) familiesBar.style.display = 'none';
             } else if (view === 'account') {
+                // GARDE ANTI-GENERIQUE : un prestataire avec session active ne doit
+                // JAMAIS voir la page compte générique — uniquement le Dashboard.
+                try {
+                    var _hasProvSession = localStorage.getItem('lp_auth_session') === '1';
+                    var _provId = localStorage.getItem('mangoo_my_provider_id');
+                    if (_hasProvSession && _provId && typeof showProviderDashboardInline === 'function') {
+                        console.log('[switchView] Prestataire détecté → redirection Dashboard (bloquage page générique)');
+                        showProviderDashboardInline();
+                        return;
+                    }
+                } catch(e) {}
+
                 // Mon compte = page compte normale (commandes, profil, favoris...)
                 // Le Dashboard prestataire est accessible via le bouton flottant 🛠️ (FAB)
                 accountDiv.style.display = 'block';
