@@ -6287,7 +6287,7 @@
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
-    <script src="/localplus-country-seeds.js?v=3"></script>
+    <script src="/localplus-country-seeds.js?v=4"></script>
     
     <script>
         // Tunnel WebSocket géré par le proxy unifié sur port 3090 (même tunnel que HTTP)
@@ -10489,6 +10489,20 @@
                 // Always wipe the stale mangoo_vendors cache – base always starts from seeds
                 try { localStorage.removeItem('mangoo_vendors'); } catch {}
 
+                // Nettoyage one-shot des vendors obsolètes du localStorage
+                try {
+                    if (!localStorage.getItem('lp_vendors_cleaned')) {
+                        var obsoleteIds = ['5','6','1780950564842'];
+                        var cv = JSON.parse(localStorage.getItem('mangoo_custom_vendors') || 'null');
+                        if (cv && Array.isArray(cv)) {
+                            cv = cv.filter(function(c) { return obsoleteIds.indexOf(String(c && c.id)) === -1; });
+                            localStorage.setItem('mangoo_custom_vendors', JSON.stringify(cv));
+                        }
+                        localStorage.setItem('lp_vendors_cleaned', '1');
+                        console.log('[lp] Cleaned obsolete vendors from localStorage');
+                    }
+                } catch {}
+
                 const custom = getStoredCustomVendors();
                 const merged = [...VENDORS];
                 (custom || []).forEach((c) => {
@@ -10524,6 +10538,11 @@
                 }
 
                 if (!merged.length) return;
+                // Filtrer les vendors obsolètes (comptes supprimés) du résultat final
+                try {
+                    var obsoleteIds = ['5','6','1780950564842'];
+                    merged = merged.filter(function(v) { return obsoleteIds.indexOf(String(v && v.id)) === -1; });
+                } catch {}
                 // Préserver les statuts live existants avant le remplacement
                 var liveStatusBefore = {};
                 try {
@@ -18829,7 +18848,7 @@
 
             try {
                 const sheet = document.getElementById('vendorSheet');
-                if (sheet) sheet.classList.add('active');
+                if (sheet) { sheet.style.display = ''; sheet.classList.add('active'); }
             } catch {
             }
 
@@ -18840,7 +18859,7 @@
                     const isLive = Boolean(vendor && vendor.live);
                     try {
                         actions.classList.remove('lp-actions-2', 'lp-actions-3', 'lp-actions-4');
-                        const count = 3 + (isLive ? 1 : 0) + (isService ? 2 : 0);
+                        const count = 3 + (isLive ? 1 : 0) + (isService ? 1 : 0);
                         actions.classList.add(count >= 4 ? 'lp-actions-4' : count === 3 ? 'lp-actions-3' : 'lp-actions-2');
                     } catch {
                     }
@@ -18862,9 +18881,6 @@
                         ${isService ? `
                             <button type="button" class="vendor-action-btn btn-primary" onclick="startServicePayment('${lpEscapeInlineArg(vendor.id)}')">
                                 <span style="font-size:1.05rem;">💳</span> Payer
-                            </button>
-                            <button type="button" class="vendor-action-btn btn-secondary" onclick="openChat()">
-                                <span style="font-size:1.05rem;">💬</span> Devis
                             </button>
                         ` : ''}
                     `;
