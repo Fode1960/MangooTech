@@ -10513,20 +10513,6 @@
                     }
                 } catch {}
 
-                // Nettoyage one-shot des vendors modifiés (Tailleur Élégance, Mangoo Répar)
-                // pour forcer les données API/seeds à jour
-                try {
-                    if (!localStorage.getItem('lp_vendors_refreshed_v2')) {
-                        var cv2 = JSON.parse(localStorage.getItem('mangoo_custom_vendors') || 'null');
-                        if (cv2 && Array.isArray(cv2)) {
-                            cv2 = cv2.filter(function(c) { return ['3','1780592661253'].indexOf(String(c && c.id)) === -1; });
-                            localStorage.setItem('mangoo_custom_vendors', JSON.stringify(cv2));
-                        }
-                        localStorage.setItem('lp_vendors_refreshed_v2', '1');
-                        console.log('[lp] Refreshed Tailleur Elegance & Mangoo Repar from seeds/API');
-                    }
-                } catch {}
-
                 const custom = getStoredCustomVendors();
                 // Toujours partir des seeds propres pour éviter la contamination
                 // par les fusions précédentes (VENDORS déjà muté par d'anciennes données localStorage)
@@ -10534,8 +10520,21 @@
                 const merged = JSON.parse(JSON.stringify(seeds));
                 (custom || []).forEach((c) => {
                     const idx = merged.findIndex((x) => String(x?.id) === String(c?.id));
-                    if (idx >= 0) merged[idx] = { ...merged[idx], ...c };
-                    else merged.push(c);
+                    if (idx >= 0) {
+                        const seed = merged[idx];
+                        merged[idx] = { ...seed, ...c };
+                        // Préserver les données seeds si l'API retourne des champs vides
+                        // (évite la "page générique" où services/coverage sont vides)
+                        if ((!c.services || !c.services.length) && seed.services && seed.services.length) {
+                            merged[idx].services = seed.services;
+                        }
+                        if ((!c.coverage || !c.coverage.length) && seed.coverage && seed.coverage.length) {
+                            merged[idx].coverage = seed.coverage;
+                        }
+                        if (c.isMobile === false && seed.isMobile === true) {
+                            merged[idx].isMobile = true;
+                        }
+                    } else merged.push(c);
                 });
 
                 try {
