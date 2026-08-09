@@ -6664,6 +6664,9 @@
         }
 
         const VENDORS = lpCloneCountryVendors(LP_COUNTRY_CONTEXT?.vendors);
+        // Snapshot propre des seeds AVANT toute fusion localStorage
+        // pour servir de base à hydrateVendorsFromStorage()
+        window.__VENDORS_SEEDS = JSON.parse(JSON.stringify(VENDORS));
         // Réinitialiser tous les statuts live à false au démarrage
         // Le WebSocket mettra à jour uniquement les vendors réellement en live
         for (var _lvi = 0; _lvi < VENDORS.length; _lvi++) {
@@ -10518,7 +10521,10 @@
                 } catch {}
 
                 const custom = getStoredCustomVendors();
-                const merged = [...VENDORS];
+                // Toujours partir des seeds propres pour éviter la contamination
+                // par les fusions précédentes (VENDORS déjà muté par d'anciennes données localStorage)
+                const seeds = window.__VENDORS_SEEDS && Array.isArray(window.__VENDORS_SEEDS) ? window.__VENDORS_SEEDS : VENDORS;
+                const merged = JSON.parse(JSON.stringify(seeds));
                 (custom || []).forEach((c) => {
                     const idx = merged.findIndex((x) => String(x?.id) === String(c?.id));
                     if (idx >= 0) merged[idx] = { ...merged[idx], ...c };
