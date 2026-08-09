@@ -4413,8 +4413,8 @@
     <script>
     (function() {
       if (!('serviceWorker' in navigator)) return;
-      var SW_URL = '/sw.js?v=13';
-      var APP_VERSION = '13';
+      var SW_URL = '/sw.js?v=14';
+      var APP_VERSION = '14';
 
       // ═══ NETTOYAGE AUTO DES ANCIENNES VERSIONS ═══
       // Si la version en localStorage est dépassée, on désinstalle
@@ -4438,7 +4438,7 @@
       }
 
       // ═══ ENREGISTREMENT NORMAL ═══
-      console.log('[Push] Registering SW v13...');
+      console.log('[Push] Registering SW v14...');
       navigator.serviceWorker.register(SW_URL, { scope: '/', updateViaCache: 'none' }).then(function(reg) {
         console.log('[Push] SW registered: ' + reg.scope);
 
@@ -8480,6 +8480,9 @@
                     else localStorage.setItem('mangoo_my_shop_id', String(id));
                 } catch {
                 }
+                // Marquer l'authentification PIN active pour le garde push
+                // (evite que lpInitPushSubscription utilise un vendorId residuel)
+                try { sessionStorage.setItem('_lpPushAuthReady', '1'); } catch(e) {}
                 // Mettre à jour mangoo-current-user pour que getLpCurrentUser() retourne l'utilisateur authentifié
                 // → indispensable pour les vérifications email dans isOwnerProvider
                 try {
@@ -10982,9 +10985,17 @@
                 setTimeout(() => loader.style.display = 'none', 500);
             }
 
+            // Ne pas ouvrir le vendorSheet si une session prestataire est active
+            // (le Dashboard va s'ouvrir et prendre le controle)
+            var _skipVendorSheet = false;
+            try {
+                _skipVendorSheet = localStorage.getItem('lp_auth_session') === '1'
+                    && !!localStorage.getItem('mangoo_my_provider_id');
+            } catch(e) {}
+
             try {
                 const openId = localStorage.getItem('mangoo-open-vendor-id');
-                if (openId) {
+                if (openId && !_skipVendorSheet) {
                     setTimeout(() => {
                         try { openVendorSheetById(openId, { retries: 8, retryDelay: 220, clearPendingOpenId: true }); } catch {}
                     }, 400);
@@ -10995,7 +11006,7 @@
             try {
                 const url = new URL(window.location.href);
                 const vendorId = url.searchParams.get('vendor');
-                if (vendorId) {
+                if (vendorId && !_skipVendorSheet) {
                     setTimeout(() => {
                         try { openVendorSheetById(vendorId, { retries: 8, retryDelay: 220, clearPendingOpenId: true }); } catch {}
                     }, 450);
@@ -11515,6 +11526,21 @@
         function openVendorSheetById(id, options) {
             const vendorId = String(id || '').trim();
             if (!vendorId) return false;
+
+            // GARDE : ne pas ouvrir de fiche si une session prestataire est active.
+            // Le Dashboard doit s'ouvrir à la place (voir openMyProviderDashboard).
+            var _isProv = false;
+            try {
+                _isProv = window.sessionStorage && sessionStorage.getItem('_lpPushAuthReady') === '1';
+                if (!_isProv) {
+                    _isProv = localStorage.getItem('lp_auth_session') === '1'
+                        && !!localStorage.getItem('mangoo_my_provider_id');
+                }
+            } catch(e) {}
+            if (_isProv) {
+                console.log('[openVendorSheetById] BLOQUE: session prestataire active pour', vendorId);
+                return false;
+            }
 
             const opts = options && typeof options === 'object' ? options : {};
             const maxRetries = Math.max(0, Number(opts.retries) || 0);
@@ -14590,6 +14616,7 @@
             } catch {
             }
             try { sessionStorage.setItem('mangoo_force_logged_out', '1') } catch {}
+            try { sessionStorage.removeItem('_lpPushAuthReady') } catch {}
             try { localStorage.removeItem('lp_auth_session') } catch {}
             try {
                 closeLpIdentityModal()
@@ -16438,6 +16465,22 @@
         function lpTryRegisterVendorPresence() {
             try {
                 if (!webrtcMgmtWs || !webrtcMgmtWsConnected) return;
+                // GARDE ANTI-FUITTE : ne pas enregistrer la presence depuis un onglet
+                // non authentifie (ex: onglet client avec mangoo_my_provider_id residuel).
+                // Sans cette garde, un onglet client peut faire croire au serveur que le
+                // vendeur est en ligne → l'appel part en WebSocket au lieu d'un push.
+                var _isPinAuth2 = false;
+                try { _isPinAuth2 = sessionStorage.getItem('_lpPushAuthReady') === '1'; } catch(e) {}
+                var _isUrlAuth2 = false;
+                try {
+                    var _uaV2 = new URLSearchParams(window.location.search).get('vendor') || '';
+                    var _uaR2 = new URLSearchParams(window.location.search).get('lpRole') || '';
+                    _isUrlAuth2 = !!(_uaV2 && (_uaR2 === 'vendor' || _uaR2 === 'provider'));
+                } catch(e) {}
+                if (!_isPinAuth2 && !_isUrlAuth2) {
+                    console.log('[MgmtWS] Presence BLOQUEE: pas d\'authentification PIN/URL active');
+                    return;
+                }
                 const shopId = lpGetVendorWsVendorId();
                 if (!shopId) {
                     console.log('[MgmtWS] Aucun vendorId, presence non enregistree (tentative ' + (lpPresenceRetryCount + 1) + '/' + LP_PRESENCE_MAX_RETRIES + ')');
@@ -16529,27 +16572,52 @@
                     setTimeout(lpInitPushSubscription, 3000);
                     return;
                 }
-                // Verifier si permission deja demandee/refusee (ne pas re-demander)
-                if (_lpPushSubRequested) {
-                    console.log('[Push] Permission deja demandee, pas de nouvelle tentative');
+                // GARDE D'AUTHENTIFICATION : ne pas creer d'abonnement push avant
+                // authentification explicite (PIN ou URL ?vendor=X&lpRole=provider).
+                // Evite qu'un mangoo_my_provider_id residuel d'une session precedente
+                // (ex: DAN Electricien) ne soit utilise pour un autre prestataire.
+                var isUrlAuthVendor = false;
+                try {
+                    var _uaVendor = new URLSearchParams(window.location.search).get('vendor') || '';
+                    var _uaRole = new URLSearchParams(window.location.search).get('lpRole') || '';
+                    isUrlAuthVendor = !!(_uaVendor && (_uaRole === 'vendor' || _uaRole === 'provider'));
+                } catch(e) {}
+                var isPinAuth = false;
+                try { isPinAuth = sessionStorage.getItem('_lpPushAuthReady') === '1'; } catch(e) {}
+                if (!isUrlAuthVendor && !isPinAuth) {
+                    console.log('[Push] Auth PIN/URL non detectee, attente login... (retry 3s)');
+                    setTimeout(lpInitPushSubscription, 3000);
                     return;
                 }
+                console.log('[Push] Auth confirmee (pinAuth=' + isPinAuth + ' urlAuth=' + isUrlAuthVendor + '), vendorId=' + vendorId);
+                // Verifier l'etat REEL de la permission AVANT le flag _lpPushSubRequested
+                // (l'utilisateur a pu changer la permission dans les parametres du navigateur)
                 var permState = Notification.permission;
                 if (permState === 'denied') {
-                    console.log('[Push] Permission deja refusee par l\'utilisateur');
+                    console.log('[Push] Permission refusee par l\'utilisateur');
                     _lpPushSubRequested = true;
                     return;
                 }
                 if (permState === 'granted') {
-                    // Permission deja accordee mais pas d'abonnement → s'abonner directement
-                    console.log('[Push] Permission deja accordee, abonnement direct');
-                    var subscription = await reg.pushManager.subscribe({
-                        userVisibleOnly: true,
-                        applicationServerKey: lpUrlBase64ToUint8Array(LP_VAPID_PUBLIC_KEY)
-                    });
-                    console.log('[Push] Abonnement cree, endpoint: ' + (subscription.endpoint || '').substring(0, 60));
-                    await lpSavePushSubscription(subscription);
-                    _lpPushSubRequested = true;
+                    // Permission accordee → toujours tenter l'abonnement (resilience)
+                    console.log('[Push] Permission accordee, abonnement...');
+                    try {
+                        var subscription = await reg.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            applicationServerKey: lpUrlBase64ToUint8Array(LP_VAPID_PUBLIC_KEY)
+                        });
+                        console.log('[Push] Abonnement cree, endpoint: ' + (subscription.endpoint || '').substring(0, 60));
+                        await lpSavePushSubscription(subscription);
+                        _lpPushSubRequested = true;
+                    } catch(subErr) {
+                        console.warn('[Push] Echec abonnement (permission accordee mais erreur):', subErr.message);
+                    }
+                    return;
+                }
+                // Permission = 'default' (ni accordee ni refusee)
+                // Verifier si on a deja tente (eviter les boucles infinies)
+                if (_lpPushSubRequested) {
+                    console.log('[Push] Permission deja demandee sans reponse, nouvelle tentative ignoree');
                     return;
                 }
                 // Besoin d'un geste utilisateur pour demander la permission
@@ -16589,6 +16657,35 @@
                 // Reessayer dans 5s en cas d'erreur
                 setTimeout(lpInitPushSubscription, 5000);
             }
+        }
+
+        // Outil de diagnostic Push — a appeler depuis la console: lpDiagPush()
+        async function lpDiagPush() {
+            console.log('===== DIAGNOSTIC PUSH =====');
+            console.log('1. Service Worker support:', 'serviceWorker' in navigator);
+            console.log('2. PushManager support:', 'PushManager' in window);
+            console.log('3. Notification.permission:', Notification.permission);
+            console.log('4. _lpPushSubRequested:', _lpPushSubRequested);
+            console.log('5. _lpPushGestureInstalled:', _lpPushGestureInstalled);
+            console.log('6. WebSocket connecte:', webrtcMgmtWsConnected);
+            console.log('7. VendorId pour push:', lpGetVendorWsVendorId() || '(aucun)');
+            try {
+                var reg = await navigator.serviceWorker.ready;
+                console.log('8. SW scope:', reg.scope);
+                var existingSub = await reg.pushManager.getSubscription();
+                if (existingSub) {
+                    console.log('9. Abonnement existant: endpoint=' + (existingSub.endpoint || '').substring(0, 60) + '...');
+                } else {
+                    console.log('9. Aucun abonnement push existant');
+                }
+            } catch(e) {
+                console.log('8-9. Erreur SW:', e.message);
+            }
+            console.log('10. VAPID key:', LP_VAPID_PUBLIC_KEY.substring(0, 20) + '...');
+            console.log('===========================');
+            console.log('👉 Si Notification.permission = "granted" mais aucun abonnement → relancer lpInitPushSubscription()');
+            console.log('👉 Si Notification.permission = "denied" → activer dans Parametres du navigateur > Notifications');
+            console.log('👉 Si Notification.permission = "default" → cliquer n\'importe ou sur la page pour declencher la demande');
         }
 
         function lpShowPushPermissionHint() {
@@ -17514,8 +17611,9 @@
                     timestamp: Date.now(),
                     originUrl: window.location.origin
                 };
+                console.log('[Call] lpSendCallNotification: vendorId=' + vendorId + ' callMode=' + callMode + ' roomId=' + roomId + ' label=' + clientLabel + ' wsConnected=' + webrtcMgmtWsConnected);
                 if (!webrtcMgmtWs || !webrtcMgmtWsConnected || webrtcMgmtWs.readyState !== WebSocket.OPEN) {
-                    console.log('[Call] WebSocket non connecte, mise en file');
+                    console.log('[Call] WebSocket non connecte, mise en file (queue=' + webrtcMsgQueue.length + ')');
                     webrtcMsgQueue.push(msg);
                     // Force reconnect if needed
                     if (!webrtcMgmtWsReconnecting) {
@@ -19330,6 +19428,8 @@
             } catch {
             }
             try { lpApplySimplePanelVisibility(); } catch {}
+            // Restaurer le bouton Go Live si on est un vendeur boutique sur la carte
+            try { lpInitGoLiveButton(); } catch {}
         }
 
         function lpGetUiMode() {
@@ -25107,35 +25207,23 @@
         var _lpPendingViewers = []; // viewers en attente de connexion WebRTC (caméra pas encore activée)
         var _lpLiveCurrentProduct = null; // produit actuellement affiché dans le live client
 
-        // Afficher le bouton Go Live si l'utilisateur est un vendeur connecte
+        // Afficher le bouton Go Live uniquement sur la carte (map/list) pour les vendeurs boutique.
+        // JAMAIS sur une fiche prestataire, JAMAIS sur le dashboard prestataire.
+        // IMPORTANT : _lpLiveVendorId est défini pour TOUS les vendors (même sans affichage)
+        // car lpGetVendorWsVendorId() et d'autres flux en dépendent.
         function lpInitGoLiveButton() {
             var wrapper = document.getElementById('lpGoLiveWrapper');
             var btn = document.getElementById('lpGoLiveBtn');
             if (!btn) return;
-            // Sécurité : wrapper toujours masqué par défaut (CSS), ne l'afficher que si auth OK
+
+            // === RÈGLE D'OR : masqué par défaut ===
+            if (wrapper) wrapper.style.display = 'none';
+            btn.style.display = 'none';
+
             try {
-                // Garde de sécurité : ne jamais afficher le bouton si l'utilisateur n'est pas authentifié
-                var _cuCheck = null;
-                try { _cuCheck = getLpCurrentUser(); } catch(e) {}
-                var _isAuth = !!(_cuCheck && String(_cuCheck.email || '').trim());
-                var _urlRole = '';
-                try { _urlRole = new URLSearchParams(window.location.search).get('lpRole') || ''; } catch(e) {}
-                // Le bouton ne doit JAMAIS s'afficher sur la carte publique (map/list) sans lpRole=vendor
-                var _curView = '';
-                try { _curView = String(currentView || '').trim(); } catch(e) {}
-                if ((_curView === 'map' || _curView === 'list' || _curView === 'fav') && _urlRole !== 'vendor' && _urlRole !== 'provider') {
-                    if (wrapper) wrapper.style.display = 'none';
-                    if (btn) btn.style.display = 'none';
-                    console.warn('[Live] Bouton Go Live NON affiche: vue publique (map/list) sans lpRole');
-                    return;
-                }
-                // L'utilisateur doit être connecté (email présent) OU avoir lpRole=vendor dans l'URL
-                if (!_isAuth && _urlRole !== 'vendor' && _urlRole !== 'provider') {
-                    if (wrapper) wrapper.style.display = 'none';
-                    if (btn) btn.style.display = 'none';
-                    console.warn('[Live] Bouton Go Live NON affiche: utilisateur non authentifie');
-                    return;
-                }
+                // ============================================================
+                // ÉTAPE 1 : DÉTECTER LE VENDOR ID (toujours, pour _lpLiveVendorId)
+                // ============================================================
                 var vendorId = '';
                 // 1. URL params
                 try {
@@ -25145,85 +25233,110 @@
                         _lpLiveIsVendor = true;
                     }
                 } catch(e) {}
-                // 2. localStorage (multiples cles)
+                // 2. localStorage
                 if (!vendorId) {
                     try {
                         vendorId = localStorage.getItem('mangoo_my_shop_id') || localStorage.getItem('mangoo_my_provider_id') || localStorage.getItem('lp_vendor_id') || '';
                     } catch(e) {}
                 }
-                // 2b. getLpCurrentUser (objet utilisateur stocke dans mangoo-current-user)
+                // 3. getLpCurrentUser
                 if (!vendorId) {
                     try {
                         var cu = getLpCurrentUser();
                         if (cu && cu.vendorId) vendorId = String(cu.vendorId).trim();
                     } catch(e) {}
                 }
-                // 2b2. lpGetStoredShopIdsForCurrentUser (survit a la purge startup)
+                // 4. lpGetStoredShopIdsForCurrentUser
                 if (!vendorId && typeof lpGetStoredShopIdsForCurrentUser === 'function') {
                     try {
                         var ids = lpGetStoredShopIdsForCurrentUser();
-                        if (Array.isArray(ids) && ids.length > 0) {
-                            vendorId = String(ids[0]).trim();
-                            _lpLiveIsVendor = true;
-                        }
+                        if (Array.isArray(ids) && ids.length > 0) { vendorId = String(ids[0]).trim(); _lpLiveIsVendor = true; }
                     } catch(e) {}
                 }
-                // 2b3. lpGetStoredProviderIdsForCurrentUser (prestataires)
+                // 5. lpGetStoredProviderIdsForCurrentUser
                 if (!vendorId && typeof lpGetStoredProviderIdsForCurrentUser === 'function') {
                     try {
                         var provIds = lpGetStoredProviderIdsForCurrentUser();
-                        if (Array.isArray(provIds) && provIds.length > 0) {
-                            vendorId = String(provIds[0]).trim();
-                            _lpLiveIsVendor = true;
-                        }
+                        if (Array.isArray(provIds) && provIds.length > 0) { vendorId = String(provIds[0]).trim(); _lpLiveIsVendor = true; }
                     } catch(e) {}
                 }
-                // 2c. Debug dump all localStorage keys
-                if (!vendorId) {
-                    try {
-                        var keys = [];
-                        for (var k in localStorage) {
-                            if (k.indexOf('mangoo') >= 0 || k.indexOf('shop') >= 0 || k.indexOf('vendor') >= 0 || k.indexOf('provider') >= 0 || k.indexOf('lp_') >= 0) {
-                                keys.push(k + '=' + localStorage[k].substring(0, 30));
-                            }
-                        }
-                        console.warn('[Live] DBG localStorage cles Mangoo:', keys);
-                    } catch(e) {}
-                }
-                // 3. activeVendor fallback
+                // 6. activeVendor fallback
                 if (!vendorId && typeof activeVendor !== 'undefined' && activeVendor && activeVendor.id) {
                     vendorId = activeVendor.id;
                     _lpLiveIsVendor = true;
                 }
 
-                console.log('[Live] lpInitGoLiveButton: vendorId=', vendorId, 'isVendor=', _lpLiveIsVendor, 'active=', !_lpLiveActive);
-
+                // Définir _lpLiveVendorId pour TOUS les vendors (prestataires ET boutiques)
+                // → indispensable pour lpGetVendorWsVendorId(), présence WS, etc.
                 if (vendorId && !_lpLiveActive) {
                     _lpLiveVendorId = vendorId;
                     _lpLiveIsVendor = true;
-                    // Definir activeVendor pour le prestataire (comme pour le vendeur)
                     if (!activeVendor || String(activeVendor.id) !== String(vendorId)) {
                         try {
                             var _matchV = (Array.isArray(VENDORS) ? VENDORS : []).find(function(x) { return String(x?.id) === String(vendorId); });
                             if (_matchV) activeVendor = _matchV;
                         } catch(e) {}
                     }
-                    // Garde : ne pas afficher le bouton flottant si le dashboard prestataire est actif
-                    var _provSec2 = document.getElementById('providerSection');
-                    if (_provSec2 && _provSec2.style.display === 'block') {
-                        if (wrapper) wrapper.style.display = 'none';
-                        btn.style.display = 'none';
-                        console.log('[Live] Bouton Go Live masque (dashboard prestataire actif), vendorId=', vendorId);
-                    } else {
-                        if (wrapper) wrapper.style.display = 'block';
-                        btn.style.display = 'block';
-                    }
-                    console.log('[Live] Bouton Go Live active pour', vendorId);
-                } else if (!vendorId) {
-                    console.warn('[Live] Bouton Go Live NON affiche: aucun vendorId trouve');
-                } else {
-                    console.warn('[Live] Bouton Go Live NON affiche: _lpLiveActive=', _lpLiveActive);
                 }
+
+                // ============================================================
+                // ÉTAPE 2 : CONDITIONS D'AFFICHAGE (bouton flottant sur la carte uniquement)
+                // ============================================================
+
+                // CONDITION A : Doit être sur la carte (map/list) — jamais fiche, jamais dashboard
+                var _curView = '';
+                try { _curView = String(currentView || '').trim(); } catch(e) {}
+                if (_curView !== 'map' && _curView !== 'list') {
+                    console.log('[Live] Bouton Go Live masque: pas sur la carte (view=' + _curView + ')');
+                    return;
+                }
+
+                // CONDITION A2 : Pas de fiche prestataire ouverte (vendorSheet visible)
+                // openVendorSheet ne change pas currentView, donc on verifie le DOM.
+                var _vendorSheet = document.getElementById('vendorSheet');
+                if (_vendorSheet && _vendorSheet.classList.contains('active')) {
+                    console.log('[Live] Bouton Go Live masque: fiche prestataire ouverte');
+                    return;
+                }
+
+                // CONDITION B : Pas de live déjà actif
+                if (_lpLiveActive) {
+                    console.log('[Live] Bouton Go Live masque: live deja actif');
+                    return;
+                }
+
+                // CONDITION C : Doit être un vendeur boutique, pas un prestataire.
+                // Un prestataire (mangoo_my_provider_id) n'a JAMAIS le bouton Go Live flottant.
+                var _isShopVendor = false;
+                try {
+                    var _shopId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
+                    if (_shopId) _isShopVendor = true;
+                } catch(e) {}
+                // Vérifier qu'on n'est PAS un prestataire (mangoo_my_provider_id présent)
+                var _isProvider = false;
+                try {
+                    var _provIdCheck = String(localStorage.getItem('mangoo_my_provider_id') || '').trim();
+                    if (_provIdCheck) _isProvider = true;
+                } catch(e) {}
+                if (_isProvider && !_isShopVendor) {
+                    console.log('[Live] Bouton Go Live masque: prestataire (pas boutique), provId=' + (_provIdCheck || ''));
+                    return;
+                }
+                if (!_isShopVendor) {
+                    console.log('[Live] Bouton Go Live masque: pas un vendeur boutique');
+                    return;
+                }
+
+                // CONDITION D : VendorId boutique trouvé
+                if (!vendorId) {
+                    console.log('[Live] Bouton Go Live masque: aucun vendorId boutique');
+                    return;
+                }
+
+                // TOUTES les conditions sont remplies → AFFICHER
+                if (wrapper) wrapper.style.display = 'block';
+                btn.style.display = 'block';
+                console.log('[Live] Bouton Go Live AFFICHÉ pour vendeur boutique', vendorId, '(sur la carte)');
             } catch(e) { console.warn('[Live] Erreur init bouton:', e); }
         }
 

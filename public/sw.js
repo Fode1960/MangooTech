@@ -1,16 +1,16 @@
-// Service Worker pour Mangoo Tech - avec Push Notifications
+﻿// Service Worker pour Mangoo Tech - avec Push Notifications
 // ⚠️ CE SW NE GÈRE PAS LES DOCUMENTS HTML — le navigateur les récupère directement
-const CACHE_NAME = 'mangoo-tech-v13';
+const CACHE_NAME = 'mangoo-tech-v14';
 
 // Installation du service worker
 self.addEventListener('install', (event) => {
-  console.log('[SW v13] Installation');
+  console.log('[SW v14] Installation');
   self.skipWaiting();
 });
 
 // Activation du service worker – supprimer tous les anciens caches + notifier les clients
 self.addEventListener('activate', (event) => {
-  console.log('[SW v13] Activation – suppression de tous les anciens caches');
+  console.log('[SW v14] Activation – suppression de tous les anciens caches');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -22,7 +22,7 @@ self.addEventListener('activate', (event) => {
       // Notifier TOUS les clients qu'une mise à jour est dispo → rechargement auto
       return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
         clients.forEach((client) => {
-          client.postMessage({ type: 'SW_UPDATED', version: 'v13' });
+          client.postMessage({ type: 'SW_UPDATED', version: 'v14' });
         });
       });
     })
@@ -32,7 +32,7 @@ self.addEventListener('activate', (event) => {
 // Écouter les messages du client (ex: SKIP_WAITING)
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
-    console.log('[SW v13] SKIP_WAITING reçu → skipWaiting');
+    console.log('[SW v14] SKIP_WAITING reçu → skipWaiting');
     self.skipWaiting();
   }
 });
@@ -81,14 +81,19 @@ self.addEventListener('fetch', (event) => {
  * Quand le vendeur n'est pas connecte, lui envoie une notification d'appel entrant
  */
 self.addEventListener('push', (event) => {
-  console.log('[SW] Push recu:', event);
+  console.log('[SW v14] === PUSH RECU ===');
+  console.log('[SW v14] Timestamp:', new Date().toISOString());
 
   let data = {};
   try {
     if (event.data) {
       data = event.data.json();
+      console.log('[SW v14] Payload:', JSON.stringify(data).substring(0, 200));
+    } else {
+      console.log('[SW v14] Pas de donnees dans le push (event.data est null)');
     }
   } catch (e) {
+    console.warn('[SW v14] Erreur parsing push:', e.message);
     data = { title: 'Appel entrant', body: 'Quelqu\'un souhaite vous parler' };
   }
 
@@ -127,8 +132,28 @@ self.addEventListener('push', (event) => {
     } : {})
   };
 
+  console.log('[SW v14] showNotification:', title, '| tag:', options.tag, '| actions:', options.actions ? options.actions.length : 0);
   event.waitUntil(
-    self.registration.showNotification(title, options)
+    self.registration.showNotification(title, options).then(function() {
+      console.log('[SW v14] Notification affichee avec succes');
+    }).catch(function(err) {
+      console.error('[SW v14] ECHEC affichage notification:', err.message);
+      // Fallback: notification sans actions (compatible tous navigateurs)
+      var fallbackOpts = {
+        body: options.body,
+        icon: options.icon,
+        badge: options.badge,
+        tag: options.tag,
+        requireInteraction: true,
+        vibrate: [200, 100, 200],
+        data: options.data
+      };
+      return self.registration.showNotification(title, fallbackOpts).then(function() {
+        console.log('[SW v14] Notification fallback affichee');
+      }).catch(function(err2) {
+        console.error('[SW v14] ECHEC fallback aussi:', err2.message);
+      });
+    })
   );
 });
 
