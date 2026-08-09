@@ -7673,11 +7673,19 @@
         }
 
         function formatUntil(ts) {
-            if (!ts || typeof ts !== 'number') return '—';
-            const d = new Date(ts);
-            const hh = String(d.getHours()).padStart(2, '0');
-            const mm = String(d.getMinutes()).padStart(2, '0');
-            return `${hh}:${mm}`;
+            if (ts === null || ts === undefined) return '\u2014';
+            if (typeof ts === 'number') {
+                if (!Number.isFinite(ts)) return '\u2014';
+                const d = new Date(ts);
+                return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+            }
+            if (typeof ts === 'string') {
+                const t = Date.parse(ts);
+                if (!Number.isFinite(t)) return '\u2014';
+                const d = new Date(t);
+                return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+            }
+            return '\u2014';
         }
         function refreshBoostPanel(vendor) {
             // Met à jour l'affichage du statut boost dans #boostSimpleCard
@@ -7687,10 +7695,17 @@
                 try { return VENDORS.find(function(x) { return String(x.id) === String(getMyProviderId()); }); } catch(e) { return null; }
             })();
             if (!v) { statusEl.textContent = '\u2014'; return; }
+            // Helper robuste : accepte timestamps nombres ET chaînes ISO
+            var _toMs = function(val) {
+                if (val === null || val === undefined) return null;
+                if (typeof val === 'number') return Number.isFinite(val) ? val : null;
+                if (typeof val === 'string') { var t = Date.parse(val); return Number.isFinite(t) ? t : null; }
+                return null;
+            };
             const now = Date.now();
-            const sponsorOn = typeof v.sponsoredUntil === 'number' && v.sponsoredUntil > now;
-            const promoOn = typeof v.promoUntil === 'number' && v.promoUntil > now;
-            const newOn = typeof v.newUntil === 'number' && v.newUntil > now;
+            const sponsorOn = _toMs(v.sponsoredUntil) !== null && _toMs(v.sponsoredUntil) > now;
+            const promoOn = _toMs(v.promoUntil) !== null && _toMs(v.promoUntil) > now;
+            const newOn = _toMs(v.newUntil) !== null && _toMs(v.newUntil) > now;
             const parts = [];
             if (sponsorOn) {
                 const t = Number(v.sponsoredTier || 1);
@@ -19040,9 +19055,22 @@
                 if (Array.isArray(vendor.services) && vendor.services.length) badges.push('🧰 Profil');
                 if (vendor.live) badges.push('🔴 Live');
                 if (lpGetVendorKind(vendor) === 'shop') badges.push('🏪 Boutique');
-                if (typeof vendor.sponsoredUntil === 'number' && vendor.sponsoredUntil > Date.now()) badges.push('🏷️ Sponsorisé');
-                if (typeof vendor.promoUntil === 'number' && vendor.promoUntil > Date.now()) badges.push('🎯 En Promo');
-                if (typeof vendor.newUntil === 'number' && vendor.newUntil > Date.now()) badges.push('✨ Nouveau');
+                // Badges Booster — compatible timestamps nombres ET chaînes ISO
+                (function() {
+                    var now = Date.now();
+                    var toMs = function(v) {
+                        if (v === null || v === undefined) return null;
+                        if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+                        if (typeof v === 'string') { var t = Date.parse(v); return Number.isFinite(t) ? t : null; }
+                        return null;
+                    };
+                    var sp = toMs(vendor.sponsoredUntil);
+                    var pr = toMs(vendor.promoUntil);
+                    var nw = toMs(vendor.newUntil);
+                    if (sp !== null && sp > now) badges.push('🏷️ Sponsorisé');
+                    if (pr !== null && pr > now) badges.push('🎯 En Promo');
+                    if (nw !== null && nw > now) badges.push('✨ Nouveau');
+                })();
 
                 if (badges.length) {
                     badgesEl.style.display = 'flex';
@@ -20169,7 +20197,8 @@
             // Ouvrir le modal de paiement
             openPaymentModal(amount, async function(paymentResult) {
                 // Vérifier que le paiement a réussi avant d'activer le boost
-                if (!paymentResult || !paymentResult.success) {
+                // openPaymentModal passe { amount, method, paidAt } — paidAt confirme le succès
+                if (!paymentResult || !paymentResult.paidAt) {
                     console.warn('[Booster] Paiement non validé:', paymentResult);
                     lpToast('Paiement non confirmé. Boost non activé.', 'error');
                     return;
@@ -20177,18 +20206,19 @@
 
                 try {
                     const patch = {};
-                    const now = new Date();
+                    const nowTs = Date.now();
                     const durations = LP_BOOST_DURATIONS || { sponsor: 24, promo: 72, 'new': 48 };
                     const hours = durations[type] || 24;
-                    const until = new Date(now.getTime() + hours * 3600 * 1000);
+                    const untilMs = nowTs + hours * 3600 * 1000;
 
+                    // TIMESTAMPS EN MILLISECONDES (nombres) — compatible avec les checks typeof === 'number'
                     if (type === 'sponsor') {
-                        patch.sponsored_until = until.toISOString();
-                        patch.sponsored_tier = 1;
+                        patch.sponsoredUntil = untilMs;
+                        patch.sponsoredTier = 1;
                     } else if (type === 'promo') {
-                        patch.promo_until = until.toISOString();
+                        patch.promoUntil = untilMs;
                     } else if (type === 'new') {
-                        patch.new_until = until.toISOString();
+                        patch.newUntil = untilMs;
                     }
 
                     // Activer le boost
