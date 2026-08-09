@@ -10503,6 +10503,20 @@
                     }
                 } catch {}
 
+                // Nettoyage one-shot des vendors modifiés (Tailleur Élégance, Mangoo Répar)
+                // pour forcer les données API/seeds à jour
+                try {
+                    if (!localStorage.getItem('lp_vendors_refreshed_v2')) {
+                        var cv2 = JSON.parse(localStorage.getItem('mangoo_custom_vendors') || 'null');
+                        if (cv2 && Array.isArray(cv2)) {
+                            cv2 = cv2.filter(function(c) { return ['3','1780592661253'].indexOf(String(c && c.id)) === -1; });
+                            localStorage.setItem('mangoo_custom_vendors', JSON.stringify(cv2));
+                        }
+                        localStorage.setItem('lp_vendors_refreshed_v2', '1');
+                        console.log('[lp] Refreshed Tailleur Elegance & Mangoo Repar from seeds/API');
+                    }
+                } catch {}
+
                 const custom = getStoredCustomVendors();
                 const merged = [...VENDORS];
                 (custom || []).forEach((c) => {
