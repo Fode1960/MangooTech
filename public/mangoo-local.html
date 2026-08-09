@@ -293,8 +293,6 @@
                 // REMPLACEMENT COMPLET : vider localStorage avant stockage API
                 // pour éviter que le merge préserve d'anciens vendors obsolètes
                 try { localStorage.removeItem('mangoo_custom_vendors'); } catch {}
-                try { localStorage.removeItem('lp_vendors_cleaned'); } catch {}
-                try { localStorage.removeItem('lp_vendors_refreshed_v2'); } catch {}
 
                 try {
                     if (typeof upsertCustomVendorsBulk === 'function') upsertCustomVendorsBulk(list)
