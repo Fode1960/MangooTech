@@ -416,7 +416,7 @@ export const localSyncStore = {
       phone: keepNonEmptyString(v.phone, prev?.phone),
       city: keepNonEmptyString(v.city, prev?.city),
       country: keepNonEmptyString(v.country, prev?.country),
-      isMobile: Boolean(v.isMobile ?? v.is_mobile),
+      isMobile: v.isMobile !== undefined ? Boolean(v.isMobile) : v.is_mobile !== undefined ? Boolean(v.is_mobile) : Boolean(prev?.isMobile),
       localPin: keepNonEmptyString(v.localPin, prev?.localPin),
       services: keepStringArray(v.services, prev?.services),
       coverage: keepStringArray(v.coverage, prev?.coverage),
