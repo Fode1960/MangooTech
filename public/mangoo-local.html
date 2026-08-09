@@ -205,6 +205,9 @@
                     const lat = Number(vendor?.lat);
                     const lng = Number(vendor?.lng);
                     if (!id || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
+                    // Ne jamais backfill les vendors supprimés de la production
+                    const BLOCKED_PROVIDER_IDS = ['5','6','1780950564842'];
+                    if (BLOCKED_PROVIDER_IDS.includes(id)) return;
                     if (lpGetVendorKind(vendor) !== 'service') return;
                     try {
                         const ownerEmail = lpNormalizeEmail(vendor?.ownerEmail);

@@ -619,7 +619,16 @@ router.post('/localplus/vendors', async (req, res) => {
   try {
     const user = await maybeUserFromRequest(req)
     const ownerEmail = normalizeEmail(req.body?.ownerEmail || req.body?.vendor?.ownerEmail) || user?.email || null
-    const vendor = localSyncStore.upsertLocalPlusVendor(req.body?.vendor || req.body, ownerEmail)
+    const vendorInput = req.body?.vendor || req.body
+    const vendorId = String(vendorInput?.id || '').trim()
+    // Bloquer les IDs obsolètes supprimés de la production
+    const BLOCKED_IDS = ['5', '6', '1780950564842']
+    if (BLOCKED_IDS.includes(vendorId)) {
+      console.log(`[BLOCKED] upsert refusé pour vendor obsolète id=${vendorId}`)
+      res.json({ success: true, blocked: true })
+      return
+    }
+    const vendor = localSyncStore.upsertLocalPlusVendor(vendorInput, ownerEmail)
     res.json({ success: true, vendor })
   } catch (e: any) {
     res.status(400).json({ success: false, error: String(e?.message || e || 'Bad request') })
