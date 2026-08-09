@@ -4595,31 +4595,6 @@
             <div class="stories-container" id="storiesContent">
                 <!-- Injected by JS -->
             </div>
-            <!-- ADMIN: Gestion des prix des boosters -->
-            <div id="lbsAdminPanel" style="display:none; border-top:1px solid rgba(255,255,255,0.08); padding:12px 16px;">
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-                    <span style="font-size:0.85rem; font-weight:800; color:#94a3b8;">⚙️ Admin — Prix des Boosters</span>
-                    <button onclick="lpResetBoostPrices()" style="margin-left:auto; font-size:0.7rem; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); color:#94a3b8; border-radius:6px; padding:3px 8px; cursor:pointer;" title="Réinitialiser aux prix par défaut">↺ Défaut</button>
-                </div>
-                <div id="lbsAdminPrices">
-                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-                        <span style="width:28px; font-size:1rem;">🔥</span>
-                        <span style="flex:1; font-size:0.78rem; color:#e2e8f0; font-weight:700;">Sponsorisé</span>
-                        <input id="lbsAdminPrice_sponsor" type="number" min="0" step="100" style="width:90px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e2e8f0; border-radius:6px; padding:4px 8px; font-size:0.8rem; text-align:right;" /> <span style="font-size:0.75rem; color:#94a3b8;">F</span>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-                        <span style="width:28px; font-size:1rem;">🎯</span>
-                        <span style="flex:1; font-size:0.78rem; color:#e2e8f0; font-weight:700;">Promo</span>
-                        <input id="lbsAdminPrice_promo" type="number" min="0" step="100" style="width:90px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e2e8f0; border-radius:6px; padding:4px 8px; font-size:0.8rem; text-align:right;" /> <span style="font-size:0.75rem; color:#94a3b8;">F</span>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-                        <span style="width:28px; font-size:1rem;">✨</span>
-                        <span style="flex:1; font-size:0.78rem; color:#e2e8f0; font-weight:700;">Nouveau</span>
-                        <input id="lbsAdminPrice_new" type="number" min="0" step="100" style="width:90px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e2e8f0; border-radius:6px; padding:4px 8px; font-size:0.8rem; text-align:right;" /> <span style="font-size:0.75rem; color:#94a3b8;">F</span>
-                    </div>
-                    <button onclick="lpAdminSaveBoostPrices()" style="width:100%; background:linear-gradient(135deg,#1b5e20,#2e7d32); color:white; border:none; border-radius:8px; padding:8px; font-weight:800; font-size:0.85rem; cursor:pointer;">💾 Enregistrer les prix</button>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -5958,6 +5933,42 @@
                         <div class="lbs-desc">Badge "Nouveau" pour attirer les clients</div>
                     </div>
                     <div class="lbs-price" id="lbsPrice_new">1 000 F</div>
+                </div>
+            </div>
+            <!-- ADMIN: Gestion des prix et historique des boosters -->
+            <div id="lbsAdminPanel" style="display:none; border-top:1px solid rgba(255,255,255,0.08); padding:12px 16px; max-height:280px; overflow-y:auto;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                    <span style="font-size:0.85rem; font-weight:800; color:#94a3b8;">⚙️ Admin — Prix des Boosters</span>
+                    <button onclick="lpResetBoostPrices()" style="margin-left:auto; font-size:0.7rem; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); color:#94a3b8; border-radius:6px; padding:3px 8px; cursor:pointer;" title="Réinitialiser aux prix par défaut">↺ Défaut</button>
+                </div>
+                <div id="lbsAdminPrices">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                        <span style="width:28px; font-size:1rem;">🔥</span>
+                        <span style="flex:1; font-size:0.78rem; color:#e2e8f0; font-weight:700;">Sponsorisé</span>
+                        <input id="lbsAdminPrice_sponsor" type="number" min="0" step="100" style="width:90px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e2e8f0; border-radius:6px; padding:4px 8px; font-size:0.8rem; text-align:right;" /> <span style="font-size:0.75rem; color:#94a3b8;">F</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                        <span style="width:28px; font-size:1rem;">🎯</span>
+                        <span style="flex:1; font-size:0.78rem; color:#e2e8f0; font-weight:700;">Promo</span>
+                        <input id="lbsAdminPrice_promo" type="number" min="0" step="100" style="width:90px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e2e8f0; border-radius:6px; padding:4px 8px; font-size:0.8rem; text-align:right;" /> <span style="font-size:0.75rem; color:#94a3b8;">F</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                        <span style="width:28px; font-size:1rem;">✨</span>
+                        <span style="flex:1; font-size:0.78rem; color:#e2e8f0; font-weight:700;">Nouveau</span>
+                        <input id="lbsAdminPrice_new" type="number" min="0" step="100" style="width:90px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e2e8f0; border-radius:6px; padding:4px 8px; font-size:0.8rem; text-align:right;" /> <span style="font-size:0.75rem; color:#94a3b8;">F</span>
+                    </div>
+                    <button onclick="lpAdminSaveBoostPrices()" style="width:100%; background:linear-gradient(135deg,#1b5e20,#2e7d32); color:white; border:none; border-radius:8px; padding:8px; font-weight:800; font-size:0.85rem; cursor:pointer; margin-bottom:8px;">💾 Enregistrer les prix</button>
+                    <button onclick="lpCleanupExpiredBoosts(); lpRefreshBoostModalPrices(); lpToast('🧹 Nettoyage terminé','ok');" style="width:100%; background:rgba(255,255,255,0.06); color:#ef4444; border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:6px; font-weight:700; font-size:0.75rem; cursor:pointer; margin-bottom:10px;">🧹 Nettoyer tous les boosts expirés</button>
+                </div>
+                <!-- Historique des paiements -->
+                <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:10px; margin-top:4px;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                        <span style="font-size:0.8rem; font-weight:800; color:#94a3b8;">📋 Historique des paiements</span>
+                        <button onclick="lpRenderBoostHistory()" style="margin-left:auto; font-size:0.65rem; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#94a3b8; border-radius:4px; padding:2px 6px; cursor:pointer;">Rafraîchir</button>
+                    </div>
+                    <div id="lbsBoostHistory" style="font-size:0.7rem; color:#94a3b8; max-height:120px; overflow-y:auto;">
+                        <span style="opacity:0.5;">Chargement...</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -11057,6 +11068,9 @@
                 const runPostStartup = () => {
                     try { backfillCreatorLocationEvents(); } catch {}
                     try {
+                        // 1) Nettoyer les boosts expirés localement (badges fantômes)
+                        lpCleanupExpiredBoosts();
+                        // 2) Synchroniser depuis le serveur (boosts payés sur d'autres navigateurs)
                         Promise.resolve(syncBoostConfigFromServer()).then(() => {
                             try { applyBoostConfigToVendors(); } catch {}
                             try { filterVendors(); } catch {}
@@ -20163,6 +20177,8 @@
                     if (spEl) spEl.value = prices.sponsor;
                     if (prEl) prEl.value = prices.promo;
                     if (nwEl) nwEl.value = prices['new'];
+                    // Rendre l'historique
+                    lpRenderBoostHistory();
                 } else {
                     adminPanel.style.display = 'none';
                 }
@@ -20243,6 +20259,49 @@
                         }
                     } catch {}
 
+                    // SYNCHRONISER avec le serveur pour visibilité cross-navigateur
+                    try {
+                        var boostKindMap = { sponsor: 'sponsored', promo: 'promo', 'new': 'new' };
+                        var tierMap = { sponsor: 'bronze' };
+                        var kindStr = boostKindMap[type] || type;
+                        var vendorKindStr = (vkind === 'service' || vkind === 'provider') ? 'provider' : 'shop';
+                        var syncPayload = {
+                            vendorId: vid,
+                            vendorKind: vendorKindStr,
+                            boostKind: kindStr,
+                            durationHours: Number(LP_BOOST_DURATIONS[type] || 24)
+                        };
+                        if (type === 'sponsor') syncPayload.sponsoredTier = 'bronze';
+
+                        var apiBase = window.location.origin || '';
+                        fetch(apiBase + '/api/boosts/dev/activate', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(syncPayload)
+                        }).then(function(r) { return r.json(); }).then(function(data) {
+                            console.log('[Booster] Sync serveur OK:', data);
+                        }).catch(function(err) {
+                            console.warn('[Booster] Sync serveur échouée (boost local OK):', err.message);
+                        });
+                    } catch(e) {}
+
+                    // Enregistrer dans l'historique des paiements boost
+                    lpRecordBoostPayment({
+                        vendorId: vid,
+                        vendorName: (function() {
+                            try {
+                                var vv = VENDORS.find(function(x) { return String(x?.id) === String(vid); });
+                                return String(vv?.name || vv?.shop_name || '').trim() || vid;
+                            } catch(e) { return vid; }
+                        })(),
+                        boostType: type,
+                        boostLabel: boostName,
+                        amount: amount,
+                        paidAt: paymentResult.paidAt || new Date().toISOString(),
+                        durationHours: hours,
+                        expiresAtMs: untilMs
+                    });
+
                     // Rafraîchir l'affichage
                     try { if (typeof filterVendors === 'function') filterVendors(); } catch {}
                     try { if (typeof refreshBoostPanel === 'function') refreshBoostPanel(); } catch {}
@@ -20253,6 +20312,107 @@
                     lpToast('Erreur activation boost.', 'error');
                 }
             });
+        }
+
+        // ─── Historique des paiements boost ───
+        function lpRecordBoostPayment(entry) {
+            try {
+                var history = [];
+                try { history = JSON.parse(localStorage.getItem('mangoo_boost_history') || '[]'); } catch {}
+                if (!Array.isArray(history)) history = [];
+                history.push({
+                    vendorId: String(entry.vendorId || ''),
+                    vendorName: String(entry.vendorName || ''),
+                    boostType: String(entry.boostType || ''),
+                    boostLabel: String(entry.boostLabel || ''),
+                    amount: Number(entry.amount || 0),
+                    paidAt: String(entry.paidAt || new Date().toISOString()),
+                    durationHours: Number(entry.durationHours || 0),
+                    expiresAtMs: Number(entry.expiresAtMs || 0)
+                });
+                // Garder max 50 entrées
+                if (history.length > 50) history = history.slice(-50);
+                localStorage.setItem('mangoo_boost_history', JSON.stringify(history));
+            } catch(e) { console.warn('[Booster] Erreur historique:', e); }
+        }
+
+        function lpGetBoostHistory() {
+            try {
+                var h = JSON.parse(localStorage.getItem('mangoo_boost_history') || '[]');
+                return Array.isArray(h) ? h : [];
+            } catch { return []; }
+        }
+
+        function lpRenderBoostHistory() {
+            var container = document.getElementById('lbsBoostHistory');
+            if (!container) return;
+            var history = lpGetBoostHistory();
+            if (!history.length) {
+                container.innerHTML = '<span style="opacity:0.5;">Aucun paiement enregistré</span>';
+                return;
+            }
+            // Afficher les 20 dernières entrées (les plus récentes d'abord)
+            var recent = history.slice(-20).reverse();
+            var now = Date.now();
+            var html = '';
+            recent.forEach(function(entry) {
+                var icon = { sponsor: '🔥', promo: '🎯', 'new': '✨' }[entry.boostType] || '🚀';
+                var isExpired = entry.expiresAtMs && entry.expiresAtMs < now;
+                var date = '';
+                try { date = new Date(entry.paidAt).toLocaleDateString('fr-FR'); } catch {}
+                var time = '';
+                try { time = new Date(entry.paidAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); } catch {}
+                var expires = '';
+                try { expires = entry.expiresAtMs ? new Date(entry.expiresAtMs).toLocaleDateString('fr-FR') + ' ' + new Date(entry.expiresAtMs).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '?'; } catch {}
+                var rowStyle = isExpired ? 'opacity:0.4;text-decoration:line-through;' : '';
+                html += '<div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03);' + rowStyle + '">'
+                    + '<span>' + icon + '</span> '
+                    + '<span style="color:#e2e8f0;font-weight:600;">' + escapeHtml(entry.vendorName || entry.vendorId) + '</span> '
+                    + '<span style="font-size:0.65rem;color:#64748b;">(' + escapeHtml(entry.boostLabel || entry.boostType) + ')</span>'
+                    + '<br><span style="font-size:0.62rem;color:#94a3b8;">' + lpFormatCfa(entry.amount) + ' • ' + date + ' ' + time
+                    + (isExpired ? ' • <span style="color:#ef4444;">Expiré</span>' : ' • Jusqu\'au ' + expires)
+                    + '</span></div>';
+            });
+            container.innerHTML = html;
+        }
+
+        function escapeHtml(str) {
+            var div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        }
+
+        function lpCleanupExpiredBoosts() {
+            // Nettoie les boosts expirés du localStorage (badges fantômes)
+            var now = Date.now();
+            var cleaned = 0;
+            try {
+                var cfg = getBoostConfig();
+                var changed = false;
+                Object.keys(cfg).forEach(function(vid) {
+                    var c = cfg[vid];
+                    if (!c || typeof c !== 'object') return;
+                    var hasActive = false;
+                    ['sponsoredUntil','promoUntil','newUntil'].forEach(function(k) {
+                        var v = c[k];
+                        if (v === null || v === undefined) return;
+                        var ms = null;
+                        if (typeof v === 'number') ms = v;
+                        else if (typeof v === 'string') { var t = Date.parse(v); if (Number.isFinite(t)) ms = t; }
+                        if (ms !== null && ms > 0) {
+                            if (ms < now) { c[k] = null; changed = true; cleaned++; }
+                            else hasActive = true;
+                        }
+                    });
+                    // Si aucun boost actif, supprimer l'entrée entière
+                    if (!hasActive && changed) { delete cfg[vid]; }
+                });
+                if (changed) { setBoostConfig(cfg); }
+                console.log('[Booster] Nettoyage: ' + cleaned + ' boosts expirés supprimés');
+            } catch(e) { console.warn('[Booster] Erreur nettoyage:', e); }
+            // Appliquer aux VENDORS
+            try { if (typeof applyBoostConfigToVendors === 'function') applyBoostConfigToVendors(); } catch {}
+            return cleaned;
         }
 
         // ─── Helper format CFA ───
