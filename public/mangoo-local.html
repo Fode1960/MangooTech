@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -4863,8 +4863,8 @@
                             <div id="boostSimpleCard" style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:16px; margin-bottom:20px; box-shadow:var(--ml-shadow-sm); display:none;">
                                 <div style="font-weight:950; color:var(--ml-text); margin-bottom:10px;">📍 Visibilité Carte</div>
                                 <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                                    <button onclick="setSponsorBoost(24)" style="flex:1; min-width:130px; padding:10px 12px; border-radius:12px; border:1px solid rgba(17,24,39,0.10); background:#111827; color:white; font-weight:900; cursor:pointer; font-size:0.88rem;">🏷️ Sponsor 24h</button>
-                                    <button onclick="setNewBoost(24)" style="flex:1; min-width:130px; padding:10px 12px; border-radius:12px; border:1px solid rgba(55,48,163,0.16); background:#1b5e20; color:#ffffff; font-weight:900; cursor:pointer; font-size:0.88rem;">🆕 Nouveau 24h</button>
+                                    <button onclick="event.stopPropagation(); var pid = (typeof getMyProviderId === 'function' ? getMyProviderId() : ''); if(pid) lpTryOpenBoostFromLocal(pid, 'service');" style="flex:1; min-width:130px; padding:10px 12px; border-radius:12px; border:1px solid rgba(17,24,39,0.10); background:#111827; color:white; font-weight:900; cursor:pointer; font-size:0.88rem;">🏷️ Sponsor 24h</button>
+                                    <button onclick="event.stopPropagation(); var pid = (typeof getMyProviderId === 'function' ? getMyProviderId() : ''); if(pid) lpTryOpenBoostFromLocal(pid, 'service');" style="flex:1; min-width:130px; padding:10px 12px; border-radius:12px; border:1px solid rgba(55,48,163,0.16); background:#1b5e20; color:#ffffff; font-weight:900; cursor:pointer; font-size:0.88rem;">🆕 Nouveau 24h</button>
                                 </div>
                                 <div style="margin-top:10px; display:flex; justify-content:space-between; gap:10px; font-weight:700; font-size:0.85rem; color:var(--ml-muted);">
                                     <span>État</span>
@@ -7596,12 +7596,6 @@
             try { filterVendors(); } catch {}
         }
 
-        function updateBoostAdminVisibility() {
-            const el = document.getElementById('boostAdminCard');
-            if (!el) return;
-            el.style.display = isAdminUser() ? 'block' : 'none';
-        }
-
         function formatUntil(ts) {
             if (!ts || typeof ts !== 'number') return '—';
             const d = new Date(ts);
@@ -7609,113 +7603,29 @@
             const mm = String(d.getMinutes()).padStart(2, '0');
             return `${hh}:${mm}`;
         }
-
-        function ensureBoostPanelOptions() {
-            const sel = document.getElementById('boostVendorSelect');
-            if (!sel) return;
-            const cur = sel.value;
-            sel.innerHTML = VENDORS.map(v => {
-                const kind = lpGetVendorKind(v);
-                const tag = kind === 'shop' ? '🏪' : '🛠️';
-                return `<option value="${String(v.id)}">${tag} ${v.name}</option>`;
-            }).join('');
-            if (cur && Array.from(sel.options).some(o => o.value === cur)) sel.value = cur;
-        }
-
-        function refreshBoostPanel() {
-            ensureBoostPanelOptions();
-            const sel = document.getElementById('boostVendorSelect');
-            const tierSel = document.getElementById('boostTierSelect');
+        function refreshBoostPanel(vendor) {
+            // Met à jour l'affichage du statut boost dans #boostSimpleCard
             const statusEl = document.getElementById('boostStatusText');
-            const statsEl = document.getElementById('boostStatsText');
-            if (!sel || !tierSel || !statusEl || !statsEl) return;
-
-            const id = sel.value;
-            const v = VENDORS.find(x => String(x.id) === String(id));
-            if (!v) return;
-
+            if (!statusEl) return;
+            const v = vendor || (function() {
+                try { return VENDORS.find(function(x) { return String(x.id) === String(getMyProviderId()); }); } catch(e) { return null; }
+            })();
+            if (!v) { statusEl.textContent = '\u2014'; return; }
             const now = Date.now();
             const sponsorOn = typeof v.sponsoredUntil === 'number' && v.sponsoredUntil > now;
             const promoOn = typeof v.promoUntil === 'number' && v.promoUntil > now;
             const newOn = typeof v.newUntil === 'number' && v.newUntil > now;
-            if (typeof v.sponsoredTier === 'number') tierSel.value = String(v.sponsoredTier);
-
             const parts = [];
             if (sponsorOn) {
                 const t = Number(v.sponsoredTier || 1);
                 const tierLabel = t === 3 ? 'Or' : t === 2 ? 'Argent' : 'Bronze';
-                parts.push(`🏷️ Sponsor jusqu’à ${formatUntil(v.sponsoredUntil)} (${tierLabel})`);
+                parts.push('\uD83C\uDFF7\uFE0F Sponsor jusqu\u2019\u00E0 ' + formatUntil(v.sponsoredUntil) + ' (' + tierLabel + ')');
             }
-            if (promoOn) parts.push(`✨ Promo jusqu’à ${formatUntil(v.promoUntil)}`);
-            if (newOn) parts.push(`🆕 Nouveau jusqu’à ${formatUntil(v.newUntil)}`);
-            statusEl.textContent = parts.length ? parts.join(' • ') : 'Aucun boost actif';
-
-            const stats = getAdStats();
-            const s = stats[String(v.id)] || { impressions: 0, clicks: 0 };
-            const imp = Number(s.impressions || 0);
-            const clk = Number(s.clicks || 0);
-            const ctr = imp ? Math.round((clk / imp) * 100) : 0;
-            statsEl.textContent = `${imp} vues • ${clk} clics • ${ctr}%`;
+            if (promoOn) parts.push('\u2728 Promo jusqu\u2019\u00E0 ' + formatUntil(v.promoUntil));
+            if (newOn) parts.push('\uD83D\uDDC6 Nouveau jusqu\u2019\u00E0 ' + formatUntil(v.newUntil));
+            statusEl.textContent = parts.length ? parts.join(' \u2022 ') : 'Aucun boost actif';
         }
 
-        function getSelectedBoostVendorId() {
-            const sel = document.getElementById('boostVendorSelect');
-            if (!sel) return null;
-            return sel.value;
-        }
-
-        function setSponsorBoost(hours) {
-            const id = getSelectedBoostVendorId();
-            if (!id) return;
-            const tierSel = document.getElementById('boostTierSelect');
-            const tier = tierSel ? Number(tierSel.value || 1) : 1;
-            const until = Date.now() + Number(hours) * 60 * 60 * 1000;
-            setVendorBoost(id, { sponsoredUntil: until, sponsoredTier: tier });
-            filterVendors();
-            refreshBoostPanel();
-        }
-
-        function clearSponsorBoost() {
-            const id = getSelectedBoostVendorId();
-            if (!id) return;
-            setVendorBoost(id, { sponsoredUntil: null, sponsoredTier: null });
-            filterVendors();
-            refreshBoostPanel();
-        }
-
-        function setPromoBoost(hours) {
-            const id = getSelectedBoostVendorId();
-            if (!id) return;
-            const until = Date.now() + Number(hours) * 60 * 60 * 1000;
-            setVendorBoost(id, { promoUntil: until });
-            filterVendors();
-            refreshBoostPanel();
-        }
-
-        function clearPromoBoost() {
-            const id = getSelectedBoostVendorId();
-            if (!id) return;
-            setVendorBoost(id, { promoUntil: null });
-            filterVendors();
-            refreshBoostPanel();
-        }
-
-        function setNewBoost(hours) {
-            const id = getSelectedBoostVendorId();
-            if (!id) return;
-            const until = Date.now() + Number(hours) * 60 * 60 * 1000;
-            setVendorBoost(id, { newUntil: until });
-            filterVendors();
-            refreshBoostPanel();
-        }
-
-        function clearNewBoost() {
-            const id = getSelectedBoostVendorId();
-            if (!id) return;
-            setVendorBoost(id, { newUntil: null });
-            filterVendors();
-            refreshBoostPanel();
-        }
 
         function recordAdImpression(vendorId) {
             if (!vendorId && vendorId !== 0) return;
@@ -11046,17 +10956,6 @@
                 };
                 if (liteStartup) lpDeferNonCriticalTask(writeCatalog, 260);
                 else writeCatalog();
-            } catch {
-            }
-
-            try {
-                if (liteStartup) {
-                    lpDeferNonCriticalTask(() => {
-                        try { updateBoostAdminVisibility(); } catch {}
-                    }, 300);
-                } else {
-                    updateBoostAdminVisibility();
-                }
             } catch {
             }
 
@@ -18030,8 +17929,7 @@
             try { vendorSection.style.display = 'block'; } catch {}
             try { switchVendorTab('overview'); } catch {}
             try { refreshBoostPanel(); } catch {}
-            try { updateBoostAdminVisibility(); } catch {}
-        }
+}
 
         // === PRODUCT MANAGEMENT (SELL) ===
         function openAddProductModal() {
@@ -20130,162 +20028,6 @@
             }
         }
 
-        function lpOpenBoostOverlay(url) {
-            const next = String(url || '/boosts');
-            let overlay = document.getElementById('lpBoostOverlay');
-            let frame = document.getElementById('lpBoostFrame');
-
-            if (!overlay || !frame) {
-                try {
-                    overlay = overlay || document.createElement('div');
-                    overlay.id = 'lpBoostOverlay';
-                    overlay.style.display = 'none';
-                    overlay.innerHTML = `
-                        <div style="position:absolute; inset:0; display:flex; flex-direction:column; background: rgba(255,255,255,0.98);">
-                            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-bottom: 1px solid rgba(0,0,0,0.08); background: #1b5e20;">
-                                <button type="button" onclick="lpHandleBoostReturn()" style="border:0; background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.08); border-radius: 999px; padding: 10px 14px; font-weight: 900; cursor:pointer;">← Retour</button>
-                                <div style="font-weight: 950; color: #0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Boost (Informel)</div>
-                                <button type="button" onclick="lpHandleBoostReturn()" style="border:0; background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.08); border-radius: 999px; padding: 10px 14px; font-weight: 950; cursor:pointer;">✕</button>
-                            </div>
-                            <iframe id="lpBoostFrame" title="Boost" style="flex:1; width:100%; border:0; background:white;"></iframe>
-                        </div>
-                    `;
-                    try { document.body.appendChild(overlay); } catch {}
-                    frame = document.getElementById('lpBoostFrame');
-                } catch {
-                    return false;
-                }
-            }
-
-            try { document.body.appendChild(overlay); } catch {}
-            try {
-                overlay.style.cssText = 'position:fixed; inset:0; width:100vw; height:100vh; z-index:2147483647; background: rgba(0,0,0,0.55); display:block; visibility:visible; opacity:1; pointer-events:auto;';
-            } catch {}
-            try { frame.style.cssText = 'width:100%; height:100%; border:0; background:white; flex:1;'; } catch {}
-            try { frame.src = next; } catch {}
-            setTimeout(() => {
-                try {
-                    overlay.style.display = 'block';
-                    overlay.style.visibility = 'visible';
-                    overlay.style.opacity = '1';
-                    if (frame.src !== next) frame.src = next;
-                } catch {
-                }
-            }, 30);
-            try { document.body.style.overflow = 'hidden'; } catch {}
-            return true;
-        }
-
-        function lpCloseBoostOverlay() {
-            const overlay = document.getElementById('lpBoostOverlay');
-            const frame = document.getElementById('lpBoostFrame');
-            if (overlay) {
-                overlay.style.display = 'none';
-                try { overlay.style.visibility = 'hidden'; } catch {}
-                try { overlay.style.opacity = '0'; } catch {}
-            }
-            try { document.body.style.overflow = ''; } catch {}
-            if (frame) {
-                const prev = frame.src;
-                try {
-                    frame.src = 'about:blank';
-                    setTimeout(() => {
-                        try {
-                            if (frame.src !== 'about:blank') return;
-                            frame.src = prev ? 'about:blank' : 'about:blank';
-                        } catch {
-                        }
-                    }, 50);
-                } catch {
-                }
-            }
-            try {
-                Promise.resolve(syncBoostConfigFromServer()).then(() => {
-                    try { applyBoostConfigToVendors(); } catch {}
-                    try { filterVendors(); } catch {}
-                    try { refreshBoostPanel(); } catch {}
-                })
-            } catch {
-            }
-        }
-
-        function lpHandleBoostReturn(explicitReturnTo) {
-            let returnTo = '';
-            let vendorId = '';
-            let scrollY = 0;
-            try {
-                const ctx = window.__lpBoostReturnContext || {};
-                returnTo = String(explicitReturnTo || ctx.returnTo || '').trim();
-                vendorId = String(ctx.vendorId || '').trim();
-                scrollY = Number(ctx.scrollY || 0) || 0;
-            } catch {
-            }
-            if (!returnTo) {
-                try {
-                    const frame = document.getElementById('lpBoostFrame');
-                    const src = String(frame?.src || '').trim();
-                    if (src) {
-                        const u = new URL(src, window.location.origin);
-                        returnTo = String(u.searchParams.get('return') || '').trim();
-                        if (!vendorId) vendorId = String(u.searchParams.get('vendorId') || '').trim();
-                    }
-                } catch {
-                }
-            }
-
-            lpCloseBoostOverlay();
-
-            try {
-                const clearCtx = () => {
-                    try { window.__lpBoostReturnContext = null; } catch {}
-                };
-                if (returnTo) {
-                    const u = new URL(returnTo, window.location.origin);
-                    const sameOrigin = u.origin === window.location.origin;
-                    const sameLocalPage = sameOrigin && (u.pathname === window.location.pathname || u.pathname.endsWith('/mangoo-local.html'));
-                    const returnVendorId = String(u.searchParams.get('vendor') || vendorId || '').trim();
-                    if (sameLocalPage) {
-                        if (returnVendorId) {
-                            try { localStorage.setItem('mangoo-open-vendor-id', returnVendorId); } catch {}
-                            try { u.searchParams.set('vendor', returnVendorId); } catch {}
-                        }
-                        try { u.searchParams.delete('boostSync'); } catch {}
-                        try { window.history.replaceState({}, '', u.toString()); } catch {}
-                        try { window.scrollTo({ top: scrollY, behavior: 'auto' }); } catch {}
-                        if (returnVendorId) {
-                            setTimeout(() => {
-                                try { openVendorSheetById(returnVendorId, { retries: 8, retryDelay: 220, clearPendingOpenId: true }); } catch {}
-                            }, 120);
-                        }
-                        clearCtx();
-                        return;
-                    }
-                    clearCtx();
-                    window.location.href = u.toString();
-                    return;
-                }
-                if (vendorId) {
-                    try { localStorage.setItem('mangoo-open-vendor-id', vendorId); } catch {}
-                    try { window.scrollTo({ top: scrollY, behavior: 'auto' }); } catch {}
-                    setTimeout(() => {
-                        try { openVendorSheetById(vendorId, { retries: 8, retryDelay: 220, clearPendingOpenId: true }); } catch {}
-                    }, 120);
-                }
-                clearCtx();
-            } catch {
-            }
-        }
-
-        window.addEventListener('message', function (event) {
-            try {
-                if (!event || event.origin !== window.location.origin) return;
-                const data = event.data;
-                if (!data || typeof data !== 'object') return;
-                if (String(data.type || '') !== 'lp_boost_close') return;
-                lpHandleBoostReturn(String(data.returnTo || '').trim());
-            } catch {
-            }
-        });
 
         // === FAVORIS LOGIC ===
         function updateFavBtn() {
@@ -29744,7 +29486,6 @@
             if (next === 'sell') {
                 try { switchVendorTab(wantsOrders ? 'orders' : 'overview') } catch {}
                 try { refreshBoostPanel() } catch {}
-                try { updateBoostAdminVisibility() } catch {}
             }
         }
 
@@ -31445,16 +31186,6 @@
             }
         }
     </script>
-    <div id="lpBoostOverlay" style="display:none; position:fixed; inset:0; z-index: 999999; background: rgba(0,0,0,0.55);">
-        <div style="position:absolute; inset:0; display:flex; flex-direction:column; background: rgba(255,255,255,0.98);">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-bottom: 1px solid rgba(0,0,0,0.08); background: #1b5e20;">
-                <button type="button" onclick="lpHandleBoostReturn()" style="border:0; background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.08); border-radius: 999px; padding: 10px 14px; font-weight: 900; cursor:pointer;">← Retour</button>
-                <div style="font-weight: 950; color: #0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Boost (Informel)</div>
-                <button type="button" onclick="lpHandleBoostReturn()" style="border:0; background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.08); border-radius: 999px; padding: 10px 14px; font-weight: 950; cursor:pointer;">✕</button>
-            </div>
-            <iframe id="lpBoostFrame" title="Boost" style="flex:1; width:100%; border:0; background:white;"></iframe>
-        </div>
-</div>
 <!-- Overlay produit grand format - hors conteneur pour stacking context -->
 <div id="lpProductOverlay" style="display:none; position:fixed; inset:0; z-index:23000; background:rgba(0,0,0,0.85); align-items:center; justify-content:center; cursor:pointer;" onclick="this.style.display='none'">
     <img id="lpProductOverlayImg" src="" style="max-width:90vw; max-height:85vh; border-radius:12px; object-fit:contain;" onerror="this.parentElement.style.display='none'" />
