@@ -4595,6 +4595,31 @@
             <div class="stories-container" id="storiesContent">
                 <!-- Injected by JS -->
             </div>
+            <!-- ADMIN: Gestion des prix des boosters -->
+            <div id="lbsAdminPanel" style="display:none; border-top:1px solid rgba(255,255,255,0.08); padding:12px 16px;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                    <span style="font-size:0.85rem; font-weight:800; color:#94a3b8;">⚙️ Admin — Prix des Boosters</span>
+                    <button onclick="lpResetBoostPrices()" style="margin-left:auto; font-size:0.7rem; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); color:#94a3b8; border-radius:6px; padding:3px 8px; cursor:pointer;" title="Réinitialiser aux prix par défaut">↺ Défaut</button>
+                </div>
+                <div id="lbsAdminPrices">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                        <span style="width:28px; font-size:1rem;">🔥</span>
+                        <span style="flex:1; font-size:0.78rem; color:#e2e8f0; font-weight:700;">Sponsorisé</span>
+                        <input id="lbsAdminPrice_sponsor" type="number" min="0" step="100" style="width:90px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e2e8f0; border-radius:6px; padding:4px 8px; font-size:0.8rem; text-align:right;" /> <span style="font-size:0.75rem; color:#94a3b8;">F</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                        <span style="width:28px; font-size:1rem;">🎯</span>
+                        <span style="flex:1; font-size:0.78rem; color:#e2e8f0; font-weight:700;">Promo</span>
+                        <input id="lbsAdminPrice_promo" type="number" min="0" step="100" style="width:90px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e2e8f0; border-radius:6px; padding:4px 8px; font-size:0.8rem; text-align:right;" /> <span style="font-size:0.75rem; color:#94a3b8;">F</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                        <span style="width:28px; font-size:1rem;">✨</span>
+                        <span style="flex:1; font-size:0.78rem; color:#e2e8f0; font-weight:700;">Nouveau</span>
+                        <input id="lbsAdminPrice_new" type="number" min="0" step="100" style="width:90px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e2e8f0; border-radius:6px; padding:4px 8px; font-size:0.8rem; text-align:right;" /> <span style="font-size:0.75rem; color:#94a3b8;">F</span>
+                    </div>
+                    <button onclick="lpAdminSaveBoostPrices()" style="width:100%; background:linear-gradient(135deg,#1b5e20,#2e7d32); color:white; border:none; border-radius:8px; padding:8px; font-weight:800; font-size:0.85rem; cursor:pointer;">💾 Enregistrer les prix</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -5916,7 +5941,7 @@
                         <div class="lbs-name">Sponsorisé 24h</div>
                         <div class="lbs-desc">Apparaît en tête des résultats</div>
                     </div>
-                    <div class="lbs-price">2 000 F</div>
+                    <div class="lbs-price" id="lbsPrice_sponsor">2 000 F</div>
                 </div>
                 <div class="lbs-option" onclick="lpBuyBoost('promo')">
                     <div class="lbs-icon promo">🎯</div>
@@ -5924,7 +5949,7 @@
                         <div class="lbs-name">En Promo 3 jours</div>
                         <div class="lbs-desc">Badge "Promo" visible par tous</div>
                     </div>
-                    <div class="lbs-price">3 000 F</div>
+                    <div class="lbs-price" id="lbsPrice_promo">3 000 F</div>
                 </div>
                 <div class="lbs-option" onclick="lpBuyBoost('new')">
                     <div class="lbs-icon nouveau">✨</div>
@@ -5932,7 +5957,7 @@
                         <div class="lbs-name">Nouveau 48h</div>
                         <div class="lbs-desc">Badge "Nouveau" pour attirer les clients</div>
                     </div>
-                    <div class="lbs-price">1 000 F</div>
+                    <div class="lbs-price" id="lbsPrice_new">1 000 F</div>
                 </div>
             </div>
         </div>
@@ -7235,6 +7260,57 @@
                 localStorage.setItem('mangoo_ads_stats', JSON.stringify(next || {}));
             } catch {
             }
+        }
+
+        // ─── SOURCE UNIQUE DES PRIX BOOSTER ───
+        // Les prix par défaut. L'admin peut les modifier via l'interface admin.
+        // Les prix modifiés sont persistés dans localStorage (clé: mangoo_boost_prices)
+        // et synchronisés avec le serveur.
+        var LP_BOOST_DEFAULT_PRICES = { sponsor: 2000, promo: 3000, 'new': 1000 };
+        var LP_BOOST_DURATIONS = { sponsor: 24, promo: 72, 'new': 48 }; // heures
+        var LP_BOOST_NAMES = { sponsor: 'Sponsorisé 24h', promo: 'En Promo 3j', 'new': 'Nouveau 48h' };
+        var LP_BOOST_DESCS = { sponsor: 'Apparaît en tête des résultats', promo: 'Badge "Promo" visible par tous', 'new': 'Badge "Nouveau" pour attirer les clients' };
+        var LP_BOOST_ICONS = { sponsor: '\uD83D\uDD25', promo: '\uD83C\uDFAF', 'new': '\u2728' };
+
+        function lpGetBoostPrices() {
+            try {
+                var saved = JSON.parse(localStorage.getItem('mangoo_boost_prices') || 'null');
+                if (saved && typeof saved === 'object') {
+                    return {
+                        sponsor: Number(saved.sponsor) || LP_BOOST_DEFAULT_PRICES.sponsor,
+                        promo: Number(saved.promo) || LP_BOOST_DEFAULT_PRICES.promo,
+                        'new': Number(saved['new']) || LP_BOOST_DEFAULT_PRICES['new']
+                    };
+                }
+            } catch {}
+            return LP_BOOST_DEFAULT_PRICES;
+        }
+
+        function lpSetBoostPrices(prices) {
+            try {
+                var toSave = {
+                    sponsor: Number(prices.sponsor) || LP_BOOST_DEFAULT_PRICES.sponsor,
+                    promo: Number(prices.promo) || LP_BOOST_DEFAULT_PRICES.promo,
+                    'new': Number(prices['new']) || LP_BOOST_DEFAULT_PRICES['new']
+                };
+                localStorage.setItem('mangoo_boost_prices', JSON.stringify(toSave));
+                // Mettre à jour l'affichage HTML des prix dans le modal
+                lpRefreshBoostModalPrices();
+                return toSave;
+            } catch { return lpGetBoostPrices(); }
+        }
+
+        function lpResetBoostPrices() {
+            try { localStorage.removeItem('mangoo_boost_prices'); } catch {}
+            lpRefreshBoostModalPrices();
+        }
+
+        function lpRefreshBoostModalPrices() {
+            var prices = lpGetBoostPrices();
+            ['sponsor','promo','new'].forEach(function(k) {
+                var el = document.getElementById('lbsPrice_' + k);
+                if (el) el.textContent = lpFormatCfa(prices[k]);
+            });
         }
 
         function getBoostConfig() {
@@ -18965,6 +19041,8 @@
                 if (vendor.live) badges.push('🔴 Live');
                 if (lpGetVendorKind(vendor) === 'shop') badges.push('🏪 Boutique');
                 if (typeof vendor.sponsoredUntil === 'number' && vendor.sponsoredUntil > Date.now()) badges.push('🏷️ Sponsorisé');
+                if (typeof vendor.promoUntil === 'number' && vendor.promoUntil > Date.now()) badges.push('🎯 En Promo');
+                if (typeof vendor.newUntil === 'number' && vendor.newUntil > Date.now()) badges.push('✨ Nouveau');
 
                 if (badges.length) {
                     badgesEl.style.display = 'flex';
@@ -20037,9 +20115,30 @@
             __lbsVendorKind = String(vendorKind || '').trim();
             __lbsVendorEmail = String(email || '').trim();
 
+            // Rafraîchir les prix (au cas où l'admin les a modifiés)
+            lpRefreshBoostModalPrices();
+
             // Afficher le nom du vendeur dans le header
             const nameEl = document.getElementById('lbsVendorName');
             if (nameEl) nameEl.textContent = '🏪 ' + vendorName;
+
+            // Afficher/Masquer le panneau admin selon le rôle
+            const adminPanel = document.getElementById('lbsAdminPanel');
+            if (adminPanel) {
+                if (typeof isAdminUser === 'function' && isAdminUser()) {
+                    adminPanel.style.display = 'block';
+                    // Remplir les champs admin avec les prix actuels
+                    var prices = lpGetBoostPrices();
+                    var spEl = document.getElementById('lbsAdminPrice_sponsor');
+                    var prEl = document.getElementById('lbsAdminPrice_promo');
+                    var nwEl = document.getElementById('lbsAdminPrice_new');
+                    if (spEl) spEl.value = prices.sponsor;
+                    if (prEl) prEl.value = prices.promo;
+                    if (nwEl) nwEl.value = prices['new'];
+                } else {
+                    adminPanel.style.display = 'none';
+                }
+            }
 
             // Afficher le modal
             const overlay = document.getElementById('lpBoostSimpleOverlay');
@@ -20059,9 +20158,9 @@
             const vkind = __lbsVendorKind;
             if (!vid) { lpToast('Erreur : boutique introuvable.', 'error'); return; }
 
-            const boostPrices = { sponsor: 2000, promo: 3000, 'new': 1000 };
+            const prices = lpGetBoostPrices();
             const boostNames = { sponsor: 'Sponsorisé 24h', promo: 'En Promo 3j', 'new': 'Nouveau 48h' };
-            const amount = boostPrices[type] || 1000;
+            const amount = prices[type] || LP_BOOST_DEFAULT_PRICES[type] || 1000;
             const boostName = boostNames[type] || type;
 
             // Fermer le modal boost avant d'ouvrir le paiement
@@ -20069,18 +20168,26 @@
 
             // Ouvrir le modal de paiement
             openPaymentModal(amount, async function(paymentResult) {
+                // Vérifier que le paiement a réussi avant d'activer le boost
+                if (!paymentResult || !paymentResult.success) {
+                    console.warn('[Booster] Paiement non validé:', paymentResult);
+                    lpToast('Paiement non confirmé. Boost non activé.', 'error');
+                    return;
+                }
+
                 try {
                     const patch = {};
                     const now = new Date();
+                    const durations = LP_BOOST_DURATIONS || { sponsor: 24, promo: 72, 'new': 48 };
+                    const hours = durations[type] || 24;
+                    const until = new Date(now.getTime() + hours * 3600 * 1000);
+
                     if (type === 'sponsor') {
-                        const until = new Date(now.getTime() + 24 * 3600 * 1000);
                         patch.sponsored_until = until.toISOString();
                         patch.sponsored_tier = 1;
                     } else if (type === 'promo') {
-                        const until = new Date(now.getTime() + 72 * 3600 * 1000);
                         patch.promo_until = until.toISOString();
                     } else if (type === 'new') {
-                        const until = new Date(now.getTime() + 48 * 3600 * 1000);
                         patch.new_until = until.toISOString();
                     }
 
@@ -20116,6 +20223,28 @@
                     lpToast('Erreur activation boost.', 'error');
                 }
             });
+        }
+
+        // ─── Helper format CFA ───
+        function lpFormatCfa(amount) {
+            var n = Number(amount);
+            if (!Number.isFinite(n)) return '0 F';
+            return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' F';
+        }
+
+        // ─── Admin : Sauvegarde des prix modifiés ───
+        function lpAdminSaveBoostPrices() {
+            var sp = parseInt(document.getElementById('lbsAdminPrice_sponsor')?.value) || 0;
+            var pr = parseInt(document.getElementById('lbsAdminPrice_promo')?.value) || 0;
+            var nw = parseInt(document.getElementById('lbsAdminPrice_new')?.value) || 0;
+
+            if (sp <= 0 || pr <= 0 || nw <= 0) {
+                lpToast('Tous les prix doivent être supérieurs à 0.', 'error');
+                return;
+            }
+
+            lpSetBoostPrices({ sponsor: sp, promo: pr, 'new': nw });
+            lpToast('✅ Prix des boosters mis à jour !', 'ok');
         }
 
         function lpTryOpenBoostFromLocal(vendorId, vendorKind) {
