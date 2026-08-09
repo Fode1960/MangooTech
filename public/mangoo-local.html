@@ -290,6 +290,12 @@
                 const list = Array.isArray(data?.vendors) ? data.vendors : [];
                 if (!list.length) return;
 
+                // REMPLACEMENT COMPLET : vider localStorage avant stockage API
+                // pour éviter que le merge préserve d'anciens vendors obsolètes
+                try { localStorage.removeItem('mangoo_custom_vendors'); } catch {}
+                try { localStorage.removeItem('lp_vendors_cleaned'); } catch {}
+                try { localStorage.removeItem('lp_vendors_refreshed_v2'); } catch {}
+
                 try {
                     if (typeof upsertCustomVendorsBulk === 'function') upsertCustomVendorsBulk(list)
                     else list.forEach((v) => { try { upsertCustomVendor(v); } catch {} });
@@ -30107,7 +30113,7 @@
                 if (hidden) hidden.value = nextMode
                 const configs = {
                     email: {
-                        placeholder: 'pc4@exemple.com',
+                        placeholder: 'votre-email@exemple.com',
                         hint: 'Entrez l e-mail Local+ du compte.',
                         inputMode: 'email',
                         autoComplete: 'email',
