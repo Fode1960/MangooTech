@@ -2,6 +2,9 @@
  * This is a API server
  */
 
+import dotenv from 'dotenv'
+dotenv.config()
+
 import express, {
   type Request,
   type Response,
@@ -75,9 +78,6 @@ function setStaticCacheHeaders(res: Response, filePath: string): void {
     res.setHeader('Cache-Control', 'no-cache')
   }
 }
-
-// load env
-dotenv.config()
 
 const app: express.Application = express()
 
