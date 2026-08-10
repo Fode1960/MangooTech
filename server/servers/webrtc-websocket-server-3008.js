@@ -5,7 +5,7 @@ import WebSocket, { WebSocketServer } from 'ws';
 import fs from 'fs';
 import path from 'path';
 import webpush from 'web-push';
-import { saveSubscription, removeSubscription, getSubscriptions } from './webrtc-push-store.js';
+import { saveSubscription, removeSubscription, getSubscriptions, markStale } from './webrtc-push-store.js';
 import { startLiveSession, endLiveSession, joinLiveSession, leaveLiveSession, updateLiveProducts, getLiveSession, isVendorLive, broadcastToLiveViewers, removeViewerFromAllSessions, sendToViewer, getAllActiveLiveVendors } from './webrtc-live-sessions.js';
 
 // Configuration VAPID pour Web Push
@@ -251,9 +251,11 @@ async function sendPushToVendor(vendorId, payloadOrBuilder) {
       console.log(`[WebRTC-3008] Push envoye a ${vendorId} (endpoint: ${sub.endpoint.substring(0, 60)}...)`);
     } catch (err) {
       console.error(`[WebRTC-3008] Echec push pour ${vendorId}:`, err.statusCode, err.message);
-      // Nettoyer les souscriptions invalides (410 Gone, 404 Not Found)
+      // Souscription invalide (410 Gone = tunnel expiré, 404 = endpoint supprimé)
+      // Ne PAS supprimer : marquer comme "stale" pour que le vendor puisse la remplacer
+      // en se reconnectant. La purge automatique nettoiera après 7 jours.
       if (err.statusCode === 410 || err.statusCode === 404) {
-        removeSubscription(vendorId, sub.endpoint);
+        markStale(vendorId, sub.endpoint);
       }
     }
   }

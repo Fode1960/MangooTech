@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -10807,25 +10807,39 @@
             // ═══ PROTECTION INITIALE ANTI-GÉNÉRIQUE ═══
             // Si une session prestataire est active, cacher accountView IMMÉDIATEMENT
             // pour éviter tout flash de la page générique avant l'auto-redirect.
+            var _hasProviderSession = false;
             try {
-                if (localStorage.getItem('lp_auth_session') === '1' && localStorage.getItem('mangoo_my_provider_id')) {
+                _hasProviderSession = localStorage.getItem('lp_auth_session') === '1' && !!localStorage.getItem('mangoo_my_provider_id');
+                if (_hasProviderSession) {
                     var _av = document.getElementById('accountView');
                     if (_av) _av.style.display = 'none';
                     console.log('[INIT] Protection: accountView caché (session prestataire détectée)');
                 }
             } catch(e) {}
 
-            // Force l'affichage de la carte au demarrage pour eviter le chevauchement des vues
-            try { switchView('map'); } catch(e) {}
+            // ═══ OPTIMISATION PERF ═══
+            // Si une session prestataire est active, ne PAS initialiser la carte Leaflet
+            // (switchView('map') est lourd : chargement tiles, markers, etc.).
+            // On va directement au dashboard, ce qui évite un double rendu inutile.
+            if (_hasProviderSession) {
+                console.log('[INIT] Session prestataire → skip map, ouverture directe Dashboard');
+                // Forcer le flag d'auth push pour que lpInitPushSubscription ne bloque pas
+                try { sessionStorage.setItem('_lpPushAuthReady', '1'); } catch(e) {}
+                try { openMyProviderDashboard(); } catch(e) {}
+            } else {
+                // Force l'affichage de la carte au demarrage pour eviter le chevauchement des vues
+                try { switchView('map'); } catch(e) {}
+            }
 
-            // AUTO-REDIRECT DASHBOARD : si une session prestataire est active, ouvrir le Dashboard
-            // apres un court delai (le temps que le DOM soit pret)
+            // AUTO-REDIRECT DASHBOARD (fallback pour les sessions détectées après un délai)
             setTimeout(function() {
                 try {
                     var _hasSess = localStorage.getItem('lp_auth_session') === '1';
                     var _provId = localStorage.getItem('mangoo_my_provider_id');
-                    if (_hasSess && _provId && typeof openMyProviderDashboard === 'function') {
-                        console.log('[INIT] Session prestataire detectee → auto-ouverture Dashboard');
+                    // Ne pas rouvrir si deja ouvert (garde contre le double appel)
+                    if (_hasSess && _provId && typeof openMyProviderDashboard === 'function' && !window._lpDashActive) {
+                        console.log('[INIT] Session prestataire detectee (delai) → auto-ouverture Dashboard');
+                        try { sessionStorage.setItem('_lpPushAuthReady', '1'); } catch(e) {}
                         openMyProviderDashboard();
                     }
                 } catch(e) {}
@@ -10837,11 +10851,14 @@
             // Cette sentinelle est le DERNIER REMPART — aucun code ne peut la contourner.
             (function _lpAntiGenericSentinel() {
                 var _lastDashCheck = 0;
+                var _moDebounceTimer = null;
                 function _lpCheckAndRedirect() {
                     var now = Date.now();
                     if (now - _lastDashCheck < 500) return; // max 2 fois/sec
                     _lastDashCheck = now;
                     try {
+                        // Garde rapide : si le dashboard est déjà actif, ne rien faire
+                        if (window._lpDashActive === true) return;
                         var _hasSess = localStorage.getItem('lp_auth_session') === '1';
                         var _provId = localStorage.getItem('mangoo_my_provider_id');
                         if (!_hasSess || !_provId) return;
@@ -10849,26 +10866,28 @@
                         if (!_acct) return;
                         var _disp = window.getComputedStyle(_acct).display;
                         if (_disp === 'none') return;
-                        if (window._lpDashActive === true) return;
                         console.warn('[SENTINELLE] Page générique détectée pour prestataire → forçage Dashboard');
                         if (typeof showProviderDashboardInline === 'function') {
                             showProviderDashboardInline();
                         }
                     } catch(e) {}
                 }
-                // Vérification périodique toutes les 2 secondes
-                setInterval(_lpCheckAndRedirect, 2000);
-                // MutationObserver sur accountView (détecte les changements de style/display)
+                // Vérification périodique toutes les 5 secondes (réduit de 2s → économise 60% de getComputedStyle)
+                setInterval(_lpCheckAndRedirect, 5000);
+                // MutationObserver avec debounce : évite les rafales de getComputedStyle
+                // pendant les manipulations DOM lourdes (rendu dashboard, etc.)
                 try {
                     var _acctEl = document.getElementById('accountView');
                     if (_acctEl && window.MutationObserver) {
                         var _mo = new MutationObserver(function() {
-                            setTimeout(_lpCheckAndRedirect, 100);
+                            // Debounce : annuler le timer précédent, n'exécuter qu'une fois
+                            if (_moDebounceTimer) clearTimeout(_moDebounceTimer);
+                            _moDebounceTimer = setTimeout(_lpCheckAndRedirect, 300);
                         });
                         _mo.observe(_acctEl, { attributes: true, attributeFilter: ['style', 'class'], childList: true, subtree: false });
                     }
                 } catch(e) {}
-                console.log('[SENTINELLE] Observateur anti-générique activé');
+                console.log('[SENTINELLE] Observateur anti-générique activé (intervalle 5s, debounce 300ms)');
             })();
 
             // ═══ PROTECTION BFCACHE ═══
@@ -10882,6 +10901,7 @@
                         var _bfProv = localStorage.getItem('mangoo_my_provider_id');
                         if (_bfSess && _bfProv && typeof openMyProviderDashboard === 'function') {
                             console.log('[BFCACHE] Session prestataire → ouverture Dashboard');
+                            try { sessionStorage.setItem('_lpPushAuthReady', '1'); } catch(e) {}
                             setTimeout(function() { openMyProviderDashboard(); }, 300);
                         }
                     } catch(_e) {}
@@ -12052,6 +12072,8 @@
                 if (accountDiv) accountDiv.style.display = 'block';
                 // Marqueur: le dashboard prestataire est actif
                 try { window._lpDashActive = true; } catch(e) {}
+                // Forcer la disparition du bouton Go Live flottant (reserve aux boutiques)
+                try { var _glBtn = document.getElementById('lpGoLiveBtn'); if (_glBtn) _glBtn.style.display = 'none'; } catch(e) {}
                 if (mapDiv) mapDiv.style.display = 'none';
                 if (listDiv) listDiv.style.display = 'none';
                 if (espaceDiv) espaceDiv.style.display = 'none';
@@ -16629,6 +16651,7 @@
         var LP_VAPID_PUBLIC_KEY = 'BEszMwB7h83nh_ULNDyvIfOtA7qxnAu6G5cf3XFeWntIjEnlPinLCjoQg_1sjlLZKerhUaf7WF5OnER3oCKgwX0';
         var _lpPushGestureInstalled = false;
         var _lpPushSubRequested = false;
+        var _lpPushRevalidationTimer = null; // Timer de revalidation periodique (5 min)
 
         function lpUrlBase64ToUint8Array(base64String) {
             var padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -16770,6 +16793,24 @@
                 console.warn('[Push] Erreur abonnement:', e.message);
                 // Reessayer dans 5s en cas d'erreur
                 setTimeout(lpInitPushSubscription, 5000);
+            }
+            // REVALIDATION PERIODIQUE : toutes les 5 minutes, verifier que
+            // l'abonnement push est toujours valide (resilience tunnel Cloudflare)
+            if (!_lpPushRevalidationTimer) {
+                _lpPushRevalidationTimer = setInterval(async function() {
+                    try {
+                        var _reg = await navigator.serviceWorker.ready;
+                        var _sub = await _reg.pushManager.getSubscription();
+                        if (_sub && Notification.permission === 'granted') {
+                            // Re-sauvegarder pour rafraichir le baseUrl et clearer le flag stale
+                            await lpSavePushSubscription(_sub);
+                            console.log('[Push] Revalidation periodique OK');
+                        } else if (Notification.permission === 'granted' && !_sub) {
+                            console.log('[Push] Revalidation: abonnement perdu, re-enregistrement...');
+                            lpInitPushSubscription();
+                        }
+                    } catch(e) { /* silencieux */ }
+                }, 300000); // 5 minutes
             }
         }
 
@@ -25635,6 +25676,21 @@
             // === RÈGLE D'OR : masqué par défaut ===
             if (wrapper) wrapper.style.display = 'none';
             btn.style.display = 'none';
+
+            // ============================================================
+            // GARDE ABSOLUE : un prestataire sans boutique ne voit JAMAIS
+            // le bouton Go Live flottant sur la carte. Cette garde est
+            // volontairement en DEBUT de fonction pour bloquer tout appel,
+            // quel que soit l'état de currentView, _lpLiveVendorId, etc.
+            // ============================================================
+            try {
+                var _provId = String(localStorage.getItem('mangoo_my_provider_id') || '').trim();
+                var _shopId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
+                if (_provId && !_shopId) {
+                    console.log('[Live] Bouton Go Live BLOQUE: prestataire sans boutique (provId=' + _provId + ')');
+                    return;
+                }
+            } catch(e) {}
 
             try {
                 // ============================================================
