@@ -4861,10 +4861,10 @@
                             </div>
 
                             <div id="boostSimpleCard" style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:16px; margin-bottom:20px; box-shadow:var(--ml-shadow-sm); display:none;">
-                                <div style="font-weight:950; color:var(--ml-text); margin-bottom:10px;">📍 Visibilité Carte</div>
+                                <div id="boostSimpleCardTitle" style="font-weight:950; color:var(--ml-text); margin-bottom:10px;">📍 Visibilité Carte</div>
                                 <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                                    <button onclick="event.stopPropagation(); var pid = (typeof getMyProviderId === 'function' ? getMyProviderId() : ''); if(pid) lpTryOpenBoostFromLocal(pid, 'service');" style="flex:1; min-width:130px; padding:10px 12px; border-radius:12px; border:1px solid rgba(17,24,39,0.10); background:#111827; color:white; font-weight:900; cursor:pointer; font-size:0.88rem;">🏷️ Sponsor 24h</button>
-                                    <button onclick="event.stopPropagation(); var pid = (typeof getMyProviderId === 'function' ? getMyProviderId() : ''); if(pid) lpTryOpenBoostFromLocal(pid, 'service');" style="flex:1; min-width:130px; padding:10px 12px; border-radius:12px; border:1px solid rgba(55,48,163,0.16); background:#1b5e20; color:#ffffff; font-weight:900; cursor:pointer; font-size:0.88rem;">🆕 Nouveau 24h</button>
+                                    <button onclick="event.stopPropagation(); var card=document.getElementById('boostSimpleCard'); var pid=card?card.getAttribute('data-vendor-id'):''; if(!pid) pid=(typeof getMyProviderId==='function'?getMyProviderId():''); if(pid) lpTryOpenBoostFromLocal(pid, 'service');" style="flex:1; min-width:130px; padding:10px 12px; border-radius:12px; border:1px solid rgba(17,24,39,0.10); background:#111827; color:white; font-weight:900; cursor:pointer; font-size:0.88rem;">🏷️ Sponsor 24h</button>
+                                    <button onclick="event.stopPropagation(); var card=document.getElementById('boostSimpleCard'); var pid=card?card.getAttribute('data-vendor-id'):''; if(!pid) pid=(typeof getMyProviderId==='function'?getMyProviderId():''); if(pid) lpTryOpenBoostFromLocal(pid, 'service');" style="flex:1; min-width:130px; padding:10px 12px; border-radius:12px; border:1px solid rgba(55,48,163,0.16); background:#1b5e20; color:#ffffff; font-weight:900; cursor:pointer; font-size:0.88rem;">🆕 Nouveau 24h</button>
                                 </div>
                                 <div style="margin-top:10px; display:flex; justify-content:space-between; gap:10px; font-weight:700; font-size:0.85rem; color:var(--ml-muted);">
                                     <span>État</span>
@@ -5935,40 +5935,14 @@
                     <div class="lbs-price" id="lbsPrice_new">1 000 F</div>
                 </div>
             </div>
-            <!-- ADMIN: Gestion des prix et historique des boosters -->
-            <div id="lbsAdminPanel" style="display:none; border-top:1px solid rgba(255,255,255,0.08); padding:12px 16px; max-height:280px; overflow-y:auto;">
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-                    <span style="font-size:0.85rem; font-weight:800; color:#94a3b8;">⚙️ Admin — Prix des Boosters</span>
-                    <button onclick="lpResetBoostPrices()" style="margin-left:auto; font-size:0.7rem; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); color:#94a3b8; border-radius:6px; padding:3px 8px; cursor:pointer;" title="Réinitialiser aux prix par défaut">↺ Défaut</button>
+            <!-- Historique des paiements -->
+            <div id="lbsBoostHistoryPanel" style="border-top:1px solid rgba(255,255,255,0.08); padding:8px 16px; max-height:200px; overflow-y:auto;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                    <span style="font-size:0.8rem; font-weight:800; color:#94a3b8;">📋 Historique des paiements</span>
+                    <button onclick="var o=document.getElementById('lpBoostSimpleOverlay');var v=o?o.getAttribute('data-vendor-id'):'';lpRenderBoostHistory(v||__lbsVendorId)" style="margin-left:auto; font-size:0.65rem; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#94a3b8; border-radius:4px; padding:2px 6px; cursor:pointer;">Rafraîchir</button>
                 </div>
-                <div id="lbsAdminPrices">
-                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-                        <span style="width:28px; font-size:1rem;">🔥</span>
-                        <span style="flex:1; font-size:0.78rem; color:#e2e8f0; font-weight:700;">Sponsorisé</span>
-                        <input id="lbsAdminPrice_sponsor" type="number" min="0" step="100" style="width:90px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e2e8f0; border-radius:6px; padding:4px 8px; font-size:0.8rem; text-align:right;" /> <span style="font-size:0.75rem; color:#94a3b8;">F</span>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-                        <span style="width:28px; font-size:1rem;">🎯</span>
-                        <span style="flex:1; font-size:0.78rem; color:#e2e8f0; font-weight:700;">Promo</span>
-                        <input id="lbsAdminPrice_promo" type="number" min="0" step="100" style="width:90px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e2e8f0; border-radius:6px; padding:4px 8px; font-size:0.8rem; text-align:right;" /> <span style="font-size:0.75rem; color:#94a3b8;">F</span>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-                        <span style="width:28px; font-size:1rem;">✨</span>
-                        <span style="flex:1; font-size:0.78rem; color:#e2e8f0; font-weight:700;">Nouveau</span>
-                        <input id="lbsAdminPrice_new" type="number" min="0" step="100" style="width:90px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e2e8f0; border-radius:6px; padding:4px 8px; font-size:0.8rem; text-align:right;" /> <span style="font-size:0.75rem; color:#94a3b8;">F</span>
-                    </div>
-                    <button onclick="lpAdminSaveBoostPrices()" style="width:100%; background:linear-gradient(135deg,#1b5e20,#2e7d32); color:white; border:none; border-radius:8px; padding:8px; font-weight:800; font-size:0.85rem; cursor:pointer; margin-bottom:8px;">💾 Enregistrer les prix</button>
-                    <button onclick="lpCleanupExpiredBoosts(); lpRefreshBoostModalPrices(); lpToast('🧹 Nettoyage terminé','ok');" style="width:100%; background:rgba(255,255,255,0.06); color:#ef4444; border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:6px; font-weight:700; font-size:0.75rem; cursor:pointer; margin-bottom:10px;">🧹 Nettoyer tous les boosts expirés</button>
-                </div>
-                <!-- Historique des paiements -->
-                <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:10px; margin-top:4px;">
-                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                        <span style="font-size:0.8rem; font-weight:800; color:#94a3b8;">📋 Historique des paiements</span>
-                        <button onclick="lpRenderBoostHistory()" style="margin-left:auto; font-size:0.65rem; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#94a3b8; border-radius:4px; padding:2px 6px; cursor:pointer;">Rafraîchir</button>
-                    </div>
-                    <div id="lbsBoostHistory" style="font-size:0.7rem; color:#94a3b8; max-height:120px; overflow-y:auto;">
-                        <span style="opacity:0.5;">Chargement...</span>
-                    </div>
+                <div id="lbsBoostHistory" style="font-size:0.7rem; color:#94a3b8; max-height:120px; overflow-y:auto;">
+                    <span style="opacity:0.5;">Aucun paiement</span>
                 </div>
             </div>
         </div>
@@ -7375,7 +7349,7 @@
             if (!force) {
                 try {
                     const last = Number(localStorage.getItem('mangoo_boost_sync_at') || 0)
-                    if (Number.isFinite(last) && Date.now() - last < 60 * 1000) return
+                    if (Number.isFinite(last) && Date.now() - last < 15 * 1000) return
                 } catch {
                 }
             }
@@ -7418,7 +7392,23 @@
                     })
                 })
                 const prev = getBoostConfig()
-                setBoostConfig({ ...(prev || {}), ...(next || {}) })
+                // MERGE PROFOND : ne pas écraser les champs locaux absents du serveur
+                // On ne merge que les valeurs NON-NULL du serveur pour éviter d'effacer
+                // les boosts locaux (ex: un sponsored payé sur Chrome ne doit pas être
+                // écrasé par un sponsored_until: null venant du serveur)
+                const merged = { ...(prev || {}) }
+                Object.keys(next || {}).forEach(function(vid) {
+                    var prevEntry = (merged[vid] && typeof merged[vid] === 'object') ? merged[vid] : {}
+                    var nextEntry = next[vid] || {}
+                    merged[vid] = { ...prevEntry }
+                    // Ne merger que les valeurs non-null du serveur
+                    Object.keys(nextEntry).forEach(function(k) {
+                        if (nextEntry[k] !== null && nextEntry[k] !== undefined) {
+                            merged[vid][k] = nextEntry[k]
+                        }
+                    })
+                })
+                setBoostConfig(merged)
                 try { applyBoostConfigToVendors() } catch {}
                 try { lpUpdateBoostHudCounts('serveur') } catch {}
                 try { window.__lpNeedsMapRefreshAfterBoost = true; } catch {}
@@ -7700,12 +7690,24 @@
         }
         function refreshBoostPanel(vendor) {
             // Met à jour l'affichage du statut boost dans #boostSimpleCard
+            const card = document.getElementById('boostSimpleCard');
+            if (!card) return;
             const statusEl = document.getElementById('boostStatusText');
             if (!statusEl) return;
             const v = vendor || (function() {
                 try { return VENDORS.find(function(x) { return String(x.id) === String(getMyProviderId()); }); } catch(e) { return null; }
             })();
-            if (!v) { statusEl.textContent = '\u2014'; return; }
+            if (!v) { card.style.display = 'none'; return; }
+            
+            // Afficher le nom du prestataire DANS la carte pour éviter toute confusion
+            const vendorName = String(v?.name || v?.shop_name || v?.vendor_name || v?.displayName || '').trim() || 'Ma boutique';
+            const cardTitle = document.getElementById('boostSimpleCardTitle');
+            if (cardTitle) cardTitle.textContent = '\uD83D\uDCCD Visibilit\u00E9 Carte \u2014 \uD83C\uDFEA ' + vendorName;
+            
+            card.style.display = 'block';
+            // Stocker l'ID du vendor sur la carte pour que les boutons lisent le bon ID
+            try { card.setAttribute('data-vendor-id', String(v.id || '')); } catch {}
+
             // Helper robuste : accepte timestamps nombres ET chaînes ISO
             var _toMs = function(val) {
                 if (val === null || val === undefined) return null;
@@ -11071,10 +11073,16 @@
                         // 1) Nettoyer les boosts expirés localement (badges fantômes)
                         lpCleanupExpiredBoosts();
                         // 2) Synchroniser depuis le serveur (boosts payés sur d'autres navigateurs)
-                        Promise.resolve(syncBoostConfigFromServer()).then(() => {
+                        // Forcer la synchro : supprimer le throttle pour que le 1er chargement synchrone toujours
+                        try { localStorage.removeItem('mangoo_boost_sync_at'); } catch {}
+                        syncBoostConfigFromServer().then(function() {
+                            // Appliquer la config synchronisée aux VENDORS et rafraîchir la carte
                             try { applyBoostConfigToVendors(); } catch {}
-                            try { filterVendors(); } catch {}
-                            try { refreshBoostPanel(); } catch {}
+                            try { if (typeof filterVendors === 'function') filterVendors(); } catch {}
+                        }).catch(function() {
+                            // Même si la synchro échoue, appliquer ce qu'on a en local
+                            try { applyBoostConfigToVendors(); } catch {}
+                            try { if (typeof filterVendors === 'function') filterVendors(); } catch {}
                         });
                     } catch {
                     }
@@ -11544,6 +11552,7 @@
                             ">
                                 <img src="${lpResolveVendorAvatar(vendor)}" style="width:44px; height:44px; border-radius:50%; object-fit:cover;">
                                 
+                                ${!vendor.live ? badge : ''}
                                 ${badge2}
                                 ${kindBadge}
                                 ${sponsoredBadge}
@@ -11632,20 +11641,10 @@
             const vendorId = String(id || '').trim();
             if (!vendorId) return false;
 
-            // GARDE : ne pas ouvrir de fiche si une session prestataire est active.
-            // Le Dashboard doit s'ouvrir à la place (voir openMyProviderDashboard).
+            // GARDE : ne pas bloquer l'ouverture de fiche si une session prestataire est active.
+            // Le blocage empêchait l'accès au Booster d'autres prestataires.
             var _isProv = false;
-            try {
-                _isProv = window.sessionStorage && sessionStorage.getItem('_lpPushAuthReady') === '1';
-                if (!_isProv) {
-                    _isProv = localStorage.getItem('lp_auth_session') === '1'
-                        && !!localStorage.getItem('mangoo_my_provider_id');
-                }
-            } catch(e) {}
-            if (_isProv) {
-                console.log('[openVendorSheetById] BLOQUE: session prestataire active pour', vendorId);
-                return false;
-            }
+            // Blocage désactivé — la fiche doit rester accessible même en session prestataire
 
             const opts = options && typeof options === 'object' ? options : {};
             const maxRetries = Math.max(0, Number(opts.retries) || 0);
@@ -11780,49 +11779,51 @@
         }
 
         function getMyProviderId() {
-            // PRIORITÉ 0 : URL vendor param (source la plus fiable)
+            // PRIORITÉ 1 : mangoo_my_provider_id (défini explicitement par login/claim/create)
+            // C'est la source la plus fiable car elle reflète le dernier prestataire sélectionné
             try {
-                var _urlV = new URLSearchParams(window.location.search).get('vendor') || '';
-                if (_urlV) { try { localStorage.setItem('mangoo_my_provider_id', _urlV); } catch(_e) {} return _urlV; }
-            } catch(_e) {}
-            try {
-                // PRIORITÉ 1 : mangoo_my_provider_id (défini explicitement par login/claim/create)
-                // C'est la source la plus fiable car elle reflète le dernier prestataire sélectionné
                 const raw = localStorage.getItem('mangoo_my_provider_id');
                 if (raw) {
                     const id = String(raw).trim();
-                    if (id) return id;
+                    if (id) { return id; }
                 }
             } catch {}
-            // PRIORITÉ 2 : mangoo-current-user.vendorId (dernier login actif)
+            // PRIORITÉ 2 : URL vendor ou vendorId param (contexte de navigation)
+            try {
+                var _urlV = new URLSearchParams(window.location.search).get('vendor')
+                         || new URLSearchParams(window.location.search).get('vendorId') || '';
+                if (_urlV) { return _urlV; }
+            } catch(_e) {}
+            // PRIORITÉ 3 : mangoo-current-user.vendorId (dernier login actif)
             try {
                 var _cu3 = JSON.parse(localStorage.getItem('mangoo-current-user') || '{}');
                 var _vid3 = String(_cu3.vendorId || '').trim();
                 var _vkind3 = String(_cu3.vendorKind || '').trim().toLowerCase();
-                if (_vid3 && _vkind3 === 'service') return _vid3;
+                if (_vid3 && _vkind3 === 'service') { return _vid3; }
             } catch {}
             try {
                 const scoped = lpGetStoredProviderIdsForCurrentUser()
-                if (scoped.length === 1) return String(scoped[0] || '').trim()
+                if (scoped.length === 1) { var _sid = String(scoped[0] || '').trim(); return _sid; }
                 // Si plusieurs IDs scopés, on vérifie le owned (plus fiable via VENDORS)
                 const owned = lpGetOwnedProviderIds()
-                if (owned.length === 1) return String(owned[0] || '').trim()
+                if (owned.length === 1) { var _oid = String(owned[0] || '').trim(); return _oid; }
                 if (owned.length > 1) {
                     // Plusieurs prestataires : utiliser mangoo_my_provider_id (défini explicitement par login/claim/create)
                     try {
                         var _provId = String(localStorage.getItem('mangoo_my_provider_id') || '').trim();
-                        if (_provId && owned.indexOf(_provId) >= 0) return _provId;
+                        if (_provId && owned.indexOf(_provId) >= 0) { return _provId; }
                     } catch {}
                     // Essayer le vendorId du current-user
                     try {
                         var _cu4 = JSON.parse(localStorage.getItem('mangoo-current-user') || '{}');
                         var _vid4 = String(_cu4.vendorId || '').trim();
-                        if (_vid4 && owned.indexOf(_vid4) >= 0) return _vid4;
+                        if (_vid4 && owned.indexOf(_vid4) >= 0) { return _vid4; }
                     } catch {}
                     // Fallback : retourner le premier owned
-                    return String(owned[0] || '').trim();
+                    var _fo = String(owned[0] || '').trim(); return _fo;
                 }
             } catch {}
+
             return '';
         }
 
@@ -12340,10 +12341,18 @@
                     }
                 }
                 // 1. D'ABORD : Prestataire (peu importe la vue courante)
-                const providerId_check = getMyProviderId();
+                let providerId_check = getMyProviderId();
                 const providerScoped = lpGetStoredProviderIdsForCurrentUser();
                 const providerOwned = providerScoped.length ? providerScoped : lpGetOwnedProviderIds();
                 console.log('[DIAG] Provider check: pid=' + providerId_check + ' owned=' + JSON.stringify(providerOwned) + ' scoped=' + JSON.stringify(providerScoped));
+                // CORRECTION : si le providerId du localStorage ne correspond à aucun provider
+                // possédé par l'utilisateur connecté, le corriger automatiquement.
+                if (providerId_check && providerOwned.length && providerOwned.indexOf(providerId_check) < 0) {
+                    const correctedId = String(providerOwned[0] || '').trim();
+                    try { localStorage.setItem('mangoo_my_provider_id', correctedId); } catch(e) {}
+                    // Recharger le providerId après correction pour que showProviderDashboardInline utilise la bonne valeur
+                    providerId_check = correctedId;
+                }
                 if (providerId_check || providerOwned.length) {
                     console.log('[DIAG] → showProviderDashboardInline()');
                     showProviderDashboardInline();
@@ -19220,10 +19229,17 @@
                         </div>
                     `;
                 } else {
-                    ownerLink.style.display = 'none';
+                    // Même sans être propriétaire, on peut booster ce prestataire
+                    ownerLink.style.display = 'block';
+                    var boostKind = (kindMode === 'shop' ? 'shop' : 'provider');
+                    ownerLink.innerHTML = `
+                        <div style="display:flex; gap:10px; justify-content:flex-start; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:0 12px; scroll-snap-type:x proximity;">
+                                <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpTryOpenBoostFromLocal('${safeVendorId}', '${boostKind}');" style="flex:0 0 auto; white-space:nowrap; background:#1b5e20; color:white; font-size:0.95rem; border:1px solid #1b5e20; padding:10px 16px; border-radius:999px; font-weight:950; scroll-snap-align:start; cursor:pointer; pointer-events:auto;">🚀 Booster</button>
+                        </div>
+                    `;
                 }
             }
-            
+
             // Add Close Button to Vendor Sheet (if not already there)
             const sheet = document.getElementById('vendorSheet');
             let closeBtn = sheet ? sheet.querySelector('.close-sheet-btn') : null;
@@ -20153,39 +20169,29 @@
         let __lbsVendorEmail = '';
 
         function lpOpenBoostSimpleModal(vendorId, vendorKind, vendorName, email) {
+
             __lbsVendorId = String(vendorId || '').trim();
             __lbsVendorKind = String(vendorKind || '').trim();
             __lbsVendorEmail = String(email || '').trim();
+
+            // Stocker le vendorId sur le DOM pour éviter les corruptions de variable globale
+            const overlay = document.getElementById('lpBoostSimpleOverlay');
+            if (overlay) {
+                overlay.setAttribute('data-vendor-id', __lbsVendorId);
+                overlay.setAttribute('data-vendor-kind', __lbsVendorKind);
+            }
 
             // Rafraîchir les prix (au cas où l'admin les a modifiés)
             lpRefreshBoostModalPrices();
 
             // Afficher le nom du vendeur dans le header
             const nameEl = document.getElementById('lbsVendorName');
-            if (nameEl) nameEl.textContent = '🏪 ' + vendorName;
+            if (nameEl) nameEl.textContent = '\uD83C\uDFEA ' + vendorName;
 
-            // Afficher/Masquer le panneau admin selon le rôle
-            const adminPanel = document.getElementById('lbsAdminPanel');
-            if (adminPanel) {
-                if (typeof isAdminUser === 'function' && isAdminUser()) {
-                    adminPanel.style.display = 'block';
-                    // Remplir les champs admin avec les prix actuels
-                    var prices = lpGetBoostPrices();
-                    var spEl = document.getElementById('lbsAdminPrice_sponsor');
-                    var prEl = document.getElementById('lbsAdminPrice_promo');
-                    var nwEl = document.getElementById('lbsAdminPrice_new');
-                    if (spEl) spEl.value = prices.sponsor;
-                    if (prEl) prEl.value = prices.promo;
-                    if (nwEl) nwEl.value = prices['new'];
-                    // Rendre l'historique
-                    lpRenderBoostHistory();
-                } else {
-                    adminPanel.style.display = 'none';
-                }
-            }
+            // Rendre l'historique visible pour tout le monde, filtré par ce prestataire
+            lpRenderBoostHistory(__lbsVendorId);
 
             // Afficher le modal
-            const overlay = document.getElementById('lpBoostSimpleOverlay');
             if (overlay) overlay.classList.add('open');
         }
 
@@ -20198,8 +20204,13 @@
         }
 
         function lpBuyBoost(type) {
-            const vid = __lbsVendorId;
-            const vkind = __lbsVendorKind;
+            // Lire depuis le DOM (plus fiable que la variable globale, évite les corruptions)
+            var overlay = document.getElementById('lpBoostSimpleOverlay');
+            var vid = overlay ? (overlay.getAttribute('data-vendor-id') || '') : '';
+            var vkind = overlay ? (overlay.getAttribute('data-vendor-kind') || '') : '';
+            // Fallback sur les variables globales si le DOM n'est pas disponible
+            if (!vid) vid = __lbsVendorId;
+            if (!vkind) vkind = __lbsVendorKind;
             if (!vid) { lpToast('Erreur : boutique introuvable.', 'error'); return; }
 
             const prices = lpGetBoostPrices();
@@ -20269,7 +20280,9 @@
                             vendorId: vid,
                             vendorKind: vendorKindStr,
                             boostKind: kindStr,
-                            durationHours: Number(LP_BOOST_DURATIONS[type] || 24)
+                            durationHours: Number(LP_BOOST_DURATIONS[type] || 24),
+                            amount: amount,
+                            currency: 'XOF'
                         };
                         if (type === 'sponsor') syncPayload.sponsoredTier = 'bronze';
 
@@ -20343,20 +20356,103 @@
             } catch { return []; }
         }
 
-        function lpRenderBoostHistory() {
+        function lpRenderBoostHistory(vendorId) {
             var container = document.getElementById('lbsBoostHistory');
             if (!container) return;
-            var history = lpGetBoostHistory();
+            container.innerHTML = '<span style="opacity:0.5;">Chargement depuis le serveur...</span>';
+
+            // Fusionner historique local + serveur
+            var localHistory = lpGetBoostHistory().filter(function(h) {
+                return !vendorId || String(h.vendorId || '') === String(vendorId);
+            });
+
+            // Charger depuis le serveur
+            var apiBase = window.location.origin || '';
+            fetch(apiBase + '/api/boosts/orders?limit=50')
+                .then(function(r) { return r.json(); })
+                .then(function(payload) {
+                    var serverOrders = Array.isArray(payload?.orders) ? payload.orders : [];
+                    // Convertir les ordres serveur au format historique local
+                    // Filtrer les ordres serveur par vendorId si spécifié
+                    var serverHistory = serverOrders.filter(function(o) {
+                        return !vendorId || String(o.vendor_id || '') === String(vendorId);
+                    }).map(function(o) {
+                        var boostTypeMap = { sponsored: 'sponsor', promo: 'promo', 'new': 'new' };
+                        var boostLabelMap = { sponsored: 'Sponsorisé', promo: 'En Promo', 'new': 'Nouveau' };
+                        return {
+                            vendorId: String(o.vendor_id || ''),
+                            vendorName: String(o.vendor_id || ''), // sera résolu plus bas
+                            boostType: boostTypeMap[o.boost_kind] || o.boost_kind,
+                            boostLabel: (boostLabelMap[o.boost_kind] || o.boost_kind) + ' ' + (o.duration_hours || '') + 'h',
+                            amount: Number(o.amount_xof || 0),
+                            paidAt: String(o.created_at || ''),
+                            durationHours: Number(o.duration_hours || 0),
+                            expiresAtMs: o.expires_at ? Date.parse(String(o.expires_at)) : 0,
+                            source: 'server'
+                        };
+                    });
+
+                    // Dédupliquer : une entrée serveur override une locale si même vendorId+paidAt
+                    var merged = [];
+                    var seenKeys = {};
+                    // D'abord le local
+                    localHistory.forEach(function(h) {
+                        var key = h.vendorId + '|' + h.paidAt + '|' + h.boostType;
+                        seenKeys[key] = true;
+                        merged.push(h);
+                    });
+                    // Puis le serveur (prioritaire)
+                    serverHistory.forEach(function(h) {
+                        var key = h.vendorId + '|' + h.paidAt + '|' + h.boostType;
+                        if (seenKeys[key]) {
+                            // Remplacer l'entrée locale par la serveur
+                            for (var i = 0; i < merged.length; i++) {
+                                var k2 = merged[i].vendorId + '|' + merged[i].paidAt + '|' + merged[i].boostType;
+                                if (k2 === key) { merged[i] = h; break; }
+                            }
+                        } else {
+                            seenKeys[key] = true;
+                            merged.push(h);
+                        }
+                    });
+
+                    // Résoudre les noms des vendeurs via VENDORS
+                    merged.forEach(function(h) {
+                        if (h.vendorName === h.vendorId || !h.vendorName || h.vendorName === '') {
+                            try {
+                                if (typeof VENDORS !== 'undefined' && Array.isArray(VENDORS)) {
+                                    var v = VENDORS.find(function(x) { return String(x?.id) === String(h.vendorId); });
+                                    if (v) h.vendorName = String(v?.name || v?.shop_name || '').trim() || h.vendorId;
+                                }
+                            } catch {}
+                        }
+                    });
+
+                    _lpRenderBoostHistoryCards(container, merged);
+                })
+                .catch(function() {
+                    // Fallback : afficher uniquement l'historique local
+                    _lpRenderBoostHistoryCards(container, localHistory);
+                });
+        }
+
+        function _lpRenderBoostHistoryCards(container, history) {
             if (!history.length) {
                 container.innerHTML = '<span style="opacity:0.5;">Aucun paiement enregistré</span>';
                 return;
             }
-            // Afficher les 20 dernières entrées (les plus récentes d'abord)
-            var recent = history.slice(-20).reverse();
+            // Trier par date décroissante
+            history.sort(function(a, b) {
+                var ta = 0, tb = 0;
+                try { ta = new Date(a.paidAt).getTime(); } catch {}
+                try { tb = new Date(b.paidAt).getTime(); } catch {}
+                return tb - ta;
+            });
+            var recent = history.slice(0, 30);
             var now = Date.now();
             var html = '';
             recent.forEach(function(entry) {
-                var icon = { sponsor: '🔥', promo: '🎯', 'new': '✨' }[entry.boostType] || '🚀';
+                var icon = { sponsor: '\uD83D\uDD25', promo: '\uD83C\uDFAF', 'new': '\u2728' }[entry.boostType] || '\uD83D\uDE80';
                 var isExpired = entry.expiresAtMs && entry.expiresAtMs < now;
                 var date = '';
                 try { date = new Date(entry.paidAt).toLocaleDateString('fr-FR'); } catch {}
@@ -20365,12 +20461,13 @@
                 var expires = '';
                 try { expires = entry.expiresAtMs ? new Date(entry.expiresAtMs).toLocaleDateString('fr-FR') + ' ' + new Date(entry.expiresAtMs).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '?'; } catch {}
                 var rowStyle = isExpired ? 'opacity:0.4;text-decoration:line-through;' : '';
+                var sourceTag = entry.source === 'server' ? ' <span style="font-size:0.55rem;color:#4caf50;">[\uD83D\uDCE1 serveur]</span>' : '';
                 html += '<div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03);' + rowStyle + '">'
                     + '<span>' + icon + '</span> '
                     + '<span style="color:#e2e8f0;font-weight:600;">' + escapeHtml(entry.vendorName || entry.vendorId) + '</span> '
-                    + '<span style="font-size:0.65rem;color:#64748b;">(' + escapeHtml(entry.boostLabel || entry.boostType) + ')</span>'
-                    + '<br><span style="font-size:0.62rem;color:#94a3b8;">' + lpFormatCfa(entry.amount) + ' • ' + date + ' ' + time
-                    + (isExpired ? ' • <span style="color:#ef4444;">Expiré</span>' : ' • Jusqu\'au ' + expires)
+                    + '<span style="font-size:0.65rem;color:#64748b;">(' + escapeHtml(entry.boostLabel || entry.boostType) + ')</span>' + sourceTag
+                    + '<br><span style="font-size:0.62rem;color:#94a3b8;">' + lpFormatCfa(entry.amount) + ' \u2022 ' + date + ' ' + time
+                    + (isExpired ? ' \u2022 <span style="color:#ef4444;">Expiré</span>' : ' \u2022 Jusqu\'au ' + expires)
                     + '</span></div>';
             });
             container.innerHTML = html;

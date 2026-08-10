@@ -1,16 +1,16 @@
-﻿// Service Worker pour Mangoo Tech - avec Push Notifications
-// ⚠️ CE SW NE GÈRE PAS LES DOCUMENTS HTML — le navigateur les récupère directement
-const CACHE_NAME = 'mangoo-tech-v14';
+// Service Worker pour Mangoo Tech - avec Push Notifications
+// ?? CE SW NE G�RE PAS LES DOCUMENTS HTML � le navigateur les r�cup�re directement
+const CACHE_NAME = 'mangoo-tech-v24';
 
 // Installation du service worker
 self.addEventListener('install', (event) => {
-  console.log('[SW v14] Installation');
+  console.log('[SW v17] Installation');
   self.skipWaiting();
 });
 
-// Activation du service worker – supprimer tous les anciens caches + notifier les clients
+// Activation du service worker � supprimer tous les anciens caches + notifier les clients
 self.addEventListener('activate', (event) => {
-  console.log('[SW v14] Activation – suppression de tous les anciens caches');
+  console.log('[SW v17] Activation � suppression de tous les anciens caches');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -19,29 +19,29 @@ self.addEventListener('activate', (event) => {
     }).then(() => {
       return self.clients.claim();
     }).then(() => {
-      // Notifier TOUS les clients qu'une mise à jour est dispo → rechargement auto
+      // Notifier TOUS les clients qu'une mise � jour est dispo ? rechargement auto
       return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
         clients.forEach((client) => {
-          client.postMessage({ type: 'SW_UPDATED', version: 'v14' });
+          client.postMessage({ type: 'SW_UPDATED', version: 'v17' });
         });
       });
     })
   );
 });
 
-// Écouter les messages du client (ex: SKIP_WAITING)
+// �couter les messages du client (ex: SKIP_WAITING)
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
-    console.log('[SW v14] SKIP_WAITING reçu → skipWaiting');
+    console.log('[SW v17] SKIP_WAITING re�u ? skipWaiting');
     self.skipWaiting();
   }
 });
 
-// Stratégie : NE PAS intercepter les documents HTML.
-// Le navigateur les récupère directement → toujours la dernière version.
-// Le SW ne gère que les assets statiques (JS, CSS, images) et les Push.
+// Strat�gie : NE PAS intercepter les documents HTML.
+// Le navigateur les r�cup�re directement ? toujours la derni�re version.
+// Le SW ne g�re que les assets statiques (JS, CSS, images) et les Push.
 self.addEventListener('fetch', (event) => {
-  // Ignorer les requêtes Vite HMR, WebSocket et ping
+  // Ignorer les requ�tes Vite HMR, WebSocket et ping
   if (event.request.url.includes('/@vite/') ||
       event.request.url.includes('/__vite_ping') ||
       event.request.url.includes('ws://') ||
@@ -50,10 +50,10 @@ self.addEventListener('fetch', (event) => {
   }
 
   // DOCUMENTS HTML + NAVIGATION : ne pas intercepter.
-  // Le navigateur gère directement → pas de cache SW → toujours frais.
+  // Le navigateur g�re directement ? pas de cache SW ? toujours frais.
   if (event.request.destination === 'document' ||
       event.request.mode === 'navigate') {
-    return; // pas de event.respondWith() → le navigateur fait le fetch lui-même
+    return; // pas de event.respondWith() ? le navigateur fait le fetch lui-m�me
   }
 
   // Assets statiques : network-first, cache en fallback
@@ -81,19 +81,19 @@ self.addEventListener('fetch', (event) => {
  * Quand le vendeur n'est pas connecte, lui envoie une notification d'appel entrant
  */
 self.addEventListener('push', (event) => {
-  console.log('[SW v14] === PUSH RECU ===');
-  console.log('[SW v14] Timestamp:', new Date().toISOString());
+  console.log('[SW v17] === PUSH RECU ===');
+  console.log('[SW v17] Timestamp:', new Date().toISOString());
 
   let data = {};
   try {
     if (event.data) {
       data = event.data.json();
-      console.log('[SW v14] Payload:', JSON.stringify(data).substring(0, 200));
+      console.log('[SW v17] Payload:', JSON.stringify(data).substring(0, 200));
     } else {
-      console.log('[SW v14] Pas de donnees dans le push (event.data est null)');
+      console.log('[SW v17] Pas de donnees dans le push (event.data est null)');
     }
   } catch (e) {
-    console.warn('[SW v14] Erreur parsing push:', e.message);
+    console.warn('[SW v17] Erreur parsing push:', e.message);
     data = { title: 'Appel entrant', body: 'Quelqu\'un souhaite vous parler' };
   }
 
@@ -132,12 +132,12 @@ self.addEventListener('push', (event) => {
     } : {})
   };
 
-  console.log('[SW v14] showNotification:', title, '| tag:', options.tag, '| actions:', options.actions ? options.actions.length : 0);
+  console.log('[SW v17] showNotification:', title, '| tag:', options.tag, '| actions:', options.actions ? options.actions.length : 0);
   event.waitUntil(
     self.registration.showNotification(title, options).then(function() {
-      console.log('[SW v14] Notification affichee avec succes');
+      console.log('[SW v17] Notification affichee avec succes');
     }).catch(function(err) {
-      console.error('[SW v14] ECHEC affichage notification:', err.message);
+      console.error('[SW v17] ECHEC affichage notification:', err.message);
       // Fallback: notification sans actions (compatible tous navigateurs)
       var fallbackOpts = {
         body: options.body,
@@ -149,9 +149,9 @@ self.addEventListener('push', (event) => {
         data: options.data
       };
       return self.registration.showNotification(title, fallbackOpts).then(function() {
-        console.log('[SW v14] Notification fallback affichee');
+        console.log('[SW v17] Notification fallback affichee');
       }).catch(function(err2) {
-        console.error('[SW v14] ECHEC fallback aussi:', err2.message);
+        console.error('[SW v17] ECHEC fallback aussi:', err2.message);
       });
     })
   );
