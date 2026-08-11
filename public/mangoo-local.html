@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -16412,7 +16412,22 @@
             var container = document.getElementById('lpProviderOrdersContainer');
             if (!container) return;
             try {
-                var providerId = (typeof getMyProviderId === 'function' ? getMyProviderId() : '') || '';
+                // ═══ Support double : provider ET shop ═══
+                var _vendorSection = document.getElementById('vendorSection');
+                var _isShopContext = _vendorSection && _vendorSection.style.display === 'block';
+                var providerId = '';
+                if (_isShopContext) {
+                    providerId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
+                    if (!providerId) {
+                        try {
+                            var _cu = JSON.parse(localStorage.getItem('mangoo-current-user') || '{}');
+                            if (_cu && String(_cu.vendorKind || '').toLowerCase() === 'shop') {
+                                providerId = String(_cu.vendorId || '').trim();
+                            }
+                        } catch(e) {}
+                    }
+                }
+                if (!providerId) providerId = (typeof getMyProviderId === 'function' ? getMyProviderId() : '') || '';
                 if (!providerId) providerId = String(activeVendor?.id || '').trim();
                 if (!providerId) providerId = String(localStorage.getItem('mangoo_my_provider_id') || '').trim();
                 var providerName = '';
@@ -19820,7 +19835,9 @@
                     if (myProducts.length > 0) {
                         if (emptyMsg) emptyMsg.style.display = 'none';
                         myProducts.forEach(p => {
-                            feed.insertAdjacentHTML('afterbegin', createProductCardHTML(p, true));
+                            // Même le propriétaire voit les boutons client (Acheter, Tontine, Marchander)
+                            // sur la page publique. Les boutons d'édition (✏️, 🗑️) sont dans le dashboard.
+                            feed.insertAdjacentHTML('afterbegin', createProductCardHTML(p, false));
                         });
                         // Sauvegarder le premier produit pour le partage WebRTC (Voir produit)
                         try {
@@ -26100,13 +26117,13 @@
         // IMPORTANT : _lpLiveVendorId est défini pour TOUS les vendors (même sans affichage)
         // car lpGetVendorWsVendorId() et d'autres flux en dépendent.
         function lpInitGoLiveButton() {
-            var wrapper = document.getElementById('lpGoLiveWrapper');
-            var btn = document.getElementById('lpGoLiveBtn');
-            if (!btn) return;
-
-            // === RÈGLE D'OR : masqué par défaut ===
-            if (wrapper) wrapper.style.display = 'none';
-            btn.style.display = 'none';
+            // ═══ BLOCAGE PERMANENT : le bouton flottant "Démarrer le Live" ═══
+            // est supprimé définitivement. Le Live se lance depuis le dashboard.
+            var _goLiveBtn = document.getElementById('lpGoLiveBtn');
+            var _wrapper = document.getElementById('lpGoLiveWrapper');
+            if (_goLiveBtn) _goLiveBtn.style.display = 'none';
+            if (_wrapper) _wrapper.style.display = 'none';
+            return;
 
             // ============================================================
             // GARDE ABSOLUE : un prestataire sans boutique ne voit JAMAIS
@@ -31354,6 +31371,11 @@
                 // Si onglet Chat, ouvrir la messagerie
                 if (next === 'communication') {
                     try { openChat(); } catch(e) {}
+                }
+                // Si onglet Commandes, charger les commandes du shop
+                if (next === 'orders') {
+                    try { renderProviderOrders(); } catch(e) {}
+                    setTimeout(function() { try { renderProviderOrders(); } catch(e) {} }, 200);
                 }
                 console.log('[SWITCH-VENDOR-TAB] Shop dash → ' + next);
                 return;
