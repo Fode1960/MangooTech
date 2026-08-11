@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -19505,10 +19505,11 @@
                 const actions = document.getElementById('vendorPrimaryActions');
                 if (actions) {
                     const isService = lpGetVendorKind(vendor) === 'service';
+                    const isShop = lpGetVendorKind(vendor) === 'shop';
                     const isLive = Boolean(vendor && vendor.live);
                     try {
                         actions.classList.remove('lp-actions-2', 'lp-actions-3', 'lp-actions-4');
-                        const count = 3 + (isLive ? 1 : 0) + (isService ? 1 : 0);
+                        const count = 3 + (isLive ? 1 : 0) + ((isService || isShop) ? 1 : 0);
                         actions.classList.add(count >= 4 ? 'lp-actions-4' : count === 3 ? 'lp-actions-3' : 'lp-actions-2');
                     } catch {
                     }
@@ -19527,8 +19528,8 @@
                                 <span style="font-size:1.1rem;">📹</span> Rejoindre le Live
                             </button>
                         ` : ''}
-                        ${isService ? `
-                            <button type="button" class="vendor-action-btn btn-primary" onclick="startServicePayment('${lpEscapeInlineArg(vendor.id)}')">
+                        ${(isService || isShop) ? `
+                            <button type="button" class="vendor-action-btn btn-primary" onclick="startServicePayment('${lpEscapeInlineArg(vendor.id)}', '${isShop ? 'shop' : 'service'}')">
                                 <span style="font-size:1.05rem;">💳</span> Payer
                             </button>
                         ` : ''}
@@ -19742,14 +19743,8 @@
                         </div>
                     `;
                 } else {
-                    // Même sans être propriétaire, on peut booster ce prestataire
-                    ownerLink.style.display = 'block';
-                    var boostKind = (kindMode === 'shop' ? 'shop' : 'provider');
-                    ownerLink.innerHTML = `
-                        <div style="display:flex; gap:10px; justify-content:flex-start; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:0 12px; scroll-snap-type:x proximity;">
-                                <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpTryOpenBoostFromLocal('${safeVendorId}', '${boostKind}');" style="flex:0 0 auto; white-space:nowrap; background:#1b5e20; color:white; font-size:0.95rem; border:1px solid #1b5e20; padding:10px 16px; border-radius:999px; font-weight:950; scroll-snap-align:start; cursor:pointer; pointer-events:auto;">🚀 Booster</button>
-                        </div>
-                    `;
+                    // Page publique client : pas de bouton Booster (réservé au dashboard vendeur)
+                    ownerLink.style.display = 'none';
                 }
             }
 
@@ -20501,20 +20496,22 @@
             window.open(url, '_blank');
         }
 
-        function startServicePayment(vendorId) {
+        function startServicePayment(vendorId, vendorKind) {
             const vendor = VENDORS.find((v) => String(v?.id) === String(vendorId)) || activeVendor;
             if (!vendor) return;
+            const isShop = String(vendorKind || '').toLowerCase() === 'shop';
 
-            // Modal stylisé Mangoo pour saisir le montant (remplace l'ancien prompt() + redirection /service-checkout)
-            var vName = String(vendor.name || 'Prestataire').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            // Modal stylisé Mangoo pour saisir le montant
+            var vName = String(vendor.name || (isShop ? 'Boutique' : 'Prestataire')).replace(/</g,'&lt;').replace(/>/g,'&gt;');
             var vPhone = String(vendor.phone || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            var titleText = isShop ? '💳 Paiement en boutique' : '💳 Paiement de prestation';
             var html = '<div style="padding:16px; border-radius:16px; border:1px solid var(--ml-border); background:rgba(17,24,39,0.04);">' +
-                '<div style="font-weight:950; font-size:1.1rem; margin-bottom:4px;">💳 Paiement de prestation</div>' +
+                '<div style="font-weight:950; font-size:1.1rem; margin-bottom:4px;">' + titleText + '</div>' +
                 '<div style="color:var(--ml-muted); font-size:0.9rem; margin-bottom:14px;">' + vName + (vPhone ? ' &middot; ' + vPhone : '') + '</div>' +
                 '<label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:6px; color:var(--ml-text);">Montant (FCFA)</label>' +
                 '<input id="lpServicePayAmount" inputmode="numeric" placeholder="ex: 5000" style="width:100%; padding:14px; border:2px solid var(--ml-border); border-radius:14px; background:var(--ml-panel); color:var(--ml-text); font-weight:900; font-size:1.2rem; text-align:center;" />' +
                 '<div style="display:flex; gap:10px; margin-top:16px;">' +
-                    '<button type="button" class="lp-btn lp-btn-primary" style="flex:1; background:linear-gradient(135deg,#1b5e20,#2e7d32); font-weight:950; font-size:1rem; padding:14px;" onclick="var el=document.getElementById(\'lpServicePayAmount\');var v=String(el?.value||\'\').replace(/[^\\d]/g,\'\');var a=Number(v);if(!Number.isFinite(a)||a<=0){alert(\'Montant invalide.\');return;}lpCloseModalShell();setTimeout(function(){openPaymentModal(a,function(r){console.log(\'[ServicePay] Paiement effectue:\',r);try{lpToast(\'Paiement de \'+a.toLocaleString()+\' FCFA réussi.\',\'ok\');}catch{}});},200);">✅ Payer</button>' +
+                    '<button type="button" class="lp-btn lp-btn-primary" style="flex:1; background:linear-gradient(135deg,#1b5e20,#2e7d32); font-weight:950; font-size:1rem; padding:14px;" onclick="var el=document.getElementById(\'lpServicePayAmount\');var v=String(el?.value||\'\').replace(/[^\\d]/g,\'\');var a=Number(v);if(!Number.isFinite(a)||a<=0){alert(\'Montant invalide.\');return;}lpCloseModalShell();setTimeout(function(){openPaymentModal(a,function(r){console.log(\'[ServicePay] Paiement effectue:\',r);try{lpToast(\'Paiement de \'+a.toLocaleString()+\' FCFA réussi.\',\'ok\');}catch{};});},200);">✅ Payer</button>' +
                     '<button type="button" class="lp-btn lp-btn-secondary" style="flex:1; padding:14px;" onclick="lpCloseModalShell();">Annuler</button>' +
                 '</div>' +
             '</div>';
