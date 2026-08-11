@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -14382,7 +14382,6 @@
                     if (vendor.verified) badges.push({ label: 'Vérifié', tone: 'ok' });
                     if (vendor.isMobile) badges.push({ label: 'Se déplace', tone: 'info' });
                     if (Array.isArray(vendor.services) && vendor.services.length) badges.push({ label: 'Profil', tone: 'neutral' });
-                    if (lpGetVendorKind(vendor) === 'shop') badges.push({ label: 'Boutique', tone: 'neutral' });
                     const shown = badges.slice(0, 2);
                     const extra = Math.max(0, badges.length - shown.length);
 
@@ -19591,23 +19590,8 @@
                 if (vendor.isMobile) badges.push('🚗 Se déplace');
                 if (Array.isArray(vendor.services) && vendor.services.length) badges.push('🧰 Profil');
                 if (vendor.live) badges.push('🔴 Live');
-                if (lpGetVendorKind(vendor) === 'shop') badges.push('🏪 Boutique');
-                // Badges Booster — compatible timestamps nombres ET chaînes ISO
-                (function() {
-                    var now = Date.now();
-                    var toMs = function(v) {
-                        if (v === null || v === undefined) return null;
-                        if (typeof v === 'number') return Number.isFinite(v) ? v : null;
-                        if (typeof v === 'string') { var t = Date.parse(v); return Number.isFinite(t) ? t : null; }
-                        return null;
-                    };
-                    var sp = toMs(vendor.sponsoredUntil);
-                    var pr = toMs(vendor.promoUntil);
-                    var nw = toMs(vendor.newUntil);
-                    if (sp !== null && sp > now) badges.push('🏷️ Sponsorisé');
-                    if (pr !== null && pr > now) badges.push('🎯 En Promo');
-                    if (nw !== null && nw > now) badges.push('✨ Nouveau');
-                })();
+                // Badges Booster (Sponsorisé, Promo, Nouveau) et badge Boutique
+                // retirés de la page publique — le Booster est réservé au dashboard vendeur.
 
                 if (badges.length) {
                     badgesEl.style.display = 'flex';
