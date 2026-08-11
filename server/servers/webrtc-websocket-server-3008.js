@@ -769,6 +769,59 @@ wss.on('connection', (ws) => {
     const vendorOnline = isVendorOnline(vendorId) || (fallbackVendorId ? isVendorOnline(fallbackVendorId) : false);
     // Stocker la session client pour pouvoir lui renvoyer call-accepted / call-ended
     callSessions.set(roomId, ws);
+
+    // FALLBACK LIVE : si le vendeur est en live, envoyer incoming-call
+    // directement au vendeur via la session live (et pas via broadcastToRoom
+    // qui ne fonctionne pas car personne ne rejoint la room live:xxx).
+    try {
+      const liveVid = vendorId || fallbackVendorId;
+      console.log(`[WebRTC-3008] LIVE CHECK: liveVid=${liveVid} isVendorLive=${liveVid ? isVendorLive(liveVid) : 'N/A'} vendorOnline=${vendorOnline}`);
+      if (liveVid && isVendorLive(liveVid)) {
+        const session = getLiveSession(liveVid);
+        let sentViaSession = false;
+        console.log(`[WebRTC-3008] LIVE SESSION: session=${!!session} vendorWs=${!!(session?.vendorWs)} readyState=${session?.vendorWs?.readyState} viewers=${session?.viewers ? session.viewers.size : 'N/A'}`);
+        if (session && session.vendorWs && session.vendorWs.readyState === WebSocket.OPEN) {
+          console.log(`[WebRTC-3008] Vendor ${liveVid} est en live → envoi incoming-call direct via session.vendorWs (readyState=${session.vendorWs.readyState})`);
+          try {
+            session.vendorWs.send(JSON.stringify(incomingCallMsg));
+            sentViaSession = true;
+            console.log(`[WebRTC-3008] ✅ incoming-call ENVOYE via session.vendorWs a ${liveVid}`);
+          } catch(e) {
+            console.error(`[WebRTC-3008] ECHEC session.vendorWs.send pour ${liveVid}:`, e.message);
+          }
+        } else {
+          console.warn(`[WebRTC-3008] Vendor ${liveVid} en live mais session.vendorWs absent ou ferme (ws=${!!(session?.vendorWs)}, readyState=${session?.vendorWs?.readyState})`);
+        }
+        // Fallback: aussi envoyer via vendorPresence si session.vendorWs a echoue
+        if (!sentViaSession) {
+          const presEntry = vendorPresence.get(vendorId) || vendorPresence.get(rawId) || (fallbackVendorId ? vendorPresence.get(fallbackVendorId) : null);
+          console.log(`[WebRTC-3008] PRESENCE FALLBACK: presEntry=${!!presEntry} readyState=${presEntry?.ws?.readyState}`);
+          if (presEntry && presEntry.ws !== ws && presEntry.ws.readyState === WebSocket.OPEN) {
+            console.log(`[WebRTC-3008] Fallback: envoi incoming-call via vendorPresence pour ${vendorId}`);
+            try {
+              presEntry.ws.send(JSON.stringify(incomingCallMsg));
+              console.log(`[WebRTC-3008] ✅ incoming-call ENVOYE via vendorPresence a ${vendorId}`);
+            } catch(e) {
+              console.error(`[WebRTC-3008] ECHEC vendorPresence.ws.send:`, e.message);
+            }
+          }
+        }
+        // Message chat visible dans le panneau live (envoyé à tous les viewers)
+        broadcastToLiveViewers(liveVid, {
+          type: 'chat-message',
+          roomId: `live:${liveVid}`,
+          from: 'system',
+          fromLabel: '📞 Appel',
+          message: `${fromLabel || 'Un client'} souhaite vous appeler en ${cm === 'video' ? 'video' : 'audio'}. Ouvrez l'appel !`,
+          timestamp: Date.now()
+        }, null);
+        // DOUBLE SECURITE : broadcast incoming-call a tous les participants du live
+        // (les clients l'ignoreront via le guard _lpLiveIsVendor, le vendeur l'affichera)
+        broadcastToLiveViewers(liveVid, incomingCallMsg, currentUser?.id);
+        console.log(`[WebRTC-3008] ✅ broadcastToLiveViewers effectue pour ${liveVid} (exclude=${currentUser?.id})`);
+      }
+    } catch(e) { console.warn('[WebRTC-3008] Erreur broadcast live:', e.message); }
+
     if (vendorOnline) {
       console.log(`[WebRTC-3008] Vendor ${vendorId} est en ligne, envoi direct (pas de push)`);
       const vendorPres = vendorPresence.get(vendorId) || vendorPresence.get(rawId) || (fallbackVendorId ? vendorPresence.get(fallbackVendorId) : null);

@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -4881,9 +4881,11 @@
                         </div>
 
                         <div id="lp-vendor-orders" class="lp-pane" data-vpane="orders">
-                            <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
-                                <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Commandes vendeur</div>
-                                <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Historique des commandes reçues.</div>
+                            <div id="lpProviderOrdersContainer" style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px; min-height: 120px;">
+                                <div style="text-align:center; padding:30px 0; color:var(--ml-muted);">
+                                    <div style="font-size:2.5rem; margin-bottom:8px;">🛒</div>
+                                    <div style="font-weight:900;">Chargement des commandes...</div>
+                                </div>
                             </div>
                         </div>
 
@@ -4973,14 +4975,7 @@
                             </div>
                         </div>
 
-                        <div id="lp-provider-orders" class="lp-pane" data-pvpane="orders">
-                            <div id="lpProviderOrdersContainer" style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px; min-height: 120px;">
-                                <div style="text-align:center; padding:30px 0; color:var(--ml-muted);">
-                                    <div style="font-size:2.5rem; margin-bottom:8px;">🛒</div>
-                                    <div style="font-weight:900;">Chargement des commandes...</div>
-                                </div>
-                            </div>
-                        </div>
+                        <div id="lp-provider-orders" class="lp-pane" data-pvpane="orders"></div>
 
                         <div id="lp-provider-communication" class="lp-pane" data-pvpane="communication">
                             <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
@@ -6906,14 +6901,10 @@
                     } catch(e) {}
                 }
                 if (!_shopId2) {
-                    // Dernier recours : chercher dans VENDORS le vendor dont vendorSection est affiché
+                    // Dernier recours : utiliser le vendor du live en cours si dispo
                     try {
-                        var _allV = Array.isArray(VENDORS) ? VENDORS : [];
-                        for (var _vi = 0; _vi < _allV.length; _vi++) {
-                            if (String(_allV[_vi]?.kind || '').toLowerCase() === 'shop') {
-                                _shopId2 = String(_allV[_vi].id || '').trim();
-                                break;
-                            }
+                        if (typeof _lpLiveVendorId !== 'undefined' && _lpLiveVendorId) {
+                            _shopId2 = String(_lpLiveVendorId);
                         }
                     } catch(e) {}
                 }
@@ -7229,6 +7220,20 @@
                     }
                 } catch {
                 }
+
+                // Restaurer le micro Live si l'appel etait pendant un Live (cote vendeur)
+                try {
+                    if (typeof _lpLiveActive !== 'undefined' && _lpLiveActive && _lpLiveIsVendor) {
+                        if (typeof _lpRestoreLiveMic === 'function') {
+                            _lpRestoreLiveMic();
+                        } else if (typeof _lpLiveStream !== 'undefined' && _lpLiveStream) {
+                            var at2 = _lpLiveStream.getAudioTracks();
+                            if (at2 && at2.length > 0) { at2[0].enabled = true; }
+                        }
+                        console.log('[Live] Micro Live RESTAURE apres fin appel (end_call)');
+                        _lpAppendLiveChatMsg('lpLiveChatMsgsVendor', '🔔', '✅ Appel privé terminé. Le vendeur est de retour.', false);
+                    }
+                } catch(e) { console.warn('[Live] Erreur restauration micro depuis end_call:', e); }
             }
         });
 
@@ -15876,6 +15881,8 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         roomId: String(draft.roomId || '').trim() || 'live-room-123',
+                        vendorId: String(draft.vendorId || '').trim() || undefined,
+                        vendorName: String(draft.vendorName || draft.shopName || '').trim() || undefined,
                         shopSlug: String(draft.shopSlug || '').trim() || undefined,
                         shopName: String(draft.shopName || draft.vendorName || '').trim() || undefined,
                         buyerId: String(draft.buyerId || '').trim() || undefined,
@@ -16143,6 +16150,7 @@
                 shopSlug: shopSlug,
                 shopName: shopName,
                 vendorName: shopName,
+                vendorId: String(ctxVendor.vendorId || activeVendor?.id || localStorage.getItem('mangoo_my_shop_id') || localStorage.getItem('mangoo_my_provider_id') || '').trim(),
                 buyerId: currentUser?.id || '',
                 buyerName: currentUser?.name || 'Client',
                 buyerEmail: currentUser?.email || '',
@@ -16432,7 +16440,12 @@
                 if (!providerId) providerId = String(localStorage.getItem('mangoo_my_provider_id') || '').trim();
                 var providerName = '';
                 try { providerName = String(activeVendor?.name || '').trim(); } catch(e) {}
-                console.log('[renderProviderOrders] providerId=' + providerId + ' providerName=' + providerName);
+                var fallbackSlug = '';
+                try { fallbackSlug = String(activeVendor?.shopSlug || activeVendor?.shop_slug || activeVendor?.slug || '').trim(); } catch(e) {}
+                if (!fallbackSlug) {
+                    try { fallbackSlug = String(JSON.parse(localStorage.getItem('mangoo-current-user') || '{}')?.shopSlug || '').trim(); } catch(e) {}
+                }
+                console.log('[renderProviderOrders] providerId=' + providerId + ' providerName=' + providerName + ' slug=' + fallbackSlug);
 
                 // === 1. Commandes du localStorage (backward compat) ===
                 var localOrders = typeof lpReadClientOrders === 'function' ? lpReadClientOrders() : [];
@@ -16448,7 +16461,7 @@
                     var seen = {};
                     localFiltered.forEach(function(o) { if (o && o.id) seen[String(o.id)] = true; });
 
-                    fetch('/api/live-orders/by-vendor/' + encodeURIComponent(providerId))
+                    fetch('/api/live-orders/by-vendor/' + encodeURIComponent(providerId) + '?shopSlug=' + encodeURIComponent(fallbackSlug) + '&shopName=' + encodeURIComponent(providerName))
                         .then(function(r) { return r.json(); })
                         .then(function(data) {
                             var serverOrders = (data && data.success && Array.isArray(data.orders)) ? data.orders : [];
@@ -16511,8 +16524,8 @@
                 productName: safeProductName,
                 vendorName: safeVendorName,
                 shopName: safeVendorName,
-                vendorId: String(vendorContext.vendorId || '').trim(),
-                shopSlug: String(vendorContext.shopSlug || '').trim(),
+                vendorId: String(vendorContext.vendorId || activeVendor?.id || localStorage.getItem('mangoo_my_shop_id') || localStorage.getItem('mangoo_my_provider_id') || '').trim(),
+                shopSlug: String(vendorContext.shopSlug || activeVendor?.shopSlug || activeVendor?.shop_slug || activeVendor?.slug || '').trim(),
                 roomId: String(vendorContext.roomId || safeVendorName).trim() || 'live-room-123',
                 qty: 1,
                 amountCfa: cleanPrice,
@@ -17475,6 +17488,10 @@
                     handleChatBroadcast(data);
                     break;
                 case 'incoming-call':
+                case 'call-notification':
+                    // call-notification = message brut du client, incoming-call = format serveur
+                    // On traite les deux de la meme facon
+                    console.log('[MgmtWS] APPEL RECU: type=' + data.type + ' from=' + (data.fromLabel || data.from));
                     handleIncomingCall(data);
                     break;
                 case 'call-accepted':
@@ -18031,6 +18048,13 @@
         function handleIncomingCall(data) {
             console.log('[MgmtWS] Appel entrant:', data);
             incomingCallData = data;
+            
+            // GUARD : si on est client dans un Live, ignorer (l'appel est pour le vendeur)
+            if (typeof _lpLiveActive !== 'undefined' && _lpLiveActive && typeof _lpLiveIsVendor !== 'undefined' && !_lpLiveIsVendor) {
+                console.log('[IncomingCall] Ignore (client dans un Live, appel pour le vendeur)');
+                return;
+            }
+            
             const banner = document.getElementById('incomingCallBanner');
             const callerEl = document.getElementById('icbCallerName');
             if (!banner || !callerEl) return;
@@ -18040,6 +18064,21 @@
             // Jouer la sonnerie
             startRinging();
             try { if (navigator && navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch {}
+            // Si le vendeur est en live, afficher aussi une alerte dans le panneau live
+            try {
+                if (_lpLiveActive && _lpLiveIsVendor) {
+                    var _liveChatVendor = document.getElementById('lpLiveChatMsgsVendor');
+                    if (_liveChatVendor) {
+                        var _alertDiv = document.createElement('div');
+                        _alertDiv.className = 'lp-live-call-alert';
+                        _alertDiv.innerHTML = '<div style="background:#d32f2f;color:#fff;padding:10px 14px;border-radius:8px;margin:4px 0;font-weight:700;text-align:center;animation:pulse 1s infinite;">📞 APPEL ENTRANT : ' + callerName + ' souhaite vous parler !<br><small style="opacity:0.85;">Acceptez l\'appel dans la bannière en haut</small></div>';
+                        _liveChatVendor.appendChild(_alertDiv);
+                        _liveChatVendor.scrollTop = _liveChatVendor.scrollHeight;
+                        // Auto-suppression apres 30s
+                        setTimeout(function() { try { _alertDiv.remove(); } catch(e) {} }, 30000);
+                    }
+                }
+            } catch(e) { console.warn('[Live] Erreur alerte appel live:', e); }
         }
 
         function acceptIncomingCall() {
@@ -18075,7 +18114,29 @@
                 if (callFrame && callOverlay) {
                     const roomId = data.roomId || '';
                     callOverlay.classList.add('loading');
-                    callFrame.onload = function() { callOverlay.classList.remove('loading'); };
+                    callFrame.onload = function() {
+                        callOverlay.classList.remove('loading');
+                        // Forcer la reprise audio dans l'iframe (autoplay policy)
+                        setTimeout(function() {
+                            try {
+                                if (callFrame && callFrame.contentWindow) {
+                                    callFrame.contentWindow.postMessage('resumeAudio', '*');
+                                }
+                            } catch(e) { console.warn('[Call] Erreur resumeAudio:', e); }
+                        }, 800);
+                        // Couper le micro Live pendant l'appel prive (confidentialite)
+                        if (typeof _lpLiveActive !== 'undefined' && _lpLiveActive && typeof _lpLiveStream !== 'undefined' && _lpLiveStream) {
+                            try {
+                                var at = _lpLiveStream.getAudioTracks();
+                                if (at && at.length > 0) {
+                                    at[0].enabled = false;
+                                    console.log('[Live] Micro Live COUPE pour appel prive');
+                                    // Notifier le public du Live
+                                    _lpAppendLiveChatMsg('lpLiveChatMsgsVendor', '🔔', '📞 Le vendeur est en appel privé. Son micro est momentanément coupé.', false);
+                                }
+                            } catch(e) { console.warn('[Live] Erreur coupe micro Live:', e); }
+                        }
+                    };
                     callFrame.src = 'webrtc-audio.html?callee=' + encodeURIComponent(vendorName) + '&theme=' + isDark + '&mode=audio&autoConnect=true&t=' + Date.now() + '&role=callee&roomId=' + encodeURIComponent(roomId);
                     callOverlay.style.display = 'flex';
                     // Stocker le join-room pour l'envoyer quand l'iframe sera prete
@@ -18184,6 +18245,20 @@
                     }
                     if (callOverlay) callOverlay.style.display = 'none';
                 } catch {}
+                // Restaurer le micro Live si l'appel etait pendant un Live
+                if (typeof _lpLiveActive !== 'undefined' && _lpLiveActive && _lpLiveIsVendor) {
+                    try {
+                        if (typeof _lpRestoreLiveMic === 'function') {
+                            _lpRestoreLiveMic();
+                        } else if (typeof _lpLiveStream !== 'undefined' && _lpLiveStream) {
+                            var at = _lpLiveStream.getAudioTracks();
+                            if (at && at.length > 0) { at[0].enabled = true; }
+                        }
+                        console.log('[Live] Micro Live RESTAURE apres appel prive (call-ended)');
+                        // Notifier le public du Live
+                        _lpAppendLiveChatMsg('lpLiveChatMsgsVendor', '🔔', '✅ Appel privé terminé. Le vendeur est de retour.', false);
+                    } catch(e) { console.warn('[Live] Erreur restauration micro Live:', e); }
+                }
             } catch {}
         }
 
@@ -20803,6 +20878,32 @@
                         durationHours: hours,
                         expiresAtMs: untilMs
                     });
+
+                    // CREER UNE COMMANDE pour le paiement du boost (visible dans 📦 Voir mes commandes)
+                    try {
+                        var bVendorName = '';
+                        try {
+                            var bvv = VENDORS.find(function(x) { return String(x?.id) === String(vid); });
+                            bVendorName = String(bvv?.name || bvv?.shop_name || '').trim() || '';
+                        } catch(e) {}
+                        fetch('/api/live-orders/record-payment', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                vendorId: vid,
+                                vendorName: bVendorName,
+                                amount: amount,
+                                method: paymentResult.method || 'mobile_money',
+                                paidAt: paymentResult.paidAt
+                            })
+                        }).then(function(r) { return r.json(); }).then(function(d) {
+                            console.log('[Booster] Commande creee:', d.success ? 'OK' : 'FAIL', d.orderId);
+                            // Rafraichir l'onglet commandes
+                            try { setTimeout(function() { if (typeof renderProviderOrders === 'function') renderProviderOrders(); }, 500); } catch(e) {}
+                        }).catch(function(err) {
+                            console.error('[Booster] Erreur creation commande:', err.message);
+                        });
+                    } catch(e) { console.error('[Booster] Erreur savePayment:', e); }
 
                     // Rafraîchir l'affichage
                     try { if (typeof filterVendors === 'function') filterVendors(); } catch {}
@@ -27286,9 +27387,18 @@
             // Utiliser le flux d'appel existant
             var vendorId = _lpLiveVendorId;
             if (typeof startAudioCall === 'function') {
-                // Definir activeVendor temporairement si necessaire
-                if (!activeVendor || activeVendor.id !== vendorId) {
+                // Toujours résoudre le vendor depuis VENDORS pour éviter
+                // d'utiliser un nom erroné (ex: 'Epicerie du Quartier' par startAudioCall)
+                var liveVendor = null;
+                try {
+                    liveVendor = (Array.isArray(VENDORS) ? VENDORS : []).find(function(x) { return String(x?.id) === String(vendorId); });
+                } catch(e) {}
+                if (liveVendor) {
+                    activeVendor = liveVendor;
+                    console.log('[Call] lpCallLiveVendor: vendor résolu depuis VENDORS:', liveVendor.name);
+                } else if (!activeVendor || String(activeVendor.id) !== String(vendorId)) {
                     activeVendor = { id: vendorId, name: 'Vendeur Live' };
+                    console.log('[Call] lpCallLiveVendor: vendor fallback Vendeur Live');
                 }
                 startAudioCall();
             } else {
@@ -27356,6 +27466,16 @@
                     _lpLiveActive = true;
                     _lpLiveViewerCount = msg.viewerCount || 0;
                     _lpLiveProducts = msg.products || [];
+                    // Résoudre le vendor depuis VENDORS pour avoir le bon nom
+                    if (_lpLiveVendorId) {
+                        try {
+                            var _vLive = (Array.isArray(VENDORS) ? VENDORS : []).find(function(x) { return String(x?.id) === String(_lpLiveVendorId); });
+                            if (_vLive) {
+                                activeVendor = _vLive;
+                                console.log('[Live] live:joined → activeVendor résolu:', _vLive.name);
+                            }
+                        } catch(e) {}
+                    }
                     // Afficher le nom du vendeur
                     var vName = document.getElementById('lpLiveVendorName');
                     if (vName) {
@@ -27512,6 +27632,89 @@
         var _lpLivePeerConnections = {}; // viewerUserId -> RTCPeerConnection
         var _lpLiveViewerUserId = null; // userId du viewer courant (côté client)
         var _lpLiveRetryTimeout = null; // timeout pour le retry du stream distant
+
+        // Restaurer le micro Live apres appel privé
+        // v3 : Ré-acquiert le microphone via getUserMedia après appel privé.
+        // L'iframe d'appel privé (test-webrtc-audio.html) appelle getUserMedia({audio:true})
+        // ce qui vole le micro physique. Quand l'iframe est détruite, le navigateur libère
+        // le micro → le track audio du _lpLiveStream devient muet (même si enabled=true).
+        // Seule solution : ré-acquérir un NOUVEAU track audio via getUserMedia.
+        function _lpRestoreLiveMic() {
+            if (!_lpLiveStream) return false;
+
+            // Sauvegarder les IDs des viewers connectés puis FERMER toutes les connexions
+            var connectedViewers = [];
+            Object.keys(_lpLivePeerConnections).forEach(function(vid) {
+                var pc = _lpLivePeerConnections[vid];
+                try {
+                    var rawId = vid.startsWith('vendor:') ? vid.substring(7) : vid;
+                    if (connectedViewers.indexOf(rawId) === -1) {
+                        connectedViewers.push(rawId);
+                    }
+                    pc.close();
+                } catch(e) {}
+                delete _lpLivePeerConnections[vid];
+            });
+            console.log('[Live] _lpRestoreLiveMic v3: ' + connectedViewers.length + ' connexions fermees, re-acquisition micro dans 600ms...');
+
+            // Attendre que l'iframe ait totalement libere le micro (src='' + garbage collect)
+            var viewersToRestore = connectedViewers.slice();
+            setTimeout(function() {
+                console.log('[Live] _lpRestoreLiveMic v3: appel getUserMedia({audio:true})...');
+                navigator.mediaDevices.getUserMedia({ audio: true }).then(function(aStream) {
+                    var newTrack = aStream.getAudioTracks()[0];
+                    if (!newTrack) {
+                        console.warn('[Live] _lpRestoreLiveMic v3: aucun track audio obtenu');
+                        _lpRebuildViewers(viewersToRestore);
+                        return;
+                    }
+                    console.log('[Live] _lpRestoreLiveMic v3: nouveau track audio obtenu, label=' + newTrack.label + ', readyState=' + newTrack.readyState);
+
+                    // Arreter les anciens tracks audio du _lpLiveStream
+                    var oldAudioTracks = _lpLiveStream.getAudioTracks();
+                    oldAudioTracks.forEach(function(t) {
+                        console.log('[Live] _lpRestoreLiveMic v3: arret ancien track audio, label=' + t.label + ', readyState=' + t.readyState);
+                        t.stop();
+                        _lpLiveStream.removeTrack(t);
+                    });
+
+                    // Ajouter le nouveau track audio au stream
+                    _lpLiveStream.addTrack(newTrack);
+                    newTrack.enabled = true;
+
+                    // Arreter les eventuels autres tracks du nouveau stream (video, etc.)
+                    aStream.getTracks().forEach(function(t) {
+                        if (t !== newTrack) t.stop();
+                    });
+
+                    console.log('[Live] _lpRestoreLiveMic v3: nouveau track audio ajoute a _lpLiveStream, reconstruction connexions...');
+                    _lpRebuildViewers(viewersToRestore);
+                }).catch(function(err) {
+                    console.error('[Live] _lpRestoreLiveMic v3: echec getUserMedia - ' + err.name + ': ' + err.message);
+                    // Fallback: reconstruire les connexions avec l'ancien track (qui est peut-etre encore OK)
+                    console.warn('[Live] _lpRestoreLiveMic v3: fallback → reconstruction avec ancien track');
+                    _lpRebuildViewers(viewersToRestore);
+                });
+            }, 600);
+
+            return connectedViewers.length > 0;
+        }
+
+        // Helper : reconstruire les connexions WebRTC pour une liste de viewers
+        function _lpRebuildViewers(viewerIds) {
+            if (!viewerIds || viewerIds.length === 0) return;
+            viewerIds.forEach(function(vid) {
+                if (_lpPendingViewers.indexOf(vid) === -1) {
+                    _lpPendingViewers.push(vid);
+                }
+            });
+            if (typeof _lpFlushPendingViewers === 'function') {
+                _lpFlushPendingViewers();
+            }
+            if (typeof webrtcMgmtWs !== 'undefined' && webrtcMgmtWs && webrtcMgmtWs.readyState === WebSocket.OPEN && typeof _lpLiveVendorId !== 'undefined' && _lpLiveVendorId) {
+                webrtcMgmtWs.send(JSON.stringify({ type: 'live:get-viewers', vendorId: _lpLiveVendorId }));
+            }
+        }
 
         // Vendeur : initier une connexion WebRTC vers un viewer
         function _lpStartLiveStreamToViewer(viewerUserId) {

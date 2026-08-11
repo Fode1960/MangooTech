@@ -184,9 +184,14 @@ const buildResolvedIdentityFromVendor = (vendor: any, preferredRole?: string) =>
   if (!ownerEmail) return null
   const role = String(preferredRole || '').trim().toLowerCase() === 'client' ? 'client' : 'vendor'
   const vendorKind = getNormalizedVendorKind(vendor)
+  // AXE 1.5 : Pour une boutique, le nom affiché doit être celui du shop (ex: "DAN PC"),
+  // pas le ownerName (ex: "Administrateur"). ownerName est le propriétaire, pas le commerce.
+  const displayName = vendorKind === 'shop'
+    ? (String(vendor?.name || vendor?.ownerName || ownerEmail.split('@')[0] || 'Utilisateur').trim())
+    : (String(vendor?.ownerName || vendor?.name || ownerEmail.split('@')[0] || 'Utilisateur').trim())
   return {
     email: ownerEmail,
-    name: String(vendor?.ownerName || vendor?.name || ownerEmail.split('@')[0] || 'Utilisateur').trim(),
+    name: displayName,
     phone: String(getResolvedVendorPhone(vendor) || '').trim(),
     role,
     roles: role === 'vendor' ? ['vendor', 'client'] : ['client'],

@@ -460,7 +460,26 @@
                             const remoteAudio = document.getElementById('remoteAudio');
                             if (remoteAudio) {
                                 remoteAudio.srcObject = remoteAudioStream;
-                                remoteAudio.play().catch(e => console.warn('[WebRTC] Caller: autoplay audio bloque...', e));
+                                remoteAudio.play().then(function() {
+                                    console.log('[WebRTC] Audio distant en lecture');
+                                }).catch(function(e) {
+                                    console.warn('[WebRTC] autoplay audio bloque, tentera avec interaction...', e);
+                                    // Retry avec un delai
+                                    var ar = 0;
+                                    var arTry = function() {
+                                        var ra = document.getElementById('remoteAudio');
+                                        if (ra && ra.srcObject) {
+                                            ra.muted = false;
+                                            ra.volume = 1.0;
+                                            ra.play().then(function() {
+                                                console.log('[WebRTC] Audio distant reactive (retry)');
+                                            }).catch(function(err) {
+                                                if (ar < 8) { ar++; setTimeout(arTry, 800); }
+                                            });
+                                        }
+                                    };
+                                    setTimeout(arTry, 1000);
+                                });
                             }
                             console.log('[WebRTC] Caller: audio distant initialise');
                         } else {
@@ -867,6 +886,36 @@
                     if (!callConnected) connectCall();
                 } else if (data === 'call_ended') {
                     terminateCall();
+                } else if (data === 'resumeAudio') {
+                    // Forcer la reprise de l'audio distant (autoplay policy)
+                    // Retry jusqu'a 5 fois car la connexion WebRTC peut ne pas etre prete
+                    var retries = 0;
+                    var maxRetries = 5;
+                    var tryResume = function() {
+                        var ra = document.getElementById('remoteAudio');
+                        if (ra && ra.srcObject) {
+                            ra.muted = false;
+                            ra.volume = 1.0;
+                            ra.play().then(function() {
+                                console.log('[Call] Audio distant reactive avec succes (tentative ' + (retries + 1) + ')');
+                            }).catch(function(e) {
+                                console.warn('[Call] Echec reprise audio distant:', e);
+                                if (retries < maxRetries) { retries++; setTimeout(tryResume, 600); }
+                            });
+                        } else if (retries < maxRetries) {
+                            retries++;
+                            console.log('[Call] srcObject pas encore pret, retry ' + retries + '/' + maxRetries);
+                            setTimeout(tryResume, 600);
+                        }
+                    };
+                    setTimeout(tryResume, 200);
+                    // Tenter aussi l'AudioContext
+                    try {
+                        var ctx = window.AudioContext || window.webkitAudioContext;
+                        if (ctx && window._ringtoneCtx && window._ringtoneCtx.state === 'suspended') {
+                            window._ringtoneCtx.resume().catch(function() {});
+                        }
+                    } catch(e) {}
                 } else if (data && data.type === 'webrtc-signal') {
                     // Relai WebRTC du parent (offer / answer / ice-candidate / product-preview)
                     handleWebRTCSignal(data.signal);

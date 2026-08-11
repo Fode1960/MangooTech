@@ -1273,9 +1273,44 @@ router.post('/dev/activate', (req, res) => {
       durationHours,
       sponsoredTier: tier,
     })
+
+    // Enregistrer la commande dans l'historique
+    try {
+      const expiresAt =
+        boostKind === 'sponsored' ? row.sponsored_until :
+        boostKind === 'promo' ? row.promo_until :
+        row.new_until
+      localBoostOrdersStore.create({
+        vendor_id: vendorId,
+        vendor_kind: vendorKind as any,
+        boost_kind: boostKind as any,
+        duration_hours: durationHours,
+        amount_xof: Number(req.body?.amount || 0) || 0,
+        currency: String(req.body?.currency || 'XOF'),
+        status: 'active',
+        expires_at: expiresAt ? String(expiresAt) : null,
+      })
+    } catch { /* non-bloquant */ }
+
     res.json({ success: true, row })
   } catch (e: any) {
     res.status(400).json({ success: false, error: e?.message || 'Erreur' })
+  }
+})
+
+// Récupérer l'historique des commandes boost (admin)
+router.get('/orders', (req, res) => {
+  try {
+    const isDev = String(process.env.NODE_ENV || '').trim().toLowerCase() !== 'production'
+    if (!isDev || !isLocalBoostPricingMode()) {
+      res.status(404).json({ orders: [] })
+      return
+    }
+    const limit = Math.max(1, Math.min(200, Math.floor(Number(req.query?.limit || 50))))
+    const orders = localBoostOrdersStore.listAll(limit)
+    res.json({ orders })
+  } catch (e: any) {
+    res.status(500).json({ orders: [], error: e?.message || 'Erreur' })
   }
 })
 

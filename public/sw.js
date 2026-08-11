@@ -175,6 +175,7 @@ self.addEventListener('notificationclick', (event) => {
       const params = [];
       if (!targetUrl.includes('?')) params.push('v=' + Date.now());
       params.push('chatAction=open');
+      params.push('lpRole=vendor');
       if (notifData.roomId) params.push('roomId=' + encodeURIComponent(notifData.roomId));
       if (notifData.vendorId) params.push('vendorId=' + encodeURIComponent(notifData.vendorId));
       if (notifData.clientId) params.push('clientId=' + encodeURIComponent(notifData.clientId));
@@ -225,6 +226,7 @@ self.addEventListener('notificationclick', (event) => {
   // Refus ou clic simple : ouvrir mangoo-local
   let targetUrl = basePage;
   const params = new URLSearchParams();
+  params.set('lpRole', 'vendor');
   if (notifData.roomId) params.set('roomId', notifData.roomId);
   if (notifData.callMode) params.set('callMode', notifData.callMode);
   if (notifData.fromLabel) params.set('fromLabel', notifData.fromLabel);

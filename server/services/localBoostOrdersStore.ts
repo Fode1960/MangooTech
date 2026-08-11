@@ -140,6 +140,14 @@ export const localBoostOrdersStore = {
     return list.slice(0, lim)
   },
 
+  listAll: (limit: number) => {
+    const lim = Math.max(1, Math.min(200, Math.floor(Number(limit || 50))))
+    const db = safeRead()
+    const list = [...(db.orders || [])]
+    list.sort((a, b) => Date.parse(String(b.created_at)) - Date.parse(String(a.created_at)))
+    return list.slice(0, lim)
+  },
+
   listByVendors: (vendorIds: string[], vendorKind: string, limit: number) => {
     const ids = new Set((Array.isArray(vendorIds) ? vendorIds : []).map((x) => String(x || '').trim()).filter(Boolean))
     const kind = normalizeKind(vendorKind)
