@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -4788,7 +4788,7 @@
             <div style="padding: 0 16px 12px; position: sticky; top: 0; z-index: 20; background: var(--ml-bg);">
                 <div class="lp-tabs" aria-label="Boussole compte client">
                     <button type="button" onclick="try{lpGoToClientAccount('orders')}catch{}" class="lp-tab active" id="lp-tab-orders">📦 Commandes</button>
-                    <button type="button" onclick="try{lpGoToVendorTab('overview')}catch{}" class="lp-tab" id="lp-tab-sell">🏪 Vendre</button>
+                    <button type="button" onclick="try{switchVendorTab('overview')}catch{}" class="lp-tab" id="lp-tab-sell">🏪 Vendre</button>
                     <button type="button" onclick="try{lpGoToClientAccount('profile')}catch{}" class="lp-tab" id="lp-tab-profile">👤 Profil</button>
                     <button type="button" onclick="try{lpGoToClientAccount('wishlist')}catch{}" class="lp-tab" id="lp-tab-favorites">❤️ Favoris</button>
                     <button type="button" onclick="try{lpGoToClientAccount('wallet')}catch{}" class="lp-tab" id="lp-tab-pay">💳 Mangoo Pay</button>
@@ -4836,17 +4836,17 @@
 
                     <div id="vendorSection" style="margin-top:14px; display:block;">
 
-                        <div class="lp-tabs" style="margin-bottom: 12px;" aria-label="Boussole compte vendeur">
-                            <button type="button" onclick="try{lpGoToVendorTab('overview')}catch{}" class="lp-tab active" id="lp-vtab-overview">📊 Vue d’ensemble</button>
-                            <button type="button" onclick="try{lpGoToVendorTab('products')}catch{}" class="lp-tab" id="lp-vtab-products">🧾 Produits</button>
-                            <button type="button" onclick="try{lpGoToVendorTab('communication')}catch{}" class="lp-tab" id="lp-vtab-communication">💬 Chat</button>
-                            <button type="button" onclick="try{lpGoToVendorTab('supply')}catch{}" class="lp-tab" id="lp-vtab-supply">🏭 Appro</button>
+                        <div class="lp-tabs" style="margin-bottom: 12px; flex-wrap:nowrap; overflow-x:auto;" aria-label="Boussole compte vendeur">
+                            <button type="button" onclick="try{switchVendorTab('overview')}catch{}" class="lp-tab active" id="lp-vtab-overview">📊 Vue d’ensemble</button>
+                            <button type="button" onclick="try{switchVendorTab('products')}catch{}" class="lp-tab" id="lp-vtab-products">🧾 Produits</button>
+                            <button type="button" onclick="try{switchVendorTab('communication')}catch{}" class="lp-tab" id="lp-vtab-communication">💬 Chat</button>
+                            <button type="button" onclick="try{switchVendorTab('supply')}catch{}" class="lp-tab" id="lp-vtab-supply">🏭 Appro</button>
+                            <button type="button" onclick="try{switchVendorTab('live')}catch{}" class="lp-tab" id="lp-vtab-live">🔴 Live</button>
                         </div>
 
                         <div id="lp-vendor-overview" class="lp-pane active" data-vpane="overview">
                             <div style="display:flex; gap:10px; flex-wrap:wrap; margin:-6px 0 18px;">
                                 <button type="button" class="lp-btn lp-btn-primary" onclick="try{switchVendorTab('orders')}catch{}">📦 Voir mes commandes</button>
-                                <button type="button" class="lp-btn lp-btn-secondary" onclick="try{switchVendorTab('products')}catch{}">🧾 Gérer mes produits</button>
                             </div>
 
                             <div style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:16px; margin-bottom:18px;">
@@ -4861,14 +4861,9 @@
                             </div>
 
                             <div id="boostSimpleCard" style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:16px; margin-bottom:20px; box-shadow:var(--ml-shadow-sm); display:none;">
-                                <div id="boostSimpleCardTitle" style="font-weight:950; color:var(--ml-text); margin-bottom:10px;">📍 Visibilité Carte</div>
+                                <div id="boostSimpleCardTitle" style="font-weight:950; color:var(--ml-text); margin-bottom:10px;">📍 Visibilité</div>
                                 <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                                    <button onclick="event.stopPropagation(); var card=document.getElementById('boostSimpleCard'); var pid=card?card.getAttribute('data-vendor-id'):''; if(!pid) pid=(typeof getMyProviderId==='function'?getMyProviderId():''); if(pid) lpTryOpenBoostFromLocal(pid, 'service');" style="flex:1; min-width:130px; padding:10px 12px; border-radius:12px; border:1px solid rgba(17,24,39,0.10); background:#111827; color:white; font-weight:900; cursor:pointer; font-size:0.88rem;">🏷️ Sponsor 24h</button>
-                                    <button onclick="event.stopPropagation(); var card=document.getElementById('boostSimpleCard'); var pid=card?card.getAttribute('data-vendor-id'):''; if(!pid) pid=(typeof getMyProviderId==='function'?getMyProviderId():''); if(pid) lpTryOpenBoostFromLocal(pid, 'service');" style="flex:1; min-width:130px; padding:10px 12px; border-radius:12px; border:1px solid rgba(55,48,163,0.16); background:#1b5e20; color:#ffffff; font-weight:900; cursor:pointer; font-size:0.88rem;">🆕 Nouveau 24h</button>
-                                </div>
-                                <div style="margin-top:10px; display:flex; justify-content:space-between; gap:10px; font-weight:700; font-size:0.85rem; color:var(--ml-muted);">
-                                    <span>État</span>
-                                    <span id="boostStatusText">—</span>
+                                    <button class="lp-tab" onclick="event.stopPropagation(); var card=document.getElementById('boostSimpleCard'); var pid=card?card.getAttribute('data-vendor-id'):''; if(!pid){ try{pid=localStorage.getItem('mangoo_my_shop_id')||''}catch(e){} } if(pid) lpTryOpenBoostFromLocal(pid, 'shop');" style="background:linear-gradient(135deg,#1b5e20,#2e7d32);color:#fff;border-color:transparent;">🚀 Booster</button>
                                 </div>
                             </div>
                         </div>
@@ -4897,10 +4892,7 @@
                         <div id="lp-vendor-communication" class="lp-pane" data-vpane="communication">
                             <div style="background: var(--ml-card); border: 1px solid var(--ml-border); border-radius: 18px; padding: 16px;">
                                 <div style="font-weight: 950; color: var(--ml-text); font-size: 1.05rem;">Communication</div>
-                                <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Contactez vos clients via Mangoo Connect+.</div>
-                                <div style="margin-top: 14px;">
-                                    <button type="button" class="lp-btn lp-btn-primary" onclick="try{lpOpenVendorCommunication()}catch{}">💬 Ouvrir le chat</button>
-                                </div>
+                                <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Contactez vos clients via l'onglet Chat ci-dessus.</div>
                             </div>
                         </div>
 
@@ -4912,7 +4904,33 @@
                                 <div style="color: var(--ml-muted); font-size: 0.9rem; margin-top: 4px;">Ouvrez Mangoo Supply pour ajouter des produits et voir les arrivages.</div>
                                 <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 14px;">
                                     <button type="button" class="lp-btn lp-btn-primary" onclick="openSupplyModal()">🏭 Ouvrir l'appro</button>
-                                    <button type="button" class="lp-btn lp-btn-secondary" onclick="try{switchVendorTab('products')}catch{}">🧾 Voir mes produits</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="lp-vendor-live" class="lp-pane" data-vpane="live">
+                            <div style="background:var(--ml-card); border:1px solid var(--ml-border); border-radius:18px; padding:18px; box-shadow:var(--ml-shadow-sm);">
+                                <div style="margin-bottom:8px;">
+                                    <span style="display:inline-block; background:linear-gradient(135deg,#1b5e20,#2e7d32); color:#fff; padding:4px 12px; border-radius:9px; font-weight:750; font-size:0.82rem; white-space:nowrap;">
+                                        🔴 Live Shopping
+                                    </span>
+                                </div>
+                                <div style="color:var(--ml-muted); font-size:0.88rem; line-height:1.45;">
+                                    Lancez un live pour interagir avec vos clients en temps réel. Présentez vos produits, répondez aux questions et concluez des ventes instantanément.
+                                </div>
+                                <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+                                    <button type="button" class="lp-btn lp-btn-primary" id="lp-shop-start-live-btn" style="background:linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color:#fff; font-weight:700; padding:8px 16px; border:none; border-radius:11px; font-size:0.83rem; cursor:pointer; box-shadow:0 3px 10px rgba(220,38,38,0.25); transition:transform 0.15s, box-shadow 0.15s;" onmouseover="this.style.transform='scale(1.03)';this.style.boxShadow='0 5px 14px rgba(220,38,38,0.35)'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 3px 10px rgba(220,38,38,0.25)'" onclick="try{lpStartShopLive()}catch(e){console.error(e);}">
+                                        <span style="margin-right:4px;">🔴</span> Démarrer le Live
+                                    </button>
+                                </div>
+                                <div id="lp-shop-live-status" style="margin-top:14px;display:none;">
+                                    <div style="padding:12px 14px; background:linear-gradient(135deg, rgba(220,38,38,0.06), rgba(185,28,28,0.04)); border:1px solid rgba(220,38,38,0.2); border-radius:13px; display:flex; align-items:center; gap:9px;">
+                                        <span style="display:inline-flex; width:9px; height:9px; background:#dc2626; border-radius:50%; animation:pulse 1.5s infinite; flex-shrink:0;"></span>
+                                        <div style="flex:1;">
+                                            <div style="color:#b91c1c; font-weight:700; font-size:0.9rem;">Live en cours</div>
+                                            <div style="color:var(--ml-muted); font-size:0.8rem; margin-top:1px;">Badge Live activé sur la carte · Clients peuvent vous rejoindre</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -5240,7 +5258,7 @@
             </div>
 
             <p id="lpAccountVersion" style="text-align:center; color:#b2bec3; font-size:0.8rem; margin-top:30px;">
-                Local+ 2.0.44 • build v167
+                Local+ 2.0.45 • build v168
             </p>
 
             </div>
@@ -6869,25 +6887,75 @@
 
         // === MANGOO CONNECT+ AUDIO CALL SIMULATION ===
         function startAudioCall() {
-            // Verifier si dashboard prestataire actif -> definir activeVendor
-            var _isProvider = false;
-            var _providerId = '';
-            try { var _ps = document.getElementById('providerSection'); _isProvider = !!(_ps && _ps.style.display === 'block'); } catch(e) {}
-            if (_isProvider) {
-                try { _providerId = getMyProviderId(); } catch(e) {}
-                // Toujours forcer activeVendor au prestataire
-                if (_providerId) {
+            // ═══ AUTORITÉ SUPRÊME : vendorSection visible = contexte boutique FORCÉ ═══
+            // Même si localStorage est corrompu (mangoo_my_shop_id effacé,
+            // mangoo_my_provider_id résiduel), le DOM fait foi.
+            var _vs2 = document.getElementById('vendorSection');
+            var _isShopDash2 = _vs2 && _vs2.style.display === 'block';
+
+            if (_isShopDash2) {
+                console.log('[Call] vendorSection visible → FORÇAGE contexte boutique');
+                // Récupérer l'ID boutique (résilience : multi-sources)
+                var _shopId2 = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
+                if (!_shopId2) {
                     try {
-                        var pv = (Array.isArray(VENDORS) ? VENDORS : []).find(function(x) { return String(x?.id) === String(_providerId); });
-                        if (pv) activeVendor = pv;
+                        var _cu = JSON.parse(localStorage.getItem('mangoo-current-user') || '{}');
+                        if (_cu && String(_cu.vendorKind || '').toLowerCase() === 'shop') {
+                            _shopId2 = String(_cu.vendorId || '').trim();
+                        }
                     } catch(e) {}
                 }
+                if (!_shopId2) {
+                    // Dernier recours : chercher dans VENDORS le vendor dont vendorSection est affiché
+                    try {
+                        var _allV = Array.isArray(VENDORS) ? VENDORS : [];
+                        for (var _vi = 0; _vi < _allV.length; _vi++) {
+                            if (String(_allV[_vi]?.kind || '').toLowerCase() === 'shop') {
+                                _shopId2 = String(_allV[_vi].id || '').trim();
+                                break;
+                            }
+                        }
+                    } catch(e) {}
+                }
+
+                if (_shopId2) {
+                    // Réparer localStorage
+                    localStorage.setItem('mangoo_my_shop_id', _shopId2);
+                    try { localStorage.removeItem('mangoo_my_provider_id'); } catch(e) {}
+                    window._lpDashActive = true;
+
+                    var _sv2 = (Array.isArray(VENDORS) ? VENDORS : []).find(function(x) { return String(x?.id) === _shopId2; });
+                    if (_sv2) {
+                        activeVendor = _sv2;
+                        console.log('[Call] activeVendor forcé boutique:', _sv2.name, 'id=', _shopId2);
+                    } else {
+                        activeVendor = { id: _shopId2, name: 'Ma boutique', kind: 'shop', slug: _shopId2 };
+                        console.log('[Call] activeVendor fallback boutique id=', _shopId2);
+                    }
+                }
             }
-            if (_isProvider && !activeVendor) {
-                try { showLocalToast('Appel indisponible en mode prestataire. Utilisez le chat texte.', 'info'); } catch {}
-                return;
+
+            // Fallback : dashboard prestataire
+            var _isProvider = false;
+            if (!_isShopDash2) {
+                var _providerId = '';
+                try { var _ps = document.getElementById('providerSection'); _isProvider = !!(_ps && _ps.style.display === 'block'); } catch(e) {}
+                if (_isProvider) {
+                    try { _providerId = getMyProviderId(); } catch(e) {}
+                    if (_providerId) {
+                        try {
+                            var pv = (Array.isArray(VENDORS) ? VENDORS : []).find(function(x) { return String(x?.id) === String(_providerId); });
+                            if (pv) activeVendor = pv;
+                        } catch(e) {}
+                    }
+                }
+                if (_isProvider && !activeVendor) {
+                    try { showLocalToast('Appel indisponible en mode prestataire. Utilisez le chat texte.', 'info'); } catch {}
+                    return;
+                }
             }
-            const vendorName = activeVendor ? activeVendor.name : (_isProvider ? "le prestataire" : "le vendeur");
+
+            const vendorName = activeVendor ? activeVendor.name : (_isShopDash2 ? "la boutique" : "le vendeur");
             console.log('[Call] startAudioCall declenche, activeVendor=', activeVendor ? (activeVendor.name + ' | slug=' + activeVendor.slug + ' | id=' + activeVendor.id) : 'null');
             
             // Show selection modal instead of direct call
@@ -6937,6 +7005,35 @@
             // Nettoyer tout appel precedent
             activeCallData = null;
             _amCaller = true; // Ce cote initie l'appel
+
+            // ═══ GARDE ANTI-REDIRECTION BOUTIQUE ═══
+            // vendorSection visible = autorité suprême. Même si localStorage est corrompu.
+            try {
+                var _vsLc = document.getElementById('vendorSection');
+                var _isShopDashLc = _vsLc && _vsLc.style.display === 'block';
+                if (_isShopDashLc) {
+                    window._lpDashActive = true;
+                    // Réparer localStorage si corrompu
+                    var _sidLc = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
+                    if (!_sidLc) {
+                        try {
+                            var _cuLc = JSON.parse(localStorage.getItem('mangoo-current-user') || '{}');
+                            if (_cuLc && String(_cuLc.vendorKind || '').toLowerCase() === 'shop') {
+                                _sidLc = String(_cuLc.vendorId || '').trim();
+                                if (_sidLc) localStorage.setItem('mangoo_my_shop_id', _sidLc);
+                            }
+                        } catch(e) {}
+                    }
+                    if (_sidLc) {
+                        localStorage.setItem('mangoo_my_shop_id', _sidLc);
+                    }
+                    try { localStorage.removeItem('mangoo_my_provider_id'); } catch(e) {}
+                    // Forcer le masquage de la carte au cas où elle serait visible
+                    try { var _m = document.getElementById('map'); if (_m) _m.style.display = 'none'; } catch(e) {}
+                    try { var _lv = document.getElementById('listView'); if (_lv) _lv.style.display = 'none'; } catch(e) {}
+                    console.log('[CALL-GUARD] Dashboard boutique actif → _lpDashActive réaffirmé, localStorage réparé, carte masquée');
+                }
+            } catch(e) {}
             
             var _isProvider2 = false;
             try { var _ps2 = document.getElementById('providerSection'); _isProvider2 = !!(_ps2 && _ps2.style.display === 'block'); } catch(e) {}
@@ -7692,17 +7789,22 @@
             // Met à jour l'affichage du statut boost dans #boostSimpleCard
             const card = document.getElementById('boostSimpleCard');
             if (!card) return;
-            const statusEl = document.getElementById('boostStatusText');
-            if (!statusEl) return;
             const v = vendor || (function() {
-                try { return VENDORS.find(function(x) { return String(x.id) === String(getMyProviderId()); }); } catch(e) { return null; }
+                try {
+                    // AXE 1.5 : Priorité shop — utiliser mangoo_my_shop_id pour les boutiques
+                    var _shopId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
+                    if (_shopId) {
+                        var _sv = VENDORS.find(function(x) { return String(x.id) === _shopId; });
+                        if (_sv) return _sv;
+                    }
+                    return VENDORS.find(function(x) { return String(x.id) === String(getMyProviderId()); });
+                } catch(e) { return null; }
             })();
             if (!v) { card.style.display = 'none'; return; }
             
-            // Afficher le nom du prestataire DANS la carte pour éviter toute confusion
-            const vendorName = String(v?.name || v?.shop_name || v?.vendor_name || v?.displayName || '').trim() || 'Ma boutique';
+            // Titre simplifié : "📍 Visibilité" (le nom est déjà dans le header du dashboard)
             const cardTitle = document.getElementById('boostSimpleCardTitle');
-            if (cardTitle) cardTitle.textContent = '\uD83D\uDCCD Visibilit\u00E9 Carte \u2014 \uD83C\uDFEA ' + vendorName;
+            if (cardTitle) cardTitle.textContent = '\uD83D\uDCCD Visibilit\u00E9';
             
             card.style.display = 'block';
             // Stocker l'ID du vendor sur la carte pour que les boutons lisent le bon ID
@@ -7727,7 +7829,10 @@
             }
             if (promoOn) parts.push('\u2728 Promo jusqu\u2019\u00E0 ' + formatUntil(v.promoUntil));
             if (newOn) parts.push('\uD83D\uDDC6 Nouveau jusqu\u2019\u00E0 ' + formatUntil(v.newUntil));
-            statusEl.textContent = parts.length ? parts.join(' \u2022 ') : 'Aucun boost actif';
+            const statusEl = document.getElementById('boostStatusText');
+            if (statusEl) {
+                statusEl.textContent = parts.length ? parts.join(' \u2022 ') : 'Aucun boost actif';
+            }
         }
 
 
@@ -8580,8 +8685,16 @@
                 // Persister la session pour que initApp() preserve l'identite au rechargement
                 localStorage.setItem('lp_auth_session', '1');
                 try {
-                    if (kind === 'service') localStorage.setItem('mangoo_my_provider_id', String(id));
-                    else localStorage.setItem('mangoo_my_shop_id', String(id));
+                    if (kind === 'service') {
+                        localStorage.setItem('mangoo_my_provider_id', String(id));
+                        try { localStorage.removeItem('mangoo_my_shop_id'); } catch(_e) {}
+                    } else {
+                        localStorage.setItem('mangoo_my_shop_id', String(id));
+                        // CRITIQUE : effacer mangoo_my_provider_id résiduel pour empêcher
+                        // switchView('account') de détecter _isProviderAccount=true et
+                        // d'ouvrir showProviderDashboardInline() au lieu du vendorSection.
+                        try { localStorage.removeItem('mangoo_my_provider_id'); } catch(_e) {}
+                    }
                 } catch {
                 }
                 // Marquer l'authentification PIN active pour le garde push
@@ -8613,9 +8726,27 @@
                     if (kind === 'service') {
                         // Ouvrir le dashboard prestataire inline (pas de redirection React)
                         console.log('[PIN-LOGIN] lpClaimVendorByPin SUCCES | vendor=' + String(v?.name||'?') + ' id=' + id + ' | lpAuth=' + localStorage.getItem('lp_auth_session') + ' | provId=' + localStorage.getItem('mangoo_my_provider_id') + ' | forceLogout=' + (sessionStorage.getItem('mangoo_force_logged_out')||'0') + ' | LoadID=' + (sessionStorage.getItem('_lp_load_id')||'?'));
+                        // Bandeau diagnostic ROUGE : chemin PRESTATAIRE
+                        (function() {
+                            var _dbg = document.getElementById('lp-diagnostic-pin');
+                            if (!_dbg) { _dbg = document.createElement('div'); _dbg.id = 'lp-diagnostic-pin'; _dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#ef4444;color:#fff;padding:6px 12px;font-size:12px;font-family:monospace;text-align:center;pointer-events:none;'; document.body.appendChild(_dbg); }
+                            _dbg.textContent = '[PIN-DIAG] CHEMIN=PRESTATAIRE | vendor=' + String(v?.name||'?') + ' | kind=' + kind;
+                        })();
                         try { openMyProviderDashboard(); } catch(e) { openProviderDashboard(String(id)); }
                     }
-                    else lpOpenVendorById(String(id));
+                    else {
+                        // AXE 1.4 : Ouvrir le dashboard vendeur directement (comme les prestataires)
+                        // On n'utilise PAS openMyProviderDashboard() ici car si le shop
+                        // partage le même email qu'un prestataire (ex: admin@mangoo.tech),
+                        // le routage pourrait bifurquer vers le dashboard prestataire.
+                        console.log('[PIN-LOGIN] lpClaimVendorByPin SUCCES (shop) | vendor=' + String(v?.name||'?') + ' id=' + id + ' | lpAuth=' + localStorage.getItem('lp_auth_session') + ' | shopId=' + localStorage.getItem('mangoo_my_shop_id'));
+                        try { showShopDashboardInline(v); } catch(e) { console.error('[PIN-LOGIN] showShopDashboardInline error:', e); }
+                        // AXE 1 : déclencher l'abonnement push pour les shops après login PIN
+                        setTimeout(function() {
+                            try { lpInitPushSubscription(); } catch(e) {}
+                        }, 3000);
+                        setTimeout(function() { try { lpTryRegisterVendorPresence(); } catch(e) {} }, 800);
+                    }
                 } catch {
                 }
                 return true;
@@ -10807,9 +10938,18 @@
             // ═══ PROTECTION INITIALE ANTI-GÉNÉRIQUE ═══
             // Si une session prestataire est active, cacher accountView IMMÉDIATEMENT
             // pour éviter tout flash de la page générique avant l'auto-redirect.
+            // ═══ AXE 1 FIX : priorité boutique sur prestataire ═══
+            // Si l'utilisateur a une session boutique active, NE PAS ouvrir le
+            // dashboard prestataire. Sans ce garde, un ancien prestataire (ex: Mangoo Répar)
+            // hijack la page et empêche le shop (ex: DAN PC) de fonctionner.
+            var _hasShopSession = false;
             var _hasProviderSession = false;
             try {
-                _hasProviderSession = localStorage.getItem('lp_auth_session') === '1' && !!localStorage.getItem('mangoo_my_provider_id');
+                _hasShopSession = localStorage.getItem('lp_auth_session') === '1' && !!localStorage.getItem('mangoo_my_shop_id');
+                _hasProviderSession = !_hasShopSession && localStorage.getItem('lp_auth_session') === '1' && !!localStorage.getItem('mangoo_my_provider_id');
+                if (_hasShopSession) {
+                    console.log('[INIT] Protection: session boutique détectée (shopId=' + (localStorage.getItem('mangoo_my_shop_id') || '') + '), blocage dashboard prestataire');
+                }
                 if (_hasProviderSession) {
                     var _av = document.getElementById('accountView');
                     if (_av) _av.style.display = 'none';
@@ -10818,16 +10958,24 @@
             } catch(e) {}
 
             // ═══ OPTIMISATION PERF ═══
-            // Si une session prestataire est active, ne PAS initialiser la carte Leaflet
-            // (switchView('map') est lourd : chargement tiles, markers, etc.).
-            // On va directement au dashboard, ce qui évite un double rendu inutile.
             if (_hasProviderSession) {
                 console.log('[INIT] Session prestataire → skip map, ouverture directe Dashboard');
-                // Forcer le flag d'auth push pour que lpInitPushSubscription ne bloque pas
                 try { sessionStorage.setItem('_lpPushAuthReady', '1'); } catch(e) {}
                 try { openMyProviderDashboard(); } catch(e) {}
+            } else if (_hasShopSession) {
+                // AXE 1.5 MARKER: Dashboard vendeur PLEIN ÉCRAN
+                try { window._lpShopDashboardFix = 'v1.5-fullscreen'; } catch(e) {}
+                try { sessionStorage.setItem('_lpPushAuthReady', '1'); } catch(e) {}
+                console.log('[INIT] Session boutique → showShopDashboardInline | shopId=' + (localStorage.getItem('mangoo_my_shop_id') || '?'));
+                try { showShopDashboardInline(); } catch(e) { console.error('[INIT-Shop] showShopDashboardInline error:', e); }
+                try { lpInitGoLiveButton(); } catch(e) {}
+                // AXE 1.4 : Déclencher l'abonnement push pour les shops (même flow que prestataires)
+                setTimeout(function() {
+                    try { lpInitPushSubscription(); } catch(e) {}
+                }, 3000);
+                // Enregistrer la présence WebSocket
+                setTimeout(function() { try { lpTryRegisterVendorPresence(); } catch(e) {} }, 800);
             } else {
-                // Force l'affichage de la carte au demarrage pour eviter le chevauchement des vues
                 try { switchView('map'); } catch(e) {}
             }
 
@@ -10835,7 +10983,13 @@
             setTimeout(function() {
                 try {
                     var _hasSess = localStorage.getItem('lp_auth_session') === '1';
+                    var _shopId = localStorage.getItem('mangoo_my_shop_id');
                     var _provId = localStorage.getItem('mangoo_my_provider_id');
+                    // AXE 1 : si une boutique est active, NE PAS ouvrir le dashboard prestataire
+                    if (_hasSess && _shopId) {
+                        console.log('[INIT] Session boutique detectee (delai) → pas de dashboard prestataire');
+                        return;
+                    }
                     // Ne pas rouvrir si deja ouvert (garde contre le double appel)
                     if (_hasSess && _provId && typeof openMyProviderDashboard === 'function' && !window._lpDashActive) {
                         console.log('[INIT] Session prestataire detectee (delai) → auto-ouverture Dashboard');
@@ -10860,6 +11014,11 @@
                         // Garde rapide : si le dashboard est déjà actif, ne rien faire
                         if (window._lpDashActive === true) return;
                         var _hasSess = localStorage.getItem('lp_auth_session') === '1';
+                        // AXE 1.4 : si une boutique a une session active, NE PAS forcer
+                        // le dashboard prestataire (même si mangoo_my_provider_id persiste
+                        // d'une session précédente)
+                        var _shopIdSent = localStorage.getItem('mangoo_my_shop_id');
+                        if (_hasSess && _shopIdSent) return;
                         var _provId = localStorage.getItem('mangoo_my_provider_id');
                         if (!_hasSess || !_provId) return;
                         var _acct = document.getElementById('accountView');
@@ -10948,17 +11107,17 @@
 
             try { requestUserGeolocation(); } catch {}
 
-            // Labels de version (build v167)
+            // Labels de version (build v168)
             try {
                 const buildEl = document.getElementById('lpBuild');
-                if (buildEl) buildEl.textContent = 'build v167';
+                if (buildEl) buildEl.textContent = 'build v168';
             } catch {}
             try {
                 const hud = document.getElementById('lpVersionHud');
-                window.__lpVersionLabel = 'Local+ 2.0.44 • build v167';
-                if (hud) hud.textContent = String(window.__lpVersionLabel || 'Local+ 2.0.44 • build v167');
+                window.__lpVersionLabel = 'Local+ 2.0.45 • build v168';
+                if (hud) hud.textContent = String(window.__lpVersionLabel || 'Local+ 2.0.45 • build v168');
                 const acv = document.getElementById('lpAccountVersion');
-                if (acv) acv.textContent = String(window.__lpVersionLabel || 'Local+ 2.0.44 • build v167');
+                if (acv) acv.textContent = String(window.__lpVersionLabel || 'Local+ 2.0.45 • build v168');
             } catch {
             }
             try {
@@ -12038,8 +12197,205 @@
             } catch(e) {}
         }
 
+        function showShopDashboardInline() {
+            console.log('[SHOP-DASH] showShopDashboardInline() appelé');
+            // Garde : ne pas ouvrir sans session shop
+            try {
+                var _hasShopSession2 = localStorage.getItem('lp_auth_session') === '1' && !!localStorage.getItem('mangoo_my_shop_id');
+                if (!_hasShopSession2) {
+                    console.warn('[SHOP-DASH] Bloqué: pas de session boutique active');
+                    return;
+                }
+            } catch(e) {}
+            // Marqueur d'authentification pour lpTryRegisterVendorPresence (badge LIVE)
+            try { sessionStorage.setItem('_lpPushAuthReady', '1'); } catch(e) {}
+            try {
+                // 1. Afficher la vue compte et masquer toutes les autres vues
+                var accountDiv = document.getElementById('accountView');
+                var mapDiv = document.getElementById('map');
+                var listDiv = document.getElementById('listView');
+                var espaceDiv = document.getElementById('espaceView');
+                var introDiv = document.getElementById('introView');
+                if (accountDiv) accountDiv.style.display = 'block';
+                try { window._lpDashActive = true; } catch(e) {}
+                if (mapDiv) mapDiv.style.display = 'none';
+                if (listDiv) listDiv.style.display = 'none';
+                if (espaceDiv) espaceDiv.style.display = 'none';
+                if (introDiv) introDiv.style.display = 'none';
+                try { var vs = document.getElementById('vendorSheet'); if (vs) { vs.classList.remove('active'); vs.style.display = 'none'; } } catch(e) {}
+
+                // 1b. Réduire le header compte (sticky bar) — trop haut
+                try {
+                    var ah = document.getElementById('accountHeader');
+                    if (ah) { ah.style.padding = '8px 16px'; ah.style.marginBottom = '0'; }
+                } catch(e) {}
+                
+                // 2. Masquer le footer compte + sticky onglets + cartes parasites
+                try {
+                    var af = document.getElementById('accountFooter');
+                    if (af) { af.style.display = 'none'; }
+                    // Masquer la barre sticky d'onglets (📦 Commandes, 🏪 Vendre, etc.)
+                    try {
+                        var stickyTabs = document.querySelector('#accountView > div[style*="sticky"]');
+                        if (stickyTabs) stickyTabs.style.display = 'none';
+                    } catch(e) {}
+                    // Masquer les cartes menu-grid, hub-card, action-list parasites
+                    document.querySelectorAll('#accountView .menu-grid, #accountView .lp-hub-card, #accountView .action-list:not(#lp-shop-logout-actions)').forEach(function(el) {
+                        if (!el.closest('#accountFooter')) {
+                            el.style.display = 'none';
+                        }
+                    });
+                    // Dans dash-sell, masquer tout SAUF vendorSection
+                    var dashSell = document.getElementById('dash-sell');
+                    if (dashSell) {
+                        Array.from(dashSell.children).forEach(function(child) {
+                            if (child.id !== 'vendorSection') {
+                                child.style.display = 'none';
+                            }
+                        });
+                    }
+                    // Réduire le padding du conteneur principal
+                    try {
+                        var ac = document.querySelector('#accountView > div[style*="padding: 8px 16px 80px"]');
+                        if (ac) { ac.style.padding = '8px 16px 20px'; }
+                    } catch(e) {}
+                } catch(e) {}
+
+                // 3. Masquer barre de recherche, filtres, panneau Simple
+                try { var sb = document.querySelector('.search-container'); if (sb) sb.style.display = 'none'; } catch(e) {}
+                try { var fb = document.getElementById('metiersFamiliesBar'); if (fb) fb.style.display = 'none'; } catch(e) {}
+                try { var sp = document.getElementById('lpSimplePanel'); if (sp) sp.style.display = 'none'; } catch(e) {}
+                try { var sr = document.getElementById('lpSimpleReopenBtn'); if (sr) sr.style.display = 'none'; } catch(e) {}
+                try { currentView = 'account'; window.currentView = 'account'; } catch {}
+
+                // 4. Masquer les onglets compte (le shop a ses propres onglets lp-vtab-*)
+                document.querySelectorAll('#accountView .lp-tab[id^="lp-tab-"]').forEach(function(t) {
+                    t.style.display = 'none';
+                });
+
+                // 5. Masquer TOUS les panes de compte SAUF sell (qui contient vendorSection)
+                document.querySelectorAll('#accountView .lp-pane[data-pane]').forEach(function(el) {
+                    el.classList.toggle('active', String(el.getAttribute('data-pane') || '') === 'sell');
+                });
+
+                // 6. Afficher vendorSection + cacher providerSection
+                var vendSec = document.getElementById('vendorSection');
+                var provSec = document.getElementById('providerSection');
+                if (vendSec) vendSec.style.display = 'block';
+                if (provSec) provSec.style.display = 'none';
+
+                // 7. Activer onglet overview du shop
+                var allowedShop = ['overview', 'products', 'orders', 'communication', 'supply', 'live'];
+                allowedShop.forEach(function(k) {
+                    var btn = document.getElementById('lp-vtab-' + k);
+                    if (btn) btn.classList.toggle('active', k === 'overview');
+                });
+                document.querySelectorAll('.lp-pane[data-vpane]').forEach(function(el) {
+                    el.classList.toggle('active', String(el.getAttribute('data-vpane') || '') === 'overview');
+                });
+
+                // 8. Injecter les actions Déconnexion dans vendorSection
+                try {
+                    var vendSec2 = document.getElementById('vendorSection');
+                    if (vendSec2 && !document.getElementById('lp-shop-logout-actions')) {
+                        var actDiv = document.createElement('div');
+                        actDiv.id = 'lp-shop-logout-actions';
+                        actDiv.className = 'action-list';
+                        actDiv.style.marginTop = '18px';
+                        actDiv.innerHTML = '<div class="action-row" onclick="lpDisconnectProvider()"><span>🧰 Quitter mon compte</span><span class="arrow">›</span></div><div class="action-row" style="color:#d63031;" onclick="lpLogout()"><span>🚪 Déconnexion</span><span class="arrow">›</span></div>';
+                        vendSec2.appendChild(actDiv);
+                    }
+                } catch(e) {}
+
+                // 9. Définir activeVendor pour le shop
+                var _shopId2 = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
+                if (_shopId2) {
+                    var _sv2 = (Array.isArray(VENDORS) ? VENDORS : []).find(function(x) { return String(x?.id) === _shopId2; });
+                    if (_sv2) {
+                        activeVendor = _sv2;
+                        console.log('[SHOP-DASH] activeVendor défini:', _sv2.name, 'id=', _shopId2);
+                    } else {
+                        activeVendor = { id: _shopId2, name: 'Ma boutique', kind: 'shop', slug: _shopId2, avatar: '', photo: '', category: '', coverage: [] };
+                        console.warn('[SHOP-DASH] activeVendor créé (fallback) id=', _shopId2);
+                    }
+                }
+
+                // 9b. Sauvegarder vendorId dans mangoo-current-user (copié du provider)
+                try {
+                    if (activeVendor && activeVendor.id) {
+                        var _cuSave = JSON.parse(localStorage.getItem('mangoo-current-user') || '{}');
+                        _cuSave.vendorId = String(activeVendor.id);
+                        _cuSave.vendorKind = 'shop';
+                        localStorage.setItem('mangoo-current-user', JSON.stringify(_cuSave));
+                    }
+                } catch {}
+
+                // 10. Actualiser le header
+                try { applyLpHeaderUser(); } catch(e) {}
+                // 11. Initialiser Go Live
+                try { lpInitGoLiveButton(); } catch(e) {}
+                // 12. Rafraîchir le panneau boost
+                try { refreshBoostPanel(); } catch(e) {}
+                // 12b. Mise à jour du pane Live boutique
+                try {
+                    var _shopLiveBtn = document.getElementById('lp-shop-start-live-btn');
+                    var _shopLiveStatus = document.getElementById('lp-shop-live-status');
+                    if (_shopLiveBtn && _shopLiveStatus) {
+                        if (typeof _lpLiveActive !== 'undefined' && _lpLiveActive) {
+                            _shopLiveBtn.style.display = 'none';
+                            _shopLiveStatus.style.display = 'block';
+                        } else {
+                            _shopLiveBtn.style.display = 'inline-block';
+                            _shopLiveStatus.style.display = 'none';
+                        }
+                    }
+                } catch(e) {}
+
+                // 12c. Enregistrer la présence WebSocket pour le badge LIVE (copié du provider)
+                setTimeout(function() { try { lpTryRegisterVendorPresence(); } catch(e) {} }, 800);
+
+                // 13. Parler (feedback audio, comme le provider)
+                try { lpSpeak('Ouverture de votre espace boutique.', { lang: 'fr-FR' }) } catch {}
+
+                console.log('[SHOP-DASH] Dashboard shop affiché');
+
+                // 14. CORRECTIF DÉFENSIF : Après 200ms, re-vérifier que vendorSection
+                // est bien visible et que providerSection est masquée. Des appels
+                // concurrents (ex: switchView, initApp) peuvent tenter de ré-ouvrir
+                // providerSection après notre configuration.
+                setTimeout(function() {
+                    try {
+                        var _vsCheck = document.getElementById('vendorSection');
+                        var _psCheck = document.getElementById('providerSection');
+                        if (_vsCheck && _vsCheck.style.display !== 'block') {
+                            _vsCheck.style.display = 'block';
+                            console.log('[SHOP-DASH] CORRECTIF: vendorSection re-affichée');
+                        }
+                        if (_psCheck && _psCheck.style.display !== 'none') {
+                            _psCheck.style.display = 'none';
+                            console.log('[SHOP-DASH] CORRECTIF: providerSection re-masquée');
+                        }
+                        // Ré-affirmer le flag dashboard actif + ré-enregistrer présence
+                        try { window._lpDashActive = true; } catch(e) {}
+                        try { lpTryRegisterVendorPresence(); } catch(e) {}
+                    } catch(e) {}
+                }, 200);
+            } catch(e) {
+                console.error('[SHOP-DASH] Erreur:', e);
+            }
+        }
+
         function showProviderDashboardInline() {
             console.log('[DIAG] showProviderDashboardInline() appele');
+            // AXE 1.5 : Si une boutique a une session active, NE PAS ouvrir le dashboard
+            // prestataire. Le dashboard vendeur (vendorSection) doit être utilisé à la place.
+            try {
+                var _shopGuard = localStorage.getItem('lp_auth_session') === '1' && !!localStorage.getItem('mangoo_my_shop_id');
+                if (_shopGuard) {
+                    console.log('[Provider] showProviderDashboardInline bloqué: contexte boutique actif');
+                    return;
+                }
+            } catch(e) {}
             // Garde de sécurité : ne jamais afficher le dashboard sans authentification
             // sauf si l'URL force explicitement lpRole=provider
             try {
@@ -12362,6 +12718,29 @@
                         return;
                     }
                 }
+                // ═══ AXE 1.4 : PRIORITÉ BOUTIQUE ═══
+                // Détecter le contexte shop AVANT les providers. Sans ce garde,
+                // un prestataire partageant le même email (ex: Mangoo Répar) hijack
+                // le dashboard et impose ses labels "Prestations" au shop.
+                var _isShopCtx = false;
+                try {
+                    var _shopIdCtx = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
+                    if (_shopIdCtx && localStorage.getItem('lp_auth_session') === '1') {
+                        _isShopCtx = true;
+                        console.log('[DIAG] Contexte boutique détecté (shopId=' + _shopIdCtx + '), priorité dashboard vendeur');
+                    }
+                } catch(e) {}
+                if (_isShopCtx) {
+                    var _shopId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
+                    if (_shopId) {
+                        try { showShopDashboardInline(); } catch(e) { console.error('[Shop] Erreur dashboard:', e); }
+                        // Enregistrer la présence WebSocket pour le badge LIVE
+                        setTimeout(function() { try { lpTryRegisterVendorPresence(); } catch(e) {} }, 800);
+                        console.log('[DIAG] → Dashboard vendeur (vendorSection)');
+                        return;
+                    }
+                }
+
                 // 1. D'ABORD : Prestataire (peu importe la vue courante)
                 let providerId_check = getMyProviderId();
                 const providerScoped = lpGetStoredProviderIdsForCurrentUser();
@@ -12547,6 +12926,23 @@
         }
 
         function lpOpenVendorCommunication() {
+            // AXE 1.5 : Détection dashboard boutique (vendorSection) — priorité absolue
+            // Évite que getMyProviderId() ou un vendorId résiduel dans l'URL
+            // redirige vers le chat d'un prestataire (ex: Plombier magnifique)
+            // au lieu du shop actif (ex: DAN PC).
+            try {
+                var _vsComm = document.getElementById('vendorSection');
+                var _isShopComm = _vsComm && _vsComm.style.display === 'block' && !!localStorage.getItem('mangoo_my_shop_id');
+                if (_isShopComm) {
+                    var _shopIdComm = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
+                    if (_shopIdComm) {
+                        var _svComm = (Array.isArray(VENDORS) ? VENDORS : []).find(function(x) { return String(x?.id) === _shopIdComm; });
+                        if (_svComm) { activeVendor = _svComm; }
+                    }
+                    try { openChat(); } catch {}
+                    return;
+                }
+            } catch(e) {}
             // Si l'utilisateur est un prestataire, toujours forcer activeVendor sur son propre profil
             try {
                 var _pid = getMyProviderId();
@@ -13370,7 +13766,7 @@
                     const tontineOverlay = document.getElementById('tontineOverlay');
                     if(tontineOverlay) tontineOverlay.style.zIndex = '8000';
                     
-                    callOverlay.style.zIndex = '9000';
+                    callOverlay.style.zIndex = '23000';
                     callOverlay.style.transition = 'height 0.3s ease, border-radius 0.3s ease';
 
                     // Create Minimize Button if not exists
@@ -14199,9 +14595,23 @@
                 // générique. Le return est HORS du try/catch : même si
                 // showProviderDashboardInline() lève une exception, on ne montrera
                 // PAS la page générique.
+                // AXE 1.5 : PRIORITÉ BOUTIQUE — si une boutique a une session active,
+                // NE PAS rediriger vers le dashboard prestataire même si mangoo_my_provider_id
+                // persiste d'une session précédente.
+                var _hasActiveShopInSwitchView = false;
+                try {
+                    _hasActiveShopInSwitchView = localStorage.getItem('lp_auth_session') === '1'
+                        && !!localStorage.getItem('mangoo_my_shop_id');
+                } catch(_e) {}
+                if (_hasActiveShopInSwitchView) {
+                    console.log('[SWITCH-VIEW] Contexte boutique actif → showShopDashboardInline()');
+                    try { showShopDashboardInline(); } catch(e) { console.error('[SWITCH-VIEW] Erreur showShopDashboardInline:', e); }
+                    return;
+                }
                 var _isProviderAccount = false;
                 try {
-                    _isProviderAccount = localStorage.getItem('lp_auth_session') === '1'
+                    _isProviderAccount = !_hasActiveShopInSwitchView
+                        && localStorage.getItem('lp_auth_session') === '1'
                         && !!localStorage.getItem('mangoo_my_provider_id')
                         && typeof showProviderDashboardInline === 'function';
                 } catch(_e) {}
@@ -14805,6 +15215,7 @@
                 const ok = confirm('Quitter le profil prestataire actif ?')
                 if (!ok) return
                 localStorage.removeItem('mangoo_my_provider_id')
+                localStorage.removeItem('mangoo_my_shop_id')
             } catch {
             }
             try { localStorage.removeItem('lp_auth_session') } catch {}
@@ -16507,6 +16918,25 @@
                     if (_forceRole2 !== 'vendor' && _forceRole2 !== 'provider') return ''; // Pas de vendorId pour les non-connectés
                 }
             } catch {}
+            // ============================================================
+            // AXE 1 FIX : Détection du contexte boutique vs prestataire
+            // Si une boutique est active, forcer le chemin shop et IGNORER
+            // les vérifications provider (providerSection, lpRole=provider).
+            // Sans ce garde, un prestataire peut "voler" l'ID d'une boutique
+            // si providerSection est stale-visible dans le DOM.
+            // ============================================================
+            var _isShopContext = false;
+            try {
+                var _myShopId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
+                var _hasSessShop = localStorage.getItem('lp_auth_session') === '1';
+                var _urlRoleX = new URLSearchParams(window.location.search).get('lpRole') || '';
+                if (_myShopId && (_hasSessShop || _urlRoleX === 'vendor')) {
+                    _isShopContext = true;
+                    console.log('[WS-vendorId] Contexte boutique détecté (shopId=' + _myShopId + '), ignore les priorités provider');
+                }
+            } catch(e) {}
+
+            if (!_isShopContext) {
             // PRIORITÉ PROVIDER : si dashboard prestataire actif, prioriser mangoo_my_provider_id
             try {
                 var _psProv2 = document.getElementById('providerSection');
@@ -16527,6 +16957,7 @@
                     if (_provId3) { console.log('[WS-vendorId] Via lpRole=provider + getMyProviderId:', _provId3); return _provId3; }
                 }
             } catch {}
+            } // fin if (!_isShopContext)
             // Try multiple sources to find the vendor's shop ID
             try {
                 const pref = String(typeof lpGetPreferredShopAccountId === 'function' ? (lpGetPreferredShopAccountId() || '') : '').trim();
@@ -25876,6 +26307,37 @@
             lpShowLiveProductPicker();
         }
 
+        // AXE 1.5 : Live Shopping pour les boutiques
+        async function lpStartShopLive() {
+            if (_lpLiveActive) return;
+            var vendorId = '';
+
+            // Source 1 : mangoo_my_shop_id
+            try { vendorId = String(localStorage.getItem('mangoo_my_shop_id') || '').trim(); } catch(e) {}
+
+            // Source 2 : VENDORS lookup by session
+            if (!vendorId) {
+                try {
+                    var _cuShop = JSON.parse(localStorage.getItem('mangoo-current-user') || '{}');
+                    vendorId = String(_cuShop.vendorId || '').trim();
+                } catch(e) {}
+            }
+
+            if (!vendorId) { alert('Boutique non identifiée. Veuillez vous reconnecter.'); return; }
+
+            _lpLiveVendorId = vendorId;
+            _lpLiveIsVendor = true;
+
+            // Définir activeVendor
+            try {
+                var _mvShop = (Array.isArray(VENDORS) ? VENDORS : []).find(function(x) { return String(x?.id) === String(vendorId); });
+                if (_mvShop) activeVendor = _mvShop;
+            } catch(e) {}
+
+            // Ouvrir le picker de produits
+            lpShowLiveProductPicker();
+        }
+
         // Afficher le picker de produits
         async function lpShowLiveProductPicker() {
             var picker = document.getElementById('lpLiveProductPicker');
@@ -26122,10 +26584,17 @@
                 // cree des marqueurs zombies sur carte cachee -> double badge)
                 try {
                     var _provSec = document.getElementById('providerSection');
+                    var _vendSec = document.getElementById('vendorSection');
+                    var _showMap = false;
                     if (_provSec && _provSec.style.display !== 'none') {
-                        // Cacher le dashboard prestataire
                         _provSec.style.display = 'none';
-                        // Afficher la carte
+                        _showMap = true;
+                    }
+                    if (_vendSec && _vendSec.style.display !== 'none') {
+                        _vendSec.style.display = 'none';
+                        _showMap = true;
+                    }
+                    if (_showMap) {
                         var _mapDiv2 = document.getElementById('map');
                         if (_mapDiv2) { _mapDiv2.style.display = 'block'; }
                         var _acctDiv2 = document.getElementById('accountView');
@@ -26194,6 +26663,14 @@
 
                 // Mettre à jour l'UI prestataire
                 lpUpdateProviderLiveStatus(true);
+
+                // Mettre à jour l'UI boutique (pane Live)
+                try {
+                    var _shopLiveBtn = document.getElementById('lp-shop-start-live-btn');
+                    if (_shopLiveBtn) _shopLiveBtn.style.display = 'none';
+                    var _shopLiveStatus = document.getElementById('lp-shop-live-status');
+                    if (_shopLiveStatus) _shopLiveStatus.style.display = 'block';
+                } catch(e) {}
 
                 // Remplir le lien de partage
                 var link = _lpGetLiveUrl();
@@ -26294,6 +26771,13 @@
             lpHideProductCard();
 
             lpUpdateProviderLiveStatus(false);
+            // Restaurer l'UI boutique (pane Live)
+            try {
+                var _shopLiveBtn2 = document.getElementById('lp-shop-start-live-btn');
+                if (_shopLiveBtn2) _shopLiveBtn2.style.display = 'inline-block';
+                var _shopLiveStatus2 = document.getElementById('lp-shop-live-status');
+                if (_shopLiveStatus2) _shopLiveStatus2.style.display = 'none';
+            } catch(e) {}
             lpInitGoLiveButton();
             // Réinitialiser l'état pour permettre une future reconnexion
             _lpLiveJoinSent = false;
@@ -30530,7 +31014,16 @@
             // Accepte les deux noms : 'service' (ancien) et 'provider' (nouveau système)
             var _isProvider = String(identity.vendorKind || '').trim().toLowerCase() === 'service'
                 || String(identity.vendorKind || '').trim().toLowerCase() === 'provider';
-            if (!_isProvider && email) {
+            // AXE 1.5 : Si l'identité résolue est explicitement une BOUTIQUE (vendorKind='shop'),
+            // NE PAS faire de fallback email/nom dans VENDORS — cela empêche qu'un shop
+            // partageant le même email qu'un provider (ex: admin@mangoo.tech pour DAN PC
+            // et Mangoo Répar) soit détecté à tort comme prestataire.
+            var _explicitShop = String(identity.vendorKind || '').trim().toLowerCase() === 'shop';
+            // AXE 1.5 : Si le vendorKind est VIDE (ex: rôle 'client' dans le modal),
+            // NE PAS faire de fallback email → provider. Cela éviterait qu'un shop
+            // soit détecté comme prestataire via l'email partagé admin@mangoo.tech.
+            var _vendorKindEmpty = String(identity.vendorKind || '').trim() === '';
+            if (!_isProvider && !_explicitShop && !_vendorKindEmpty && email) {
                 try {
                     var _ownedCheck = (Array.isArray(VENDORS) ? VENDORS : [])
                         .filter(function(v) { try { return lpGetVendorKind(v) === 'service'; } catch(e) { return false; } })
@@ -30540,7 +31033,7 @@
             }
             // Fallback nom : si l'email ne match pas (ex: email API ≠ ownerEmail VENDORS),
             // chercher par nom du prestataire (DAN Electricien, Mangoo Répar, etc.)
-            if (!_isProvider && name) {
+            if (!_isProvider && !_explicitShop && !_vendorKindEmpty && name) {
                 try {
                     var _nameCheck = (Array.isArray(VENDORS) ? VENDORS : [])
                         .filter(function(v) { try { return lpGetVendorKind(v) === 'service'; } catch(e) { return false; } })
@@ -30573,6 +31066,17 @@
                 }
                 if (_vendorId) {
                     localStorage.setItem('mangoo_my_provider_id', _vendorId);
+                    // Nettoyer tout shop_id résiduel (symétrique)
+                    try { localStorage.removeItem('mangoo_my_shop_id'); } catch(_e) {}
+                }
+            } else {
+                // AXE 1.5 : BOUTIQUE — si l'identité n'est PAS un prestataire,
+                // enregistrer mangoo_my_shop_id pour le routage dashboard vendeur
+                var _shopVendorId = String(identity.vendorId || '').trim();
+                if (_shopVendorId) {
+                    localStorage.setItem('mangoo_my_shop_id', _shopVendorId);
+                    // Nettoyer tout provider_id résiduel
+                    try { localStorage.removeItem('mangoo_my_provider_id'); } catch(_e) {}
                 }
             }
             try { localStorage.setItem(`mangoo-active-role:${email}`, role) } catch {}
@@ -30627,6 +31131,20 @@
                     lpSetIdentityEntryStatus(mode === 'pin' ? 'Entrez le PIN.' : mode === 'phone' ? 'Entrez le telephone.' : 'Entrez l e-mail.', 'error')
                     return
                 }
+
+                // AXE 1.5 : Si le mode est PIN, tenter lpClaimVendorByPin() en PRIORITÉ
+                // (résolution côté client, pas besoin d'API). Cela évite que le rôle 'client'
+                // par défaut ne fasse échouer la détection vendorKind='shop' côté serveur.
+                if (mode === 'pin') {
+                    var _claimed = lpClaimVendorByPin(value)
+                    if (_claimed) {
+                        lpSetIdentityEntryStatus('Connexion reussie.', 'success')
+                        try { closeLpIdentityModal() } catch {}
+                        return
+                    }
+                    // lpClaimVendorByPin a échoué → continuer avec l'API
+                    console.log('[IDENTITY] lpClaimVendorByPin échoué pour PIN ' + value + ', fallback API')
+                }
                 if (submitBtn) {
                     submitBtn.disabled = true
                     submitBtn.style.opacity = '0.7'
@@ -30645,8 +31163,11 @@
                     signal: ctrl ? ctrl.signal : undefined
                 })
                 if (timer) clearTimeout(timer)
-                const payload = await response.json().catch(() => null)
+                console.log('[IDENTITY-RESOLVE] fetch status:', response.status, response.ok)
+                const payload = await response.json().catch((err) => { console.error('[IDENTITY-RESOLVE] json parse error:', err); return null; })
+                console.log('[IDENTITY-RESOLVE] payload:', JSON.stringify(payload).substring(0, 200))
                 if (!response.ok || !payload?.success) {
+                    console.error('[IDENTITY-RESOLVE] FAIL: ok=' + response.ok + ' success=' + payload?.success + ' error=' + payload?.error)
                     throw new Error(String(payload?.error || 'Connexion impossible pour le moment.'))
                 }
                 if (payload?.ambiguous) {
@@ -30685,7 +31206,11 @@
                 if (!_isProviderIdentity) {
                     try {
                         var _cu = getLpCurrentUser();
-                        if (_cu && (String(_cu.vendorKind || '').toLowerCase() === 'service'
+                        // AXE 1.5 : Si vendorKind='shop', c'est une BOUTIQUE, pas un prestataire.
+                        // Un vendeur boutique a aussi role='vendor', donc on ne peut pas
+                        // se baser uniquement sur le rôle pour détecter un prestataire.
+                        var _cuIsShop = String(_cu?.vendorKind || '').trim().toLowerCase() === 'shop';
+                        if (_cu && !_cuIsShop && (String(_cu.vendorKind || '').toLowerCase() === 'service'
                             || String(_cu.vendorKind || '').toLowerCase() === 'provider'
                             || String(_cu.role || '').toLowerCase() === 'vendor'
                             || String(_cu.role || '').toLowerCase() === 'provider')) {
@@ -30701,15 +31226,35 @@
                         try { showProviderDashboardInline(); } catch(e) {}
                     }, 500);
                 } else {
-                    // Laisser openMyProviderDashboard() décider : il a son propre
-                    // fallback localStorage + getLpCurrentUser() + VENDORS.
-                    // Si ce n'est vraiment pas un prestataire, il appellera
-                    // switchView('account') pour la page générique client.
-                    try { openMyProviderDashboard(); } catch(e) { switchView('account'); }
-                    try { switchAccountTab('profile') } catch {}
-                    try { loadLpProfile(true) } catch {}
+                    // AXE 1.5 : BOUTIQUE — si vendorKind='shop', ouvrir DIRECTEMENT
+                    // le dashboard vendeur sans passer par openMyProviderDashboard()
+                    // (qui a ses propres heuristiques parfois erronées).
+                    var _isShopIdentity = false;
+                    try {
+                        _isShopIdentity = String(payload?.identity?.vendorKind || '').trim().toLowerCase() === 'shop';
+                    } catch(e) {}
+                    if (_isShopIdentity) {
+                        console.log('[IDENTITY] Shop détecté → ouverture dashboard shop');
+                        try { showShopDashboardInline(); } catch(e) { console.error('[IDENTITY] Erreur dashboard shop:', e); }
+                        // Secours : réappliquer le dashboard shop après rendu DOM
+                        setTimeout(function() {
+                            try { showShopDashboardInline(); } catch(e) {}
+                        }, 300);
+                        setTimeout(function() {
+                            try { lpTryRegisterVendorPresence(); } catch(e) {}
+                        }, 800);
+                    } else {
+                        // Laisser openMyProviderDashboard() décider : il a son propre
+                        // fallback localStorage + getLpCurrentUser() + VENDORS.
+                        // Si ce n'est vraiment pas un prestataire, il appellera
+                        // switchView('account') pour la page générique client.
+                        try { openMyProviderDashboard(); } catch(e) { switchView('account'); }
+                        try { switchAccountTab('profile') } catch {}
+                        try { loadLpProfile(true) } catch {}
+                    }
                 }
             } catch (e) {
+                console.error('[IDENTITY-RESOLVE] CATCH error:', e?.name, e?.message, e?.stack?.substring(0, 300))
                 const msg = e?.name === 'AbortError'
                     ? 'Verification trop longue. Reessayez.'
                     : (e?.message ? String(e.message) : 'Connexion impossible.')
@@ -30783,8 +31328,36 @@
         }
 
         function switchVendorTab(tabName) {
-            const allowed = ['overview', 'products', 'orders', 'communication', 'supply']
+            const allowed = ['overview', 'products', 'orders', 'communication', 'supply', 'live']
             const next = allowed.includes(String(tabName || '')) ? String(tabName) : 'overview'
+
+            // AXE 1.5 : Garde shop — si vendorSection est le dashboard actif (pas providerSection),
+            // ne PAS toucher aux onglets compte (lp-tab-sell etc.), seulement aux onglets vendeur (lp-vtab-*)
+            var _isShopDash = false;
+            try {
+                var _vs = document.getElementById('vendorSection');
+                _isShopDash = _vs && _vs.style.display === 'block' && !!localStorage.getItem('mangoo_my_shop_id');
+            } catch(e) {}
+            if (_isShopDash) {
+                document.querySelectorAll('#vendorSection .lp-tab').forEach(function(t) {
+                    t.classList.toggle('active', t.id === 'lp-vtab-' + next);
+                });
+                document.querySelectorAll('.lp-pane[data-vpane]').forEach(function(el) {
+                    el.classList.toggle('active', String(el.getAttribute('data-vpane') || '') === next);
+                });
+                // Forcer activeVendor au shop courant (pour le chat et autres)
+                var _sid = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
+                if (_sid) {
+                    var _sv3 = (Array.isArray(VENDORS) ? VENDORS : []).find(function(x) { return String(x?.id) === _sid; });
+                    if (_sv3) activeVendor = _sv3;
+                }
+                // Si onglet Chat, ouvrir la messagerie
+                if (next === 'communication') {
+                    try { openChat(); } catch(e) {}
+                }
+                console.log('[SWITCH-VENDOR-TAB] Shop dash → ' + next);
+                return;
+            }
 
             // Masquer le dashboard prestataire
             try { var ps = document.getElementById('providerSection'); if (ps) ps.style.display = 'none'; } catch(e) {}
