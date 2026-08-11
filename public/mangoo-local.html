@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -16900,6 +16900,35 @@
 
         function lpGetVendorWsVendorId() {
             console.log('[WS-vendorId] DEBUT recherche vendorId...');
+
+            // ═══ GARDE DOM SUPRÊME : vendorSection visible = contexte boutique FORCÉ ═══
+            // Même si localStorage est corrompu (mangoo_my_shop_id effacé,
+            // mangoo_my_provider_id résiduel), le DOM fait foi.
+            // Sans cette garde, register-presence envoie le mauvais vendorId
+            // → le serveur rejette live:start → badge Live jamais propagé.
+            try {
+                var _vsWs = document.getElementById('vendorSection');
+                if (_vsWs && _vsWs.style.display === 'block') {
+                    var _shopIdWs = String(localStorage.getItem('mangoo_my_shop_id') || '').trim();
+                    if (!_shopIdWs) {
+                        // Résilience : chercher dans mangoo-current-user
+                        try {
+                            var _cuWs2 = JSON.parse(localStorage.getItem('mangoo-current-user') || '{}');
+                            if (_cuWs2 && String(_cuWs2.vendorKind || '').toLowerCase() === 'shop') {
+                                _shopIdWs = String(_cuWs2.vendorId || '').trim();
+                            }
+                        } catch(e) {}
+                    }
+                    if (_shopIdWs) {
+                        console.log('[WS-vendorId] DOM vendorSection=visible → FORÇAGE shopId:', _shopIdWs);
+                        // Réparer localStorage
+                        localStorage.setItem('mangoo_my_shop_id', _shopIdWs);
+                        try { localStorage.removeItem('mangoo_my_provider_id'); } catch(e) {}
+                        return _shopIdWs;
+                    }
+                }
+            } catch(e) { console.warn('[WS-vendorId] Erreur garde DOM:', e); }
+
             // 0. _lpLiveVendorId deja resolu par lpInitGoLiveButton
             try {
                 if (_lpLiveVendorId) {
@@ -17036,17 +17065,29 @@
                 // non authentifie (ex: onglet client avec mangoo_my_provider_id residuel).
                 // Sans cette garde, un onglet client peut faire croire au serveur que le
                 // vendeur est en ligne → l'appel part en WebSocket au lieu d'un push.
-                var _isPinAuth2 = false;
-                try { _isPinAuth2 = sessionStorage.getItem('_lpPushAuthReady') === '1'; } catch(e) {}
-                var _isUrlAuth2 = false;
+                // ═══ GARDE DOM SUPRÊME : dashboard visible = autorisation implicite ═══
+                // Même sans _lpPushAuthReady ou lpRole dans l'URL, si le dashboard
+                // boutique OU prestataire est visible, le vendeur est authentifié.
+                var _isDashVisible = false;
                 try {
-                    var _uaV2 = new URLSearchParams(window.location.search).get('vendor') || '';
-                    var _uaR2 = new URLSearchParams(window.location.search).get('lpRole') || '';
-                    _isUrlAuth2 = !!(_uaV2 && (_uaR2 === 'vendor' || _uaR2 === 'provider'));
+                    var _vs3 = document.getElementById('vendorSection');
+                    var _ps3 = document.getElementById('providerSection');
+                    _isDashVisible = (_vs3 && _vs3.style.display === 'block') || (_ps3 && _ps3.style.display === 'block');
                 } catch(e) {}
-                if (!_isPinAuth2 && !_isUrlAuth2) {
-                    console.log('[MgmtWS] Presence BLOQUEE: pas d\'authentification PIN/URL active');
-                    return;
+
+                if (!_isDashVisible) {
+                    var _isPinAuth2 = false;
+                    try { _isPinAuth2 = sessionStorage.getItem('_lpPushAuthReady') === '1'; } catch(e) {}
+                    var _isUrlAuth2 = false;
+                    try {
+                        var _uaV2 = new URLSearchParams(window.location.search).get('vendor') || '';
+                        var _uaR2 = new URLSearchParams(window.location.search).get('lpRole') || '';
+                        _isUrlAuth2 = !!(_uaV2 && (_uaR2 === 'vendor' || _uaR2 === 'provider'));
+                    } catch(e) {}
+                    if (!_isPinAuth2 && !_isUrlAuth2) {
+                        console.log('[MgmtWS] Presence BLOQUEE: pas d\'authentification PIN/URL active');
+                        return;
+                    }
                 }
                 const shopId = lpGetVendorWsVendorId();
                 if (!shopId) {
