@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -19667,16 +19667,11 @@
                 isOwnerShop = false;
             }
 
-            // Quand le proprietaire regarde sa propre fiche, masquer les actions client
-            // (Discuter, Itineraire, Appeler...) pour ne garder que les actions proprio
-            // (Booster, Ma fiche, Paiement, Mon compte, Quitter)
-            if (isOwnerProvider || isOwnerShop) {
-                try {
-                    const clientActions = document.getElementById('vendorPrimaryActions');
-                    if (clientActions) clientActions.style.display = 'none';
-                } catch {}
-            }
-
+            // Quand le proprietaire regarde sa propre fiche, NE PLUS masquer
+            // les actions client (Discuter, Itineraire, Appeler, Payer...).
+            // Le propriétaire doit voir la même page publique que les clients.
+            // Les actions propriétaires (Booster, Ma fiche, Mon compte) sont
+            // accessibles depuis le dashboard, pas depuis la fiche publique.
             const isAdmin = isAdminUser() && lpIsAdminToolsEnabled();
 
                 if (kindMode === 'service' && isAdmin) {
@@ -19704,28 +19699,11 @@
                 }
 
                     if (kindMode === 'service' && isOwnerProvider) {
-                    ownerLink.style.display = 'block';
-                    ownerLink.innerHTML = `
-                        <div style="display:flex; gap:10px; justify-content:flex-start; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:0 12px; scroll-snap-type:x proximity;">
-                                <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpTryOpenBoostFromLocal('${safeVendorId}', 'provider');" style="flex:0 0 auto; white-space:nowrap; background:#1b5e20; color:white; font-size:0.95rem; border:1px solid #1b5e20; padding:10px 16px; border-radius:999px; font-weight:950; scroll-snap-align:start; cursor:pointer; pointer-events:auto;">🚀 Booster</button>
-                            <a href="#" onclick="openProviderModalForVendor('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#636e72; font-size:0.85rem; text-decoration:none; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px; scroll-snap-align:start;">🏪 Ma fiche</a>
-                            <a href="#" onclick="startServicePayment('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#1b5e20; font-size:0.85rem; text-decoration:none; border:1px solid #1b5e20; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">💳 Paiement</a>
-                            <a href="#" onclick="openProviderDashboard('${safeVendorId}')" style="flex:0 0 auto; white-space:nowrap; color:#1b5e20; font-size:0.85rem; text-decoration:none; border:1px solid #1b5e20; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">👤 Mon compte</a>
-                            <a href="#" onclick="try{lpDisconnectProvider()}catch{}; try{closeSheet()}catch{}" style="flex:0 0 auto; white-space:nowrap; color:#d63031; font-size:0.85rem; text-decoration:none; border:1px solid #d63031; padding:8px 15px; border-radius:20px; font-weight:bold; scroll-snap-align:start;">🚪 Quitter</a>
-                        </div>
-                    `;
+                    // Page publique : masquer les actions propriétaires (accessibles depuis le dashboard)
+                    ownerLink.style.display = 'none';
                 } else if (isOwnerShop) {
-                    ownerLink.style.display = 'block';
-                    ownerLink.innerHTML = `
-                        <div style="display:flex; gap:10px; justify-content:flex-start; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:0 12px; scroll-snap-type:x proximity;">
-                                <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpTryOpenBoostFromLocal('${safeVendorId}', 'shop');" style="flex:0 0 auto; white-space:nowrap; background:#1b5e20; color:white; font-size:0.95rem; border:1px solid #1b5e20; padding:10px 16px; border-radius:999px; font-weight:950; scroll-snap-align:start; cursor:pointer; pointer-events:auto;">🚀 Booster</button>
-                            <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; openSellerModalForVendor('${safeVendorId}');" style="flex:0 0 auto; white-space:nowrap; color:#636e72; font-size:0.85rem; border:1px solid #dfe6e9; padding:8px 15px; border-radius:20px; background:transparent; font-weight:900; scroll-snap-align:start; cursor:pointer;">🏪 Ma fiche</button>
-                            <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpOpenShopAccountFromSheet('${safeVendorId}');" style="flex:0 0 auto; white-space:nowrap; color:#1b5e20; font-size:0.85rem; border:1px solid #1b5e20; padding:8px 15px; border-radius:20px; background:transparent; font-weight:950; scroll-snap-align:start; cursor:pointer;">👤 Mon compte</button>
-                            <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpOpenProductModalForShop('${safeVendorId}');" style="flex:0 0 auto; white-space:nowrap; color:#1b5e20; font-size:0.85rem; border:1px solid #1b5e20; padding:8px 15px; border-radius:20px; background:transparent; font-weight:950; scroll-snap-align:start; cursor:pointer;">📦 Nouveau</button>
-                            <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; lpOpenSupplyModalForShop('${safeVendorId}');" style="flex:0 0 auto; white-space:nowrap; color:#1b5e20; font-size:0.85rem; border:1px solid #1b5e20; padding:8px 15px; border-radius:20px; background:transparent; font-weight:950; scroll-snap-align:start; cursor:pointer;">🏭 S'approvisionner</button>
-                            <button type="button" onclick="try{event&&event.preventDefault&&event.preventDefault();event&&event.stopPropagation&&event.stopPropagation()}catch{}; try{lpDisconnectShop()}catch{}; try{closeSheet()}catch{}" style="flex:0 0 auto; white-space:nowrap; color:#d63031; font-size:0.85rem; border:1px solid #d63031; padding:8px 15px; border-radius:20px; background:transparent; font-weight:950; scroll-snap-align:start; cursor:pointer;">🚪 Quitter</button>
-                        </div>
-                    `;
+                    // Page publique : masquer les actions propriétaires (accessibles depuis le dashboard)
+                    ownerLink.style.display = 'none';
                 } else {
                     // Page publique client : pas de bouton Booster (réservé au dashboard vendeur)
                     ownerLink.style.display = 'none';
