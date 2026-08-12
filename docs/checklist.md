@@ -15,8 +15,8 @@
 - [x] Self-view auto-start côté vendeur
 - [x] "Voir produit" côté client (`_getProductsForCall()`)
 - [x] Badge "LIVE" sur la carte et fiche prestataire
-- [x] `_lpRestoreLiveMic()` v3 implémenté (ré-acquisition micro après appel privé)
-- [x] Tests structurels 10/10 (test-final.cjs, test-live-call-restore.cjs)
+- [x] Appel privé pendant un Live sans couper le Live (code v3 restauré : coupure/restauration micro après appel + bloc serveur FALLBACK LIVE)
+- [x] Tests structurels 10/10 (test-final.cjs)
 
 ### Dashboard
 - [x] Navigation Dashboard après PIN
@@ -93,10 +93,10 @@
 
 ## 🔄 EN COURS / À VALIDER
 
-- [ ] **Restauration audio Live après appel privé** — v3 implémenté, tests structurels 10/10 OK, **test utilisateur requis**
-  - Ouvrir le tunnel Cloudflare : `https://greeting-compaq-trio-refugees.trycloudflare.com`
-  - Hard refresh (`Ctrl+Shift+R`) pour charger le code v3
-  - Scénario : DAN PC démarre Live → Client rejoint → Appel privé → Raccroche → Vérifier audio Live restauré
+- [ ] **Régression Live/Appel privé corrigée** — code v3 restauré (`_lpRestoreLiveMic`, `_lpRebuildViewers`, restauration micro) **+ bloc serveur « FALLBACK LIVE » restauré** (envoi `incoming-call` direct au vendeur via `session.vendorWs`), **test utilisateur requis**
+  - Ouvrir le tunnel Cloudflare : `https://break-live-powerseller-exciting.trycloudflare.com`
+  - Hard refresh (`Ctrl+Shift+R`) pour charger le code restauré
+  - Scénario : DAN PC démarre Live → Client rejoint → Appel privé → **Vendeur reçoit la notification** → Vendeur accepte → **Vérifier que le Live reste actif** (vidéo + audio)
 
 ---
 
@@ -132,6 +132,7 @@
 6. Tests de résilience : Connexion → Déconnexion → Reconnexion (min. 3x)
 7. Alignement `vendor_id` serveur/client obligatoire
 8. Toute feature validée pour les prestataires doit être adaptée aux boutiques
+9. Tester toute nouvelle implémentation après l'avoir implémentée et ne passer à la suite que si les tests (10/10) sont validés et approuvés que c'est bien implémenté
 
 ---
 

@@ -35,12 +35,13 @@ const get = (u, to=10000) => new Promise((resolve, reject) => {
     t('4. / → mangoo-local.html', res.status === 200, 'status='+res.status);
   } catch(e) { t('4. / → mangoo-local.html', false, e.message); }
 
-  // 5. Contains LiveBadge code + _lpRestoreLiveMic v3
+  // 5. Contains LiveBadge code + v3 restaurée + Publier PIN
   try {
     const html = fs.readFileSync(path.join(__dirname, 'dist', 'mangoo-local.html'), 'utf-8');
     const hasBadge = html.includes('LiveBadge') && html.includes('live:start');
-    const hasV3 = html.includes('_lpRestoreLiveMic v3') && html.includes('getUserMedia');
-    t('5. Code LiveBadge + _lpRestoreLiveMic v3', hasBadge && hasV3, 'Badge='+hasBadge+' v3='+hasV3);
+    const v3Restored = html.includes('_lpRestoreLiveMic') && html.includes('_lpRebuildViewers');
+    const hasPublishAuth = html.includes('Code PIN vendeur');
+    t('5. Code LiveBadge présent + v3 restaurée + Publier PIN', hasBadge && v3Restored && hasPublishAuth, 'Badge='+hasBadge+' v3='+v3Restored+' Publier='+hasPublishAuth);
   } catch(e) { t('5. Code LiveBadge + v3', false, e.message); }
 
   // 6. test-webrtc-audio.html accessible

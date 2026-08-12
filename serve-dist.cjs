@@ -14,6 +14,8 @@ const MIME = {
 };
 
 const srv = http.createServer((req, res) => {
+  req.on('error', () => {});
+  res.on('error', () => {});
   const url = req.url.split('?')[0];
   
   // Proxy /api, /socket.io → 3045
@@ -56,6 +58,8 @@ srv.on('upgrade', (req, sock, head) => {
   
   const proxyReq = http.request(opts);
   proxyReq.on('upgrade', (proxyRes, proxySocket, proxyHead) => {
+    sock.on('error', () => { try { proxySocket.destroy(); } catch {} });
+    proxySocket.on('error', () => { try { sock.destroy(); } catch {} });
     // Forward the 101 response from the real server back to the client
     sock.write(
       'HTTP/1.1 101 Switching Protocols\r\n' +
@@ -69,5 +73,7 @@ srv.on('upgrade', (req, sock, head) => {
   proxyReq.on('error', () => sock.end());
   proxyReq.end();
 });
+
+srv.on('clientError', (_err, socket) => { try { socket.destroy(); } catch {} });
 
 srv.listen(PORT, '0.0.0.0', () => console.log(`[dist] http://0.0.0.0:${PORT}`));

@@ -65,17 +65,10 @@
 | `lpStopLive()` | 26816 | Arrête le live, ferme connexions |
 | `lpCallLiveVendor()` | 27385 | Client appelle le vendeur depuis le live |
 | `_lpFlushPendingViewers()` | 27183 | Connecte les viewers en attente |
-| `_lpRestoreLiveMic()` | 27642 | Restaure l'audio après appel privé (v3) |
-| `_lpRebuildViewers()` | 27704 | Reconstruit la liste des viewers |
 
-**Restauration audio Live après appel privé (v3) :**
-1. Fermeture de toutes les connexions `_lpLivePeerConnections`
-2. Délai 600ms
-3. `getUserMedia({audio:true})` — ré-acquisition physique du micro
-4. Remplacement du track audio dans `_lpLiveStream`
-5. Reconstruction des connexions viewers via `_lpRebuildViewers()`
+**Appel privé pendant un Live :** le Live n'est plus coupé lors de l'acceptation d'un appel privé (régression v3 annulée, aucune manipulation du micro Live).
 
-**État actuel :** Fonctionnel pour les prestataires. Restauration audio v3 en attente de validation utilisateur.
+**État actuel :** Fonctionnel pour les prestataires. Appel privé pendant un Live sans couper le Live.
 
 **Plage :** [l.26205-28000](file:///c:/Users/mdans/Documents/MangooTech/public/mangoo-local.html#L26205-L28000)
 

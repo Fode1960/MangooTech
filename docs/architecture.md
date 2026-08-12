@@ -181,14 +181,7 @@ Vendeur (en Live)                 Client
    │                                  │
    │──── call-ended ─────────────────▶│
    │                                  │
-   │ _lpRestoreLiveMic() v3 :         │
-   │ • Close all Live PC connections  │
-   │ • Wait 600ms                     │
-   │ • getUserMedia({audio:true})     │
-   │ • Replace audio track in stream  │
-   │ • Rebuild viewer connections     │
-   │                                  │
-   │◀══════ Live Audio restauré ═══════════════════════════════▶│
+   │◀══════ Live toujours actif ═══════════════════════════════▶│
 ```
 
 ---
