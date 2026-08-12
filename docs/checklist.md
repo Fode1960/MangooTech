@@ -110,6 +110,8 @@
 
 ### Validation
 - [ ] **Re-test Scénario B (Push notifications)** post-corrections Dashboard
+  - 🔧 Cause du KO trouvée + corrigée : `serve-dist.cjs` ne proxyait pas les requêtes HTTP `/webrtc-ws/*` (et `/push/*`) vers le port 3008. Le `fetch('/webrtc-ws/push/subscribe')` du client tombait sur le fallback SPA (HTML 200) au lieu d'enregistrer la souscription → `sendPushToVendor` ne trouvait aucune souscription → aucune notif.
+  - Correctif : proxy HTTP ajouté (`/webrtc-ws/*`, `/push/*`, `/health`, `/presence/check`, `/chat/history`, `/hours/check` → 3008) dans `serve-dist.cjs`. Vérifié via localhost:3015 ET tunnel Cloudflare (JSON 200).
 - [ ] **Validation mobile complète** (Android)
 - [ ] **Test restauration audio Live v3** en conditions réelles
 

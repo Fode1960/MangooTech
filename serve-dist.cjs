@@ -28,6 +28,19 @@ const srv = http.createServer((req, res) => {
     return;
   }
 
+  // Proxy HTTP /webrtc-ws/*, /push/*, /health, /presence/check, /chat/history, /hours/check → 3008
+  // (le client enregistre sa souscription Push via fetch('/webrtc-ws/push/subscribe'))
+  if (url.startsWith('/webrtc-ws/') || url.startsWith('/push/') ||
+      url === '/health' || url === '/presence/check' ||
+      url.startsWith('/chat/history') || url.startsWith('/hours/check')) {
+    const opts = { hostname:'127.0.0.1', port:3008, path:req.url, method:req.method, headers:{ ...req.headers, host:'127.0.0.1:3008' } };
+    const pr = http.request(opts, prRes => { res.writeHead(prRes.statusCode, prRes.headers); prRes.pipe(res); });
+    pr.on('error', () => { res.writeHead(502); res.end('Push server down'); });
+    if (req.method !== 'GET' && req.method !== 'HEAD') { req.pipe(pr); }
+    else { req.resume(); pr.end(); }
+    return;
+  }
+
   // Page principale = mangoo-local.html (Local+ avec badge Live, dashboard, etc.)
   let fp = url === '/' ? path.join(DIR, 'mangoo-local.html') : path.join(DIR, url);
   
