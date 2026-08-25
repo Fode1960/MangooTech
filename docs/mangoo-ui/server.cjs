@@ -1111,6 +1111,32 @@ function carteCategory(category) {
   return category === 'commerce' ? 'boutique' : category;
 }
 
+// Reconstruit une ville valide à partir d'un profil dont la ville est absente
+// ou a été enregistrée comme « other » (ancienne option « Autre » du formulaire,
+// qui n'était pas géolocalisée). On dérive la ville connue la plus proche des
+// coordonnées, sinon la première ville du pays, sinon Dakar. Corrige les comptes
+// créés avant la normalisation des villes, afin qu'ils apparaissent sur la carte.
+function resolveVendorCity(lat, lng, country) {
+  const hasGeo = typeof lat === 'number' && isFinite(lat) && typeof lng === 'number' && isFinite(lng);
+  if (hasGeo) {
+    let best = null, bestKm = Infinity;
+    for (const slug in GEO_CITIES) {
+      const c = GEO_CITIES[slug];
+      const d = haversineKm(lat, lng, c.lat, c.lng);
+      if (d < bestKm) { bestKm = d; best = c; }
+    }
+    if (best) return { city: best.city, country: best.country };
+  }
+  if (country) {
+    const ck = String(country).trim().toLowerCase();
+    for (const slug in GEO_CITIES) {
+      const c = GEO_CITIES[slug];
+      if (String(c.country).trim().toLowerCase() === ck) return { city: c.city, country: c.country };
+    }
+  }
+  return { city: 'Dakar', country: 'Senegal' };
+}
+
 function carteVendors() {
   // Réconcilie l'état des boosters (expiration des badges échus) avant de
   // construire l'annuaire, afin que la carte reflète les badges actifs en
@@ -1132,16 +1158,30 @@ function carteVendors() {
     const rating = (cfg && cfg.rating != null)
       ? Number(cfg.rating)
       : ((cfg && cfg.ranking && cfg.ranking.score != null) ? Number((cfg.ranking.score / 20).toFixed(1)) : 4.5);
+
+    // Coordonnées + ville normalisées : les comptes « other » (ancienne option
+    // « Autre ») sont ré-affectés à une vraie ville pour ne pas disparaître de
+    // la carte alors qu'ils sont géolocalisés (par défaut Dakar).
+    const lat = (profile.lat != null) ? Number(profile.lat) : (u.lat != null ? Number(u.lat) : 14.7167);
+    const lng = (profile.lng != null) ? Number(profile.lng) : (u.lng != null ? Number(u.lng) : -17.4677);
+    let city = profile.city || u.city || '';
+    let country = profile.country || u.country || '';
+    if (!city || normalizeCityKey(city) === 'other' || normalizeCityKey(city) === 'autre') {
+      const resolved = resolveVendorCity(lat, lng, country);
+      city = resolved.city;
+      if (!country) country = resolved.country;
+    }
+
     list.push({
       id: nextId++,
       vendorId: u.vendorId || u.id,
       name: profile.enseigne || u.enseigne || u.name,
       type: type,
       category: category,
-      city: profile.city || u.city || '',
-      country: profile.country || u.country || '',
-      lat: (profile.lat != null) ? Number(profile.lat) : (u.lat != null ? Number(u.lat) : 14.7167),
-      lng: (profile.lng != null) ? Number(profile.lng) : (u.lng != null ? Number(u.lng) : -17.4677),
+      city: city,
+      country: country,
+      lat: lat,
+      lng: lng,
       rating: rating,
       price: '$$',
       live: false,
