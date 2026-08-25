@@ -974,6 +974,34 @@ function saveUsers() {
  *  Expose uniquement les profils pro réels (prestataires & boutiques),
  *  à l'exclusion des comptes admin/démo, pour alimenter la carte.
  * ------------------------------------------------------------------ */
+// Dictionnaire géographique des villes proposées à l'inscription (slug -> coordonnées).
+// Permet d'enregistrer country + lat/lng au moment de la création du compte, afin
+// que la carte Local+ puisse géolocaliser chaque pro sans retomber sur Dakar.
+const GEO_CITIES = {
+  'paris':        { city: 'Paris',        country: 'France',        lat: 48.8566, lng: 2.3522 },
+  'dakar':        { city: 'Dakar',        country: 'Senegal',       lat: 14.7167, lng: -17.4677 },
+  'abidjan':      { city: 'Abidjan',      country: "Cote d'Ivoire", lat: 5.3599,  lng: -4.0083 },
+  'libreville':   { city: 'Libreville',   country: 'Gabon',         lat: 0.4162,  lng: 9.4673 },
+  'yamoussoukro': { city: 'Yamoussoukro', country: "Cote d'Ivoire", lat: 6.8276,  lng: -5.2893 },
+  'bouake':       { city: 'Bouaké',       country: "Cote d'Ivoire", lat: 7.6900,  lng: -5.0300 },
+  'daloa':        { city: 'Daloa',        country: "Cote d'Ivoire", lat: 6.8774,  lng: -6.4502 },
+  'san-pedro':    { city: 'San Pedro',    country: "Cote d'Ivoire", lat: 4.7485,  lng: -6.6363 },
+  'korhogo':      { city: 'Korhogo',      country: "Cote d'Ivoire", lat: 9.4580,  lng: -5.6296 },
+  'man':          { city: 'Man',          country: "Cote d'Ivoire", lat: 7.4064,  lng: -7.5572 }
+};
+
+function normalizeCityKey(raw) {
+  return String(raw || '').trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function geocodeCity(raw) {
+  const slug = normalizeCityKey(raw);
+  return GEO_CITIES[slug] || null;
+}
+
 function carteCategory(category) {
   // Un profil « commerce » est un vendeur ; catégorie affichée « boutique ».
   return category === 'commerce' ? 'boutique' : category;
@@ -1007,9 +1035,9 @@ function carteVendors() {
       type: type,
       category: category,
       city: profile.city || u.city || '',
-      country: profile.country || '',
-      lat: (profile.lat != null) ? Number(profile.lat) : 14.7167,
-      lng: (profile.lng != null) ? Number(profile.lng) : -17.4677,
+      country: profile.country || u.country || '',
+      lat: (profile.lat != null) ? Number(profile.lat) : (u.lat != null ? Number(u.lat) : 14.7167),
+      lng: (profile.lng != null) ? Number(profile.lng) : (u.lng != null ? Number(u.lng) : -17.4677),
       rating: rating,
       price: '$$',
       live: false,
@@ -3283,7 +3311,9 @@ function handleHttp(req, res) {
 
       const userId = newUserId(role);
       const enseigne = String(body.enseigne || '').trim() || name;
-      const city = String(body.city || '').trim() || 'Dakar';
+      const cityRaw = String(body.city || '').trim() || 'Dakar';
+      const geo = geocodeCity(cityRaw);
+      const city = geo ? geo.city : cityRaw;
       const category = String(body.category || '').trim() || 'salon';
       const logo = String(body.logo || '').slice(0, 500000); // data URL logo (max 500 Ko)
       // Véhicule du livreur validé AVANT création du compte (évite tout compte orphelin).
@@ -3296,7 +3326,11 @@ function handleHttp(req, res) {
         email: email || null, phone,
         pinHash: pin ? hashSecret(pin) : null,
         passwordHash: password ? hashSecret(password) : null,
-        logo, category, city, createdAt: nowIso()
+        logo, category, city,
+        country: geo ? geo.country : null,
+        lat: geo ? geo.lat : null,
+        lng: geo ? geo.lng : null,
+        createdAt: nowIso()
       };
       users.push(user);
       saveUsers();
@@ -3309,7 +3343,10 @@ function handleHttp(req, res) {
         doc.vendorName = enseigne;
         doc.profile = Object.assign({}, doc.profile, {
           ownerName: name, email: email || '', phone: phone,
-          enseigne: enseigne, category: category, city: city, logo: logo
+          enseigne: enseigne, category: category, city: city, logo: logo,
+          country: geo ? geo.country : (doc.profile.country || ''),
+          lat: geo ? geo.lat : (doc.profile.lat != null ? doc.profile.lat : null),
+          lng: geo ? geo.lng : (doc.profile.lng != null ? doc.profile.lng : null)
         });
         doc.updatedAt = nowIso();
         saveVendorConfig();

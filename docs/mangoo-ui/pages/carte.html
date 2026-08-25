@@ -525,7 +525,8 @@ html.dark {
   var FALLBACK_CITIES = {
     'Dakar': { lat: 14.7167, lng: -17.4677, country: 'Senegal' },
     'Libreville': { lat: 0.4162, lng: 9.4673, country: 'Gabon' },
-    'Abidjan': { lat: 5.3599, lng: -4.0083, country: "Cote d'Ivoire" }
+    'Abidjan': { lat: 5.3599, lng: -4.0083, country: "Cote d'Ivoire" },
+    'Paris': { lat: 48.8566, lng: 2.3522, country: 'France' }
   };
 
   function rebuildDerivedData() {
@@ -543,6 +544,9 @@ html.dark {
     vendors.forEach(function(v) {
       v._demoLive = v.live === true;
     });
+
+    // Reconstruit l'index de correspondance ville (Paris, Dakar, ...).
+    rebuildCityIndex();
   }
 
 
@@ -598,8 +602,14 @@ html.dark {
   }
 
   // Index des villes connues par clé normalisée (pour la correspondance Nominatim).
+  // Reconstruit après chargement des profils réels (rebuildDerivedData) afin
+  // d'inclure Paris et toutes les villes portées par les vendeurs inscrits.
   var CITY_INDEX = {};
-  Object.keys(CITIES).forEach(function(city) { CITY_INDEX[normalizeText(city)] = city; });
+  function rebuildCityIndex() {
+    CITY_INDEX = {};
+    Object.keys(CITIES).forEach(function(city) { CITY_INDEX[normalizeText(city)] = city; });
+  }
+  rebuildCityIndex();
 
   function matchCity(name) {
     if (!name) return null;
