@@ -594,7 +594,13 @@ html.dark {
       return !userCountry || v.country === userCountry;
     }
     if (userCity) {
-      return v.city === userCity && vendorDistanceKm(v) <= maxDistanceKm;
+      // Un compte « other » (ancienne option « Autre ») ou sans ville n'a pas
+      // de ville de rattachement : on le rattache par proximité GPS au lieu de
+      // l'exclure (il est géolocalisé par défaut sur Dakar).
+      var cityKey = normalizeText(v.city);
+      var cityKnown = cityKey !== '' && cityKey !== 'other' && cityKey !== 'autre';
+      var matchesCity = cityKnown ? (v.city === userCity) : true;
+      return matchesCity && vendorDistanceKm(v) <= maxDistanceKm;
     }
     return vendorDistanceKm(v) <= maxDistanceKm;
   }
@@ -1787,8 +1793,22 @@ html.dark {
         applyFilters();
         return;
       }
-      // Déjà au palier maximal.
-      showRadiusNotice('Aucun commerce a ' + maxDistanceKm + ' km — essayez « Tout le pays » ou une autre ville.');
+      // Déjà au palier maximal : bascule automatiquement sur « Tout le pays »
+      // si le pays contient des commerces, pour ne jamais laisser une carte
+      // inutilement vide alors que des profils existent ailleurs dans le pays.
+      var countryCount = vendors.filter(function (v) {
+        return !userCountry || v.country === userCountry;
+      }).length;
+      if (countryCount > 0) {
+        lpScopeMode = 'country';
+        updateRadiusChips();
+        updateRadiusCircle();
+        showRadiusNotice('Aucun commerce a ' + maxDistanceKm + ' km — affichage de tout ' + (userCountry || 'le pays') + '.');
+        applyFilters();
+        persistScope();
+      } else {
+        showRadiusNotice('Aucun commerce a ' + maxDistanceKm + ' km — essayez une autre ville.');
+      }
       return;
     }
 
