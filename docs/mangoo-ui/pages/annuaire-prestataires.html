@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Annuaire des professionnels</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  /* --- Radius Scale (root-level for preflight) --- */
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  /* --- Brand Primary: Dark Green --- */
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  /* --- Orange Accent (CTAs, highlights) --- */
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  /* --- Neutral Surface & Text Scale --- */
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  /* --- State Colors --- */
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  /* --- Shadows --- */
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  /* --- Typography --- */
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* --- Semantic Tailwind Aliases --- */
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+/* --- Typography Classes --- */
+.h-display {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.h1 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(28px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.h2 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h3 {
+  font-family: var(--mgt-font-sans);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.body-l {
+  font-family: var(--mgt-font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--mgt-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--mgt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--radius-sm);
+    --radius-md: var(--radius-md);
+    --radius-lg: var(--radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased flex bg-[rgb(var(--mgt-muted))]">
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-[rgb(var(--mgt-primary))] text-[rgb(var(--mgt-primary-foreground))]">
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+        <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+        <div>
+          <span class="font-semibold text-base tracking-tight">Mangoo</span><span class="font-light text-base tracking-tight text-white/70">Tech</span>
+        </div>
+      </div>
+      <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <a href="./dashboard-overview.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i> Vue d'ensemble
+        </a>
+        <a href="./dashboard-messages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="message-square" class="w-4.5 h-4.5"></i> Messagerie
+        </a>
+        <a href="./annuaire-prestataires.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-medium transition-colors">
+          <i data-lucide="contact" class="w-4.5 h-4.5"></i> Annuaire
+        </a>
+        <a href="./dashboard-live.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="radio" class="w-4.5 h-4.5"></i> Live
+        </a>
+        <a href="./dashboard-boosters.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="zap" class="w-4.5 h-4.5"></i> Boosters
+        </a>
+        <a href="./dashboard-classement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="trophy" class="w-4.5 h-4.5"></i> Classement
+        </a>
+        <a href="./dashboard-settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="settings" class="w-4.5 h-4.5"></i> Parametres
+        </a>
+      </nav>
+      <div class="border-t border-white/10 px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>CA</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate" data-vendor-name>DAN Boutique</p>
+            <p class="text-xs text-white/60 truncate" data-vendor-role>Prestataire certifié</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div id="app-main" class="flex-1 ml-60 min-h-screen flex flex-col">
+      <header class="sticky top-0 z-30 flex items-center justify-between gap-4 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] px-8 py-3.5">
+        <div class="flex items-center gap-4">
+          <h1 class="h3 tabular-nums">Annuaire des professionnels</h1>
+          <span class="inline-flex items-center gap-2 caption text-[rgb(var(--mgt-primary-700))] bg-[rgb(var(--mgt-primary-50))] px-2.5 py-0.5 rounded-full font-medium">
+            <i data-lucide="contact" class="w-3 h-3"></i>
+            <span id="annuaire-count">8 partenaires</span>
+          </span>
+        </div>
+        <div class="flex items-center gap-4">
+          <button id="btn-notifications" class="relative p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))]" aria-label="Notifications">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="btn-notifications-badge" class="absolute top-1 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-[10px] font-bold leading-4 text-center" style="display:none;"></span>
+          </button>
+          <div id="btn-account" class="flex items-center gap-3 pl-2 border-l border-[rgb(var(--mgt-border))] cursor-pointer" role="button" tabindex="0">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>CA</div>
+            <div class="hidden sm:block text-right">
+              <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]" data-vendor-name>DAN Boutique</p>
+              <div class="flex items-center gap-1 text-xs text-[rgb(var(--mgt-accent))]">
+                <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                <span data-vendor-rating>4.8</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="flex-1 p-8 space-y-6">
+        <!-- ===== INTRO + RECHERCHE ===== -->
+        <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div class="max-w-xl">
+              <h2 class="h3 mb-1">Trouvez et contactez un autre professionnel</h2>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Boutiques et prestataires peuvent s'écrire, s'appeler (audio) et se voir (vidéo) directement, via Mangoo Connect+.</p>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))] mt-2 flex items-center gap-1.5">
+                <i data-lucide="info" class="w-3.5 h-3.5"></i>
+                Pour qu'un appel aboutisse, les deux professionnels doivent être connectés à leur dashboard. Sans serveur actif, l'appel est simulé.
+              </p>
+            </div>
+            <div class="relative w-full sm:w-80">
+              <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+              <input id="annuaire-search" type="text" placeholder="Rechercher un nom, un métier..." class="pl-9 pr-4 py-2.5 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== LISTE DES PROFESSIONNELS ===== -->
+        <div id="annuaire-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+        <div id="annuaire-empty" class="hidden rounded-xl border border-dashed px-6 py-14 text-center" style="border-color: rgb(var(--mgt-border));">
+          <i data-lucide="search-x" class="h-10 w-10 mx-auto mb-3 text-[rgb(var(--mgt-muted-foreground))]"></i>
+          <p class="h3 mb-1">Aucun résultat</p>
+          <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Essayez un autre nom ou un autre métier.</p>
+        </div>
+      </main>
+    </div>
+
+    <script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+    <script src="../assets/mangoo-connect-plus.js"></script>
+    <script src="../assets/mangoo-dashboard-shell.js"></script>
+    <script>
+(function () {
+  // Annuaire des professionnels — prototype. Les boutons « Contacter »,
+  // « Appeler » (audio) et « Vidéo » déclenchent le chat / l'appel via Mangoo Connect+.
+  var PROVIDERS = [
+    { vendorId: 'pro-eb10536cd12d', name: 'DAN Coiffure',   ini: 'DC', type: 'Salon de coiffure', rating: '4.8', reviews: 18, city: 'Dakar', badge: 'Promotion',   badgeKind: 'primary' },
+    { vendorId: 'pro-41cafa4bcb31', name: 'DAN Boutique',   ini: 'CA', type: 'Boutique',          rating: '4.8', reviews: 12, city: 'Dakar', badge: 'Nouveau',     badgeKind: 'accent' },
+    { vendorId: 'pro-salon-diop',   name: 'Salon Diop',     ini: 'SD', type: 'Coiffure',          rating: '4.9', reviews: 22, city: 'Dakar', badge: 'Sponsorisé',  badgeKind: 'accent' },
+    { vendorId: 'pro-nails-bineta', name: 'Nails by Bineta',ini: 'NB', type: 'Onglerie',          rating: '4.8', reviews: 18, city: 'Dakar', badge: null,          badgeKind: null },
+    { vendorId: 'pro-maison-mareme',name: 'Maison Marème',  ini: 'MM', type: 'Soins du visage',   rating: '4.7', reviews: 10, city: 'Dakar', badge: null,          badgeKind: null },
+    { vendorId: 'pro-khady-styles', name: 'Khady Styles',   ini: 'KS', type: 'Coiffure',          rating: '4.6', reviews: 9,  city: 'Dakar', badge: null,          badgeKind: null },
+    { vendorId: 'pro-almadies-grill', name: 'Almadies Grill', ini: 'AG', type: 'Restauration',    rating: '4.9', reviews: 31, city: 'Dakar', badge: 'Promotion',   badgeKind: 'primary' },
+    { vendorId: 'pro-bijou-beauty', name: 'Bijou Beauty',   ini: 'BB', type: 'Accessoires',       rating: '4.8', reviews: 24, city: 'Dakar', badge: null,          badgeKind: null }
+  ];
+
+  var BADGE_STYLE = {
+    primary: 'background-color: rgb(var(--mgt-primary-100)); color: rgb(var(--mgt-primary-700)); border: 1px solid rgb(var(--mgt-primary-200));',
+    accent: 'background-color: rgb(var(--mgt-accent-50)); color: rgb(var(--mgt-accent-700)); border: 1px solid rgb(var(--mgt-accent-200));'
+  };
+
+  function currentVendorId() {
+    try {
+      var v = (window.MangooVendor && window.MangooVendor.current) ? window.MangooVendor.current() : null;
+      return v ? v.vendorId : null;
+    } catch (e) { return null; }
+  }
+
+  // Présence temps réel : { vendorId -> true } pour les pros actuellement en ligne.
+  var onlinePeers = {};
+  function syncPresence(peers) {
+    onlinePeers = {};
+    (peers || []).forEach(function (p) {
+      if (p && p.id) onlinePeers[String(p.id)] = true;
+    });
+    var q = document.getElementById('annuaire-search');
+    try { applyFilter(q ? q.value : ''); } catch (e) {}
+  }
+  if (window.MangooConnect && typeof window.MangooConnect.onPresence === 'function') {
+    window.MangooConnect.onPresence(syncPresence);
+  }
+
+  function contact(provider) {
+    if (window.MangooConnect && typeof window.MangooConnect.chat === 'function') {
+      window.MangooConnect.chat({ vendorId: provider.vendorId, name: provider.name });
+    }
+  }
+
+  function call(provider) {
+    if (window.MangooConnect && typeof window.MangooConnect.call === 'function') {
+      window.MangooConnect.call({ vendorId: provider.vendorId, name: provider.name }, { mode: 'audio' });
+    }
+  }
+
+  function videoCall(provider) {
+    if (window.MangooConnect && typeof window.MangooConnect.call === 'function') {
+      window.MangooConnect.call({ vendorId: provider.vendorId, name: provider.name }, { mode: 'video' });
+    }
+  }
+
+  function render(list) {
+    var grid = document.getElementById('annuaire-grid');
+    var empty = document.getElementById('annuaire-empty');
+    var count = document.getElementById('annuaire-count');
+    var me = currentVendorId();
+    grid.innerHTML = '';
+    if (count) count.textContent = list.length + (list.length > 1 ? ' partenaires' : ' partenaire');
+    if (empty) empty.classList.toggle('hidden', list.length > 0);
+
+    list.forEach(function (p) {
+      var isYou = me && p.vendorId === me;
+      var isOnline = !isYou && !!onlinePeers[p.vendorId];
+      var badge = p.badge ? '<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold" style="' + (BADGE_STYLE[p.badgeKind] || BADGE_STYLE.primary) + ' border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">' +
+        '<i data-lucide="' + (p.badge === 'Sponsorisé' ? 'megaphone' : (p.badge === 'Nouveau' ? 'sparkles' : 'tag')) + '" class="h-3 w-3"></i>' + p.badge + '</span>' : '';
+
+      var presence = '<span class="inline-flex items-center gap-1.5 text-xs font-medium" style="font-family: var(--mgt-font-sans);">' +
+        '<span class="w-2 h-2 rounded-full" style="background-color: ' + (isOnline ? 'rgb(var(--mgt-success))' : 'rgb(var(--mgt-muted-foreground))') + ';"></span>' +
+        '<span style="color: rgb(var(--mgt-muted-foreground));">' + (isOnline ? 'En ligne' : 'Hors ligne') + '</span></span>';
+
+      var callNow = isOnline
+        ? '<button data-action="callnow" class="inline-flex w-full items-center justify-center gap-2 rounded-md px-3 py-2.5 text-sm font-semibold transition-all hover:brightness-110 animate-pulse" style="background-color: rgb(var(--mgt-success)); color: rgb(var(--mgt-success-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: var(--mgt-shadow-sm);">' +
+            '<i data-lucide="phone-call" class="h-4 w-4"></i>Appeler maintenant' +
+          '</button>'
+        : '';
+
+      var actions;
+      if (isYou) {
+        actions = '<span class="inline-flex items-center gap-1.5 text-xs font-semibold text-[rgb(var(--mgt-muted-foreground))]"><i data-lucide="user" class="h-3.5 w-3.5"></i>C\'est vous</span>';
+      } else {
+        actions =
+          '<button data-action="chat" class="inline-flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">' +
+            '<i data-lucide="message-circle" class="h-4 w-4"></i>Contacter' +
+          '</button>' +
+          '<button data-action="call" class="inline-flex flex-1 items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-semibold transition-all hover:bg-[rgb(var(--mgt-muted))]" style="border-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">' +
+            '<i data-lucide="phone" class="h-4 w-4"></i>Appeler' +
+          '</button>' +
+          '<button data-action="video" class="inline-flex flex-1 items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-semibold transition-all hover:bg-[rgb(var(--mgt-muted))]" style="border-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">' +
+            '<i data-lucide="video" class="h-4 w-4"></i>Vidéo' +
+          '</button>';
+      }
+
+      var card = document.createElement('div');
+      card.className = 'bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)] flex flex-col gap-4';
+      card.innerHTML =
+        '<div class="flex items-start gap-3">' +
+          '<div class="relative flex-shrink-0">' +
+            '<div class="flex items-center justify-center w-12 h-12 rounded-full text-white font-semibold text-base" style="background-color: rgb(var(--mgt-accent));">' + p.ini + '</div>' +
+            '<span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2" style="background-color: ' + (isYou ? 'rgb(var(--mgt-muted-foreground))' : (isOnline ? 'rgb(var(--mgt-success))' : 'rgb(var(--mgt-muted-foreground))')) + '; border-color: rgb(var(--mgt-card));"></span>' +
+          '</div>' +
+          '<div class="flex-1 min-w-0">' +
+            '<div class="flex items-center justify-between gap-2">' +
+              '<p class="text-sm font-semibold truncate text-[rgb(var(--mgt-foreground))]">' + p.name + '</p>' +
+              badge +
+            '</div>' +
+            '<p class="caption text-[rgb(var(--mgt-muted-foreground))] truncate">' + p.type + '</p>' +
+            '<div class="flex items-center gap-2 mt-1.5">' +
+              '<span class="inline-flex items-center gap-1 text-xs font-semibold text-[rgb(var(--mgt-foreground))]"><i data-lucide="star" class="h-3.5 w-3.5 fill-current" style="color: rgb(var(--mgt-accent-300));"></i>' + p.rating + '</span>' +
+              '<span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">(' + p.reviews + ' avis)</span>' +
+              '<span class="inline-flex items-center gap-1 text-xs text-[rgb(var(--mgt-muted-foreground))]"><i data-lucide="map-pin" class="h-3 w-3"></i>' + p.city + '</span>' +
+            '</div>' +
+            '<div class="mt-2">' + presence + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="flex gap-2 pt-1">' + actions + '</div>' +
+        callNow;
+
+      if (!isYou) {
+        card.querySelector('[data-action="chat"]').addEventListener('click', function () { contact(p); });
+        card.querySelector('[data-action="call"]').addEventListener('click', function () { call(p); });
+        card.querySelector('[data-action="video"]').addEventListener('click', function () { videoCall(p); });
+      }
+      if (callNow) {
+        card.querySelector('[data-action="callnow"]').addEventListener('click', function () { call(p); });
+      }
+      grid.appendChild(card);
+    });
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function normalize(s) {
+    return (s || '').toString().toLowerCase()
+      .replace(/[éèêë]/g, 'e')
+      .replace(/[àâä]/g, 'a')
+      .replace(/[ùûü]/g, 'u')
+      .replace(/[ôö]/g, 'o')
+      .replace(/[îï]/g, 'i')
+      .replace(/[ç]/g, 'c');
+  }
+
+  function applyFilter(q) {
+    q = normalize(q);
+    var filtered = PROVIDERS.filter(function (p) {
+      if (!q) return true;
+      var hay = normalize(p.name + ' ' + p.type + ' ' + p.city);
+      return hay.indexOf(q) >= 0;
+    });
+    try {
+      render(filtered);
+    } catch (e) {
+      // Filet de sécurité : ne jamais laisser une liste vide en cas d'erreur.
+      render(PROVIDERS);
+    }
+  }
+
+  var search = document.getElementById('annuaire-search');
+  if (search) search.addEventListener('input', function () { applyFilter(search.value); });
+
+  function boot() {
+    applyFilter('');
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
+</body>
+</html>

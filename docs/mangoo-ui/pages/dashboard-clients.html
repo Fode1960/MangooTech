@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Clients</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  /* --- Radius Scale (root-level for preflight) --- */
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  /* --- Brand Primary: Dark Green --- */
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  /* --- Orange Accent (CTAs, highlights) --- */
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  /* --- Neutral Surface & Text Scale --- */
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  /* --- State Colors --- */
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  /* --- Shadows --- */
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  /* --- Typography --- */
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* --- Semantic Tailwind Aliases --- */
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+/* --- Typography Classes --- */
+.h-display {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.h1 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(28px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.h2 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h3 {
+  font-family: var(--mgt-font-sans);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.body-l {
+  font-family: var(--mgt-font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--mgt-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--mgt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--radius-sm);
+    --radius-md: var(--radius-md);
+    --radius-lg: var(--radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen antialiased flex bg-[rgb(var(--mgt-muted))]">
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-[rgb(var(--mgt-primary))] text-[rgb(var(--mgt-primary-foreground))]">
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+        <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+        <div>
+          <span class="font-semibold text-base tracking-tight">Mangoo</span><span class="font-light text-base tracking-tight text-white/70">Tech</span>
+        </div>
+      </div>
+      <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <a href="./dashboard-overview.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+          Vue d'ensemble
+        </a>
+        <a href="./dashboard-performance.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bar-chart-3" class="w-4.5 h-4.5"></i>
+          Performance
+        </a>
+        <a href="./dashboard-reviews.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="star" class="w-4.5 h-4.5"></i>
+          Avis clients
+        </a>
+        <a href="./dashboard-agenda.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="calendar-days" class="w-4.5 h-4.5"></i>
+          Rendez-vous
+        </a>
+        <a href="./dashboard-finances.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wallet" class="w-4.5 h-4.5"></i>
+          Finances
+        </a>
+        <a href="./dashboard-notifications.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+          Notifications
+        </a>
+        <a href="./dashboard-orders.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shopping-bag" class="w-4.5 h-4.5"></i>
+          Commandes
+        </a>
+        <a href="./dashboard-clients.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-medium transition-colors">
+          <i data-lucide="users" class="w-4.5 h-4.5"></i>
+          Clients
+        </a>
+        <a href="./dashboard-team.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users-round" class="w-4.5 h-4.5"></i>
+          Équipe
+        </a>
+        <a href="./dashboard-messages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="message-square" class="w-4.5 h-4.5"></i>
+          Messagerie
+        </a>
+        <a href="./dashboard-live.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="radio" class="w-4.5 h-4.5"></i>
+          Live
+        </a>
+        <a href="./dashboard-services.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="briefcase" class="w-4.5 h-4.5"></i>
+          Prestations
+        </a>
+        <a href="./dashboard-catalogue.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="package" class="w-4.5 h-4.5"></i>
+          Catalogue
+        </a>
+        <a href="./dashboard-inventaire.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="boxes" class="w-4.5 h-4.5"></i>
+          Inventaire
+        </a>
+        <a href="./dashboard-gallery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="images" class="w-4.5 h-4.5"></i>
+          Galerie
+        </a>
+        <a href="./dashboard-boosters.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="zap" class="w-4.5 h-4.5"></i>
+          Boosters
+        </a>
+        <a href="./dashboard-delivery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="truck" class="w-4.5 h-4.5"></i>
+          Livraisons
+        </a>
+        <a href="./dashboard-promotions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="badge-percent" class="w-4.5 h-4.5"></i>
+          Promotions
+        </a>
+        <a href="./dashboard-fidelite.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="award" class="w-4.5 h-4.5"></i>
+          Fidélité
+        </a>
+        <a href="./dashboard-parrainage.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="gift" class="w-4.5 h-4.5"></i>
+          Parrainage
+        </a>
+        <a href="./dashboard-classement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="trophy" class="w-4.5 h-4.5"></i>
+          Classement
+        </a>
+        <a href="./dashboard-verification.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shield-check" class="w-4.5 h-4.5"></i>
+          Vérification
+        </a>
+        <a href="./dashboard-recommandation.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="compass" class="w-4.5 h-4.5"></i>
+          Découverte
+        </a>
+        <a href="./dashboard-hors-ligne.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wifi-off" class="w-4.5 h-4.5"></i>
+          Hors-ligne
+        </a>
+        <a href="./dashboard-rapports.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
+          Rapports
+        </a>
+        <a href="./dashboard-support.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="life-buoy" class="w-4.5 h-4.5"></i>
+          Support
+        </a>
+        <a href="./dashboard-offres.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="tag" class="w-4.5 h-4.5"></i>
+          Offres & Tarifs
+        </a>
+        <a href="./dashboard-abonnement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="credit-card" class="w-4.5 h-4.5"></i>
+          Abonnement
+        </a>
+        <a href="./dashboard-settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="settings" class="w-4.5 h-4.5"></i>
+          Parametres
+        </a>
+      </nav>
+      <div class="border-t border-white/10 px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>CA</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate" data-vendor-name>DAN Boutique</p>
+            <p class="text-xs text-white/60 truncate" data-vendor-role>Prestataire certifié</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div id="app-main" class="flex-1 ml-60 min-h-screen flex flex-col">
+      <header class="sticky top-0 z-30 flex items-center justify-between gap-4 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] px-8 py-3.5">
+        <div class="flex items-center gap-4">
+          <h1 class="text-lg font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">Clients &amp; Fidélité</h1>
+          <span class="text-xs text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">148 clients</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <button id="btn-add-client" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[rgb(var(--mgt-primary))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-primary-700))] transition-colors">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            Ajouter un client
+          </button>
+          <button id="btn-notifications" class="relative p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))]" aria-label="Notifications">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="btn-notifications-badge" class="absolute top-1 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-[10px] font-bold leading-4 text-center" style="display:none;"></span>
+          </button>
+          <div id="btn-account" class="flex items-center gap-3 pl-2 border-l border-[rgb(var(--mgt-border))] cursor-pointer" role="button" tabindex="0">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>CA</div>
+            <div class="hidden sm:block text-right">
+              <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]" data-vendor-name>DAN Boutique</p>
+              <div class="flex items-center gap-1 text-xs text-[rgb(var(--mgt-accent))]">
+                <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                <span data-vendor-rating>4.8</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="flex-1 p-8 space-y-6">
+        <!-- ===== KPIs CLIENTS ===== -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <span class="w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))] flex items-center justify-center text-[rgb(var(--mgt-primary))]"><i data-lucide="users" class="w-5 h-5"></i></span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><i data-lucide="trending-up" class="w-3 h-3"></i> +8%</span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Clients au total</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">148</p>
+          </div>
+
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <span class="w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))] flex items-center justify-center text-[rgb(var(--mgt-accent))]"><i data-lucide="user-plus" class="w-5 h-5"></i></span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><i data-lucide="trending-up" class="w-3 h-3"></i> +12</span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Nouveaux clients</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">24 <span class="text-sm font-semibold text-[rgb(var(--mgt-muted-foreground))]">/ 30 j</span></p>
+          </div>
+
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <span class="w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))] flex items-center justify-center text-[rgb(var(--mgt-primary))]"><i data-lucide="repeat" class="w-5 h-5"></i></span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><i data-lucide="trending-up" class="w-3 h-3"></i> +5%</span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Clients récurrents</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">92</p>
+          </div>
+
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <span class="w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))] flex items-center justify-center text-[rgb(var(--mgt-accent))]"><i data-lucide="gift" class="w-5 h-5"></i></span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><i data-lucide="trending-up" class="w-3 h-3"></i> +2 400</span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Points distribués</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">12 640</p>
+          </div>
+        </div>
+
+        <!-- ===== PROGRAMME FIDELITE ===== -->
+        <div class="bg-[rgb(var(--mgt-primary))] rounded-xl p-6 shadow-[var(--mgt-shadow-md)] text-[rgb(var(--mgt-primary-foreground))]">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex items-start gap-4">
+              <div class="flex items-center justify-center w-11 h-11 rounded-lg bg-[rgb(var(--mgt-accent))] text-white flex-shrink-0">
+                <i data-lucide="gift" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h2 class="text-base font-semibold">Programme de fidélité Local+</h2>
+                <p class="text-sm text-white/70 mt-0.5">1 point = 100 FCFA dépensés · 100 points = 1 000 FCFA de réduction.</p>
+              </div>
+            </div>
+            <button id="btn-config-rewards" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[rgb(var(--mgt-accent))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-accent-600))] transition-colors flex-shrink-0">
+              <i data-lucide="settings-2" class="w-4 h-4"></i>
+              Configurer les récompenses
+            </button>
+          </div>
+
+          <!-- Récompenses -->
+          <div id="rewards-grid" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5 pt-5 border-t border-white/10">
+            <div class="p-4 rounded-lg bg-white/10">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-2xl font-bold tabular-nums">100 pts</span>
+                <span class="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center"><i data-lucide="percent" class="w-4 h-4"></i></span>
+              </div>
+              <p class="text-sm font-medium">−1 000 FCFA</p>
+              <p class="text-xs text-white/60 mt-1">sur votre prochaine prestation</p>
+            </div>
+            <div class="p-4 rounded-lg bg-white/10">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-2xl font-bold tabular-nums">250 pts</span>
+                <span class="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center"><i data-lucide="sparkles" class="w-4 h-4"></i></span>
+              </div>
+              <p class="text-sm font-medium">Soin gratuit</p>
+              <p class="text-xs text-white/60 mt-1">shampoing + massage du cuir chevelu</p>
+            </div>
+            <div class="p-4 rounded-lg bg-white/10">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-2xl font-bold tabular-nums">500 pts</span>
+                <span class="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center"><i data-lucide="crown" class="w-4 h-4"></i></span>
+              </div>
+              <p class="text-sm font-medium">Statut Premium</p>
+              <p class="text-xs text-white/60 mt-1">−10 % sur toutes les prestations</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== TABLEAU CLIENTS + SEGMENTS (2-col) ===== -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <!-- Liste des clients -->
+          <div class="lg:col-span-2 bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Vos clients</h2>
+              <div class="flex items-center gap-2">
+                <div class="relative">
+                  <i data-lucide="search" class="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[rgb(var(--mgt-muted-foreground))] pointer-events-none"></i>
+                  <input id="client-search" type="text" placeholder="Rechercher un client…" class="pl-8 pr-3 py-1.5 w-44 rounded-lg border border-[rgb(var(--mgt-border))] text-xs text-[rgb(var(--mgt-foreground))] bg-transparent placeholder:text-[rgb(var(--mgt-muted-foreground))] focus:outline-none focus:border-[rgb(var(--mgt-primary))]" />
+                </div>
+                <select id="client-filter" class="px-3 py-1.5 rounded-lg border border-[rgb(var(--mgt-border))] text-xs font-medium text-[rgb(var(--mgt-foreground))] bg-transparent focus:outline-none focus:border-[rgb(var(--mgt-primary))]">
+                  <option value="all">Tous les statuts</option>
+                  <option value="fidele">Fidèles</option>
+                  <option value="recent">Récents</option>
+                  <option value="relance">À relancer</option>
+                </select>
+              </div>
+            </div>
+            <div class="overflow-hidden rounded-lg border border-[rgb(var(--mgt-border))]">
+              <table class="w-full text-sm">
+                <thead class="bg-[rgb(var(--mgt-muted))] text-left">
+                  <tr class="text-xs text-[rgb(var(--mgt-muted-foreground))]">
+                    <th class="px-4 py-2.5 font-medium">Client</th>
+                    <th class="px-4 py-2.5 font-medium">Contact</th>
+                    <th class="px-4 py-2.5 font-medium text-right">Visites</th>
+                    <th class="px-4 py-2.5 font-medium">Dernière visite</th>
+                    <th class="px-4 py-2.5 font-medium text-right">Points</th>
+                    <th class="px-4 py-2.5 font-medium">Statut</th>
+                  </tr>
+                </thead>
+                <tbody id="client-tbody" class="divide-y divide-[rgb(var(--mgt-border))]">
+                  <tr>
+                    <td class="px-4 py-3">
+                      <div class="flex items-center gap-2.5">
+                        <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] font-semibold text-xs">AS</div>
+                        <span class="font-medium text-[rgb(var(--mgt-foreground))]">Awa S.</span>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3 text-[rgb(var(--mgt-muted-foreground))]">+221 77 123 45 67</td>
+                    <td class="px-4 py-3 text-right tabular-nums text-[rgb(var(--mgt-foreground))]">12</td>
+                    <td class="px-4 py-3 text-[rgb(var(--mgt-muted-foreground))]">Il y a 2 jours</td>
+                    <td class="px-4 py-3 text-right tabular-nums text-[rgb(var(--mgt-accent-700))]">840</td>
+                    <td class="px-4 py-3"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-800))]">★ Fidèle</span></td>
+                  </tr>
+                  <tr>
+                    <td class="px-4 py-3">
+                      <div class="flex items-center gap-2.5">
+                        <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] font-semibold text-xs">FK</div>
+                        <span class="font-medium text-[rgb(var(--mgt-foreground))]">Fatou K.</span>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3 text-[rgb(var(--mgt-muted-foreground))]">+221 76 456 78 90</td>
+                    <td class="px-4 py-3 text-right tabular-nums text-[rgb(var(--mgt-foreground))]">8</td>
+                    <td class="px-4 py-3 text-[rgb(var(--mgt-muted-foreground))]">Il y a 5 jours</td>
+                    <td class="px-4 py-3 text-right tabular-nums text-[rgb(var(--mgt-accent-700))]">625</td>
+                    <td class="px-4 py-3"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-800))]">★ Fidèle</span></td>
+                  </tr>
+                  <tr>
+                    <td class="px-4 py-3">
+                      <div class="flex items-center gap-2.5">
+                        <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] font-semibold text-xs">DD</div>
+                        <span class="font-medium text-[rgb(var(--mgt-foreground))]">Dida DANSO</span>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3 text-[rgb(var(--mgt-muted-foreground))]">+221 78 234 56 78</td>
+                    <td class="px-4 py-3 text-right tabular-nums text-[rgb(var(--mgt-foreground))]">3</td>
+                    <td class="px-4 py-3 text-[rgb(var(--mgt-muted-foreground))]">Il y a 2 sem.</td>
+                    <td class="px-4 py-3 text-right tabular-nums text-[rgb(var(--mgt-accent-700))]">120</td>
+                    <td class="px-4 py-3"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-info)/0.15)] text-[rgb(var(--mgt-info))]">Récent</span></td>
+                  </tr>
+                  <tr>
+                    <td class="px-4 py-3">
+                      <div class="flex items-center gap-2.5">
+                        <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))] font-semibold text-xs">NB</div>
+                        <span class="font-medium text-[rgb(var(--mgt-foreground))]">Ndeye B.</span>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3 text-[rgb(var(--mgt-muted-foreground))]">+221 70 876 54 32</td>
+                    <td class="px-4 py-3 text-right tabular-nums text-[rgb(var(--mgt-foreground))]">5</td>
+                    <td class="px-4 py-3 text-[rgb(var(--mgt-muted-foreground))]">Il y a 2 mois</td>
+                    <td class="px-4 py-3 text-right tabular-nums text-[rgb(var(--mgt-accent-700))]">280</td>
+                    <td class="px-4 py-3"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-warning)/0.20)] text-[rgb(var(--mgt-accent-800))]">À relancer</span></td>
+                  </tr>
+                  <tr>
+                    <td class="px-4 py-3">
+                      <div class="flex items-center gap-2.5">
+                        <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] font-semibold text-xs">SD</div>
+                        <span class="font-medium text-[rgb(var(--mgt-foreground))]">Sokhna D.</span>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3 text-[rgb(var(--mgt-muted-foreground))]">+221 77 345 67 89</td>
+                    <td class="px-4 py-3 text-right tabular-nums text-[rgb(var(--mgt-foreground))]">6</td>
+                    <td class="px-4 py-3 text-[rgb(var(--mgt-muted-foreground))]">Il y a 1 sem.</td>
+                    <td class="px-4 py-3 text-right tabular-nums text-[rgb(var(--mgt-accent-700))]">355</td>
+                    <td class="px-4 py-3"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-800))]">★ Fidèle</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Segments / Top clients -->
+          <div class="space-y-5">
+            <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+              <h2 class="text-base font-semibold text-[rgb(var(--mgt-foreground))] mb-4">Segments</h2>
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="flex items-center gap-2 text-sm text-[rgb(var(--mgt-foreground))]"><span class="w-2.5 h-2.5 rounded-full bg-[rgb(var(--mgt-primary))]"></span> Fidèles</span>
+                  <span class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">72</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="flex items-center gap-2 text-sm text-[rgb(var(--mgt-foreground))]"><span class="w-2.5 h-2.5 rounded-full bg-[rgb(var(--mgt-info))]"></span> Récents</span>
+                  <span class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">24</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="flex items-center gap-2 text-sm text-[rgb(var(--mgt-foreground))]"><span class="w-2.5 h-2.5 rounded-full bg-[rgb(var(--mgt-warning))]"></span> À relancer</span>
+                  <span class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">18</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="flex items-center gap-2 text-sm text-[rgb(var(--mgt-foreground))]"><span class="w-2.5 h-2.5 rounded-full bg-[rgb(var(--mgt-muted))]"></span> Inactifs</span>
+                  <span class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">34</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+              <div class="flex items-center justify-between mb-4">
+                <h2 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Top clients</h2>
+                <button id="btn-see-all-top" class="text-xs font-medium text-[rgb(var(--mgt-primary))] hover:text-[rgb(var(--mgt-primary-700))]">Voir tout</button>
+              </div>
+              <div class="space-y-3">
+                <div class="flex items-center gap-3">
+                  <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] font-semibold text-xs flex-shrink-0">AS</div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Awa S.</p>
+                    <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">12 visites</p>
+                  </div>
+                  <span class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-primary-700))]">84 000 F</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] font-semibold text-xs flex-shrink-0">FK</div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Fatou K.</p>
+                    <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">8 visites</p>
+                  </div>
+                  <span class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-primary-700))]">62 500 F</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] font-semibold text-xs flex-shrink-0">SD</div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Sokhna D.</p>
+                    <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">6 visites</p>
+                  </div>
+                  <span class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-primary-700))]">35 500 F</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Relancer -->
+            <div class="p-5 rounded-xl border border-dashed border-[rgb(var(--mgt-border))] flex items-start gap-3">
+              <i data-lucide="message-circle" class="w-5 h-5 text-[rgb(var(--mgt-primary))] flex-shrink-0 mt-0.5"></i>
+              <div>
+                <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Relancer les clients inactifs</p>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1">18 clients n'ont pas réservé depuis 60 jours. Envoyez-leur une offre de bienvenue.</p>
+                <button id="btn-create-campaign" class="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-[rgb(var(--mgt-primary))] hover:text-[rgb(var(--mgt-primary-700))]"><i data-lucide="send" class="w-3.5 h-3.5"></i> Créer une campagne</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <!-- ===== FICHE CLIENT (drawer) ===== -->
+    <div id="client-drawer-overlay" class="fixed inset-0 bg-black/50 z-50 opacity-0 pointer-events-none transition-opacity duration-300"></div>
+    <aside id="client-drawer" class="fixed top-0 right-0 z-50 h-full w-full max-w-md bg-[rgb(var(--mgt-background))] border-l border-[rgb(var(--mgt-border))] shadow-[var(--mgt-shadow-lg)] transform translate-x-full transition-transform duration-300 flex flex-col">
+      <div class="flex items-center justify-between px-6 py-5 border-b border-[rgb(var(--mgt-border))]">
+        <h3 class="text-lg font-semibold text-[rgb(var(--mgt-foreground))]">Fiche client</h3>
+        <button id="btn-close-client" class="p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))] transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div class="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+        <div class="flex items-center gap-4">
+          <div id="drawer-avatar" class="flex items-center justify-center w-14 h-14 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] font-bold text-lg">AS</div>
+          <div>
+            <p id="drawer-name" class="text-lg font-semibold text-[rgb(var(--mgt-foreground))]">Awa S.</p>
+            <p id="drawer-status" class="text-sm text-[rgb(var(--mgt-accent-700))]">★ Fidèle</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="p-4 rounded-xl bg-[rgb(var(--mgt-muted))]">
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Visites</p>
+            <p id="drawer-visits" class="text-xl font-bold tabular-nums text-[rgb(var(--mgt-foreground))] mt-1">12</p>
+          </div>
+          <div class="p-4 rounded-xl bg-[rgb(var(--mgt-muted))]">
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Points fidélité</p>
+            <p id="drawer-points" class="text-xl font-bold tabular-nums text-[rgb(var(--mgt-accent-700))] mt-1">840</p>
+          </div>
+        </div>
+        <div class="space-y-3">
+          <div class="flex items-center gap-3">
+            <i data-lucide="phone" class="w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+            <span id="drawer-phone" class="text-sm text-[rgb(var(--mgt-foreground))]">+221 77 123 45 67</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <i data-lucide="calendar" class="w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+            <span id="drawer-last-visit" class="text-sm text-[rgb(var(--mgt-foreground))]">Il y a 2 jours</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <i data-lucide="wallet" class="w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+            <span id="drawer-spent" class="text-sm text-[rgb(var(--mgt-foreground))]">84 000 F dépensés</span>
+          </div>
+        </div>
+        <div class="pt-4 border-t border-[rgb(var(--mgt-border))] flex flex-col gap-2">
+          <button id="btn-msg-client" class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[rgb(var(--mgt-primary))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-primary-700))] transition-colors"><i data-lucide="message-square" class="w-4 h-4"></i> Envoyer un message</button>
+          <button id="btn-client-history" class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-sm font-semibold text-[rgb(var(--mgt-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors"><i data-lucide="history" class="w-4 h-4"></i> Voir l'historique</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== MODAL AJOUT CLIENT ===== -->
+    <div id="add-client-overlay" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+      <div class="bg-[rgb(var(--mgt-background))] border border-[rgb(var(--mgt-border))] rounded-2xl shadow-[var(--mgt-shadow-lg)] w-full max-w-md p-6">
+        <div class="flex items-center justify-between mb-5">
+          <h3 class="text-lg font-semibold text-[rgb(var(--mgt-foreground))]">Ajouter un client</h3>
+          <button id="btn-close-add" class="p-1.5 rounded-lg hover:bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))]"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-medium text-[rgb(var(--mgt-muted-foreground))] mb-1">Nom complet</label>
+            <input id="add-name" type="text" placeholder="Ex. Mariama N." class="w-full px-3 py-2 rounded-lg border border-[rgb(var(--mgt-border))] text-sm text-[rgb(var(--mgt-foreground))] bg-transparent focus:outline-none focus:border-[rgb(var(--mgt-primary))]" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-[rgb(var(--mgt-muted-foreground))] mb-1">Téléphone</label>
+            <input id="add-phone" type="text" placeholder="+221 77 000 00 00" class="w-full px-3 py-2 rounded-lg border border-[rgb(var(--mgt-border))] text-sm text-[rgb(var(--mgt-foreground))] bg-transparent focus:outline-none focus:border-[rgb(var(--mgt-primary))]" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-[rgb(var(--mgt-muted-foreground))] mb-1">Email</label>
+            <input id="add-email" type="text" placeholder="client@email.com" class="w-full px-3 py-2 rounded-lg border border-[rgb(var(--mgt-border))] text-sm text-[rgb(var(--mgt-foreground))] bg-transparent focus:outline-none focus:border-[rgb(var(--mgt-primary))]" />
+          </div>
+        </div>
+        <div class="flex items-center gap-2 mt-6">
+          <button id="btn-cancel-add" class="flex-1 px-4 py-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-sm font-semibold text-[rgb(var(--mgt-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors">Annuler</button>
+          <button id="btn-confirm-add" class="flex-1 px-4 py-2.5 rounded-lg bg-[rgb(var(--mgt-primary))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-primary-700))] transition-colors">Ajouter</button>
+        </div>
+      </div>
+    </div>
+
+    <script>lucide.createIcons();</script>
+    <script>
+    (function () {
+      // Comportement de production des clients : recherche, filtre par statut,
+      // fiche client détaillée et ajout de client.
+      function toast(msg) {
+        var t = document.getElementById('cl-toast');
+        if (!t) {
+          t = document.createElement('div');
+          t.id = 'cl-toast';
+          t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translate(-50%,16px);background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;font-family:var(--mgt-font-sans);z-index:9999;opacity:0;transition:all .25s ease;pointer-events:none;max-width:90vw;';
+          document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        requestAnimationFrame(function () { t.style.opacity = '1'; t.style.transform = 'translate(-50%,0)'; });
+        clearTimeout(t._timer);
+        t._timer = setTimeout(function () { t.style.opacity = '0'; t.style.transform = 'translate(-50%,16px)'; }, 2600);
+      }
+
+      // Données complémentaires pour la fiche client (email, dépenses, dernière visite).
+      var CLIENT_EXTRA = {
+        'Awa S.':    { email: 'awa.sow@email.com', spent: '84 000 F', visits: '12', points: '840', last: 'Il y a 2 jours',  status: '★ Fidèle' },
+        'Fatou K.':  { email: 'fatou.k@email.com',  spent: '62 500 F', visits: '8',  points: '625', last: 'Il y a 5 jours',  status: '★ Fidèle' },
+        'Dida DANSO': { email: 'dida.danso@email.com', spent: '18 000 F', visits: '3',  points: '120', last: 'Il y a 2 sem.',   status: 'Récent' },
+        'Ndeye B.':  { email: 'ndeye.b@email.com',  spent: '30 000 F', visits: '5',  points: '280', last: 'Il y a 2 mois',   status: 'À relancer' },
+        'Sokhna D.': { email: 'sokhna.d@email.com', spent: '35 500 F', visits: '6',  points: '355', last: 'Il y a 1 sem.',   status: '★ Fidèle' }
+      };
+
+      var tbody = document.getElementById('client-tbody');
+      if (!tbody) return;
+      var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr'));
+
+      // --- Fiche client (drawer) ---
+      var drawer = document.getElementById('client-drawer');
+      var drawerOverlay = document.getElementById('client-drawer-overlay');
+      var currentClientName = null;
+
+      function openDrawer(name) {
+        currentClientName = name;
+        var extra = CLIENT_EXTRA[name] || {};
+        var initials = name.split(' ').map(function (w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase();
+        document.getElementById('drawer-avatar').textContent = initials;
+        document.getElementById('drawer-name').textContent = name;
+        document.getElementById('drawer-status').textContent = extra.status || '';
+        document.getElementById('drawer-visits').textContent = extra.visits || '0';
+        document.getElementById('drawer-points').textContent = extra.points || '0';
+        document.getElementById('drawer-phone').textContent = (document.querySelector('tr[data-name="' + name + '"] td:nth-child(2)') || {}).textContent || '';
+        document.getElementById('drawer-last-visit').textContent = extra.last || '';
+        document.getElementById('drawer-spent').textContent = (extra.spent || '') + ' dépensés';
+        drawer.classList.remove('translate-x-full');
+        drawerOverlay.classList.remove('opacity-0', 'pointer-events-none');
+        lucide.createIcons();
+      }
+      function closeDrawer() {
+        drawer.classList.add('translate-x-full');
+        drawerOverlay.classList.add('opacity-0', 'pointer-events-none');
+      }
+
+      if (document.getElementById('btn-close-client')) document.getElementById('btn-close-client').addEventListener('click', closeDrawer);
+      if (drawerOverlay) drawerOverlay.addEventListener('click', closeDrawer);
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeDrawer(); closeAddModal(); } });
+
+      rows.forEach(function (row) {
+        var cells = row.querySelectorAll('td');
+        if (cells.length < 6) return;
+        var name = (cells[0].querySelector('span.font-medium') || {}).textContent || (cells[0].textContent || '').trim();
+        var phone = cells[1].textContent.trim();
+        var status = cells[5].textContent.trim();
+        var statusKey = status.indexOf('Fidèle') !== -1 ? 'fidele'
+          : (status.indexOf('Récent') !== -1 ? 'recent'
+          : (status.indexOf('relancer') !== -1 ? 'relance' : 'all'));
+        row.setAttribute('data-name', name);
+        row.setAttribute('data-phone', phone);
+        row.setAttribute('data-status', statusKey);
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', function () {
+          rows.forEach(function (r) { r.style.background = ''; });
+          row.style.background = 'rgb(var(--mgt-primary-50))';
+          openDrawer(name);
+        });
+      });
+
+      // Actions de la fiche client.
+      var btnMsg = document.getElementById('btn-msg-client');
+      if (btnMsg) btnMsg.addEventListener('click', function () {
+        if (!currentClientName) return;
+        toast('Ouverture de la messagerie avec ' + currentClientName + '…');
+        setTimeout(function () { window.location.href = './dashboard-messages.html?client=' + encodeURIComponent(currentClientName); }, 500);
+      });
+      var btnHistory = document.getElementById('btn-client-history');
+      if (btnHistory) btnHistory.addEventListener('click', function () {
+        if (!currentClientName) return;
+        toast('Ouverture de l\'historique des commandes de ' + currentClientName + '…');
+      });
+
+      function applyFilter() {
+        var searchEl = document.getElementById('client-search');
+        var filterEl = document.getElementById('client-filter');
+        var q = (searchEl && searchEl.value || '').toLowerCase().trim();
+        var f = filterEl ? filterEl.value : 'all';
+        rows.forEach(function (row) {
+          var name = (row.getAttribute('data-name') || '').toLowerCase();
+          var phone = (row.getAttribute('data-phone') || '').toLowerCase();
+          var st = row.getAttribute('data-status');
+          var matchQ = !q || name.indexOf(q) !== -1 || phone.indexOf(q) !== -1;
+          var matchF = f === 'all' || st === f;
+          row.style.display = (matchQ && matchF) ? '' : 'none';
+        });
+      }
+
+      var searchEl = document.getElementById('client-search');
+      var filterEl = document.getElementById('client-filter');
+      if (searchEl) searchEl.addEventListener('input', applyFilter);
+      if (filterEl) filterEl.addEventListener('change', applyFilter);
+
+      // --- Ajout de client (modal) ---
+      var addOverlay = document.getElementById('add-client-overlay');
+      function openAddModal() { addOverlay.classList.remove('hidden'); addOverlay.classList.add('flex'); }
+      function closeAddModal() { addOverlay.classList.add('hidden'); addOverlay.classList.remove('flex'); }
+
+      if (document.getElementById('btn-add-client')) document.getElementById('btn-add-client').addEventListener('click', openAddModal);
+      if (document.getElementById('btn-close-add')) document.getElementById('btn-close-add').addEventListener('click', closeAddModal);
+      if (document.getElementById('btn-cancel-add')) document.getElementById('btn-cancel-add').addEventListener('click', closeAddModal);
+
+      if (document.getElementById('btn-confirm-add')) document.getElementById('btn-confirm-add').addEventListener('click', function () {
+        var nameEl = document.getElementById('add-name');
+        var phoneEl = document.getElementById('add-phone');
+        var emailEl = document.getElementById('add-email');
+        var name = (nameEl && nameEl.value || '').trim();
+        var phone = (phoneEl && phoneEl.value || '').trim();
+        var email = (emailEl && emailEl.value || '').trim();
+        if (!name) { toast('Veuillez saisir le nom du client'); return; }
+        var initials = name.split(' ').map(function (w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase();
+        var tr = document.createElement('tr');
+        tr.setAttribute('data-name', name);
+        tr.setAttribute('data-phone', phone);
+        tr.setAttribute('data-status', 'recent');
+        tr.style.cursor = 'pointer';
+        tr.innerHTML = '<td class="px-4 py-3"><div class="flex items-center gap-2.5"><div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] font-semibold text-xs">' + initials + '</div><span class="font-medium text-[rgb(var(--mgt-foreground))]">' + name + '</span></div></td>' +
+          '<td class="px-4 py-3 text-[rgb(var(--mgt-muted-foreground))]">' + (phone || '—') + '</td>' +
+          '<td class="px-4 py-3 text-right tabular-nums text-[rgb(var(--mgt-foreground))]">0</td>' +
+          '<td class="px-4 py-3 text-[rgb(var(--mgt-muted-foreground))]">À l\'instant</td>' +
+          '<td class="px-4 py-3 text-right tabular-nums text-[rgb(var(--mgt-accent-700))]">0</td>' +
+          '<td class="px-4 py-3"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-info)/0.15)] text-[rgb(var(--mgt-info))]">Récent</span></td>';
+        tr.addEventListener('click', function () {
+          rows.forEach(function (r) { r.style.background = ''; });
+          tr.style.background = 'rgb(var(--mgt-primary-50))';
+          openDrawer(name);
+        });
+        tbody.appendChild(tr);
+        rows.push(tr);
+        CLIENT_EXTRA[name] = { email: email, spent: '0 F', visits: '0', points: '0', last: 'À l\'instant', status: 'Récent' };
+        closeAddModal();
+        if (nameEl) nameEl.value = '';
+        if (phoneEl) phoneEl.value = '';
+        if (emailEl) emailEl.value = '';
+        toast('Client « ' + name + ' » ajouté');
+        lucide.createIcons();
+      });
+
+      // --- Boutons du header / cartes ---
+      if (document.getElementById('btn-notifications')) document.getElementById('btn-notifications').addEventListener('click', function () {
+        window.location.href = './dashboard-notifications.html';
+      });
+      if (document.getElementById('btn-config-rewards')) document.getElementById('btn-config-rewards').addEventListener('click', function () {
+        openRewardsConfig();
+      });
+
+      // --- Configuration des récompenses (sur place, sans redirection) ---
+      function esc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+      function readRewards() {
+        try {
+          var saved = JSON.parse(localStorage.getItem('mgt_rewards_v1') || 'null');
+          if (Array.isArray(saved) && saved.length === 3) return saved;
+        } catch (e) {}
+        return [
+          { points: 100, label: '−1 000 FCFA', desc: 'sur votre prochaine prestation' },
+          { points: 250, label: 'Soin gratuit', desc: 'shampoing + massage du cuir chevelu' },
+          { points: 500, label: 'Statut Premium', desc: '−10 % sur toutes les prestations' }
+        ];
+      }
+      function renderRewardCards(rewards) {
+        var grid = document.getElementById('rewards-grid');
+        if (!grid) return;
+        var icons = ['percent', 'sparkles', 'crown'];
+        grid.innerHTML = rewards.map(function (r, i) {
+          return '<div class="p-4 rounded-lg bg-white/10">' +
+            '<div class="flex items-center justify-between mb-2">' +
+              '<span class="text-2xl font-bold tabular-nums">' + r.points + ' pts</span>' +
+              '<span class="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center"><i data-lucide="' + (icons[i] || 'gift') + '" class="w-4 h-4"></i></span>' +
+            '</div>' +
+            '<p class="text-sm font-medium">' + esc(r.label) + '</p>' +
+            '<p class="text-xs text-white/60 mt-1">' + esc(r.desc) + '</p>' +
+          '</div>';
+        }).join('');
+        if (window.lucide) window.lucide.createIcons();
+      }
+      function openRewardsConfig() {
+        var old = document.getElementById('rewards-config-modal');
+        if (old) old.remove();
+        var defaults = readRewards();
+
+        var modal = document.createElement('div');
+        modal.id = 'rewards-config-modal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;font-family:var(--mgt-font-sans);';
+        modal.innerHTML =
+          '<div style="background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow:auto;padding:24px;">' +
+            '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">' +
+              '<h3 style="font-size:16px;font-weight:600;color:rgb(var(--mgt-foreground));margin:0;">Configurer les récompenses</h3>' +
+              '<button type="button" data-rc-close style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:22px;cursor:pointer;line-height:1;">&times;</button>' +
+            '</div>' +
+            '<p style="font-size:13px;color:rgb(var(--mgt-muted-foreground));margin:0 0 16px;">Définissez les paliers de points et les récompenses associées.</p>' +
+            defaults.map(function (r, i) {
+              return '<div style="border:1px solid rgb(var(--mgt-border));border-radius:12px;padding:14px;margin-bottom:12px;">' +
+                '<div style="display:flex;gap:10px;margin-bottom:8px;">' +
+                  '<div style="flex:1;">' +
+                    '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:5px;">Points</label>' +
+                    '<input type="number" data-rc-points="' + i + '" value="' + r.points + '" min="1" style="width:100%;height:40px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;box-sizing:border-box;">' +
+                  '</div>' +
+                  '<div style="flex:1.6;">' +
+                    '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:5px;">Récompense</label>' +
+                    '<input type="text" data-rc-label="' + i + '" value="' + esc(r.label) + '" style="width:100%;height:40px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;box-sizing:border-box;">' +
+                  '</div>' +
+                '</div>' +
+                '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:5px;">Description</label>' +
+                '<input type="text" data-rc-desc="' + i + '" value="' + esc(r.desc) + '" style="width:100%;height:40px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;box-sizing:border-box;">' +
+              '</div>';
+            }).join('') +
+            '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">' +
+              '<button type="button" data-rc-cancel style="height:42px;padding:0 18px;border:1px solid rgb(var(--mgt-border));border-radius:10px;background:transparent;color:rgb(var(--mgt-foreground));font-size:14px;font-weight:600;cursor:pointer;">Annuler</button>' +
+              '<button type="button" data-rc-save style="height:42px;padding:0 18px;border:none;border-radius:10px;background:rgb(var(--mgt-accent));color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Enregistrer</button>' +
+            '</div>' +
+          '</div>';
+        document.body.appendChild(modal);
+
+        function close() { modal.remove(); }
+        modal.querySelector('[data-rc-close]').onclick = close;
+        modal.querySelector('[data-rc-cancel]').onclick = close;
+        modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+
+        modal.querySelector('[data-rc-save]').onclick = function () {
+          var next = defaults.map(function (r, i) {
+            var ptsEl = modal.querySelector('[data-rc-points="' + i + '"]');
+            var labelEl = modal.querySelector('[data-rc-label="' + i + '"]');
+            var descEl = modal.querySelector('[data-rc-desc="' + i + '"]');
+            var pts = ptsEl ? parseInt(ptsEl.value, 10) : r.points;
+            return {
+              points: (isNaN(pts) || pts < 1) ? r.points : pts,
+              label: labelEl ? labelEl.value.trim() : r.label,
+              desc: descEl ? descEl.value.trim() : r.desc
+            };
+          });
+          try { localStorage.setItem('mgt_rewards_v1', JSON.stringify(next)); } catch (e) {}
+          renderRewardCards(next);
+          close();
+          toast('Récompenses enregistrées.');
+        };
+      }
+      if (document.getElementById('btn-see-all-top')) document.getElementById('btn-see-all-top').addEventListener('click', function () {
+        var list = document.getElementById('client-tbody');
+        if (list) list.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        toast('5 clients affichés sur 148 au total');
+      });
+      if (document.getElementById('btn-create-campaign')) document.getElementById('btn-create-campaign').addEventListener('click', function () {
+        window.location.href = './dashboard-promotions.html';
+      });
+    })();
+    </script>
+
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      .tabular-nums { font-variant-numeric: tabular-nums; }
+      body { font-family: var(--mgt-font-sans); }
+    </style>
+
+<script>
+(function(){
+  function __mgtSidebarScrollFix(){
+    var active = document.querySelector('nav a[class*="bg-white/15"]');
+    if (!active) return;
+    var nav = active.closest('nav');
+    if (!nav) return;
+    var navRect = nav.getBoundingClientRect();
+    var linkRect = active.getBoundingClientRect();
+    var target = nav.scrollTop + (linkRect.top - navRect.top) - (navRect.height - linkRect.height) / 2;
+    nav.scrollTop = Math.max(0, target);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', __mgtSidebarScrollFix);
+  } else {
+    __mgtSidebarScrollFix();
+  }
+})();
+</script>
+
+<script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+<script src="../assets/mangoo-dashboard-shell.js"></script>
+</body>
+</html>

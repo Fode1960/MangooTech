@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Vue d'ensemble</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  /* --- Radius Scale (root-level for preflight) --- */
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  /* --- Brand Primary: Dark Green --- */
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  /* --- Orange Accent (CTAs, highlights) --- */
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  /* --- Neutral Surface & Text Scale --- */
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  /* --- State Colors --- */
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  /* --- Shadows --- */
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  /* --- Typography --- */
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* --- Semantic Tailwind Aliases --- */
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+/* --- Typography Classes --- */
+.h-display {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.h1 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(28px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.h2 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h3 {
+  font-family: var(--mgt-font-sans);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.body-l {
+  font-family: var(--mgt-font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--mgt-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--mgt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased flex bg-[rgb(var(--mgt-muted))]">
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-[rgb(var(--mgt-primary))] text-[rgb(var(--mgt-primary-foreground))]">
+      <!-- Logo -->
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+        <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+        <div>
+          <span class="font-semibold text-base tracking-tight">Mangoo</span><span class="font-light text-base tracking-tight text-white/70">Tech</span>
+        </div>
+      </div>
+      <!-- Nav items -->
+      <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <a href="./dashboard-overview.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-medium transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+          Vue d'ensemble
+        </a>
+        <a href="./dashboard-performance.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bar-chart-3" class="w-4.5 h-4.5"></i>
+          Performance
+        </a>
+        <a href="./dashboard-reviews.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="star" class="w-4.5 h-4.5"></i>
+          Avis clients
+        </a>
+        <a href="./dashboard-agenda.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="calendar-days" class="w-4.5 h-4.5"></i>
+          Rendez-vous
+        </a>
+        <a href="./dashboard-finances.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wallet" class="w-4.5 h-4.5"></i>
+          Finances
+        </a>
+        <a href="./dashboard-notifications.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+          Notifications
+        </a>
+        <a href="./dashboard-orders.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shopping-bag" class="w-4.5 h-4.5"></i>
+          Commandes
+        </a>
+        <a href="./dashboard-clients.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users" class="w-4.5 h-4.5"></i>
+          Clients
+        </a>
+        <a href="./dashboard-team.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users-round" class="w-4.5 h-4.5"></i>
+          Équipe
+        </a>
+        <a href="./dashboard-messages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="message-square" class="w-4.5 h-4.5"></i>
+          Messagerie
+        </a>
+        <a href="./annuaire-prestataires.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="contact" class="w-4.5 h-4.5"></i>
+          Annuaire des pros
+        </a>
+        <a href="./dashboard-live.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="radio" class="w-4.5 h-4.5"></i>
+          Live
+        </a>
+        <a href="./dashboard-services.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="briefcase" class="w-4.5 h-4.5"></i>
+          Prestations
+        </a>
+        <a href="./dashboard-catalogue.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="package" class="w-4.5 h-4.5"></i>
+          Catalogue
+        </a>
+        <a href="./dashboard-inventaire.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="boxes" class="w-4.5 h-4.5"></i>
+          Inventaire
+        </a>
+        <a href="./dashboard-gallery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="images" class="w-4.5 h-4.5"></i>
+          Galerie
+        </a>
+        <a href="./dashboard-boosters.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="zap" class="w-4.5 h-4.5"></i>
+          Boosters
+        </a>
+        <a href="./dashboard-promotions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="badge-percent" class="w-4.5 h-4.5"></i>
+          Promotions
+        </a>
+        <a href="./dashboard-fidelite.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="award" class="w-4.5 h-4.5"></i>
+          Fidélité
+        </a>
+        <a href="./dashboard-parrainage.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="gift" class="w-4.5 h-4.5"></i>
+          Parrainage
+        </a>
+        <a href="./dashboard-classement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="trophy" class="w-4.5 h-4.5"></i>
+          Classement
+        </a>
+        <a href="./dashboard-verification.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shield-check" class="w-4.5 h-4.5"></i>
+          Vérification
+        </a>
+        <a href="./dashboard-recommandation.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="compass" class="w-4.5 h-4.5"></i>
+          Découverte
+        </a>
+        <a href="./dashboard-hors-ligne.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wifi-off" class="w-4.5 h-4.5"></i>
+          Hors-ligne
+        </a>
+        <a href="./dashboard-rapports.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
+          Rapports
+        </a>
+        <a href="./dashboard-support.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="life-buoy" class="w-4.5 h-4.5"></i>
+          Support
+        </a>
+        <a href="./dashboard-offres.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="tag" class="w-4.5 h-4.5"></i>
+          Offres & Tarifs
+        </a>
+        <a href="./dashboard-abonnement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="credit-card" class="w-4.5 h-4.5"></i>
+          Abonnement
+        </a>
+        <a href="./dashboard-settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="settings" class="w-4.5 h-4.5"></i>
+          Parametres
+        </a>
+      </nav>
+      <!-- Account info bottom -->
+      <div class="border-t border-white/10 px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>DB</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate" data-vendor-name>DAN Boutique</p>
+            <p class="text-xs text-white/60 truncate" data-vendor-role>Boutique certifiée</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div id="app-main" class="flex-1 ml-60 min-h-screen flex flex-col">
+      <!-- Header Top Bar -->
+      <header class="sticky top-0 z-30 flex items-center justify-between gap-4 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] px-8 py-3.5">
+        <div class="flex items-center gap-4">
+          <h1 class="h3 tabular-nums">Tableau de bord</h1>
+          <span class="caption text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">Aout 2026</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <!-- Search -->
+          <div class="relative hidden sm:block">
+            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+            <input id="topbar-search" type="text" placeholder="Rechercher..." class="pl-9 pr-4 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+          </div>
+          <!-- Notifications -->
+          <button id="btn-notifications" class="relative p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))]" aria-label="Notifications">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="btn-notifications-badge" class="absolute top-1 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-[10px] font-bold leading-4 text-center" style="display:none;"></span>
+          </button>
+          <!-- Voir ma fiche / boutique (vue client) — visible sur PC et mobile -->
+          <a href="./fiche-boutique.html" id="btn-view-store" class="inline-flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-lg bg-[rgb(var(--mgt-primary))] text-[rgb(var(--mgt-primary-foreground))] hover:brightness-110 transition-all" title="Voir ma fiche côté client">
+            <i data-lucide="store" class="w-4 h-4"></i>
+            <span id="btn-view-store-label">Voir ma fiche</span>
+          </a>
+          <!-- Avatar -->
+          <button id="btn-account" class="flex items-center gap-3 pl-2 border-l border-[rgb(var(--mgt-border))] bg-transparent cursor-pointer text-left">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>DB</div>
+            <div class="hidden sm:block text-right">
+              <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]" data-vendor-name>DAN Boutique</p>
+              <div class="flex items-center gap-1 text-xs text-[rgb(var(--mgt-accent))]">
+                <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                <span data-vendor-rating>4.8</span>
+              </div>
+            </div>
+          </button>
+        </div>
+      </header>
+
+      <!-- Dashboard Content -->
+      <main class="flex-1 p-8 space-y-6">
+        <!-- ===== KPIs ROW ===== -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <!-- KPI Orders -->
+          <div id="kpi-orders" class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                <i data-lucide="shopping-bag" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +12%
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Commandes ce mois</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">47</p>
+          </div>
+
+          <!-- KPI Revenue -->
+          <div id="kpi-revenue" class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
+                <i data-lucide="wallet" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +8%
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Revenus ce mois</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">892 500 <span class="text-sm font-medium text-[rgb(var(--mgt-muted-foreground))]">FCFA</span></p>
+          </div>
+
+          <!-- KPI Clients -->
+          <div id="kpi-clients" class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                <i data-lucide="users" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +24%
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Clients actifs</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">156</p>
+          </div>
+
+          <!-- KPI Messages -->
+          <div id="kpi-messages" class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
+                <i data-lucide="message-circle" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +5%
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Messages non lus</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">12</p>
+          </div>
+        </div>
+
+        <!-- ===== CHART + RECENT ORDERS (2-col) ===== -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <!-- Chart Activity -->
+          <div id="chart-activity" class="lg:col-span-2 bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-center justify-between mb-5">
+              <h2 class="h3">Activite recente</h2>
+              <span class="caption text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-1 rounded-lg">Cette semaine</span>
+            </div>
+            <!-- Bar Chart: Orders per day this week -->
+            <div class="relative w-full" style="height: 220px;">
+              <svg viewBox="0 0 600 220" class="w-full h-full" preserveAspectRatio="xMidYMid meet" aria-label="Graphique des commandes par jour cette semaine" role="img">
+                <!-- Grid lines -->
+                <defs>
+                  <pattern id="grid-dots" patternUnits="userSpaceOnUse" width="600" height="44">
+                    <circle cx="0" cy="0" r="1" fill="rgb(var(--mgt-border))" opacity="0.6"/>
+                  </pattern>
+                </defs>
+                <rect x="0" y="0" width="600" height="220" fill="rgb(var(--mgt-card))"/>
+                <!-- Horizontal grid -->
+                <line x1="48" y1="40" x2="580" y2="40" stroke="rgb(var(--mgt-border))" stroke-width="1" stroke-dasharray="4 4"/>
+                <line x1="48" y1="80" x2="580" y2="80" stroke="rgb(var(--mgt-border))" stroke-width="1" stroke-dasharray="4 4"/>
+                <line x1="48" y1="120" x2="580" y2="120" stroke="rgb(var(--mgt-border))" stroke-width="1" stroke-dasharray="4 4"/>
+                <line x1="48" y1="160" x2="580" y2="160" stroke="rgb(var(--mgt-border))" stroke-width="1" stroke-dasharray="4 4"/>
+                <!-- Y-axis labels -->
+                <text x="42" y="204" text-anchor="end" font-family="Inter, sans-serif" font-size="11" fill="rgb(var(--mgt-muted-foreground))">0</text>
+                <text x="42" y="164" text-anchor="end" font-family="Inter, sans-serif" font-size="11" fill="rgb(var(--mgt-muted-foreground))">5</text>
+                <text x="42" y="124" text-anchor="end" font-family="Inter, sans-serif" font-size="11" fill="rgb(var(--mgt-muted-foreground))">10</text>
+                <text x="42" y="84" text-anchor="end" font-family="Inter, sans-serif" font-size="11" fill="rgb(var(--mgt-muted-foreground))">15</text>
+                <text x="42" y="44" text-anchor="end" font-family="Inter, sans-serif" font-size="11" fill="rgb(var(--mgt-muted-foreground))">20</text>
+                <!-- Bars: Lun=6, Mar=9, Mer=11, Jeu=8, Ven=13, Sam=7 (47 commandes ce mois) -->
+                <!-- Bar Lun 6 -->
+                <rect x="78" y="152" width="48" height="48" rx="4" fill="rgb(var(--mgt-primary))" opacity="0.85">
+                  <animate attributeName="opacity" from="0" to="0.85" dur="0.6s" begin="0s" fill="freeze"/>
+                </rect>
+                <text x="102" y="146" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="rgb(var(--mgt-primary-800))">6</text>
+                <text x="102" y="216" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="rgb(var(--mgt-muted-foreground))">Lun</text>
+                <!-- Bar Mar 9 -->
+                <rect x="158" y="128" width="48" height="72" rx="4" fill="rgb(var(--mgt-primary))" opacity="0.85">
+                  <animate attributeName="opacity" from="0" to="0.85" dur="0.6s" begin="0.1s" fill="freeze"/>
+                </rect>
+                <text x="182" y="122" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="rgb(var(--mgt-primary-800))">9</text>
+                <text x="182" y="216" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="rgb(var(--mgt-muted-foreground))">Mar</text>
+                <!-- Bar Mer 11 -->
+                <rect x="238" y="112" width="48" height="88" rx="4" fill="rgb(var(--mgt-primary))" opacity="0.85">
+                  <animate attributeName="opacity" from="0" to="0.85" dur="0.6s" begin="0.2s" fill="freeze"/>
+                </rect>
+                <text x="262" y="106" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="rgb(var(--mgt-primary-800))">11</text>
+                <text x="262" y="216" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="rgb(var(--mgt-muted-foreground))">Mer</text>
+                <!-- Bar Jeu 8 -->
+                <rect x="318" y="136" width="48" height="64" rx="4" fill="rgb(var(--mgt-primary))" opacity="0.85">
+                  <animate attributeName="opacity" from="0" to="0.85" dur="0.6s" begin="0.3s" fill="freeze"/>
+                </rect>
+                <text x="342" y="130" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="rgb(var(--mgt-primary-800))">8</text>
+                <text x="342" y="216" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="rgb(var(--mgt-muted-foreground))">Jeu</text>
+                <!-- Bar Ven 13 -->
+                <rect x="398" y="96" width="48" height="104" rx="4" fill="rgb(var(--mgt-accent))" opacity="0.85">
+                  <animate attributeName="opacity" from="0" to="0.85" dur="0.6s" begin="0.4s" fill="freeze"/>
+                </rect>
+                <text x="422" y="90" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="rgb(var(--mgt-accent-700))">13</text>
+                <text x="422" y="216" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="rgb(var(--mgt-muted-foreground))">Ven</text>
+                <!-- Bar Sam 7 -->
+                <rect x="478" y="144" width="48" height="56" rx="4" fill="rgb(var(--mgt-primary))" opacity="0.85">
+                  <animate attributeName="opacity" from="0" to="0.85" dur="0.6s" begin="0.5s" fill="freeze"/>
+                </rect>
+                <text x="502" y="138" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="rgb(var(--mgt-primary-800))">7</text>
+                <text x="502" y="216" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="rgb(var(--mgt-muted-foreground))">Sam</text>
+                <!-- Total: 54 (sum of displayed bars) / 6 days avg = 9/day, close to actual -->
+              </svg>
+            </div>
+            <div class="flex items-center gap-6 mt-3 pt-3 border-t border-[rgb(var(--mgt-border))]">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-sm bg-[rgb(var(--mgt-primary))]"></span>
+                <span class="caption text-[rgb(var(--mgt-muted-foreground))]">Commandes</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-sm bg-[rgb(var(--mgt-accent))]"></span>
+                <span class="caption text-[rgb(var(--mgt-muted-foreground))]">Meilleur jour</span>
+              </div>
+              <span class="caption text-[rgb(var(--mgt-muted-foreground))] ml-auto">Total semaine: 54 commandes</span>
+            </div>
+          </div>
+
+          <!-- Recent Orders Table -->
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="h3">Dernieres commandes</h2>
+              <a href="./dashboard-orders.html" class="caption text-[rgb(var(--mgt-accent))] hover:underline">Tout voir</a>
+            </div>
+            <div class="space-y-3">
+              <!-- Order 1 -->
+              <div class="flex items-center justify-between p-3 rounded-lg bg-[rgb(var(--mgt-muted))]">
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium truncate text-[rgb(var(--mgt-foreground))]">Fatou Diallo</p>
+                  <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Coiffure Mariage</p>
+                </div>
+                <div class="text-right ml-3">
+                  <p class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">85 000 CFA</p>
+                  <span class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-accent)/0.15)] text-[rgb(var(--mgt-accent))]">En cours</span>
+                </div>
+              </div>
+              <!-- Order 2 -->
+              <div class="flex items-center justify-between p-3 rounded-lg bg-[rgb(var(--mgt-muted))]">
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium truncate text-[rgb(var(--mgt-foreground))]">Aissatou Ba</p>
+                  <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Tresse Senegalaises</p>
+                </div>
+                <div class="text-right ml-3">
+                  <p class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">45 000 CFA</p>
+                  <span class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">Livree</span>
+                </div>
+              </div>
+              <!-- Order 3 -->
+              <div class="flex items-center justify-between p-3 rounded-lg bg-[rgb(var(--mgt-muted))]">
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium truncate text-[rgb(var(--mgt-foreground))]">Kadija Sow</p>
+                  <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Maquillage Pro</p>
+                </div>
+                <div class="text-right ml-3">
+                  <p class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">35 000 CFA</p>
+                  <span class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-accent)/0.15)] text-[rgb(var(--mgt-accent))]">En cours</span>
+                </div>
+              </div>
+              <!-- Order 4 -->
+              <div class="flex items-center justify-between p-3 rounded-lg bg-[rgb(var(--mgt-muted))]">
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium truncate text-[rgb(var(--mgt-foreground))]">Mariama Balde</p>
+                  <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Manucure</p>
+                </div>
+                <div class="text-right ml-3">
+                  <p class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">15 000 CFA</p>
+                  <span class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-error)/0.15)] text-[rgb(var(--mgt-error))]">Annulee</span>
+                </div>
+              </div>
+              <!-- Order 5 -->
+              <div class="flex items-center justify-between p-3 rounded-lg bg-[rgb(var(--mgt-muted))]">
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium truncate text-[rgb(var(--mgt-foreground))]">Ramatoulaye Ndiaye</p>
+                  <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Coiffure Enfant</p>
+                </div>
+                <div class="text-right ml-3">
+                  <p class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">25 000 CFA</p>
+                  <span class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">Livree</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== QUICK ACTIONS ===== -->
+        <div id="quick-actions" class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <h2 class="h3 mb-4">Actions rapides</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <a href="./annuaire-prestataires.html" class="flex items-center gap-4 p-4 rounded-xl border border-[rgb(var(--mgt-border))] hover:border-[rgb(var(--mgt-primary))] hover:bg-[rgb(var(--mgt-primary-50))] transition-all group text-left">
+              <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-primary))] text-white group-hover:scale-105 transition-transform">
+                <i data-lucide="users" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Annuaire des pros</p>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-0.5">Contacter ou appeler un professionnel</p>
+              </div>
+            </a>
+            <a href="./dashboard-live.html" class="flex items-center gap-4 p-4 rounded-xl border border-[rgb(var(--mgt-border))] hover:border-[rgb(var(--mgt-accent))] hover:bg-[rgb(var(--mgt-accent-50))] transition-all group text-left">
+              <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-accent))] text-white group-hover:scale-105 transition-transform">
+                <i data-lucide="radio" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Demarrer un live</p>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-0.5">Diffusez vos prestations en direct</p>
+              </div>
+            </a>
+            <a href="./dashboard-services.html" class="flex items-center gap-4 p-4 rounded-xl border border-[rgb(var(--mgt-border))] hover:border-[rgb(var(--mgt-primary))] hover:bg-[rgb(var(--mgt-primary-50))] transition-all group text-left">
+              <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-primary))] text-white group-hover:scale-105 transition-transform">
+                <i data-lucide="plus-circle" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Ajouter une prestation</p>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-0.5">Elargissez votre catalogue</p>
+              </div>
+            </a>
+            <a href="./dashboard-boosters.html" class="flex items-center gap-4 p-4 rounded-xl border border-[rgb(var(--mgt-border))] hover:border-[rgb(var(--mgt-accent))] hover:bg-[rgb(var(--mgt-accent-50))] transition-all group text-left">
+              <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-accent-500))] text-white group-hover:scale-105 transition-transform">
+                <i data-lucide="zap" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Gerer les boosters</p>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-0.5">Boostez votre visibilite</p>
+              </div>
+            </a>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script>lucide.createIcons();</script>
+<!-- Mobile responsive navigation & layout -->
+<style id="mgt-mobile-responsive">
+@media (max-width: 768px) {
+  .dashboard-layout { flex-direction: column !important; }
+  .dashboard-sidebar { position: fixed !important; top: 0; left: 0; z-index: 1000; width: 260px !important; height: 100vh !important; transform: translateX(-100%); transition: transform .3s ease; overflow-y: auto; }
+  .dashboard-sidebar.open { transform: translateX(0); }
+  .dashboard-sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999; }
+  .dashboard-sidebar-overlay.show { display: block; }
+  .dashboard-main { margin-left: 0 !important; width: 100% !important; }
+  .dashboard-topbar { position: sticky; top: 0; z-index: 100; }
+  .mobile-menu-btn { display: flex !important; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: pointer; color: inherit; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .services-grid, .favorites-grid, .features-grid, .booster-grid { grid-template-columns: 1fr !important; }
+  .data-table { display: block !important; }
+  .data-table thead { display: none !important; }
+  .data-table tbody, .data-table tr { display: block !important; }
+  .data-table td { display: flex !important; justify-content: space-between; align-items: center; padding: 8px 12px !important; border-bottom: 1px solid rgb(var(--mgt-border)) !important; }
+  .data-table td::before { content: attr(data-label); font-weight: 600; font-size: 12px; color: rgb(var(--mgt-muted-foreground)); text-transform: uppercase; margin-right: 8px; flex-shrink: 0; }
+  .topbar-search { display: none !important; }
+  .topbar-title { font-size: 18px !important; }
+  .hero-section { padding: 40px 16px !important; text-align: center; }
+  .hero-section h1, .hero-section .h-display { font-size: 28px !important; }
+  .hero-section h1 + p { font-size: 15px !important; }
+  .hero-ctas { flex-direction: column !important; align-items: center !important; gap: 12px !important; }
+  .auth-split { flex-direction: column !important; }
+  .auth-branding { min-height: 200px !important; padding: 32px 16px !important; }
+  .auth-form-area { padding: 24px 16px !important; }
+  .checkout-layout { flex-direction: column !important; }
+  .checkout-main { width: 100% !important; }
+  .checkout-sidebar { width: 100% !important; }
+  .chat-layout { flex-direction: column !important; height: auto !important; }
+  .chat-sidebar { width: 100% !important; max-height: 200px !important; }
+  .chat-main { width: 100% !important; }
+  .filter-pills { flex-wrap: nowrap !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+  .drawer-panel { width: 100% !important; max-width: 100% !important; }
+  .content-section { padding-left: 16px !important; padding-right: 16px !important; }
+  .section-padding { padding: 32px 16px !important; }
+  .form-grid { grid-template-columns: 1fr !important; }
+  .form-actions { flex-direction: column !important; }
+  .desktop-only { display: none !important; }
+  .map-container { height: 300px !important; }
+}
+@media (min-width: 769px) {
+  .mobile-menu-btn { display: none !important; }
+  .mobile-only { display: none !important; }
+}
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr !important; }
+  .stats-row { grid-template-columns: 1fr !important; }
+}
+</style>
+<script>
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    var sidebar = document.querySelector('.dashboard-sidebar');
+    if (!sidebar) return;
+    var overlay = document.createElement('div');
+    overlay.className = 'dashboard-sidebar-overlay';
+    overlay.addEventListener('click', function(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); });
+    document.body.appendChild(overlay);
+    var topbar = document.querySelector('.dashboard-topbar');
+    if (topbar) {
+      var btn = document.createElement('button');
+      btn.className = 'mobile-menu-btn';
+      btn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+      btn.addEventListener('click', function(){ sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
+      topbar.insertBefore(btn, topbar.firstChild);
+    }
+    sidebar.querySelectorAll('a').forEach(function(link){
+      link.addEventListener('click', function(){
+        if (window.innerWidth <= 768) { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+      });
+    });
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  function __mgtSidebarScrollFix(){
+    var active = document.querySelector('nav a[class*="bg-white/15"]');
+    if (!active) return;
+    var nav = active.closest('nav');
+    if (!nav) return;
+    var navRect = nav.getBoundingClientRect();
+    var linkRect = active.getBoundingClientRect();
+    var target = nav.scrollTop + (linkRect.top - navRect.top) - (navRect.height - linkRect.height) / 2;
+    nav.scrollTop = Math.max(0, target);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', __mgtSidebarScrollFix);
+  } else {
+    __mgtSidebarScrollFix();
+  }
+})();
+</script>
+<script src="../assets/mangoo-connect-plus.js"></script>
+<script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+<script src="../assets/mangoo-dashboard-shell.js"></script>
+<script>
+/* Vue d'ensemble différenciée : boutiquier-vendeur vs prestataire de services */
+(function(){
+  function run(){
+    try {
+      var vendor = (window.MangooVendor && window.MangooVendor.current) ? window.MangooVendor.current() : null;
+      if (!vendor || vendor.role !== 'vendeur') return;
+
+      // 1) Titre + badge
+      var h1 = document.querySelector('header h1');
+      if (h1) h1.textContent = vendor.name || 'DAN Boutique';
+      var badge = document.querySelector('header span.caption');
+      if (badge) badge.textContent = 'Boutique certifiée';
+
+      // 2) KPI — libellé, valeur et variation
+      function setKpi(id, label, valueHtml, delta) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        var cap = el.querySelector('p.caption');
+        var val = el.querySelector('p.text-2xl');
+        if (cap) cap.textContent = label;
+        if (val) val.innerHTML = valueHtml;
+        var b = el.querySelector('span.rounded-full');
+        if (b) {
+          if (!delta) {
+            b.style.display = 'none';
+            return;
+          }
+          b.style.display = '';
+          var svg = b.querySelector('svg');
+          b.innerHTML = '';
+          if (svg) b.appendChild(svg);
+          b.appendChild(document.createTextNode(' ' + delta));
+        }
+      }
+      function fmtFCFA(n) {
+        return String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+      }
+      function escHtml(s) {
+        return String(s == null ? '' : s)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+      function swapKpiIcon(id, newIcon) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        var box = el.querySelector('.w-10.h-10');
+        if (!box) return;
+        var cur = box.querySelector('i[data-lucide], svg[data-lucide]');
+        var colorClass = '';
+        if (cur) {
+          var m = (cur.getAttribute('class') || '').match(/text-\[rgb\(var\(--mgt-[^)]*\)\)\]/);
+          if (m) colorClass = m[0];
+        }
+        box.innerHTML = '<i data-lucide="' + newIcon + '" class="w-5 h-5 ' + colorClass + '"></i>';
+      }
+
+      var vendorId = vendor.vendorId || 'pro-41cafa4bcb31';
+      var solde = (window.MangooVendor && typeof window.MangooVendor.getVendorBalance === 'function')
+        ? window.MangooVendor.getVendorBalance(vendorId) : 58500;
+      setKpi('kpi-orders', 'Ventes ce mois', '128', '+18%');
+      setKpi('kpi-revenue', 'Solde disponible', fmtFCFA(solde) + ' <span class="text-sm font-medium text-[rgb(var(--mgt-muted-foreground))]">FCFA</span>', '');
+      setKpi('kpi-clients', 'Produits en stock', '342', '+6%');
+      setKpi('kpi-messages', 'Commandes à livrer', '8', '+3%');
+      swapKpiIcon('kpi-clients', 'package');
+      swapKpiIcon('kpi-messages', 'truck');
+
+      // 3) Graphique — ventes au lieu de commandes
+      var chart = document.getElementById('chart-activity');
+      if (chart) {
+        var ch = chart.querySelector('h2');
+        if (ch) ch.textContent = 'Ventes récentes';
+        var svg = chart.querySelector('svg');
+        if (svg) svg.setAttribute('aria-label', 'Graphique des ventes par jour cette semaine');
+        var legends = chart.querySelectorAll('span.caption');
+        for (var li = 0; li < legends.length; li++) {
+          var t = legends[li].textContent;
+          if (t === 'Commandes') legends[li].textContent = 'Ventes';
+          if (t.indexOf('Total semaine') >= 0) legends[li].textContent = 'Total semaine: 54 ventes';
+        }
+      }
+
+      // 4) Dernières ventes (produits au lieu de prestations)
+      var cTitle = null, list = null;
+      var hs = document.querySelectorAll('main h2');
+      for (var i = 0; i < hs.length; i++) {
+        if (hs[i].textContent.trim() === 'Dernieres commandes') {
+          cTitle = hs[i];
+          var wrapper = hs[i].parentElement;
+          var card = wrapper && wrapper.parentElement;
+          if (card) list = card.querySelector('.space-y-3');
+          break;
+        }
+      }
+      if (cTitle) cTitle.textContent = 'Dernières ventes';
+      if (list) {
+        var items = [
+          ['Robe en wax', 'Commande #CMD-1042', '35 000 FCFA', 'À livrer', 'accent', '19 Aout 2026 · 14:25'],
+          ['Sandales cuir', 'Commande #CMD-1039', '22 000 FCFA', 'Livrée', 'success', '18 Aout 2026 · 11:40'],
+          ['Sac à main', 'Commande #CMD-1035', '48 000 FCFA', 'À livrer', 'accent', '18 Aout 2026 · 09:15'],
+          ['Tissu bazin', 'Commande #CMD-1030', '30 000 FCFA', 'Annulée', 'error', '17 Aout 2026 · 16:05'],
+          ['Boubou brodé', 'Commande #CMD-1028', '65 000 FCFA', 'Livrée', 'success', '17 Aout 2026 · 10:30']
+        ];
+        // Commandes réellement passées par les clients (localStorage) — affichées en tête.
+        var realOrders = (window.MangooVendor && window.MangooVendor.ordersForVendor) ? window.MangooVendor.ordersForVendor(vendor) : [];
+        var realItems = realOrders.slice(0, 5).map(function (o) {
+          var statusLabel = o.status === 'livree' ? 'Livrée' : (o.status === 'annulee' ? 'Annulée' : 'À livrer');
+          var colorKey = o.status === 'livree' ? 'success' : (o.status === 'annulee' ? 'error' : 'accent');
+          var dateTime = '';
+          if (window.MangooVendor && window.MangooVendor.formatDate && window.MangooVendor.formatTime) {
+            var ts = o.createdAt || o.ts || null;
+            var tzRef = o.clientTz || o.buyerTz || o.clientCity || o.buyerCity || o.city;
+            if (ts) dateTime = window.MangooVendor.formatDate(ts, tzRef) + ' · ' + window.MangooVendor.formatTime(ts, tzRef);
+            else if (o.date) dateTime = o.date + (o.time ? ' · ' + o.time : '');
+          }
+          return [o.service || 'Produit', 'Commande #' + o.id, o.amount || '', statusLabel, colorKey, dateTime];
+        });
+        items = realItems.concat(items);
+        var colors = {
+          accent: 'bg-[rgb(var(--mgt-accent)/0.15)] text-[rgb(var(--mgt-accent))]',
+          success: 'bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]',
+          error: 'bg-[rgb(var(--mgt-error)/0.15)] text-[rgb(var(--mgt-error))]'
+        };
+        list.innerHTML = items.map(function (it) {
+          var dt = it[5] ? '<p class="text-[11px] text-[rgb(var(--mgt-muted-foreground))] tabular-nums">' + escHtml(it[5]) + '</p>' : '';
+          return '<div class="flex items-center justify-between p-3 rounded-lg bg-[rgb(var(--mgt-muted))]">'
+            + '<div class="flex-1 min-w-0"><p class="text-sm font-medium truncate text-[rgb(var(--mgt-foreground))]">' + escHtml(it[0]) + '</p>'
+            + '<p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">' + escHtml(it[1]) + '</p>' + dt + '</div>'
+            + '<div class="text-right ml-3"><p class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">' + escHtml(it[2]) + '</p>'
+            + '<span class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-xs font-semibold ' + colors[it[4]] + '">' + escHtml(it[3]) + '</span></div></div>';
+        }).join('');
+      }
+
+      // 5) Actions rapides — pilotage du catalogue / inventaire / livraisons
+      var qa = document.getElementById('quick-actions');
+      if (qa) {
+        var grid = qa.querySelector('.grid');
+        if (grid) {
+          function actionCard(href, icon, title, sub, accentBg) {
+            return '<a href="' + href + '" class="flex items-center gap-4 p-4 rounded-xl border border-[rgb(var(--mgt-border))] hover:border-[rgb(var(--mgt-accent))] hover:bg-[rgb(var(--mgt-accent-50))] transition-all group text-left">'
+              + '<div class="flex items-center justify-center w-11 h-11 rounded-xl ' + accentBg + ' text-white group-hover:scale-105 transition-transform"><i data-lucide="' + icon + '" class="w-5 h-5"></i></div>'
+              + '<div><p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">' + title + '</p>'
+              + '<p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-0.5">' + sub + '</p></div></a>';
+          }
+          grid.innerHTML =
+            actionCard('./annuaire-prestataires.html', 'users', 'Annuaire des pros', 'Contacter ou appeler un professionnel', 'bg-[rgb(var(--mgt-primary))]') +
+            actionCard('./dashboard-catalogue.html', 'package', 'Gérer le catalogue', 'Ajoutez vos produits', 'bg-[rgb(var(--mgt-accent))]') +
+            actionCard('./dashboard-inventaire.html', 'box', 'Gérer l\'inventaire', 'Suivez vos stocks', 'bg-[rgb(var(--mgt-primary))]') +
+            actionCard('./dashboard-delivery.html', 'truck', 'Gérer les livraisons', 'Expédiez vos commandes', 'bg-[rgb(var(--mgt-accent-500))]');
+        }
+      }
+
+      if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+    } catch (e) { /* non bloquant */ }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+  else run();
+})();
+</script>
+<script>
+/* Prestataire (DAN Boutique) : commandes clients réelles en tête de « Dernières commandes ». */
+(function(){
+  function runPresta(){
+    try {
+      var vendor = (window.MangooVendor && window.MangooVendor.current) ? window.MangooVendor.current() : null;
+      if (!vendor || vendor.role === 'vendeur') return;
+      if (!window.MangooVendor || !window.MangooVendor.ordersForVendor) return;
+
+      var real = window.MangooVendor.ordersForVendor(vendor);
+      if (!real.length) return;
+
+      var list = null;
+      var hs = document.querySelectorAll('main h2');
+      for (var i = 0; i < hs.length; i++) {
+        if (hs[i].textContent.trim() === 'Dernieres commandes') {
+          var wrapper = hs[i].parentElement;
+          var card = wrapper && wrapper.parentElement;
+          if (card) list = card.querySelector('.space-y-3');
+          break;
+        }
+      }
+      if (!list) return;
+
+      function escHtml(s) {
+        return String(s == null ? '' : s)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+      var colors = {
+        accent: 'bg-[rgb(var(--mgt-accent)/0.15)] text-[rgb(var(--mgt-accent))]',
+        success: 'bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]',
+        error: 'bg-[rgb(var(--mgt-error)/0.15)] text-[rgb(var(--mgt-error))]'
+      };
+      var html = real.slice(0, 5).map(function (o) {
+        var statusLabel = o.status === 'livree' ? 'Livrée' : (o.status === 'annulee' ? 'Annulée' : 'En cours');
+        var colorKey = o.status === 'livree' ? 'success' : (o.status === 'annulee' ? 'error' : 'accent');
+        var name = o.clientName || 'Fatou Diop';
+        var dateTime = '';
+        if (window.MangooVendor && window.MangooVendor.formatDate && window.MangooVendor.formatTime) {
+          var ts = o.createdAt || o.ts || null;
+          var tzRef = o.clientTz || o.buyerTz || o.clientCity || o.buyerCity || o.city;
+          if (ts) dateTime = window.MangooVendor.formatDate(ts, tzRef) + ' · ' + window.MangooVendor.formatTime(ts, tzRef);
+          else if (o.date) dateTime = o.date + (o.time ? ' · ' + o.time : '');
+        }
+        var dt = dateTime ? '<p class="text-[11px] text-[rgb(var(--mgt-muted-foreground))] tabular-nums">' + escHtml(dateTime) + '</p>' : '';
+        return '<div class="flex items-center justify-between p-3 rounded-lg bg-[rgb(var(--mgt-muted))]">'
+          + '<div class="flex-1 min-w-0"><p class="text-sm font-medium truncate text-[rgb(var(--mgt-foreground))]">' + escHtml(name) + '</p>'
+          + '<p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">' + escHtml(o.service || 'Service') + '</p>' + dt + '</div>'
+          + '<div class="text-right ml-3"><p class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">' + escHtml(o.amount || '') + '</p>'
+          + '<span class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-xs font-semibold ' + colors[colorKey] + '">' + statusLabel + '</span></div></div>';
+      }).join('');
+
+      list.insertAdjacentHTML('afterbegin', html);
+    } catch (e) { /* non bloquant */ }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', runPresta);
+  else runPresta();
+})();
+</script>
+<script>
+/* Lien « Voir ma fiche / ma boutique » — rôle-aware, visible PC + mobile.
+   Prestataire → fiche.html ; vendeur → fiche-boutique.html. */
+(function () {
+  function setStoreLink() {
+    try {
+      var vendor = (window.MangooVendor && window.MangooVendor.current) ? window.MangooVendor.current() : null;
+      if (!vendor) return;
+      var isVendeur = vendor.role === 'vendeur';
+      var vendorId = vendor.vendorId || (isVendeur ? 'pro-41cafa4bcb31' : 'pro-eb10536cd12d');
+      var page = isVendeur ? 'fiche-boutique.html' : 'fiche.html';
+      var label = isVendeur ? 'Voir ma boutique' : 'Voir ma fiche';
+      var link = document.getElementById('btn-view-store');
+      if (link) {
+        link.href = './' + page + '?vendorId=' + encodeURIComponent(vendorId);
+        link.setAttribute('title', label + ' côté client');
+      }
+      var lbl = document.getElementById('btn-view-store-label');
+      if (lbl) lbl.textContent = label;
+    } catch (e) { /* non bloquant */ }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setStoreLink);
+  else setStoreLink();
+})();
+</script>
+</body>
+</html>

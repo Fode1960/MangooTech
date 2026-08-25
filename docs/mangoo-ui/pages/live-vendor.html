@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Live vendeur — MangooTech</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+:root {
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-foreground: 255 255 255;
+
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+}
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--mgt-background);
+    --color-foreground: var(--mgt-foreground);
+    --color-card: var(--mgt-card);
+    --color-card-foreground: var(--mgt-card-foreground);
+    --color-popover: var(--mgt-popover);
+    --color-popover-foreground: var(--mgt-popover-foreground);
+    --color-primary: var(--mgt-primary);
+    --color-primary-foreground: var(--mgt-primary-foreground);
+    --color-muted: var(--mgt-muted);
+    --color-muted-foreground: var(--mgt-muted-foreground);
+    --color-border: var(--mgt-border);
+    --color-input: var(--mgt-input);
+    --color-ring: var(--mgt-ring);
+  }
+  @layer base {
+    body { background: var(--mgt-background); color: var(--mgt-foreground); }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      #btn-order-product, #btn-screen-share { transition: background-color .2s ease; }
+      .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased bg-black text-[rgb(var(--mgt-foreground))] flex flex-col h-[100dvh] overflow-hidden">
+
+    <!-- ===== HEADER ===== -->
+    <header class="shrink-0 flex items-center justify-between gap-3 px-4 py-3 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))]">
+        <div class="flex items-center gap-2.5 min-w-0">
+            <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-primary))] text-white font-bold text-sm shrink-0">CA</div>
+            <div class="min-w-0">
+                <p class="text-sm font-semibold leading-tight truncate">DAN Boutique</p>
+                <p class="text-[11px] text-[rgb(var(--mgt-muted-foreground))] leading-tight">Live vendeur</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+            <span id="live-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))]">Prêt à diffuser</span>
+            <span id="net-quality" class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-[rgb(var(--mgt-muted))] text-[11px] font-semibold">
+                <span id="net-dot" class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                <span id="net-label">En attente</span>
+            </span>
+        </div>
+    </header>
+
+    <!-- ===== MAIN ===== -->
+    <main class="flex-1 flex flex-col min-h-0">
+
+        <!-- ÉTAT OFF -->
+        <div id="live-off-state" class="flex-1 flex flex-col items-center justify-center px-6 text-center">
+            <div class="flex items-center justify-center w-20 h-20 rounded-2xl bg-[rgb(var(--mgt-muted))] mb-5">
+                <i data-lucide="video" class="w-9 h-9 text-[rgb(var(--mgt-muted-foreground))]"></i>
+            </div>
+            <h2 class="text-xl font-semibold mb-2">Démarrer votre live</h2>
+            <p class="text-sm text-[rgb(var(--mgt-muted-foreground))] max-w-xs mb-6">Diffusez depuis votre téléphone, vendez et discutez en direct avec vos clients.</p>
+            <button id="btn-start-stream" class="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm active:scale-[.98] transition-transform">
+                <i data-lucide="radio" class="w-5 h-5"></i>
+                Démarrer le live
+            </button>
+            <div class="flex items-center gap-4 mt-8 text-[rgb(var(--mgt-muted-foreground))] text-xs">
+                <span class="inline-flex items-center gap-1.5"><i data-lucide="users" class="w-4 h-4"></i> Spectateurs</span>
+                <span class="inline-flex items-center gap-1.5"><i data-lucide="shopping-bag" class="w-4 h-4"></i> Vente intégrée</span>
+                <span class="inline-flex items-center gap-1.5"><i data-lucide="message-circle" class="w-4 h-4"></i> Chat</span>
+            </div>
+        </div>
+
+        <!-- ÉTAT ON -->
+        <div id="live-on-state" class="hidden flex-1 flex flex-col min-h-0">
+            <!-- Vidéo -->
+            <div id="live-preview" class="relative shrink-0 h-[30vh] min-h-[180px] max-h-[280px] bg-gray-900 overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950"></div>
+                <video id="local-video" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover hidden"></video>
+                <video id="local-pip" autoplay playsinline muted class="hidden absolute top-14 right-3 w-28 h-40 object-cover rounded-xl border border-white/25 shadow-lg z-10 bg-black/60"></video>
+                <div id="live-preview-fallback" class="absolute inset-0 flex items-center justify-center">
+                    <div class="flex items-center justify-center w-24 h-24 rounded-full bg-white/5 backdrop-blur-sm border border-white/10">
+                        <i data-lucide="camera" class="w-9 h-9 text-white/30"></i>
+                    </div>
+                </div>
+                <!-- EN DIRECT -->
+                <div class="absolute top-3 left-3 flex items-center gap-2">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-600 text-white text-[11px] font-bold">
+                        <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                        EN DIRECT
+                    </span>
+                </div>
+                <!-- Spectateurs -->
+                <div class="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/50 backdrop-blur-sm text-white text-[11px] font-semibold">
+                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                    <span id="viewer-count-overlay">0</span>
+                </div>
+                <!-- Produit épinglé -->
+                <div class="absolute bottom-3 left-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/50 backdrop-blur-sm text-white text-[11px] font-medium">
+                    <i data-lucide="shopping-bag" class="w-3.5 h-3.5 text-[rgb(var(--mgt-accent))]"></i>
+                    <span id="pinned-product-label">Aucun produit partagé</span>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))]">
+                <div class="flex-1 flex items-center gap-2 bg-[rgb(var(--mgt-muted))] rounded-lg px-3 py-2">
+                    <i data-lucide="eye" class="w-4 h-4 text-[rgb(var(--mgt-primary))]"></i>
+                    <div class="min-w-0"><p class="text-[10px] text-[rgb(var(--mgt-muted-foreground))] leading-none">Spectateurs</p><p id="live-viewers" class="text-sm font-bold tabular-nums leading-tight">0</p></div>
+                </div>
+                <div class="flex-1 flex items-center gap-2 bg-[rgb(var(--mgt-muted))] rounded-lg px-3 py-2">
+                    <i data-lucide="heart" class="w-4 h-4 text-red-500"></i>
+                    <div class="min-w-0"><p class="text-[10px] text-[rgb(var(--mgt-muted-foreground))] leading-none">Likes</p><p id="live-likes" class="text-sm font-bold tabular-nums leading-tight">0</p></div>
+                </div>
+                <div class="flex-1 flex items-center gap-2 bg-[rgb(var(--mgt-muted))] rounded-lg px-3 py-2">
+                    <i data-lucide="shopping-cart" class="w-4 h-4 text-[rgb(var(--mgt-accent))]"></i>
+                    <div class="min-w-0"><p class="text-[10px] text-[rgb(var(--mgt-muted-foreground))] leading-none">Commandes</p><p id="live-orders" class="text-sm font-bold tabular-nums leading-tight">0</p></div>
+                </div>
+            </div>
+
+            <!-- Spectateurs (appel privé) -->
+            <div id="viewers-strip" class="shrink-0 px-4 py-2.5 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] hidden">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="flex items-center gap-1.5 text-xs font-semibold"><i data-lucide="users" class="w-3.5 h-3.5 text-[rgb(var(--mgt-accent))]"></i> Spectateurs connectés</p>
+                    <span class="flex items-center gap-1 text-[10px] text-[rgb(var(--mgt-muted-foreground))]"><i data-lucide="phone" class="w-3 h-3"></i> Appel privé</span>
+                </div>
+                <div id="viewers-list" class="flex gap-2 overflow-x-auto pb-1 no-scrollbar"></div>
+            </div>
+
+            <!-- Produits -->
+            <div class="shrink-0 px-4 py-2.5 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))]">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-xs font-semibold">Produits à partager</p>
+                    <button id="btn-manage-products" class="text-xs text-[rgb(var(--mgt-accent))] font-medium">Gérer</button>
+                </div>
+                <div class="flex gap-3 overflow-x-auto pb-1 no-scrollbar" id="live-products-list">
+                    <div class="product-card flex-shrink-0 w-36 bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl overflow-hidden" data-name="Coiffure Mariage Complète" data-price="85 000 FCFA" data-image="../assets/products/coiffure-mariage.svg">
+                        <img src="../assets/products/coiffure-mariage.svg" alt="Coiffure Mariage Complète" class="h-24 w-full object-cover">
+                        <div class="p-2">
+                            <p class="text-[11px] font-semibold leading-tight line-clamp-2">Coiffure Mariage Complète</p>
+                            <p class="text-xs font-bold text-[rgb(var(--mgt-accent))] mt-0.5 tabular-nums">85 000 FCFA</p>
+                            <button class="btn-pin-product w-full mt-1.5 py-1.5 rounded-lg bg-[rgb(var(--mgt-accent))] text-white text-[11px] font-semibold">Partager</button>
+                        </div>
+                    </div>
+                    <div class="product-card flex-shrink-0 w-36 bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl overflow-hidden" data-name="Tresses Sénégalaises" data-price="45 000 FCFA" data-image="../assets/products/tresses-senegalaises.svg">
+                        <img src="../assets/products/tresses-senegalaises.svg" alt="Tresses Sénégalaises" class="h-24 w-full object-cover">
+                        <div class="p-2">
+                            <p class="text-[11px] font-semibold leading-tight line-clamp-2">Tresses Sénégalaises</p>
+                            <p class="text-xs font-bold text-[rgb(var(--mgt-accent))] mt-0.5 tabular-nums">45 000 FCFA</p>
+                            <button class="btn-pin-product w-full mt-1.5 py-1.5 rounded-lg bg-[rgb(var(--mgt-accent))] text-white text-[11px] font-semibold">Partager</button>
+                        </div>
+                    </div>
+                    <div class="product-card flex-shrink-0 w-36 bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl overflow-hidden" data-name="Maquillage Professionnel" data-price="35 000 FCFA" data-image="../assets/products/maquillage-professionnel.svg">
+                        <img src="../assets/products/maquillage-professionnel.svg" alt="Maquillage Professionnel" class="h-24 w-full object-cover">
+                        <div class="p-2">
+                            <p class="text-[11px] font-semibold leading-tight line-clamp-2">Maquillage Professionnel</p>
+                            <p class="text-xs font-bold text-[rgb(var(--mgt-accent))] mt-0.5 tabular-nums">35 000 FCFA</p>
+                            <button class="btn-pin-product w-full mt-1.5 py-1.5 rounded-lg bg-[rgb(var(--mgt-accent))] text-white text-[11px] font-semibold">Partager</button>
+                        </div>
+                    </div>
+                    <div class="product-card flex-shrink-0 w-36 bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl overflow-hidden" data-name="Manucure Gel" data-price="15 000 FCFA" data-image="../assets/products/manucure-gel.svg">
+                        <img src="../assets/products/manucure-gel.svg" alt="Manucure Gel" class="h-24 w-full object-cover">
+                        <div class="p-2">
+                            <p class="text-[11px] font-semibold leading-tight line-clamp-2">Manucure Gel</p>
+                            <p class="text-xs font-bold text-[rgb(var(--mgt-accent))] mt-0.5 tabular-nums">15 000 FCFA</p>
+                            <button class="btn-pin-product w-full mt-1.5 py-1.5 rounded-lg bg-[rgb(var(--mgt-accent))] text-white text-[11px] font-semibold">Partager</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat -->
+            <div class="flex-1 flex flex-col min-h-[120px] bg-[rgb(var(--mgt-background))]">
+                <div class="flex items-center gap-2 px-4 pt-2.5 pb-1.5 shrink-0">
+                    <i data-lucide="message-circle" class="w-4 h-4 text-[rgb(var(--mgt-accent))]"></i>
+                    <span class="text-xs font-semibold">Chat en direct</span>
+                </div>
+                <div id="chat-messages" class="flex-1 overflow-y-auto px-4 pb-2 space-y-2.5"></div>
+                <div class="shrink-0 px-4 pb-2">
+                    <div class="flex items-center gap-2">
+                        <input id="chat-input" type="text" placeholder="Écrivez un message..." class="flex-1 px-3.5 py-2.5 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-full focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+                        <button id="chat-send" class="flex items-center justify-center w-10 h-10 rounded-full bg-[rgb(var(--mgt-accent))] text-white shrink-0">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ===== CONTROLES (visible seulement en direct) ===== -->
+    <footer id="live-controls" class="hidden shrink-0 safe-bottom flex items-center justify-between gap-1.5 px-4 py-2.5 bg-[rgb(var(--mgt-background))] border-t border-[rgb(var(--mgt-border))]">
+        <div class="flex items-center gap-1.5">
+            <button id="btn-mic" class="flex items-center justify-center w-11 h-11 rounded-full bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-foreground))]" aria-pressed="false"><i data-lucide="mic" class="w-5 h-5"></i></button>
+            <button id="btn-camera" class="flex items-center justify-center w-11 h-11 rounded-full bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-foreground))]" aria-pressed="false"><i data-lucide="camera" class="w-5 h-5"></i></button>
+            <button id="btn-flip-camera" class="flex items-center justify-center w-11 h-11 rounded-full bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-foreground))]" title="Basculer caméra avant/arrière"><i data-lucide="refresh-cw" class="w-5 h-5"></i></button>
+            <div class="relative">
+                <button id="btn-more" class="flex items-center justify-center w-11 h-11 rounded-full bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-foreground))]" aria-expanded="false"><i data-lucide="more-horizontal" class="w-5 h-5"></i></button>
+                <div id="more-menu" class="hidden absolute bottom-14 left-0 z-30 w-56 bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl shadow-lg overflow-hidden">
+                    <button id="btn-fit-toggle" class="w-full flex items-center gap-3 px-4 py-3 text-sm text-left hover:bg-[rgb(var(--mgt-muted))]">
+                        <i data-lucide="maximize" class="w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+                        <span id="fit-toggle-label">Cadrage : Plein écran</span>
+                    </button>
+                    <button id="btn-screen-share" class="w-full flex items-center gap-3 px-4 py-3 text-sm text-left hover:bg-[rgb(var(--mgt-muted))]">
+                        <i data-lucide="monitor" class="w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+                        <span>Partager mon écran</span>
+                    </button>
+                </div>
+            </div>
+            <button id="btn-share-product" class="flex items-center justify-center w-11 h-11 rounded-full bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-foreground))]"><i data-lucide="tag" class="w-5 h-5"></i></button>
+            <button id="btn-effects" class="flex items-center justify-center w-11 h-11 rounded-full bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-foreground))]" aria-pressed="false"><i data-lucide="sparkles" class="w-5 h-5"></i></button>
+        </div>
+        <button id="btn-stop-stream" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-red-600 text-white text-sm font-semibold">
+            <i data-lucide="square" class="w-4 h-4 fill-current"></i>
+            Arrêter
+        </button>
+    </footer>
+
+    <script>
+      let liveInterval = null;
+      let liveStartTime = null;
+      let viewers = 0, likes = 0, liveOrders = 0;
+      let isLive = false;
+
+      // Diffusion vidéo (caméra vendeur -> spectateurs)
+      let localStream = null;
+      let pcMap = {};
+      const RTC_CONFIG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+      // Caméra avant/arrière + cadrage (plein écran / portrait)
+      let currentFacing = 'user';
+      let fitMode = 'cover';   // 'cover' = plein écran (remplit), 'contain' = portrait (cadre entier)
+
+      // Second flux : partage d'écran + caméra en incrustation (PiP)
+      let screenStream = null, screenTrack = null, shareOn = false;
+
+      let ws = null, wsReady = false;
+      const MY_ID = 'pro-41cafa4bcb31';
+      const MY_NAME = 'DAN Boutique';
+
+      // Appel privé (réception client -> vendeur)
+      let callPc = null, callStream = null, callId = null, callState = 'idle'; // idle | ringing | connected
+      let callOfferSdp = null;
+
+      function toast(msg) {
+        var t = document.getElementById('live-toast');
+        if (!t) {
+          t = document.createElement('div');
+          t.id = 'live-toast';
+          t.style.cssText = 'position:fixed;bottom:96px;left:50%;transform:translate(-50%,16px);background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;font-family:var(--mgt-font-sans);z-index:9999;opacity:0;transition:all .25s ease;pointer-events:none;max-width:90vw;text-align:center;';
+          document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        requestAnimationFrame(function () { t.style.opacity = '1'; t.style.transform = 'translate(-50%,0)'; });
+        clearTimeout(t._timer);
+        t._timer = setTimeout(function () { t.style.opacity = '0'; t.style.transform = 'translate(-50%,16px)'; }, 2600);
+      }
+
+      function escHtml(s) {
+        return String(s).replace(/[&<>"']/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+      }
+
+      function setVisible(el, show) {
+        if (!el) return;
+        if (show) { el.classList.remove('hidden'); el.style.display = ''; }
+        else { el.classList.add('hidden'); el.style.display = 'none'; }
+      }
+
+      /* -------- WebSocket -------- */
+      function wsUrl() {
+        return (location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + location.host + '/webrtc-ws';
+      }
+      function connect() {
+        try { ws = new WebSocket(wsUrl()); } catch (e) { ws = null; scheduleReconnect(); return; }
+        ws.onopen = function () {
+          wsReady = true;
+          ws.send(JSON.stringify({ type: 'register', id: MY_ID, role: 'vendor', name: MY_NAME }));
+          ws.send(JSON.stringify({ type: 'live-state-request' }));
+        };
+        ws.onmessage = function (ev) { var m; try { m = JSON.parse(ev.data); } catch (e) { return; } handleLiveMessage(m); };
+        ws.onclose = function () { wsReady = false; scheduleReconnect(); };
+        ws.onerror = function () { try { ws.close(); } catch (e) {} };
+      }
+      function scheduleReconnect() { setTimeout(connect, 2000); }
+      function send(obj) { if (wsReady && ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); }
+
+      function handleLiveMessage(msg) {
+        switch (msg.type) {
+          case 'live-started': enterLiveState(); setViewers(msg.viewers || 0); setLikes(msg.likes || 0); setOrders(msg.orders || 0); toast('Live démarré — en direct'); break;
+          case 'live-ended': exitLiveState(); break;
+          case 'live-state':
+            if (msg.active) {
+              enterLiveState(); setViewers(msg.viewers || 0); setLikes(msg.likes || 0); setOrders(msg.orders || 0);
+              if (msg.pinnedProduct && msg.pinnedProduct.name) setPinned(msg.pinnedProduct);
+              (msg.chat || []).forEach(appendViewerMessage);
+            } else exitLiveState();
+            break;
+          case 'live-error': toast('Impossible de démarrer le live (déjà en cours).'); break;
+          case 'live-viewers': setViewers(msg.viewers || 0); break;
+          case 'live-like': setLikes(msg.likes || 0); break;
+          case 'live-chat': appendViewerMessage(msg); break;
+          case 'live-pinned': setPinned({ name: msg.name, price: msg.price, image: msg.image }); break;
+          case 'live-order': setOrders(msg.orders != null ? msg.orders : (liveOrders + 1)); appendOrderEvent(msg.fromName, msg.product); break;
+          case 'live-viewer-joined': if (msg.viewerId) createViewerOffer(msg.viewerId); break;
+          case 'live-video-answer':
+            if (msg.viewerId && pcMap[msg.viewerId] && msg.sdp) pcMap[msg.viewerId].setRemoteDescription(new RTCSessionDescription(msg.sdp)).catch(function () {});
+            break;
+          case 'live-video-ice':
+            if (msg.viewerId && pcMap[msg.viewerId] && msg.candidate) { try { pcMap[msg.viewerId].addIceCandidate(new RTCIceCandidate(msg.candidate)); } catch (e) {} }
+            break;
+          case 'live-video-viewer-left': if (msg.viewerId) closeViewerPeer(msg.viewerId); break;
+          case 'call-ring': handleCallRing(msg); break;
+          case 'call-accepted': handleCallAccepted(msg); break;
+          case 'ice-candidate': handleCallIce(msg); break;
+          case 'call-ended': handleCallEnded(msg); break;
+          case 'live-viewers-list': renderViewers(msg.viewers); break;
+        }
+      }
+
+      function enterLiveState() {
+        if (isLive) return;
+        isLive = true;
+        setVisible(document.getElementById('live-off-state'), false);
+        var on = document.getElementById('live-on-state');
+        setVisible(on, true);
+        on.style.display = 'flex'; on.style.flexDirection = 'column';
+        setVisible(document.getElementById('live-controls'), true);
+        var badge = document.getElementById('live-status-badge');
+        badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span> En direct';
+        badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-red-50 text-red-600';
+        document.getElementById('chat-messages').innerHTML = '';
+        liveStartTime = Date.now();
+        setViewers(0); setLikes(0); setOrders(0);
+        updateDuration();
+        if (liveInterval) clearInterval(liveInterval);
+        liveInterval = setInterval(updateDuration, 1000);
+        startCamera();
+        lucide.createIcons();
+      }
+
+      function exitLiveState() {
+        isLive = false;
+        if (liveInterval) { clearInterval(liveInterval); liveInterval = null; }
+        stopScreenShare(); stopCamera(); closeAllPeers();
+        resetCall();
+        renderViewers([]);
+        renderNetworkQuality({ peers: 0, states: [], lossPct: 0 });
+        setVisible(document.getElementById('live-on-state'), false);
+        var off = document.getElementById('live-off-state');
+        setVisible(off, true); off.style.display = 'flex';
+        setVisible(document.getElementById('live-controls'), false);
+        var badge = document.getElementById('live-status-badge');
+        badge.innerHTML = 'Prêt à diffuser';
+        badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))]';
+        var label = document.getElementById('pinned-product-label');
+        if (label) label.textContent = 'Aucun produit partagé';
+        lucide.createIcons();
+      }
+
+      function startLive() {
+        if (isLive) return;
+        if (!wsReady) { toast('Connexion au serveur en cours...'); return; }
+        send({ type: 'live-start', title: 'Live Shopping — DAN Boutique' });
+      }
+      function stopLive() { if (wsReady) send({ type: 'live-stop' }); exitLiveState(); }
+
+      function updateDuration() {
+        if (!liveStartTime) return;
+        var el = document.getElementById('live-duration');
+        if (el) {
+          var s = Math.floor((Date.now() - liveStartTime) / 1000);
+          var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;
+          el.textContent = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(ss).padStart(2, '0');
+        }
+      }
+
+      function setViewers(n) {
+        viewers = n;
+        var lv = document.getElementById('live-viewers'), vco = document.getElementById('viewer-count-overlay');
+        if (lv) lv.textContent = n;
+        if (vco) vco.textContent = n;
+      }
+      function setLikes(n) { likes = n; var el = document.getElementById('live-likes'); if (el) el.textContent = n; }
+      function setOrders(n) { liveOrders = n; var el = document.getElementById('live-orders'); if (el) el.textContent = n; }
+
+      function setPinned(p) {
+        var label = document.getElementById('pinned-product-label');
+        if (!label) return;
+        if (!p || !p.name) { label.textContent = 'Aucun produit partagé'; return; }
+        label.textContent = p.name + (p.price ? ' — ' + p.price : '');
+      }
+
+      function appendOrderEvent(name, product) {
+        var msgs = document.getElementById('chat-messages');
+        if (!msgs) return;
+        var div = document.createElement('div');
+        div.className = 'flex items-center gap-2 py-1';
+        div.innerHTML = '<div class="flex-1 h-px bg-[rgb(var(--mgt-border))]"></div><span class="text-[11px] text-[rgb(var(--mgt-accent))] font-medium text-center">' + escHtml(name) + ' a commandé ' + escHtml(product) + '</span><div class="flex-1 h-px bg-[rgb(var(--mgt-border))]"></div>';
+        msgs.appendChild(div);
+        msgs.scrollTop = msgs.scrollHeight;
+      }
+
+      function appendVendorMessage(text) {
+        var msgs = document.getElementById('chat-messages');
+        if (!msgs) return;
+        var div = document.createElement('div');
+        div.className = 'flex gap-2 justify-end';
+        div.innerHTML = '<div class="max-w-[75%]"><div class="px-3 py-2 rounded-lg rounded-tr-sm bg-[rgb(var(--mgt-accent))] text-white text-sm leading-snug">' + escHtml(text) + '</div></div>';
+        msgs.appendChild(div);
+        msgs.scrollTop = msgs.scrollHeight;
+      }
+
+      function appendViewerMessage(m) {
+        var msgs = document.getElementById('chat-messages');
+        if (!msgs) return;
+        var name = m.fromName || 'Spectateur';
+        var initial = name.charAt(0).toUpperCase();
+        var div = document.createElement('div');
+        div.className = 'flex gap-2';
+        div.innerHTML = '<div class="flex items-center justify-center w-7 h-7 rounded-full bg-[rgb(var(--mgt-primary))] text-white font-bold text-xs shrink-0">' + escHtml(initial) + '</div>' +
+          '<div class="flex-1 min-w-0"><p class="text-xs font-semibold">' + escHtml(name) + '</p><p class="text-sm leading-snug">' + escHtml(m.text) + '</p></div>';
+        msgs.appendChild(div);
+        msgs.scrollTop = msgs.scrollHeight;
+      }
+
+      function pinProduct(card) {
+        var name = card.getAttribute('data-name'), price = card.getAttribute('data-price'), image = card.getAttribute('data-image') || '';
+        document.querySelectorAll('.product-card').forEach(function (c) { c.style.boxShadow = ''; c.style.borderColor = ''; });
+        card.style.boxShadow = '0 0 0 2px rgb(var(--mgt-accent))';
+        card.style.borderColor = 'rgb(var(--mgt-accent))';
+        setPinned({ name: name, price: price, image: image });
+        if (wsReady && isLive) send({ type: 'live-pin-product', name: name, price: price, image: image });
+        toast('Produit partagé : ' + name);
+      }
+
+      function setToggle(btn, active) {
+        btn.setAttribute('aria-pressed', String(active));
+        if (active) { btn.style.background = ''; btn.style.color = ''; btn.style.boxShadow = ''; }
+        else { btn.style.background = '#fee2e2'; btn.style.color = '#dc2626'; btn.style.boxShadow = 'none'; }
+      }
+      function swapIcon(btn, name) {
+        var icon = btn.querySelector('i, svg');
+        if (icon) icon.outerHTML = '<i data-lucide="' + name + '" class="w-5 h-5"></i>';
+        lucide.createIcons();
+      }
+
+      /* -------- Caméra vendeur -------- */
+      function startCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { toast('Caméra indisponible sur ce navigateur.'); showLocalVideoFallback(); return; }
+        if (localStream) { updateLocalPreview(); return; }
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacing, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: true })
+          .then(function (stream) { localStream = stream; updateLocalPreview(); })
+          .catch(function (err) { toast('Accès caméra/micro refusé : ' + (err && err.name ? err.name : 'erreur')); showLocalVideoFallback(); });
+      }
+
+      // Bascule caméra avant/arrière sans interrompre le live
+      function flipCamera() {
+        if (!localStream) return;
+        var oldVideo = localStream.getVideoTracks()[0];
+        currentFacing = (currentFacing === 'user') ? 'environment' : 'user';
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacing, width: { ideal: 1280 }, height: { ideal: 720 } } })
+          .then(function (newStream) {
+            var newTrack = newStream.getVideoTracks()[0];
+            // Remplacer la piste vidéo dans chaque connexion spectateur
+            Object.keys(pcMap).forEach(function (id) {
+              var sender = pcMap[id].getSenders().find(function (s) { return s.track && s.track.kind === 'video'; });
+              if (sender) sender.replaceTrack(newTrack).catch(function () {});
+            });
+            // Conserver l'ancien audio, remplacer la vidéo dans le stream local
+            var audio = localStream.getAudioTracks()[0];
+            if (oldVideo) { try { oldVideo.stop(); } catch (e) {} }
+            var rebuilt = new MediaStream([newTrack]);
+            if (audio) rebuilt.addTrack(audio);
+            localStream = rebuilt;
+            updateLocalPreview();
+            toast(currentFacing === 'user' ? 'Caméra avant' : 'Caméra arrière');
+          })
+          .catch(function (err) { toast('Bascule caméra impossible : ' + (err && err.name ? err.name : 'erreur')); currentFacing = (currentFacing === 'user') ? 'environment' : 'user'; });
+      }
+
+      // Cadrage : plein écran (remplit) ↔ portrait (cadre entier)
+      function toggleFitMode() {
+        fitMode = (fitMode === 'cover') ? 'contain' : 'cover';
+        applyFitMode();
+        var label = document.getElementById('fit-toggle-label');
+        if (label) label.textContent = 'Cadrage : ' + (fitMode === 'cover' ? 'Plein écran' : 'Portrait');
+        toast(fitMode === 'cover' ? 'Cadrage plein écran' : 'Cadrage portrait');
+      }
+
+      function applyFitMode() {
+        var v = document.getElementById('local-video');
+        if (v) v.style.objectFit = fitMode;
+      }
+
+      function showLocalVideoFallback() {
+        var v = document.getElementById('local-video'), pip = document.getElementById('local-pip'), fb = document.getElementById('live-preview-fallback');
+        if (v) { v.srcObject = null; v.classList.add('hidden'); }
+        if (pip) { pip.srcObject = null; pip.classList.add('hidden'); }
+        if (fb) fb.classList.remove('hidden');
+      }
+
+      function updateLocalPreview() {
+        var main = document.getElementById('local-video'), pip = document.getElementById('local-pip'), fb = document.getElementById('live-preview-fallback');
+        if (screenStream && screenTrack) {
+          if (main) { main.srcObject = screenStream; main.classList.remove('hidden'); }
+          if (pip && localStream) { pip.srcObject = localStream; pip.classList.remove('hidden'); }
+          else if (pip) { pip.srcObject = null; pip.classList.add('hidden'); }
+          if (fb) fb.classList.add('hidden');
+        } else if (localStream) {
+          if (main) { main.srcObject = localStream; main.classList.remove('hidden'); }
+          if (pip) { pip.srcObject = null; pip.classList.add('hidden'); }
+          if (fb) fb.classList.add('hidden');
+        } else {
+          showLocalVideoFallback();
+        }
+      }
+
+      function stopCamera() {
+        if (localStream) { localStream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} }); localStream = null; }
+        updateLocalPreview();
+      }
+
+      /* -------- Partage d'écran + PiP -------- */
+      function setShareButton(active) {
+        var moreBtn = document.getElementById('btn-more');
+        if (moreBtn) {
+          moreBtn.style.background = active ? 'rgb(var(--mgt-primary) / 0.14)' : '';
+          moreBtn.style.boxShadow = active ? 'inset 0 0 0 2px rgb(var(--mgt-primary) / 0.35)' : 'none';
+          moreBtn.style.color = active ? 'rgb(var(--mgt-primary))' : '';
+        }
+      }
+      function addScreenToPeers(track, stream) { Object.keys(pcMap).forEach(function (id) { try { pcMap[id].addTrack(track, stream); } catch (e) {} }); }
+      function removeScreenFromPeers(track) {
+        Object.keys(pcMap).forEach(function (id) {
+          try { var pc = pcMap[id]; var s = pc.getSenders().find(function (x) { return x.track === track; }); if (s) pc.removeTrack(s); } catch (e) {}
+        });
+      }
+      function startScreenShare() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) { toast('Partage d\'écran indisponible sur cet appareil.'); return; }
+        navigator.mediaDevices.getDisplayMedia({ video: true }).then(function (ds) {
+          var track = ds.getVideoTracks()[0] || null;
+          if (!track) { ds.getTracks().forEach(function (t) { t.stop(); }); return; }
+          screenStream = ds; screenTrack = track;
+          addScreenToPeers(track, ds);
+          updateLocalPreview();
+          shareOn = true; setShareButton(true);
+          toast('Partage d\'écran démarré');
+          track.onended = function () { stopScreenShare(); };
+        }).catch(function () { toast('Partage d\'écran annulé.'); });
+      }
+      function stopScreenShare() {
+        if (screenTrack) { removeScreenFromPeers(screenTrack); try { screenTrack.stop(); } catch (e) {} }
+        if (screenStream) { screenStream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} }); }
+        screenTrack = null; screenStream = null;
+        updateLocalPreview();
+        shareOn = false; setShareButton(false);
+        toast('Partage d\'écran arrêté');
+      }
+
+      /* -------- WebRTC : un vendeur -> N spectateurs -------- */
+      function createViewerOffer(viewerId, attempt) {
+        if (!localStream) {
+          var tries = attempt || 0;
+          if (tries < 5) setTimeout(function () { createViewerOffer(viewerId, tries + 1); }, 1000);
+          return;
+        }
+        if (pcMap[viewerId]) { try { pcMap[viewerId].close(); } catch (e) {} }
+        var pc;
+        try { pc = new RTCPeerConnection(RTC_CONFIG); } catch (e) { pc = new RTCPeerConnection(); }
+        pcMap[viewerId] = pc;
+
+        pc.onicecandidate = function (e) { if (e.candidate) send({ type: 'live-video-ice', viewerId: viewerId, candidate: e.candidate }); };
+        pc.onconnectionstatechange = function () {
+          if (pc.connectionState === 'failed' || pc.connectionState === 'closed' || pc.connectionState === 'disconnected') {
+            try { pc.close(); } catch (e) {}
+            if (pcMap[viewerId] === pc) delete pcMap[viewerId];
+          }
+        };
+        pc.onnegotiationneeded = function () {
+          pc.createOffer().then(function (offer) { return pc.setLocalDescription(offer); })
+            .then(function () { send({ type: 'live-video-offer', viewerId: viewerId, sdp: pc.localDescription }); })
+            .catch(function () {});
+        };
+
+        localStream.getTracks().forEach(function (track) { pc.addTrack(track, localStream); });
+        if (screenTrack) pc.addTrack(screenTrack, screenStream);
+      }
+      function closeViewerPeer(viewerId) { var pc = pcMap[viewerId]; if (pc) { try { pc.close(); } catch (e) {} delete pcMap[viewerId]; } }
+      function closeAllPeers() { Object.keys(pcMap).forEach(function (id) { try { pcMap[id].close(); } catch (e) {} }); pcMap = {}; }
+
+      /* -------- Appel privé (client <-> vendeur) -------- */
+      function showCallOverlay(state) {
+        var ov = document.getElementById('call-overlay');
+        var ring = document.getElementById('call-ring-buttons');
+        var hang = document.getElementById('btn-call-hangup');
+        if (state === 'idle') { ov.classList.add('hidden'); ov.style.display = 'none'; }
+        else { ov.classList.remove('hidden'); ov.style.display = 'flex'; if (window.lucide) lucide.createIcons(); }
+        if (ring) ring.style.display = (state === 'ringing') ? 'flex' : 'none';
+        if (hang) hang.style.display = (state === 'ringing') ? 'none' : 'flex';
+      }
+      function setBroadcastMicMuted(muted) {
+        if (localStream) localStream.getAudioTracks().forEach(function (t) { t.enabled = !muted; });
+      }
+      function handleCallRing(msg) {
+        if (callState !== 'idle') { send({ type: 'call-reject', callId: msg.callId }); return; }
+        callId = msg.callId;
+        callState = 'ringing';
+        callOfferSdp = msg.sdp;
+        var name = msg.fromName || 'Client';
+        document.getElementById('call-caller').textContent = name;
+        document.getElementById('call-avatar').textContent = name.charAt(0).toUpperCase();
+        document.getElementById('call-status').textContent = 'vous appelle · négociation privée';
+        showCallOverlay('ringing');
+        toast('Appel entrant de ' + name);
+      }
+      function acceptCall() {
+        if (callState !== 'ringing') return;
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { rejectCall(); return; }
+        navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+          .then(function (stream) {
+            callStream = stream;
+            try { callPc = new RTCPeerConnection(RTC_CONFIG); } catch (e) { callPc = new RTCPeerConnection(); }
+            callPc.onicecandidate = function (e) { if (e.candidate) send({ type: 'ice-candidate', callId: callId, candidate: e.candidate }); };
+            callPc.ontrack = function (e) {
+              var audio = document.getElementById('call-remote-audio');
+              if (audio && e.streams && e.streams[0]) audio.srcObject = e.streams[0];
+            };
+            stream.getTracks().forEach(function (t) { callPc.addTrack(t, stream); });
+            callPc.setRemoteDescription(new RTCSessionDescription(callOfferSdp))
+              .then(function () { return callPc.createAnswer(); })
+              .then(function (ans) { return callPc.setLocalDescription(ans); })
+              .then(function () {
+                callState = 'connected';
+                document.getElementById('call-status').textContent = 'Appel privé en cours';
+                showCallOverlay('connected');
+                setBroadcastMicMuted(true);
+                send({ type: 'call-answer', callId: callId, sdp: callPc.localDescription });
+              })
+              .catch(function () { resetCall(); });
+          })
+          .catch(function () { toast('Accès au micro refusé'); rejectCall(); });
+      }
+      function rejectCall() {
+        if (callId && wsReady) send({ type: 'call-reject', callId: callId });
+        resetCall();
+        toast('Appel refusé');
+      }
+      function startOutgoingCall(viewerId, viewerName) {
+        if (callState !== 'idle') { toast('Un appel est déjà en cours'); return; }
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { toast('Micro non disponible'); return; }
+        document.getElementById('call-caller').textContent = viewerName;
+        document.getElementById('call-avatar').textContent = viewerName.charAt(0).toUpperCase();
+        document.getElementById('call-status').textContent = 'Appel vers ' + viewerName + '...';
+        showCallOverlay('calling');
+        navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+          .then(function (stream) {
+            callStream = stream;
+            callState = 'calling';
+            callId = 'call-' + Date.now();
+            try { callPc = new RTCPeerConnection(RTC_CONFIG); } catch (e) { callPc = new RTCPeerConnection(); }
+            callPc.onicecandidate = function (e) { if (e.candidate) send({ type: 'ice-candidate', callId: callId, candidate: e.candidate }); };
+            callPc.ontrack = function (e) {
+              var audio = document.getElementById('call-remote-audio');
+              if (audio && e.streams && e.streams[0]) audio.srcObject = e.streams[0];
+            };
+            stream.getTracks().forEach(function (t) { callPc.addTrack(t, stream); });
+            callPc.createOffer()
+              .then(function (o) { return callPc.setLocalDescription(o); })
+              .then(function () { send({ type: 'call-offer', callId: callId, to: viewerId, sdp: callPc.localDescription, mode: 'audio' }); })
+              .catch(function () { resetCall(); toast('Appel impossible'); });
+          })
+          .catch(function () { resetCall(); toast('Accès au micro refusé'); });
+      }
+      function handleCallAccepted(msg) {
+        if (!callPc || msg.callId !== callId) return;
+        callState = 'connected';
+        document.getElementById('call-status').textContent = 'Appel privé en cours';
+        showCallOverlay('connected');
+        setBroadcastMicMuted(true);
+        callPc.setRemoteDescription(new RTCSessionDescription(msg.sdp)).catch(function () {});
+      }
+      function renderViewers(list) {
+        var strip = document.getElementById('viewers-strip');
+        var wrap = document.getElementById('viewers-list');
+        if (!wrap) return;
+        wrap.innerHTML = '';
+        var viewers = (list || []).filter(function (v) { return v.id !== MY_ID; });
+        if (!viewers.length) { if (strip) strip.classList.add('hidden'); return; }
+        if (strip) strip.classList.remove('hidden');
+        viewers.forEach(function (v) {
+          var chip = document.createElement('div');
+          chip.className = 'flex items-center gap-2 shrink-0 px-2.5 py-1.5 rounded-full bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))]';
+          var initial = (v.name || 'C').charAt(0).toUpperCase();
+          chip.innerHTML = '<span class="flex items-center justify-center w-6 h-6 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-xs font-bold">' + initial + '</span>' +
+            '<span class="text-xs font-medium max-w-[96px] truncate">' + (v.name || 'Spectateur') + '</span>' +
+            '<button class="btn-call-viewer flex items-center justify-center w-7 h-7 rounded-full bg-[rgb(var(--mgt-accent))] text-white" data-id="' + v.id + '" data-name="' + (v.name || 'Spectateur') + '" title="Appeler"><i data-lucide="phone" class="w-3.5 h-3.5"></i></button>';
+          wrap.appendChild(chip);
+        });
+        var btns = wrap.querySelectorAll('.btn-call-viewer');
+        for (var i = 0; i < btns.length; i++) {
+          btns[i].addEventListener('click', function () {
+            startOutgoingCall(this.getAttribute('data-id'), this.getAttribute('data-name'));
+          });
+        }
+        if (window.lucide) lucide.createIcons();
+      }
+      function handleCallIce(msg) {
+        if (!callPc || msg.callId !== callId || !msg.candidate) return;
+        try { callPc.addIceCandidate(new RTCIceCandidate(msg.candidate)); } catch (e) {}
+      }
+      function handleCallEnded(msg) {
+        if (msg.callId !== callId) return;
+        resetCall();
+        toast('Appel terminé');
+      }
+      function endCall() {
+        if (callId && wsReady) send({ type: 'call-end', callId: callId });
+        resetCall();
+      }
+      function resetCall() {
+        callState = 'idle';
+        callOfferSdp = null;
+        if (callStream) { callStream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} }); callStream = null; }
+        if (callPc) { try { callPc.close(); } catch (e) {} callPc = null; }
+        callId = null;
+        var audio = document.getElementById('call-remote-audio');
+        if (audio) audio.srcObject = null;
+        setBroadcastMicMuted(false);
+        showCallOverlay('idle');
+      }
+
+      /* -------- Indicateur qualité réseau -------- */
+      async function pollNetworkQuality() {
+        if (!isLive) return;
+        var peers = Object.keys(pcMap);
+        var lost = 0, sent = 0; var states = [];
+        for (var i = 0; i < peers.length; i++) {
+          var pc = pcMap[peers[i]];
+          states.push(pc.connectionState);
+          try {
+            var stats = await pc.getStats();
+            stats.forEach(function (r) { if (r.type === 'outbound-rtp' && r.kind === 'video') { lost += (r.packetsLost || 0); sent += (r.packetsSent || 0); } });
+          } catch (e) {}
+        }
+        var lossPct = (sent + lost) > 0 ? (lost / (sent + lost)) * 100 : 0;
+        renderNetworkQuality({ peers: peers.length, states: states, lossPct: lossPct });
+      }
+      function renderNetworkQuality(q) {
+        var dot = document.getElementById('net-dot'), label = document.getElementById('net-label');
+        if (!dot || !label) return;
+        var text, color;
+        if (q.peers === 0) { text = 'En attente'; color = '#9ca3af'; }
+        else if (q.states.some(function (s) { return s === 'failed' || s === 'closed'; })) { text = 'Interrompue'; color = '#ef4444'; }
+        else if (q.states.some(function (s) { return s !== 'connected'; })) { text = 'Connexion…'; color = '#f59e0b'; }
+        else if (q.lossPct < 1) { text = 'Stable'; color = '#22c55e'; }
+        else if (q.lossPct < 5) { text = 'Correct'; color = '#a3e635'; }
+        else { text = 'Wi-Fi faible'; color = '#f59e0b'; }
+        dot.style.background = color; dot.style.boxShadow = '0 0 6px ' + color;
+        label.textContent = text;
+      }
+
+      function init() {
+        document.getElementById('btn-start-stream').addEventListener('click', startLive);
+        document.getElementById('btn-stop-stream').addEventListener('click', stopLive);
+        // Les boutons d'appel vivent dans l'overlay placé APRÈS ce script :
+        // on délègue le clic pour rester toujours relié (sinon getElementById = null).
+        document.addEventListener('click', function (e) {
+          var btn = e.target && e.target.closest ? e.target.closest('#btn-call-accept, #btn-call-reject, #btn-call-hangup') : null;
+          if (!btn) return;
+          if (btn.id === 'btn-call-accept') acceptCall();
+          else if (btn.id === 'btn-call-reject') rejectCall();
+          else if (btn.id === 'btn-call-hangup') endCall();
+        });
+
+        var micOn = true;
+        document.getElementById('btn-mic').addEventListener('click', function () {
+          micOn = !micOn;
+          if (localStream) localStream.getAudioTracks().forEach(function (t) { t.enabled = micOn; });
+          setToggle(this, micOn); swapIcon(this, micOn ? 'mic' : 'mic-off');
+          toast(micOn ? 'Microphone activé' : 'Microphone coupé');
+        });
+
+        var camOn = true;
+        document.getElementById('btn-camera').addEventListener('click', function () {
+          camOn = !camOn;
+          if (localStream) localStream.getVideoTracks().forEach(function (t) { t.enabled = camOn; });
+          setToggle(this, camOn); swapIcon(this, camOn ? 'camera' : 'camera-off');
+          toast(camOn ? 'Caméra activée' : 'Caméra coupée');
+        });
+
+        // Menu « + »
+        var moreBtn = document.getElementById('btn-more'), moreMenu = document.getElementById('more-menu');
+        function closeMoreMenu() { moreMenu.classList.add('hidden'); moreBtn.setAttribute('aria-expanded', 'false'); }
+        moreBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          if (!moreMenu.classList.contains('hidden')) { closeMoreMenu(); return; }
+          moreMenu.classList.remove('hidden'); moreBtn.setAttribute('aria-expanded', 'true');
+        });
+        document.addEventListener('click', function (e) {
+          if (!moreMenu.classList.contains('hidden') && !moreMenu.contains(e.target) && !moreBtn.contains(e.target)) closeMoreMenu();
+        });
+        document.getElementById('btn-screen-share').addEventListener('click', function () { closeMoreMenu(); if (shareOn) stopScreenShare(); else startScreenShare(); });
+        document.getElementById('btn-fit-toggle').addEventListener('click', function () { closeMoreMenu(); toggleFitMode(); });
+        document.getElementById('btn-flip-camera').addEventListener('click', flipCamera);
+
+        document.getElementById('btn-effects').addEventListener('click', function () {
+          var on = this.getAttribute('aria-pressed') !== 'true';
+          this.setAttribute('aria-pressed', String(on));
+          this.style.background = on ? 'rgb(var(--mgt-accent) / 0.14)' : '';
+          this.style.color = on ? 'rgb(var(--mgt-accent-700))' : '';
+          toast(on ? 'Effets activés' : 'Effets désactivés');
+        });
+
+        document.getElementById('btn-share-product').addEventListener('click', function () {
+          var list = document.getElementById('live-products-list');
+          if (list) list.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          var first = document.querySelector('.product-card');
+          if (first) { first.style.boxShadow = '0 0 0 2px rgb(var(--mgt-accent))'; setTimeout(function () { first.style.boxShadow = ''; }, 1200); }
+          toast('Sélectionnez un produit ci-dessous.');
+        });
+
+        document.getElementById('btn-manage-products').addEventListener('click', function () { window.location.href = './dashboard-catalogue.html'; });
+
+        document.querySelectorAll('.btn-pin-product').forEach(function (btn) {
+          btn.addEventListener('click', function () { pinProduct(btn.closest('.product-card')); });
+        });
+
+        // Chat
+        var input = document.getElementById('chat-input');
+        function sendChat() {
+          var text = input ? input.value.trim() : '';
+          if (!text) return;
+          if (input) input.value = '';
+          if (wsReady && isLive) { send({ type: 'live-chat', text: text }); appendVendorMessage(text); }
+          else appendVendorMessage(text);
+        }
+        document.getElementById('chat-send').addEventListener('click', sendChat);
+        input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); sendChat(); } });
+
+        connect();
+        applyFitMode();
+        setInterval(pollNetworkQuality, 2000);
+      }
+
+      init();
+    </script>
+
+    <!-- ===== OVERLAY APPEL PRIVÉ ===== -->
+    <div id="call-overlay" class="hidden fixed inset-0 z-[999] bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center text-white px-6" style="display:none">
+        <div class="flex flex-col items-center text-center">
+            <div id="call-avatar" class="flex items-center justify-center w-20 h-20 rounded-full bg-[rgb(var(--mgt-accent))] text-3xl font-bold mb-4 ring-4 ring-white/10">C</div>
+            <p id="call-caller" class="text-xl font-bold mb-1">Appel</p>
+            <p id="call-status" class="text-sm text-white/70 mb-10">Appel privé...</p>
+        </div>
+        <audio id="call-remote-audio" autoplay></audio>
+        <div id="call-ring-buttons" class="flex items-center gap-10" style="display:none">
+            <button id="btn-call-reject" class="flex flex-col items-center gap-2">
+                <span class="flex items-center justify-center w-16 h-16 rounded-full bg-red-600 text-white shadow-lg shadow-red-600/30 active:scale-95 transition-transform"><i data-lucide="phone-off" class="w-7 h-7"></i></span>
+                <span class="text-xs text-white/70">Refuser</span>
+            </button>
+            <button id="btn-call-accept" class="flex flex-col items-center gap-2">
+                <span class="flex items-center justify-center w-16 h-16 rounded-full bg-green-600 text-white shadow-lg shadow-green-600/30 active:scale-95 transition-transform"><i data-lucide="phone" class="w-7 h-7"></i></span>
+                <span class="text-xs text-white/70">Accepter</span>
+            </button>
+        </div>
+        <button id="btn-call-hangup" class="flex flex-col items-center gap-2" style="display:none">
+            <span class="flex items-center justify-center w-16 h-16 rounded-full bg-red-600 text-white shadow-lg shadow-red-600/30 active:scale-95 transition-transform"><i data-lucide="phone-off" class="w-7 h-7"></i></span>
+            <span class="text-xs text-white/70">Raccrocher</span>
+        </button>
+    </div>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

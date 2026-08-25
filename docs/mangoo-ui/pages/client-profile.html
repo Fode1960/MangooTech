@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espace Client - Profil &amp; Parametres</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  /* --- Radius Scale (root-level for preflight) --- */
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  /* --- Brand Primary: Dark Green --- */
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  /* --- Orange Accent (CTAs, highlights) --- */
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  /* --- Neutral Surface & Text Scale --- */
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  /* --- State Colors --- */
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  /* --- Shadows --- */
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  /* --- Typography --- */
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* --- Semantic Tailwind Aliases --- */
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+/* --- Typography Classes --- */
+.h-display {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.h1 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(28px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.h2 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h3 {
+  font-family: var(--mgt-font-sans);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.body-l {
+  font-family: var(--mgt-font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--mgt-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--mgt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased flex bg-[rgb(var(--mgt-muted))]">
+
+    <!-- ===== SIDEBAR (Client navigation) ===== -->
+    <aside class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-[rgb(var(--mgt-primary))] text-[rgb(var(--mgt-primary-foreground))]">
+      <!-- Logo -->
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+        <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+        <div>
+          <span class="font-semibold text-base tracking-tight">Mangoo</span><span class="font-light text-base tracking-tight text-white/70">Tech</span>
+        </div>
+      </div>
+      <!-- Nav items - Client navigation -->
+      <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <a href="./client-dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="home" class="w-4.5 h-4.5"></i>
+          Accueil
+        </a>
+        <a href="./client-orders.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shopping-bag" class="w-4.5 h-4.5"></i>
+          Mes commandes
+        </a>
+        <a href="./client-favorites.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="heart" class="w-4.5 h-4.5"></i>
+          Mes favoris
+        </a>
+        <a href="./client-profile.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-medium transition-colors">
+          <i data-lucide="user" class="w-4.5 h-4.5"></i>
+          Mon profil
+        </a>
+        <a href="./auth.html" id="sidebar-logout-link" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors mt-6">
+          <i data-lucide="log-out" class="w-4.5 h-4.5"></i>
+          Déconnexion
+        </a>
+      </nav>
+      <!-- Account info bottom -->
+      <div class="border-t border-white/10 px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div id="sidebar-user-avatar" class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm">--</div>
+          <div class="flex-1 min-w-0">
+            <p id="sidebar-user-name" class="text-sm font-medium truncate">Client</p>
+            <p class="text-xs text-white/60 truncate">Cliente</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="flex-1 ml-60 min-h-screen flex flex-col">
+
+      <!-- Header Top Bar -->
+      <header class="sticky top-0 z-30 flex items-center justify-between gap-4 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] px-8 py-3.5">
+        <div class="flex items-center gap-4">
+          <h1 class="h3">Profil &amp; Parametres</h1>
+        </div>
+        <div class="flex items-center gap-4">
+          <!-- Notifications -->
+          <button class="relative p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))]">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span class="absolute top-1 right-1.5 w-2 h-2 rounded-full bg-[rgb(var(--mgt-accent))]"></span>
+          </button>
+          <!-- Avatar -->
+          <div class="flex items-center gap-3 pl-2 border-l border-[rgb(var(--mgt-border))]">
+            <div id="topbar-avatar" class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs">--</div>
+            <span id="topbar-name" class="text-sm font-medium text-[rgb(var(--mgt-foreground))] hidden sm:block">Client</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <main class="flex-1 p-8 space-y-6" style="max-width: 1200px;">
+        <!-- ===== SECTION 1: Photo + Infos ===== -->
+        <div id="profile-photo-infos" class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex flex-col sm:flex-row items-start gap-6">
+            <!-- Avatar large -->
+            <div id="profile-avatar-large" class="flex items-center justify-center w-24 h-24 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-3xl font-bold shrink-0 cursor-pointer">--</div>
+            <!-- Infos -->
+            <div class="flex-1 min-w-0">
+              <h2 id="profile-name" class="h2">Client</h2>
+              <div class="flex flex-wrap items-center gap-x-6 gap-y-1.5 mt-2 text-[rgb(var(--mgt-muted-foreground))]">
+                <span id="profile-email-row" class="flex items-center gap-1.5 caption"><i data-lucide="mail" class="w-3.5 h-3.5"></i><span id="profile-email-text"></span></span>
+                <span id="profile-phone-row" class="flex items-center gap-1.5 caption"><i data-lucide="phone" class="w-3.5 h-3.5"></i><span id="profile-phone-text"></span></span>
+                <span id="profile-city-row" class="flex items-center gap-1.5 caption"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i><span id="profile-city-text"></span></span>
+              </div>
+            </div>
+            <!-- Bouton Modifier -->
+            <button id="profile-avatar-edit-btn" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[rgb(var(--mgt-border))] text-sm font-medium text-[rgb(var(--mgt-foreground))] hover:bg-[rgb(var(--mgt-muted))] hover:border-[rgb(var(--mgt-primary))] transition-all shrink-0">
+              <i data-lucide="pencil" class="w-4 h-4"></i>
+              Modifier
+            </button>
+            <input type="file" id="profile-avatar-input" accept="image/*" style="display:none;">
+          </div>
+        </div>
+
+        <!-- ===== SECTION 2: Informations personnelles (form card) ===== -->
+        <div id="profile-personal-info" class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex items-center justify-between mb-5">
+            <h2 class="h3">Informations personnelles</h2>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <!-- Nom -->
+            <div class="space-y-1.5">
+              <label class="caption font-medium text-[rgb(var(--mgt-foreground))]">Nom</label>
+              <input id="profile-nom" type="text" value="" class="w-full px-4 py-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-sm text-[rgb(var(--mgt-foreground))] bg-[rgb(var(--mgt-background))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] focus:border-[rgb(var(--mgt-ring))] transition-all placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+            </div>
+            <!-- Prenom -->
+            <div class="space-y-1.5">
+              <label class="caption font-medium text-[rgb(var(--mgt-foreground))]">Prenom</label>
+              <input id="profile-prenom" type="text" value="" class="w-full px-4 py-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-sm text-[rgb(var(--mgt-foreground))] bg-[rgb(var(--mgt-background))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] focus:border-[rgb(var(--mgt-ring))] transition-all placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+            </div>
+            <!-- Email -->
+            <div class="space-y-1.5">
+              <label class="caption font-medium text-[rgb(var(--mgt-foreground))]">Email</label>
+              <input id="profile-email-input" type="email" value="" class="w-full px-4 py-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-sm text-[rgb(var(--mgt-foreground))] bg-[rgb(var(--mgt-background))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] focus:border-[rgb(var(--mgt-ring))] transition-all placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+            </div>
+            <!-- Telephone -->
+            <div class="space-y-1.5">
+              <label class="caption font-medium text-[rgb(var(--mgt-foreground))]">Telephone</label>
+              <input id="profile-phone-input" type="tel" value="" class="w-full px-4 py-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-sm text-[rgb(var(--mgt-foreground))] bg-[rgb(var(--mgt-background))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] focus:border-[rgb(var(--mgt-ring))] transition-all placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+            </div>
+            <!-- Adresse -->
+            <div class="space-y-1.5">
+              <label class="caption font-medium text-[rgb(var(--mgt-foreground))]">Adresse</label>
+              <input id="profile-adresse-input" type="text" value="" placeholder="Rue, quartier, immeuble..." class="w-full px-4 py-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-sm text-[rgb(var(--mgt-foreground))] bg-[rgb(var(--mgt-background))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] focus:border-[rgb(var(--mgt-ring))] transition-all placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+            </div>
+            <!-- Ville -->
+            <div class="space-y-1.5">
+              <label class="caption font-medium text-[rgb(var(--mgt-foreground))]">Ville</label>
+              <select id="profile-ville-select" class="w-full px-4 py-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-sm text-[rgb(var(--mgt-foreground))] bg-[rgb(var(--mgt-background))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] focus:border-[rgb(var(--mgt-ring))] transition-all appearance-none" style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E&quot;); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px;">
+                <option value="Dakar">Dakar</option>
+                <option value="Thies">Thies</option>
+                <option value="Saint-Louis">Saint-Louis</option>
+                <option value="Ziguinchor">Ziguinchor</option>
+                <option value="Touba">Touba</option>
+                <option value="other">Autre / Non précisé</option>
+              </select>
+            </div>
+          </div>
+          <!-- Bouton Enregistrer -->
+          <div class="mt-6 pt-5 border-t border-[rgb(var(--mgt-border))]">
+            <button id="profile-save-btn" class="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[rgb(var(--mgt-primary))] text-[rgb(var(--mgt-primary-foreground))] text-sm font-semibold hover:opacity-90 transition-all hover:translate-y-[-1px]">
+              <i data-lucide="check" class="w-4 h-4"></i>
+              Enregistrer
+            </button>
+          </div>
+        </div>
+
+        <!-- ===== SECTION 3: Methodes de paiement ===== -->
+        <div id="profile-payment-methods" class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex items-center justify-between mb-5">
+            <h2 class="h3">Methodes de paiement</h2>
+            <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[rgb(var(--mgt-accent))] text-white text-xs font-semibold hover:opacity-90 transition-all hover:translate-y-[-1px]">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              Ajouter
+            </button>
+          </div>
+          <div class="space-y-3">
+            <!-- Orange Money -->
+            <div class="flex items-center justify-between p-4 rounded-lg border border-[rgb(var(--mgt-border))] bg-[rgb(var(--mgt-muted))]">
+              <div class="flex items-center gap-4">
+                <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent))] font-bold text-sm">OM</div>
+                <div>
+                  <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Orange Money</p>
+                  <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-0.5">+212 06 12 34 56 78</p>
+                </div>
+              </div>
+              <!-- Toggle switch active -->
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked class="sr-only peer">
+                <div class="w-10 h-5 rounded-full bg-[rgb(var(--mgt-success))] peer-checked:bg-[rgb(var(--mgt-success))] peer-focus:ring-2 peer-focus:ring-[rgb(var(--mgt-ring)/0.30)] transition-colors after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full after:shadow-sm"></div>
+              </label>
+            </div>
+
+            <!-- Wave -->
+            <div class="flex items-center justify-between p-4 rounded-lg border border-[rgb(var(--mgt-border))] bg-[rgb(var(--mgt-muted))]">
+              <div class="flex items-center gap-4">
+                <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-info)/0.15)] text-[rgb(var(--mgt-info))] font-bold text-sm">WV</div>
+                <div>
+                  <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Wave</p>
+                  <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-0.5">+221 77 987 65 43</p>
+                </div>
+              </div>
+              <!-- Toggle switch active -->
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked class="sr-only peer">
+                <div class="w-10 h-5 rounded-full bg-[rgb(var(--mgt-success))] peer-checked:bg-[rgb(var(--mgt-success))] peer-focus:ring-2 peer-focus:ring-[rgb(var(--mgt-ring)/0.30)] transition-colors after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full after:shadow-sm"></div>
+              </label>
+            </div>
+
+            <!-- Carte Visa -->
+            <div class="flex items-center justify-between p-4 rounded-lg border border-[rgb(var(--mgt-border))] bg-[rgb(var(--mgt-muted))]">
+              <div class="flex items-center gap-4">
+                <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary))] font-bold text-sm">VS</div>
+                <div>
+                  <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Carte Visa</p>
+                  <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-0.5">**** **** **** 4242</p>
+                </div>
+              </div>
+              <!-- Toggle switch active -->
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked class="sr-only peer">
+                <div class="w-10 h-5 rounded-full bg-[rgb(var(--mgt-success))] peer-checked:bg-[rgb(var(--mgt-success))] peer-focus:ring-2 peer-focus:ring-[rgb(var(--mgt-ring)/0.30)] transition-colors after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full after:shadow-sm"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== SECTION 4: Adresses enregistrees ===== -->
+        <div id="profile-addresses" class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex items-center justify-between mb-5">
+            <h2 class="h3">Adresses enregistrees</h2>
+            <button id="addr-add-btn" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer" style="color: rgb(var(--mgt-primary-foreground)); background-color: rgb(var(--mgt-primary)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
+              <i data-lucide="plus" class="w-4 h-4"></i> Ajouter
+            </button>
+          </div>
+          <div id="addr-list" class="space-y-3"></div>
+          <!-- Formulaire inline (ajout / edition) -->
+          <div id="addr-form" class="hidden mt-4 p-4 rounded-lg border border-[rgb(var(--mgt-primary-200))] bg-[rgb(var(--mgt-muted))]">
+            <input type="hidden" id="addr-form-id">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium mb-1 text-[rgb(var(--mgt-muted-foreground))]">Libelle (ex : Domicile)</label>
+                <input id="addr-label" type="text" placeholder="Domicile" class="w-full h-10 px-3 rounded-md text-sm" style="border: 1px solid rgb(var(--mgt-input)); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
+              </div>
+              <div>
+                <label class="block text-xs font-medium mb-1 text-[rgb(var(--mgt-muted-foreground))]">Nom complet</label>
+                <input id="addr-name" type="text" placeholder="" class="w-full h-10 px-3 rounded-md text-sm" style="border: 1px solid rgb(var(--mgt-input)); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
+              </div>
+              <div>
+                <label class="block text-xs font-medium mb-1 text-[rgb(var(--mgt-muted-foreground))]">Telephone</label>
+                <input id="addr-phone" type="text" placeholder="" class="w-full h-10 px-3 rounded-md text-sm" style="border: 1px solid rgb(var(--mgt-input)); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
+              </div>
+              <div>
+                <label class="block text-xs font-medium mb-1 text-[rgb(var(--mgt-muted-foreground))]">Ville</label>
+                <input id="addr-city" type="text" placeholder="Ville" class="w-full h-10 px-3 rounded-md text-sm" style="border: 1px solid rgb(var(--mgt-input)); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-medium mb-1 text-[rgb(var(--mgt-muted-foreground))]">Adresse complete</label>
+                <input id="addr-line1" type="text" placeholder="Rue, quartier, immeuble..." class="w-full h-10 px-3 rounded-md text-sm" style="border: 1px solid rgb(var(--mgt-input)); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
+              </div>
+            </div>
+            <div class="flex items-center justify-end gap-2 mt-4">
+              <button id="addr-cancel-btn" class="px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer" style="color: rgb(var(--mgt-foreground)); background-color: rgb(var(--mgt-background)); border: 1px solid rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Annuler</button>
+              <button id="addr-save-btn" class="px-4 py-2 rounded-md text-sm font-semibold transition-colors cursor-pointer" style="color: rgb(var(--mgt-primary-foreground)); background-color: rgb(var(--mgt-primary)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Enregistrer</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== SECTION 5: Preferences ===== -->
+        <div id="profile-preferences" class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <h2 class="h3 mb-5">Preferences</h2>
+
+          <!-- Notifications -->
+          <div class="mb-6">
+            <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))] mb-3">Notifications</p>
+            <div class="space-y-3">
+              <!-- Commandes -->
+              <div class="flex items-center justify-between p-3 rounded-lg bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))]">
+                <div>
+                  <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Notifications de commandes</p>
+                  <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-0.5">Recevoir les mises a jour sur vos commandes</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" checked class="sr-only peer">
+                  <div class="w-10 h-5 rounded-full bg-[rgb(var(--mgt-success))] peer-checked:bg-[rgb(var(--mgt-success))] peer-focus:ring-2 peer-focus:ring-[rgb(var(--mgt-ring)/0.30)] transition-colors after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full after:shadow-sm"></div>
+                </label>
+              </div>
+
+              <!-- Lives -->
+              <div class="flex items-center justify-between p-3 rounded-lg bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))]">
+                <div>
+                  <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Notifications de lives</p>
+                  <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-0.5">Etre informe quand vos prestataires sont en direct</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" class="sr-only peer">
+                  <div class="w-10 h-5 rounded-full bg-[rgb(var(--mgt-border))] peer-checked:bg-[rgb(var(--mgt-success))] peer-focus:ring-2 peer-focus:ring-[rgb(var(--mgt-ring)/0.30)] transition-colors after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full after:shadow-sm"></div>
+                </label>
+              </div>
+
+              <!-- Promotions -->
+              <div class="flex items-center justify-between p-3 rounded-lg bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))]">
+                <div>
+                  <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Promotions et offres</p>
+                  <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-0.5">Recevoir les offres speciales et reductions</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" checked class="sr-only peer">
+                  <div class="w-10 h-5 rounded-full bg-[rgb(var(--mgt-success))] peer-checked:bg-[rgb(var(--mgt-success))] peer-focus:ring-2 peer-focus:ring-[rgb(var(--mgt-ring)/0.30)] transition-colors after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full after:shadow-sm"></div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Langue & Devise -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-4 border-t border-[rgb(var(--mgt-border))]">
+            <!-- Langue -->
+            <div class="space-y-1.5">
+              <label class="caption font-medium text-[rgb(var(--mgt-foreground))]">Langue</label>
+              <select class="w-full px-4 py-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-sm text-[rgb(var(--mgt-foreground))] bg-[rgb(var(--mgt-background))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] focus:border-[rgb(var(--mgt-ring))] transition-all appearance-none" style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E&quot;); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px;">
+                <option>Francais</option>
+                <option>English</option>
+                <option>Wolof</option>
+              </select>
+            </div>
+            <!-- Devise -->
+            <div class="space-y-1.5">
+              <label class="caption font-medium text-[rgb(var(--mgt-foreground))]">Devise</label>
+              <select class="w-full px-4 py-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-sm text-[rgb(var(--mgt-foreground))] bg-[rgb(var(--mgt-background))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] focus:border-[rgb(var(--mgt-ring))] transition-all appearance-none" style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E&quot;); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px;">
+                <option>FCFA</option>
+                <option>EUR</option>
+                <option>USD</option>
+                <option>MAD</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== SECTION 6: Securite ===== -->
+        <div id="profile-security" class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <h2 class="h3 mb-5">Securite</h2>
+          <div class="space-y-4">
+
+            <!-- Changer le PIN -->
+            <div class="rounded-xl border border-[rgb(var(--mgt-border))] bg-[rgb(var(--mgt-muted))] overflow-hidden">
+              <button id="security-pin-toggle" type="button" class="flex items-center justify-between w-full p-4 hover:border-[rgb(var(--mgt-primary))] hover:bg-[rgb(var(--mgt-primary-50))] transition-all text-left group">
+                <div class="flex items-center gap-3">
+                  <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary))] group-hover:scale-105 transition-transform">
+                    <i data-lucide="lock" class="w-4.5 h-4.5"></i>
+                  </div>
+                  <div>
+                    <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Changer le PIN</p>
+                    <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-0.5">Modifier votre PIN a 4 chiffres</p>
+                  </div>
+                </div>
+                <i data-lucide="chevron-down" class="panel-chevron w-4.5 h-4.5 text-[rgb(var(--mgt-muted-foreground))]"></i>
+              </button>
+              <div id="security-pin-panel" class="hidden p-5 pt-0 border-t border-[rgb(var(--mgt-border))]">
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-4 leading-relaxed">Saisissez votre PIN actuel, puis le nouveau code a 4 chiffres et sa confirmation.</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                  <div>
+                    <label class="block text-xs font-medium mb-1.5 text-[rgb(var(--mgt-muted-foreground))]">PIN actuel</label>
+                    <input id="security-current-pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••" class="w-full max-w-[140px] h-11 px-3 rounded-lg text-center text-base tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.35)] focus:border-[rgb(var(--mgt-ring))] transition-all" style="border: 1px solid rgb(var(--mgt-input)); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium mb-1.5 text-[rgb(var(--mgt-muted-foreground))]">Nouveau PIN</label>
+                    <input id="security-new-pin" type="password" inputmode="numeric" maxlength="4" autocomplete="new-password" placeholder="••••" class="w-full max-w-[140px] h-11 px-3 rounded-lg text-center text-base tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.35)] focus:border-[rgb(var(--mgt-ring))] transition-all" style="border: 1px solid rgb(var(--mgt-input)); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium mb-1.5 text-[rgb(var(--mgt-muted-foreground))]">Confirmer le PIN</label>
+                    <input id="security-confirm-pin" type="password" inputmode="numeric" maxlength="4" autocomplete="new-password" placeholder="••••" class="w-full max-w-[140px] h-11 px-3 rounded-lg text-center text-base tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.35)] focus:border-[rgb(var(--mgt-ring))] transition-all" style="border: 1px solid rgb(var(--mgt-input)); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
+                  </div>
+                </div>
+                <p id="security-pin-message" class="text-xs font-medium mt-3" style="display:none;"></p>
+                <div class="flex items-center justify-end gap-2 mt-4">
+                  <button id="security-pin-submit" type="button" class="px-5 py-2.5 rounded-lg text-sm font-semibold transition-all hover:opacity-90 cursor-pointer" style="color: rgb(var(--mgt-primary-foreground)); background-color: rgb(var(--mgt-primary)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Mettre a jour le PIN</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Authentification a deux facteurs -->
+            <div class="rounded-lg border border-[rgb(var(--mgt-border))] bg-[rgb(var(--mgt-muted))] overflow-hidden">
+              <button id="security-2fa-toggle" type="button" class="flex items-center justify-between w-full p-4 hover:border-[rgb(var(--mgt-accent))] hover:bg-[rgb(var(--mgt-accent-50))] transition-all text-left group">
+                <div class="flex items-center gap-3">
+                  <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent))] group-hover:scale-105 transition-transform">
+                    <i data-lucide="shield" class="w-4.5 h-4.5"></i>
+                  </div>
+                  <div>
+                    <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Authentification a deux facteurs</p>
+                    <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-0.5">Code de verification par email a 6 chiffres</p>
+                  </div>
+                </div>
+                <i data-lucide="chevron-down" class="panel-chevron w-4.5 h-4.5 text-[rgb(var(--mgt-muted-foreground))]"></i>
+              </button>
+              <div id="security-2fa-panel" class="hidden p-5 pt-0 border-t border-[rgb(var(--mgt-border))]">
+                <div class="mt-5 flex items-center gap-2">
+                  <span class="text-xs font-semibold uppercase tracking-wide text-[rgb(var(--mgt-muted-foreground))]">Statut :</span>
+                  <span id="security-2fa-status" class="text-xs font-semibold px-2.5 py-1 rounded-full">Desactivee</span>
+                </div>
+                <p id="security-2fa-description" class="text-sm text-[rgb(var(--mgt-foreground))] mt-3 leading-relaxed">Recevez un code a 6 chiffres par email pour renforcer la securite de votre compte.</p>
+                <p id="security-2fa-message" class="text-xs font-medium mt-3" style="display:none;"></p>
+                <div id="security-2fa-actions" class="mt-5"></div>
+              </div>
+            </div>
+
+            <!-- Déconnexion -->
+            <button id="security-logout-btn" type="button" class="flex items-center justify-between w-full p-4 rounded-xl border border-[rgb(var(--mgt-border))] bg-[rgb(var(--mgt-muted))] hover:border-[rgb(var(--mgt-error))] hover:bg-[rgb(var(--mgt-error)/0.06)] transition-all text-left group">
+              <div class="flex items-center gap-3">
+                <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-error)/0.12)] text-[rgb(var(--mgt-error))] group-hover:scale-105 transition-transform">
+                  <i data-lucide="log-out" class="w-4.5 h-4.5"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-[rgb(var(--mgt-error))]">Déconnexion</p>
+                  <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-0.5">Se déconnecter de votre compte sur cet appareil</p>
+                </div>
+              </div>
+              <i data-lucide="log-out" class="w-4.5 h-4.5 text-[rgb(var(--mgt-muted-foreground))]"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- ===== BOUTON SAUVEGARDER LES MODIFICATIONS ===== -->
+        <div class="flex justify-end pt-2 pb-6">
+          <button id="profile-save-all-btn" class="flex items-center gap-2 px-6 py-3 rounded-lg bg-[rgb(var(--mgt-accent))] text-white text-sm font-semibold hover:opacity-90 transition-all hover:translate-y-[-1px] shadow-[var(--mgt-shadow-sm)]">
+            <i data-lucide="save" class="w-4.5 h-4.5"></i>
+            Sauvegarder les modifications
+          </button>
+        </div>
+
+      </main>
+    </div>
+
+    <script>lucide.createIcons();</script>
+<!-- Mobile responsive navigation & layout -->
+<style id="mgt-mobile-responsive">
+@media (max-width: 768px) {
+  .dashboard-layout { flex-direction: column !important; }
+  .dashboard-sidebar { position: fixed !important; top: 0; left: 0; z-index: 1000; width: 260px !important; height: 100vh !important; transform: translateX(-100%); transition: transform .3s ease; overflow-y: auto; }
+  .dashboard-sidebar.open { transform: translateX(0); }
+  .dashboard-sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999; }
+  .dashboard-sidebar-overlay.show { display: block; }
+  .dashboard-main { margin-left: 0 !important; width: 100% !important; }
+  .dashboard-topbar { position: sticky; top: 0; z-index: 100; }
+  .mobile-menu-btn { display: flex !important; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: pointer; color: inherit; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .services-grid, .favorites-grid, .features-grid, .booster-grid { grid-template-columns: 1fr !important; }
+  .data-table { display: block !important; }
+  .data-table thead { display: none !important; }
+  .data-table tbody, .data-table tr { display: block !important; }
+  .data-table td { display: flex !important; justify-content: space-between; align-items: center; padding: 8px 12px !important; border-bottom: 1px solid rgb(var(--mgt-border)) !important; }
+  .data-table td::before { content: attr(data-label); font-weight: 600; font-size: 12px; color: rgb(var(--mgt-muted-foreground)); text-transform: uppercase; margin-right: 8px; flex-shrink: 0; }
+  .topbar-search { display: none !important; }
+  .topbar-title { font-size: 18px !important; }
+  .hero-section { padding: 40px 16px !important; text-align: center; }
+  .hero-section h1, .hero-section .h-display { font-size: 28px !important; }
+  .hero-section h1 + p { font-size: 15px !important; }
+  .hero-ctas { flex-direction: column !important; align-items: center !important; gap: 12px !important; }
+  .auth-split { flex-direction: column !important; }
+  .auth-branding { min-height: 200px !important; padding: 32px 16px !important; }
+  .auth-form-area { padding: 24px 16px !important; }
+  .checkout-layout { flex-direction: column !important; }
+  .checkout-main { width: 100% !important; }
+  .checkout-sidebar { width: 100% !important; }
+  .chat-layout { flex-direction: column !important; height: auto !important; }
+  .chat-sidebar { width: 100% !important; max-height: 200px !important; }
+  .chat-main { width: 100% !important; }
+  .filter-pills { flex-wrap: nowrap !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+  .drawer-panel { width: 100% !important; max-width: 100% !important; }
+  .content-section { padding-left: 16px !important; padding-right: 16px !important; }
+  .section-padding { padding: 32px 16px !important; }
+  .form-grid { grid-template-columns: 1fr !important; }
+  .form-actions { flex-direction: column !important; }
+  .desktop-only { display: none !important; }
+  .map-container { height: 300px !important; }
+}
+@media (min-width: 769px) {
+  .mobile-menu-btn { display: none !important; }
+  .mobile-only { display: none !important; }
+}
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr !important; }
+  .stats-row { grid-template-columns: 1fr !important; }
+}
+</style>
+<script>
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    var sidebar = document.querySelector('.dashboard-sidebar');
+    if (!sidebar) return;
+    var overlay = document.createElement('div');
+    overlay.className = 'dashboard-sidebar-overlay';
+    overlay.addEventListener('click', function(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); });
+    document.body.appendChild(overlay);
+    var topbar = document.querySelector('.dashboard-topbar');
+    if (topbar) {
+      var btn = document.createElement('button');
+      btn.className = 'mobile-menu-btn';
+      btn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+      btn.addEventListener('click', function(){ sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
+      topbar.insertBefore(btn, topbar.firstChild);
+    }
+    sidebar.querySelectorAll('a').forEach(function(link){
+      link.addEventListener('click', function(){
+        if (window.innerWidth <= 768) { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+      });
+    });
+  });
+})();
+</script>
+
+<script>
+(function () {
+  'use strict';
+
+  function showToast(message) {
+    var existing = document.getElementById('mgt-toast');
+    if (existing) existing.remove();
+    var toast = document.createElement('div');
+    toast.id = 'mgt-toast';
+    toast.textContent = message;
+    toast.setAttribute('style', 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));padding:12px 20px;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);font-size:14px;font-weight:500;box-shadow:var(--mgt-shadow-md);z-index:9999;opacity:0;transition:opacity .25s ease;');
+    document.body.appendChild(toast);
+    requestAnimationFrame(function () { toast.style.opacity = '1'; });
+    setTimeout(function () {
+      toast.style.opacity = '0';
+      setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+    }, 2400);
+  }
+
+  function initialsOf(name) {
+    var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return '--';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  }
+
+  // Affiche un avatar circulaire : logo data URL si présent, sinon initiales.
+  // Exposé globalement pour être réutilisé par le bloc d'hydratation (qui
+  // s'exécute après le chargement de MangooClient).
+  function applyAvatar(id, fallbackName, logo) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var hasLogo = typeof logo === 'string' && logo.trim().length > 0;
+    if (hasLogo) {
+      el.textContent = '';
+      el.style.overflow = 'hidden';
+      el.style.backgroundImage = 'url("' + logo + '")';
+      el.style.backgroundSize = 'cover';
+      el.style.backgroundPosition = 'center';
+      el.style.backgroundRepeat = 'no-repeat';
+    } else {
+      el.style.overflow = '';
+      el.style.backgroundImage = '';
+      el.textContent = initialsOf(fallbackName);
+    }
+  }
+  window.applyAvatar = applyAvatar;
+
+  function setText(id, txt) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = txt;
+  }
+
+  function cityLabel(city) {
+    var c = String(city || '').trim();
+    if (!c || c.toLowerCase() === 'other' || c.toLowerCase() === 'autre') return '';
+    return c.charAt(0).toUpperCase() + c.slice(1);
+  }
+
+  function currentUser() {
+    var MC = window.MangooClient;
+    if (MC && MC.sessionUser) {
+      var u = MC.sessionUser();
+      if (u) return u;
+    }
+    if (MC && MC.getUser) return MC.getUser();
+    return {};
+  }
+
+  function refreshIdentityUI(user) {
+    var name = (user && (user.fullName || user.name)) || '';
+    var logo = (user && user.logo) || '';
+    var email = (user && user.email) || '';
+    var phone = (user && user.phone) || '';
+    var city = cityLabel(user && user.city);
+    applyAvatar('profile-avatar-large', name, logo);
+    applyAvatar('sidebar-user-avatar', name, logo);
+    applyAvatar('topbar-avatar', name, logo);
+    setText('profile-name', name || 'Client');
+    setText('sidebar-user-name', name || 'Client');
+    setText('topbar-name', name || 'Client');
+    setText('profile-email-text', email);
+    setText('profile-phone-text', phone);
+    setText('profile-city-text', city);
+    var emailRow = document.getElementById('profile-email-row');
+    var phoneRow = document.getElementById('profile-phone-row');
+    var cityRow = document.getElementById('profile-city-row');
+    if (emailRow) emailRow.style.display = email ? '' : 'none';
+    if (phoneRow) phoneRow.style.display = phone ? '' : 'none';
+    if (cityRow) cityRow.style.display = city ? '' : 'none';
+  }
+
+  // Logo choisi par l'utilisateur mais pas encore enregistré (data URL).
+  var pendingLogo = '';
+
+  function saveProfile() {
+    var u = currentUser();
+    var nomEl = document.getElementById('profile-nom');
+    var prenomEl = document.getElementById('profile-prenom');
+    var emailEl = document.getElementById('profile-email-input');
+    var phoneEl = document.getElementById('profile-phone-input');
+    var adresseEl = document.getElementById('profile-adresse-input');
+    var villeEl = document.getElementById('profile-ville-select');
+
+    var prenom = (prenomEl && prenomEl.value ? prenomEl.value : '').trim();
+    var nom = (nomEl && nomEl.value ? nomEl.value : '').trim();
+    var fullName = (prenom + ' ' + nom).trim() || (u.fullName || u.name || '');
+
+    var city = (villeEl && villeEl.value) ? villeEl.value : (u.city || '');
+    var logo = pendingLogo || (u.logo || '');
+
+    var updated = Object.assign({}, u, {
+      name: fullName,
+      fullName: fullName,
+      email: emailEl ? emailEl.value.trim() : (u.email || ''),
+      phone: phoneEl ? phoneEl.value.trim() : (u.phone || ''),
+      address: adresseEl ? adresseEl.value.trim() : (u.address || ''),
+      city: city,
+      logo: logo
+    });
+
+    // Source de vérité immédiate côté client : la session `mgt_user`, lue par
+    // MangooClient.sessionUser() sur toutes les pages de l'espace client.
+    try { localStorage.setItem('mgt_user', JSON.stringify(updated)); } catch (e) {}
+
+    // Synchronise aussi l'ancienne clé `mgt_client_user_v1` (rétro-compatibilité).
+    var MC = window.MangooClient;
+    if (MC && MC.saveUser) {
+      MC.saveUser({
+        name: updated.name,
+        fullName: updated.fullName,
+        email: updated.email,
+        phone: updated.phone,
+        address: updated.address,
+        city: updated.city,
+        logo: updated.logo
+      });
+    }
+
+    pendingLogo = '';
+    refreshIdentityUI(updated);
+    if (window.lucide) lucide.createIcons();
+
+    // Persistance serveur : PATCH /api/auth/me écrit réellement dans users.json,
+    // pour que les changements survivent à une reconnexion ou à une relance.
+    var token = null;
+    try { token = localStorage.getItem('mgt_token'); } catch (e) {}
+    if (!token) {
+      showToast('Profil enregistré localement (session absente)');
+      return;
+    }
+    fetch('/api/auth/me', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({
+        name: updated.name,
+        fullName: updated.fullName,
+        email: updated.email,
+        phone: updated.phone,
+        address: updated.address,
+        city: updated.city,
+        logo: updated.logo
+      })
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (data) {
+        return { status: r.status, data: data };
+      });
+    }).then(function (res) {
+      if (!res.data || res.data.ok !== true || !res.data.user) {
+        showToast('Enregistré localement, mais échec serveur');
+        return;
+      }
+      // Le serveur est la source de vérité : on écrase la session locale avec
+      // le profil renvoyé (normalisé côté client au prochain accès).
+      var serverUser = res.data.user;
+      try { localStorage.setItem('mgt_user', JSON.stringify(serverUser)); } catch (e) {}
+      refreshIdentityUI(serverUser);
+      showToast('Profil enregistré');
+    }).catch(function () {
+      showToast('Enregistré localement, mais échec réseau');
+    });
+  }
+
+  var saveBtn = document.getElementById('profile-save-btn');
+  if (saveBtn) saveBtn.addEventListener('click', saveProfile);
+
+  var saveAllBtn = document.getElementById('profile-save-all-btn');
+  if (saveAllBtn) saveAllBtn.addEventListener('click', saveProfile);
+
+  var avatarLarge = document.getElementById('profile-avatar-large');
+  var editBtn = document.getElementById('profile-avatar-edit-btn');
+  var fileInput = document.getElementById('profile-avatar-input');
+
+  function openAvatarPicker() { if (fileInput) fileInput.click(); }
+  if (avatarLarge) avatarLarge.addEventListener('click', openAvatarPicker);
+  if (editBtn) editBtn.addEventListener('click', openAvatarPicker);
+
+  if (fileInput) {
+    fileInput.addEventListener('change', function () {
+      if (!fileInput.files || !fileInput.files.length) return;
+      var file = fileInput.files[0];
+      if (!file || !/^image\//.test(file.type)) {
+        showToast('Choisissez une image (PNG, JPG, WebP...)');
+        return;
+      }
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        pendingLogo = e.target.result;
+        var u = currentUser();
+        applyAvatar('profile-avatar-large', (u.fullName || u.name) || '', pendingLogo);
+        showToast('Photo prête — cliquez sur Enregistrer pour confirmer');
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+})();
+</script>
+
+<style id="mgt-client-nav">
+.mgt-nav-btn{display:none;align-items:center;justify-content:center;width:40px;height:40px;border:none;background:none;cursor:pointer;color:rgb(var(--mgt-foreground));border-radius:10px;flex-shrink:0}
+.mgt-nav-btn:active{background:rgb(var(--mgt-muted))}
+.mgt-nav-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:80}
+.mgt-nav-overlay.show{display:block}
+.mgt-nav-drawer{position:fixed;top:0;left:0;bottom:0;z-index:90;width:280px;max-width:85vw;background:rgb(var(--mgt-background));border-right:1px solid rgb(var(--mgt-border));transform:translateX(-100%);transition:transform .25s ease;display:flex;flex-direction:column;overflow-y:auto}
+.mgt-nav-drawer.open{transform:translateX(0);box-shadow:0 0 60px rgba(0,0,0,.3)}
+.mgt-nav-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid rgb(var(--mgt-border))}
+.mgt-nav-brand{display:flex;align-items:center;gap:12px}
+.mgt-nav-logo{width:40px;height:40px;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px}
+.mgt-nav-title{font-size:16px;font-weight:700;color:rgb(var(--mgt-foreground));margin:0}
+.mgt-nav-sub{font-size:12px;color:rgb(var(--mgt-muted-foreground));margin:0}
+.mgt-nav-close{border:none;background:none;cursor:pointer;color:rgb(var(--mgt-muted-foreground));font-size:18px;line-height:1;padding:6px;border-radius:8px}
+.mgt-nav-close:hover{background:rgb(var(--mgt-muted))}
+.mgt-nav-list{flex:1;padding:12px;display:flex;flex-direction:column;gap:2px}
+.mgt-nav-link{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;color:rgb(var(--mgt-foreground));text-decoration:none;font-size:14px;font-weight:500}
+.mgt-nav-link:hover{background:rgb(var(--mgt-muted))}
+.mgt-nav-link.active{background:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary-700));font-weight:600}
+.mgt-nav-link i{width:20px;height:20px;flex-shrink:0;color:rgb(var(--mgt-muted-foreground))}
+.mgt-nav-link.active i{color:rgb(var(--mgt-primary-700))}
+.mgt-nav-foot{padding:12px;border-top:1px solid rgb(var(--mgt-border))}
+.mgt-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:70;border-top:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-card));padding-bottom:env(safe-area-inset-bottom)}
+.mgt-bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 4px;font-size:11px;font-weight:500;color:rgb(var(--mgt-muted-foreground));text-decoration:none}
+.mgt-bottom-nav a.active{color:rgb(var(--mgt-primary));font-weight:600}
+.mgt-bottom-nav a i{width:22px;height:22px}
+@media(max-width:768px){
+  .mgt-nav-btn{display:flex}
+  .mgt-bottom-nav{display:flex}
+  body{padding-bottom:64px}
+  aside.fixed.inset-y-0.left-0{display:none!important}
+  div.flex-1.ml-60{margin-left:0!important}
+}
+</style>
+<script>
+(function(){
+  var DRAWER=[
+    ['client-dashboard.html','home','Accueil'],
+    ['chat.html','message-circle','Messagerie'],
+    ['chat.html#rdv','calendar-days','Mes rendez-vous','rdv'],
+    ['client-orders.html','shopping-bag','Mes commandes'],
+    ['client-favorites.html','heart','Mes favoris'],
+    ['carte.html','map','Explorer la carte'],
+    ['client-profile.html','user','Mon profil']
+  ];
+  var BOTTOM=[
+    ['client-dashboard.html','home','Accueil'],
+    ['chat.html','message-circle','Messages'],
+    ['chat.html#rdv','calendar-days','RDV','rdv'],
+    ['client-profile.html','user','Profil']
+  ];
+  var path=location.pathname.toLowerCase();
+  function isActive(h){var f=h.split('/').pop().toLowerCase();return path.indexOf(f)!==-1;}
+
+  var overlay=document.createElement('div');overlay.className='mgt-nav-overlay';
+  var drawer=document.createElement('aside');drawer.className='mgt-nav-drawer';
+  drawer.innerHTML='<div class="mgt-nav-head"><div class="mgt-nav-brand"><img src="../assets/favicon.png" alt="" style="width:40px;height:40px;border-radius:10px;object-fit:cover;"><div><p class="mgt-nav-title">Mangoo</p><p class="mgt-nav-sub">Espace client</p></div></div><button class="mgt-nav-close" id="mgt-nav-close" aria-label="Fermer">✕</button></div><nav class="mgt-nav-list"></nav><div class="mgt-nav-foot"><a href="./auth.html" id="mgt-nav-logout" class="mgt-nav-link"><i data-lucide="log-out"></i><span>Déconnexion</span></a></div>';
+  var list=drawer.querySelector('.mgt-nav-list');
+  DRAWER.forEach(function(d){
+    var a=document.createElement('a');a.href='./'+d[0];
+    a.className='mgt-nav-link'+(d[3]!=='rdv'&&isActive(d[0])?' active':'');
+    a.innerHTML='<i data-lucide="'+d[1]+'"></i><span>'+d[2]+'</span>';list.appendChild(a);
+  });
+  var bottom=document.createElement('nav');bottom.className='mgt-bottom-nav';
+  BOTTOM.forEach(function(d){
+    var a=document.createElement('a');a.href='./'+d[0];
+    a.className=(d[3]!=='rdv'&&isActive(d[0])?'active':'');
+    a.innerHTML='<i data-lucide="'+d[1]+'"></i><span>'+d[2]+'</span>';bottom.appendChild(a);
+  });
+  document.body.appendChild(overlay);document.body.appendChild(drawer);document.body.appendChild(bottom);
+
+  function open(){drawer.classList.add('open');overlay.classList.add('show');}
+  function close(){drawer.classList.remove('open');overlay.classList.remove('show');}
+  overlay.addEventListener('click',close);
+  drawer.querySelector('#mgt-nav-close').addEventListener('click',close);
+  list.querySelectorAll('a').forEach(function(a){a.addEventListener('click',close);});
+  drawer.querySelector('.mgt-nav-foot a').addEventListener('click',close);
+
+  var topbar=document.querySelector('.client-header')||document.querySelector('header.topbar')||document.querySelector('header.sticky')||document.querySelector('header');
+  if(topbar&&!topbar.querySelector('.mgt-nav-btn')){
+    var btn=document.createElement('button');btn.className='mgt-nav-btn';
+    btn.setAttribute('aria-label','Ouvrir le menu');btn.innerHTML='<i data-lucide="menu"></i>';
+    btn.addEventListener('click',open);topbar.insertBefore(btn,topbar.firstChild);
+  }
+  if(window.lucide)lucide.createIcons();
+})();
+</script>
+
+<script>
+(function () {
+  'use strict';
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+
+  function showToast(message) {
+    var existing = document.getElementById('mgt-toast');
+    if (existing) existing.remove();
+    var toast = document.createElement('div');
+    toast.id = 'mgt-toast';
+    toast.textContent = message;
+    toast.setAttribute('style', 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));padding:12px 20px;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);font-size:14px;font-weight:500;box-shadow:var(--mgt-shadow-md);z-index:9999;opacity:0;transition:opacity .25s ease;');
+    document.body.appendChild(toast);
+    requestAnimationFrame(function () { toast.style.opacity = '1'; });
+    setTimeout(function () {
+      toast.style.opacity = '0';
+      setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+    }, 2400);
+  }
+
+  function getToken() {
+    try { return localStorage.getItem('mgt_token'); } catch (e) { return null; }
+  }
+
+  function authFetch(path, payload) {
+    var t = getToken();
+    var headers = { 'Content-Type': 'application/json' };
+    if (t) headers['Authorization'] = 'Bearer ' + t;
+    return fetch(path, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(payload || {})
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) {
+        return { status: r.status, data: d };
+      });
+    });
+  }
+
+  function setMessage(id, text, isError) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text;
+    el.style.display = text ? 'block' : 'none';
+    el.style.color = isError ? 'rgb(var(--mgt-error))' : 'rgb(var(--mgt-primary))';
+  }
+
+  function togglePanel(btnId, panelId) {
+    var btn = document.getElementById(btnId);
+    var panel = document.getElementById(panelId);
+    if (!btn || !panel) return;
+    var icon = btn.querySelector('.panel-chevron');
+    if (panel.classList.contains('hidden')) {
+      panel.classList.remove('hidden');
+      if (icon) icon.setAttribute('data-lucide', 'chevron-up');
+    } else {
+      panel.classList.add('hidden');
+      if (icon) icon.setAttribute('data-lucide', 'chevron-down');
+    }
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  var twoFactorEnabled = false;
+  var userEmail = '';
+
+  function loadSecurityState() {
+    var t = getToken();
+    if (!t) return;
+    fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + t } })
+      .then(function (r) { return r.json().catch(function () { return {}; }); })
+      .then(function (data) {
+        var u = (data && data.user) || {};
+        twoFactorEnabled = !!u.twoFactorEnabled;
+        userEmail = u.email || '';
+        updateTwoFactorStatus();
+      })
+      .catch(function () {});
+  }
+
+  function updateTwoFactorStatus() {
+    var badge = document.getElementById('security-2fa-status');
+    if (badge) {
+      badge.textContent = twoFactorEnabled ? 'Activee' : 'Desactivee';
+      badge.style.background = twoFactorEnabled ? 'rgb(var(--mgt-success))' : 'rgb(var(--mgt-border))';
+      badge.style.color = twoFactorEnabled ? '#fff' : 'rgb(var(--mgt-muted-foreground))';
+    }
+    renderTwoFactorPanel();
+  }
+
+  function renderTwoFactorPanel() {
+    var container = document.getElementById('security-2fa-actions');
+    var desc = document.getElementById('security-2fa-description');
+    if (!container) return;
+    if (desc) {
+      desc.textContent = twoFactorEnabled
+        ? 'La double authentification est active. Un code a 6 chiffres vous sera demande a chaque connexion.'
+        : 'Recevez un code a 6 chiffres par email pour renforcer la securite de votre compte.';
+    }
+    setMessage('security-2fa-message', '', false);
+
+    if (twoFactorEnabled) {
+      container.innerHTML = '<button id="security-2fa-disable-start" type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold" style="color:rgb(var(--mgt-error));background-color:rgba(239,68,68,0.10);border:1px solid rgba(239,68,68,0.30);"><i data-lucide="shield-off" class="w-4 h-4"></i> Desactiver</button>';
+      if (window.lucide) window.lucide.createIcons();
+      document.getElementById('security-2fa-disable-start').addEventListener('click', renderDisablePinForm);
+    } else {
+      container.innerHTML = '<button id="security-2fa-enable-start" type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold" style="color:rgb(var(--mgt-primary-foreground));background-color:rgb(var(--mgt-accent));"><i data-lucide="mail" class="w-4 h-4"></i> Envoyer le code par email</button>';
+      if (window.lucide) window.lucide.createIcons();
+      document.getElementById('security-2fa-enable-start').addEventListener('click', requestTwoFactorCode);
+    }
+  }
+
+  function requestTwoFactorCode() {
+    setMessage('security-2fa-message', '', false);
+    authFetch('/api/auth/2fa/request-code', {}).then(function (res) {
+      var d = res.data;
+      if (d && d.ok) {
+        var container = document.getElementById('security-2fa-actions');
+        container.innerHTML =
+          '<div class="space-y-3">' +
+            '<p class="caption" style="color:rgb(var(--mgt-foreground));">Un code a ete envoye a <strong>' + esc(userEmail || 'votre email') + '</strong>.</p>' +
+            '<p class="caption" style="color:rgb(var(--mgt-accent));font-weight:600;">Code (demo) : ' + esc(d.demoCode) + '</p>' +
+            '<input id="security-2fa-code" type="text" inputmode="numeric" maxlength="6" placeholder="000000" style="width:100%;max-width:180px;padding:10px 12px;border-radius:var(--mgt-radius-md);border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:18px;letter-spacing:0.3em;font-weight:700;">' +
+            '<div class="flex gap-2">' +
+              '<button id="security-2fa-enable-confirm" type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold" style="color:rgb(var(--mgt-primary-foreground));background-color:rgb(var(--mgt-primary));"><i data-lucide="check" class="w-4 h-4"></i> Activer</button>' +
+              '<button id="security-2fa-enable-cancel" type="button" class="px-4 py-2 rounded-lg text-sm font-medium" style="color:rgb(var(--mgt-foreground));background-color:rgb(var(--mgt-background));border:1px solid rgb(var(--mgt-border));">Annuler</button>' +
+            '</div>' +
+          '</div>';
+        if (window.lucide) window.lucide.createIcons();
+        document.getElementById('security-2fa-enable-confirm').addEventListener('click', enableTwoFactor);
+        document.getElementById('security-2fa-enable-cancel').addEventListener('click', renderTwoFactorPanel);
+      } else {
+        setMessage('security-2fa-message', (d && d.error) || 'Impossible d\'envoyer le code.', true);
+      }
+    }).catch(function () { setMessage('security-2fa-message', 'Erreur reseau.', true); });
+  }
+
+  function enableTwoFactor() {
+    var code = document.getElementById('security-2fa-code');
+    var val = (code ? code.value : '').trim();
+    if (!/^\d{6}$/.test(val)) { setMessage('security-2fa-message', 'Entrez le code a 6 chiffres.', true); return; }
+    authFetch('/api/auth/2fa/enable', { code: val }).then(function (res) {
+      var d = res.data;
+      if (d && d.ok) {
+        twoFactorEnabled = true;
+        updateTwoFactorStatus();
+        showToast('Authentification a deux facteurs activee');
+      } else {
+        setMessage('security-2fa-message', (d && d.error) || 'Echec de l\'activation.', true);
+      }
+    }).catch(function () { setMessage('security-2fa-message', 'Erreur reseau.', true); });
+  }
+
+  function renderDisablePinForm() {
+    var container = document.getElementById('security-2fa-actions');
+    container.innerHTML =
+      '<div class="space-y-3">' +
+        '<p class="caption" style="color:rgb(var(--mgt-foreground));">Confirmez votre PIN actuel pour desactiver la double authentification.</p>' +
+        '<input id="security-2fa-disable-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" style="width:100%;max-width:160px;padding:10px 12px;border-radius:var(--mgt-radius-md);border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:18px;letter-spacing:0.3em;font-weight:700;">' +
+        '<div class="flex gap-2">' +
+          '<button id="security-2fa-disable-confirm" type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold" style="color:#fff;background-color:rgb(var(--mgt-error));"><i data-lucide="shield-off" class="w-4 h-4"></i> Desactiver</button>' +
+          '<button id="security-2fa-disable-cancel" type="button" class="px-4 py-2 rounded-lg text-sm font-medium" style="color:rgb(var(--mgt-foreground));background-color:rgb(var(--mgt-background));border:1px solid rgb(var(--mgt-border));">Annuler</button>' +
+        '</div>' +
+      '</div>';
+    if (window.lucide) window.lucide.createIcons();
+    document.getElementById('security-2fa-disable-confirm').addEventListener('click', disableTwoFactor);
+    document.getElementById('security-2fa-disable-cancel').addEventListener('click', renderTwoFactorPanel);
+  }
+
+  function disableTwoFactor() {
+    var pin = document.getElementById('security-2fa-disable-pin');
+    var val = (pin ? pin.value : '').trim();
+    if (!/^\d{4}$/.test(val)) { setMessage('security-2fa-message', 'Entrez votre PIN a 4 chiffres.', true); return; }
+    authFetch('/api/auth/2fa/disable', { currentPin: val }).then(function (res) {
+      var d = res.data;
+      if (d && d.ok) {
+        twoFactorEnabled = false;
+        updateTwoFactorStatus();
+        showToast('Authentification a deux facteurs desactivee');
+      } else {
+        setMessage('security-2fa-message', (d && d.error) || 'Echec de la desactivation.', true);
+      }
+    }).catch(function () { setMessage('security-2fa-message', 'Erreur reseau.', true); });
+  }
+
+  function performLogout() {
+    var t = getToken();
+    var done = function () {
+      try {
+        localStorage.removeItem('mgt_token');
+        localStorage.removeItem('mgt_user');
+        localStorage.removeItem('mgt_vendor_identity_v1');
+      } catch (e) {}
+      window.location.href = './auth.html';
+    };
+    if (!t) { done(); return; }
+    authFetch('/api/auth/logout', {}).then(done).catch(done);
+  }
+
+  var pinToggle = document.getElementById('security-pin-toggle');
+  var twoFaToggle = document.getElementById('security-2fa-toggle');
+  if (pinToggle) pinToggle.addEventListener('click', function () { togglePanel('security-pin-toggle', 'security-pin-panel'); });
+  if (twoFaToggle) twoFaToggle.addEventListener('click', function () { togglePanel('security-2fa-toggle', 'security-2fa-panel'); });
+
+  var pinSubmit = document.getElementById('security-pin-submit');
+  if (pinSubmit) pinSubmit.addEventListener('click', function () {
+    var cur = document.getElementById('security-current-pin').value.trim();
+    var nu = document.getElementById('security-new-pin').value.trim();
+    var cf = document.getElementById('security-confirm-pin').value.trim();
+    if (!/^\d{4}$/.test(cur)) { setMessage('security-pin-message', 'Entrez votre PIN actuel (4 chiffres).', true); return; }
+    if (!/^\d{4}$/.test(nu)) { setMessage('security-pin-message', 'Le nouveau PIN doit contenir 4 chiffres.', true); return; }
+    if (nu !== cf) { setMessage('security-pin-message', 'Les nouveaux PIN ne correspondent pas.', true); return; }
+    setMessage('security-pin-message', '', false);
+    authFetch('/api/auth/change-pin', { currentPin: cur, newPin: nu }).then(function (res) {
+      var d = res.data;
+      if (d && d.ok) {
+        document.getElementById('security-current-pin').value = '';
+        document.getElementById('security-new-pin').value = '';
+        document.getElementById('security-confirm-pin').value = '';
+        showToast('PIN mis a jour');
+      } else {
+        setMessage('security-pin-message', (d && d.error) || 'Echec de la mise a jour.', true);
+      }
+    }).catch(function () { setMessage('security-pin-message', 'Erreur reseau.', true); });
+  });
+
+  var logoutBtn = document.getElementById('security-logout-btn');
+  if (logoutBtn) logoutBtn.addEventListener('click', performLogout);
+  var sidebarLogout = document.getElementById('sidebar-logout-link');
+  if (sidebarLogout) sidebarLogout.addEventListener('click', function (e) { e.preventDefault(); performLogout(); });
+  var navLogout = document.getElementById('mgt-nav-logout');
+  if (navLogout) navLogout.addEventListener('click', function (e) { e.preventDefault(); performLogout(); });
+
+  loadSecurityState();
+})();
+</script>
+
+<script src="../assets/mangoo-client-data.js"></script>
+<script>
+(function () {
+  'use strict';
+  var MC = window.MangooClient;
+  if (!MC) return;
+
+  function setText(id, txt) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = txt;
+  }
+  function initialsOf(name) {
+    var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return '--';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  function cityLabel(city) {
+    var c = String(city || '').trim();
+    if (!c || c.toLowerCase() === 'other' || c.toLowerCase() === 'autre') return '';
+    return c.charAt(0).toUpperCase() + c.slice(1);
+  }
+
+  // Identité réelle du client connecté (session `mgt_user`), jamais le seed.
+  var u = MC.sessionUser() || MC.getUser();
+  if (!u) return;
+
+  var name = (u.fullName || u.name || '').trim();
+  var parts = name.split(/\s+/).filter(Boolean);
+  var firstName = parts[0] || '';
+  var lastName = parts.slice(1).join(' ') || '';
+  var initials = initialsOf(name);
+
+  var logo = u.logo || '';
+  applyAvatar('sidebar-user-avatar', name, logo);
+  setText('sidebar-user-name', name || 'Client');
+  applyAvatar('topbar-avatar', name, logo);
+  setText('topbar-name', name || 'Client');
+  applyAvatar('profile-avatar-large', name, logo);
+  setText('profile-name', name || 'Client');
+
+  var email = u.email || '';
+  var phone = u.phone || '';
+  var city = cityLabel(u.city);
+
+  setText('profile-email-text', email);
+  setText('profile-phone-text', phone);
+  setText('profile-city-text', city);
+
+  var emailRow = document.getElementById('profile-email-row');
+  var phoneRow = document.getElementById('profile-phone-row');
+  var cityRow = document.getElementById('profile-city-row');
+  if (emailRow) emailRow.style.display = email ? '' : 'none';
+  if (phoneRow) phoneRow.style.display = phone ? '' : 'none';
+  if (cityRow) cityRow.style.display = city ? '' : 'none';
+
+  var nomEl = document.getElementById('profile-nom');
+  var prenomEl = document.getElementById('profile-prenom');
+  var emailInput = document.getElementById('profile-email-input');
+  var phoneInput = document.getElementById('profile-phone-input');
+  if (nomEl) nomEl.value = lastName;
+  if (prenomEl) prenomEl.value = firstName;
+  if (emailInput) emailInput.value = email;
+  if (phoneInput) phoneInput.value = phone;
+
+  var adresseInput = document.getElementById('profile-adresse-input');
+  if (adresseInput) adresseInput.value = u.address || '';
+
+  var villeEl = document.getElementById('profile-ville-select');
+  if (villeEl) {
+    var wanted = String(u.city || '').toLowerCase();
+    var matched = false;
+    for (var i = 0; i < villeEl.options.length; i++) {
+      if (String(villeEl.options[i].value).toLowerCase() === wanted ||
+          villeEl.options[i].textContent.trim().toLowerCase() === wanted) {
+        villeEl.value = villeEl.options[i].value;
+        matched = true;
+        break;
+      }
+    }
+    if (!matched && wanted && wanted !== 'other' && wanted !== 'autre') {
+      var opt = document.createElement('option');
+      opt.value = city;
+      opt.textContent = city;
+      villeEl.appendChild(opt);
+      villeEl.value = city;
+    }
+  }
+})();
+</script>
+<script>
+(function () {
+  'use strict';
+  var MC = window.MangooClient;
+  if (!MC) return;
+
+  var listEl = document.getElementById('addr-list');
+  var formEl = document.getElementById('addr-form');
+  var addBtn = document.getElementById('addr-add-btn');
+  var cancelBtn = document.getElementById('addr-cancel-btn');
+  var saveBtn = document.getElementById('addr-save-btn');
+  var idEl = document.getElementById('addr-form-id');
+  var labelEl = document.getElementById('addr-label');
+  var nameEl = document.getElementById('addr-name');
+  var phoneEl = document.getElementById('addr-phone');
+  var cityEl = document.getElementById('addr-city');
+  var line1El = document.getElementById('addr-line1');
+
+  var editingId = null;
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+
+  function render() {
+    var list = MC.getAddresses();
+    if (!listEl) return;
+    if (!list.length) {
+      listEl.innerHTML = '<p class="text-sm text-[rgb(var(--mgt-muted-foreground))] py-4 text-center">Aucune adresse. Ajoutez-en une pour livrer plus vite.</p>';
+      return;
+    }
+    listEl.innerHTML = list.map(function (a) {
+      var isDef = a.isDefault;
+      var border = isDef ? 'border-[rgb(var(--mgt-primary))] bg-[rgb(var(--mgt-primary-50))]' : 'border-[rgb(var(--mgt-border))] bg-[rgb(var(--mgt-muted))]';
+      return '<div class="flex items-start gap-3 p-4 rounded-lg border ' + border + ' transition-all">' +
+        '<div class="flex-1 min-w-0">' +
+          '<div class="flex items-center gap-2 flex-wrap">' +
+            '<span class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">' + esc(a.label) + '</span>' +
+            (isDef ? '<span class="text-xs px-2 py-0.5 rounded-full" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground));">Par defaut</span>' : '') +
+          '</div>' +
+          '<p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1">' + esc(a.line1) + (a.city ? ', ' + esc(a.city) : '') + '</p>' +
+          '<p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">' + esc(a.phone) + '</p>' +
+        '</div>' +
+        '<div class="flex items-center gap-1 shrink-0">' +
+          (isDef ? '' : '<button data-action="default" data-id="' + esc(a.id) + '" title="Definir par defaut" class="p-1.5 rounded-lg text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-primary))] hover:bg-white transition-colors"><i data-lucide="star" class="w-4 h-4"></i></button>') +
+          '<button data-action="edit" data-id="' + esc(a.id) + '" title="Modifier" class="p-1.5 rounded-lg text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))] hover:bg-white transition-colors"><i data-lucide="pencil" class="w-4 h-4"></i></button>' +
+          '<button data-action="delete" data-id="' + esc(a.id) + '" title="Supprimer" class="p-1.5 rounded-lg text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-error))] hover:bg-white transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function openForm(addr) {
+    editingId = addr ? addr.id : null;
+    idEl.value = editingId || '';
+    labelEl.value = addr ? addr.label : '';
+    var me = (MC.sessionUser && MC.sessionUser()) || (MC.getUser && MC.getUser()) || {};
+    var city = String(me.city || '');
+    if (city.toLowerCase() === 'other' || city.toLowerCase() === 'autre') city = '';
+    nameEl.value = addr ? addr.fullName : (me.fullName || me.name || '');
+    phoneEl.value = addr ? addr.phone : (me.phone || '');
+    cityEl.value = addr ? addr.city : city;
+    line1El.value = addr ? addr.line1 : '';
+    formEl.classList.remove('hidden');
+    labelEl.focus();
+  }
+  function closeForm() {
+    editingId = null;
+    formEl.classList.add('hidden');
+  }
+  function saveForm() {
+    var data = {
+      label: labelEl.value.trim() || 'Adresse',
+      fullName: nameEl.value.trim(),
+      phone: phoneEl.value.trim(),
+      city: cityEl.value.trim(),
+      line1: line1El.value.trim()
+    };
+    if (!data.line1) { line1El.focus(); return; }
+    if (editingId) MC.updateAddress(editingId, data);
+    else MC.addAddress(data);
+    closeForm();
+    render();
+  }
+
+  if (addBtn) addBtn.addEventListener('click', function () { openForm(null); });
+  if (cancelBtn) cancelBtn.addEventListener('click', closeForm);
+  if (saveBtn) saveBtn.addEventListener('click', saveForm);
+
+  if (listEl) listEl.addEventListener('click', function (e) {
+    var btn = e.target.closest ? e.target.closest('[data-action]') : null;
+    if (!btn) return;
+    var action = btn.getAttribute('data-action');
+    var id = btn.getAttribute('data-id');
+    if (action === 'edit') {
+      var a = MC.getAddresses().find(function (x) { return x.id === id; });
+      if (a) openForm(a);
+    } else if (action === 'delete') {
+      MC.removeAddress(id);
+      render();
+    } else if (action === 'default') {
+      MC.setDefault(id);
+      render();
+    }
+  });
+
+  render();
+})();
+</script>
+
+<script>
+(function(){
+  function __mgtSidebarScrollFix(){
+    var active = document.querySelector('nav a[class*="bg-white/15"]');
+    if (!active) return;
+    var nav = active.closest('nav');
+    if (!nav) return;
+    var navRect = nav.getBoundingClientRect();
+    var linkRect = active.getBoundingClientRect();
+    var target = nav.scrollTop + (linkRect.top - navRect.top) - (navRect.height - linkRect.height) / 2;
+    nav.scrollTop = Math.max(0, target);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', __mgtSidebarScrollFix);
+  } else {
+    __mgtSidebarScrollFix();
+  }
+})();
+</script>
+<script src="../assets/mangoo-client-shell.js"></script>
+</body>
+</html>

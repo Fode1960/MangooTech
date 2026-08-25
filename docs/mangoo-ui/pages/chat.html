@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Connect+</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  /* --- Radius Scale (root-level for preflight) --- */
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  /* --- Brand Primary: Dark Green --- */
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  /* --- Orange Accent (CTAs, highlights) --- */
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  /* --- Neutral Surface & Text Scale --- */
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  /* --- State Colors --- */
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  /* --- Shadows --- */
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  /* --- Typography --- */
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* --- Semantic Tailwind Aliases --- */
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+/* --- Typography Classes --- */
+.h-display {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.h1 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(28px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.h2 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h3 {
+  font-family: var(--mgt-font-sans);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.body-l {
+  font-family: var(--mgt-font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--mgt-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--mgt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="h-screen overflow-hidden font-sans antialiased bg-background text-foreground" style="font-family: 'Inter', system-ui, sans-serif;">
+    <div class="flex h-full">
+
+      <!-- ===== SIDEBAR LEFT (30%) ===== -->
+      <aside id="conversation-list" class="w-[30%] min-w-[320px] max-w-[420px] flex flex-col border-r border-border bg-card">
+
+        <!-- Sidebar Header -->
+        <div class="flex items-center justify-between px-5 py-4 border-b shrink-0" style="background: linear-gradient(135deg, rgb(var(--mgt-primary-800)), rgb(var(--mgt-primary-700))); border-color: rgb(var(--mgt-primary-700));">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-md flex items-center justify-center" style="background: rgba(255,255,255,.14);">
+              <i data-lucide="message-circle" class="w-5 h-5" style="color: rgb(var(--mgt-primary-50));"></i>
+            </div>
+            <h2 class="text-lg font-semibold" style="color: rgb(var(--mgt-primary-foreground));">Messages</h2>
+          </div>
+          <button id="btn-new-message" class="w-9 h-9 flex items-center justify-center rounded-full transition-colors hover:brightness-110" title="Nouveau message" style="color: rgb(var(--mgt-primary-foreground)); background: rgba(255,255,255,.12);">
+            <i data-lucide="square-pen" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="px-4 py-3 shrink-0">
+          <div class="relative">
+            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"></i>
+            <input type="text" id="conv-search" placeholder="Rechercher une conversation..." class="w-full pl-10 pr-4 py-2.5 rounded-full text-sm bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring))] focus:border-transparent transition-shadow">
+          </div>
+        </div>
+
+        <!-- Conversation List -->
+        <nav class="flex-1 overflow-y-auto no-scrollbar">
+          <div class="empty-state px-6 py-12 text-center" style="color:rgb(var(--mgt-muted-foreground));">
+            <div style="width:64px;height:64px;margin:0 auto;border-radius:50%;background:linear-gradient(135deg, rgb(var(--mgt-primary-50)), rgb(var(--mgt-primary-100)));display:flex;align-items:center;justify-content:center;box-shadow:var(--mgt-shadow-sm);">
+              <i data-lucide="messages-square" style="width:26px;height:26px;color:rgb(var(--mgt-primary-600));"></i>
+            </div>
+            <p style="margin:16px 0 4px;font-size:15px;font-weight:600;color:rgb(var(--mgt-foreground));">Aucune conversation</p>
+            <p style="margin:0;font-size:13px;line-height:1.5;">Vos échanges avec les prestataires apparaîtront ici.</p>
+          </div>
+        </nav>
+      </aside>
+
+      <!-- ===== CHAT ZONE RIGHT (70%) ===== -->
+      <div class="flex-1 flex flex-col min-w-0">
+
+        <!-- Chat Header - Contact Info -->
+        <header class="flex items-center gap-2 px-4 py-3 shrink-0" style="background: linear-gradient(135deg, rgb(var(--mgt-primary-900)) 0%, rgb(var(--mgt-primary-700)) 45%, rgb(var(--mgt-primary-600)) 100%); box-shadow: var(--mgt-shadow-sm);">
+          <button id="btn-nav-menu" class="nav-menu-btn shrink-0" title="Menu" aria-label="Ouvrir le menu" style="color: rgb(var(--mgt-primary-foreground));">
+            <i data-lucide="menu" class="w-5 h-5"></i>
+          </button>
+          <button id="btn-back-list" class="mobile-back-btn shrink-0" title="Retour aux conversations" aria-label="Retour aux conversations" style="color: rgb(var(--mgt-primary-foreground));">
+            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+          </button>
+          <div class="relative shrink-0">
+            <div id="chat-peer-avatar" class="w-11 h-11 rounded-full flex items-center justify-center text-white font-semibold text-lg relative overflow-hidden" style="background: linear-gradient(135deg, rgb(var(--mgt-accent-400)), rgb(var(--mgt-accent-600))); border: 2px solid rgb(var(--mgt-primary-foreground));">
+              <span id="chat-peer-initial">DB</span>
+              <img id="chat-peer-img" alt="" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+            </div>
+            <span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2" style="background-color: rgb(var(--mgt-success)); border-color: rgb(var(--mgt-primary-700));"></span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h3 class="font-semibold text-sm truncate" id="chat-peer-name" style="color: rgb(var(--mgt-primary-50));">DAN Boutique</h3>
+            <p class="text-xs font-medium" id="chat-peer-status" style="color: rgb(var(--mgt-primary-100));">En ligne</p>
+          </div>
+          <div class="flex items-center gap-1">
+            <button id="btn-call-audio" class="w-9 h-9 flex items-center justify-center rounded-full transition-colors" title="Appel vocal" style="color: rgb(var(--mgt-primary-foreground)); background: rgba(255,255,255,.12);">
+              <i data-lucide="phone" class="w-4 h-4"></i>
+            </button>
+            <button id="btn-call-video" class="w-9 h-9 flex items-center justify-center rounded-full transition-colors" title="Appel vidéo" style="color: rgb(var(--mgt-primary-foreground)); background: rgba(255,255,255,.12);">
+              <i data-lucide="video" class="w-4 h-4"></i>
+            </button>
+            <button id="btn-my-agenda" class="w-9 h-9 flex items-center justify-center rounded-full transition-colors" title="Mes rendez-vous" style="color: rgb(var(--mgt-primary-foreground)); background: rgba(255,255,255,.12);">
+              <i data-lucide="calendar-days" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </header>
+
+        <!-- Chat Messages Zone -->
+        <div id="chat-messages" class="flex-1 overflow-y-auto px-4 py-4 space-y-1" style="background-color: rgb(var(--mgt-muted)); background-image: radial-gradient(circle at 1px 1px, rgb(var(--mgt-border)) 1px, transparent 1px); background-size: 22px 22px;">
+          <div id="chat-empty" class="empty-state flex flex-col items-center justify-center py-16 text-center" style="color:rgb(var(--mgt-muted-foreground));">
+            <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg, rgb(var(--mgt-primary-500)), rgb(var(--mgt-primary-700)));display:flex;align-items:center;justify-content:center;box-shadow:var(--mgt-shadow-md);">
+              <i data-lucide="message-circle" style="width:30px;height:30px;color:#fff;"></i>
+            </div>
+            <p style="margin:18px 0 4px;font-size:16px;font-weight:600;color:rgb(var(--mgt-foreground));">Démarrez la conversation</p>
+            <p style="margin:0;font-size:13px;line-height:1.5;max-width:280px;">Écrivez à <span id="chat-empty-peer" style="font-weight:600;color:rgb(var(--mgt-primary));">DAN Boutique</span> pour poser vos questions ou prendre rendez-vous.</p>
+          </div>
+        </div>
+
+        <!-- Indicateur « en train d'écrire » -->
+        <div id="typing-indicator" class="typing-indicator shrink-0" style="display:none;padding:4px 18px;background:rgb(var(--mgt-muted));">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span id="typing-name" style="font-size:12px;font-weight:500;color:rgb(var(--mgt-muted-foreground));">DAN Boutique</span>
+            <span class="typing-dots" style="display:inline-flex;gap:3px;">
+              <span></span><span></span><span></span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Chat Input Bar -->
+        <div id="chat-input" class="border-t border-border bg-card px-4 py-3 shrink-0">
+          <div class="flex items-end gap-2">
+            <!-- Attachment Button -->
+            <button id="btn-attach" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shrink-0" title="Joindre un fichier">
+              <i data-lucide="paperclip" class="w-5 h-5"></i>
+            </button>
+            <input type="file" id="chat-file-input" style="display:none;" />
+
+            <!-- Text Input -->
+            <div class="flex-1 relative">
+              <textarea id="chat-input-text" rows="1" placeholder="Écrivez votre message..." class="w-full resize-none rounded-2xl border border-border bg-muted px-4 py-2.5 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring))] focus:border-transparent transition-shadow" style="min-height: 42px; max-height: 120px;" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';"></textarea>
+            </div>
+
+            <!-- Send Button -->
+            <button id="btn-send" class="w-10 h-10 flex items-center justify-center rounded-full text-white shrink-0 transition-all hover:opacity-90 active:scale-95" style="background-color: rgb(var(--mgt-accent));" title="Envoyer">
+              <i data-lucide="send" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Bottom navigation (client) -->
+        <nav id="client-bottom-nav" class="client-bottom-nav shrink-0">
+          <a href="./client-dashboard.html" class="client-nav-item">
+            <i data-lucide="home" class="w-5 h-5"></i>
+            <span>Accueil</span>
+          </a>
+          <a href="./chat.html" class="client-nav-item active">
+            <i data-lucide="message-circle" class="w-5 h-5"></i>
+            <span>Messages</span>
+          </a>
+          <a href="#" class="client-nav-item" id="bottom-nav-agenda">
+            <i data-lucide="calendar-days" class="w-5 h-5"></i>
+            <span>RDV</span>
+          </a>
+          <a href="./client-profile.html" class="client-nav-item">
+            <i data-lucide="user" class="w-5 h-5"></i>
+            <span>Profil</span>
+          </a>
+        </nav>
+
+      </div>
+    </div>
+
+    <style>
+      @keyframes bounce {
+        0%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-6px); }
+      }
+      .animate-bounce {
+        animation: bounce 1.2s infinite;
+      }
+      .typing-dots span {
+        width: 5px; height: 5px; border-radius: 50%;
+        background: rgb(var(--mgt-muted-foreground));
+        display: inline-block;
+        animation: typingBlink 1.2s infinite ease-in-out;
+      }
+      .typing-dots span:nth-child(2) { animation-delay: .15s; }
+      .typing-dots span:nth-child(3) { animation-delay: .3s; }
+      @keyframes typingBlink {
+        0%, 60%, 100% { opacity: .25; transform: translateY(0); }
+        30% { opacity: 1; transform: translateY(-3px); }
+      }
+      #chat-messages::-webkit-scrollbar,
+      #conversation-list nav::-webkit-scrollbar {
+        width: 4px;
+      }
+      #chat-messages::-webkit-scrollbar-track,
+      #conversation-list nav::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      #chat-messages::-webkit-scrollbar-thumb,
+      #conversation-list nav::-webkit-scrollbar-thumb {
+        background-color: rgb(var(--mgt-border));
+        border-radius: 4px;
+      }
+    </style>
+
+    <script>lucide.createIcons();</script>
+<!-- Mobile responsive navigation & layout -->
+<style id="mgt-mobile-responsive">
+@media (max-width: 768px) {
+  .dashboard-layout { flex-direction: column !important; }
+  .dashboard-sidebar { position: fixed !important; top: 0; left: 0; z-index: 1000; width: 260px !important; height: 100vh !important; transform: translateX(-100%); transition: transform .3s ease; overflow-y: auto; }
+  .dashboard-sidebar.open { transform: translateX(0); }
+  .dashboard-sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999; }
+  .dashboard-sidebar-overlay.show { display: block; }
+  .dashboard-main { margin-left: 0 !important; width: 100% !important; }
+  .dashboard-topbar { position: sticky; top: 0; z-index: 100; }
+  .mobile-menu-btn { display: flex !important; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: pointer; color: inherit; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .services-grid, .favorites-grid, .features-grid, .booster-grid { grid-template-columns: 1fr !important; }
+  .data-table { display: block !important; }
+  .data-table thead { display: none !important; }
+  .data-table tbody, .data-table tr { display: block !important; }
+  .data-table td { display: flex !important; justify-content: space-between; align-items: center; padding: 8px 12px !important; border-bottom: 1px solid rgb(var(--mgt-border)) !important; }
+  .data-table td::before { content: attr(data-label); font-weight: 600; font-size: 12px; color: rgb(var(--mgt-muted-foreground)); text-transform: uppercase; margin-right: 8px; flex-shrink: 0; }
+  .topbar-search { display: none !important; }
+  .topbar-title { font-size: 18px !important; }
+  .hero-section { padding: 40px 16px !important; text-align: center; }
+  .hero-section h1, .hero-section .h-display { font-size: 28px !important; }
+  .hero-section h1 + p { font-size: 15px !important; }
+  .hero-ctas { flex-direction: column !important; align-items: center !important; gap: 12px !important; }
+  .auth-split { flex-direction: column !important; }
+  .auth-branding { min-height: 200px !important; padding: 32px 16px !important; }
+  .auth-form-area { padding: 24px 16px !important; }
+  .checkout-layout { flex-direction: column !important; }
+  .checkout-main { width: 100% !important; }
+  .checkout-sidebar { width: 100% !important; }
+  .chat-layout { flex-direction: column !important; height: auto !important; }
+  .chat-sidebar { width: 100% !important; max-height: 200px !important; }
+  .chat-main { width: 100% !important; }
+  .filter-pills { flex-wrap: nowrap !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+  .drawer-panel { width: 100% !important; max-width: 100% !important; }
+  .content-section { padding-left: 16px !important; padding-right: 16px !important; }
+  .section-padding { padding: 32px 16px !important; }
+  .form-grid { grid-template-columns: 1fr !important; }
+  .form-actions { flex-direction: column !important; }
+  .desktop-only { display: none !important; }
+  .map-container { height: 300px !important; }
+}
+@media (min-width: 769px) {
+  .mobile-menu-btn { display: none !important; }
+  .mobile-only { display: none !important; }
+}
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr !important; }
+  .stats-row { grid-template-columns: 1fr !important; }
+}
+</style>
+<script>
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    var sidebar = document.querySelector('.dashboard-sidebar');
+    if (!sidebar) return;
+    var overlay = document.createElement('div');
+    overlay.className = 'dashboard-sidebar-overlay';
+    overlay.addEventListener('click', function(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); });
+    document.body.appendChild(overlay);
+    var topbar = document.querySelector('.dashboard-topbar');
+    if (topbar) {
+      var btn = document.createElement('button');
+      btn.className = 'mobile-menu-btn';
+      btn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+      btn.addEventListener('click', function(){ sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
+      topbar.insertBefore(btn, topbar.firstChild);
+    }
+    sidebar.querySelectorAll('a').forEach(function(link){
+      link.addEventListener('click', function(){
+        if (window.innerWidth <= 768) { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+      });
+    });
+  });
+})();
+</script>
+
+<style id="mgt-chat-mobile">
+  .mobile-back-btn { display: none; }
+  .chat-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 55; }
+  .chat-overlay.show { display: block; }
+  @media (max-width: 768px) {
+    body { height: 100dvh !important; }
+    .mobile-back-btn { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: pointer; color: var(--foreground); border-radius: 10px; flex-shrink: 0; }
+    .mobile-back-btn:active { background: rgb(var(--mgt-muted)); }
+    .mobile-hide { display: none !important; }
+    #conversation-list {
+      position: fixed !important;
+      top: 0; left: 0; bottom: 0;
+      z-index: 60;
+      width: 82% !important;
+      min-width: 0 !important;
+      max-width: 320px !important;
+      transform: translateX(-100%);
+      transition: transform .25s ease;
+      border-right: none !important;
+      box-shadow: none;
+      background: rgb(var(--mgt-card)) !important;
+    }
+    #conversation-list.open { transform: translateX(0); box-shadow: 0 0 60px rgba(0,0,0,.35); }
+    #conversation-list .bg-muted,
+    #conversation-list .bg-card,
+    #conversation-list .bg-background { background: rgb(var(--mgt-card)) !important; }
+    #chat-messages { padding-left: 12px !important; padding-right: 12px !important; }
+    #chat-input { padding-left: 10px !important; padding-right: 10px !important; }
+  }
+</style>
+<script>
+(function () {
+  var backBtn = document.getElementById('btn-back-list');
+  var list = document.getElementById('conversation-list');
+  if (!backBtn || !list) return;
+  var overlay = document.createElement('div');
+  overlay.className = 'chat-overlay';
+  document.body.appendChild(overlay);
+  function close() { list.classList.remove('open'); overlay.classList.remove('show'); }
+  backBtn.addEventListener('click', function () { list.classList.add('open'); overlay.classList.add('show'); });
+  overlay.addEventListener('click', close);
+  list.querySelectorAll('nav > div').forEach(function (item) {
+    item.addEventListener('click', close);
+  });
+})();
+</script>
+
+<!-- ===== Modal "Mes rendez-vous" (côté client) ===== -->
+<div id="client-agenda" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(15,23,42,.5);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:rgb(var(--mgt-background));border:1px solid rgb(var(--mgt-border));border-radius:20px;width:100%;max-width:480px;max-height:85vh;overflow:auto;box-shadow:var(--mgt-shadow-lg);font-family:var(--mgt-font-sans);">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgb(var(--mgt-border));">
+      <h3 style="font-size:16px;font-weight:600;color:rgb(var(--mgt-foreground));margin:0;">Mes rendez-vous</h3>
+      <button id="agenda-close" title="Fermer" style="border:none;background:none;cursor:pointer;color:rgb(var(--mgt-muted-foreground));padding:6px;border-radius:8px;font-size:16px;line-height:1;">✕</button>
+    </div>
+    <div style="padding:16px 20px;border-bottom:1px solid rgb(var(--mgt-border));">
+      <p style="font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));margin:0 0 10px;">Nouvelle demande de rendez-vous</p>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <input id="ag-service" type="text" placeholder="Prestation (ex : Coiffure)" style="width:100%;padding:10px 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;font-size:14px;color:rgb(var(--mgt-foreground));background:rgb(var(--mgt-background));">
+        <div style="display:flex;gap:8px;">
+          <input id="ag-day" type="text" placeholder="Jour (ex : Demain)" style="flex:1;min-width:0;padding:10px 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;font-size:14px;color:rgb(var(--mgt-foreground));background:rgb(var(--mgt-background));">
+          <input id="ag-time" type="text" placeholder="Heure (ex : 10:00)" style="flex:1;min-width:0;padding:10px 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;font-size:14px;color:rgb(var(--mgt-foreground));background:rgb(var(--mgt-background));">
+        </div>
+        <button id="ag-submit" style="width:100%;padding:11px;border:none;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Envoyer la demande</button>
+      </div>
+    </div>
+    <div id="ag-items" style="padding:16px 20px;display:flex;flex-direction:column;gap:10px;"></div>
+  </div>
+</div>
+
+<script src="../assets/mangoo-connect-plus.js"></script>
+<script>
+(function () {
+  var RT = window.MangooConnect;
+  var STORE_KEY = 'mgt_client_chat_v1';
+
+  function initialsOf(n){ var p = String(n||'').trim().split(/\s+/).filter(Boolean); if(!p.length) return 'M'; if(p.length===1) return p[0].slice(0,2).toUpperCase(); return (p[0][0]+p[p.length-1][0]).toUpperCase(); }
+  function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function fmtSize(bytes){ if(!bytes && bytes!==0) return ''; if(bytes<1024) return bytes+' o'; if(bytes<1048576) return (bytes/1024).toFixed(1)+' Ko'; return (bytes/1048576).toFixed(1)+' Mo'; }
+  function nowTime(){ var d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+
+  // Identité du client : session `mgt_user` (Dida), avec repli si absente.
+  function readClient(){
+    try {
+      var u = JSON.parse(localStorage.getItem('mgt_user') || 'null');
+      if (u) {
+        var id = u.id || u.vendorId || '';
+        var name = u.fullName || u.name || '';
+        if (id && name) return { id: String(id), name: String(name) };
+      }
+    } catch(e){}
+    return { id: 'cli-66b551e17c29', name: 'Dida DANSO' };
+  }
+  var CLIENT = readClient();
+  var CLIENT_INITIAL = initialsOf(CLIENT.name);
+
+  // --- État multi-conversations ---
+  var CONVERSATIONS = [];   // [{ vendorId, name, img, type, category }]
+  var ACTIVE = null;        // vendorId actif
+  var ONLINE = {};          // vendorId -> bool
+  var UNREAD = {};          // vendorId -> compteur non-lu
+  var THREADS = {};         // vendorId -> [message]
+
+  // PEER reste synchronisé sur la conversation active : les envois (message,
+  // fichier, appel, rendez-vous) continuent de cibler PEER.id.
+  var PEER = { id: '', name: '' };
+  var PEER_INITIAL = '';
+
+  function loadStore(){ try { var v = JSON.parse(localStorage.getItem(STORE_KEY)||'{}'); return (v && typeof v==='object') ? v : {}; } catch(e){ return {}; } }
+  function saveStore(){ try { localStorage.setItem(STORE_KEY, JSON.stringify(THREADS)); } catch(e){} }
+  THREADS = loadStore();
+
+  var threadEl = document.getElementById('chat-messages');
+  var input = document.getElementById('chat-input-text');
+  var sendBtn = document.getElementById('btn-send');
+  var statusEl = document.getElementById('chat-peer-status');
+  var convListNav = document.querySelector('#conversation-list nav');
+  var searchQ = '';
+
+  function convById(id){ for (var i=0;i<CONVERSATIONS.length;i++) if (CONVERSATIONS[i].vendorId===id) return CONVERSATIONS[i]; return null; }
+  function threadOf(id){ return THREADS[id] || (THREADS[id] = []); }
+  function pushMsg(id, msg){ threadOf(id).push(msg); saveStore(); }
+  function scrollBottom(){ if (threadEl) threadEl.scrollTop = threadEl.scrollHeight; }
+
+  function lastPreviewOf(id){
+    var t = threadOf(id);
+    for (var i=t.length-1;i>=0;i--){
+      var m = t[i];
+      if (m.dir === 'sys') continue;
+      if (m.kind === 'file') return '📎 ' + (m.name || 'Fichier');
+      return m.text || '';
+    }
+    return '';
+  }
+
+  // --- Rendu sidebar (liste des conversations) ---
+  function renderSidebar(){
+    if (!convListNav) return;
+    convListNav.innerHTML = '';
+    var q = searchQ.trim().toLowerCase();
+    var list = CONVERSATIONS.filter(function(c){ return !q || String(c.name||'').toLowerCase().indexOf(q) !== -1; });
+    if (!list.length){
+      convListNav.innerHTML = '<div class="px-6 py-12 text-center" style="color:rgb(var(--mgt-muted-foreground));">' + (q ? 'Aucun résultat.' : 'Aucune conversation.') + '</div>';
+      return;
+    }
+    list.forEach(function(c){
+      var online = !!ONLINE[c.vendorId];
+      var unread = UNREAD[c.vendorId] || 0;
+      var preview = lastPreviewOf(c.vendorId);
+      var active = c.vendorId === ACTIVE;
+      var item = document.createElement('div');
+      item.setAttribute('data-id', c.vendorId);
+      item.style.cssText = 'display:flex;align-items:center;gap:12px;padding:11px 16px;cursor:pointer;' + (active ? 'background:rgb(var(--mgt-primary-50));' : '');
+      item.innerHTML =
+        '<div style="position:relative;flex-shrink:0;">' +
+          '<div style="width:44px;height:44px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;' + (c.img?'':'background:linear-gradient(135deg, rgb(var(--mgt-accent-400)), rgb(var(--mgt-accent-600)));') + '">' +
+            (c.img ? '<img src="'+esc(c.img)+'" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">' : '<span style="color:#fff;font-weight:600;font-size:13px;">'+initialsOf(c.name||'')+'</span>') +
+          '</div>' +
+          (online ? '<span style="position:absolute;bottom:0;right:0;width:12px;height:12px;border-radius:50%;background:rgb(var(--mgt-success));border:2px solid rgb(var(--mgt-card));"></span>' : '') +
+        '</div>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">' +
+            '<span style="font-size:14px;font-weight:600;color:rgb(var(--mgt-foreground));overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(c.name)+'</span>' +
+            (unread ? '<span style="flex-shrink:0;min-width:20px;height:20px;border-radius:999px;background:rgb(var(--mgt-accent));color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 6px;">'+unread+'</span>' : '') +
+          '</div>' +
+          '<div style="font-size:12px;color:rgb(var(--mgt-muted-foreground));overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;">'+ (preview ? esc(preview) : 'Nouvelle conversation') +'</div>' +
+        '</div>';
+      item.addEventListener('click', function(){ selectConversation(c.vendorId); });
+      convListNav.appendChild(item);
+    });
+  }
+
+  // --- Rendu en-tête ---
+  function updateStatusEl(online){
+    if (!statusEl) return;
+    statusEl.textContent = online ? 'En ligne' : 'Hors ligne';
+    statusEl.style.color = online ? '#86efac' : 'rgb(var(--mgt-primary-200))';
+  }
+  function renderHeader(){
+    var c = convById(ACTIVE);
+    var initEl = document.getElementById('chat-peer-initial');
+    var img = document.getElementById('chat-peer-img');
+    var nameEl = document.getElementById('chat-peer-name');
+    var emptyPeer = document.getElementById('chat-empty-peer');
+    if (!c){
+      PEER.id = ''; PEER.name = ''; PEER_INITIAL = '';
+      if (nameEl) nameEl.textContent = 'Messages';
+      if (emptyPeer) emptyPeer.textContent = 'un professionnel';
+      if (img) img.style.display = 'none';
+      if (initEl) { initEl.style.display = ''; initEl.textContent = 'M'; }
+      updateStatusEl(false);
+      return;
+    }
+    PEER.id = c.vendorId;
+    PEER.name = c.name;
+    PEER_INITIAL = initialsOf(c.name);
+    if (c.img){
+      if (img) { img.src = c.img; img.style.display = 'block'; }
+      if (initEl) initEl.style.display = 'none';
+    } else {
+      if (img) img.style.display = 'none';
+      if (initEl) { initEl.style.display = ''; initEl.textContent = PEER_INITIAL; }
+    }
+    if (nameEl) nameEl.textContent = c.name;
+    if (emptyPeer) emptyPeer.textContent = c.name;
+    updateStatusEl(!!ONLINE[c.vendorId]);
+  }
+
+  // --- Rendu des messages (conversation active) ---
+  function renderThread(){
+    if (!threadEl) return;
+    threadEl.innerHTML = '';
+    var list = ACTIVE ? threadOf(ACTIVE) : [];
+    if (!ACTIVE || !list.length){
+      var c = convById(ACTIVE);
+      var empty = document.createElement('div');
+      empty.className = 'empty-state flex flex-col items-center justify-center py-16 text-center';
+      empty.style.color = 'rgb(var(--mgt-muted-foreground))';
+      empty.innerHTML =
+        '<div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg, rgb(var(--mgt-primary-500)), rgb(var(--mgt-primary-700)));display:flex;align-items:center;justify-content:center;box-shadow:var(--mgt-shadow-md);">' +
+          '<i data-lucide="message-circle" style="width:30px;height:30px;color:#fff;"></i>' +
+        '</div>' +
+        '<p style="margin:18px 0 4px;font-size:16px;font-weight:600;color:rgb(var(--mgt-foreground));">Démarrez la conversation</p>' +
+        '<p style="margin:0;font-size:13px;line-height:1.5;max-width:280px;">Écrivez à <span style="font-weight:600;color:rgb(var(--mgt-primary));">'+esc(c?c.name:'ce professionnel')+'</span> pour poser vos questions ou prendre rendez-vous.</p>';
+      threadEl.appendChild(empty);
+      if (window.lucide) window.lucide.createIcons();
+      return;
+    }
+    list.forEach(function(m){ threadEl.appendChild(renderMessage(m)); });
+    if (window.lucide) window.lucide.createIcons();
+    scrollBottom();
+  }
+
+  function renderMessage(m){
+    var el = document.createElement('div');
+    if (m.dir === 'sys'){
+      el.className = 'flex items-center justify-center py-2';
+      el.innerHTML = '<span class="text-xs text-muted-foreground bg-white/80 px-3 py-1 rounded-full shadow-sm">'+esc(m.text)+'</span>';
+      return el;
+    }
+    var outgoing = m.dir === 'out';
+    var initial = outgoing ? CLIENT_INITIAL : PEER_INITIAL;
+    var avatarBg = outgoing ? 'background:rgb(var(--mgt-accent-300));' : 'background:rgb(var(--mgt-primary));';
+    el.className = outgoing ? 'flex items-end gap-2 max-w-[75%] ml-auto flex-row-reverse' : 'flex items-end gap-2 max-w-[75%]';
+
+    var body;
+    if (m.kind === 'file'){
+      body =
+        '<div class="'+(outgoing?'bg-[rgb(var(--mgt-primary))] text-white rounded-2xl rounded-br-sm':'bg-white rounded-2xl rounded-bl-sm shadow-sm')+' px-4 py-2.5" style="display:flex;align-items:center;gap:10px;min-width:200px;max-width:280px;box-sizing:border-box;">' +
+          '<i data-lucide="paperclip" class="w-4 h-4 shrink-0"></i>' +
+          '<div style="text-align:left;min-width:0;flex:1;">' +
+            '<p style="word-break:normal;overflow-wrap:anywhere;line-height:1.4;font-size:13px;font-weight:600;margin:0;">'+esc(m.name||'Fichier')+'</p>' +
+            '<p style="font-size:11px;margin:2px 0 0;'+(outgoing?'opacity:.8;':'color:rgb(var(--mgt-muted-foreground));')+'">'+esc(m.size||'')+'</p>' +
+          '</div>' +
+          (m.url ? '<a href="'+m.url+'" download="'+esc(m.name||'fichier')+'" style="flex-shrink:0;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;'+(outgoing?'color:#fff;':'color:rgb(var(--mgt-primary));')+'text-decoration:none;"><i data-lucide="download" class="w-3.5 h-3.5"></i></a>' : '') +
+        '</div>';
+    } else if (m.kind === 'appt'){
+      body =
+        '<div class="bg-white rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">' +
+          '<p class="text-sm font-medium text-foreground">Proposition de rendez-vous</p>' +
+          '<p class="text-xs text-muted-foreground mt-1">'+esc(m.service||'')+' · '+esc(m.day||'')+' · '+esc(m.time||'')+'</p>' +
+          (m.status === 'pending'
+            ? '<div class="flex gap-2 mt-2.5">' +
+                '<button data-appt="accept" data-appt-id="'+esc(m.apptId||'')+'" class="flex-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-white" style="background:rgb(var(--mgt-primary))">Accepter</button>' +
+                '<button data-appt="refuse" data-appt-id="'+esc(m.apptId||'')+'" class="flex-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-foreground" style="border:1px solid rgb(var(--mgt-border))">Refuser</button>' +
+              '</div>'
+            : '<p class="text-xs mt-1.5 text-foreground">'+(m.status==='accepted'?'Rendez-vous accepté ✓':'Rendez-vous refusé')+'</p>') +
+        '</div>';
+    } else {
+      body = '<div class="'+(outgoing?'bg-[rgb(var(--mgt-primary))] text-white rounded-2xl rounded-br-sm':'bg-white rounded-2xl rounded-bl-sm shadow-sm')+' px-4 py-2.5"><p class="text-sm leading-relaxed"></p></div>';
+    }
+
+    el.innerHTML =
+      '<div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0 mb-1" style="'+avatarBg+'">'+initial+'</div>' +
+      '<div class="'+(outgoing?'flex flex-col items-end':'')+'">' +
+        body +
+        '<span class="text-[11px] text-muted-foreground mt-1 '+(outgoing?'mr-1':'ml-1')+' inline-block">'+esc(m.time||'')+(outgoing?' ✓✓':'')+'</span>' +
+      '</div>';
+    var p = el.querySelector('p');
+    if (p && m.kind !== 'file' && m.kind !== 'appt') p.textContent = m.text || '';
+    return el;
+  }
+
+  // --- Sélection de conversation ---
+  function selectConversation(vendorId){
+    ACTIVE = vendorId;
+    UNREAD[vendorId] = 0;
+    // Sur mobile, la liste est un tiroir qui recouvre le chat : on le referme
+    // systématiquement à la sélection pour afficher le fil en entier.
+    var listPanel = document.getElementById('conversation-list');
+    if (listPanel) listPanel.classList.remove('open');
+    var overlay = document.querySelector('.chat-overlay');
+    if (overlay) overlay.classList.remove('show');
+    hideTyping();
+    renderHeader();
+    renderThread();
+    renderSidebar();
+    if (input) setTimeout(function(){ input.focus(); }, 50);
+  }
+
+  // --- Message système (conversation active) ---
+  function sysMsg(text){
+    if (!ACTIVE) return;
+    pushMsg(ACTIVE, { dir:'sys', text:text, time:nowTime() });
+    renderThread();
+    renderSidebar();
+  }
+
+  // --- Envoi ---
+  function send(){
+    var text = input && input.value.trim();
+    if (!text || !ACTIVE) return;
+    input.value = '';
+    input.style.height = 'auto';
+    pushMsg(ACTIVE, { dir:'out', text:text, time:nowTime() });
+    renderThread();
+    renderSidebar();
+    if (RT && typeof RT.sendMessage === 'function') RT.sendMessage(PEER.id, text);
+  }
+
+  if (sendBtn) sendBtn.addEventListener('click', send);
+  if (input) input.addEventListener('keydown', function(e){ if (e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(); } });
+
+  // --- Indicateur « en train d'écrire » ---
+  var typingIndicator = document.getElementById('typing-indicator');
+  var typingNameEl = document.getElementById('typing-name');
+  var peerTypingTimers = {};   // peerId -> timeout id
+  var myTypingTimer = null;
+  var myTypingSentAt = 0;
+
+  function showTypingFor(name){
+    if (typingIndicator) typingIndicator.style.display = '';
+    if (typingNameEl) typingNameEl.textContent = (name || 'Quelqu\'un') + ' est en train d\'écrire…';
+  }
+  function hideTyping(){
+    if (typingIndicator) typingIndicator.style.display = 'none';
+  }
+  function receiveTyping(t){
+    var from = t.from || '';
+    var isTyping = !!t.isTyping;
+    if (peerTypingTimers[from]){ clearTimeout(peerTypingTimers[from]); delete peerTypingTimers[from]; }
+    if (isTyping){
+      if (from === ACTIVE) showTypingFor(t.fromName);
+      peerTypingTimers[from] = setTimeout(function(){
+        delete peerTypingTimers[from];
+        if (from === ACTIVE) hideTyping();
+      }, 3000);
+    } else {
+      if (from === ACTIVE) hideTyping();
+    }
+  }
+  function onUserTyping(){
+    if (!ACTIVE) return;
+    if (myTypingTimer){ clearTimeout(myTypingTimer); myTypingTimer = null; }
+    var now = Date.now();
+    if (now - myTypingSentAt > 2000 && RT && typeof RT.sendTyping === 'function'){
+      myTypingSentAt = now;
+      RT.sendTyping(PEER.id, true);
+    }
+    myTypingTimer = setTimeout(function(){
+      if (RT && typeof RT.sendTyping === 'function' && ACTIVE) RT.sendTyping(PEER.id, false);
+    }, 2500);
+  }
+  if (input) input.addEventListener('input', onUserTyping);
+
+  var newMsgBtn = document.getElementById('btn-new-message');
+  if (newMsgBtn) newMsgBtn.addEventListener('click', function(){ if (input && ACTIVE){ input.focus(); scrollBottom(); } });
+
+  var searchEl = document.getElementById('conv-search');
+  if (searchEl) searchEl.addEventListener('input', function(){ searchQ = this.value || ''; renderSidebar(); });
+
+  // --- Pièce jointe (conversation active) ---
+  var attachBtn = document.getElementById('btn-attach');
+  var fileInput = document.getElementById('chat-file-input');
+  if (attachBtn && fileInput){
+    attachBtn.addEventListener('click', function(){ fileInput.click(); });
+    fileInput.addEventListener('change', function(){
+      var f = fileInput.files && fileInput.files[0];
+      if (!f || !ACTIVE) return;
+      var size = fmtSize(f.size);
+      if (RT && typeof RT.sendFile === 'function'){
+        var fileId = RT.sendFile(PEER.id, f);
+        pushMsg(ACTIVE, { dir:'out', kind:'file', name:f.name, size:size, fileId:fileId, time:nowTime() });
+      } else {
+        pushMsg(ACTIVE, { dir:'out', kind:'file', name:f.name, size:size, time:nowTime() });
+        if (RT && typeof RT.sendMessage === 'function') RT.sendMessage(PEER.id, '📎 Pièce jointe : ' + f.name + ' (' + size + ')');
+      }
+      renderThread();
+      renderSidebar();
+      fileInput.value = '';
+    });
+  }
+
+  function callMode(mode){
+    if (!ACTIVE) return;
+    if (RT && typeof RT.call === 'function') RT.call(PEER, { mode: mode });
+    else sysMsg('Mangoo Connect+ indisponible.');
+  }
+  var audioBtn = document.getElementById('btn-call-audio');
+  var videoBtn = document.getElementById('btn-call-video');
+  if (audioBtn) audioBtn.addEventListener('click', function(){ callMode('audio'); });
+  if (videoBtn) videoBtn.addEventListener('click', function(){ callMode('video'); });
+
+  function refreshVideoButton(){
+    if (!videoBtn) return;
+    var canVideo = !!(RT && typeof RT.canVideo === 'function' && RT.canVideo());
+    var real = !!(RT && typeof RT.isReal === 'function' && RT.isReal());
+    videoBtn.style.display = (canVideo && real) ? '' : 'none';
+  }
+  refreshVideoButton();
+  if (RT && typeof RT.onStatus === 'function') RT.onStatus(function(){ refreshVideoButton(); });
+
+  // --- Agenda client (mes rendez-vous) ---
+  var myAppointments = [];
+  function agRender(){
+    var items = document.getElementById('ag-items');
+    if (!items) return;
+    if (!myAppointments.length){
+      items.innerHTML = '<p style="font-size:13px;color:rgb(var(--mgt-muted-foreground));text-align:center;padding:12px;margin:0;">Aucun rendez-vous pour le moment.</p>';
+      return;
+    }
+    var map = {
+      pending: ['En attente', 'rgb(var(--mgt-warning))', 'rgb(var(--mgt-warning-foreground))'],
+      confirmed: ['Confirmé', 'rgb(var(--mgt-primary-500))', '#fff'],
+      declined: ['Refusé', 'rgb(var(--mgt-error))', '#fff']
+    };
+    items.innerHTML = '';
+    myAppointments.forEach(function(a){
+      var st = map[a.status] || map.pending;
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgb(var(--mgt-border));border-radius:12px;background:rgb(var(--mgt-card));';
+      row.innerHTML =
+        '<div style="flex:1;min-width:0;">' +
+          '<p style="font-size:14px;font-weight:600;color:rgb(var(--mgt-foreground));margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(a.service)+'</p>' +
+          '<p style="font-size:12px;color:rgb(var(--mgt-muted-foreground));margin:2px 0 0;">'+esc(a.day)+' · '+esc(a.time)+'</p>' +
+        '</div>' +
+        '<span style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;background:'+st[1]+';color:'+st[2]+';white-space:nowrap;flex-shrink:0;">'+st[0]+'</span>';
+      items.appendChild(row);
+    });
+  }
+  function agOpen(){ var m = document.getElementById('client-agenda'); if (m){ m.style.display = 'flex'; agRender(); } }
+  function agClose(){ var m = document.getElementById('client-agenda'); if (m) m.style.display = 'none'; }
+  function agSubmit(){
+    var service = (document.getElementById('ag-service')||{}).value || 'Consultation';
+    var day = (document.getElementById('ag-day')||{}).value || 'Demain';
+    var time = (document.getElementById('ag-time')||{}).value || '10:00';
+    if (RT && typeof RT.sendAppointment === 'function' && ACTIVE) RT.sendAppointment(PEER.id, { service:service, day:day, time:time });
+    myAppointments.push({ service:service, day:day, time:time, status:'pending' });
+    if (document.getElementById('ag-service')) document.getElementById('ag-service').value = '';
+    if (document.getElementById('ag-day')) document.getElementById('ag-day').value = '';
+    if (document.getElementById('ag-time')) document.getElementById('ag-time').value = '';
+    agRender();
+    sysMsg('Demande de rendez-vous envoyée : ' + service + ' (' + day + ' · ' + time + ')');
+  }
+  var myAgendaBtn = document.getElementById('btn-my-agenda');
+  var agendaCloseBtn = document.getElementById('agenda-close');
+  var agendaSubmitBtn = document.getElementById('ag-submit');
+  var agendaOverlay = document.getElementById('client-agenda');
+  if (agendaCloseBtn) agendaCloseBtn.addEventListener('click', agClose);
+  if (agendaSubmitBtn) agendaSubmitBtn.addEventListener('click', agSubmit);
+  if (agendaOverlay) agendaOverlay.addEventListener('click', function(e){ if (e.target === agendaOverlay) agClose(); });
+  if (myAgendaBtn) myAgendaBtn.addEventListener('click', agOpen);
+  if (location.hash === '#rdv'){ setTimeout(agOpen, 0); history.replaceState(null, '', location.pathname + location.search); }
+
+  // --- Délégation accept/refus d'un rendez-vous reçu ---
+  if (threadEl){
+    threadEl.addEventListener('click', function(e){
+      var t = e.target;
+      var btn = null;
+      while (t && t !== threadEl){ if (t.getAttribute && t.getAttribute('data-appt')){ btn = t; break; } t = t.parentNode; }
+      if (!btn) return;
+      var action = btn.getAttribute('data-appt');
+      var apptId = btn.getAttribute('data-appt-id');
+      Object.keys(THREADS).forEach(function(id){
+        (THREADS[id]||[]).forEach(function(m){
+          if (m.kind === 'appt' && m.apptId === apptId && m.status === 'pending') m.status = action === 'accept' ? 'accepted' : 'declined';
+        });
+      });
+      if (RT && typeof RT.replyAppointment === 'function') RT.replyAppointment(apptId, action === 'accept');
+      saveStore();
+      renderThread();
+    });
+  }
+
+  // --- Événements temps réel ---
+  if (RT){
+    RT.onMessage(function(m){
+      var from = m.from || '';
+      if (!from) return;
+      pushMsg(from, { dir:'in', text:m.text, time:nowTime(), name:m.fromName });
+      if (from !== ACTIVE) UNREAD[from] = (UNREAD[from]||0)+1;
+      if (from === ACTIVE) renderThread();
+      renderSidebar();
+    });
+    RT.onTyping(function(t){ receiveTyping(t); });
+    RT.onFile(function(f){
+      if (f && f.error){
+        if (ACTIVE) sysMsg('Pièce jointe impossible ('+(f.reason==='taille'?'fichier trop volumineux':'destinataire indisponible')+')');
+        return;
+      }
+      if (f && f.blob && f.from){
+        var url = null; try { url = URL.createObjectURL(f.blob); } catch(e){ url = null; }
+        pushMsg(f.from, { dir:'in', kind:'file', name:f.name, size:fmtSize(f.size), url:url, time:nowTime() });
+        if (f.from !== ACTIVE) UNREAD[f.from] = (UNREAD[f.from]||0)+1;
+        if (f.from === ACTIVE) renderThread();
+        renderSidebar();
+      }
+    });
+    RT.onFileSendProgress(function(p){
+      // La progression est traitée comme un simple indicateur visuel : on
+      // re-rend le fil uniquement si la bulle est encore visible.
+      var el = threadEl && threadEl.querySelector('[data-attach="'+p.fileId+'"]');
+      if (!el) return;
+      var fill = el.querySelector('.attach-progress-fill');
+      var status = el.querySelector('.attach-status');
+      if (fill) fill.style.width = p.pct + '%';
+      if (status){ status.textContent = p.done ? 'Envoyé ✓' : 'Envoi… ' + p.pct + '%'; }
+    });
+    RT.onIncomingCall(function(c){
+      var from = c.from || '';
+      if (from && convById(from) && from !== ACTIVE) selectConversation(from);
+      sysMsg('Appel entrant de ' + (c.fromName || c.from));
+    });
+    RT.onAppointment(function(a){
+      var from = a.from || '';
+      if (!from) return;
+      pushMsg(from, { dir:'in', kind:'appt', apptId:a.apptId, service:a.service, day:a.day, time:a.time, status:'pending', time:nowTime() });
+      if (from !== ACTIVE) UNREAD[from] = (UNREAD[from]||0)+1;
+      if (from === ACTIVE) renderThread();
+      renderSidebar();
+    });
+    RT.onAppointmentReply(function(r){
+      var accepted = r.type === 'appointment-accepted';
+      for (var i = myAppointments.length-1; i>=0; i--){
+        if (myAppointments[i].status === 'pending'){ myAppointments[i].status = accepted ? 'confirmed' : 'declined'; break; }
+      }
+      if (typeof agRender === 'function') agRender();
+      if (ACTIVE) sysMsg('Rendez-vous ' + (accepted ? 'confirmé' : 'refusé') + ' par ' + (r.name || 'le professionnel'));
+    });
+    RT.onPresence(function(peers){
+      var set = {};
+      (peers||[]).forEach(function(p){ set[p.id] = true; });
+      CONVERSATIONS.forEach(function(c){ ONLINE[c.vendorId] = !!set[c.vendorId]; });
+      if (ACTIVE) updateStatusEl(!!ONLINE[ACTIVE]);
+      renderSidebar();
+    });
+    if (typeof RT.register === 'function') RT.register('client', CLIENT.id, CLIENT.name);
+  }
+
+  // --- Chargement de l'annuaire et sélection initiale ---
+  function loadConversations(){
+    fetch('/api/carte', { headers: { 'Accept': 'application/json' } })
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        var list = (data && data.vendors) || [];
+        CONVERSATIONS = list.map(function(v){
+          return { vendorId: String(v.vendorId || v.id || ''), name: v.name || 'Professionnel', img: v.img || '', type: v.type || '', category: v.category || '' };
+        }).filter(function(c){ return c.vendorId; });
+
+        var qp = new URLSearchParams(location.search);
+        var wantVid = qp.get('vendorId');
+        var wantName = qp.get('to');
+        var initial = null;
+        if (wantVid){
+          for (var i=0;i<CONVERSATIONS.length;i++) if (CONVERSATIONS[i].vendorId === wantVid){ initial = wantVid; break; }
+        }
+        if (!initial && wantName){
+          var norm = wantName.trim().toLowerCase();
+          for (var j=0;j<CONVERSATIONS.length;j++){
+            var n = String(CONVERSATIONS[j].name||'').trim().toLowerCase();
+            if (n && (n===norm || n.indexOf(norm)===0 || norm.indexOf(n)===0)){ initial = CONVERSATIONS[j].vendorId; break; }
+          }
+        }
+        if (!initial && CONVERSATIONS.length) initial = CONVERSATIONS[0].vendorId;
+        renderSidebar();
+        if (initial) selectConversation(initial);
+        else { renderHeader(); renderThread(); }
+      })
+      .catch(function(){
+        renderSidebar();
+        renderHeader();
+        renderThread();
+      });
+  }
+  loadConversations();
+
+  // Masque l'indicateur statique « en train d'écrire » par défaut.
+  var typing = document.getElementById('typing-indicator');
+  if (typing) typing.style.display = 'none';
+
+  if (window.lucide) window.lucide.createIcons();
+})();
+</script>
+
+<!-- ===== Navigation client (tiroir + barre basse) ===== -->
+<div id="client-nav-overlay" class="client-nav-overlay"></div>
+<aside id="client-nav-drawer" class="client-nav-drawer">
+  <div class="client-nav-header">
+    <div class="client-nav-brand">
+      <div class="client-nav-logo" id="nav-client-logo">M</div>
+      <div>
+        <p class="client-nav-title" id="nav-client-name">Mangoo</p>
+        <p class="client-nav-subtitle" id="nav-client-role">Espace client</p>
+      </div>
+    </div>
+    <button id="nav-drawer-close" class="client-nav-close" title="Fermer" aria-label="Fermer le menu">✕</button>
+  </div>
+  <nav class="client-nav-list">
+    <a href="./client-dashboard.html" class="client-nav-link"><i data-lucide="home" class="w-4 h-4"></i><span>Accueil</span></a>
+    <a href="./chat.html" class="client-nav-link active"><i data-lucide="message-circle" class="w-4 h-4"></i><span>Messagerie</span></a>
+    <a href="#" class="client-nav-link" id="drawer-nav-agenda"><i data-lucide="calendar-days" class="w-4 h-4"></i><span>Mes rendez-vous</span></a>
+    <a href="./client-orders.html" class="client-nav-link"><i data-lucide="package" class="w-4 h-4"></i><span>Mes commandes</span></a>
+    <a href="./client-favorites.html" class="client-nav-link"><i data-lucide="heart" class="w-4 h-4"></i><span>Mes favoris</span></a>
+    <a href="./carte.html" class="client-nav-link"><i data-lucide="map" class="w-4 h-4"></i><span>Explorer la carte</span></a>
+    <a href="./client-profile.html" class="client-nav-link"><i data-lucide="user" class="w-4 h-4"></i><span>Mon profil</span></a>
+  </nav>
+  <div class="client-nav-footer">
+    <a href="./auth.html" class="client-nav-link"><i data-lucide="log-out" class="w-4 h-4"></i><span>Déconnexion</span></a>
+  </div>
+</aside>
+
+<style id="mgt-client-nav">
+  .nav-menu-btn { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: pointer; color: var(--foreground); border-radius: 10px; flex-shrink: 0; }
+  .nav-menu-btn:active { background: rgb(var(--mgt-muted)); }
+  .client-nav-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 80; }
+  .client-nav-overlay.show { display: block; }
+  .client-nav-drawer {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 90;
+    width: 280px; max-width: 85vw;
+    background: rgb(var(--mgt-background));
+    border-right: 1px solid rgb(var(--mgt-border));
+    transform: translateX(-100%); transition: transform .25s ease;
+    display: flex; flex-direction: column; overflow-y: auto;
+  }
+  .client-nav-drawer.open { transform: translateX(0); box-shadow: 0 0 60px rgba(0,0,0,.3); }
+  .client-nav-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid rgb(var(--mgt-border)); }
+  .client-nav-brand { display: flex; align-items: center; gap: 12px; }
+  .client-nav-logo { width: 40px; height: 40px; border-radius: 10px; background: rgb(var(--mgt-primary)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; }
+  .client-nav-title { font-size: 16px; font-weight: 700; color: rgb(var(--mgt-foreground)); margin: 0; }
+  .client-nav-subtitle { font-size: 12px; color: rgb(var(--mgt-muted-foreground)); margin: 0; }
+  .client-nav-close { border: none; background: none; cursor: pointer; color: rgb(var(--mgt-muted-foreground)); font-size: 16px; line-height: 1; padding: 6px; border-radius: 8px; }
+  .client-nav-close:hover { background: rgb(var(--mgt-muted)); }
+  .client-nav-list { flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 2px; }
+  .client-nav-footer { padding: 12px; border-top: 1px solid rgb(var(--mgt-border)); }
+  .client-nav-link { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 10px; color: rgb(var(--mgt-foreground)); text-decoration: none; font-size: 14px; font-weight: 500; transition: background .15s; }
+  .client-nav-link:hover { background: rgb(var(--mgt-muted)); }
+  .client-nav-link.active { background: rgb(var(--mgt-primary-50)); color: rgb(var(--mgt-primary-700)); font-weight: 600; }
+  .client-nav-link i { color: rgb(var(--mgt-muted-foreground)); flex-shrink: 0; }
+  .client-nav-link.active i { color: rgb(var(--mgt-primary-700)); }
+
+  .client-bottom-nav { display: none; border-top: 1px solid rgb(var(--mgt-border)); background: rgb(var(--mgt-card)); padding-bottom: env(safe-area-inset-bottom); }
+  .client-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 8px 4px; font-size: 11px; font-weight: 500; color: rgb(var(--mgt-muted-foreground)); text-decoration: none; }
+  .client-nav-item.active { color: rgb(var(--mgt-primary)); font-weight: 600; }
+  .client-nav-item i { width: 22px; height: 22px; }
+  @media (max-width: 768px) {
+    .client-bottom-nav { display: flex; }
+  }
+</style>
+<script>
+(function () {
+  var menuBtn = document.getElementById('btn-nav-menu');
+  var drawer = document.getElementById('client-nav-drawer');
+  var overlay = document.getElementById('client-nav-overlay');
+  var closeBtn = document.getElementById('nav-drawer-close');
+  if (!menuBtn || !drawer || !overlay) return;
+  function open() { drawer.classList.add('open'); overlay.classList.add('show'); }
+  function close() { drawer.classList.remove('open'); overlay.classList.remove('show'); }
+  menuBtn.addEventListener('click', open);
+  if (closeBtn) closeBtn.addEventListener('click', close);
+  overlay.addEventListener('click', close);
+  function openAgenda() {
+    var b = document.getElementById('btn-my-agenda');
+    if (b) b.click();
+    close();
+  }
+  var bna = document.getElementById('bottom-nav-agenda');
+  if (bna) bna.addEventListener('click', function (e) { e.preventDefault(); openAgenda(); });
+  var dna = document.getElementById('drawer-nav-agenda');
+  if (dna) dna.addEventListener('click', function (e) { e.preventDefault(); openAgenda(); });
+  drawer.querySelectorAll('a[href]:not(#drawer-nav-agenda)').forEach(function (a) {
+    a.addEventListener('click', close);
+  });
+
+  // Personnalise l'en-tête du tiroir avec l'identité du client connecté.
+  function initialsOf(n) {
+    var p = String(n || '').trim().split(/\s+/).filter(Boolean);
+    if (!p.length) return 'M';
+    if (p.length === 1) return p[0].slice(0, 2).toUpperCase();
+    return (p[0][0] + p[p.length - 1][0]).toUpperCase();
+  }
+  var clientName = 'Dida DANSO';
+  var clientLogo = '';
+  var clientRole = 'Cliente';
+  try {
+    var u = JSON.parse(localStorage.getItem('mgt_user') || 'null');
+    if (u) {
+      var n = String(u.fullName || u.name || '').trim();
+      if (n) clientName = n;
+      clientLogo = u.logo || '';
+      if (clientLogo && String(clientLogo).slice(0, 11) !== 'data:image/') clientLogo = '';
+      var r = String(u.role || '').toLowerCase();
+      var roleMap = { cliente: 'Cliente', client: 'Client', vendeur: 'Vendeur', prestataire: 'Prestataire', admin: 'Administrateur' };
+      clientRole = roleMap[r] || 'Cliente';
+    }
+  } catch (e) {}
+  var logoEl = document.getElementById('nav-client-logo');
+  var nameEl = document.getElementById('nav-client-name');
+  var roleEl = document.getElementById('nav-client-role');
+  if (logoEl) {
+    if (clientLogo) {
+      logoEl.style.overflow = 'hidden';
+      logoEl.innerHTML = '<img src="' + clientLogo + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;">';
+    } else {
+      logoEl.textContent = initialsOf(clientName);
+    }
+  }
+  if (nameEl) nameEl.textContent = clientName;
+  if (roleEl) roleEl.textContent = clientRole;
+
+  if (window.lucide) window.lucide.createIcons();
+})();
+</script>
+
+</body>
+</html>

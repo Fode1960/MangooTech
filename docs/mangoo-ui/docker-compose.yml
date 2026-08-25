@@ -1,0 +1,63 @@
+# ============================================================
+#  Mangoo Connect+ — orchestration de production
+#  ------------------------------------------------------------
+#  Usage :
+#    1. Générer des secrets :  node scripts/generate-env.cjs
+#    2. Placer un vrai certificat dans ./certs/ (nginx, port 443)
+#    3. docker compose up -d --build
+#
+#  Topologie :
+#    nginx (80/443, TLS public)  ->  mangoo (8443, TLS interne auto-signé)
+#    Le forçage HTTPS admin reste ACTIF côté backend.
+# ============================================================
+
+services:
+  mangoo:
+    build: .
+    container_name: mangoo-connect
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+    ports:
+      # Accès direct LAN / WebRTC (optionnel si vous passez par nginx)
+      - "8080:8080"
+      # HTTPS direct (caméra/micro, espace admin)
+      - "8443:8443"
+    volumes:
+      # Données persistées (utilisateurs, transactions, sessions…)
+      - ./data:/app/data
+      # Certificat interne (auto-signé accepté par nginx via proxy_ssl_verify off)
+      - ./cert.pem:/app/cert.pem:ro
+      - ./key.pem:/app/key.pem:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8080/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - mangoo
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: mangoo-nginx
+    restart: unless-stopped
+    depends_on:
+      mangoo:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      # Montez ici votre certificat public de production :
+      - ./certs/fullchain.pem:/etc/nginx/ssl/fullchain.pem:ro
+      - ./certs/privkey.pem:/etc/nginx/ssl/privkey.pem:ro
+    networks:
+      - mangoo
+
+networks:
+  mangoo:
+    driver: bridge

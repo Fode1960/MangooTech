@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Découverte</title>
+    <style id="theme-vars">
+:root { --mgt-radius-sm: 4px; --mgt-radius-md: 8px; --mgt-radius-lg: 16px; --mgt-radius-full: 9999px; }
+:root, html.light {
+  --mgt-primary: 26 92 42; --mgt-primary-50: 232 245 233; --mgt-primary-100: 200 230 201; --mgt-primary-200: 165 214 168; --mgt-primary-300: 129 199 134; --mgt-primary-400: 102 183 108; --mgt-primary-500: 76 168 82; --mgt-primary-600: 56 142 60; --mgt-primary-700: 38 112 42; --mgt-primary-800: 26 92 42; --mgt-primary-900: 13 71 18; --mgt-primary-foreground: 255 255 255;
+  --mgt-accent: 232 97 12; --mgt-accent-50: 255 243 224; --mgt-accent-100: 255 224 178; --mgt-accent-200: 255 204 128; --mgt-accent-300: 255 183 77; --mgt-accent-400: 255 153 31; --mgt-accent-500: 232 97 12; --mgt-accent-600: 209 78 0; --mgt-accent-700: 163 61 0; --mgt-accent-800: 130 49 0; --mgt-accent-900: 97 36 0; --mgt-accent-foreground: 255 255 255;
+  --mgt-background: 255 255 255; --mgt-foreground: 15 23 42; --mgt-card: 255 255 255; --mgt-card-foreground: 15 23 42; --mgt-popover: 255 255 255; --mgt-popover-foreground: 15 23 42; --mgt-muted: 248 250 252; --mgt-muted-foreground: 100 116 139; --mgt-border: 226 232 240; --mgt-input: 226 232 240; --mgt-ring: 26 92 42;
+  --mgt-success: 129 199 134; --mgt-success-foreground: 255 255 255; --mgt-warning: 255 183 77; --mgt-warning-foreground: 15 23 42; --mgt-error: 239 68 68; --mgt-error-foreground: 255 255 255; --mgt-info: 59 130 246; --mgt-info-foreground: 255 255 255;
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03); --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18); --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif; --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+:root { --background: 255 255 255; --foreground: 15 23 42; --card: 255 255 255; --card-foreground: 15 23 42; --popover: 255 255 255; --popover-foreground: 15 23 42; --primary: 26 92 42; --primary-foreground: 255 255 255; --muted: 248 250 252; --muted-foreground: 100 116 139; --border: 226 232 240; --input: 226 232 240; --ring: 26 92 42; --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px; --radius-full: 9999px; --state-success: 129 199 134; --state-success-foreground: 255 255 255; --state-warning: 255 183 77; --state-warning-foreground: 15 23 42; --state-error: 239 68 68; --state-error-foreground: 255 255 255; --state-info: 59 130 246; --state-info-foreground: 255 255 255; }
+html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-card: 20 20 26; --mgt-card-foreground: 248 250 252; --mgt-popover: 20 20 26; --mgt-popover-foreground: 248 250 252; --mgt-muted: 30 30 38; --mgt-muted-foreground: 148 163 184; --mgt-border: 40 40 50; --mgt-input: 40 40 50; --mgt-ring: 76 168 82; --background: 11 11 15; --foreground: 248 250 252; --card: 20 20 26; --card-foreground: 248 250 252; --popover: 20 20 26; --popover-foreground: 248 250 252; --primary: 76 168 82; --primary-foreground: 255 255 255; --muted: 30 30 38; --muted-foreground: 148 163 184; --border: 40 40 50; --input: 40 40 50; --ring: 76 168 82; }
+.h-display { font-family: var(--mgt-font-sans); font-size: clamp(40px, 6vw, 88px); line-height: 1.02; font-weight: 600; letter-spacing: -0.03em; text-wrap: balance; }
+.h1 { font-family: var(--mgt-font-sans); font-size: clamp(28px, 3.5vw, 48px); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+.h2 { font-family: var(--mgt-font-sans); font-size: clamp(22px, 2.4vw, 32px); line-height: 1.2; font-weight: 600; letter-spacing: -0.015em; }
+.h3 { font-family: var(--mgt-font-sans); font-size: 20px; line-height: 1.3; font-weight: 600; letter-spacing: -0.01em; }
+.body-l { font-family: var(--mgt-font-sans); font-size: 18px; line-height: 1.55; font-weight: 400; }
+.body { font-family: var(--mgt-font-sans); font-size: 15px; line-height: 1.6; font-weight: 400; }
+.caption { font-family: var(--mgt-font-sans); font-size: 13px; line-height: 1.5; font-weight: 400; letter-spacing: 0.005em; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline { --color-background: var(--background); --color-foreground: var(--foreground); --color-card: var(--card); --color-card-foreground: var(--card-foreground); --color-popover: var(--popover); --color-popover-foreground: var(--popover-foreground); --color-primary: var(--primary); --color-primary-foreground: var(--primary-foreground); --color-muted: var(--muted); --color-muted-foreground: var(--muted-foreground); --color-border: var(--border); --color-input: var(--input); --color-ring: var(--ring); --radius-sm: var(--mgt-radius-sm); --radius-md: var(--mgt-radius-md); --radius-lg: var(--mgt-radius-lg); }
+  @layer base { body { background: var(--background); color: var(--foreground); } td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; } th { @apply whitespace-nowrap; } }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); } .text-background { color: var(--background); } .border-background { border-color: var(--background); } .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); } .text-foreground { color: var(--foreground); } .border-foreground { border-color: var(--foreground); } .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); } .text-card { color: var(--card); } .border-card { border-color: var(--card); } .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); } .text-card-foreground { color: var(--card-foreground); } .border-card-foreground { border-color: var(--card-foreground); } .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); } .text-popover { color: var(--popover); } .border-popover { border-color: var(--popover); } .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); } .text-popover-foreground { color: var(--popover-foreground); } .border-popover-foreground { border-color: var(--popover-foreground); } .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); } .text-primary { color: var(--primary); } .border-primary { border-color: var(--primary); } .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); } .text-primary-foreground { color: var(--primary-foreground); } .border-primary-foreground { border-color: var(--primary-foreground); } .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); } .text-muted { color: var(--muted); } .border-muted { border-color: var(--muted); } .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); } .text-muted-foreground { color: var(--muted-foreground); } .border-muted-foreground { border-color: var(--muted-foreground); } .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); } .text-border { color: var(--border); } .border-border { border-color: var(--border); } .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); } .text-input { color: var(--input); } .border-input { border-color: var(--input); } .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); } .text-ring { color: var(--ring); } .border-ring { border-color: var(--ring); } .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased flex bg-[rgb(var(--mgt-muted))]">
+    <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-[rgb(var(--mgt-primary))] text-[rgb(var(--mgt-primary-foreground))]">
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+        <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+        <div><span class="font-semibold text-base tracking-tight">Mangoo</span><span class="font-light text-base tracking-tight text-white/70">Tech</span></div>
+      </div>
+      <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <a href="./dashboard-overview.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>Vue d'ensemble</a>
+        <a href="./dashboard-performance.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="bar-chart-3" class="w-4.5 h-4.5"></i>Performance</a>
+        <a href="./dashboard-reviews.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="star" class="w-4.5 h-4.5"></i>Avis clients</a>
+        <a href="./dashboard-agenda.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="calendar-days" class="w-4.5 h-4.5"></i>Rendez-vous</a>
+        <a href="./dashboard-finances.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="wallet" class="w-4.5 h-4.5"></i>Finances</a>
+        <a href="./dashboard-notifications.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="bell" class="w-4.5 h-4.5"></i>Notifications</a>
+        <a href="./dashboard-orders.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="shopping-bag" class="w-4.5 h-4.5"></i>Commandes</a>
+        <a href="./dashboard-clients.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="users" class="w-4.5 h-4.5"></i>Clients</a>
+        <a href="./dashboard-team.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="users-round" class="w-4.5 h-4.5"></i>Équipe</a>
+        <a href="./dashboard-messages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="message-square" class="w-4.5 h-4.5"></i>Messagerie</a>
+        <a href="./dashboard-live.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="radio" class="w-4.5 h-4.5"></i>Live</a>
+        <a href="./dashboard-services.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="briefcase" class="w-4.5 h-4.5"></i>Prestations</a>
+        <a href="./dashboard-catalogue.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="package" class="w-4.5 h-4.5"></i>Catalogue</a>
+        <a href="./dashboard-inventaire.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="boxes" class="w-4.5 h-4.5"></i>Inventaire</a>
+        <a href="./dashboard-gallery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="images" class="w-4.5 h-4.5"></i>Galerie</a>
+        <a href="./dashboard-boosters.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="zap" class="w-4.5 h-4.5"></i>Boosters</a>
+        <a href="./dashboard-promotions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="badge-percent" class="w-4.5 h-4.5"></i>Promotions</a>
+        <a href="./dashboard-fidelite.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="award" class="w-4.5 h-4.5"></i>Fidélité</a>
+        <a href="./dashboard-parrainage.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="gift" class="w-4.5 h-4.5"></i>Parrainage</a>
+        <a href="./dashboard-classement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="trophy" class="w-4.5 h-4.5"></i>Classement</a>
+        <a href="./dashboard-verification.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="shield-check" class="w-4.5 h-4.5"></i>Vérification</a>
+        <a href="./dashboard-recommandation.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-medium transition-colors"><i data-lucide="compass" class="w-4.5 h-4.5"></i>Découverte</a>
+        <a href="./dashboard-hors-ligne.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="wifi-off" class="w-4.5 h-4.5"></i>Hors-ligne</a>
+        <a href="./dashboard-rapports.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="file-text" class="w-4.5 h-4.5"></i>Rapports</a>
+        <a href="./dashboard-support.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="life-buoy" class="w-4.5 h-4.5"></i>Support</a>
+        <a href="./dashboard-offres.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="tag" class="w-4.5 h-4.5"></i>Offres & Tarifs</a>
+        <a href="./dashboard-abonnement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="credit-card" class="w-4.5 h-4.5"></i>Abonnement</a>
+        <a href="./dashboard-settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="settings" class="w-4.5 h-4.5"></i>Parametres</a>
+      </nav>
+      <div class="border-t border-white/10 px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>CA</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate" data-vendor-name>DAN Boutique</p>
+            <p class="text-xs text-white/60 truncate" data-vendor-role>Prestataire certifié</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <div id="app-main" class="flex-1 ml-60 min-h-screen flex flex-col">
+      <header class="sticky top-0 z-30 flex items-center justify-between gap-4 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] px-8 py-3.5">
+        <div class="flex items-center gap-4">
+          <h1 class="h3 tabular-nums">Découverte</h1>
+          <span class="inline-flex items-center gap-2 caption text-[rgb(var(--mgt-accent-600))] bg-[rgb(var(--mgt-accent-50))] px-2.5 py-0.5 rounded-full font-medium"><i data-lucide="map-pin" class="w-3 h-3"></i>Près de chez vous</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <button id="btn-notifications" class="relative p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))]" aria-label="Notifications">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="btn-notifications-badge" class="absolute top-1 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-[10px] font-bold leading-4 text-center" style="display:none;"></span>
+          </button>
+          <div id="btn-account" class="flex items-center gap-3 pl-2 border-l border-[rgb(var(--mgt-border))] cursor-pointer" role="button" tabindex="0">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>CA</div>
+            <div class="hidden sm:block text-right">
+              <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]" data-vendor-name>DAN Boutique</p>
+              <div class="flex items-center gap-1 text-xs text-[rgb(var(--mgt-accent))]">
+                <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                <span data-vendor-rating>4.8</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="flex-1 p-8 space-y-6">
+        <div class="relative overflow-hidden bg-[rgb(var(--mgt-primary))] text-white rounded-2xl p-8 shadow-[var(--mgt-shadow-md)]">
+          <div class="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-white/5"></div>
+          <div class="absolute -right-4 -bottom-24 w-72 h-72 rounded-full bg-white/5"></div>
+          <div class="relative flex flex-wrap items-center justify-between gap-6">
+            <div class="max-w-xl">
+              <h2 class="h2 mb-2">Faites-vous découvrir au-delà de la recherche</h2>
+              <p class="body-l text-white/80">La section « Vous aimerez aussi » recommande votre fiche aux clients dont la catégorie et les notes correspondent. C'est de la visibilité gratuite qui prolonge la découverte.</p>
+            </div>
+            <div class="bg-white/10 backdrop-blur rounded-xl p-5 min-w-[200px]">
+              <p class="caption text-white/60 mb-1">Impressions (30 j)</p>
+              <div class="flex items-end gap-1"><span id="reco-hero-impressions" class="text-4xl font-bold leading-none tabular-nums">8 420</span></div>
+              <p class="caption text-white/60 mt-2 flex items-center gap-1"><i data-lucide="trending-up" class="w-3.5 h-3.5"></i>+18% vs mois dernier</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]"><div class="flex items-center gap-3"><div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent))]"><i data-lucide="eye" class="w-5 h-5"></i></div><div><p id="reco-kpi-impressions" class="text-2xl font-bold tabular-nums">8 420</p><p class="caption text-[rgb(var(--mgt-muted-foreground))]">Impressions</p></div></div></div>
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]"><div class="flex items-center gap-3"><div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary))]"><i data-lucide="mouse-pointer-click" class="w-5 h-5"></i></div><div><p id="reco-kpi-clics" class="text-2xl font-bold tabular-nums">3 150</p><p class="caption text-[rgb(var(--mgt-muted-foreground))]">Clics</p></div></div></div>
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]"><div class="flex items-center gap-3"><div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary))]"><i data-lucide="percent" class="w-5 h-5"></i></div><div><p id="reco-kpi-taux" class="text-2xl font-bold tabular-nums">37%</p><p class="caption text-[rgb(var(--mgt-muted-foreground))]">Taux de clic</p></div></div></div>
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]"><div class="flex items-center gap-3"><div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent))]"><i data-lucide="list" class="w-5 h-5"></i></div><div><p id="reco-kpi-recos" class="text-2xl font-bold tabular-nums">6</p><p class="caption text-[rgb(var(--mgt-muted-foreground))]">Catégories associées</p></div></div></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div class="lg:col-span-2 bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <h3 class="h3 mb-4">Où vous apparaissez</h3>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between gap-4 p-3 rounded-lg border border-[rgb(var(--mgt-border))]"><div class="flex items-center gap-3"><div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary))]"><i data-lucide="sparkles" class="w-4 h-4"></i></div><div><p class="text-sm font-semibold">« Vous aimerez aussi » — Soins du visage</p><p class="caption text-[rgb(var(--mgt-muted-foreground))]">Recommandé aux clients notant des soins similaires</p></div></div><span class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-primary))]">2 140 vues</span></div>
+              <div class="flex items-center justify-between gap-4 p-3 rounded-lg border border-[rgb(var(--mgt-border))]"><div class="flex items-center gap-3"><div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary))]"><i data-lucide="sparkles" class="w-4 h-4"></i></div><div><p class="text-sm font-semibold">« Près de chez vous » — Almadies</p><p class="caption text-[rgb(var(--mgt-muted-foreground))]">Mis en avant localement</p></div></div><span class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-primary))]">1 890 vues</span></div>
+              <div class="flex items-center justify-between gap-4 p-3 rounded-lg border border-[rgb(var(--mgt-border))]"><div class="flex items-center gap-3"><div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary))]"><i data-lucide="sparkles" class="w-4 h-4"></i></div><div><p class="text-sm font-semibold">« Vous aimerez aussi » — Coiffure</p><p class="caption text-[rgb(var(--mgt-muted-foreground))]">Recommandé par similarité de catégorie</p></div></div><span class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-primary))]">1 460 vues</span></div>
+            </div>
+          </div>
+          <div class="bg-[rgb(var(--mgt-primary))] text-white rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <h3 class="h3 mb-2 text-white">Comment ça marche</h3>
+            <p class="body text-white/70 mb-4">L'algorithme recommande votre fiche selon la catégorie, la note moyenne et la proximité géographique. Aucun coût, aucune action requise.</p>
+            <div class="flex items-center gap-2 text-sm font-semibold"><i data-lucide="lightbulb" class="w-4 h-4 text-[rgb(var(--mgt-accent-400))]"></i><span>Améliorez note et galerie pour apparaître plus souvent</span></div>
+          </div>
+        </div>
+
+        <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+            <div>
+              <h2 class="h3">Recommandations personnalisées</h2>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))] mt-1">Acceptez ou ignorez les suggestions pour améliorer votre visibilité.</p>
+            </div>
+            <div id="reco-filter" class="flex items-center gap-2" role="group" aria-label="Filtrer les recommandations">
+              <button type="button" data-category="all" style="padding:8px 14px;border-radius:9999px;font-size:13px;font-weight:600;border:1px solid rgb(var(--mgt-border));color:rgb(var(--mgt-muted-foreground));background:transparent;cursor:pointer;transition:all .2s ease;">Toutes</button>
+              <button type="button" data-category="visibilite" style="padding:8px 14px;border-radius:9999px;font-size:13px;font-weight:600;border:1px solid rgb(var(--mgt-border));color:rgb(var(--mgt-muted-foreground));background:transparent;cursor:pointer;transition:all .2s ease;">Visibilité</button>
+              <button type="button" data-category="contenu" style="padding:8px 14px;border-radius:9999px;font-size:13px;font-weight:600;border:1px solid rgb(var(--mgt-border));color:rgb(var(--mgt-muted-foreground));background:transparent;cursor:pointer;transition:all .2s ease;">Contenu</button>
+              <button type="button" data-category="reactivite" style="padding:8px 14px;border-radius:9999px;font-size:13px;font-weight:600;border:1px solid rgb(var(--mgt-border));color:rgb(var(--mgt-muted-foreground));background:transparent;cursor:pointer;transition:all .2s ease;">Réactivité</button>
+            </div>
+          </div>
+          <div id="reco-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="reco-card" data-id="reco-local" data-category="visibilite" style="padding:16px;border-radius:var(--mgt-radius-md);border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-muted));">
+              <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))] mb-1">Activez la mise en avant locale</p>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-3">Votre fiche apparaît davantage dans les résultats « Près de chez vous ».</p>
+              <div style="display:flex;gap:8px;">
+                <button type="button" class="reco-accept" style="padding:6px 12px;border-radius:var(--mgt-radius-md);background:rgb(var(--mgt-primary));color:rgb(var(--mgt-primary-foreground));border:none;font-size:12px;font-weight:600;cursor:pointer;">Accepter</button>
+                <button type="button" class="reco-ignore" style="padding:6px 12px;border-radius:var(--mgt-radius-md);background:transparent;color:rgb(var(--mgt-muted-foreground));border:1px solid rgb(var(--mgt-border));font-size:12px;font-weight:600;cursor:pointer;">Ignorer</button>
+              </div>
+            </div>
+            <div class="reco-card" data-id="reco-photos" data-category="contenu" style="padding:16px;border-radius:var(--mgt-radius-md);border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-muted));">
+              <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))] mb-1">Ajoutez 3 photos de votre salon</p>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-3">Les fiches avec au moins 5 photos génèrent davantage de clics.</p>
+              <div style="display:flex;gap:8px;">
+                <button type="button" class="reco-accept" style="padding:6px 12px;border-radius:var(--mgt-radius-md);background:rgb(var(--mgt-primary));color:rgb(var(--mgt-primary-foreground));border:none;font-size:12px;font-weight:600;cursor:pointer;">Accepter</button>
+                <button type="button" class="reco-ignore" style="padding:6px 12px;border-radius:var(--mgt-radius-md);background:transparent;color:rgb(var(--mgt-muted-foreground));border:1px solid rgb(var(--mgt-border));font-size:12px;font-weight:600;cursor:pointer;">Ignorer</button>
+              </div>
+            </div>
+            <div class="reco-card" data-id="reco-reactif" data-category="reactivite" style="padding:16px;border-radius:var(--mgt-radius-md);border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-muted));">
+              <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))] mb-1">Répondez aux messages en moins de 15 minutes</p>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-3">Un délai court rassure les clients et améliore votre classement local.</p>
+              <div style="display:flex;gap:8px;">
+                <button type="button" class="reco-accept" style="padding:6px 12px;border-radius:var(--mgt-radius-md);background:rgb(var(--mgt-primary));color:rgb(var(--mgt-primary-foreground));border:none;font-size:12px;font-weight:600;cursor:pointer;">Accepter</button>
+                <button type="button" class="reco-ignore" style="padding:6px 12px;border-radius:var(--mgt-radius-md);background:transparent;color:rgb(var(--mgt-muted-foreground));border:1px solid rgb(var(--mgt-border));font-size:12px;font-weight:600;cursor:pointer;">Ignorer</button>
+              </div>
+            </div>
+            <div class="reco-card" data-id="reco-horaires" data-category="visibilite" style="padding:16px;border-radius:var(--mgt-radius-md);border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-muted));">
+              <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))] mb-1">Complétez vos horaires de week-end</p>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-3">Les horaires complets augmentent les chances d'être choisi par les clients.</p>
+              <div style="display:flex;gap:8px;">
+                <button type="button" class="reco-accept" style="padding:6px 12px;border-radius:var(--mgt-radius-md);background:rgb(var(--mgt-primary));color:rgb(var(--mgt-primary-foreground));border:none;font-size:12px;font-weight:600;cursor:pointer;">Accepter</button>
+                <button type="button" class="reco-ignore" style="padding:6px 12px;border-radius:var(--mgt-radius-md);background:transparent;color:rgb(var(--mgt-muted-foreground));border:1px solid rgb(var(--mgt-border));font-size:12px;font-weight:600;cursor:pointer;">Ignorer</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script>lucide.createIcons();</script>
+<script>
+(function () {
+  function toast(message) {
+    var old = document.getElementById('mgt-toast');
+    if (old) { old.parentNode.removeChild(old); }
+    var el = document.createElement('div');
+    el.id = 'mgt-toast';
+    el.setAttribute('role', 'status');
+    el.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(8px);background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));padding:10px 16px;border-radius:var(--mgt-radius-md);box-shadow:var(--mgt-shadow-md);font-size:14px;font-weight:500;z-index:9999;opacity:0;transition:opacity .25s ease, transform .25s ease;pointer-events:none;';
+    el.textContent = message;
+    document.body.appendChild(el);
+    window.requestAnimationFrame(function () {
+      el.style.opacity = '1';
+      el.style.transform = 'translateX(-50%) translateY(0)';
+    });
+    window.setTimeout(function () {
+      el.style.opacity = '0';
+      el.style.transform = 'translateX(-50%) translateY(8px)';
+      window.setTimeout(function () { if (el.parentNode) { el.parentNode.removeChild(el); } }, 260);
+    }, 2400);
+  }
+
+  var list = document.getElementById('reco-list');
+
+  var filter = document.getElementById('reco-filter');
+  var chips = filter ? filter.querySelectorAll('[data-category]') : [];
+  function setActive(cat) {
+    chips.forEach(function (c) {
+      var active = c.getAttribute('data-category') === cat;
+      c.style.background = active ? 'rgb(var(--mgt-primary))' : 'transparent';
+      c.style.color = active ? 'rgb(var(--mgt-primary-foreground))' : 'rgb(var(--mgt-muted-foreground))';
+      c.style.borderColor = active ? 'rgb(var(--mgt-primary))' : 'rgb(var(--mgt-border))';
+    });
+  }
+  function applyFilter(cat) {
+    var cards = list ? list.querySelectorAll('.reco-card') : [];
+    cards.forEach(function (card) {
+      card.style.display = (cat === 'all' || card.getAttribute('data-category') === cat) ? '' : 'none';
+    });
+    setActive(cat);
+  }
+  chips.forEach(function (c) {
+    c.addEventListener('click', function () { applyFilter(c.getAttribute('data-category')); });
+  });
+  applyFilter('all');
+})();
+</script>
+
+<script>
+(function(){
+  function __mgtSidebarScrollFix(){
+    var active = document.querySelector('nav a[class*="bg-white/15"]');
+    if (!active) return;
+    var nav = active.closest('nav');
+    if (!nav) return;
+    var navRect = nav.getBoundingClientRect();
+    var linkRect = active.getBoundingClientRect();
+    var target = nav.scrollTop + (linkRect.top - navRect.top) - (navRect.height - linkRect.height) / 2;
+    nav.scrollTop = Math.max(0, target);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', __mgtSidebarScrollFix);
+  } else {
+    __mgtSidebarScrollFix();
+  }
+})();
+</script>
+
+<script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+<script src="../assets/mangoo-vendor-config.js"></script>
+<script src="../assets/mangoo-dashboard-shell.js"></script>
+<script>
+(function(){
+  var currentConfig = null;
+
+  function toast(message) {
+    var old = document.getElementById('mgt-toast');
+    if (old) { old.parentNode.removeChild(old); }
+    var el = document.createElement('div');
+    el.id = 'mgt-toast';
+    el.setAttribute('role', 'status');
+    el.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(8px);background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));padding:10px 16px;border-radius:var(--mgt-radius-md);box-shadow:var(--mgt-shadow-md);font-size:14px;font-weight:500;z-index:9999;opacity:0;transition:opacity .25s ease, transform .25s ease;pointer-events:none;';
+    el.textContent = message;
+    document.body.appendChild(el);
+    window.requestAnimationFrame(function () {
+      el.style.opacity = '1';
+      el.style.transform = 'translateX(-50%) translateY(0)';
+    });
+    window.setTimeout(function () {
+      el.style.opacity = '0';
+      el.style.transform = 'translateX(-50%) translateY(8px)';
+      window.setTimeout(function () { if (el.parentNode) { el.parentNode.removeChild(el); } }, 260);
+    }, 2400);
+  }
+
+  function fmtNum(n) {
+    return String(n == null ? 0 : n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  }
+
+  function setText(id, val) {
+    var el = document.getElementById(id);
+    if (el) { el.textContent = val; }
+  }
+
+  function render() {
+    var d = (currentConfig && currentConfig.decouverte) || {};
+    var imps = d.impressions != null ? d.impressions : 0;
+    var clics = d.clics != null ? d.clics : 0;
+    var taux = d.tauxClic != null ? d.tauxClic : 0;
+    var recos = d.recommandations != null ? d.recommandations : 0;
+
+    setText('reco-hero-impressions', fmtNum(imps));
+    setText('reco-kpi-impressions', fmtNum(imps));
+    setText('reco-kpi-clics', fmtNum(clics));
+    setText('reco-kpi-taux', String(taux).replace('.', ',') + '%');
+    setText('reco-kpi-recos', fmtNum(recos));
+
+    var list = document.getElementById('reco-list');
+    if (list) {
+      var ignored = d.ignored || [];
+      var accepted = d.accepted || [];
+      var cards = list.querySelectorAll('.reco-card');
+      Array.prototype.forEach.call(cards, function (card) {
+        var id = card.getAttribute('data-id');
+        if (id && (ignored.indexOf(id) !== -1 || accepted.indexOf(id) !== -1)) {
+          if (card.parentNode) { card.parentNode.removeChild(card); }
+        }
+      });
+    }
+  }
+
+  var list = document.getElementById('reco-list');
+  if (list) {
+    list.addEventListener('click', function (e) {
+      var target = e.target;
+      if (!target || !target.closest) { return; }
+      var btn = target.closest('.reco-accept, .reco-ignore');
+      if (!btn) { return; }
+      var card = target.closest('.reco-card');
+      if (!card) { return; }
+      var id = card.getAttribute('data-id') || ('reco-' + Date.now());
+      var accepted = btn.classList.contains('reco-accept');
+
+      card.style.transition = 'opacity .25s ease, transform .25s ease';
+      card.style.opacity = '0';
+      card.style.transform = 'scale(.98)';
+      window.setTimeout(function () {
+        if (card.parentNode) { card.parentNode.removeChild(card); }
+      }, 250);
+      toast(accepted ? 'Recommandation acceptée' : 'Recommandation ignorée');
+
+      if (currentConfig) {
+        var d = currentConfig.decouverte = currentConfig.decouverte || {};
+        var key = accepted ? 'accepted' : 'ignored';
+        var arr = (d[key] || []).slice();
+        if (arr.indexOf(id) === -1) { arr.push(id); }
+        d[key] = arr;
+        var patchObj = {};
+        patchObj[key] = arr;
+        MangooVendorConfig.patch('decouverte', patchObj).catch(function () {});
+      }
+    });
+  }
+
+  if (window.MangooVendorConfig) {
+    MangooVendorConfig.get().then(function (res) {
+      if (res && res.ok) {
+        currentConfig = res.config || {};
+        render();
+      }
+    }).catch(function () {});
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Rendez-vous</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  /* --- Radius Scale (root-level for preflight) --- */
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  /* --- Brand Primary: Dark Green --- */
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  /* --- Orange Accent (CTAs, highlights) --- */
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  /* --- Neutral Surface & Text Scale --- */
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  /* --- State Colors --- */
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  /* --- Shadows --- */
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  /* --- Typography --- */
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* --- Semantic Tailwind Aliases --- */
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+/* --- Typography Classes --- */
+.h-display {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.h1 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(28px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.h2 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h3 {
+  font-family: var(--mgt-font-sans);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.body-l {
+  font-family: var(--mgt-font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--mgt-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--mgt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--radius-sm);
+    --radius-md: var(--radius-md);
+    --radius-lg: var(--radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen antialiased flex bg-[rgb(var(--mgt-muted))]">
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-[rgb(var(--mgt-primary))] text-[rgb(var(--mgt-primary-foreground))]">
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+        <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+        <div>
+          <span class="font-semibold text-base tracking-tight">Mangoo</span><span class="font-light text-base tracking-tight text-white/70">Tech</span>
+        </div>
+      </div>
+      <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <a href="./dashboard-overview.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+          Vue d'ensemble
+        </a>
+        <a href="./dashboard-performance.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bar-chart-3" class="w-4.5 h-4.5"></i>
+          Performance
+        </a>
+        <a href="./dashboard-reviews.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="star" class="w-4.5 h-4.5"></i>
+          Avis clients
+        </a>
+        <a href="./dashboard-agenda.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-medium transition-colors">
+          <i data-lucide="calendar-days" class="w-4.5 h-4.5"></i>
+          Rendez-vous
+        </a>
+        <a href="./dashboard-finances.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wallet" class="w-4.5 h-4.5"></i>
+          Finances
+        </a>
+        <a href="./dashboard-notifications.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+          Notifications
+        </a>
+        <a href="./dashboard-orders.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shopping-bag" class="w-4.5 h-4.5"></i>
+          Commandes
+        </a>
+        <a href="./dashboard-clients.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users" class="w-4.5 h-4.5"></i>
+          Clients
+        </a>
+        <a href="./dashboard-team.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users-round" class="w-4.5 h-4.5"></i>
+          Équipe
+        </a>
+        <a href="./dashboard-messages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="message-square" class="w-4.5 h-4.5"></i>
+          Messagerie
+        </a>
+        <a href="./dashboard-live.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="radio" class="w-4.5 h-4.5"></i>
+          Live
+        </a>
+        <a href="./dashboard-services.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="briefcase" class="w-4.5 h-4.5"></i>
+          Prestations
+        </a>
+        <a href="./dashboard-catalogue.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="package" class="w-4.5 h-4.5"></i>
+          Catalogue
+        </a>
+        <a href="./dashboard-inventaire.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="boxes" class="w-4.5 h-4.5"></i>
+          Inventaire
+        </a>
+        <a href="./dashboard-gallery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="images" class="w-4.5 h-4.5"></i>
+          Galerie
+        </a>
+        <a href="./dashboard-boosters.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="zap" class="w-4.5 h-4.5"></i>
+          Boosters
+        </a>
+        <a href="./dashboard-delivery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="truck" class="w-4.5 h-4.5"></i>
+          Livraisons
+        </a>
+        <a href="./dashboard-promotions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="badge-percent" class="w-4.5 h-4.5"></i>
+          Promotions
+        </a>
+        <a href="./dashboard-fidelite.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="award" class="w-4.5 h-4.5"></i>
+          Fidélité
+        </a>
+        <a href="./dashboard-parrainage.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="gift" class="w-4.5 h-4.5"></i>
+          Parrainage
+        </a>
+        <a href="./dashboard-classement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="trophy" class="w-4.5 h-4.5"></i>
+          Classement
+        </a>
+        <a href="./dashboard-verification.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shield-check" class="w-4.5 h-4.5"></i>
+          Vérification
+        </a>
+        <a href="./dashboard-recommandation.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="compass" class="w-4.5 h-4.5"></i>
+          Découverte
+        </a>
+        <a href="./dashboard-hors-ligne.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wifi-off" class="w-4.5 h-4.5"></i>
+          Hors-ligne
+        </a>
+        <a href="./dashboard-rapports.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
+          Rapports
+        </a>
+        <a href="./dashboard-support.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="life-buoy" class="w-4.5 h-4.5"></i>
+          Support
+        </a>
+        <a href="./dashboard-offres.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="tag" class="w-4.5 h-4.5"></i>
+          Offres & Tarifs
+        </a>
+        <a href="./dashboard-abonnement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="credit-card" class="w-4.5 h-4.5"></i>
+          Abonnement
+        </a>
+        <a href="./dashboard-settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="settings" class="w-4.5 h-4.5"></i>
+          Parametres
+        </a>
+      </nav>
+      <div class="border-t border-white/10 px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>CA</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate" data-vendor-name>DAN Boutique</p>
+            <p class="text-xs text-white/60 truncate" data-vendor-role>Prestataire certifié</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div id="app-main" class="flex-1 ml-60 min-h-screen flex flex-col">
+      <header class="sticky top-0 z-30 flex items-center justify-between gap-4 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] px-4 py-3.5">
+        <div class="flex items-center gap-3">
+          <button id="btn-app-menu" class="mobile-menu-btn" title="Menu" aria-label="Ouvrir le menu">
+            <i data-lucide="menu" class="w-5 h-5"></i>
+          </button>
+          <h1 class="text-lg font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">Rendez-vous</h1>
+          <span id="week-label" class="hidden sm:inline text-xs text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">Semaine du 10 août</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <button id="btn-new-appointment" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[rgb(var(--mgt-primary))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-primary-700))] transition-colors">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            Nouveau rendez-vous
+          </button>
+          <button id="btn-notifications" class="relative p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))]" aria-label="Notifications">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="btn-notifications-badge" class="absolute top-1 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-[10px] font-bold leading-4 text-center" style="display:none;"></span>
+          </button>
+          <div id="btn-account" class="flex items-center gap-3 pl-2 border-l border-[rgb(var(--mgt-border))] cursor-pointer" role="button" tabindex="0">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>CA</div>
+            <div class="hidden sm:block text-right">
+              <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]" data-vendor-name>DAN Boutique</p>
+              <div class="flex items-center gap-1 text-xs text-[rgb(var(--mgt-accent))]">
+                <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                <span data-vendor-rating>4.8</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="flex-1 p-8 space-y-6">
+        <!-- ===== KPIs AGENDA ===== -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                <i data-lucide="calendar-check" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><i data-lucide="trending-up" class="w-3 h-3"></i> +12%</span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Rendez-vous aujourd'hui</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">8</p>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1">dont 2 en attente</p>
+          </div>
+
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
+                <i data-lucide="calendar-clock" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><i data-lucide="trending-up" class="w-3 h-3"></i> +8%</span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">À venir (7 jours)</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">27</p>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1">semaine chargée</p>
+          </div>
+
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                <i data-lucide="gauge" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><i data-lucide="trending-up" class="w-3 h-3"></i> +6 pts</span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Taux d'occupation</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">78 %</p>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1">créneaux réservés</p>
+          </div>
+
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
+                <i data-lucide="user-x" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-warning)/0.15)] text-[rgb(var(--mgt-accent-700))]"><i data-lucide="trending-down" class="w-3 h-3"></i> -3 pts</span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Annulations</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">4</p>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1">ce mois-ci</p>
+          </div>
+        </div>
+
+        <!-- ===== CALENDRIER HEBDOMADAIRE ===== -->
+        <div id="calendar-section" class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex items-center justify-between mb-5">
+            <h2 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Vue de la semaine <span id="week-range" class="font-normal text-sm text-[rgb(var(--mgt-muted-foreground))]">· 10 – 16 août 2026</span></h2>
+            <div class="flex items-center gap-2">
+              <button id="btn-week-prev" class="p-2 rounded-lg border border-[rgb(var(--mgt-border))] hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))]"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+              <button id="btn-week-today" class="px-3 py-1.5 rounded-lg border border-[rgb(var(--mgt-border))] text-xs font-medium text-[rgb(var(--mgt-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors">Aujourd'hui</button>
+              <button id="btn-week-next" class="p-2 rounded-lg border border-[rgb(var(--mgt-border))] hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))]"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+            </div>
+          </div>
+
+          <!-- Jours de la semaine (défilement horizontal sur mobile) -->
+          <div id="week-scroll">
+          <div id="week-days-grid" class="grid grid-cols-7 gap-2 mb-4">
+            <div class="ag-day text-center py-2 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+              <p class="text-xs font-medium text-[rgb(var(--mgt-muted-foreground))]">Lun</p>
+              <p class="ag-daynum text-sm font-bold text-[rgb(var(--mgt-foreground))]">10</p>
+            </div>
+            <div class="ag-day text-center py-2 rounded-lg bg-[rgb(var(--mgt-primary))]">
+              <p class="text-xs font-medium text-white/70">Mar</p>
+              <p class="ag-daynum text-sm font-bold text-white">11</p>
+            </div>
+            <div class="ag-day text-center py-2 rounded-lg">
+              <p class="text-xs font-medium text-[rgb(var(--mgt-muted-foreground))]">Mer</p>
+              <p class="ag-daynum text-sm font-bold text-[rgb(var(--mgt-foreground))]">12</p>
+            </div>
+            <div class="ag-day text-center py-2 rounded-lg">
+              <p class="text-xs font-medium text-[rgb(var(--mgt-muted-foreground))]">Jeu</p>
+              <p class="ag-daynum text-sm font-bold text-[rgb(var(--mgt-foreground))]">13</p>
+            </div>
+            <div class="ag-day text-center py-2 rounded-lg">
+              <p class="text-xs font-medium text-[rgb(var(--mgt-muted-foreground))]">Ven</p>
+              <p class="ag-daynum text-sm font-bold text-[rgb(var(--mgt-foreground))]">14</p>
+            </div>
+            <div class="ag-day text-center py-2 rounded-lg">
+              <p class="text-xs font-medium text-[rgb(var(--mgt-muted-foreground))]">Sam</p>
+              <p class="ag-daynum text-sm font-bold text-[rgb(var(--mgt-foreground))]">15</p>
+            </div>
+            <div class="ag-day text-center py-2 rounded-lg">
+              <p class="text-xs font-medium text-[rgb(var(--mgt-muted-foreground))]">Dim</p>
+              <p class="ag-daynum text-sm font-bold text-[rgb(var(--mgt-foreground))]">16</p>
+            </div>
+          </div>
+
+          <!-- Créneaux horaires avec rendez-vous -->
+          <div class="grid grid-cols-7 gap-2">
+            <!-- Lundi -->
+            <div class="space-y-2 min-h-40">
+              <div class="rounded-lg p-2 text-xs border-l-2" style="border-color:rgb(var(--mgt-primary)); background:rgb(var(--mgt-primary-50));">
+                <div class="flex items-center justify-between mb-0.5">
+                  <p class="font-semibold text-[rgb(var(--mgt-foreground))]">09:00</p>
+                  <span class="text-[10px] text-[rgb(var(--mgt-muted-foreground))]">1 h</span>
+                </div>
+                <p class="leading-snug break-words"><span class="block text-[rgb(var(--mgt-primary-700))]">Tresse</span><span class="block font-semibold text-[rgb(var(--mgt-foreground))]">Awa S.</span></p>
+              </div>
+              <div class="rounded-lg p-2 text-xs border-l-2" style="border-color:rgb(var(--mgt-accent)); background:rgb(var(--mgt-accent-50));">
+                <div class="flex items-center justify-between mb-0.5">
+                  <p class="font-semibold text-[rgb(var(--mgt-foreground))]">14:00</p>
+                  <span class="text-[10px] text-[rgb(var(--mgt-muted-foreground))]">1 h 30</span>
+                </div>
+                <p class="leading-snug break-words"><span class="block text-[rgb(var(--mgt-accent-700))]">Coloration</span><span class="block font-semibold text-[rgb(var(--mgt-foreground))]">Fatou K.</span></p>
+              </div>
+            </div>
+            <!-- Mardi -->
+            <div class="space-y-2 min-h-40">
+              <div class="rounded-lg p-2 text-xs border-l-2" style="border-color:rgb(var(--mgt-primary)); background:rgb(var(--mgt-primary-50));">
+                <div class="flex items-center justify-between mb-0.5">
+                  <p class="font-semibold text-[rgb(var(--mgt-foreground))]">10:00</p>
+                  <span class="text-[10px] text-[rgb(var(--mgt-muted-foreground))]">45 min</span>
+                </div>
+                <p class="leading-snug break-words"><span class="block text-[rgb(var(--mgt-primary-700))]">Coiffure homme</span><span class="block font-semibold text-[rgb(var(--mgt-foreground))]">Dida DANSO</span></p>
+              </div>
+              <div class="rounded-lg p-2 text-xs border-l-2" style="border-color:rgb(var(--mgt-primary)); background:rgb(var(--mgt-primary-50));">
+                <div class="flex items-center justify-between mb-0.5">
+                  <p class="font-semibold text-[rgb(var(--mgt-foreground))]">16:00</p>
+                  <span class="text-[10px] text-[rgb(var(--mgt-muted-foreground))]">45 min</span>
+                </div>
+                <p class="leading-snug break-words"><span class="block text-[rgb(var(--mgt-primary-700))]">Manucure</span><span class="block font-semibold text-[rgb(var(--mgt-foreground))]">Aïda N.</span></p>
+              </div>
+            </div>
+            <!-- Mercredi -->
+            <div class="space-y-2 min-h-40">
+              <div class="rounded-lg p-2 text-xs border-l-2" style="border-color:rgb(var(--mgt-primary)); background:rgb(var(--mgt-primary-50));">
+                <div class="flex items-center justify-between mb-0.5">
+                  <p class="font-semibold text-[rgb(var(--mgt-foreground))]">11:00</p>
+                  <span class="text-[10px] text-[rgb(var(--mgt-muted-foreground))]">1 h 15</span>
+                </div>
+                <p class="leading-snug break-words"><span class="block text-[rgb(var(--mgt-primary-700))]">Tresse</span><span class="block font-semibold text-[rgb(var(--mgt-foreground))]">Mariama B.</span></p>
+              </div>
+              <div class="rounded-lg p-2 text-xs border-dashed border border-[rgb(var(--mgt-border))] bg-transparent flex items-center gap-1.5">
+                <i data-lucide="coffee" class="w-3.5 h-3.5 text-[rgb(var(--mgt-muted-foreground))]"></i>
+                <p class="text-[10px] text-[rgb(var(--mgt-muted-foreground))]">Pause déjeuner</p>
+              </div>
+            </div>
+            <!-- Jeudi -->
+            <div class="space-y-2 min-h-40">
+              <div class="rounded-lg p-2 text-xs border-l-2" style="border-color:rgb(var(--mgt-accent)); background:rgb(var(--mgt-accent-50));">
+                <div class="flex items-center justify-between mb-0.5">
+                  <p class="font-semibold text-[rgb(var(--mgt-foreground))]">09:30</p>
+                  <span class="text-[10px] text-[rgb(var(--mgt-muted-foreground))]">1 h 30</span>
+                </div>
+                <p class="leading-snug break-words"><span class="block text-[rgb(var(--mgt-accent-700))]">Coloration</span><span class="block font-semibold text-[rgb(var(--mgt-foreground))]">Ndeye F.</span></p>
+              </div>
+              <div class="rounded-lg p-2 text-xs border-l-2" style="border-color:rgb(var(--mgt-primary)); background:rgb(var(--mgt-primary-50));">
+                <div class="flex items-center justify-between mb-0.5">
+                  <p class="font-semibold text-[rgb(var(--mgt-foreground))]">15:00</p>
+                  <span class="text-[10px] text-[rgb(var(--mgt-muted-foreground))]">1 h</span>
+                </div>
+                <p class="leading-snug break-words"><span class="block text-[rgb(var(--mgt-primary-700))]">Coiffure femme</span><span class="block font-semibold text-[rgb(var(--mgt-foreground))]">Awa S.</span></p>
+              </div>
+            </div>
+            <!-- Vendredi -->
+            <div class="space-y-2 min-h-40">
+              <div class="rounded-lg p-2 text-xs border-l-2" style="border-color:rgb(var(--mgt-primary)); background:rgb(var(--mgt-primary-50));">
+                <div class="flex items-center justify-between mb-0.5">
+                  <p class="font-semibold text-[rgb(var(--mgt-foreground))]">10:30</p>
+                  <span class="text-[10px] text-[rgb(var(--mgt-muted-foreground))]">45 min</span>
+                </div>
+                <p class="leading-snug break-words"><span class="block text-[rgb(var(--mgt-primary-700))]">Manucure</span><span class="block font-semibold text-[rgb(var(--mgt-foreground))]">Coumba T.</span></p>
+              </div>
+              <div class="rounded-lg p-2 text-xs border-l-2" style="border-color:rgb(var(--mgt-primary)); background:rgb(var(--mgt-primary-50));">
+                <div class="flex items-center justify-between mb-0.5">
+                  <p class="font-semibold text-[rgb(var(--mgt-foreground))]">16:30</p>
+                  <span class="text-[10px] text-[rgb(var(--mgt-muted-foreground))]">1 h</span>
+                </div>
+                <p class="leading-snug break-words"><span class="block text-[rgb(var(--mgt-primary-700))]">Tresse</span><span class="block font-semibold text-[rgb(var(--mgt-foreground))]">Sokhna D.</span></p>
+              </div>
+            </div>
+            <!-- Samedi -->
+            <div class="space-y-2 min-h-40">
+              <div class="rounded-lg p-2 text-xs border-l-2" style="border-color:rgb(var(--mgt-accent)); background:rgb(var(--mgt-accent-50));">
+                <div class="flex items-center justify-between mb-0.5">
+                  <p class="font-semibold text-[rgb(var(--mgt-foreground))]">09:00</p>
+                  <span class="text-[10px] text-[rgb(var(--mgt-muted-foreground))]">1 h 15</span>
+                </div>
+                <p class="leading-snug break-words"><span class="block text-[rgb(var(--mgt-accent-700))]">Tresse</span><span class="block font-semibold text-[rgb(var(--mgt-foreground))]">Aminata G.</span></p>
+              </div>
+              <div class="rounded-lg p-2 text-xs border-l-2" style="border-color:rgb(var(--mgt-primary)); background:rgb(var(--mgt-primary-50));">
+                <div class="flex items-center justify-between mb-0.5">
+                  <p class="font-semibold text-[rgb(var(--mgt-foreground))]">13:00</p>
+                  <span class="text-[10px] text-[rgb(var(--mgt-muted-foreground))]">1 h</span>
+                </div>
+                <p class="leading-snug break-words"><span class="block text-[rgb(var(--mgt-primary-700))]">Coloration</span><span class="block font-semibold text-[rgb(var(--mgt-foreground))]">Sokhna D.</span></p>
+              </div>
+            </div>
+            <!-- Dimanche -->
+            <div class="space-y-2 min-h-40 rounded-lg flex items-center justify-center" style="background:rgb(var(--mgt-muted));">
+              <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] text-center">Fermé</p>
+            </div>
+          </div>
+          </div>
+        </div>
+
+        <!-- ===== PROCHAINS RDV + DISPONIBILITES (2-col) ===== -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <!-- Prochains rendez-vous -->
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Prochains rendez-vous</h2>
+              <button id="btn-see-all" class="text-xs font-medium text-[rgb(var(--mgt-primary))] hover:text-[rgb(var(--mgt-primary-700))]">Voir tout</button>
+            </div>
+            <div id="ag-list" class="space-y-3">
+              <div class="flex items-center gap-3 p-3 rounded-lg border border-[rgb(var(--mgt-border))]">
+                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] font-semibold text-xs flex-shrink-0">AS</div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Awa S. — Tresse</p>
+                  <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Aujourd'hui · 09:00 · 1 h</p>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]"><i data-lucide="check" class="w-3 h-3"></i> Confirmé</span>
+              </div>
+              <div class="js-appointment flex items-center gap-3 p-3 rounded-lg border border-[rgb(var(--mgt-border))]" data-status="pending">
+                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] font-semibold text-xs flex-shrink-0">FK</div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Fatou K. — Coloration</p>
+                  <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Aujourd'hui · 14:00 · 1 h 30</p>
+                </div>
+                <span class="js-status inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-warning)/0.20)] text-[rgb(var(--mgt-accent-800))]"><i data-lucide="clock" class="w-3 h-3"></i> En attente</span>
+                <button class="js-confirm inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-[rgb(var(--mgt-primary))] text-white hover:bg-[rgb(var(--mgt-primary-700))] transition-colors"><i data-lucide="check" class="w-3 h-3"></i> Confirmer</button>
+                <button class="js-refuse inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold border border-[rgb(var(--mgt-border))] text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors"><i data-lucide="x" class="w-3 h-3"></i> Refuser</button>
+              </div>
+              <div class="flex items-center gap-3 p-3 rounded-lg border border-[rgb(var(--mgt-border))]">
+                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] font-semibold text-xs flex-shrink-0">MD</div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Dida DANSO — Coiffure homme</p>
+                  <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Demain · 10:00 · 45 min</p>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]"><i data-lucide="check" class="w-3 h-3"></i> Confirmé</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Disponibilités -->
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Vos disponibilités</h2>
+              <button id="btn-edit-hours" class="inline-flex items-center gap-1.5 text-xs font-medium text-[rgb(var(--mgt-primary))] hover:text-[rgb(var(--mgt-primary-700))]"><i data-lucide="pencil" class="w-3.5 h-3.5"></i> Modifier</button>
+            </div>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-[rgb(var(--mgt-foreground))]">Lundi – Vendredi</span>
+                <span class="js-hours-value font-medium text-[rgb(var(--mgt-muted-foreground))]">09:00 – 18:00</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-[rgb(var(--mgt-foreground))]">Pause déjeuner</span>
+                <span class="js-hours-value font-medium text-[rgb(var(--mgt-muted-foreground))]">13:00 – 14:00</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-[rgb(var(--mgt-foreground))]">Samedi</span>
+                <span class="js-hours-value font-medium text-[rgb(var(--mgt-muted-foreground))]">09:00 – 15:00</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-[rgb(var(--mgt-foreground))]">Dimanche</span>
+                <span class="font-medium text-[rgb(var(--mgt-accent-700))]">Fermé</span>
+              </div>
+              <div class="border-t border-[rgb(var(--mgt-border))] pt-3 mt-3">
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-3">Autoriser la prise de rendez-vous en ligne</p>
+                <div class="flex items-center gap-3">
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" checked class="sr-only peer">
+                    <div class="w-11 h-6 rounded-full bg-[rgb(var(--mgt-border))] peer-checked:bg-[rgb(var(--mgt-primary))] transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+                  </label>
+                  <span class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Activé</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script>lucide.createIcons();</script>
+    <script>
+    (function () {
+      // Comportement de production du calendrier : confirmation/refus d'un
+      // rendez-vous en attente, création d'un nouveau rendez-vous et bascule
+      // de la réservation en ligne.
+      function toast(msg) {
+        var t = document.getElementById('ag-toast');
+        if (!t) {
+          t = document.createElement('div');
+          t.id = 'ag-toast';
+          t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translate(-50%,16px);background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;font-family:var(--mgt-font-sans);z-index:9999;opacity:0;transition:all .25s ease;pointer-events:none;';
+          document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        requestAnimationFrame(function () { t.style.opacity = '1'; t.style.transform = 'translate(-50%,0)'; });
+        clearTimeout(t._timer);
+        t._timer = setTimeout(function () { t.style.opacity = '0'; t.style.transform = 'translate(-50%,16px)'; }, 2400);
+      }
+
+      function confirmAppointment(row) {
+        row.setAttribute('data-status', 'confirmed');
+        var status = row.querySelector('.js-status');
+        if (status) {
+          status.className = 'js-status inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]';
+          status.innerHTML = '<i data-lucide="check" class="w-3 h-3"></i> Confirmé';
+        }
+        var confirm = row.querySelector('.js-confirm');
+        var refuse = row.querySelector('.js-refuse');
+        if (confirm) confirm.remove();
+        if (refuse) refuse.remove();
+        lucide.createIcons();
+        toast('Rendez-vous confirmé.');
+      }
+
+      document.querySelectorAll('.js-appointment[data-status="pending"]').forEach(function (row) {
+        var confirm = row.querySelector('.js-confirm');
+        var refuse = row.querySelector('.js-refuse');
+        if (confirm) confirm.addEventListener('click', function () { confirmAppointment(row); });
+        if (refuse) refuse.addEventListener('click', function () {
+          row.remove();
+          lucide.createIcons();
+          toast('Rendez-vous refusé.');
+        });
+      });
+
+      function openNewAppointment() {
+        var old = document.getElementById('ag-modal');
+        if (old) old.remove();
+        var modal = document.createElement('div');
+        modal.id = 'ag-modal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;';
+        modal.innerHTML =
+          '<div style="background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:16px;width:100%;max-width:440px;padding:24px;font-family:var(--mgt-font-sans);max-height:90vh;overflow:auto;">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
+          '<h3 style="font-size:16px;font-weight:600;color:rgb(var(--mgt-foreground));">Nouveau rendez-vous</h3>' +
+          '<button id="ag-close" style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:20px;cursor:pointer;">&times;</button></div>' +
+          '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Cliente</label>' +
+          '<input id="ag-client" placeholder="Nom de la cliente" style="width:100%;height:42px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:12px;">' +
+          '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Prestation</label>' +
+          '<input id="ag-service" placeholder="Ex. Tresse, Coloration…" style="width:100%;height:42px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:12px;">' +
+          '<div style="display:flex;gap:10px;margin-bottom:12px;">' +
+          '<div style="flex:1;"><label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Jour</label>' +
+          '<select id="ag-day" style="width:100%;height:42px;padding:0 10px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;"><option>Aujourd\'hui</option><option>Demain</option><option>Mercredi</option><option>Jeudi</option><option>Vendredi</option></select></div>' +
+          '<div style="flex:1;"><label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Heure</label>' +
+          '<input id="ag-time" type="time" value="10:00" style="width:100%;height:42px;padding:0 10px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;"></div></div>' +
+          '<div style="display:flex;gap:10px;margin-top:12px;">' +
+          '<button id="ag-cancel" style="flex:1;height:42px;border:1px solid rgb(var(--mgt-border));border-radius:10px;background:transparent;color:rgb(var(--mgt-foreground));font-size:14px;font-weight:600;cursor:pointer;">Annuler</button>' +
+          '<button id="ag-save" style="flex:1;height:42px;border:none;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Ajouter</button></div></div>';
+        document.body.appendChild(modal);
+        function close() { modal.remove(); }
+        modal.querySelector('#ag-close').onclick = close;
+        modal.querySelector('#ag-cancel').onclick = close;
+        modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+        modal.querySelector('#ag-save').onclick = function () {
+          var client = modal.querySelector('#ag-client').value.trim();
+          var service = modal.querySelector('#ag-service').value.trim();
+          if (!client || !service) { modal.querySelector('#ag-client').focus(); return; }
+          var day = modal.querySelector('#ag-day').value;
+          var time = modal.querySelector('#ag-time').value;
+          addAppointment(client, service, day, time);
+          close();
+          toast('Rendez-vous ajouté.');
+        };
+        setTimeout(function () { modal.querySelector('#ag-client').focus(); }, 50);
+      }
+
+      function addAppointment(client, service, day, time) {
+        var list = document.querySelector('#ag-list, .js-appointment');
+        var container = document.querySelector('.js-appointment') ? document.querySelector('.js-appointment').parentNode : null;
+        if (!container) return;
+        var ini = client.split(/\s+/).map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase();
+        var div = document.createElement('div');
+        div.className = 'flex items-center gap-3 p-3 rounded-lg border border-[rgb(var(--mgt-border))]';
+        div.innerHTML =
+          '<div class="flex items-center justify-center w-10 h-10 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] font-semibold text-xs flex-shrink-0">' + ini + '</div>' +
+          '<div class="flex-1 min-w-0"><p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">' + client + ' — ' + service + '</p>' +
+          '<p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">' + day + ' · ' + time + '</p></div>' +
+          '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]"><i data-lucide="check" class="w-3 h-3"></i> Confirmé</span>';
+        container.insertBefore(div, container.firstChild);
+        lucide.createIcons();
+      }
+
+      var newBtn = document.getElementById('btn-new-appointment');
+      if (newBtn) newBtn.addEventListener('click', openNewAppointment);
+
+      var bookingToggle = document.querySelector('input[type="checkbox"].sr-only');
+      if (bookingToggle) {
+        var label = bookingToggle.closest('.flex.items-center.gap-3') ? bookingToggle.closest('.flex.items-center.gap-3').querySelector('span') : null;
+        bookingToggle.addEventListener('change', function () {
+          if (label) label.textContent = bookingToggle.checked ? 'Activé' : 'Désactivé';
+          toast(bookingToggle.checked ? 'Réservation en ligne activée.' : 'Réservation en ligne désactivée.');
+        });
+      }
+
+      // ===== Navigation de la semaine (chevrons + Aujourd'hui) =====
+      var MONTHS_FR = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+      var DAYS_FR = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+
+      function startOfDay(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+      function mondayOf(d) {
+        var m = startOfDay(d);
+        m.setDate(m.getDate() - ((m.getDay() + 6) % 7));
+        return m;
+      }
+      // Date réelle du jour (et non une date figée).
+      var todayRef = startOfDay(new Date());
+      var weekStart = mondayOf(todayRef);
+
+      function formatRange(ws) {
+        var we = new Date(ws);
+        we.setDate(ws.getDate() + 6);
+        if (ws.getMonth() === we.getMonth()) {
+          return ws.getDate() + ' – ' + we.getDate() + ' ' + MONTHS_FR[ws.getMonth()] + ' ' + ws.getFullYear();
+        }
+        return ws.getDate() + ' ' + MONTHS_FR[ws.getMonth()] + ' – ' + we.getDate() + ' ' + MONTHS_FR[we.getMonth()] + ' ' + we.getFullYear();
+      }
+
+      function renderWeek() {
+        var label = document.getElementById('week-label');
+        if (label) label.textContent = 'Semaine du ' + weekStart.getDate() + ' ' + MONTHS_FR[weekStart.getMonth()];
+        var range = document.getElementById('week-range');
+        if (range) range.textContent = '· ' + formatRange(weekStart);
+        var dayCells = document.querySelectorAll('#week-days-grid .ag-day');
+        dayCells.forEach(function (cell, i) {
+          var d = new Date(weekStart);
+          d.setDate(weekStart.getDate() + i);
+          var num = cell.querySelector('.ag-daynum');
+          var nameEl = cell.querySelector('p');
+          if (num) num.textContent = d.getDate();
+          if (nameEl) nameEl.textContent = DAYS_FR[i];
+          var isToday = (d.getFullYear() === todayRef.getFullYear() && d.getMonth() === todayRef.getMonth() && d.getDate() === todayRef.getDate());
+          var isFirst = (i === 0);
+          cell.className = 'ag-day text-center py-2 rounded-lg';
+          var innerName = cell.querySelector('p:first-child');
+          var innerNum = cell.querySelector('.ag-daynum');
+          if (isToday) {
+            cell.classList.add('bg-[rgb(var(--mgt-primary))]');
+            if (innerName) innerName.className = 'text-xs font-medium text-white/70';
+            if (innerNum) innerNum.className = 'ag-daynum text-sm font-bold text-white';
+          } else if (isFirst) {
+            cell.classList.add('bg-[rgb(var(--mgt-primary-50))]');
+            if (innerName) innerName.className = 'text-xs font-medium text-[rgb(var(--mgt-muted-foreground))]';
+            if (innerNum) innerNum.className = 'ag-daynum text-sm font-bold text-[rgb(var(--mgt-foreground))]';
+          } else {
+            if (innerName) innerName.className = 'text-xs font-medium text-[rgb(var(--mgt-muted-foreground))]';
+            if (innerNum) innerNum.className = 'ag-daynum text-sm font-bold text-[rgb(var(--mgt-foreground))]';
+          }
+        });
+      }
+
+      function shiftWeek(days) {
+        weekStart = new Date(weekStart);
+        weekStart.setDate(weekStart.getDate() + days);
+        renderWeek();
+      }
+
+      var prevBtn = document.getElementById('btn-week-prev');
+      var nextBtn = document.getElementById('btn-week-next');
+      var todayBtn = document.getElementById('btn-week-today');
+      if (prevBtn) prevBtn.addEventListener('click', function () { shiftWeek(-7); toast('Semaine précédente.'); });
+      if (nextBtn) nextBtn.addEventListener('click', function () { shiftWeek(7); toast('Semaine suivante.'); });
+      if (todayBtn) todayBtn.addEventListener('click', function () {
+        todayRef = startOfDay(new Date());
+        weekStart = mondayOf(todayRef);
+        renderWeek();
+        toast('Retour à la semaine en cours.');
+      });
+
+      // ===== « Voir tout » : défile vers le calendrier complet =====
+      var seeAllBtn = document.getElementById('btn-see-all');
+      if (seeAllBtn) {
+        seeAllBtn.addEventListener('click', function () {
+          var cal = document.getElementById('calendar-section');
+          if (cal) cal.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
+
+      // Synchronisation initiale avec la date réelle au chargement.
+      renderWeek();
+
+      // ===== « Modifier » : ouvre un panneau d'édition des horaires =====
+      function openEditHours() {
+        var old = document.getElementById('ag-hours-modal');
+        if (old) old.remove();
+        var modal = document.createElement('div');
+        modal.id = 'ag-hours-modal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;';
+        modal.innerHTML =
+          '<div style="background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:16px;width:100%;max-width:440px;padding:24px;font-family:var(--mgt-font-sans);">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
+          '<h3 style="font-size:16px;font-weight:600;color:rgb(var(--mgt-foreground));">Modifier les disponibilités</h3>' +
+          '<button id="ag-hours-close" style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:20px;cursor:pointer;">&times;</button></div>' +
+          '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Lundi – Vendredi</label>' +
+          '<input id="ag-hours-weekday" value="09:00 – 18:00" style="width:100%;height:42px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:12px;">' +
+          '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Pause déjeuner</label>' +
+          '<input id="ag-hours-lunch" value="13:00 – 14:00" style="width:100%;height:42px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:12px;">' +
+          '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Samedi</label>' +
+          '<input id="ag-hours-saturday" value="09:00 – 15:00" style="width:100%;height:42px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:16px;">' +
+          '<div style="display:flex;gap:10px;">' +
+          '<button id="ag-hours-cancel" style="flex:1;height:42px;border:1px solid rgb(var(--mgt-border));border-radius:10px;background:transparent;color:rgb(var(--mgt-foreground));font-size:14px;font-weight:600;cursor:pointer;">Annuler</button>' +
+          '<button id="ag-hours-save" style="flex:1;height:42px;border:none;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Enregistrer</button></div></div>';
+        document.body.appendChild(modal);
+        function close() { modal.remove(); }
+        modal.querySelector('#ag-hours-close').onclick = close;
+        modal.querySelector('#ag-hours-cancel').onclick = close;
+        modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+        modal.querySelector('#ag-hours-save').onclick = function () {
+          var weekday = modal.querySelector('#ag-hours-weekday').value.trim();
+          var lunch = modal.querySelector('#ag-hours-lunch').value.trim();
+          var saturday = modal.querySelector('#ag-hours-saturday').value.trim();
+          if (!weekday || !lunch || !saturday) { modal.querySelector('#ag-hours-weekday').focus(); return; }
+          var spans = document.querySelectorAll('.js-hours-value');
+          if (spans[0]) spans[0].textContent = weekday;
+          if (spans[1]) spans[1].textContent = lunch;
+          if (spans[2]) spans[2].textContent = saturday;
+          close();
+          toast('Disponibilités enregistrées.');
+        };
+        setTimeout(function () { modal.querySelector('#ag-hours-weekday').focus(); }, 50);
+      }
+
+      var editBtn = document.getElementById('btn-edit-hours');
+      if (editBtn) editBtn.addEventListener('click', openEditHours);
+    })();
+    </script>
+
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      .tabular-nums { font-variant-numeric: tabular-nums; }
+      body { font-family: var(--mgt-font-sans); }
+    </style>
+
+    <script src="../assets/mangoo-connect-plus.js"></script>
+    <script>
+    (function () {
+      var RT = window.MangooConnect;
+      if (!RT || typeof RT.register !== 'function') return;
+      // Identité du professionnel réellement connecté (session `mgt_user` puis
+      // identité prestataire partagée). Aucun repli codé en dur : on ne doit
+      // jamais enregistrer DAN Coiffure sous l'identifiant de DAN Boutique.
+      function resolveVendor() {
+        try {
+          var u = JSON.parse(localStorage.getItem('mgt_user') || 'null');
+          if (u && (u.role === 'vendeur' || u.role === 'prestataire')) {
+            var id = u.vendorId || u.id || '';
+            if (id) return { id: id, name: u.enseigne || u.name || id };
+          }
+        } catch (e) {}
+        try {
+          var v = JSON.parse(localStorage.getItem('mgt_vendor_identity_v1') || 'null');
+          if (v && v.vendorId) return { id: v.vendorId, name: v.name || v.vendorId };
+        } catch (e) {}
+        try {
+          if (window.MangooVendor && typeof window.MangooVendor.connectedVendorId === 'function') {
+            var vid = window.MangooVendor.connectedVendorId();
+            if (vid) {
+              var cur = window.MangooVendor.current();
+              return { id: vid, name: (cur && cur.name) || vid };
+            }
+          }
+        } catch (e) {}
+        return { id: '', name: '' };
+      }
+      var _v = resolveVendor();
+      if (_v.id) RT.register('vendor', _v.id, _v.name);
+
+      function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+      function toast(msg) {
+        var t = document.getElementById('ag-rt-toast');
+        if (!t) {
+          t = document.createElement('div');
+          t.id = 'ag-rt-toast';
+          t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translate(-50%,16px);background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;font-family:var(--mgt-font-sans);z-index:9999;opacity:0;transition:all .25s ease;pointer-events:none;';
+          document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        requestAnimationFrame(function () { t.style.opacity = '1'; t.style.transform = 'translate(-50%,0)'; });
+        clearTimeout(t._timer);
+        t._timer = setTimeout(function () { t.style.opacity = '0'; t.style.transform = 'translate(-50%,16px)'; }, 2400);
+      }
+
+      function confirmRow(row) {
+        row.setAttribute('data-status', 'confirmed');
+        var status = row.querySelector('.js-status');
+        if (status) {
+          status.className = 'js-status inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]';
+          status.innerHTML = '<i data-lucide="check" class="w-3 h-3"></i> Confirmé';
+        }
+        var c = row.querySelector('.js-confirm'); if (c) c.remove();
+        var r = row.querySelector('.js-refuse'); if (r) r.remove();
+        if (window.lucide) window.lucide.createIcons();
+        toast('Rendez-vous confirmé.');
+      }
+
+      function renderRequest(a) {
+        var list = document.getElementById('ag-list');
+        if (!list) return;
+        var name = a.fromName || a.from || 'Client';
+        var ini = name.split(/\s+/).map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase();
+        var row = document.createElement('div');
+        row.className = 'js-appointment flex items-center gap-3 p-3 rounded-lg border border-[rgb(var(--mgt-border))]';
+        row.setAttribute('data-status', 'pending');
+        row.innerHTML =
+          '<div class="flex items-center justify-center w-10 h-10 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] font-semibold text-xs flex-shrink-0">' + esc(ini) + '</div>' +
+          '<div class="flex-1 min-w-0">' +
+            '<p class="text-sm font-medium text-[rgb(var(--mgt-foreground))] truncate">' + esc(name) + ' — ' + esc(a.service || 'Prestation') + '</p>' +
+            '<p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">' + esc(a.day || '') + ' · ' + esc(a.time || '') + '</p>' +
+          '</div>' +
+          '<span class="js-status inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-warning)/0.20)] text-[rgb(var(--mgt-accent-800))]"><i data-lucide="clock" class="w-3 h-3"></i> En attente</span>' +
+          '<button class="js-confirm inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-[rgb(var(--mgt-primary))] text-white hover:bg-[rgb(var(--mgt-primary-700))] transition-colors"><i data-lucide="check" class="w-3 h-3"></i> Confirmer</button>' +
+          '<button class="js-refuse inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold border border-[rgb(var(--mgt-border))] text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors"><i data-lucide="x" class="w-3 h-3"></i> Refuser</button>';
+        list.insertBefore(row, list.firstChild);
+        row.querySelector('.js-confirm').addEventListener('click', function () {
+          if (RT.replyAppointment) RT.replyAppointment(a.apptId, true);
+          confirmRow(row);
+        });
+        row.querySelector('.js-refuse').addEventListener('click', function () {
+          if (RT.replyAppointment) RT.replyAppointment(a.apptId, false);
+          row.remove();
+          toast('Rendez-vous refusé.');
+        });
+        if (window.lucide) window.lucide.createIcons();
+        toast('Nouvelle demande de rendez-vous de ' + name);
+      }
+
+      RT.onAppointment(function (a) { renderRequest(a); });
+      RT.onAppointmentReply(function (r) {
+        var declined = r.type === 'appointment-declined';
+        toast('Le client a ' + (declined ? 'refusé' : 'accepté') + ' le rendez-vous.');
+      });
+    })();
+    </script>
+
+    <style id="mgt-agenda-mobile">
+      .mobile-menu-btn { display: none; }
+      .ag-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 35; }
+      .ag-overlay.show { display: block; }
+      @media (max-width: 768px) {
+        .mobile-menu-btn { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: pointer; color: rgb(var(--mgt-foreground)); border-radius: 10px; flex-shrink: 0; }
+        .mobile-menu-btn:active { background: rgb(var(--mgt-muted)); }
+        #app-sidebar { transform: translateX(-100%); transition: transform .25s ease; }
+        #app-sidebar.open { transform: translateX(0); box-shadow: 0 0 60px rgba(0,0,0,.4); }
+        #app-main { margin-left: 0 !important; }
+        /* Lignes de RDV : empilement propre sur écran étroit. */
+        #ag-list > div { flex-wrap: wrap; row-gap: 8px; }
+        #ag-list .js-confirm,
+        #ag-list .js-refuse { flex: 1 1 auto; min-width: 90px; justify-content: center; }
+        #ag-list .js-status { margin-left: auto; }
+      }
+      /* Vue de la semaine : défilement horizontal au lieu d'écrire en vertical. */
+      #week-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      #week-scroll .grid-cols-7 { min-width: 840px; }
+    </style>
+    <script>
+    (function () {
+      var sidebar = document.getElementById('app-sidebar');
+      var menuBtn = document.getElementById('btn-app-menu');
+      if (!sidebar || !menuBtn) return;
+      var overlay = document.createElement('div');
+      overlay.className = 'ag-overlay';
+      document.body.appendChild(overlay);
+      function close() { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+      menuBtn.addEventListener('click', function () { sidebar.classList.add('open'); overlay.classList.add('show'); });
+      overlay.addEventListener('click', close);
+      sidebar.querySelectorAll('a').forEach(function (a) {
+        a.addEventListener('click', function () { if (window.innerWidth <= 768) close(); });
+      });
+    })();
+    </script>
+
+<script>
+(function(){
+  function __mgtSidebarScrollFix(){
+    var active = document.querySelector('nav a[class*="bg-white/15"]');
+    if (!active) return;
+    var nav = active.closest('nav');
+    if (!nav) return;
+    var navRect = nav.getBoundingClientRect();
+    var linkRect = active.getBoundingClientRect();
+    var target = nav.scrollTop + (linkRect.top - navRect.top) - (navRect.height - linkRect.height) / 2;
+    nav.scrollTop = Math.max(0, target);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', __mgtSidebarScrollFix);
+  } else {
+    __mgtSidebarScrollFix();
+  }
+})();
+</script>
+
+<script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+<script src="../assets/mangoo-dashboard-shell.js"></script>
+</body>
+</html>

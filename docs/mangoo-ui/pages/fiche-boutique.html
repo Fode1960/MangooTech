@@ -1,0 +1,1948 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fiche Boutique</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  /* --- Radius Scale (root-level for preflight) --- */
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  /* --- Brand Primary: Dark Green --- */
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  /* --- Orange Accent (CTAs, highlights) --- */
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  /* --- Neutral Surface & Text Scale --- */
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  /* --- State Colors --- */
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  /* --- Shadows --- */
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  /* --- Typography --- */
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* --- Semantic Tailwind Aliases --- */
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+/* --- Typography Classes --- */
+.h-display {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.h1 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(28px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.h2 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h3 {
+  font-family: var(--mgt-font-sans);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.body-l {
+  font-family: var(--mgt-font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--mgt-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--mgt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+
+<!-- ===== HEADER / NAVIGATION ===== -->
+<header class="sticky top-0 z-50 w-full border-b shadow-sm" style="background-color: rgb(var(--mgt-primary)); border-color: rgb(var(--mgt-primary-700)); box-shadow: var(--mgt-shadow-sm);">
+  <div class="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-3">
+    <a href="/" class="flex items-center gap-3 no-underline" style="color: rgb(var(--mgt-primary-foreground));">
+      <img src="../assets/favicon.png" alt="MangooTech Logo" class="h-10 w-10 rounded-md" style="border-radius: var(--mgt-radius-md);">
+      <span class="text-xl font-semibold tracking-tight" style="font-family: var(--mgt-font-sans);">MangooTech</span>
+    </a>
+    <nav class="hidden items-center gap-6 md:flex">
+      <a href="carte.html" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">Boutique &amp; Prestataires</a>
+      <a href="./comparatif-prestataire-boutique.html" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">Comparatif</a>
+      <a href="./accueil.html#a-propos" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">A propos</a>
+      <a href="./dashboard-overview.html" id="link-back-dashboard" class="inline-flex items-center gap-2 rounded-md border border-[rgb(var(--mgt-primary-foreground)/0.3)] px-4 py-2 text-sm font-semibold transition-all hover:brightness-110" style="color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
+        <i data-lucide="layout-dashboard" class="h-4 w-4"></i>
+        Retour au dashboard
+      </a>
+      <a href="./auth.html" id="link-login" class="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Connexion</a>
+    </nav>
+    <button id="mobile-menu-toggle" class="block md:hidden p-2 rounded-md" style="color: rgb(var(--mgt-primary-foreground));" aria-label="Menu">
+      <i data-lucide="menu" class="h-6 w-6"></i>
+    </button>
+  </div>
+</header>
+
+<script>
+  // Affiche « Retour au dashboard » seulement pour un professionnel connecté
+  // (vendeur/prestataire) ; sinon on masque ce lien et on garde « Connexion ».
+  // Ce script tourne AVANT mangoo-public-nav.js afin que le tiroir mobile
+  // reflète exactement les mêmes liens que le header desktop.
+  (function () {
+    var user = null;
+    try { user = JSON.parse(localStorage.getItem('mgt_user') || 'null'); } catch (e) {}
+    var isPro = !!(user && (user.role === 'vendeur' || user.role === 'prestataire'));
+    var back = document.getElementById('link-back-dashboard');
+    var login = document.getElementById('link-login');
+    if (back) back.style.display = isPro ? '' : 'none';
+    if (login) login.style.display = isPro ? 'none' : '';
+  })();
+</script>
+
+<main>
+
+  <!-- ===== BANNER COUVERTURE ===== -->
+  <section class="relative overflow-hidden" style="background: linear-gradient(135deg, rgb(var(--mgt-primary-900)) 0%, rgb(var(--mgt-primary-700)) 40%, rgb(var(--mgt-primary-600)) 100%);">
+    <div class="absolute inset-0 opacity-5" style="background-image: radial-gradient(circle at 20% 50%, rgb(var(--mgt-primary-300)) .5px, transparent .5px); background-size: 24px 24px;"></div>
+    <div class="relative mx-auto max-w-[1200px] px-6 py-14 md:py-20">
+      <div class="flex flex-col items-center gap-6 text-center md:flex-row md:text-left md:gap-10">
+        <!-- Avatar / Logo Boutique -->
+        <div class="relative flex h-28 w-28 md:h-36 md:w-36 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl shadow-lg" style="background-color: rgb(var(--mgt-accent-50)); border-radius: var(--mgt-radius-lg); box-shadow: 0 12px 40px rgba(15,23,42,.25);">
+          <img id="vendor-avatar-img" alt="" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+          <i id="vendor-avatar-icon" data-lucide="shopping-bag" class="h-16 w-16 md:h-20 md:w-20" style="color: rgb(var(--mgt-accent));"></i>
+        </div>
+        <!-- Infos Boutique -->
+        <div class="flex flex-col items-center gap-3 md:items-start">
+          <div class="flex flex-wrap items-center gap-3">
+            <h1 id="vendor-title" class="h1" style="color: rgb(var(--mgt-primary-foreground));">DAN Boutique</h1>
+            <span id="vendor-badge" class="inline-block rounded-full px-3 py-1 text-xs font-semibold" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Boutique certifiée</span>
+            <button id="boost-badge-hero" type="button" data-badge-audio="promo" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-colors hover:brightness-110" style="background-color: rgb(var(--mgt-primary-100)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); border: 1px solid rgb(var(--mgt-primary-200));">
+              <i data-lucide="tag" class="h-3.5 w-3.5"></i>
+              <span>Promotion</span>
+              <i data-lucide="volume-2" class="h-3.5 w-3.5"></i>
+            </button>
+            <button id="boost-badge-new" type="button" data-badge-audio="new" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-colors hover:brightness-110" style="background-color: rgb(var(--mgt-primary-300)); color: rgb(var(--mgt-primary-900)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">
+              <i data-lucide="sparkles" class="h-3.5 w-3.5"></i>
+              <span>Nouveau</span>
+              <i data-lucide="volume-2" class="h-3.5 w-3.5"></i>
+            </button>
+          </div>
+          <div class="flex flex-wrap items-center gap-4">
+            <div class="flex items-center gap-1">
+              <i data-lucide="star" class="h-4 w-4 fill-current" style="color: rgb(var(--mgt-accent-300));"></i>
+              <span id="vendor-rating" class="body font-semibold" style="color: rgb(var(--mgt-primary-foreground));">—</span>
+              <span id="vendor-reviews" class="caption ml-1" style="color: rgb(var(--mgt-primary-100));">(0 avis)</span>
+            </div>
+            <span class="hidden md:inline-block w-1 h-1 rounded-full" style="background-color: rgb(var(--mgt-primary-200));"></span>
+            <span class="flex items-center gap-1.5 caption" style="color: rgb(var(--mgt-primary-100));">
+              <i data-lucide="map-pin" class="h-3.5 w-3.5"></i>
+              <span id="vendor-city">Dakar, Senegal</span>
+            </span>
+          </div>
+          <button id="welcome-listen-hero" type="button" class="mt-2 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); box-shadow: 0 6px 18px rgba(15,23,42,.25);">
+            <i data-lucide="volume-2" class="h-4 w-4"></i>
+            <span>Écouter le message de bienvenue</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="absolute bottom-0 left-0 w-full overflow-hidden leading-none">
+      <svg viewBox="0 0 1440 80" class="relative block w-full h-12 md:h-16" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+        <path d="M0 40 C240 80 480 0 720 30 C960 60 1200 10 1440 40 L1440 80 L0 80 Z" fill="rgb(var(--mgt-background))"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ===== BARRE D'ACTIONS ===== -->
+  <section class="py-6" style="background-color: rgb(var(--mgt-background)); border-bottom: 1px solid rgb(var(--mgt-border));">
+    <div class="mx-auto max-w-[1200px] px-6 flex flex-wrap items-center gap-3">
+      <button id="btn-commander" data-dom-id="btn-commander" class="inline-flex items-center gap-2 rounded-md px-6 py-3 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: 0 4px 14px rgba(232,97,12,.35);">
+        <i data-lucide="shopping-cart" class="h-4 w-4"></i>
+        Commander
+      </button>
+      <button id="btn-chat" data-dom-id="btn-chat" class="inline-flex items-center gap-2 rounded-md border-2 px-6 py-3 text-sm font-semibold transition-all hover:opacity-80" style="border-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
+        <i data-lucide="message-circle" class="h-4 w-4"></i>
+        Discuter
+      </button>
+      <button id="btn-call" data-dom-id="btn-call" class="inline-flex items-center gap-2 rounded-md border-2 px-6 py-3 text-sm font-semibold transition-all hover:opacity-80" style="border-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
+        <i data-lucide="phone" class="h-4 w-4"></i>
+        Appeler
+      </button>
+      <button id="btn-itinerary" data-dom-id="btn-itinerary" class="inline-flex items-center gap-2 rounded-md border px-6 py-3 text-sm font-semibold transition-all hover:opacity-80" style="border-color: rgb(var(--mgt-border)); color: rgb(var(--mgt-muted-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
+        <i data-lucide="navigation" class="h-4 w-4"></i>
+        Itineraire
+      </button>
+      <span class="ml-auto hidden items-center gap-2 text-sm font-medium md:flex" style="color: rgb(var(--mgt-success)); font-family: var(--mgt-font-sans);">
+        <span class="w-2 h-2 rounded-full" style="background-color: rgb(var(--mgt-success)); display: inline-block;"></span>
+        <span id="vendor-open">Ouvert aujourd'hui</span>
+      </span>
+    </div>
+  </section>
+
+  <!-- ===== MESSAGE VOCAL DE BIENVENUE ===== -->
+  <section class="py-8" style="background-color: rgb(var(--mgt-background));">
+    <div class="mx-auto max-w-[1200px] px-6">
+      <div class="rounded-lg border p-6" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-lg); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-md);">
+        <div class="flex items-start justify-between gap-3 mb-4">
+          <div>
+            <h3 class="h3 mb-1" style="color: rgb(var(--mgt-foreground));">Message de bienvenue</h3>
+            <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Enregistré par la boutique, comme une messagerie vocale. L'audio complète la description écrite.</p>
+          </div>
+          <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium flex-shrink-0" style="background-color: rgb(var(--mgt-primary-50)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">
+            <i data-lucide="mic" class="h-3 w-3"></i>Français
+          </span>
+          <span id="welcome-source" class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium flex-shrink-0" style="background-color: rgb(var(--mgt-muted)); color: rgb(var(--mgt-muted-foreground)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Message par défaut</span>
+        </div>
+
+        <div class="rounded-md p-4 flex items-center gap-4" style="background-color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-md); border: 1px solid rgb(var(--mgt-primary-100));">
+          <button id="welcome-play-btn" type="button" class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-full); box-shadow: 0 4px 14px rgba(15,23,42,.18);" aria-label="Écouter le message de bienvenue">
+            <i id="welcome-play-icon" data-lucide="play" class="h-5 w-5"></i>
+          </button>
+          <div class="flex-1 min-w-0">
+            <div id="welcome-waveform" class="flex h-10 items-end gap-[3px]"></div>
+            <div class="flex items-center justify-between mt-2">
+              <span id="welcome-time" class="caption tabular-nums" style="color: rgb(var(--mgt-primary-700)); font-family: var(--mgt-font-sans);">0:00</span>
+              <span class="caption tabular-nums" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">0:24</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 rounded-md p-4" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md);">
+          <p class="caption mb-1 font-semibold" style="color: rgb(var(--mgt-primary-600)); font-family: var(--mgt-font-sans);">Transcription</p>
+          <p class="body" style="color: rgb(var(--mgt-foreground));">« Bienvenue chez DAN Boutique ! Découvrez nos nouveautés, nos offres de la semaine et nos horaires. »</p>
+        </div>
+
+        <p class="caption mt-3 flex items-start gap-2" style="color: rgb(var(--mgt-muted-foreground));">
+          <i data-lucide="shield-check" class="h-4 w-4 flex-shrink-0 mt-0.5" style="color: rgb(var(--mgt-primary));"></i>
+          <span>Stockage maîtrisé : message conservé 30 jours puis supprimé automatiquement ; l'audio lié aux badges « Promotion » et « Nouveau » disparaît dès leur expiration.</span>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION CATALOGUE ===== -->
+  <section class="py-16 md:py-20" style="background-color: rgb(var(--mgt-background));">
+    <div class="mx-auto max-w-[1200px] px-6">
+      <div class="mb-10 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 class="h2" style="color: rgb(var(--mgt-foreground));">Catalogue</h2>
+          <p class="body mt-1" style="color: rgb(var(--mgt-muted-foreground));" id="catalogue-count-label">12 produits disponibles</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="relative">
+            <i data-lucide="search" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" style="color: rgb(var(--mgt-muted-foreground));"></i>
+            <input id="catalogue-search" type="text" placeholder="Rechercher un produit..." class="w-56 rounded-md border py-2 pl-9 pr-3 text-sm" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">
+          </div>
+          <select id="catalogue-filter" data-dom-id="catalogue-filter" class="rounded-md border px-3 py-2 text-sm" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">
+            <option value="all">Toutes les categories</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="catalogue-grid" data-dom-id="catalogue-grid" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div class="col-span-full py-16 text-center" style="color: rgb(var(--mgt-muted-foreground));">Chargement du catalogue…</div>
+      </div>
+      <div id="catalogue-empty" class="hidden py-16 text-center" style="color: rgb(var(--mgt-muted-foreground));">Aucun produit ne correspond à votre recherche.</div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION GALERIE PHOTOS ===== -->
+  <section class="py-16 md:py-20" style="background-color: rgb(var(--mgt-muted));">
+    <div class="mx-auto max-w-[1200px] px-6">
+      <div class="mb-10">
+        <h2 class="h2" style="color: rgb(var(--mgt-foreground));">Galerie photos</h2>
+        <p class="body mt-1" style="color: rgb(var(--mgt-muted-foreground));">Découvrez l'univers de la boutique</p>
+      </div>
+      <div id="gallery-grid" data-dom-id="gallery-grid" class="grid grid-cols-2 gap-4 md:gap-6">
+        <div class="group relative overflow-hidden rounded-lg cursor-pointer transition-all hover:translate-y-[-1px] hover:shadow-md" style="border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-primary-50)); box-shadow: var(--mgt-shadow-sm);">
+          <div class="flex items-center justify-center h-56 md:h-72 rounded-lg" style="background-color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-md);">
+            <i data-lucide="shirt" class="h-16 w-16" style="color: rgb(var(--mgt-primary-300));"></i>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 p-4 rounded-b-md" style="background: linear-gradient(transparent, rgba(15,23,42,.6)); border-radius: 0 0 var(--mgt-radius-md) var(--mgt-radius-md);">
+            <span class="caption font-medium" style="color: white; font-family: var(--mgt-font-sans);">Vêtements & mode</span>
+          </div>
+        </div>
+        <div class="group relative overflow-hidden rounded-lg cursor-pointer transition-all hover:translate-y-[-1px] hover:shadow-md" style="border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-accent-50)); box-shadow: var(--mgt-shadow-sm);">
+          <div class="flex items-center justify-center h-56 md:h-72 rounded-lg" style="background-color: rgb(var(--mgt-accent-50)); border-radius: var(--mgt-radius-md);">
+            <i data-lucide="backpack" class="h-16 w-16" style="color: rgb(var(--mgt-accent-200));"></i>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 p-4 rounded-b-md" style="background: linear-gradient(transparent, rgba(15,23,42,.6)); border-radius: 0 0 var(--mgt-radius-md) var(--mgt-radius-md);">
+            <span class="caption font-medium" style="color: white; font-family: var(--mgt-font-sans);">Sacs & accessoires</span>
+          </div>
+        </div>
+        <div class="group relative overflow-hidden rounded-lg cursor-pointer transition-all hover:translate-y-[-1px] hover:shadow-md" style="border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-primary-50)); box-shadow: var(--mgt-shadow-sm);">
+          <div class="flex items-center justify-center h-56 md:h-72 rounded-lg" style="background-color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-md);">
+            <i data-lucide="smartphone" class="h-16 w-16" style="color: rgb(var(--mgt-primary-300));"></i>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 p-4 rounded-b-md" style="background: linear-gradient(transparent, rgba(15,23,42,.6)); border-radius: 0 0 var(--mgt-radius-md) var(--mgt-radius-md);">
+            <span class="caption font-medium" style="color: white; font-family: var(--mgt-font-sans);">Électronique</span>
+          </div>
+        </div>
+        <div class="group relative overflow-hidden rounded-lg cursor-pointer transition-all hover:translate-y-[-1px] hover:shadow-md" style="border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-accent-50)); box-shadow: var(--mgt-shadow-sm);">
+          <div class="flex items-center justify-center h-56 md:h-72 rounded-lg" style="background-color: rgb(var(--mgt-accent-50)); border-radius: var(--mgt-radius-md);">
+            <i data-lucide="sparkles" class="h-16 w-16" style="color: rgb(var(--mgt-accent-200));"></i>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 p-4 rounded-b-md" style="background: linear-gradient(transparent, rgba(15,23,42,.6)); border-radius: 0 0 var(--mgt-radius-md) var(--mgt-radius-md);">
+            <span class="caption font-medium" style="color: white; font-family: var(--mgt-font-sans);">Beauté & parfums</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION INFORMATIONS (2 colonnes) ===== -->
+  <section class="py-16 md:py-20" style="background-color: rgb(var(--mgt-background));">
+    <div class="mx-auto max-w-[1200px] px-6">
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-2">
+
+        <!-- COLONNE GAUCHE: Infos boutique -->
+        <div class="flex flex-col gap-8">
+          <!-- Description -->
+          <div>
+            <h2 class="h3 mb-3" style="color: rgb(var(--mgt-foreground));">A propos</h2>
+            <p id="vendor-description" class="body" style="color: rgb(var(--mgt-muted-foreground));">Boutique de prêt-à-porter, accessoires et articles tendance au cœur de Dakar.</p>
+          </div>
+
+          <!-- Horaires d'ouverture -->
+          <div>
+            <h2 class="h3 mb-3" style="color: rgb(var(--mgt-foreground));">Horaires d'ouverture</h2>
+            <ul class="space-y-2.5">
+              <li class="flex items-center justify-between py-2 border-b" style="border-color: rgb(var(--mgt-border));">
+                <span class="body font-medium" style="color: rgb(var(--mgt-foreground));">Lundi - Vendredi</span>
+                <span id="vendor-hours-week" class="body" style="color: rgb(var(--mgt-muted-foreground));">09:00 - 19:00</span>
+              </li>
+              <li class="flex items-center justify-between py-2 border-b" style="border-color: rgb(var(--mgt-border));">
+                <span class="body font-medium" style="color: rgb(var(--mgt-foreground));">Samedi</span>
+                <span id="vendor-hours-sat" class="body" style="color: rgb(var(--mgt-muted-foreground));">10:00 - 21:00</span>
+              </li>
+              <li class="flex items-center justify-between py-2 border-b" style="border-color: rgb(var(--mgt-border));">
+                <span class="body font-medium" style="color: rgb(var(--mgt-foreground));">Dimanche</span>
+                <span id="vendor-hours-sun" class="body font-semibold" style="color: rgb(var(--mgt-error));">Fermé</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Zone de livraison -->
+          <div>
+            <h2 class="h3 mb-3" style="color: rgb(var(--mgt-foreground));">Zone de livraison</h2>
+            <p class="body flex items-center gap-2" style="color: rgb(var(--mgt-muted-foreground));">
+              <i data-lucide="truck" class="h-4 w-4" style="color: rgb(var(--mgt-primary));"></i>
+              Dakar et ses environs (+5 km)
+            </p>
+          </div>
+
+          <!-- Moyens de paiement -->
+          <div>
+            <h2 class="h3 mb-3" style="color: rgb(var(--mgt-foreground));">Moyens de paiement</h2>
+            <div class="flex flex-wrap gap-3">
+              <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium" style="background-color: rgb(var(--mgt-accent-50)); color: rgb(var(--mgt-accent-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">
+                <i data-lucide="smartphone" class="h-3.5 w-3.5"></i>Orange Money
+              </span>
+              <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium" style="background-color: rgb(var(--mgt-primary-50)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">
+                <i data-lucide="wallet" class="h-3.5 w-3.5"></i>Wave
+              </span>
+              <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium" style="background-color: rgb(var(--mgt-accent-50)); color: rgb(var(--mgt-accent-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">
+                <i data-lucide="smartphone" class="h-3.5 w-3.5"></i>Mangoo Pay+
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- COLONNE DROITE: Carte + Avis -->
+        <div class="flex flex-col gap-8">
+          <!-- Mini Carte Leaflet -->
+          <div>
+            <h2 class="h3 mb-3" style="color: rgb(var(--mgt-foreground));">Localisation</h2>
+            <div class="relative overflow-hidden rounded-lg border" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md);">
+              <div class="flex items-center justify-center h-72" style="background-color: rgb(var(--mgt-muted));">
+                <div class="flex flex-col items-center gap-3">
+                  <i data-lucide="map" class="h-12 w-12" style="color: rgb(var(--mgt-primary-300));"></i>
+                  <span class="caption" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Dakar, Senegal</span>
+                  <span class="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-semibold" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
+                    <i data-lucide="map-pin" class="h-3 w-3"></i>Voir sur la carte
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Avis recents -->
+          <div id="avis-section" data-dom-id="avis-section">
+            <h2 class="h3 mb-4" style="color: rgb(var(--mgt-foreground));">Avis recents</h2>
+            <div class="flex flex-col gap-4">
+              <div class="rounded-lg border p-10 text-center" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
+                <div class="flex items-center justify-center gap-2 mb-3">
+                  <i data-lucide="star" class="h-6 w-6 fill-current" style="color: rgb(var(--mgt-accent-400));"></i>
+                  <span id="vendor-rating-empty" class="text-2xl font-bold tabular-nums" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">—</span>
+                </div>
+                <h3 class="h3 mb-1" style="color: rgb(var(--mgt-foreground));">Aucun avis publié pour le moment</h3>
+                <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Les avis clients apparaîtront ici dès leur publication.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer class="border-t py-12" style="background-color: rgb(var(--mgt-background)); border-color: rgb(var(--mgt-border));">
+  <div class="mx-auto max-w-[1200px] px-6">
+    <div class="grid grid-cols-1 gap-10 md:grid-cols-4">
+      <div class="md:col-span-1">
+        <div class="mb-4 flex items-center gap-3">
+          <img src="../assets/favicon.png" alt="MangooTech Logo" class="h-8 w-8 rounded-md" style="border-radius: var(--mgt-radius-sm);">
+          <span class="text-lg font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">MangooTech</span>
+        </div>
+        <p class="caption mb-4" style="color: rgb(var(--mgt-muted-foreground));">Plateforme e-commerce africaine connectant marchands locaux et clients via carte interactive, live shopping et chat temps reel.</p>
+        <div class="flex gap-3">
+          <a href="#" class="flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:opacity-80" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md); color: rgb(var(--mgt-muted-foreground));" aria-label="Facebook"><i data-lucide="facebook" class="h-4 w-4"></i></a>
+          <a href="#" class="flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:opacity-80" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md); color: rgb(var(--mgt-muted-foreground));" aria-label="Twitter / X"><i data-lucide="twitter" class="h-4 w-4"></i></a>
+          <a href="#" class="flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:opacity-80" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md); color: rgb(var(--mgt-muted-foreground));" aria-label="Instagram"><i data-lucide="instagram" class="h-4 w-4"></i></a>
+          <a href="#" class="flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:opacity-80" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md); color: rgb(var(--mgt-muted-foreground));" aria-label="LinkedIn"><i data-lucide="linkedin" class="h-4 w-4"></i></a>
+        </div>
+      </div>
+      <div>
+        <h4 class="mb-4 text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Plateforme</h4>
+        <ul class="space-y-2.5">
+          <li><a href="carte.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Carte interactive</a></li>
+          <li><a href="./dashboard-overview.html?demo=prestataire" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Dashboard prestataire</a></li>
+          <li><a href="./dashboard-overview.html?demo=boutique" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Dashboard boutique</a></li>
+          <li><a href="./live-shopping.html" data-dom-id="link-live-shopping" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Live Shopping</a></li>
+          <li><a href="./paiements.html" data-dom-id="link-paiements" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Paiements</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="mb-4 text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Ressources</h4>
+        <ul class="space-y-2.5">
+          <li><a href="./aide.html" data-dom-id="link-aide" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Aide et support</a></li>
+          <li><a href="./blog.html" data-dom-id="link-blog" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Blog</a></li>
+          <li><a href="./faq.html" data-dom-id="link-faq" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">FAQ</a></li>
+          <li><a href="./contact.html" data-dom-id="link-contact" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="mb-4 text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Legal</h4>
+        <ul class="space-y-2.5">
+          <li><a href="./conditions-utilisation.html" data-dom-id="link-conditions-utilisation" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Conditions d'utilisation</a></li>
+          <li><a href="./confidentialite.html" data-dom-id="link-confidentialite" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Politique de confidentialite</a></li>
+          <li><a href="./mentions-legales.html" data-dom-id="link-mentions-legales" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Mentions legales</a></li>
+          <li><a href="./cgv.html" data-dom-id="link-cgv" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">CGV</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="mt-12 border-t pt-6 text-center" style="border-color: rgb(var(--mgt-border));">
+      <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">&copy; 2026 MangooTech. Tous droits reserves. Fait avec passion pour l'Afrique.</p>
+    </div>
+  </div>
+</footer>
+
+<!-- ===== FLOTTANT : BOUTON PANIER ===== -->
+<button id="cart-fab" data-dom-id="cart-fab" aria-label="Voir le panier" class="fixed bottom-6 right-6 z-[70] hidden items-center gap-2 rounded-full px-5 py-4 text-sm font-semibold shadow-lg transition-all hover:scale-105" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); box-shadow: 0 12px 32px rgba(232,97,12,.4);">
+  <i data-lucide="shopping-cart" class="h-5 w-5"></i>
+  <span id="cart-fab-label">Panier</span>
+  <span id="cart-fab-count" class="inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-bold" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">0</span>
+</button>
+
+<!-- ===== OVERLAY ===== -->
+<div id="cart-overlay" data-dom-id="cart-overlay" class="fixed inset-0 z-[80] hidden" style="background-color: rgba(15,23,42,.5);"></div>
+
+<!-- ===== TIROIR PANIER ===== -->
+<aside id="cart-drawer" data-dom-id="cart-drawer" class="fixed top-0 right-0 z-[90] flex h-full w-full max-w-[400px] translate-x-full flex-col shadow-2xl transition-transform duration-300" style="background-color: rgb(var(--mgt-background)); box-shadow: var(--mgt-shadow-lg);">
+  <div class="flex items-center justify-between border-b px-6 py-5" style="border-color: rgb(var(--mgt-border));">
+    <h2 class="h3 flex items-center gap-2" style="color: rgb(var(--mgt-foreground));">
+      <i data-lucide="shopping-bag" class="h-5 w-5" style="color: rgb(var(--mgt-primary));"></i>
+      Votre panier
+    </h2>
+    <button id="cart-close" aria-label="Fermer" class="flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:opacity-80" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md); color: rgb(var(--mgt-muted-foreground));">
+      <i data-lucide="x" class="h-5 w-5"></i>
+    </button>
+  </div>
+
+  <div id="cart-items" class="flex-1 overflow-y-auto px-6 py-4 no-scrollbar"></div>
+
+  <!-- Mode de reception -->
+  <div class="border-t px-6 py-4" style="border-color: rgb(var(--mgt-border));">
+    <p class="caption mb-2 font-semibold" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Mode de reception</p>
+    <div class="grid grid-cols-2 gap-2">
+      <button id="fulfill-livraison" class="fulfill-option flex flex-col items-start gap-1 rounded-md border-2 px-4 py-3 text-left transition-all" style="border-color: rgb(var(--mgt-primary)); background-color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-md);">
+        <span class="flex items-center gap-1.5 text-sm font-semibold" style="color: rgb(var(--mgt-primary)); font-family: var(--mgt-font-sans);"><i data-lucide="truck" class="h-4 w-4"></i>Livraison</span>
+        <span class="caption" style="color: rgb(var(--mgt-muted-foreground));">+ 500 FCFA</span>
+      </button>
+      <button id="fulfill-retrait" class="fulfill-option flex flex-col items-start gap-1 rounded-md border-2 px-4 py-3 text-left transition-all" style="border-color: rgb(var(--mgt-border)); background-color: rgb(var(--mgt-background)); border-radius: var(--mgt-radius-md);">
+        <span class="flex items-center gap-1.5 text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);"><i data-lucide="store" class="h-4 w-4"></i>Retrait</span>
+        <span class="caption" style="color: rgb(var(--mgt-muted-foreground));">Gratuit</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Totaux -->
+  <div class="border-t px-6 py-4" style="border-color: rgb(var(--mgt-border));">
+    <div class="mb-3 space-y-1.5">
+      <div class="flex items-center justify-between text-sm" style="font-family: var(--mgt-font-sans);">
+        <span style="color: rgb(var(--mgt-muted-foreground));">Sous-total</span>
+        <span id="cart-subtotal" class="tabular-nums font-medium" style="color: rgb(var(--mgt-foreground));">0 FCFA</span>
+      </div>
+      <div class="flex items-center justify-between text-sm" style="font-family: var(--mgt-font-sans);">
+        <span style="color: rgb(var(--mgt-muted-foreground));">Livraison</span>
+        <span id="cart-fee" class="tabular-nums font-medium" style="color: rgb(var(--mgt-foreground));">0 FCFA</span>
+      </div>
+    </div>
+    <div class="mb-4 flex items-center justify-between border-t pt-3" style="border-color: rgb(var(--mgt-border));">
+      <span class="font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Total</span>
+      <span id="cart-total" class="tabular-nums text-lg font-bold" style="color: rgb(var(--mgt-primary)); font-family: var(--mgt-font-sans);">0 FCFA</span>
+    </div>
+    <button id="btn-checkout" class="w-full rounded-md px-6 py-3.5 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: 0 4px 14px rgba(232,97,12,.35);">
+      Passer commande
+    </button>
+  </div>
+</aside>
+
+<!-- ===== MODALE COMMANDE ===== -->
+<div id="checkout-modal" data-dom-id="checkout-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
+  <div class="absolute inset-0" style="background-color: rgba(15,23,42,.55);" onclick="document.getElementById('checkout-modal').classList.add('hidden'); document.getElementById('checkout-modal').classList.remove('flex');"></div>
+  <div id="checkout-card" class="relative z-10 w-full max-w-md rounded-lg shadow-2xl" style="background-color: rgb(var(--mgt-background)); border-radius: var(--mgt-radius-lg); box-shadow: var(--mgt-shadow-lg); max-height: calc(100vh - 2rem); overflow-y: auto; overflow-x: hidden;">
+    <!-- Contenu injecté dynamiquement -->
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div id="cart-toast" data-dom-id="cart-toast" class="fixed bottom-24 left-1/2 z-[110] hidden -translate-x-1/2 items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold shadow-lg" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); box-shadow: var(--mgt-shadow-md);">
+  <i data-lucide="check-circle-2" class="h-4 w-4"></i>
+  <span id="cart-toast-msg">Ajoute au panier</span>
+</div>
+
+<!-- ===== FLOTTANT : SUIVI DE COMMANDE ===== -->
+<button id="track-fab" data-dom-id="track-fab" class="fixed bottom-24 right-6 z-[70] hidden items-center gap-2 rounded-full px-4 py-2.5 text-xs font-semibold shadow-lg transition-all hover:scale-105" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); box-shadow: 0 12px 32px rgba(26,92,42,.4);">
+  <i data-lucide="package-search" class="h-4 w-4"></i>
+  <span id="track-fab-label">Suivre ma commande</span>
+  <span id="track-fab-dot" class="inline-block h-2 w-2 rounded-full" style="background-color: rgb(var(--mgt-warning)); border-radius: var(--mgt-radius-full);"></span>
+</button>
+
+<!-- ===== MODALE SUIVI DE COMMANDE ===== -->
+<div id="tracking-modal" data-dom-id="tracking-modal" class="fixed inset-0 z-[105] hidden items-center justify-center p-4">
+  <div class="absolute inset-0" style="background-color: rgba(15,23,42,.55);"></div>
+  <div class="relative z-10 w-full max-w-md overflow-hidden rounded-lg shadow-2xl" style="background-color: rgb(var(--mgt-background)); border-radius: var(--mgt-radius-lg); box-shadow: var(--mgt-shadow-lg);">
+    <div class="border-b px-6 py-5" style="border-color: rgb(var(--mgt-border));">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i data-lucide="package-search" class="h-5 w-5" style="color: rgb(var(--mgt-primary));"></i>
+          <h3 class="h3" style="color: rgb(var(--mgt-foreground));">Suivi de commande</h3>
+        </div>
+        <button id="tracking-close" class="flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:opacity-80" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md); color: rgb(var(--mgt-muted-foreground));"><i data-lucide="x" class="h-4 w-4"></i></button>
+      </div>
+    </div>
+    <div class="px-6 py-5">
+      <div id="tracking-header" class="mb-5"></div>
+      <div id="tracking-timeline" class="space-y-0"></div>
+      <div id="tracking-eta" class="mt-5 rounded-md p-3" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md);"></div>
+    </div>
+  </div>
+</div>
+
+<script>lucide.createIcons();</script>
+<script>
+window.__mgtInitBoutique = function () {
+  /* ==== Panier & commande ==== */
+  function priceFromText(t) {
+    var m = String(t || '').replace(/[^\d]/g, '');
+    return m ? parseInt(m, 10) : 0;
+  }
+  function formatFCFA(n) {
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
+  }
+
+  var grid = document.getElementById('catalogue-grid');
+  var cards = grid ? Array.prototype.slice.call(grid.querySelectorAll('.group')) : [];
+  var STOCK_INIT = {};
+  var products = cards.map(function (card, idx) {
+    var nameEl = card.querySelector('h3');
+    var priceEl = card.querySelector('p.tabular-nums');
+    var badge = card.querySelector('[class*="rounded-full"]');
+    var btn = card.querySelector('button');
+    var name = nameEl ? nameEl.textContent.trim() : ('Produit ' + (idx + 1));
+    var dataStock = card.getAttribute('data-stock');
+    var stock = dataStock != null ? parseInt(dataStock, 10) : (STOCK_INIT[name] != null ? STOCK_INIT[name] : 10);
+    return {
+      el: card,
+      btn: btn,
+      name: name,
+      price: priceEl ? priceFromText(priceEl.textContent) : 0,
+      category: badge ? badge.textContent.trim() : 'Produit',
+      catId: card.getAttribute('data-category') || '',
+      stock: stock,
+      sold: 0
+    };
+  });
+
+  function remaining(p) { return Math.max(0, p.stock - p.sold); }
+
+  function stockBadgeEl(p) {
+    if (p._badge) return p._badge;
+    var el = document.createElement('div');
+    el.className = 'flex items-center gap-1.5 mb-2';
+    p._badge = el;
+    if (p.btn && p.btn.parentNode) p.btn.parentNode.insertBefore(el, p.btn);
+    return el;
+  }
+
+  function renderStock(p) {
+    var rem = remaining(p);
+    var el = stockBadgeEl(p);
+    var low = rem > 0 && rem <= 3;
+    if (rem <= 0) {
+      el.innerHTML = '<span class="inline-flex items-center gap-1 text-xs font-semibold" style="color: rgb(var(--mgt-error)); font-family: var(--mgt-font-sans);"><i data-lucide="circle-x" class="h-3.5 w-3.5"></i>Rupture de stock</span>';
+    } else if (low) {
+      el.innerHTML = '<span class="inline-flex items-center gap-1 text-xs font-semibold" style="color: rgb(var(--mgt-warning)); font-family: var(--mgt-font-sans);"><i data-lucide="triangle-alert" class="h-3.5 w-3.5"></i>Plus que ' + rem + ' en stock</span>';
+    } else {
+      el.innerHTML = '<span class="inline-flex items-center gap-1 text-xs font-medium" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);"><i data-lucide="package" class="h-3.5 w-3.5"></i>En stock : ' + rem + '</span>';
+    }
+    if (p.btn) {
+      if (rem <= 0) {
+        p.btn.setAttribute('disabled', 'disabled');
+        p.btn.style.opacity = '0.5';
+        p.btn.style.cursor = 'not-allowed';
+        p.btn.innerHTML = '<i data-lucide="circle-x" class="h-4 w-4 mr-1.5 inline-block align-text-bottom"></i>Rupture';
+      } else {
+        p.btn.removeAttribute('disabled');
+        p.btn.style.opacity = '1';
+        p.btn.style.cursor = 'pointer';
+        p.btn.innerHTML = '<i data-lucide="shopping-bag" class="h-4 w-4 mr-1.5 inline-block align-text-bottom"></i>Ajouter au panier';
+      }
+    }
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function renderAllStock() { products.forEach(renderStock); }
+
+  var cart = { items: [], fulfillment: 'livraison' };
+  var DELIVERY_FEE = 500;
+  var TRACKING_STEP_MS = 15000;
+
+  var fab = document.getElementById('cart-fab');
+  var fabCount = document.getElementById('cart-fab-count');
+  var fabLabel = document.getElementById('cart-fab-label');
+  var drawer = document.getElementById('cart-drawer');
+  var overlay = document.getElementById('cart-overlay');
+  var toast = document.getElementById('cart-toast');
+  var toastMsg = document.getElementById('cart-toast-msg');
+  var checkoutModal = document.getElementById('checkout-modal');
+  var checkoutCard = document.getElementById('checkout-card');
+  var itemsEl = document.getElementById('cart-items');
+  var subtotalEl = document.getElementById('cart-subtotal');
+  var feeEl = document.getElementById('cart-fee');
+  var totalEl = document.getElementById('cart-total');
+
+  var trackFab = document.getElementById('track-fab');
+  var trackFabLabel = document.getElementById('track-fab-label');
+  var trackFabDot = document.getElementById('track-fab-dot');
+  var trackingModal = document.getElementById('tracking-modal');
+  var trackingHeader = document.getElementById('tracking-header');
+  var trackingTimeline = document.getElementById('tracking-timeline');
+  var trackingEta = document.getElementById('tracking-eta');
+
+  var lastOrder = null;
+  var trackingTimer = null;
+  var pendingPaymentLabel = '';
+  var pendingPaymentMethod = 'payplus'; // 'payplus' (mobile money) ou 'wallet' (solde client)
+  var OP_LABELS = {
+    orange: 'Orange Money',
+    wave: 'Wave',
+    mtn: 'MTN Mobile Money',
+    moov: 'Moov Money',
+    free: 'Free Mobile Sénégal'
+  };
+
+  var ORDER_STEPS = {
+    livraison: [
+      { label: 'Commande recue', desc: 'Votre commande a bien ete enregistree', icon: 'receipt' },
+      { label: 'En preparation', desc: 'Votre commande est en cours de preparation', icon: 'package' },
+      { label: 'En cours de livraison', desc: 'Le livreur est en route vers vous', icon: 'bike' },
+      { label: 'Livree', desc: 'Merci pour votre commande !', icon: 'check-circle-2' }
+    ],
+    retrait: [
+      { label: 'Commande recue', desc: 'Votre commande a bien ete enregistree', icon: 'receipt' },
+      { label: 'En preparation', desc: 'Votre commande est en cours de preparation', icon: 'package' },
+      { label: 'Prete au retrait', desc: 'Recuperez votre commande en boutique', icon: 'store' },
+      { label: 'Recuperee', desc: 'Merci de votre visite !', icon: 'check-circle-2' }
+    ]
+  };
+
+  function qtyTotal() { return cart.items.reduce(function (s, it) { return s + it.qty; }, 0); }
+  function subtotal() { return cart.items.reduce(function (s, it) { return s + it.price * it.qty; }, 0); }
+  function deliveryFee() { return cart.fulfillment === 'retrait' ? 0 : DELIVERY_FEE; }
+  function total() { return subtotal() + deliveryFee(); }
+
+  function clientWalletBalance() {
+    return (window.MangooClient && typeof window.MangooClient.getBalance === 'function') ? window.MangooClient.getBalance() : 0;
+  }
+
+  function setPaymentMethod(method) {
+    pendingPaymentMethod = method;
+    var options = document.querySelectorAll('.checkout-pay-option');
+    options.forEach(function (opt) {
+      var selected = opt.getAttribute('data-pay') === method;
+      var dot = opt.querySelector('.checkout-pay-dot');
+      if (selected) {
+        opt.style.borderColor = 'rgb(var(--mgt-primary))';
+        opt.style.backgroundColor = 'rgb(var(--mgt-primary-50))';
+        if (dot) { dot.style.borderColor = 'rgb(var(--mgt-primary))'; dot.innerHTML = '<span style="width:8px;height:8px;border-radius:9999px;background:rgb(var(--mgt-primary));display:block;"></span>'; }
+      } else {
+        opt.style.borderColor = 'rgb(var(--mgt-border))';
+        opt.style.backgroundColor = '';
+        if (dot) { dot.style.borderColor = 'rgb(var(--mgt-border))'; dot.innerHTML = ''; }
+      }
+    });
+  }
+
+  function showToast(msg) {
+    if (!toast) return;
+    toastMsg.textContent = msg;
+    toast.classList.remove('hidden');
+    toast.classList.add('flex');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(function () {
+      toast.classList.add('hidden');
+      toast.classList.remove('flex');
+    }, 1800);
+  }
+
+  function renderFab() {
+    if (!fab) return;
+    var qty = qtyTotal();
+    if (qty === 0) { fab.classList.add('hidden'); fab.classList.remove('flex'); return; }
+    fab.classList.remove('hidden');
+    fab.classList.add('flex');
+    fabCount.textContent = String(qty);
+    fabLabel.textContent = formatFCFA(total());
+  }
+
+  function renderFulfillment() {
+    var liv = document.getElementById('fulfill-livraison');
+    var ret = document.getElementById('fulfill-retrait');
+    if (!liv || !ret) return;
+    var active = cart.fulfillment === 'livraison' ? liv : ret;
+    var inactive = cart.fulfillment === 'livraison' ? ret : liv;
+    active.style.borderColor = 'rgb(var(--mgt-primary))';
+    active.style.backgroundColor = 'rgb(var(--mgt-primary-50))';
+    inactive.style.borderColor = 'rgb(var(--mgt-border))';
+    inactive.style.backgroundColor = 'rgb(var(--mgt-background))';
+  }
+
+  function renderCart() {
+    if (!itemsEl) return;
+    if (cart.items.length === 0) {
+      itemsEl.innerHTML = '<div class="flex h-full flex-col items-center justify-center gap-3 py-16 text-center">' +
+        '<i data-lucide="shopping-bag" class="h-12 w-12" style="color: rgb(var(--mgt-muted-foreground));"></i>' +
+        '<p class="body font-medium" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Votre panier est vide</p>' +
+        '<p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Ajoutez des articles depuis le catalogue</p>' +
+        '</div>';
+    } else {
+      var html = '<div class="space-y-3">';
+      cart.items.forEach(function (it, i) {
+        html += '<div class="rounded-md border p-3" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-card));">' +
+          '<div class="flex items-start justify-between gap-2">' +
+            '<div class="min-w-0">' +
+              '<p class="truncate text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">' + it.name + '</p>' +
+              '<p class="caption mt-0.5" style="color: rgb(var(--mgt-muted-foreground));">' + it.category + '</p>' +
+              '<p class="tabular-nums mt-1 text-sm font-semibold" style="color: rgb(var(--mgt-primary)); font-family: var(--mgt-font-sans);">' + formatFCFA(it.price * it.qty) + '</p>' +
+            '</div>' +
+            '<button class="cart-remove flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md transition-colors hover:opacity-80" data-idx="' + i + '" aria-label="Retirer" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md); color: rgb(var(--mgt-muted-foreground));"><i data-lucide="trash-2" class="h-4 w-4"></i></button>' +
+          '</div>' +
+          '<div class="mt-3 flex items-center justify-between">' +
+            '<div class="flex items-center gap-1">' +
+              '<button class="cart-qty flex h-8 w-8 items-center justify-center rounded-md text-base font-bold transition-colors hover:opacity-80" data-idx="' + i + '" data-delta="-1" style="background-color: rgb(var(--mgt-muted)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">-</button>' +
+              '<span class="tabular-nums w-8 text-center text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">' + it.qty + '</span>' +
+              '<button class="cart-qty flex h-8 w-8 items-center justify-center rounded-md text-base font-bold transition-colors hover:opacity-80" data-idx="' + i + '" data-delta="1" style="background-color: rgb(var(--mgt-muted)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">+</button>' +
+            '</div>' +
+            '<span class="caption" style="color: rgb(var(--mgt-muted-foreground));">' + formatFCFA(it.price) + ' / unite</span>' +
+          '</div>' +
+        '</div>';
+      });
+      html += '</div>';
+      itemsEl.innerHTML = html;
+    }
+    if (subtotalEl) subtotalEl.textContent = formatFCFA(subtotal());
+    if (feeEl) feeEl.textContent = deliveryFee() === 0 ? 'Gratuit' : formatFCFA(deliveryFee());
+    if (totalEl) totalEl.textContent = formatFCFA(total());
+    renderFulfillment();
+    renderFab();
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function addToCart(p) {
+    var rem = remaining(p);
+    if (rem <= 0) { showToast(p.name + ' : rupture de stock'); return; }
+    var existing = null;
+    for (var i = 0; i < cart.items.length; i++) {
+      if (cart.items[i].name === p.name) { existing = cart.items[i]; break; }
+    }
+    if (existing) {
+      if (existing.qty >= rem) { showToast('Stock maximum atteint (' + p.stock + ')'); return; }
+      existing.qty += 1;
+    } else {
+      cart.items.push({ name: p.name, price: p.price, category: p.category, qty: 1, product: p });
+    }
+    p.sold += 1;
+    renderCart();
+    renderStock(p);
+    showToast(p.name + ' ajoute au panier');
+  }
+
+  function changeQty(idx, delta) {
+    var it = cart.items[idx];
+    if (!it) return;
+    var p = it.product;
+    if (delta > 0) {
+      if (it.qty >= remaining(p)) { showToast('Stock maximum atteint (' + p.stock + ')'); return; }
+      it.qty += 1;
+      if (p) p.sold += 1;
+    } else {
+      it.qty -= 1;
+      if (p) { p.sold -= 1; if (p.sold < 0) p.sold = 0; }
+      if (it.qty <= 0) cart.items.splice(idx, 1);
+    }
+    renderCart();
+    if (p) renderStock(p);
+  }
+
+  function removeItem(idx) {
+    var it = cart.items[idx];
+    if (!it) return;
+    if (it.product) { it.product.sold -= it.qty; if (it.product.sold < 0) it.product.sold = 0; }
+    cart.items.splice(idx, 1);
+    renderCart();
+    if (it.product) renderStock(it.product);
+  }
+
+  function openDrawer() { if (!drawer) return; drawer.classList.remove('translate-x-full'); overlay.classList.remove('hidden'); }
+  function closeDrawer() { if (!drawer) return; drawer.classList.add('translate-x-full'); overlay.classList.add('hidden'); }
+
+  function openCheckout() {
+    if (cart.items.length === 0) return;
+    closeDrawer();
+    renderCheckout('form');
+    checkoutModal.classList.remove('hidden');
+    checkoutModal.classList.add('flex');
+  }
+  function closeCheckout() {
+    checkoutModal.classList.add('hidden');
+    checkoutModal.classList.remove('flex');
+  }
+
+  function renderTrackFab() {
+    if (!trackFab) return;
+    if (!lastOrder) { trackFab.classList.add('hidden'); trackFab.classList.remove('flex'); return; }
+    var steps = ORDER_STEPS[lastOrder.fulfillment] || ORDER_STEPS.livraison;
+    var done = lastOrder.statusIndex >= steps.length - 1;
+    if (done) {
+      // Commande livrée / récupérée : le suivi est terminé, on retire le bouton flottant.
+      trackFab.classList.add('hidden');
+      trackFab.classList.remove('flex');
+      return;
+    }
+    trackFab.classList.remove('hidden');
+    trackFab.classList.add('flex');
+    trackFabLabel.textContent = 'Suivre ma commande';
+    if (trackFabDot) trackFabDot.style.backgroundColor = 'rgb(var(--mgt-warning))';
+  }
+
+  function openTracking() {
+    if (!lastOrder) return;
+    // Livraison → carte GPS temps réel (Mangoo Express+) : on sort la carte
+    // plein écran avec la prise du colis, le suivi GPS, le QR/photo et la
+    // signature (page delivery-track.html). Retrait en boutique → suivi textuel.
+    if (lastOrder.fulfillment === 'livraison') {
+      window.location.href = './delivery-track.html';
+      return;
+    }
+    if (!trackingModal) return;
+    renderTracking();
+    trackingModal.classList.remove('hidden');
+    trackingModal.classList.add('flex');
+  }
+  function closeTracking() {
+    if (trackingTimer) { clearInterval(trackingTimer); trackingTimer = null; }
+    trackingModal.classList.add('hidden');
+    trackingModal.classList.remove('flex');
+  }
+
+  function orderStepTime(i) {
+    if (!lastOrder) return '';
+    var totalMin = lastOrder.fulfillment === 'retrait' ? 24 : 40;
+    return Math.round((totalMin / 4) * i) + ' min';
+  }
+
+  function renderTracking() {
+    if (!lastOrder) return;
+    var steps = ORDER_STEPS[lastOrder.fulfillment] || ORDER_STEPS.livraison;
+    var cur = lastOrder.statusIndex;
+    var done = cur >= steps.length - 1;
+
+    if (trackingHeader) {
+      trackingHeader.innerHTML = '<div class="flex items-center justify-between gap-3">' +
+        '<div class="min-w-0">' +
+          '<p class="caption mb-1" style="color: rgb(var(--mgt-muted-foreground));">Commande ' + lastOrder.orderNo + '</p>' +
+          '<p class="body font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">' + (lastOrder.fulfillment === 'retrait' ? 'Retrait en boutique' : 'Livraison a domicile') + '</p>' +
+        '</div>' +
+        '<span class="rounded-full px-3 py-1 text-xs font-bold" style="background-color: rgb(var(--mgt-primary-50)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">' + formatFCFA(lastOrder.total) + '</span>' +
+      '</div>';
+    }
+
+    if (trackingTimeline) {
+      var html = '';
+      steps.forEach(function (s, i) {
+        var state = i < cur ? 'done' : (i === cur ? 'current' : 'pending');
+        var isLast = i === steps.length - 1;
+        var bg, fg;
+        if (state === 'done') { bg = 'rgb(var(--mgt-primary))'; fg = 'rgb(var(--mgt-primary-foreground))'; }
+        else if (state === 'current') { bg = 'rgb(var(--mgt-accent))'; fg = 'rgb(var(--mgt-accent-foreground))'; }
+        else { bg = 'rgb(var(--mgt-muted))'; fg = 'rgb(var(--mgt-muted-foreground))'; }
+        html += '<div class="relative flex gap-4 pb-6">';
+        if (!isLast) {
+          html += '<div class="absolute left-[15px] top-9 bottom-0 w-0.5" style="background-color: ' + (i < cur ? 'rgb(var(--mgt-primary))' : 'rgb(var(--mgt-border))') + ';"></div>';
+        }
+        html += '<div class="relative z-10 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full" style="background-color: ' + bg + '; border-radius: var(--mgt-radius-full);">' +
+          '<i data-lucide="' + (state === 'done' ? 'check' : s.icon) + '" class="h-4 w-4" style="color: ' + fg + ';"></i>' +
+        '</div>' +
+        '<div class="min-w-0 flex-1">' +
+          '<p class="text-sm font-semibold" style="color: ' + (state === 'pending' ? 'rgb(var(--mgt-muted-foreground))' : 'rgb(var(--mgt-foreground))') + '; font-family: var(--mgt-font-sans);">' + s.label + '</p>' +
+          '<p class="caption" style="color: rgb(var(--mgt-muted-foreground));">' + s.desc + '</p>' +
+        '</div>' +
+        '<span class="caption tabular-nums" style="color: rgb(var(--mgt-muted-foreground));">' + (state === 'pending' ? '' : orderStepTime(i)) + '</span>' +
+        '</div>';
+      });
+      trackingTimeline.innerHTML = html;
+    }
+
+    if (trackingEta) {
+      if (done) {
+        trackingEta.innerHTML = '<div class="flex items-center gap-2 text-sm font-semibold" style="color: rgb(var(--mgt-success)); font-family: var(--mgt-font-sans);"><i data-lucide="check-circle-2" class="h-4 w-4"></i>Commande ' + (lastOrder.fulfillment === 'retrait' ? 'recuperee' : 'livree') + '. Merci !</div>';
+      } else {
+        var currentStep = steps[cur];
+        trackingEta.innerHTML = '<div class="flex items-center justify-between gap-2">' +
+          '<span class="caption font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Etape actuelle : ' + currentStep.label + '</span>' +
+          '<span class="caption tabular-nums" style="color: rgb(var(--mgt-accent)); font-family: var(--mgt-font-sans);">Mise a jour auto</span>' +
+        '</div>';
+      }
+    }
+    if (window.lucide) window.lucide.createIcons();
+    renderTrackFab();
+  }
+
+  function startTracking() {
+    if (trackingTimer) { clearInterval(trackingTimer); trackingTimer = null; }
+    trackingTimer = setInterval(function () {
+      if (!lastOrder) { clearInterval(trackingTimer); trackingTimer = null; return; }
+      var steps = ORDER_STEPS[lastOrder.fulfillment] || ORDER_STEPS.livraison;
+      if (lastOrder.statusIndex < steps.length - 1) {
+        lastOrder.statusIndex += 1;
+        saveOrder();
+        renderTracking();
+      } else {
+        clearInterval(trackingTimer);
+        trackingTimer = null;
+      }
+    }, TRACKING_STEP_MS);
+  }
+
+  function saveOrder() {
+    try { localStorage.setItem('mgt_last_order', JSON.stringify(lastOrder)); } catch (e) {}
+  }
+  function loadOrder() {
+    try {
+      var raw = localStorage.getItem('mgt_last_order');
+      if (!raw) return;
+      var o = JSON.parse(raw);
+      if (!o || !o.orderNo) return;
+      var steps = ORDER_STEPS[o.fulfillment] || ORDER_STEPS.livraison;
+      var elapsed = Date.now() - (o.createdAt || Date.now());
+      var advanced = Math.floor(elapsed / TRACKING_STEP_MS);
+      o.statusIndex = Math.min(steps.length - 1, (o.statusIndex || 0) + advanced);
+      lastOrder = o;
+      if (o.statusIndex < steps.length - 1) startTracking();
+      renderTrackFab();
+    } catch (e) {}
+  }
+
+  function renderCheckout(state) {
+    if (!checkoutCard) return;
+    if (state === 'success') {
+      // Assure une session client minimale pour accéder à l'historique des commandes.
+      try {
+        if (!localStorage.getItem('mgt_token') && !localStorage.getItem('mgt_user')) {
+          localStorage.setItem('mgt_token', 'guest-' + Date.now());
+          localStorage.setItem('mgt_user', JSON.stringify({ role: 'client', name: 'Client invité', email: '' }));
+        }
+      } catch (e) {}
+      var orderNo = 'CMD-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
+      var orderItems = cart.items.map(function (it) {
+        return { name: it.name, price: it.price, qty: it.qty };
+      });
+      lastOrder = {
+        orderNo: orderNo,
+        items: orderItems,
+        total: total(),
+        fulfillment: cart.fulfillment,
+        statusIndex: 0,
+        createdAt: Date.now(),
+        payment: pendingPaymentLabel || 'Orange Money'
+      };
+      saveOrder();
+
+      // Enregistre la commande dans l'historique client partagé (MangooClient).
+      var vendorName = (window._mcpVendor && window._mcpVendor.name) || 'DAN Boutique';
+      var vendorId = (window._mcpVendor && window._mcpVendor.vendorId) || 'pro-41cafa4bcb31';
+      var serviceLabel = orderItems.length === 1 ? orderItems[0].name : (orderItems.length + ' article(s)');
+      var months = ['Jan', 'Fev', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aout', 'Sep', 'Oct', 'Nov', 'Dec'];
+      var nowDate = new Date();
+      var dateLabel = nowDate.getDate() + ' ' + months[nowDate.getMonth()] + ' ' + nowDate.getFullYear();
+      var clientName = 'Client';
+      var clientPhone = '';
+      var clientEmail = '';
+      var clientCity = '';
+      var clientTz = '';
+      try {
+        if (window.MangooClient && window.MangooClient.getUser) {
+          var _u = window.MangooClient.getUser();
+          clientName = _u.fullName || _u.name || 'Client';
+          clientPhone = _u.phone || '';
+          clientEmail = _u.email || '';
+          clientCity = _u.city || _u.clientCity || '';
+        }
+      } catch (e) {}
+      if (window.MangooClient && window.MangooClient.addOrder) {
+        window.MangooClient.addOrder({
+          id: orderNo,
+          provider: vendorName,
+          initials: 'DB',
+          service: serviceLabel,
+          amount: formatFCFA(total()),
+          date: '',
+          status: 'en-cours',
+          payment: lastOrder.payment,
+          vendorId: vendorId,
+          kind: 'commerce',
+          items: orderItems,
+          fulfillment: cart.fulfillment,
+          createdAt: lastOrder.createdAt,
+          clientName: clientName,
+          clientPhone: clientPhone,
+          clientEmail: clientEmail,
+          clientCity: clientCity,
+          clientTz: clientTz,
+          address: pendingAddress || ''
+        });
+      }
+
+      // Crédite le solde du vendeur (DAN Boutique) au paiement de la commande.
+      if (window.MangooVendor && window.MangooVendor.creditVendor) {
+        window.MangooVendor.creditVendor(vendorId, Number(lastOrder.total) || 0, 'Commande ' + orderNo);
+      }
+
+      checkoutCard.innerHTML = '<div class="px-6 py-10 text-center">' +
+        '<div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full" style="background-color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-full);">' +
+          '<i data-lucide="check-circle-2" class="h-9 w-9" style="color: rgb(var(--mgt-primary));"></i>' +
+        '</div>' +
+        '<h3 class="h3 mb-2" style="color: rgb(var(--mgt-foreground));">Commande confirmee !</h3>' +
+        '<p class="body mb-1" style="color: rgb(var(--mgt-muted-foreground));">Merci pour votre commande chez ' + (window._mcpVendor && window._mcpVendor.name ? window._mcpVendor.name : 'cette boutique') + '.</p>' +
+        '<p class="body font-semibold mb-4" style="color: rgb(var(--mgt-primary)); font-family: var(--mgt-font-sans);">' + orderNo + '</p>' +
+        '<div class="mb-6 rounded-md p-3 text-left" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md);">' +
+          '<p class="caption mb-1" style="color: rgb(var(--mgt-muted-foreground));">' + (lastOrder.fulfillment === 'retrait' ? 'Retrait en boutique' : 'Livraison a domicile') + '</p>' +
+          '<p class="caption mb-1" style="color: rgb(var(--mgt-muted-foreground));">' + orderItems.length + ' article(s) — Total : ' + formatFCFA(lastOrder.total) + '</p>' +
+          '<p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Delai estime : ' + (lastOrder.fulfillment === 'retrait' ? '20-30 min' : '35-50 min') + '</p>' +
+        '</div>' +
+        '<div class="space-y-2">' +
+          '<button id="checkout-track" class="w-full rounded-md px-6 py-3 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: 0 4px 14px rgba(232,97,12,.35);">Suivre la livraison</button>' +
+          '<button id="checkout-done" class="w-full rounded-md px-6 py-3 text-sm font-semibold transition-all hover:opacity-80" style="background-color: rgb(var(--mgt-muted)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Terminer</button>' +
+          '<button id="checkout-orders" class="w-full rounded-md px-6 py-3 text-sm font-semibold transition-all hover:opacity-80" style="background-color: rgb(var(--mgt-primary-50)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Voir mes commandes</button>' +
+        '</div>' +
+        '</div>';
+      if (window.lucide) window.lucide.createIcons();
+      var done = document.getElementById('checkout-done');
+      if (done) done.addEventListener('click', function () {
+        cart.items = [];
+        cart.fulfillment = 'livraison';
+        products.forEach(function (p) { p.sold = 0; });
+        renderCart();
+        renderAllStock();
+        closeCheckout();
+        renderTrackFab();
+      });
+      var track = document.getElementById('checkout-track');
+      if (track) track.addEventListener('click', function () {
+        closeCheckout();
+        cart.items = [];
+        cart.fulfillment = 'livraison';
+        products.forEach(function (p) { p.sold = 0; });
+        renderCart();
+        renderAllStock();
+        openTracking();
+      });
+      var ordersBtn = document.getElementById('checkout-orders');
+      if (ordersBtn) ordersBtn.addEventListener('click', function () {
+        window.location.href = './client-orders.html';
+      });
+      startTracking();
+      renderTrackFab();
+      return;
+    }
+
+    var itemsHtml = cart.items.map(function (it) {
+      return '<div class="flex items-center justify-between text-sm" style="font-family: var(--mgt-font-sans);">' +
+        '<span style="color: rgb(var(--mgt-muted-foreground));">' + it.qty + ' x ' + it.name + '</span>' +
+        '<span class="tabular-nums font-medium" style="color: rgb(var(--mgt-foreground));">' + formatFCFA(it.price * it.qty) + '</span>' +
+      '</div>';
+    }).join('');
+
+    var savedAddresses = (window.MangooClient && typeof window.MangooClient.getAddresses === 'function') ? window.MangooClient.getAddresses() : [];
+    var savedSelectHtml = '';
+    if (savedAddresses.length) {
+      var def = window.MangooClient.getDefaultAddress();
+      savedSelectHtml = '<div class="mb-2"><p class="caption mb-1.5 font-semibold" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Choisir une adresse enregistree</p>' +
+        '<select id="checkout-saved-address" class="w-full rounded-md border px-3 py-2.5 text-sm" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">' +
+        '<option value="">— Saisir une nouvelle adresse —</option>' +
+        savedAddresses.map(function (a) {
+          var sel = def && a.id === def.id ? ' selected' : '';
+          return '<option value="' + a.id + '"' + sel + '>' + a.label + ' — ' + a.line1 + (a.city ? ', ' + a.city : '') + '</option>';
+        }).join('') +
+        '</select></div>';
+    }
+
+    var addressHtml = cart.fulfillment === 'livraison'
+      ? '<div class="mb-4"><p class="caption mb-2 font-semibold" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Adresse de livraison</p>' +
+        savedSelectHtml +
+        '<input id="checkout-address" type="text" placeholder="Ex : Rue 12, Plateau, Dakar" class="w-full rounded-md border px-3 py-2.5 text-sm" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">' +
+        '<label class="mt-2 flex items-center gap-2 text-xs font-medium" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);"><input id="checkout-save-address" type="checkbox" class="h-3.5 w-3.5 accent-[rgb(var(--mgt-primary))]">Sauvegarder cette adresse pour mes prochaines commandes</label>' +
+        '</div>'
+      : '';
+
+    checkoutCard.innerHTML = '<div class="border-b px-6 py-5" style="border-color: rgb(var(--mgt-border)); position: sticky; top: 0; background: rgb(var(--mgt-background)); z-index: 5;">' +
+      '<div class="flex items-center justify-between">' +
+        '<h3 class="h3" style="color: rgb(var(--mgt-foreground));">Confirmer la commande</h3>' +
+        '<button id="checkout-close" class="flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:opacity-80" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md); color: rgb(var(--mgt-muted-foreground));"><i data-lucide="x" class="h-4 w-4"></i></button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="px-6 py-5">' +
+      '<div class="mb-4 space-y-2 rounded-md p-3" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md);">' + itemsHtml + '</div>' +
+      '<div class="mb-4 space-y-1.5">' +
+        '<div class="flex items-center justify-between text-sm" style="font-family: var(--mgt-font-sans);"><span style="color: rgb(var(--mgt-muted-foreground));">Sous-total</span><span class="tabular-nums font-medium" style="color: rgb(var(--mgt-foreground));">' + formatFCFA(subtotal()) + '</span></div>' +
+        '<div class="flex items-center justify-between text-sm" style="font-family: var(--mgt-font-sans);"><span style="color: rgb(var(--mgt-muted-foreground));">' + (cart.fulfillment === 'retrait' ? 'Retrait' : 'Livraison') + '</span><span class="tabular-nums font-medium" style="color: rgb(var(--mgt-foreground));">' + (deliveryFee() === 0 ? 'Gratuit' : formatFCFA(deliveryFee())) + '</span></div>' +
+        '<div class="flex items-center justify-between border-t pt-2 text-sm font-semibold" style="border-color: rgb(var(--mgt-border)); color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);"><span>Total</span><span class="tabular-nums text-base" style="color: rgb(var(--mgt-primary));">' + formatFCFA(total()) + '</span></div>' +
+      '</div>' +
+      addressHtml +
+      '<p class="caption mb-2 font-semibold" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Mode de paiement</p>' +
+      '<div class="mb-2 flex items-center gap-3 rounded-md border p-3 cursor-pointer checkout-pay-option" data-pay="payplus" style="border-color: rgb(var(--mgt-primary)); background-color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-md);">' +
+        '<span class="checkout-pay-dot" style="width:18px;height:18px;border-radius:9999px;border:2px solid rgb(var(--mgt-primary));display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="width:8px;height:8px;border-radius:9999px;background:rgb(var(--mgt-primary));"></span></span>' +
+        '<i data-lucide="smartphone" class="h-5 w-5 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i>' +
+        '<div class="min-w-0 flex-1">' +
+          '<p class="text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Mangoo Pay+</p>' +
+          '<p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Orange Money · Wave · MTN MoMo · Moov · Free</p>' +
+        '</div>' +
+        '<i data-lucide="shield-check" class="h-4 w-4 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i>' +
+      '</div>' +
+      '<div class="mb-5 flex items-center gap-3 rounded-md border p-3 cursor-pointer checkout-pay-option" data-pay="wallet" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md);">' +
+        '<span class="checkout-pay-dot" style="width:18px;height:18px;border-radius:9999px;border:2px solid rgb(var(--mgt-border));display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;"></span>' +
+        '<i data-lucide="wallet" class="h-5 w-5 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i>' +
+        '<div class="min-w-0 flex-1">' +
+          '<p class="text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Solde client</p>' +
+          '<p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Disponible : ' + formatFCFA(clientWalletBalance()) + '</p>' +
+        '</div>' +
+        '<i data-lucide="check-circle-2" class="h-4 w-4 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i>' +
+      '</div>' +
+      '<button id="checkout-confirm" class="w-full rounded-md px-6 py-3.5 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: 0 4px 14px rgba(232,97,12,.35);">Confirmer la commande</button>' +
+    '</div>';
+
+    if (window.lucide) window.lucide.createIcons();
+
+    // Sélection du mode de paiement (Mangoo Pay+ ou Solde client).
+    var payOptions = document.querySelectorAll('.checkout-pay-option');
+    payOptions.forEach(function (opt) {
+      opt.addEventListener('click', function () {
+        setPaymentMethod(opt.getAttribute('data-pay'));
+      });
+    });
+    setPaymentMethod(pendingPaymentMethod || 'payplus');
+
+    var closeBtn = document.getElementById('checkout-close');
+    if (closeBtn) closeBtn.addEventListener('click', closeCheckout);
+
+    var savedSelect = document.getElementById('checkout-saved-address');
+    var addrInput = document.getElementById('checkout-address');
+    if (savedSelect && addrInput) {
+      savedSelect.addEventListener('change', function () {
+        var id = savedSelect.value;
+        if (!id) { addrInput.value = ''; return; }
+        var list = window.MangooClient.getAddresses();
+        var a = list.find(function (x) { return x.id === id; });
+        addrInput.value = a ? a.line1 + (a.city ? ', ' + a.city : '') : '';
+      });
+    }
+
+    var confirmBtn = document.getElementById('checkout-confirm');
+    if (confirmBtn) confirmBtn.addEventListener('click', function () {
+      var addr = document.getElementById('checkout-address');
+      if (cart.fulfillment === 'livraison' && addr && !addr.value.trim()) {
+        showToast('Veuillez saisir une adresse de livraison');
+        addr.focus();
+        return;
+      }
+      var saveCb = document.getElementById('checkout-save-address');
+      if (cart.fulfillment === 'livraison' && saveCb && saveCb.checked && addr.value.trim() && window.MangooClient) {
+        var u = window.MangooClient.getUser();
+        window.MangooClient.addAddress({
+          label: 'Adresse',
+          fullName: u.fullName,
+          phone: u.phone,
+          line1: addr.value.trim(),
+          city: u.city
+        });
+      }
+
+      var vendorName = (window._mcpVendor && window._mcpVendor.name) || 'DAN Boutique';
+      var confirmOrder = function (payLabel) {
+        pendingPaymentLabel = payLabel || 'Orange Money';
+        pendingAddress = (cart.fulfillment === 'livraison' && addr && addr.value) ? addr.value.trim() : '';
+        renderCheckout('success');
+      };
+
+      // Paiement par « Solde client » : débit du portefeuille local du client.
+      if (pendingPaymentMethod === 'wallet') {
+        var bal = clientWalletBalance();
+        if (bal < total()) {
+          showToast('Solde client insuffisant (' + formatFCFA(bal) + '). Rechargez ou choisissez un autre moyen de paiement.');
+          confirmBtn.disabled = false;
+          return;
+        }
+        var debited = window.MangooClient && typeof window.MangooClient.debitWallet === 'function'
+          ? window.MangooClient.debitWallet(total())
+          : false;
+        if (!debited) {
+          showToast('Impossible de débiter le solde client.');
+          confirmBtn.disabled = false;
+          return;
+        }
+        confirmOrder('Solde client');
+        return;
+      }
+
+      // Paiement via Mangoo Pay+ (mobile money) : opérateur → numéro → OTP.
+      if (window.MangooPayment && typeof window.MangooPayment.collect === 'function') {
+        confirmBtn.disabled = true;
+        window.MangooPayment.collect({
+          amount: total(),
+          title: 'Mangoo Pay+',
+          subtitle: 'Paiement de votre commande chez ' + vendorName,
+          onCancel: function () { confirmBtn.disabled = false; }
+        }).then(function (res) {
+          confirmBtn.disabled = false;
+          confirmOrder(OP_LABELS[(res && res.operator)] || 'Mobile money');
+        }).catch(function () {
+          confirmBtn.disabled = false;
+          confirmOrder('Mobile money');
+        });
+      } else {
+        confirmOrder('Orange Money');
+      }
+    });
+  }
+
+  /* ==== Liaisons ==== */
+  products.forEach(function (p) {
+    if (p.btn) p.btn.addEventListener('click', function () { addToCart(p); });
+  });
+
+  if (fab) fab.addEventListener('click', openDrawer);
+  var closeBtn = document.getElementById('cart-close');
+  if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+  if (overlay) overlay.addEventListener('click', closeDrawer);
+  var checkoutBtn = document.getElementById('btn-checkout');
+  if (checkoutBtn) checkoutBtn.addEventListener('click', openCheckout);
+  var commanderBtn = document.getElementById('btn-commander');
+  if (commanderBtn) commanderBtn.addEventListener('click', openDrawer);
+
+  var livBtn = document.getElementById('fulfill-livraison');
+  var retBtn = document.getElementById('fulfill-retrait');
+  if (livBtn) livBtn.addEventListener('click', function () { cart.fulfillment = 'livraison'; renderCart(); });
+  if (retBtn) retBtn.addEventListener('click', function () { cart.fulfillment = 'retrait'; renderCart(); });
+
+  if (itemsEl) itemsEl.addEventListener('click', function (e) {
+    var t = e.target.closest ? e.target.closest('.cart-qty, .cart-remove') : null;
+    if (!t) return;
+    var idx = parseInt(t.getAttribute('data-idx'), 10);
+    if (t.classList.contains('cart-qty')) changeQty(idx, parseInt(t.getAttribute('data-delta'), 10));
+    else if (t.classList.contains('cart-remove')) removeItem(idx);
+  });
+
+  /* ==== Filtre + recherche catalogue ==== */
+  var filter = document.getElementById('catalogue-filter');
+  var search = document.getElementById('catalogue-search');
+  var emptyEl = document.getElementById('catalogue-empty');
+  function fold(s) { return String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+  function populateFilterOptions() {
+    if (!filter || !window.MangooCatalogue) return;
+    var cats = window.MangooCatalogue.categoriesFor('commerce');
+    cats.forEach(function (c) {
+      var opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.label;
+      filter.appendChild(opt);
+    });
+  }
+  function applyCatalogueFilter() {
+    var v = filter ? filter.value : 'all';
+    var q = fold(search ? search.value : '');
+    var visible = 0;
+    products.forEach(function (p) {
+      var catOk = v === 'all' || p.catId === v;
+      var nameOk = !q || fold(p.name).indexOf(q) !== -1 || fold(p.category).indexOf(q) !== -1;
+      var show = catOk && nameOk;
+      if (show) visible += 1;
+      if (p.el) p.el.style.display = show ? '' : 'none';
+    });
+    if (emptyEl) emptyEl.classList.toggle('hidden', visible !== 0);
+  }
+  if (filter) filter.addEventListener('change', applyCatalogueFilter);
+  if (search) search.addEventListener('input', applyCatalogueFilter);
+
+  /* ==== Suivi de commande ==== */
+  if (trackFab) trackFab.addEventListener('click', openTracking);
+  var trackingCloseBtn = document.getElementById('tracking-close');
+  if (trackingCloseBtn) trackingCloseBtn.addEventListener('click', closeTracking);
+  if (trackingModal) {
+    var trackingBackdrop = trackingModal.querySelector('.absolute.inset-0');
+    if (trackingBackdrop) trackingBackdrop.addEventListener('click', closeTracking);
+  }
+
+  populateFilterOptions();
+  renderAllStock();
+  renderCart();
+  loadOrder();
+};
+</script>
+<script src="../assets/mangoo-connect-plus.js"></script>
+<script src="../assets/mangoo-payment.js"></script>
+<script src="../assets/mangoo-negotiation.js"></script>
+<script src="../assets/mangoo-client-data.js"></script>
+<script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+<script src="../assets/mangoo-catalogue.js"></script>
+<script>
+(function () {
+  // Contexte boutique — relié à Mangoo Connect+ (WebRTC).
+  function urlParam(name) {
+    var m = new RegExp('[?&]' + name + '=([^&]*)').exec(location.search);
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+  var DEFAULT_VENDOR = 'pro-41cafa4bcb31';
+  var vendorId = urlParam('vendorId') || urlParam('id') || DEFAULT_VENDOR;
+  window._mcpVendor = {
+    id: null,
+    vendorId: vendorId,
+    name: 'DAN Boutique',
+    role: 'boutique',
+    category: 'commerce',
+    phone: '+336423456789',
+    lat: 14.7167,
+    lng: -17.4677,
+    city: 'Dakar'
+  };
+
+  var chat = document.getElementById('btn-chat');
+  var call = document.getElementById('btn-call');
+  var itin = document.getElementById('btn-itinerary');
+  if (chat) chat.addEventListener('click', function () { MangooConnect.chat(window._mcpVendor); });
+  if (call) call.addEventListener('click', function () { MangooConnect.call(window._mcpVendor); });
+  if (itin) itin.addEventListener('click', function () { MangooConnect.navigate(window._mcpVendor); });
+
+  if (window.MangooExpress) {
+    var commander = document.getElementById('btn-commander');
+    var holder = document.createElement('span');
+    holder.className = 'inline-flex items-center self-center';
+    holder.innerHTML = MangooExpress.badge(MangooExpress.fromCategory('commerce'));
+    if (commander && commander.parentNode) {
+      commander.parentNode.insertBefore(holder.firstChild, commander);
+    }
+  }
+
+  function setText(el, value) {
+    if (el && value != null && value !== '') el.textContent = value;
+  }
+  function setIconName(el, name) {
+    if (el && name) el.setAttribute('data-lucide', name);
+  }
+  function categoryMeta(category) {
+    var map = {
+      commerce: { label: 'Boutique', icon: 'shopping-bag' },
+      boutique: { label: 'Boutique', icon: 'shopping-bag' },
+      mode: { label: 'Mode', icon: 'shopping-bag' },
+      salon: { label: 'Salon de beauté', icon: 'scissors' },
+      restaurant: { label: 'Restaurant', icon: 'utensils' }
+    };
+    return map[category] || { label: category || 'Boutique', icon: 'shopping-bag' };
+  }
+
+  function applyVendor(match) {
+    if (!match) return;
+    var meta = categoryMeta(match.category);
+    window._mcpVendor.id = match.id || window._mcpVendor.id;
+    window._mcpVendor.vendorId = match.vendorId || window._mcpVendor.vendorId;
+    window._mcpVendor.name = match.name || window._mcpVendor.name;
+    if (match.category) window._mcpVendor.category = match.category;
+    if (match.phone) window._mcpVendor.phone = match.phone;
+    if (match.lat != null) window._mcpVendor.lat = match.lat;
+    if (match.lng != null) window._mcpVendor.lng = match.lng;
+    if (match.city) window._mcpVendor.city = match.city;
+
+    setText(document.getElementById('vendor-title'), match.name);
+    setText(document.getElementById('vendor-badge'), meta.label);
+    setIconName(document.getElementById('vendor-avatar-icon'), meta.icon);
+    if (match.img) {
+      var avatarImg = document.getElementById('vendor-avatar-img');
+      var avatarIcon = document.getElementById('vendor-avatar-icon');
+      if (avatarImg) { avatarImg.src = match.img; avatarImg.style.display = 'block'; }
+      if (avatarIcon) avatarIcon.style.display = 'none';
+    }
+    if (match.rating != null) setText(document.getElementById('vendor-rating'), String(match.rating));
+    setText(document.getElementById('vendor-city'), (match.city || '') + (match.country ? ', ' + match.country : ''));
+    setText(document.getElementById('vendor-description'), match.desc);
+    if (match.name && document.title) document.title = match.name + ' · Boutique · MangooTech';
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  fetch('/api/carte', { headers: { 'Accept': 'application/json' } })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      var list = (data && data.vendors) || [];
+      var match = null;
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].vendorId === vendorId || String(list[i].id) === String(vendorId)) { match = list[i]; break; }
+      }
+      if (match) applyVendor(match);
+    })
+    .catch(function () {});
+
+  fetch('/api/vendor-config?vendor=' + encodeURIComponent(vendorId), { headers: { 'Accept': 'application/json' } })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      var c = data && data.config;
+      if (!c) return;
+      var p = c.profile || {};
+      setText(document.getElementById('vendor-title'), p.enseigne || c.vendorName);
+      setText(document.getElementById('vendor-description'), p.description);
+      if (p.city) setText(document.getElementById('vendor-city'), p.city + (p.country ? ', ' + p.country : ''));
+      if (p.phone) { window._mcpVendor.phone = p.phone; }
+      if (p.lat != null) window._mcpVendor.lat = p.lat;
+      if (p.lng != null) window._mcpVendor.lng = p.lng;
+      if (p.category) {
+        var m = categoryMeta(p.category);
+        setText(document.getElementById('vendor-badge'), m.label);
+        setIconName(document.getElementById('vendor-avatar-icon'), m.icon);
+      }
+      if (c.verification && c.verification.badgeLabel) {
+        setText(document.getElementById('vendor-badge'), c.verification.badgeLabel);
+      }
+      if (c.horaires) {
+        var now = new Date();
+        var days = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+        var today = c.horaires[days[now.getDay()]];
+        var openEl = document.getElementById('vendor-open');
+        if (openEl && today) {
+          openEl.textContent = today.open ? ('Ouvert aujourd\'hui ' + today.openTime + ' - ' + today.closeTime) : 'Fermé aujourd\'hui';
+        }
+        if (c.horaires.lundi && c.horaires.lundi.open) {
+          setText(document.getElementById('vendor-hours-week'), c.horaires.lundi.openTime + ' - ' + c.horaires.lundi.closeTime);
+        }
+        if (c.horaires.samedi) {
+          setText(document.getElementById('vendor-hours-sat'), c.horaires.samedi.open ? (c.horaires.samedi.openTime + ' - ' + c.horaires.samedi.closeTime) : 'Fermé');
+        }
+        if (c.horaires.dimanche) {
+          setText(document.getElementById('vendor-hours-sun'), c.horaires.dimanche.open ? (c.horaires.dimanche.openTime + ' - ' + c.horaires.dimanche.closeTime) : 'Fermé');
+        }
+      }
+      if (window.lucide) window.lucide.createIcons();
+    })
+    .catch(function () {});
+})();
+</script>
+<script>
+(function () {
+  var MC = window.MangooCatalogue;
+  var grid = document.getElementById('catalogue-grid');
+  var countLabel = document.getElementById('catalogue-count-label');
+  var currentProducts = [];
+  function esc(str) {
+    return String(str == null ? '' : str).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function cardHTML(p) {
+    var cat = MC.categoryById(p.category);
+    var style = MC.categoryStyle(p.category);
+    var b = { label: cat.label, bg: style.bg, fg: style.fg };
+    var icon = cat.icon;
+    var canNegotiate = p.negotiable !== false && p.available !== false && Number(p.stock) > 0;
+    var negoBtn = canNegotiate
+      ? '<button type="button" data-nego="' + esc(p.id) + '" class="w-full rounded-md px-4 py-2.5 text-sm font-semibold transition-all hover:brightness-110" style="margin-top:8px; cursor:pointer; background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">'
+        + '<i data-lucide="scale" class="h-4 w-4 mr-1.5 inline-block align-text-bottom"></i>Négocier'
+        + '</button>'
+      : '';
+    return '<div class="group rounded-lg border transition-all hover:translate-y-[-1px] hover:shadow-md" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);" data-stock="' + p.stock + '" data-category="' + esc(p.category) + '" data-id="' + esc(p.id) + '" data-negotiable="' + (p.negotiable === false ? '0' : '1') + '">'
+      + '<div class="flex items-center justify-center rounded-t-md h-48" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md) var(--mgt-radius-md) 0 0;">'
+      + '<i data-lucide="' + esc(icon) + '" class="h-12 w-12" style="color: rgb(var(--mgt-primary-300));"></i>'
+      + '</div>'
+      + '<div class="p-4">'
+      + '<span class="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium mb-2" style="background-color: ' + b.bg + '; color: ' + b.fg + '; border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">' + b.label + '</span>'
+      + '<h3 class="h3 mb-1 text-base" style="color: rgb(var(--mgt-foreground)); font-size: 16px;">' + esc(p.name) + '</h3>'
+      + '<p class="tabular-nums text-lg font-bold mb-3" style="color: rgb(var(--mgt-primary)); font-family: var(--mgt-font-sans);">' + MC.formatPrice(p.price) + '</p>'
+      + '<button class="w-full rounded-md border-2 px-4 py-2.5 text-sm font-semibold transition-all hover:opacity-80" style="border-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">'
+      + '<i data-lucide="shopping-bag" class="h-4 w-4 mr-1.5 inline-block align-text-bottom"></i>Ajouter au panier'
+      + '</button>'
+      + negoBtn
+      + '</div>'
+      + '</div>';
+  }
+
+  function render(list) {
+    currentProducts = list || [];
+    if (!list.length) {
+      grid.innerHTML = '<div class="col-span-full py-16 text-center" style="color: rgb(var(--mgt-muted-foreground));">Aucun produit disponible.</div>';
+    } else {
+      grid.innerHTML = list.map(cardHTML).join('');
+    }
+    if (countLabel) countLabel.textContent = list.length + ' produits disponibles';
+    if (window.lucide) lucide.createIcons();
+  }
+
+  // Délègue les clics sur le bouton « Négocier » vers la modale de négociation.
+  function bindNegotiation() {
+    if (!grid) return;
+    grid.addEventListener('click', function (e) {
+      var btn = e.target && e.target.closest ? e.target.closest('[data-nego]') : null;
+      if (!btn) return;
+      var id = btn.getAttribute('data-nego');
+      var p = null;
+      for (var i = 0; i < currentProducts.length; i++) {
+        if (currentProducts[i].id === id) { p = currentProducts[i]; break; }
+      }
+      if (p && window.MangooNegotiation && typeof window.MangooNegotiation.open === 'function') {
+        window.MangooNegotiation.open(p);
+      }
+    });
+  }
+
+  function init() {
+    if (!MC || !grid) return;
+    bindNegotiation();
+    var vendor = (window._mcpVendor && window._mcpVendor.vendorId) || 'pro-41cafa4bcb31';
+    MC.api.list({ vendor: vendor }).then(function (list) {
+      render(list || []);
+      if (window.__mgtInitBoutique) window.__mgtInitBoutique();
+    }).catch(function () {
+      grid.innerHTML = '<div class="col-span-full py-16 text-center" style="color: rgb(var(--mgt-error));">Impossible de charger le catalogue.</div>';
+      if (window.__mgtInitBoutique) window.__mgtInitBoutique();
+    });
+  }
+
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); }
+  else { init(); }
+})();
+</script>
+<script src="../assets/mangoo-public-nav.js"></script>
+<script src="../assets/mangoo-welcome-audio.js"></script>
+<script>
+(function () {
+  var WELCOME_DURATION = 24; // secondes simulées (durée indicative du message vocal)
+  var WELCOME_TEXT = 'Bienvenue chez DAN Boutique. Découvrez nos nouveautés, nos offres de la semaine et nos horaires.';
+  var WELCOME_VENDOR = (window._mcpVendor && window._mcpVendor.vendorId) || 'pro-41cafa4bcb31';
+
+  function fmt(s) {
+    var m = Math.floor(s / 60);
+    var sec = Math.floor(s % 60);
+    return m + ':' + (sec < 10 ? '0' : '') + sec;
+  }
+
+  var PLAY_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>';
+  var PAUSE_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
+
+  function buildWaveform() {
+    var wrap = document.getElementById('welcome-waveform');
+    if (!wrap) return;
+    var heights = [4, 8, 14, 20, 12, 24, 18, 10, 22, 16, 8, 26, 20, 12, 6, 18, 24, 14, 22, 10, 16, 20, 8, 12];
+    for (var i = 0; i < heights.length; i++) {
+      var b = document.createElement('span');
+      b.style.width = '3px';
+      b.style.height = heights[i] + 'px';
+      b.style.borderRadius = 'var(--mgt-radius-full)';
+      b.style.backgroundColor = 'rgb(var(--mgt-primary-300))';
+      b.style.transition = 'background-color .2s ease';
+      b.setAttribute('data-bar', String(i));
+      wrap.appendChild(b);
+    }
+  }
+
+  function bars() {
+    return document.querySelectorAll('#welcome-waveform [data-bar]');
+  }
+
+  function paintBar(el, active) {
+    el.style.backgroundColor = active ? 'rgb(var(--mgt-primary))' : 'rgb(var(--mgt-primary-300))';
+  }
+
+  function setProgress(upto) {
+    var all = bars();
+    for (var i = 0; i < all.length; i++) paintBar(all[i], i < upto);
+  }
+
+  function setIcon(name) {
+    var el = document.getElementById('welcome-play-icon');
+    if (!el) return;
+    el.innerHTML = name === 'pause' ? PAUSE_SVG : PLAY_SVG;
+  }
+
+  var playing = false;
+  var timer = null;
+  var elapsed = 0;
+
+  function setSourceLabel() {
+    var el = document.getElementById('welcome-source');
+    if (!el) return;
+    var has = window.MangooWelcomeAudio && window.MangooWelcomeAudio.hasRecording(WELCOME_VENDOR);
+    el.textContent = has ? 'Message personnalisé' : 'Message par défaut';
+    el.style.backgroundColor = has ? 'rgb(var(--mgt-primary-50))' : 'rgb(var(--mgt-muted))';
+    el.style.color = has ? 'rgb(var(--mgt-primary-700))' : 'rgb(var(--mgt-muted-foreground))';
+  }
+
+  function stop() {
+    playing = false;
+    if (timer) { clearInterval(timer); timer = null; }
+    setIcon('play');
+    if (window.MangooWelcomeAudio) window.MangooWelcomeAudio.stop();
+  }
+
+  function finish() {
+    if (timer) { clearInterval(timer); timer = null; }
+    playing = false;
+    setIcon('play');
+    setProgress(bars().length);
+    var timeEl = document.getElementById('welcome-time');
+    if (timeEl) timeEl.textContent = fmt(elapsed / 1000);
+  }
+
+  function start() {
+    playing = true;
+    elapsed = 0;
+    setIcon('pause');
+    setSourceLabel();
+    if (window.MangooWelcomeAudio) {
+      window.MangooWelcomeAudio.play(WELCOME_VENDOR, WELCOME_TEXT, { onEnd: finish });
+    }
+
+    var timeEl = document.getElementById('welcome-time');
+    var total = WELCOME_DURATION * 1000;
+    var step = 100;
+    var totalBars = bars().length;
+
+    timer = setInterval(function () {
+      elapsed += step;
+      if (elapsed >= total) {
+        elapsed = total;
+        if (timeEl) timeEl.textContent = fmt(elapsed / 1000);
+        setProgress(totalBars);
+        finish();
+        return;
+      }
+      if (timeEl) timeEl.textContent = fmt(elapsed / 1000);
+      setProgress(Math.round((elapsed / total) * totalBars));
+    }, step);
+
+    if (timeEl) timeEl.textContent = fmt(0);
+    setProgress(0);
+  }
+
+  function toggle() {
+    if (playing) stop();
+    else start();
+  }
+
+  function bind() {
+    buildWaveform();
+    setSourceLabel();
+    var btn = document.getElementById('welcome-play-btn');
+    if (btn) btn.addEventListener('click', toggle);
+    var hero = document.getElementById('welcome-listen-hero');
+    if (hero) hero.addEventListener('click', function () {
+      var target = document.getElementById('welcome-play-btn');
+      if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (!playing) start();
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bind);
+  } else {
+    bind();
+  }
+})();
+</script>
+<script>
+(function () {
+  var BADGE_TEXTS = {
+    promo: 'Promotion en cours : profitez de remises sur une sélection de nos produits, dans la limite des stocks disponibles.',
+    new: 'Nouveau chez nous : découvrez nos dernières nouveautés et offres du moment.'
+  };
+  var BADGE_VENDOR = (window._mcpVendor && window._mcpVendor.vendorId) || 'pro-41cafa4bcb31';
+  function bind() {
+    var els = document.querySelectorAll('[data-badge-audio]');
+    for (var i = 0; i < els.length; i++) {
+      (function (el) {
+        el.addEventListener('click', function (e) {
+          e.preventDefault();
+          var type = el.getAttribute('data-badge-audio');
+          var text = BADGE_TEXTS[type] || '';
+          // Enregistrement personnalisé du badge s'il existe, sinon repli sur la synthèse.
+          if (window.MangooWelcomeAudio) window.MangooWelcomeAudio.playBadge(BADGE_VENDOR, type, text);
+        });
+      })(els[i]);
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+  else bind();
+})();
+</script>
+</body>
+</html>

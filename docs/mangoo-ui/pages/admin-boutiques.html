@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Gestion Boutiques</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+:root {
+  --background: rgb(255 255 255);
+  --foreground: rgb(15 23 42);
+  --card: rgb(255 255 255);
+  --card-foreground: rgb(15 23 42);
+  --popover: rgb(255 255 255);
+  --popover-foreground: rgb(15 23 42);
+  --primary: rgb(26 92 42);
+  --primary-foreground: rgb(255 255 255);
+  --muted: rgb(248 250 252);
+  --muted-foreground: rgb(100 116 139);
+  --border: rgb(226 232 240);
+  --input: rgb(226 232 240);
+  --ring: rgb(26 92 42);
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: rgb(129 199 134);
+  --state-success-foreground: rgb(255 255 255);
+  --state-warning: rgb(255 183 77);
+  --state-warning-foreground: rgb(15 23 42);
+  --state-error: rgb(239 68 68);
+  --state-error-foreground: rgb(255 255 255);
+  --state-info: rgb(59 130 246);
+  --state-info-foreground: rgb(255 255 255);
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: rgb(11 11 15);
+  --foreground: rgb(248 250 252);
+  --card: rgb(20 20 26);
+  --card-foreground: rgb(248 250 252);
+  --popover: rgb(20 20 26);
+  --popover-foreground: rgb(248 250 252);
+  --primary: rgb(76 168 82);
+  --primary-foreground: rgb(255 255 255);
+  --muted: rgb(30 30 38);
+  --muted-foreground: rgb(148 163 184);
+  --border: rgb(40 40 50);
+  --input: rgb(40 40 50);
+  --ring: rgb(76 168 82);
+}
+
+.h-display { font-family: var(--mgt-font-sans); font-size: clamp(40px, 6vw, 88px); line-height: 1.02; font-weight: 600; letter-spacing: -0.03em; text-wrap: balance; }
+.h1 { font-family: var(--mgt-font-sans); font-size: clamp(28px, 3.5vw, 48px); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+.h2 { font-family: var(--mgt-font-sans); font-size: clamp(22px, 2.4vw, 32px); line-height: 1.2; font-weight: 600; letter-spacing: -0.015em; }
+.h3 { font-family: var(--mgt-font-sans); font-size: 20px; line-height: 1.3; font-weight: 600; letter-spacing: -0.01em; }
+.body-l { font-family: var(--mgt-font-sans); font-size: 18px; line-height: 1.55; font-weight: 400; }
+.body { font-family: var(--mgt-font-sans); font-size: 15px; line-height: 1.6; font-weight: 400; }
+.caption { font-family: var(--mgt-font-sans); font-size: 13px; line-height: 1.5; font-weight: 400; letter-spacing: 0.005em; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+    <style id="critical-layout">
+      .admin-layout { display: flex; min-height: 100vh; }
+      .admin-sidebar { width: 260px; min-height: 100vh; flex-shrink: 0; position: fixed; top: 0; left: 0; z-index: 40; }
+      .admin-main { flex: 1; margin-left: 260px; min-width: 0; }
+      .drawer-overlay { position: fixed; inset: 0; z-index: 50; background: rgba(15 23 42 / 0.4); display: none; }
+      .drawer-overlay.open { display: block; }
+      .drawer-panel { position: fixed; top: 0; right: 0; z-index: 60; width: 520px; max-width: 100vw; height: 100vh; overflow-y: auto; transform: translateX(100%); transition: transform 0.3s ease; }
+      .drawer-panel.open { transform: translateX(0); }
+      .filter-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 32px; }
+      @media (max-width: 768px) {
+        .admin-sidebar { transform: translateX(-100%); transition: transform .25s ease; }
+        .admin-sidebar.open { transform: translateX(0); box-shadow: 0 0 60px rgba(0,0,0,.4); }
+        .admin-main { margin-left: 0; }
+        .drawer-panel { width: 100%; max-width: 100%; }
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased bg-muted text-foreground">
+    <div class="admin-layout">
+
+        <!-- ===== ADMIN SIDEBAR ===== -->
+        <aside id="admin-nav" class="admin-sidebar" style="background-color: rgb(var(--mgt-primary-900));">
+            <div class="flex items-center gap-3 px-5 py-5 border-b" style="border-color: rgb(var(--mgt-primary-700) / .5);">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color: rgb(var(--mgt-accent));">
+                    <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+                </div>
+                <div>
+                    <span class="text-white font-semibold text-base leading-tight block">MangooTech</span>
+                    <span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded tracking-wider uppercase" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground));">Admin</span>
+                </div>
+            </div>
+
+            <nav class="flex-1 py-4 px-3 overflow-y-auto no-scrollbar">
+                <a href="./admin.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white">
+                    <i data-lucide="layout-dashboard" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Tableau de bord</span>
+                </a>
+                <a href="./admin-boutiques.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors bg-white/12 text-white">
+                    <i data-lucide="store" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Boutiques</span>
+                </a>
+                <a href="./admin-vendors.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white">
+                    <i data-lucide="users" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Prestataires</span>
+                </a>
+                <a href="./admin-commissions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white">
+                    <i data-lucide="percent" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Commissions</span>
+                </a>
+                <a href="./admin-transactions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white">
+                    <i data-lucide="receipt" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Transactions</span>
+                </a>
+                <a href="./admin-boosts.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white">
+                    <i data-lucide="rocket" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Boosters</span>
+                </a>
+                <a href="./admin-delivery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white">
+                    <i data-lucide="truck" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Livraisons</span>
+                </a>
+                <a href="./admin-packs.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white">
+                    <i data-lucide="tags" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Packs &amp; Tarifs</span>
+                </a>
+            </nav>
+
+            <div class="p-4 border-t flex items-center gap-3" style="border-color: rgb(var(--mgt-primary-700) / .5);">
+                <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0" style="background-color: rgb(var(--mgt-primary-500)); color: rgb(var(--mgt-primary-foreground));">DF</div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-white text-sm font-medium truncate">DANSOKO Fodé</div>
+                    <div class="text-xs truncate" style="color: rgb(var(--mgt-primary-300));">Administrateur</div>
+                </div>
+                <button class="text-white/50 hover:text-white transition-colors">
+                    <i data-lucide="settings" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <div class="admin-main">
+
+            <header class="sticky top-0 z-30 bg-card border-b border-border">
+                <div class="flex items-center justify-between px-6 py-3">
+                    <div>
+                        <h1 class="text-xl font-semibold text-foreground">Gestion des boutiques</h1>
+                        <p class="text-sm text-muted-foreground" id="boutiques-subtitle">Chargement…</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="relative hidden md:block">
+                            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"></i>
+                            <input type="text" placeholder="Rechercher..." class="pl-9 pr-4 py-2 rounded-lg bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring w-56 transition-shadow">
+                        </div>
+                        <button class="relative p-2 rounded-lg hover:bg-muted transition-colors">
+                            <i data-lucide="bell" class="w-5 h-5 text-muted-foreground"></i>
+                            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style="background-color: rgb(var(--mgt-accent));"></span>
+                        </button>
+                        <div class="flex items-center gap-2 pl-2 border-l border-border">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold" style="background-color: rgb(var(--mgt-primary-500)); color: rgb(var(--mgt-primary-foreground));">DF</div>
+                            <i data-lucide="chevron-down" class="w-4 h-4 text-muted-foreground"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-2 px-6 pb-3" id="boutiques-status-chips"></div>
+            </header>
+
+            <main class="p-6 space-y-6">
+
+                <!-- ===== FILTER BAR ===== -->
+                <div class="bg-card border border-border rounded-xl p-4">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <div class="relative flex-1 min-w-[240px]">
+                            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"></i>
+                            <input type="text" id="boutique-search" placeholder="Rechercher nom, propriétaire, ville..." class="w-full pl-9 pr-4 py-2.5 rounded-lg bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow">
+                        </div>
+                        <div class="relative min-w-[150px]">
+                            <select id="filter-status" class="filter-select w-full py-2.5 px-3.5 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer">
+                                <option value="">Tous les statuts</option>
+                                <option value="active">Active</option>
+                                <option value="en_attente">En attente</option>
+                                <option value="suspendue">Suspendue</option>
+                                <option value="fermee">Fermée</option>
+                            </select>
+                        </div>
+                        <div class="relative min-w-[160px]">
+                            <select id="filter-cat" class="filter-select w-full py-2.5 px-3.5 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer">
+                                <option value="">Toutes catégories</option>
+                                <option value="commerce">Commerce</option>
+                                <option value="mode">Mode</option>
+                                <option value="beaute">Beauté</option>
+                                <option value="electronique">Électronique</option>
+                                <option value="alimentation">Alimentation</option>
+                                <option value="restauration">Restauration</option>
+                                <option value="artisanat">Artisanat</option>
+                            </select>
+                        </div>
+                        <div class="relative min-w-[140px]">
+                            <select id="filter-ville" class="filter-select w-full py-2.5 px-3.5 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer">
+                                <option value="">Toutes villes</option>
+                                <option value="Dakar">Dakar</option>
+                                <option value="Abidjan">Abidjan</option>
+                                <option value="Bamako">Bamako</option>
+                                <option value="Cotonou">Cotonou</option>
+                                <option value="Ouagadougou">Ouagadougou</option>
+                                <option value="Lome">Lomé</option>
+                                <option value="Niamey">Niamey</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== KPI CARDS ROW ===== -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Boutiques</span>
+                            <span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-primary-50));">
+                                <i data-lucide="store" class="w-4 h-4" style="color: rgb(var(--mgt-primary));"></i>
+                            </span>
+                        </div>
+                        <div class="text-xl font-bold tabular-nums" style="color: rgb(var(--mgt-primary));" id="boutiques-kpi-total">—</div>
+                        <div class="text-xs text-muted-foreground">vendeurs-boutiques enregistrés</div>
+                    </div>
+                    <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Produits</span>
+                            <span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-accent-50));">
+                                <i data-lucide="package" class="w-4 h-4" style="color: rgb(var(--mgt-accent));"></i>
+                            </span>
+                        </div>
+                        <div class="text-xl font-bold tabular-nums" style="color: rgb(var(--mgt-accent));" id="boutiques-kpi-products">—</div>
+                        <div class="text-xs text-muted-foreground">références au catalogue</div>
+                    </div>
+                    <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">CA boutique</span>
+                            <span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-primary-100));">
+                                <i data-lucide="banknote" class="w-4 h-4" style="color: rgb(var(--mgt-primary));"></i>
+                            </span>
+                        </div>
+                        <div class="text-xl font-bold tabular-nums" style="color: rgb(var(--mgt-primary));" id="boutiques-kpi-ca">—</div>
+                        <div class="text-xs text-muted-foreground">FCFA générés</div>
+                    </div>
+                    <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Commission</span>
+                            <span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-accent-50));">
+                                <i data-lucide="percent" class="w-4 h-4" style="color: rgb(var(--mgt-accent));"></i>
+                            </span>
+                        </div>
+                        <div class="text-xl font-bold tabular-nums" style="color: rgb(var(--mgt-accent));" id="boutiques-kpi-commission">—</div>
+                        <div class="text-xs text-muted-foreground">FCFA de commission</div>
+                    </div>
+                </div>
+
+                <!-- ===== BOUTIQUES TABLE ===== -->
+                <div id="admin-table-boutiques" class="bg-card border border-border rounded-xl overflow-hidden">
+                    <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+                        <div>
+                            <h3 class="text-base font-semibold text-foreground">Liste des boutiques</h3>
+                            <p class="text-xs text-muted-foreground" id="boutiques-table-count">Chargement…</p>
+                        </div>
+                        <button id="btn-refresh" class="text-xs font-medium px-3 py-1.5 rounded-lg border border-border hover:bg-muted transition-colors flex items-center gap-1.5">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                            Actualiser
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="bg-muted/50">
+                                    <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">ID</th>
+                                    <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logo</th>
+                                    <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Boutique</th>
+                                    <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Propriétaire</th>
+                                    <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Catégorie</th>
+                                    <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ville</th>
+                                    <th class="text-right px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cmd</th>
+                                    <th class="text-right px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">CA</th>
+                                    <th class="text-right px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Commission</th>
+                                    <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Statut</th>
+                                    <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Inscription</th>
+                                    <th class="text-right px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="boutiques-tbody" class="divide-y divide-border"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="flex items-center justify-between px-5 py-3 border-t border-border" id="boutiques-pagination"></div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- ===== DRAWER DETAIL BOUTIQUE ===== -->
+    <div class="drawer-overlay" id="drawerOverlay" data-act="close-drawer"></div>
+    <div class="drawer-panel bg-card" id="drawerPanel">
+        <div class="sticky top-0 bg-card z-10 border-b border-border px-6 py-4 flex items-center justify-between">
+            <div>
+                <h2 class="text-lg font-semibold text-foreground" id="drawerTitle">Détail boutique</h2>
+                <p class="text-xs text-muted-foreground" id="drawerId">—</p>
+            </div>
+            <button data-act="close-drawer" class="p-2 rounded-lg hover:bg-muted transition-colors">
+                <i data-lucide="x" class="w-5 h-5 text-muted-foreground"></i>
+            </button>
+        </div>
+        <div class="p-6 space-y-6">
+            <div class="space-y-3">
+                <h3 class="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Informations générales</h3>
+                <div class="bg-muted rounded-xl p-4 space-y-3">
+                    <div class="flex justify-between gap-4"><span class="text-sm text-muted-foreground">Boutique</span><span class="text-sm font-medium text-foreground text-right" id="drawerNom">-</span></div>
+                    <div class="flex justify-between gap-4"><span class="text-sm text-muted-foreground">Propriétaire</span><span class="text-sm font-medium text-foreground text-right" id="drawerOwner">-</span></div>
+                    <div class="flex justify-between gap-4"><span class="text-sm text-muted-foreground">Catégorie</span><span class="text-sm font-medium text-foreground text-right" id="drawerCategorie">-</span></div>
+                    <div class="flex justify-between gap-4"><span class="text-sm text-muted-foreground">Ville</span><span class="text-sm font-medium text-foreground text-right" id="drawerVille">-</span></div>
+                    <div class="flex justify-between gap-4"><span class="text-sm text-muted-foreground">Téléphone</span><span class="text-sm font-medium text-foreground text-right" id="drawerTel">-</span></div>
+                    <div class="flex justify-between gap-4"><span class="text-sm text-muted-foreground">Email</span><span class="text-sm font-medium text-foreground text-right break-all" id="drawerEmail">-</span></div>
+                    <div class="flex justify-between gap-4"><span class="text-sm text-muted-foreground">Adresse</span><span class="text-sm font-medium text-foreground text-right" id="drawerAdresse">-</span></div>
+                    <div class="flex justify-between gap-4"><span class="text-sm text-muted-foreground">Plan</span><span class="text-sm font-medium text-foreground text-right" id="drawerPlan">-</span></div>
+                    <div class="flex justify-between gap-4"><span class="text-sm text-muted-foreground">Statut</span><span id="drawerStatut">-</span></div>
+                    <div class="flex justify-between gap-4"><span class="text-sm text-muted-foreground">Inscription</span><span class="text-sm font-medium text-foreground text-right" id="drawerDate">-</span></div>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <h3 class="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Statistiques</h3>
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-muted rounded-xl p-3 text-center">
+                        <div class="text-xs text-muted-foreground mb-1">Produits</div>
+                        <div class="text-base font-bold tabular-nums" style="color: rgb(var(--mgt-primary));" id="drawerProducts">-</div>
+                    </div>
+                    <div class="bg-muted rounded-xl p-3 text-center">
+                        <div class="text-xs text-muted-foreground mb-1">Commandes</div>
+                        <div class="text-base font-bold tabular-nums" style="color: rgb(var(--mgt-accent));" id="drawerCmd">-</div>
+                    </div>
+                    <div class="bg-muted rounded-xl p-3 text-center">
+                        <div class="text-xs text-muted-foreground mb-1">CA</div>
+                        <div class="text-base font-bold tabular-nums" style="color: rgb(var(--mgt-primary));" id="drawerCA">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <h3 class="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Historique de modération</h3>
+                <div class="space-y-2" id="drawerHistorique">
+                    <div class="text-sm text-muted-foreground py-2">Aucune action de modération.</div>
+                </div>
+            </div>
+
+            <div class="space-y-3 pt-2" id="drawerActions">
+                <h3 class="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Actions</h3>
+                <div class="flex flex-wrap gap-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+      'use strict';
+
+      var TOKEN = '';
+      try { TOKEN = localStorage.getItem('mgt_token') || ''; } catch (e) {}
+
+      function api(path, opts) {
+        var o = opts || {};
+        o.headers = Object.assign({ 'Content-Type': 'application/json' }, o.headers || {});
+        if (TOKEN) o.headers['Authorization'] = 'Bearer ' + TOKEN;
+        return fetch(path, o).then(function (r) { return r.json(); });
+      }
+
+      var STATUS_META = {
+        active:      { label: 'Active',    bg: 'rgb(var(--mgt-success) / .15)', fg: 'rgb(var(--mgt-success))' },
+        en_attente:  { label: 'En attente', bg: 'rgb(var(--mgt-warning) / .15)', fg: 'rgb(var(--mgt-warning))' },
+        suspendue:   { label: 'Suspendue', bg: 'rgb(var(--mgt-error) / .15)',   fg: 'rgb(var(--mgt-error))' },
+        fermee:      { label: 'Fermée',    bg: 'rgb(100 116 139 / .15)',         fg: 'rgb(100 116 139)' }
+      };
+
+      var CAT_LABELS = {
+        commerce: 'Commerce', mode: 'Mode', beaute: 'Beauté', electronique: 'Électronique',
+        alimentation: 'Alimentation', restauration: 'Restauration', artisanat: 'Artisanat',
+        services: 'Services', transport: 'Transport', coiffure: 'Coiffure', salon: 'Salon & Beauté'
+      };
+
+      function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+      }
+      function fmtMoney(n) {
+        n = Number(n) || 0;
+        if (n >= 1000000) return (n / 1000000).toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + 'M';
+        if (n >= 1000) return (n / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + 'K';
+        return String(n);
+      }
+      function fmtDate(iso) {
+        if (!iso) return '—';
+        var d = new Date(iso);
+        if (isNaN(d.getTime())) return '—';
+        return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+      }
+      function initials(name) {
+        var p = String(name || '').trim().split(/\s+/).filter(Boolean);
+        if (!p.length) return 'MT';
+        if (p.length === 1) return p[0].slice(0, 2).toUpperCase();
+        return (p[0][0] + p[p.length - 1][0]).toUpperCase();
+      }
+      function pill(status) {
+        var m = STATUS_META[status] || STATUS_META.en_attente;
+        return '<span class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full" style="background-color:' + m.bg + ';color:' + m.fg + '"><span class="w-1.5 h-1.5 rounded-full" style="background-color:' + m.fg + '"></span>' + m.label + '</span>';
+      }
+      function catBadge(cat) {
+        var label = CAT_LABELS[cat] || cat || 'Commerce';
+        return '<span class="text-xs px-2 py-1 rounded-full font-medium" style="background-color:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary))">' + esc(label) + '</span>';
+      }
+      function set(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+
+      var boutiques = [];
+      var currentDrawerId = null;
+
+      function counts() {
+        var c = { active: 0, en_attente: 0, suspendue: 0, fermee: 0, total: boutiques.length };
+        boutiques.forEach(function (b) { if (c[b.status] != null) c[b.status]++; });
+        return c;
+      }
+
+      function renderChips() {
+        var el = document.getElementById('boutiques-status-chips');
+        if (!el) return;
+        var c = counts();
+        var items = [
+          { k: 'active', label: 'Actives' }, { k: 'en_attente', label: 'En attente' },
+          { k: 'suspendue', label: 'Suspendues' }, { k: 'fermee', label: 'Fermées' }
+        ];
+        el.innerHTML = items.map(function (it) {
+          var m = STATUS_META[it.k];
+          return '<span class="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg" style="background-color:' + m.bg + ';color:' + m.fg + '"><span class="w-2 h-2 rounded-full" style="background-color:' + m.fg + '"></span>' + it.label + ' <span class="font-bold tabular-nums">' + (c[it.k] || 0) + '</span></span>';
+        }).join('');
+      }
+
+      function renderKpis() {
+        var total = boutiques.length;
+        var products = boutiques.reduce(function (s, b) { return s + ((b.stats && b.stats.products) || 0); }, 0);
+        var ca = boutiques.reduce(function (s, b) { return s + ((b.stats && b.stats.ca) || 0); }, 0);
+        var commission = boutiques.reduce(function (s, b) { return s + ((b.stats && b.stats.commission) || 0); }, 0);
+        set('boutiques-kpi-total', String(total));
+        set('boutiques-kpi-products', String(products));
+        set('boutiques-kpi-ca', fmtMoney(ca));
+        set('boutiques-kpi-commission', fmtMoney(commission));
+      }
+
+      function actionButtons(b) {
+        var html = '<button data-act="view" data-id="' + esc(b.id) + '" class="p-1.5 rounded hover:bg-muted transition-colors" title="Voir"><i data-lucide="eye" class="w-4 h-4 text-muted-foreground"></i></button>';
+        if (b.status === 'en_attente') {
+          html += '<button data-act="approve" data-id="' + esc(b.id) + '" class="p-1.5 rounded hover:bg-muted transition-colors" title="Approuver"><i data-lucide="check-circle" class="w-4 h-4" style="color:rgb(var(--mgt-success))"></i></button>';
+          html += '<button data-act="reject" data-id="' + esc(b.id) + '" class="p-1.5 rounded hover:bg-muted transition-colors" title="Rejeter"><i data-lucide="x-circle" class="w-4 h-4" style="color:rgb(var(--mgt-error))"></i></button>';
+        } else if (b.status === 'active') {
+          html += '<button data-act="suspend" data-id="' + esc(b.id) + '" class="p-1.5 rounded hover:bg-muted transition-colors" title="Suspendre"><i data-lucide="pause-circle" class="w-4 h-4" style="color:rgb(var(--mgt-warning))"></i></button>';
+          html += '<button data-act="close" data-id="' + esc(b.id) + '" class="p-1.5 rounded hover:bg-muted transition-colors" title="Fermer"><i data-lucide="x-circle" class="w-4 h-4" style="color:rgb(var(--mgt-error))"></i></button>';
+        } else if (b.status === 'suspendue') {
+          html += '<button data-act="reactivate" data-id="' + esc(b.id) + '" class="p-1.5 rounded hover:bg-muted transition-colors" title="Réactiver"><i data-lucide="play-circle" class="w-4 h-4" style="color:rgb(var(--mgt-success))"></i></button>';
+          html += '<button data-act="close" data-id="' + esc(b.id) + '" class="p-1.5 rounded hover:bg-muted transition-colors" title="Fermer"><i data-lucide="x-circle" class="w-4 h-4" style="color:rgb(var(--mgt-error))"></i></button>';
+        } else {
+          html += '<button data-act="reopen" data-id="' + esc(b.id) + '" class="p-1.5 rounded hover:bg-muted transition-colors" title="Rouvrir"><i data-lucide="play-circle" class="w-4 h-4" style="color:rgb(var(--mgt-success))"></i></button>';
+        }
+        return html;
+      }
+
+      function renderTable() {
+        var tbody = document.getElementById('boutiques-tbody');
+        if (!tbody) return;
+        var q = (document.getElementById('boutique-search').value || '').trim().toLowerCase();
+        var fStatus = document.getElementById('filter-status').value;
+        var fCat = document.getElementById('filter-cat').value;
+        var fVille = document.getElementById('filter-ville').value;
+        var list = boutiques.filter(function (b) {
+          if (fStatus && b.status !== fStatus) return false;
+          if (fCat && b.category !== fCat) return false;
+          if (fVille && (b.city || '').toLowerCase() !== fVille.toLowerCase()) return false;
+          if (q) {
+            var hay = (b.name + ' ' + b.owner + ' ' + b.city + ' ' + b.category).toLowerCase();
+            if (hay.indexOf(q) < 0) return false;
+          }
+          return true;
+        });
+
+        if (!list.length) {
+          tbody.innerHTML = '<tr><td colspan="12" class="px-5 py-12 text-center text-sm text-muted-foreground">Aucune boutique ne correspond aux filtres.</td></tr>';
+        } else {
+          tbody.innerHTML = list.map(function (b) {
+            var logo = b.logo && String(b.logo).slice(0, 11) === 'data:image/';
+            var logoCell = logo
+              ? '<img src="' + esc(b.logo) + '" alt="" class="w-9 h-9 rounded-lg object-cover">'
+              : '<div class="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold" style="background-color:rgb(var(--mgt-accent-50));color:rgb(var(--mgt-accent))">' + esc(initials(b.name)) + '</div>';
+            return '<tr class="hover:bg-muted/30 transition-colors">'
+              + '<td class="px-5 py-3.5 text-sm text-muted-foreground tabular-nums">#' + esc(String(b.id).slice(0, 12)) + '</td>'
+              + '<td class="px-5 py-3.5">' + logoCell + '</td>'
+              + '<td class="px-5 py-3.5"><span class="text-sm font-medium text-foreground">' + esc(b.name) + '</span></td>'
+              + '<td class="px-5 py-3.5 text-sm text-foreground">' + esc(b.owner) + '</td>'
+              + '<td class="px-5 py-3.5">' + catBadge(b.category) + '</td>'
+              + '<td class="px-5 py-3.5 text-sm text-foreground">' + esc(b.city) + '</td>'
+              + '<td class="px-5 py-3.5 text-sm tabular-nums text-right font-medium text-foreground">' + ((b.stats && b.stats.orders) || 0) + '</td>'
+              + '<td class="px-5 py-3.5 text-sm tabular-nums text-right font-medium" style="color:rgb(var(--mgt-primary))">' + fmtMoney((b.stats && b.stats.ca) || 0) + '</td>'
+              + '<td class="px-5 py-3.5 text-sm tabular-nums text-right text-muted-foreground">' + fmtMoney((b.stats && b.stats.commission) || 0) + '</td>'
+              + '<td class="px-5 py-3.5">' + pill(b.status) + '</td>'
+              + '<td class="px-5 py-3.5 text-sm text-muted-foreground">' + esc(fmtDate(b.createdAt)) + '</td>'
+              + '<td class="px-5 py-3.5 text-right"><div class="flex items-center justify-end gap-1">' + actionButtons(b) + '</div></td>'
+              + '</tr>';
+          }).join('');
+        }
+
+        set('boutiques-table-count', list.length + ' boutique' + (list.length > 1 ? 's' : '') + ' affichée' + (list.length > 1 ? 's' : '') + ' sur ' + boutiques.length);
+        var pg = document.getElementById('boutiques-pagination');
+        if (pg) pg.innerHTML = '<span class="text-xs text-muted-foreground">Affichage de ' + list.length + ' boutique' + (list.length > 1 ? 's' : '') + '</span>';
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function findById(id) { return boutiques.find(function (b) { return b.id === id || b.userId === id; }); }
+
+      function drawerActionButtons(b) {
+        function btn(label, act, bg, fg, icon) {
+          return '<button data-act="' + act + '" data-id="' + esc(b.id) + '" class="flex-1 min-w-[120px] py-2.5 px-4 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors" style="background-color:' + bg + ';color:' + fg + '"><i data-lucide="' + icon + '" class="w-4 h-4"></i>' + label + '</button>';
+        }
+        var h = '';
+        if (b.status === 'en_attente') {
+          h += btn('Approuver', 'approve', 'rgb(var(--mgt-success))', 'rgb(var(--mgt-success-foreground))', 'check-circle');
+          h += btn('Rejeter', 'reject', 'rgb(var(--mgt-error))', 'rgb(var(--mgt-error-foreground))', 'x-circle');
+        } else if (b.status === 'active') {
+          h += btn('Suspendre', 'suspend', 'rgb(var(--mgt-warning))', 'rgb(var(--mgt-warning-foreground))', 'pause-circle');
+          h += btn('Fermer', 'close', 'rgb(var(--mgt-error))', 'rgb(var(--mgt-error-foreground))', 'x-circle');
+        } else if (b.status === 'suspendue') {
+          h += btn('Réactiver', 'reactivate', 'rgb(var(--mgt-success))', 'rgb(var(--mgt-success-foreground))', 'play-circle');
+          h += btn('Fermer', 'close', 'rgb(var(--mgt-error))', 'rgb(var(--mgt-error-foreground))', 'x-circle');
+        } else {
+          h += btn('Rouvrir', 'reopen', 'rgb(var(--mgt-success))', 'rgb(var(--mgt-success-foreground))', 'play-circle');
+        }
+        return h;
+      }
+
+      function openDrawer(b) {
+        currentDrawerId = b.id;
+        set('drawerTitle', b.name);
+        set('drawerId', '#' + String(b.id).slice(0, 12));
+        set('drawerNom', b.name);
+        set('drawerOwner', b.owner);
+        set('drawerCategorie', CAT_LABELS[b.category] || b.category || 'Commerce');
+        set('drawerVille', b.city || '—');
+        set('drawerTel', b.phone || '—');
+        set('drawerEmail', b.email || '—');
+        set('drawerAdresse', b.address || '—');
+        set('drawerPlan', b.plan || '—');
+        set('drawerDate', fmtDate(b.createdAt));
+        set('drawerProducts', String((b.stats && b.stats.products) || 0));
+        set('drawerCmd', String((b.stats && b.stats.orders) || 0));
+        set('drawerCA', fmtMoney((b.stats && b.stats.ca) || 0));
+        document.getElementById('drawerStatut').innerHTML = pill(b.status);
+
+        var hist = document.getElementById('drawerHistorique');
+        var h = b.history && b.history.length ? b.history : [];
+        if (!h.length) {
+          hist.innerHTML = '<div class="text-sm text-muted-foreground py-2">Aucune action de modération.</div>';
+        } else {
+          hist.innerHTML = h.slice().reverse().map(function (e) {
+            return '<div class="flex gap-3 py-2 border-b border-border last:border-0"><div class="flex-1 min-w-0"><p class="text-xs text-foreground">' + esc(e.label) + ' <span class="text-muted-foreground">par ' + esc(e.by) + '</span></p><p class="text-[11px] text-muted-foreground mt-0.5">' + esc(fmtDate(e.at)) + '</p></div></div>';
+          }).join('');
+        }
+
+        document.getElementById('drawerActions').innerHTML = '<h3 class="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Actions</h3><div class="flex flex-wrap gap-2">' + drawerActionButtons(b) + '</div>';
+
+        document.getElementById('drawerOverlay').classList.add('open');
+        document.getElementById('drawerPanel').classList.add('open');
+        document.body.style.overflow = 'hidden';
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function closeDrawer() {
+        document.getElementById('drawerOverlay').classList.remove('open');
+        document.getElementById('drawerPanel').classList.remove('open');
+        document.body.style.overflow = '';
+      }
+
+      function toast(msg) {
+        var t = document.getElementById('mgt-toast');
+        if (!t) {
+          t = document.createElement('div');
+          t.id = 'mgt-toast';
+          t.setAttribute('style', 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);z-index:9999;padding:10px 18px;border-radius:999px;background-color:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));font-size:13px;font-weight:600;box-shadow:var(--mgt-shadow-md);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;max-width:90vw;text-align:center;');
+          document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        requestAnimationFrame(function () { t.style.opacity = '1'; t.style.transform = 'translateX(-50%) translateY(0)'; });
+        clearTimeout(t._h);
+        t._h = setTimeout(function () { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(16px)'; }, 2200);
+      }
+
+      var ACTION_LABELS = {
+        approve: 'Boutique approuvée', reject: 'Boutique rejetée', suspend: 'Boutique suspendue',
+        reactivate: 'Boutique réactivée', close: 'Boutique fermée', reopen: 'Boutique rouverte'
+      };
+
+      function doAction(id, action) {
+        api('/api/admin/boutiques', { method: 'POST', body: JSON.stringify({ action: action, vendorId: id }) })
+          .then(function (res) {
+            if (res && res.ok && res.boutique) {
+              var b = res.boutique;
+              var idx = boutiques.findIndex(function (x) { return x.id === b.id || x.userId === b.userId; });
+              if (idx >= 0) boutiques[idx] = b; else boutiques.push(b);
+              toast(ACTION_LABELS[action] || 'Statut mis à jour');
+              refresh();
+              if (currentDrawerId === b.id || currentDrawerId === b.userId) openDrawer(b);
+            } else {
+              toast((res && res.error) || 'Action impossible');
+            }
+          })
+          .catch(function () { toast('Erreur réseau'); });
+      }
+
+      function refresh() {
+        renderChips();
+        renderKpis();
+        renderTable();
+      }
+
+      document.addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-act]');
+        if (!btn) return;
+        var act = btn.getAttribute('data-act');
+        var id = btn.getAttribute('data-id');
+        if (act === 'close-drawer') { closeDrawer(); return; }
+        if (act === 'view') { var b = findById(id); if (b) openDrawer(b); return; }
+        if (!id && currentDrawerId) id = currentDrawerId;
+        if (ACTION_LABELS[act] && id) { doAction(id, act); return; }
+      });
+
+      document.getElementById('boutique-search').addEventListener('input', renderTable);
+      document.getElementById('filter-status').addEventListener('change', renderTable);
+      document.getElementById('filter-cat').addEventListener('change', renderTable);
+      document.getElementById('filter-ville').addEventListener('change', renderTable);
+      document.getElementById('btn-refresh').addEventListener('click', load);
+
+      function load() {
+        api('/api/admin/boutiques').then(function (res) {
+          if (res && res.ok) {
+            boutiques = res.boutiques || [];
+            var n = boutiques.length;
+            set('boutiques-subtitle', n + ' boutique' + (n > 1 ? 's' : '') + ' enregistrée' + (n > 1 ? 's' : '') + ' · mise à jour en temps réel');
+            refresh();
+          } else {
+            set('boutiques-subtitle', (res && res.error) || 'Chargement impossible');
+            set('boutiques-table-count', (res && res.error) || 'Chargement impossible');
+          }
+        }).catch(function () {
+          set('boutiques-subtitle', 'Impossible de charger les boutiques.');
+          set('boutiques-table-count', 'Serveur injoignable.');
+        });
+      }
+
+      if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', load); } else { load(); }
+    })();
+    </script>
+
+    <script src="../assets/mangoo-admin-shell.js"></script>
+</body>
+</html>
