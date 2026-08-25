@@ -1137,6 +1137,44 @@ function resolveVendorCity(lat, lng, country) {
   return { city: 'Dakar', country: 'Senegal' };
 }
 
+// Migration au démarrage : normalise les comptes dont la ville vaut « other » /
+// « autre » (ancienne option « Autre » du formulaire, non géolocalisée) ou est
+// vide, en ville géolocalisée valide. Corrige à la fois users.json (source de
+// vérité du compte) et vendor-config.json (profil du pro), afin que la carte
+// Local+ et l'annuaire reflètent un lieu réel au lieu de « other ».
+function normalizeVendorCities() {
+  let changedUsers = false;
+  users.forEach(function (u) {
+    if (!u || (u.role !== 'prestataire' && u.role !== 'vendeur')) return;
+    const ck = normalizeCityKey(u.city);
+    if (ck && ck !== 'other' && ck !== 'autre') return; // ville déjà valide
+    const lat = (u.lat != null) ? Number(u.lat) : null;
+    const lng = (u.lng != null) ? Number(u.lng) : null;
+    const resolved = resolveVendorCity(lat, lng, u.country);
+    const geo = geocodeCity(resolved.city);
+    u.city = resolved.city;
+    u.country = resolved.country;
+    if (geo) { u.lat = geo.lat; u.lng = geo.lng; }
+    changedUsers = true;
+    // Synchronise aussi le profil vendor-config pour que la carte et le
+    // dashboard affichent la même ville, sans ressaisie.
+    if (u.vendorId) {
+      const doc = vendorConfigFor(u.vendorId);
+      if (doc) {
+        doc.profile = Object.assign({}, doc.profile, {
+          city: u.city, country: u.country, lat: u.lat, lng: u.lng
+        });
+        doc.updatedAt = nowIso();
+      }
+    }
+  });
+  if (changedUsers) {
+    saveUsers();
+    saveVendorConfig();
+    console.log('[Migration] villes "other" normalisées vers des villes géolocalisées.');
+  }
+}
+
 function carteVendors() {
   // Réconcilie l'état des boosters (expiration des badges échus) avant de
   // construire l'annuaire, afin que la carte reflète les badges actifs en
@@ -5349,6 +5387,7 @@ loadBoosterStats();
 loadVendorConfig();
 loadUsers();
 loadSessions();
+normalizeVendorCities();
 loadPaymentMethods();
 loadTransactions();
 loadWallets();
