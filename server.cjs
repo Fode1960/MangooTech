@@ -2790,6 +2790,8 @@ function requireAdminSession(req, res, urlPath) {
 // Sonde de santé : vérifie l'opérationnalité du serveur sans jamais exposer
 // de données sensibles. Retourne un statut 200 si tout est OK, sinon 503.
 function healthStatus() {
+  const roleCounts = { prestataire: 0, vendeur: 0, client: 0, livreur: 0, admin: 0, total: users.length };
+  users.forEach(function (u) { if (u && roleCounts[u.role] != null) roleCounts[u.role]++; });
   const status = {
     ok: true,
     status: 'ok',
@@ -2797,7 +2799,7 @@ function healthStatus() {
     node: process.version,
     uptime: Math.round(process.uptime()),
     peers: clients.size,
-    storage: { ok: true, writable: true },
+    storage: { ok: true, writable: true, path: DATA_DIR, users: roleCounts },
     websocket: { ok: !!serverReady }
   };
 
