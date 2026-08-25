@@ -522,6 +522,11 @@ html.dark {
   // après chargement des profils réels.
   var CITIES = {};
 
+  // Villes complètes chargées depuis /api/cities (source unique, toutes les
+  // villes d'Afrique). Utilisées en priorité ; FALLBACK_CITIES reste un filet
+  // de sécurité si l'API est injoignable.
+  var ALL_CITIES = {};
+
   var FALLBACK_CITIES = {
     'Dakar': { lat: 14.7167, lng: -17.4677, country: 'Senegal' },
     'Libreville': { lat: 0.4162, lng: 9.4673, country: 'Gabon' },
@@ -531,9 +536,10 @@ html.dark {
 
   function rebuildDerivedData() {
     CITIES = {};
-    // Villes de repli en premier : elles restent présentes même sans vendeurs.
-    Object.keys(FALLBACK_CITIES).forEach(function(city) {
-      CITIES[city] = FALLBACK_CITIES[city];
+    // Villes en premier : liste complète si disponible, sinon repli restreint.
+    var citySource = (Object.keys(ALL_CITIES).length > 0) ? ALL_CITIES : FALLBACK_CITIES;
+    Object.keys(citySource).forEach(function(city) {
+      CITIES[city] = citySource[city];
     });
     vendors.forEach(function(v) {
       if (v.city && !CITIES[v.city]) CITIES[v.city] = { lat: v.lat, lng: v.lng, country: v.country };
@@ -2026,9 +2032,26 @@ html.dark {
       .catch(function() { offresJourByVendor = {}; });
   }
 
+  // Charge la liste complète des villes (Afrique + Europe) pour le sélecteur.
+  function loadCities() {
+    return fetch('/api/cities', { headers: { 'Accept': 'application/json' }, cache: 'no-store' })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        ALL_CITIES = {};
+        if (data && data.cities) {
+          Object.keys(data.cities).forEach(function(k) {
+            var c = data.cities[k];
+            ALL_CITIES[c.city] = { lat: c.lat, lng: c.lng, country: c.country };
+          });
+        }
+      })
+      .catch(function() { ALL_CITIES = {}; });
+  }
+
   Promise.all([
     fetch('/api/carte', { headers: { 'Accept': 'application/json' }, cache: 'no-store' }).then(function(r) { return r.json(); }),
-    loadOffresJour()
+    loadOffresJour(),
+    loadCities()
   ])
     .then(function(results) { initCarte(results[0]); })
     .catch(function(err) {
