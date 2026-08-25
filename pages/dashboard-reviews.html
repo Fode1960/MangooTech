@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Avis clients</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  /* --- Radius Scale (root-level for preflight) --- */
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  /* --- Brand Primary: Dark Green --- */
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  /* --- Orange Accent (CTAs, highlights) --- */
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  /* --- Neutral Surface & Text Scale --- */
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  /* --- State Colors --- */
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  /* --- Shadows --- */
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  /* --- Typography --- */
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* --- Semantic Tailwind Aliases --- */
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+/* --- Typography Classes --- */
+.h-display {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.h1 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(28px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.h2 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h3 {
+  font-family: var(--mgt-font-sans);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.body-l {
+  font-family: var(--mgt-font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--mgt-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--mgt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--radius-sm);
+    --radius-md: var(--radius-md);
+    --radius-lg: var(--radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen antialiased flex bg-[rgb(var(--mgt-muted))]">
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-[rgb(var(--mgt-primary))] text-[rgb(var(--mgt-primary-foreground))]">
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+        <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+        <div>
+          <span class="font-semibold text-base tracking-tight">Mangoo</span><span class="font-light text-base tracking-tight text-white/70">Tech</span>
+        </div>
+      </div>
+      <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <a href="./dashboard-overview.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+          Vue d'ensemble
+        </a>
+        <a href="./dashboard-performance.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bar-chart-3" class="w-4.5 h-4.5"></i>
+          Performance
+        </a>
+        <a href="./dashboard-reviews.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-medium transition-colors">
+          <i data-lucide="star" class="w-4.5 h-4.5"></i>
+          Avis clients
+        </a>
+        <a href="./dashboard-agenda.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="calendar-days" class="w-4.5 h-4.5"></i>
+          Rendez-vous
+        </a>
+        <a href="./dashboard-finances.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wallet" class="w-4.5 h-4.5"></i>
+          Finances
+        </a>
+        <a href="./dashboard-notifications.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+          Notifications
+        </a>
+        <a href="./dashboard-orders.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shopping-bag" class="w-4.5 h-4.5"></i>
+          Commandes
+        </a>
+        <a href="./dashboard-clients.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users" class="w-4.5 h-4.5"></i>
+          Clients
+        </a>
+        <a href="./dashboard-team.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users-round" class="w-4.5 h-4.5"></i>
+          Équipe
+        </a>
+        <a href="./dashboard-messages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="message-square" class="w-4.5 h-4.5"></i>
+          Messagerie
+        </a>
+        <a href="./dashboard-live.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="radio" class="w-4.5 h-4.5"></i>
+          Live
+        </a>
+        <a href="./dashboard-services.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="briefcase" class="w-4.5 h-4.5"></i>
+          Prestations
+        </a>
+        <a href="./dashboard-catalogue.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="package" class="w-4.5 h-4.5"></i>
+          Catalogue
+        </a>
+        <a href="./dashboard-inventaire.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="boxes" class="w-4.5 h-4.5"></i>
+          Inventaire
+        </a>
+        <a href="./dashboard-gallery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="images" class="w-4.5 h-4.5"></i>
+          Galerie
+        </a>
+        <a href="./dashboard-boosters.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="zap" class="w-4.5 h-4.5"></i>
+          Boosters
+        </a>
+        <a href="./dashboard-delivery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="truck" class="w-4.5 h-4.5"></i>
+          Livraisons
+        </a>
+        <a href="./dashboard-promotions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="badge-percent" class="w-4.5 h-4.5"></i>
+          Promotions
+        </a>
+        <a href="./dashboard-fidelite.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="award" class="w-4.5 h-4.5"></i>
+          Fidélité
+        </a>
+        <a href="./dashboard-parrainage.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="gift" class="w-4.5 h-4.5"></i>
+          Parrainage
+        </a>
+        <a href="./dashboard-classement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="trophy" class="w-4.5 h-4.5"></i>
+          Classement
+        </a>
+        <a href="./dashboard-verification.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shield-check" class="w-4.5 h-4.5"></i>
+          Vérification
+        </a>
+        <a href="./dashboard-recommandation.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="compass" class="w-4.5 h-4.5"></i>
+          Découverte
+        </a>
+        <a href="./dashboard-hors-ligne.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wifi-off" class="w-4.5 h-4.5"></i>
+          Hors-ligne
+        </a>
+        <a href="./dashboard-rapports.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
+          Rapports
+        </a>
+        <a href="./dashboard-support.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="life-buoy" class="w-4.5 h-4.5"></i>
+          Support
+        </a>
+        <a href="./dashboard-offres.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="tag" class="w-4.5 h-4.5"></i>
+          Offres & Tarifs
+        </a>
+        <a href="./dashboard-abonnement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="credit-card" class="w-4.5 h-4.5"></i>
+          Abonnement
+        </a>
+        <a href="./dashboard-settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="settings" class="w-4.5 h-4.5"></i>
+          Parametres
+        </a>
+      </nav>
+      <div class="border-t border-white/10 px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>CA</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate" data-vendor-name>DAN Boutique</p>
+            <p class="text-xs text-white/60 truncate" data-vendor-role>Prestataire certifié</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div id="app-main" class="flex-1 ml-60 min-h-screen flex flex-col">
+      <header class="sticky top-0 z-30 flex items-center justify-between gap-4 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] px-8 py-3.5">
+        <div class="flex items-center gap-4">
+          <h1 class="text-lg font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">Avis clients</h1>
+          <span class="text-xs text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">Note moyenne 4,8/5</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <button id="btn-notifications" class="relative p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))]" aria-label="Notifications">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="btn-notifications-badge" class="absolute top-1 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-[10px] font-bold leading-4 text-center" style="display:none;"></span>
+          </button>
+          <div id="btn-account" class="flex items-center gap-3 pl-2 border-l border-[rgb(var(--mgt-border))] cursor-pointer" role="button" tabindex="0">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>CA</div>
+            <div class="hidden sm:block text-right">
+              <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]" data-vendor-name>DAN Boutique</p>
+              <div class="flex items-center gap-1 text-xs text-[rgb(var(--mgt-accent))]">
+                <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                <span data-vendor-rating>4.8</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="flex-1 p-8 space-y-6">
+        <!-- ===== KPIs REPUTATION ===== -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
+                <i data-lucide="star" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><i data-lucide="trending-up" class="w-3 h-3"></i> +0,3</span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Note moyenne</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">4,8 <span class="text-sm font-semibold text-[rgb(var(--mgt-muted-foreground))]">/ 5</span></p>
+          </div>
+
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                <i data-lucide="message-square" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><i data-lucide="trending-up" class="w-3 h-3"></i> +15%</span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Avis reçus</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">63</p>
+          </div>
+
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                <i data-lucide="check-circle-2" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><i data-lucide="trending-up" class="w-3 h-3"></i> +5 pts</span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Taux de réponse</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]" id="kpi-response-rate">92 %</p>
+          </div>
+
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
+                <i data-lucide="clock" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><i data-lucide="trending-down" class="w-3 h-3"></i> -6 min</span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Temps de réponse</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]" id="kpi-response-time">14 min</p>
+          </div>
+        </div>
+
+        <!-- ===== DISTRIBUTION + SYNTHESE (2-col) ===== -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <!-- Distribution des notes -->
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <h2 class="text-base font-semibold text-[rgb(var(--mgt-foreground))] mb-4">Répartition des notes</h2>
+            <div class="space-y-3">
+              <div class="flex items-center gap-3">
+                <span class="w-6 text-sm font-medium text-[rgb(var(--mgt-foreground))] tabular-nums">5 ★</span>
+                <div class="flex-1 h-2.5 rounded-full bg-[rgb(var(--mgt-muted))] overflow-hidden"><div class="h-full rounded-full bg-[rgb(var(--mgt-accent))]" style="width: 68%;"></div></div>
+                <span class="w-10 text-xs text-right text-[rgb(var(--mgt-muted-foreground))] tabular-nums">68 %</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="w-6 text-sm font-medium text-[rgb(var(--mgt-foreground))] tabular-nums">4 ★</span>
+                <div class="flex-1 h-2.5 rounded-full bg-[rgb(var(--mgt-muted))] overflow-hidden"><div class="h-full rounded-full bg-[rgb(var(--mgt-accent-400))]" style="width: 24%;"></div></div>
+                <span class="w-10 text-xs text-right text-[rgb(var(--mgt-muted-foreground))] tabular-nums">24 %</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="w-6 text-sm font-medium text-[rgb(var(--mgt-foreground))] tabular-nums">3 ★</span>
+                <div class="flex-1 h-2.5 rounded-full bg-[rgb(var(--mgt-muted))] overflow-hidden"><div class="h-full rounded-full bg-[rgb(var(--mgt-primary-400))]" style="width: 5%;"></div></div>
+                <span class="w-10 text-xs text-right text-[rgb(var(--mgt-muted-foreground))] tabular-nums">5 %</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="w-6 text-sm font-medium text-[rgb(var(--mgt-foreground))] tabular-nums">2 ★</span>
+                <div class="flex-1 h-2.5 rounded-full bg-[rgb(var(--mgt-muted))] overflow-hidden"><div class="h-full rounded-full bg-[rgb(var(--mgt-primary-300))]" style="width: 2%;"></div></div>
+                <span class="w-10 text-xs text-right text-[rgb(var(--mgt-muted-foreground))] tabular-nums">2 %</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="w-6 text-sm font-medium text-[rgb(var(--mgt-foreground))] tabular-nums">1 ★</span>
+                <div class="flex-1 h-2.5 rounded-full bg-[rgb(var(--mgt-muted))] overflow-hidden"><div class="h-full rounded-full bg-[rgb(var(--mgt-border))]" style="width: 1%;"></div></div>
+                <span class="w-10 text-xs text-right text-[rgb(var(--mgt-muted-foreground))] tabular-nums">1 %</span>
+              </div>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-4">92 % de vos clients sont satisfaits (4 ★ et plus).</p>
+          </div>
+
+          <!-- Synthèse réputation -->
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <h2 class="text-base font-semibold text-[rgb(var(--mgt-foreground))] mb-4">Points forts &amp; axes d'amélioration</h2>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-[rgb(var(--mgt-muted-foreground))]">Qualité du service</span>
+                <span class="font-semibold text-[rgb(var(--mgt-primary-700))]">Excellent</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-[rgb(var(--mgt-muted-foreground))]">Accueil &amp; propreté</span>
+                <span class="font-semibold text-[rgb(var(--mgt-primary-700))]">Très bon</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-[rgb(var(--mgt-muted-foreground))]">Rapport qualité/prix</span>
+                <span class="font-semibold text-[rgb(var(--mgt-foreground))]">Bon</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-[rgb(var(--mgt-muted-foreground))]">Ponctualité</span>
+                <span class="font-semibold text-[rgb(var(--mgt-accent-700))]">À surveiller</span>
+              </div>
+            </div>
+            <div class="mt-4 p-4 rounded-lg" style="background:rgb(var(--mgt-accent-50));">
+              <p class="text-xs text-[rgb(var(--mgt-accent-800))]"><i data-lucide="lightbulb" class="w-3.5 h-3.5 inline-block mr-1"></i> 3 avis mentionnent un délai d'attente. Envoyez un message de confirmation pour réduire les annulations.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== LISTE DES AVIS ===== -->
+        <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex items-center justify-between mb-5">
+            <h2 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Avis récents</h2>
+            <div class="flex items-center gap-1.5" id="review-filter">
+              <button data-filter="all" class="review-filter-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-primary))] text-white transition-colors"><i data-lucide="filter" class="w-3.5 h-3.5"></i> Tous</button>
+              <button data-filter="pending" class="review-filter-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors">À répondre</button>
+              <button data-filter="replied" class="review-filter-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors">Répondu</button>
+            </div>
+          </div>
+
+          <div class="space-y-4" id="review-list">
+            <!-- Avis 1 (sans réponse) -->
+            <div class="p-4 rounded-lg border border-[rgb(var(--mgt-border))]" data-review-status="pending">
+              <div class="flex items-start gap-3">
+                <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] font-semibold text-xs flex-shrink-0">AD</div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between gap-3 mb-1">
+                    <div class="flex items-center gap-2">
+                      <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Aïssatou D.</p>
+                      <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Il y a 3 heures</span>
+                    </div>
+                    <div class="flex items-center gap-0.5 text-[rgb(var(--mgt-accent))]">
+                      <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+                    </div>
+                  </div>
+                  <p class="text-sm text-[rgb(var(--mgt-foreground))] mb-2">« Résultat parfait, je suis très contente de ma coiffure. Le salon est propre et l'équipe aux petits soins. »</p>
+                  <div class="flex items-center gap-3">
+                    <span class="js-status-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-warning)/0.20)] text-[rgb(var(--mgt-accent-800))]" data-status="pending"><i data-lucide="clock" class="w-3 h-3"></i> À répondre</span>
+                    <button class="js-reply-btn inline-flex items-center gap-1.5 text-xs font-medium text-[rgb(var(--mgt-primary))] hover:text-[rgb(var(--mgt-primary-700))]" data-reviewer="Aïssatou D."><i data-lucide="reply" class="w-3.5 h-3.5"></i> Répondre</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Avis 2 (avec réponse) -->
+            <div class="p-4 rounded-lg border border-[rgb(var(--mgt-border))]">
+              <div class="flex items-start gap-3">
+                <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] font-semibold text-xs flex-shrink-0">FK</div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between gap-3 mb-1">
+                    <div class="flex items-center gap-2">
+                      <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Fatou K.</p>
+                      <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Il y a 2 jours</span>
+                    </div>
+                    <div class="flex items-center gap-0.5 text-[rgb(var(--mgt-accent))]">
+                      <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+                    </div>
+                  </div>
+                  <p class="text-sm text-[rgb(var(--mgt-foreground))] mb-2">« Service impeccable, ma tresse est magnifique. Je recommande vivement. »</p>
+                  <div class="rounded-lg p-3 mb-2" style="background:rgb(var(--mgt-muted));">
+                    <p class="text-xs font-medium text-[rgb(var(--mgt-foreground))] mb-0.5">Votre réponse</p>
+                    <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Merci Fatou pour ce retour si chaleureux. Toute l'équipe est ravie de vous avoir accueillie et nous serons heureux de vous revoir très vite.</p>
+                  </div>
+                  <span class="js-status-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]" data-status="replied"><i data-lucide="check" class="w-3 h-3"></i> Répondu</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Avis 3 -->
+            <div class="p-4 rounded-lg border border-[rgb(var(--mgt-border))]" data-review-status="pending">
+              <div class="flex items-start gap-3">
+                <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] font-semibold text-xs flex-shrink-0">MD</div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between gap-3 mb-1">
+                    <div class="flex items-center gap-2">
+                      <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Mamadou D.</p>
+                      <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Il y a 5 jours</span>
+                    </div>
+                    <div class="flex items-center gap-0.5 text-[rgb(var(--mgt-accent))]">
+                      <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 text-[rgb(var(--mgt-border))] fill-current"></i>
+                    </div>
+                  </div>
+                  <p class="text-sm text-[rgb(var(--mgt-foreground))] mb-2">« Très bon accueil et salon propre. Petit délai d'attente mais le résultat en vaut la peine. »</p>
+                  <div class="flex items-center gap-3">
+                    <span class="js-status-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-warning)/0.20)] text-[rgb(var(--mgt-accent-800))]" data-status="pending"><i data-lucide="clock" class="w-3 h-3"></i> À répondre</span>
+                    <button class="js-reply-btn inline-flex items-center gap-1.5 text-xs font-medium text-[rgb(var(--mgt-primary))] hover:text-[rgb(var(--mgt-primary-700))]" data-reviewer="Mamadou D."><i data-lucide="reply" class="w-3.5 h-3.5"></i> Répondre</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== MODELES DE REPONSE ===== -->
+        <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Modèles de réponse</h2>
+            <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Choisissez un ton cohérent avec votre marque</span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-4 rounded-lg border border-[rgb(var(--mgt-border))] flex flex-col">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="w-8 h-8 rounded-lg bg-[rgb(var(--mgt-accent-50))] flex items-center justify-center text-[rgb(var(--mgt-accent))]"><i data-lucide="heart" class="w-4 h-4"></i></span>
+                <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Chaleureux</p>
+              </div>
+              <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] flex-1 mb-3">« Un grand merci pour votre confiance et votre gentillesse. C'est toujours un plaisir de vous accueillir ! »</p>
+              <button class="js-template-btn w-full py-2 rounded-lg border border-[rgb(var(--mgt-border))] text-xs font-medium text-[rgb(var(--mgt-primary))] hover:bg-[rgb(var(--mgt-primary-50))] transition-colors" data-template="Un grand merci pour votre confiance et votre gentillesse. C'est toujours un plaisir de vous accueillir !">Utiliser ce ton</button>
+            </div>
+            <div class="p-4 rounded-lg border border-[rgb(var(--mgt-border))] flex flex-col">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="w-8 h-8 rounded-lg bg-[rgb(var(--mgt-primary-50))] flex items-center justify-center text-[rgb(var(--mgt-primary))]"><i data-lucide="briefcase" class="w-4 h-4"></i></span>
+                <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Professionnel</p>
+              </div>
+              <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] flex-1 mb-3">« Merci pour votre retour. Nous sommes heureux d'avoir répondu à vos attentes et restons à votre disposition. »</p>
+              <button class="js-template-btn w-full py-2 rounded-lg border border-[rgb(var(--mgt-border))] text-xs font-medium text-[rgb(var(--mgt-primary))] hover:bg-[rgb(var(--mgt-primary-50))] transition-colors" data-template="Merci pour votre retour. Nous sommes heureux d'avoir répondu à vos attentes et restons à votre disposition.">Utiliser ce ton</button>
+            </div>
+            <div class="p-4 rounded-lg border border-[rgb(var(--mgt-border))] flex flex-col">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="w-8 h-8 rounded-lg bg-[rgb(var(--mgt-info)/0.15)] flex items-center justify-center text-[rgb(var(--mgt-info))]"><i data-lucide="zap" class="w-4 h-4"></i></span>
+                <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Concis</p>
+              </div>
+              <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] flex-1 mb-3">« Merci pour votre avis ! À très bientôt. »</p>
+              <button class="js-template-btn w-full py-2 rounded-lg border border-[rgb(var(--mgt-border))] text-xs font-medium text-[rgb(var(--mgt-primary))] hover:bg-[rgb(var(--mgt-primary-50))] transition-colors" data-template="Merci pour votre avis ! À très bientôt.">Utiliser ce ton</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== ENCOURAGER LES AVIS ===== -->
+        <div class="bg-[rgb(var(--mgt-primary))] rounded-xl p-6 shadow-[var(--mgt-shadow-md)]">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex items-start gap-4">
+              <div class="flex items-center justify-center w-11 h-11 rounded-lg bg-[rgb(var(--mgt-accent))] text-white flex-shrink-0">
+                <i data-lucide="megaphone" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h2 class="text-base font-semibold text-[rgb(var(--mgt-primary-foreground))]">Invitez vos clients à laisser un avis</h2>
+                <p class="text-sm text-white/70 mt-0.5">Les profils avec 20+ avis reçoivent 1,6× plus de demandes de contact.</p>
+              </div>
+            </div>
+            <button id="btn-send-reminder" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[rgb(var(--mgt-accent))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-accent-600))] transition-colors flex-shrink-0">
+              <i data-lucide="send" class="w-4 h-4"></i>
+              Envoyer une relance
+            </button>
+          </div>
+        </div>
+
+        <!-- ===== MODALE RELANCE ===== -->
+        <div id="reminder-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="reminder-title">
+          <div class="absolute inset-0 bg-black/50" data-close-reminder></div>
+          <div class="relative w-full max-w-md bg-[rgb(var(--mgt-card))] rounded-2xl shadow-[var(--mgt-shadow-lg)] p-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent))] text-white flex-shrink-0">
+                <i data-lucide="megaphone" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h3 id="reminder-title" class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Envoyer une relance</h3>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]" id="reminder-count">…</p>
+              </div>
+            </div>
+            <label class="block text-xs font-medium text-[rgb(var(--mgt-foreground))] mb-1.5">Message personnalisé (optionnel)</label>
+            <textarea id="reminder-message" rows="3" placeholder="Laissez vide pour envoyer le message par défaut." style="width:100%;padding:10px 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:13px;outline:none;resize:vertical;font-family:var(--mgt-font-sans);"></textarea>
+            <div class="flex items-center justify-end gap-3 mt-5">
+              <button id="reminder-cancel" class="px-4 py-2 rounded-lg text-sm font-medium text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors">Annuler</button>
+              <button id="reminder-confirm" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[rgb(var(--mgt-accent))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-accent-600))] transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+                <i data-lucide="send" class="w-4 h-4"></i>
+                <span>Confirmer l'envoi</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script>lucide.createIcons();</script>
+    <script>
+    (function () {
+      // Comportement de production des avis : réponse en ligne, modèles de
+      // réponse et relance. Les KPI (taux/temps de réponse) se mettent à jour.
+      var replyRate = 92;   // %
+      var replyTime = 14;   // min
+
+      function toast(msg) {
+        var t = document.getElementById('rev-toast');
+        if (!t) {
+          t = document.createElement('div');
+          t.id = 'rev-toast';
+          t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translate(-50%,16px);background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;font-family:var(--mgt-font-sans);z-index:9999;opacity:0;transition:all .25s ease;pointer-events:none;';
+          document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        requestAnimationFrame(function () { t.style.opacity = '1'; t.style.transform = 'translate(-50%,0)'; });
+        clearTimeout(t._timer);
+        t._timer = setTimeout(function () { t.style.opacity = '0'; t.style.transform = 'translate(-50%,16px)'; }, 2400);
+      }
+
+      function refreshKpis() {
+        var r = document.getElementById('kpi-response-rate');
+        var tm = document.getElementById('kpi-response-time');
+        if (r) r.textContent = replyRate + ' %';
+        if (tm) tm.textContent = replyTime + ' min';
+      }
+
+      function openReply(btn) {
+        var actionRow = btn.parentNode;
+        var content = actionRow.parentNode;
+        if (content.querySelector('.js-reply-form')) return;
+        btn.style.display = 'none';
+        var form = document.createElement('div');
+        form.className = 'js-reply-form mt-2';
+        form.innerHTML =
+          '<textarea class="js-reply-text" placeholder="Rédigez votre réponse..." style="width:100%;min-height:72px;padding:10px 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:13px;outline:none;resize:vertical;font-family:var(--mgt-font-sans);"></textarea>' +
+          '<div style="display:flex;gap:8px;margin-top:8px;">' +
+          '<button class="js-reply-cancel" style="flex:1;height:36px;border:1px solid rgb(var(--mgt-border));border-radius:9px;background:transparent;color:rgb(var(--mgt-foreground));font-size:13px;font-weight:600;cursor:pointer;">Annuler</button>' +
+          '<button class="js-reply-send" style="flex:1;height:36px;border:none;border-radius:9px;background:rgb(var(--mgt-primary));color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Envoyer</button></div>';
+        content.appendChild(form);
+        var text = form.querySelector('.js-reply-text');
+        text.focus();
+        form.querySelector('.js-reply-cancel').onclick = function () { form.remove(); btn.style.display = ''; };
+        form.querySelector('.js-reply-send').onclick = function () {
+          var val = text.value.trim();
+          if (!val) { text.focus(); return; }
+          saveReply(btn, actionRow, val);
+        };
+      }
+
+      function saveReply(btn, actionRow, val) {
+        // Repasse la ligne en disposition bloc (elle était en flex badge+bouton).
+        actionRow.className = '';
+        // Remplace la ligne d'action (badge + bouton) par le bloc réponse + badge Répondu.
+        actionRow.innerHTML =
+          '<div class="rounded-lg p-3 mb-2" style="background:rgb(var(--mgt-muted));">' +
+          '<p class="text-xs font-medium text-[rgb(var(--mgt-foreground))] mb-0.5">Votre réponse</p>' +
+          '<p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">' + val.replace(/</g, '&lt;') + '</p></div>' +
+          '<span class="js-status-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]" data-status="replied"><i data-lucide="check" class="w-3 h-3"></i> Répondu</span>';
+        replyRate = Math.min(100, replyRate + 1);
+        replyTime = Math.max(1, replyTime - 2);
+        refreshKpis();
+        lucide.createIcons();
+        toast('Réponse publiée.');
+        // Met à jour le statut de la carte pour rester cohérent avec le filtre
+        var card = actionRow.closest('[data-review-status]');
+        if (card) card.setAttribute('data-review-status', 'replied');
+      }
+
+      document.querySelectorAll('.js-reply-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () { openReply(btn); });
+      });
+
+      document.querySelectorAll('.js-template-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var txt = btn.getAttribute('data-template') || '';
+          // Ouvre la première réponse en attente et pré-remplit le modèle.
+          var firstReply = document.querySelector('.js-reply-btn');
+          if (firstReply) {
+            openReply(firstReply);
+            var ta = document.querySelector('.js-reply-text');
+            if (ta) { ta.value = txt; ta.focus(); }
+            toast('Modèle inséré dans la réponse.');
+          } else {
+            toast('Tous les avis ont déjà reçu une réponse.');
+          }
+        });
+      });
+
+      var reminder = document.getElementById('btn-send-reminder');
+      var reminderModal = document.getElementById('reminder-modal');
+      var reminderCountEl = document.getElementById('reminder-count');
+      var reminderMsg = document.getElementById('reminder-message');
+      var reminderConfirm = document.getElementById('reminder-confirm');
+      var reminderCancel = document.getElementById('reminder-cancel');
+
+      // Nombre simulé de clients n'ayant pas encore laissé d'avis.
+      var clientsSansAvis = 12;
+
+      function openReminder() {
+        reminderCountEl.textContent = clientsSansAvis + ' clients n\'ont pas encore laissé d\'avis.';
+        reminderMsg.value = '';
+        reminderConfirm.disabled = false;
+        reminderConfirm.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i><span>Confirmer l\'envoi</span>';
+        reminderModal.classList.remove('hidden');
+        reminderModal.classList.add('flex');
+        lucide.createIcons();
+        reminderMsg.focus();
+      }
+
+      function closeReminder() {
+        reminderModal.classList.add('hidden');
+        reminderModal.classList.remove('flex');
+      }
+
+      if (reminder) reminder.addEventListener('click', openReminder);
+      if (reminderCancel) reminderCancel.addEventListener('click', closeReminder);
+      var reminderBackdrop = reminderModal.querySelector('[data-close-reminder]');
+      if (reminderBackdrop) reminderBackdrop.addEventListener('click', closeReminder);
+
+      if (reminderConfirm) {
+        reminderConfirm.addEventListener('click', function () {
+          reminderConfirm.disabled = true;
+          reminderConfirm.innerHTML = '<span class="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span><span>Envoi en cours…</span>';
+          setTimeout(function () {
+            reminderConfirm.disabled = false;
+            reminderConfirm.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i><span>Confirmer l\'envoi</span>';
+            closeReminder();
+            lucide.createIcons();
+            toast('Relance envoyée à ' + clientsSansAvis + ' clients.');
+          }, 1400);
+        });
+      }
+
+      // Fermeture de la modale avec la touche Échap.
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeReminder();
+      });
+
+      // Filtre des avis par statut (Tous / À répondre / Répondu)
+      var filterBtns = document.querySelectorAll('.review-filter-btn');
+      var reviewCards = document.querySelectorAll('#review-list > [data-review-status]');
+      function applyReviewFilter(filter) {
+        reviewCards.forEach(function (card) {
+          var status = card.getAttribute('data-review-status');
+          card.style.display = (filter === 'all' || status === filter) ? '' : 'none';
+        });
+        filterBtns.forEach(function (b) {
+          var active = b.getAttribute('data-filter') === filter;
+          b.className = 'review-filter-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-colors ' +
+            (active
+              ? 'font-semibold bg-[rgb(var(--mgt-primary))] text-white'
+              : 'font-medium text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))]');
+        });
+      }
+      filterBtns.forEach(function (b) {
+        b.addEventListener('click', function () { applyReviewFilter(b.getAttribute('data-filter')); });
+      });
+    })();
+    </script>
+
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      .tabular-nums { font-variant-numeric: tabular-nums; }
+      body { font-family: var(--mgt-font-sans); }
+    </style>
+
+<script>
+(function(){
+  function __mgtSidebarScrollFix(){
+    var active = document.querySelector('nav a[class*="bg-white/15"]');
+    if (!active) return;
+    var nav = active.closest('nav');
+    if (!nav) return;
+    var navRect = nav.getBoundingClientRect();
+    var linkRect = active.getBoundingClientRect();
+    var target = nav.scrollTop + (linkRect.top - navRect.top) - (navRect.height - linkRect.height) / 2;
+    nav.scrollTop = Math.max(0, target);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', __mgtSidebarScrollFix);
+  } else {
+    __mgtSidebarScrollFix();
+  }
+})();
+</script>
+
+<script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+<script src="../assets/mangoo-dashboard-shell.js"></script>
+</body>
+</html>

@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Packs &amp; Tarifs</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+:root {
+  --background: rgb(255 255 255);
+  --foreground: rgb(15 23 42);
+  --card: rgb(255 255 255);
+  --card-foreground: rgb(15 23 42);
+  --popover: rgb(255 255 255);
+  --popover-foreground: rgb(15 23 42);
+  --primary: rgb(26 92 42);
+  --primary-foreground: rgb(255 255 255);
+  --muted: rgb(248 250 252);
+  --muted-foreground: rgb(100 116 139);
+  --border: rgb(226 232 240);
+  --input: rgb(226 232 240);
+  --ring: rgb(26 92 42);
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: rgb(129 199 134);
+  --state-success-foreground: rgb(255 255 255);
+  --state-warning: rgb(255 183 77);
+  --state-warning-foreground: rgb(15 23 42);
+  --state-error: rgb(239 68 68);
+  --state-error-foreground: rgb(255 255 255);
+  --state-info: rgb(59 130 246);
+  --state-info-foreground: rgb(255 255 255);
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: rgb(11 11 15);
+  --foreground: rgb(248 250 252);
+  --card: rgb(20 20 26);
+  --card-foreground: rgb(248 250 252);
+  --popover: rgb(20 20 26);
+  --popover-foreground: rgb(248 250 252);
+  --primary: rgb(76 168 82);
+  --primary-foreground: rgb(255 255 255);
+  --muted: rgb(30 30 38);
+  --muted-foreground: rgb(148 163 184);
+  --border: rgb(40 40 50);
+  --input: rgb(40 40 50);
+  --ring: rgb(76 168 82);
+}
+
+.h-display { font-family: var(--mgt-font-sans); font-size: clamp(40px, 6vw, 88px); line-height: 1.02; font-weight: 600; letter-spacing: -0.03em; text-wrap: balance; }
+.h1 { font-family: var(--mgt-font-sans); font-size: clamp(28px, 3.5vw, 48px); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+.h2 { font-family: var(--mgt-font-sans); font-size: clamp(22px, 2.4vw, 32px); line-height: 1.2; font-weight: 600; letter-spacing: -0.015em; }
+.h3 { font-family: var(--mgt-font-sans); font-size: 20px; line-height: 1.3; font-weight: 600; letter-spacing: -0.01em; }
+.body-l { font-family: var(--mgt-font-sans); font-size: 18px; line-height: 1.55; font-weight: 400; }
+.body { font-family: var(--mgt-font-sans); font-size: 15px; line-height: 1.6; font-weight: 400; }
+.caption { font-family: var(--mgt-font-sans); font-size: 13px; line-height: 1.5; font-weight: 400; letter-spacing: 0.005em; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+      .toggle { position: relative; width: 40px; height: 22px; border-radius: 9999px; background: rgb(100 116 139 / .35); transition: background .2s; cursor: pointer; flex-shrink: 0; }
+      .toggle.on { background: rgb(var(--mgt-primary)); }
+      .toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+      .toggle.on::after { transform: translateX(18px); }
+    </style>
+    <style id="critical-layout">
+      .admin-layout { display: flex; min-height: 100vh; }
+      .admin-sidebar { width: 260px; min-height: 100vh; flex-shrink: 0; position: fixed; top: 0; left: 0; z-index: 40; }
+      .admin-main { flex: 1; margin-left: 260px; min-width: 0; }
+      @media (max-width: 768px) {
+        .admin-sidebar { transform: translateX(-100%); transition: transform .25s ease; }
+        .admin-sidebar.open { transform: translateX(0); box-shadow: 0 0 60px rgba(0,0,0,.4); }
+        .admin-main { margin-left: 0; }
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased bg-muted text-foreground">
+    <div class="admin-layout">
+
+        <!-- ===== ADMIN SIDEBAR ===== -->
+        <aside id="admin-nav" class="admin-sidebar" style="background-color: rgb(var(--mgt-primary-900));">
+            <div class="flex items-center gap-3 px-5 py-5 border-b" style="border-color: rgb(var(--mgt-primary-700) / .5);">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color: rgb(var(--mgt-accent));">
+                    <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+                </div>
+                <div>
+                    <span class="text-white font-semibold text-base leading-tight block">MangooTech</span>
+                    <span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded tracking-wider uppercase" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground));">Admin</span>
+                </div>
+            </div>
+
+            <nav class="flex-1 py-4 px-3 overflow-y-auto no-scrollbar">
+                <a href="./admin.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white">
+                    <i data-lucide="layout-dashboard" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Tableau de bord</span>
+                </a>
+                <a href="./admin-boutiques.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white">
+                    <i data-lucide="store" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Boutiques</span>
+                </a>
+                <a href="./admin-vendors.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white">
+                    <i data-lucide="users" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Prestataires</span>
+                </a>
+                <a href="./admin-commissions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white">
+                    <i data-lucide="percent" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Commissions</span>
+                </a>
+                <a href="./admin-transactions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white">
+                    <i data-lucide="receipt" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Transactions</span>
+                </a>
+                <a href="./admin-boosts.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white">
+                    <i data-lucide="rocket" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Boosters</span>
+                </a>
+                <a href="./admin-delivery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white">
+                    <i data-lucide="truck" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Livraisons</span>
+                </a>
+                <a href="./admin-packs.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors bg-white/12 text-white">
+                    <i data-lucide="tags" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Packs &amp; Tarifs</span>
+                </a>
+            </nav>
+
+            <div class="p-4 border-t flex items-center gap-3" style="border-color: rgb(var(--mgt-primary-700) / .5);">
+                <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0" style="background-color: rgb(var(--mgt-primary-500)); color: rgb(var(--mgt-primary-foreground));">DF</div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-white text-sm font-medium truncate">DANSOKO Fodé</div>
+                    <div class="text-xs truncate" style="color: rgb(var(--mgt-primary-300));">Administrateur</div>
+                </div>
+                <button class="text-white/50 hover:text-white transition-colors">
+                    <i data-lucide="settings" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <div class="admin-main">
+
+            <header class="sticky top-0 z-30 bg-card border-b border-border">
+                <div class="flex items-center justify-between px-6 py-3">
+                    <div class="flex items-center gap-3">
+                        <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-muted transition-colors">
+                            <i data-lucide="menu" class="w-5 h-5 text-foreground"></i>
+                        </button>
+                        <div>
+                            <h1 class="text-xl font-semibold text-foreground">Packs &amp; Tarifs</h1>
+                            <p class="text-sm text-muted-foreground">Gérez les abonnements et leurs prix</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button class="relative p-2 rounded-lg hover:bg-muted transition-colors">
+                            <i data-lucide="bell" class="w-5 h-5 text-muted-foreground"></i>
+                            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style="background-color: rgb(var(--mgt-accent));"></span>
+                        </button>
+                        <button id="btn-add-pack" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground));">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Nouveau pack</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <main class="p-6 space-y-6">
+
+                <!-- ===== KPI CARDS ===== -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Packs actifs</span>
+                            <span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-primary-50));">
+                                <i data-lucide="tags" class="w-4 h-4" style="color: rgb(var(--mgt-primary));"></i>
+                            </span>
+                        </div>
+                        <div class="text-2xl font-bold tabular-nums" style="color: rgb(var(--mgt-primary));" id="packs-kpi-active">—</div>
+                        <div class="text-xs text-muted-foreground">formules en ligne</div>
+                    </div>
+                    <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Abonnés actifs</span>
+                            <span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-accent-50));">
+                                <i data-lucide="users" class="w-4 h-4" style="color: rgb(var(--mgt-accent));"></i>
+                            </span>
+                        </div>
+                        <div class="text-2xl font-bold tabular-nums" style="color: rgb(var(--mgt-accent));">312</div>
+                        <div class="text-xs text-muted-foreground">comptes sous abonnement</div>
+                    </div>
+                    <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Revenu mensuel</span>
+                            <span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-primary-100));">
+                                <i data-lucide="banknote" class="w-4 h-4" style="color: rgb(var(--mgt-primary));"></i>
+                            </span>
+                        </div>
+                        <div class="text-2xl font-bold tabular-nums" style="color: rgb(var(--mgt-primary));">1,8M FCFA</div>
+                        <div class="text-xs text-muted-foreground">récurrent mensuel</div>
+                    </div>
+                    <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Pack le plus choisi</span>
+                            <span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-warning) / .15);">
+                                <i data-lucide="star" class="w-4 h-4" style="color: rgb(var(--mgt-warning));"></i>
+                            </span>
+                        </div>
+                        <div class="text-2xl font-bold" style="color: rgb(var(--mgt-primary));">Visibilité</div>
+                        <div class="text-xs text-muted-foreground">54% des abonnements</div>
+                    </div>
+                </div>
+
+                <!-- ===== PACKS TABLE ===== -->
+                <div class="bg-card border border-border rounded-xl overflow-hidden">
+                    <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+                        <div>
+                            <h3 class="text-base font-semibold text-foreground">Formules d'abonnement</h3>
+                            <p class="text-xs text-muted-foreground" id="packs-table-count">Chargement…</p>
+                        </div>
+                        <button id="btn-refresh" class="text-xs font-medium px-3 py-1.5 rounded-lg border border-border hover:bg-muted transition-colors flex items-center gap-1.5">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                            Actualiser
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="bg-muted/50">
+                                    <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pack</th>
+                                    <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Prix / mois</th>
+                                    <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Inclus</th>
+                                    <th class="text-right px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Abonnés</th>
+                                    <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Statut</th>
+                                    <th class="text-right px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="packs-tbody" class="divide-y divide-border"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ===== ADD / EDIT PACK FORM ===== -->
+                <div class="bg-card border border-border rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-1">
+                        <h3 class="text-base font-semibold text-foreground">Ajouter / modifier un pack</h3>
+                        <span id="form-mode" class="text-xs text-muted-foreground">Nouveau pack</span>
+                    </div>
+                    <p class="text-xs text-muted-foreground mb-5">Renseignez le nom, le prix mensuel et la liste des avantages (séparés par une virgule).</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div class="space-y-1.5">
+                            <label class="text-sm font-medium text-foreground">Nom du pack</label>
+                            <input type="text" id="pack-name" placeholder="Ex : Pack Business" class="w-full px-4 py-2.5 rounded-lg bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-sm font-medium text-foreground">Prix mensuel (FCFA)</label>
+                            <input type="number" id="pack-price" placeholder="Ex : 8000" class="w-full px-4 py-2.5 rounded-lg bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring tabular-nums">
+                        </div>
+                        <div class="space-y-1.5 md:col-span-2">
+                            <label class="text-sm font-medium text-foreground">Avantages inclus</label>
+                            <input type="text" id="pack-features" placeholder="Ex : 20 produits, 3 photos / produit, badge, support prioritaire" class="w-full px-4 py-2.5 rounded-lg bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 mt-6">
+                        <button id="btn-save-pack" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground));">
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                            Enregistrer le pack
+                        </button>
+                        <button id="btn-clear-pack" class="px-5 py-2.5 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:bg-muted transition-colors">Annuler</button>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+      'use strict';
+
+      var PACKS_KEY = 'mgt_admin_packs_v1';
+      var packs = [];
+      var PACKS_SEED = [
+        { id: 'decouverte', name: 'Découverte', price: 0, features: ['Fiche en ligne', 'Catalogue 3 produits', 'Badge de base', 'Messagerie'], subscribers: 0, active: true },
+        { id: 'visibilite', name: 'Visibilité', price: 5000, features: ['Catalogue 50 produits', 'Boosters', 'Badge Promo', 'Statistiques simples'], subscribers: 0, active: true },
+        { id: 'professionnel', name: 'Professionnel', price: 10000, features: ['Catalogue illimité', 'Fidélité', 'Parrainage', 'Rapports avancés'], subscribers: 0, active: true },
+        { id: 'premium', name: 'Premium', price: 15000, features: ['Tout le plan Professionnel', 'Multi-vendeurs', 'Support prioritaire', 'API & intégrations'], subscribers: 0, active: true }
+      ];
+
+      var editingId = null;
+
+      function adminToken() {
+        try { return localStorage.getItem('mgt_token'); } catch (e) { return null; }
+      }
+      function api(path) {
+        var token = adminToken();
+        var headers = { 'Accept': 'application/json' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        return fetch(path, { headers: headers }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+      }
+      function readPacksLocal() {
+        try { var v = JSON.parse(localStorage.getItem(PACKS_KEY)); return Array.isArray(v) ? v : null; } catch (e) { return null; }
+      }
+      function persistPacks() {
+        try { localStorage.setItem(PACKS_KEY, JSON.stringify(packs)); } catch (e) { /* ignore */ }
+      }
+
+      // Lit les plans d'abonnement réels via l'API, en fusionnant les
+      // personnalisations admin stockées en local (actif/inactif, ajouts).
+      function loadPacks() {
+        api('/api/vendor-config').then(function (res) {
+          var plans = (res && Array.isArray(res.plans)) ? res.plans : [];
+          var stored = readPacksLocal();
+          if (plans.length) {
+            packs = plans.map(function (p) {
+              var existing = stored ? stored.filter(function (x) { return x.id === p.id; })[0] : null;
+              return {
+                id: p.id,
+                name: p.name,
+                price: Number(p.price) || 0,
+                features: Array.isArray(p.features) ? p.features : [],
+                subscribers: existing ? Number(existing.subscribers) || 0 : 0,
+                active: existing ? existing.active !== false : true
+              };
+            });
+            // Conserve les packs créés localement (non présents côté serveur).
+            if (stored) stored.forEach(function (s) {
+              if (!plans.some(function (p) { return p.id === s.id; })) packs.push(s);
+            });
+          } else {
+            packs = stored || PACKS_SEED;
+          }
+          countSubscribers();
+        }).catch(function () {
+          packs = readPacksLocal() || PACKS_SEED;
+          renderPacks();
+        });
+      }
+
+      // Compte les abonnés réels par plan en croisant boutiques + prestataires.
+      function countSubscribers() {
+        Promise.all([
+          api('/api/admin/boutiques').catch(function () { return { boutiques: [] }; }),
+          api('/api/admin/prestataires').catch(function () { return { prestataires: [] }; })
+        ]).then(function (r) {
+          var list = ((r[0] && r[0].boutiques) || []).concat((r[1] && r[1].prestataires) || []);
+          packs.forEach(function (p) {
+            p.subscribers = list.filter(function (v) { return v.plan === p.id; }).length;
+          });
+          persistPacks();
+          renderPacks();
+        });
+      }
+
+      function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+      function fmtPrice(n) {
+        n = Number(n) || 0;
+        return n === 0 ? 'Gratuit' : n.toLocaleString('fr-FR') + ' FCFA';
+      }
+
+      function featuresHtml(p) {
+        return p.features.map(function (f) {
+          return '<span class="inline-flex items-center gap-1 text-xs text-muted-foreground mr-2 mb-1"><i data-lucide="check" class="w-3 h-3" style="color:rgb(var(--mgt-success))"></i>' + esc(f) + '</span>';
+        }).join('');
+      }
+
+      function renderPacks() {
+        var tbody = document.getElementById('packs-tbody');
+        tbody.innerHTML = packs.map(function (p) {
+          var subColor = p.subscribers >= 100 ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-primary))';
+          return '<tr class="hover:bg-muted/30 transition-colors">'
+            + '<td class="px-5 py-4"><span class="text-sm font-semibold text-foreground">' + esc(p.name) + '</span></td>'
+            + '<td class="px-5 py-4 text-sm font-semibold tabular-nums" style="color:' + (p.price === 0 ? 'rgb(var(--mgt-muted-foreground))' : 'rgb(var(--mgt-accent))') + '">' + fmtPrice(p.price) + '</td>'
+            + '<td class="px-5 py-4"><div class="flex flex-wrap items-center">' + featuresHtml(p) + '</div></td>'
+            + '<td class="px-5 py-4 text-right text-sm font-semibold tabular-nums" style="color:' + subColor + '">' + p.subscribers + '</td>'
+            + '<td class="px-5 py-4"><span class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full" style="background-color:' + (p.active ? 'rgb(var(--mgt-success) / .15)' : 'rgb(100 116 139 / .1)') + ';color:' + (p.active ? 'rgb(var(--mgt-success))' : 'rgb(100 116 139)') + '"><span class="w-1.5 h-1.5 rounded-full" style="background-color:' + (p.active ? 'rgb(var(--mgt-success))' : 'rgb(100 116 139)') + '"></span>' + (p.active ? 'Actif' : 'Inactif') + '</span></td>'
+            + '<td class="px-5 py-4 text-right"><div class="flex items-center justify-end gap-2"><div class="toggle ' + (p.active ? 'on' : '') + '" data-toggle="' + esc(p.id) + '" title="' + (p.active ? 'Désactiver' : 'Activer') + '"></div><button class="p-1.5 rounded hover:bg-muted transition-colors" data-edit="' + esc(p.id) + '" title="Modifier"><i data-lucide="pencil" class="w-4 h-4 text-muted-foreground"></i></button><button class="p-1.5 rounded hover:bg-muted transition-colors" data-delete="' + esc(p.id) + '" title="Supprimer"><i data-lucide="trash-2" class="w-4 h-4" style="color:rgb(var(--mgt-error))"></i></button></div></td>'
+            + '</tr>';
+        }).join('');
+
+        var activeCount = packs.filter(function (p) { return p.active; }).length;
+        document.getElementById('packs-kpi-active').textContent = String(activeCount);
+        document.getElementById('packs-table-count').textContent = packs.length + ' pack' + (packs.length > 1 ? 's' : '') + ' au catalogue';
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function toast(msg) {
+        var t = document.getElementById('mgt-toast');
+        if (!t) {
+          t = document.createElement('div');
+          t.id = 'mgt-toast';
+          t.setAttribute('style', 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);z-index:9999;padding:10px 18px;border-radius:999px;background-color:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));font-size:13px;font-weight:600;box-shadow:var(--mgt-shadow-md);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;max-width:90vw;text-align:center;');
+          document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        requestAnimationFrame(function () { t.style.opacity = '1'; t.style.transform = 'translateX(-50%) translateY(0)'; });
+        clearTimeout(t._h);
+        t._h = setTimeout(function () { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(16px)'; }, 2200);
+      }
+
+      function resetForm() {
+        editingId = null;
+        document.getElementById('pack-name').value = '';
+        document.getElementById('pack-price').value = '';
+        document.getElementById('pack-features').value = '';
+        document.getElementById('form-mode').textContent = 'Nouveau pack';
+      }
+
+      function loadPack(id) {
+        var p = packs.find(function (x) { return x.id === id; });
+        if (!p) return;
+        editingId = id;
+        document.getElementById('pack-name').value = p.name;
+        document.getElementById('pack-price').value = p.price;
+        document.getElementById('pack-features').value = p.features.join(', ');
+        document.getElementById('form-mode').textContent = 'Modification : ' + p.name;
+        document.getElementById('pack-name').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      function savePack() {
+        var name = document.getElementById('pack-name').value.trim();
+        var priceRaw = document.getElementById('pack-price').value;
+        var featuresRaw = document.getElementById('pack-features').value;
+        if (!name) { toast('Veuillez saisir un nom de pack'); return; }
+        var price = priceRaw === '' ? 0 : parseInt(priceRaw, 10);
+        if (isNaN(price) || price < 0) { toast('Veuillez saisir un prix valide'); return; }
+        var features = featuresRaw.split(',').map(function (f) { return f.trim(); }).filter(Boolean);
+        if (features.length === 0) { toast('Ajoutez au moins un avantage'); return; }
+
+        if (editingId) {
+          var p = packs.find(function (x) { return x.id === editingId; });
+          p.name = name; p.price = price; p.features = features;
+          toast('Pack « ' + name + ' » mis à jour');
+        } else {
+          packs.push({ id: 'p' + Date.now(), name: name, price: price, features: features, subscribers: 0, active: true });
+          toast('Pack « ' + name + ' » ajouté');
+        }
+        persistPacks();
+        resetForm();
+        renderPacks();
+      }
+
+      document.getElementById('packs-tbody').addEventListener('click', function (e) {
+        var toggle = e.target.closest('[data-toggle]');
+        var edit = e.target.closest('[data-edit]');
+        var del = e.target.closest('[data-delete]');
+        if (toggle) {
+          var p = packs.find(function (x) { return x.id === toggle.getAttribute('data-toggle'); });
+          p.active = !p.active;
+          toast('Pack « ' + p.name + ' » ' + (p.active ? 'activé' : 'désactivé'));
+          persistPacks();
+          renderPacks();
+        } else if (edit) {
+          loadPack(edit.getAttribute('data-edit'));
+        } else if (del) {
+          var d = packs.find(function (x) { return x.id === del.getAttribute('data-delete'); });
+          packs = packs.filter(function (x) { return x.id !== d.id; });
+          if (editingId === d.id) resetForm();
+          toast('Pack « ' + d.name + ' » supprimé');
+          persistPacks();
+          renderPacks();
+        }
+      });
+
+      document.getElementById('btn-save-pack').addEventListener('click', savePack);
+      document.getElementById('btn-clear-pack').addEventListener('click', resetForm);
+      document.getElementById('btn-add-pack').addEventListener('click', function () {
+        resetForm();
+        document.getElementById('pack-name').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.getElementById('pack-name').focus();
+      });
+      document.getElementById('btn-refresh').addEventListener('click', loadPacks);
+
+      document.getElementById('mobile-menu-btn').addEventListener('click', function () {
+        document.getElementById('admin-nav').classList.toggle('open');
+      });
+
+      loadPacks();
+    })();
+    </script>
+
+    <script src="../assets/mangoo-admin-shell.js"></script>
+</body>
+</html>

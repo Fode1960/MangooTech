@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Prestations</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  /* --- Radius Scale (root-level for preflight) --- */
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  /* --- Brand Primary: Dark Green --- */
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  /* --- Orange Accent (CTAs, highlights) --- */
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  /* --- Neutral Surface & Text Scale --- */
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  /* --- State Colors --- */
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  /* --- Shadows --- */
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  /* --- Typography --- */
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* --- Semantic Tailwind Aliases --- */
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+/* --- Typography Classes --- */
+.h-display {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.h1 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(28px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.h2 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h3 {
+  font-family: var(--mgt-font-sans);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.body-l {
+  font-family: var(--mgt-font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--mgt-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--mgt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased flex bg-[rgb(var(--mgt-muted))]">
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-[rgb(var(--mgt-primary))] text-[rgb(var(--mgt-primary-foreground))]">
+      <!-- Logo -->
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+        <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+        <div>
+          <span class="font-semibold text-base tracking-tight">Mangoo</span><span class="font-light text-base tracking-tight text-white/70">Tech</span>
+        </div>
+      </div>
+      <!-- Nav items -->
+      <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <a href="./dashboard-overview.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+          Vue d'ensemble
+        </a>
+        <a href="./dashboard-performance.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bar-chart-3" class="w-4.5 h-4.5"></i>
+          Performance
+        </a>
+        <a href="./dashboard-reviews.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="star" class="w-4.5 h-4.5"></i>
+          Avis clients
+        </a>
+        <a href="./dashboard-agenda.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="calendar-days" class="w-4.5 h-4.5"></i>
+          Rendez-vous
+        </a>
+        <a href="./dashboard-finances.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wallet" class="w-4.5 h-4.5"></i>
+          Finances
+        </a>
+        <a href="./dashboard-notifications.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+          Notifications
+        </a>
+        <a href="./dashboard-orders.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shopping-bag" class="w-4.5 h-4.5"></i>
+          Commandes
+        </a>
+        <a href="./dashboard-clients.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users" class="w-4.5 h-4.5"></i>
+          Clients
+        </a>
+        <a href="./dashboard-team.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users-round" class="w-4.5 h-4.5"></i>
+          Équipe
+        </a>
+        <a href="./dashboard-messages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="message-square" class="w-4.5 h-4.5"></i>
+          Messagerie
+        </a>
+        <a href="./dashboard-live.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="radio" class="w-4.5 h-4.5"></i>
+          Live
+        </a>
+        <a href="./dashboard-services.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-medium transition-colors">
+          <i data-lucide="briefcase" class="w-4.5 h-4.5"></i>
+          Prestations
+        </a>
+        <a href="./dashboard-catalogue.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="package" class="w-4.5 h-4.5"></i>
+          Catalogue
+        </a>
+        <a href="./dashboard-inventaire.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="boxes" class="w-4.5 h-4.5"></i>
+          Inventaire
+        </a>
+        <a href="./dashboard-gallery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="images" class="w-4.5 h-4.5"></i>
+          Galerie
+        </a>
+        <a href="./dashboard-boosters.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="zap" class="w-4.5 h-4.5"></i>
+          Boosters
+        </a>
+        <a href="./dashboard-promotions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="badge-percent" class="w-4.5 h-4.5"></i>
+          Promotions
+        </a>
+        <a href="./dashboard-fidelite.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="award" class="w-4.5 h-4.5"></i>
+          Fidélité
+        </a>
+        <a href="./dashboard-parrainage.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="gift" class="w-4.5 h-4.5"></i>
+          Parrainage
+        </a>
+        <a href="./dashboard-classement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="trophy" class="w-4.5 h-4.5"></i>
+          Classement
+        </a>
+        <a href="./dashboard-verification.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shield-check" class="w-4.5 h-4.5"></i>
+          Vérification
+        </a>
+        <a href="./dashboard-recommandation.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="compass" class="w-4.5 h-4.5"></i>
+          Découverte
+        </a>
+        <a href="./dashboard-hors-ligne.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wifi-off" class="w-4.5 h-4.5"></i>
+          Hors-ligne
+        </a>
+        <a href="./dashboard-rapports.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
+          Rapports
+        </a>
+        <a href="./dashboard-support.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="life-buoy" class="w-4.5 h-4.5"></i>
+          Support
+        </a>
+        <a href="./dashboard-offres.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="tag" class="w-4.5 h-4.5"></i>
+          Offres & Tarifs
+        </a>
+        <a href="./dashboard-abonnement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="credit-card" class="w-4.5 h-4.5"></i>
+          Abonnement
+        </a>
+        <a href="./dashboard-settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="settings" class="w-4.5 h-4.5"></i>
+          Parametres
+        </a>
+      </nav>
+      <!-- Account info bottom -->
+      <div class="border-t border-white/10 px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>CA</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate" data-vendor-name>DAN Boutique</p>
+            <p class="text-xs text-white/60 truncate" data-vendor-role>Prestataire certifié</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div id="app-main" class="flex-1 ml-60 min-h-screen flex flex-col">
+      <!-- Header Top Bar -->
+      <header class="sticky top-0 z-30 flex items-center justify-between gap-4 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] px-8 py-3.5">
+        <div class="flex items-center gap-4">
+          <h1 class="h3 tabular-nums">Prestations</h1>
+          <span id="service-counter" class="caption text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">12 prestations</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <!-- Search -->
+          <div class="relative hidden sm:block">
+            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+            <input type="text" id="service-search" placeholder="Rechercher une prestation..." class="pl-9 pr-4 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+          </div>
+          <!-- Notifications -->
+          <button id="btn-notifications" class="relative p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))]" aria-label="Notifications">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="btn-notifications-badge" class="absolute top-1 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-[10px] font-bold leading-4 text-center" style="display:none;"></span>
+          </button>
+          <!-- Avatar -->
+          <button id="btn-account" class="flex items-center gap-3 pl-2 border-l border-[rgb(var(--mgt-border))] bg-transparent cursor-pointer text-left">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>CA</div>
+            <div class="hidden sm:block text-right">
+              <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]" data-vendor-name>DAN Boutique</p>
+              <div class="flex items-center gap-1 text-xs text-[rgb(var(--mgt-accent))]">
+                <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                <span data-vendor-rating>4.8</span>
+              </div>
+            </div>
+          </button>
+        </div>
+      </header>
+
+      <!-- Dashboard Content -->
+      <main class="flex-1 p-8 space-y-6">
+        <!-- ===== CATEGORY FILTER + ADD BUTTON ROW ===== -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <!-- Category filter pills -->
+          <div id="service-categories" class="flex flex-wrap items-center gap-2">
+            <!-- Rendu dynamiquement par JS -->
+          </div>
+          <!-- Add service button -->
+          <button id="btn-add-service" onclick="openServiceForm()" class="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[rgb(var(--mgt-primary))] text-white text-sm font-semibold shadow-sm hover:opacity-90 transition-all active:scale-95">
+            <i data-lucide="plus" class="w-4.5 h-4.5"></i>
+            Ajouter une prestation
+          </button>
+        </div>
+
+        <!-- ===== SERVICES GRID ===== -->
+        <div id="services-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <!-- Cards rendered by JS -->
+        </div>
+      </main>
+    </div>
+
+    <!-- ===== SERVICE FORM MODAL ===== -->
+    <div id="service-form-overlay" class="fixed inset-0 z-50 hidden" onclick="closeServiceForm(event)">
+      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+      <div class="absolute inset-0 flex items-center justify-center p-4">
+        <div id="service-form" class="relative w-full max-w-lg bg-[rgb(var(--mgt-card))] rounded-2xl shadow-[var(--mgt-shadow-lg)] overflow-hidden max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+          <!-- Form Header -->
+          <div class="flex items-center justify-between px-6 py-4 border-b border-[rgb(var(--mgt-border))]">
+            <h2 id="form-title" class="h3">Nouvelle prestation</h2>
+            <button onclick="closeServiceForm()" class="p-1.5 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))]">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+          <!-- Form Body -->
+          <div class="px-6 py-5 space-y-4">
+            <input type="hidden" id="form-service-id" value="">
+            <!-- Nom -->
+            <div>
+              <label class="block text-sm font-medium text-[rgb(var(--mgt-foreground))] mb-1.5">Nom de la prestation</label>
+              <input type="text" id="form-name" placeholder="Ex: Maquillage professionnel" class="w-full px-3.5 py-2.5 text-sm bg-[rgb(var(--mgt-background))] border border-[rgb(var(--mgt-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+            </div>
+            <!-- Description -->
+            <div>
+              <label class="block text-sm font-medium text-[rgb(var(--mgt-foreground))] mb-1.5">Description</label>
+              <textarea id="form-description" rows="3" placeholder="Decrivez votre prestation..." class="w-full px-3.5 py-2.5 text-sm bg-[rgb(var(--mgt-background))] border border-[rgb(var(--mgt-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))] resize-none"></textarea>
+            </div>
+            <!-- Price + Duration row -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-[rgb(var(--mgt-foreground))] mb-1.5">Prix (FCFA)</label>
+                <input type="number" id="form-price" placeholder="0" min="0" class="w-full px-3.5 py-2.5 text-sm bg-[rgb(var(--mgt-background))] border border-[rgb(var(--mgt-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))] tabular-nums">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-[rgb(var(--mgt-foreground))] mb-1.5">Duree (min)</label>
+                <input type="number" id="form-duration" placeholder="0" min="0" class="w-full px-3.5 py-2.5 text-sm bg-[rgb(var(--mgt-background))] border border-[rgb(var(--mgt-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))] tabular-nums">
+              </div>
+            </div>
+            <!-- Categorie + Unite -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-[rgb(var(--mgt-foreground))] mb-1.5">Catégorie</label>
+                <select id="form-category" class="w-full px-3.5 py-2.5 text-sm bg-[rgb(var(--mgt-background))] border border-[rgb(var(--mgt-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))]"></select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-[rgb(var(--mgt-foreground))] mb-1.5">Unité de prix</label>
+                <select id="form-unit" class="w-full px-3.5 py-2.5 text-sm bg-[rgb(var(--mgt-background))] border border-[rgb(var(--mgt-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))]"></select>
+              </div>
+            </div>
+            <!-- Image Upload placeholder -->
+            <div>
+              <label class="block text-sm font-medium text-[rgb(var(--mgt-foreground))] mb-1.5">Image</label>
+              <div id="form-image-area" class="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-[rgb(var(--mgt-border))] rounded-xl hover:border-[rgb(var(--mgt-primary))] hover:bg-[rgb(var(--mgt-primary-50))] transition-colors cursor-pointer" onclick="document.getElementById('form-image-input').click()">
+                <i data-lucide="image-plus" class="w-8 h-8 text-[rgb(var(--mgt-muted-foreground))]"></i>
+                <p class="text-sm text-[rgb(var(--mgt-muted-foreground))]">Cliquez pour ajouter une image</p>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">PNG, JPG, WEBP - 5 Mo max</p>
+                <input type="file" id="form-image-input" accept="image/png,image/jpeg,image/webp" class="hidden" onchange="handleImagePreview(event)">
+                <img id="form-image-preview" src="" alt="Apercu" class="hidden w-full max-h-40 object-cover rounded-lg mt-2">
+              </div>
+            </div>
+            <!-- Disponibilite toggle -->
+            <div class="flex items-center justify-between p-3 rounded-lg bg-[rgb(var(--mgt-muted))]">
+              <div>
+                <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Disponible</p>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Visible dans le catalogue</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="form-available" class="sr-only peer" checked>
+                <div class="w-10 h-5 bg-[rgb(var(--mgt-border))] rounded-full peer peer-checked:bg-[rgb(var(--mgt-success))] peer-focus:ring-2 peer-focus:ring-[rgb(var(--mgt-ring)/0.30)] transition-all after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+              </label>
+            </div>
+          </div>
+          <!-- Form Footer -->
+          <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-[rgb(var(--mgt-border))]">
+            <button onclick="closeServiceForm()" class="px-4 py-2.5 text-sm font-medium rounded-lg border border-[rgb(var(--mgt-border))] text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors">Annuler</button>
+            <button id="form-delete-btn" onclick="deleteServiceFromForm()" class="hidden px-4 py-2.5 text-sm font-medium rounded-lg border border-[rgb(var(--mgt-error))] text-[rgb(var(--mgt-error))] hover:bg-[rgb(var(--mgt-error))] hover:text-white transition-colors">
+              <i data-lucide="trash-2" class="w-4 h-4 inline mr-1.5"></i>Supprimer
+            </button>
+            <button onclick="saveService()" class="px-5 py-2.5 text-sm font-semibold rounded-lg bg-[rgb(var(--mgt-primary))] text-white hover:opacity-90 transition-all active:scale-95">Enregistrer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../assets/mangoo-connect-plus.js"></script>
+    <script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+    <script src="../assets/mangoo-prestations.js"></script>
+    <script>
+lucide.createIcons();
+
+// ===== DONNÉES PRESTATIONS =====
+// Identité du prestataire connecté (source unique : MangooVendor).
+const VENDOR_ID = (window.MangooVendor && MangooVendor.current().vendorId) || 'pro-41cafa4bcb31';
+const VENDOR_NAME = (window.MangooVendor && MangooVendor.current().name) || 'DAN Boutique';
+if (window.MangooVendor) MangooVendor.registerRT();
+
+let services = [];
+let currentFilter = 'Toutes';
+let editingId = null;
+let currentImageData = '';   // data URL de l'image sélectionnée dans le formulaire
+
+// ===== CATÉGORIES (pillules de filtre) =====
+function renderCategoryPills() {
+  const wrap = document.getElementById('service-categories');
+  const pills = ['Toutes'].concat(MangooPrestations.CATEGORIES.map(function (c) { return c.id; }));
+  wrap.innerHTML = pills.map(function (cat) {
+    const label = cat === 'Toutes' ? 'Toutes' : MangooPrestations.categoryById(cat).label;
+    const active = currentFilter === cat;
+    const cls = active
+      ? 'category-btn px-4 py-2 text-sm font-medium rounded-lg bg-[rgb(var(--mgt-primary))] text-white shadow-sm transition-all'
+      : 'category-btn px-4 py-2 text-sm font-medium rounded-lg bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-primary-50))] hover:text-[rgb(var(--mgt-primary))] transition-all';
+    return '<button data-category="' + cat + '" class="' + cls + '">' + label + '</button>';
+  }).join('');
+}
+
+// ===== FORMULAIRE (options catégorie / unité) =====
+function populateFormSelects() {
+  const catSel = document.getElementById('form-category');
+  catSel.innerHTML = MangooPrestations.CATEGORIES.map(function (c) {
+    return '<option value="' + c.id + '">' + c.label + '</option>';
+  }).join('');
+  const unitSel = document.getElementById('form-unit');
+  unitSel.innerHTML = MangooPrestations.UNITS.map(function (u) {
+    return '<option value="' + u + '">' + u + '</option>';
+  }).join('');
+}
+
+// ===== CHARGEMENT =====
+function loadServices() {
+  return MangooPrestations.api.list(VENDOR_ID)
+    .then(function (list) { services = list; })
+    .catch(function (e) {
+      console.warn('Impossible de charger les prestations depuis le serveur.', e);
+      services = [];
+    })
+    .then(function () { renderServices(); });
+}
+
+// ===== RENDER GRID =====
+function renderServices() {
+  const grid = document.getElementById('services-grid');
+  const searchTerm = (document.getElementById('service-search')?.value || '').toLowerCase();
+  
+  let filtered = services;
+  if (currentFilter !== 'Toutes') {
+    filtered = filtered.filter(s => s.category === currentFilter);
+  }
+  if (searchTerm) {
+    filtered = filtered.filter(s => s.name.toLowerCase().includes(searchTerm) || s.description.toLowerCase().includes(searchTerm));
+  }
+
+  const counter = document.getElementById('service-counter');
+  counter.textContent = filtered.length + ' prestation' + (filtered.length > 1 ? 's' : '');
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div class="col-span-full flex flex-col items-center justify-center py-20 text-center">
+        <i data-lucide="package-open" class="w-16 h-16 text-[rgb(var(--mgt-muted-foreground))] opacity-40 mb-4"></i>
+        <p class="text-lg font-semibold text-[rgb(var(--mgt-foreground))] mb-1">Aucune prestation trouvee</p>
+        <p class="text-sm text-[rgb(var(--mgt-muted-foreground))]">${currentFilter !== 'Toutes' ? 'Essayez un autre filtre ou ajoutez une prestation.' : 'Commencez par ajouter votre premiere prestation.'}</p>
+        ${currentFilter === 'Toutes' ? '<button onclick="openServiceForm()" class="mt-4 px-4 py-2 rounded-lg bg-[rgb(var(--mgt-primary))] text-white text-sm font-medium hover:opacity-90 transition-all">Ajouter une prestation</button>' : ''}
+      </div>`;
+    lucide.createIcons();
+    return;
+  }
+
+  grid.innerHTML = filtered.map(s => {
+    const cat = MangooPrestations.categoryById(s.category);
+    const imgHtml = s.image
+      ? '<img src="' + s.image + '" alt="' + escapeHtml(s.name) + '" class="absolute inset-0 w-full h-full object-cover" onerror="this.remove()">'
+      : '';
+    const placeholderStyle = s.image ? 'background:#f1f5f9;' : 'background:' + cat.gradient + ';';
+    const iconHtml = s.image
+      ? ''
+      : '<i data-lucide="' + cat.icon + '" class="w-10 h-10" style="color:' + cat.iconColor + ';opacity:.5"></i>';
+    return `
+    <div class="service-card bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl overflow-hidden shadow-[var(--mgt-shadow-sm)] hover:shadow-[var(--mgt-shadow-md)] transition-all group">
+      <!-- Image ou placeholder -->
+      <div class="relative h-36" style="${placeholderStyle}">
+        ${imgHtml}
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+          ${iconHtml}
+        </div>
+        <!-- Category badge top-left -->
+        <span class="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full text-xs font-semibold" style="background-color:${cat.chipBg};color:${cat.chipText}">${cat.label}</span>
+        <!-- Availability dot top-right -->
+        <span class="absolute top-2.5 right-2.5 flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-card))] text-[rgb(var(--mgt-foreground))] shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full ${s.available ? 'bg-[rgb(var(--mgt-success))]' : 'bg-[rgb(var(--mgt-error))]'}"></span>
+          ${s.available ? 'Actif' : 'Inactif'}
+        </span>
+      </div>
+      <!-- Card body -->
+      <div class="p-4">
+        <h3 class="text-base font-semibold text-[rgb(var(--mgt-foreground))] mb-1 truncate">${escapeHtml(s.name)}</h3>
+        <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] line-clamp-2 mb-3">${escapeHtml(s.description)}</p>
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-lg font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">${MangooPrestations.formatPrice(s.price)} <span class="text-xs font-medium text-[rgb(var(--mgt-muted-foreground))]">FCFA</span></span>
+          <span class="flex items-center gap-1 text-xs text-[rgb(var(--mgt-muted-foreground))]">
+            <i data-lucide="clock" class="w-3.5 h-3.5"></i> ${MangooPrestations.formatDuration(s.duration)}
+          </span>
+        </div>
+        <div class="text-[11px] text-[rgb(var(--mgt-muted-foreground))] mb-3">${escapeHtml(s.unit || 'Par prestation')}</div>
+        <!-- Availability toggle + Actions -->
+        <div class="flex items-center justify-between pt-3 border-t border-[rgb(var(--mgt-border))]">
+          <label class="relative inline-flex items-center cursor-pointer" onclick="event.stopPropagation()">
+            <input type="checkbox" class="sr-only peer" ${s.available ? 'checked' : ''} onchange="toggleAvailability('${s.id}', this.checked)">
+            <div class="w-9 h-5 bg-[rgb(var(--mgt-border))] rounded-full peer peer-checked:bg-[rgb(var(--mgt-success))] peer-focus:ring-2 peer-focus:ring-[rgb(var(--mgt-ring)/0.30)] transition-all after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4"></div>
+          </label>
+          <div class="flex items-center gap-1.5">
+            <button onclick="editService('${s.id}')" class="p-1.5 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-primary))]" title="Modifier">
+              <i data-lucide="pencil" class="w-4 h-4"></i>
+            </button>
+            <button onclick="deleteService('${s.id}')" class="p-1.5 rounded-lg hover:bg-red-50 transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-red-600" title="Supprimer">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  lucide.createIcons();
+  updateCategoryPills();
+}
+
+// ===== CATEGORY FILTERING =====
+function updateCategoryPills() {
+  document.querySelectorAll('#service-categories .category-btn').forEach(btn => {
+    if (btn.dataset.category === currentFilter) {
+      btn.className = 'category-btn px-4 py-2 text-sm font-medium rounded-lg bg-[rgb(var(--mgt-primary))] text-white shadow-sm transition-all';
+    } else {
+      btn.className = 'category-btn px-4 py-2 text-sm font-medium rounded-lg bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-primary-50))] hover:text-[rgb(var(--mgt-primary))] transition-all';
+    }
+  });
+}
+
+document.getElementById('service-categories').addEventListener('click', function(e) {
+  const btn = e.target.closest('.category-btn');
+  if (!btn) return;
+  currentFilter = btn.dataset.category;
+  renderServices();
+});
+
+// ===== SEARCH =====
+const searchInput = document.getElementById('service-search');
+if (searchInput) {
+  searchInput.addEventListener('input', renderServices);
+}
+
+// ===== MODAL FORM =====
+function openServiceForm(serviceId) {
+  editingId = serviceId || null;
+  const overlay = document.getElementById('service-form-overlay');
+  const title = document.getElementById('form-title');
+  const deleteBtn = document.getElementById('form-delete-btn');
+  
+  document.getElementById('form-service-id').value = '';
+  document.getElementById('form-name').value = '';
+  document.getElementById('form-description').value = '';
+  document.getElementById('form-price').value = '';
+  document.getElementById('form-duration').value = '';
+  document.getElementById('form-category').value = MangooPrestations.CATEGORIES[0].id;
+  document.getElementById('form-unit').value = MangooPrestations.UNITS[0];
+  document.getElementById('form-available').checked = true;
+  document.getElementById('form-image-preview').classList.add('hidden');
+  document.getElementById('form-image-input').value = '';
+  currentImageData = '';
+
+  if (serviceId) {
+    const service = services.find(s => s.id === serviceId);
+    if (service) {
+      document.getElementById('form-service-id').value = service.id;
+      document.getElementById('form-name').value = service.name;
+      document.getElementById('form-description').value = service.description;
+      document.getElementById('form-price').value = service.price;
+      document.getElementById('form-duration').value = service.duration;
+      document.getElementById('form-category').value = service.category || MangooPrestations.CATEGORIES[0].id;
+      document.getElementById('form-unit').value = service.unit || MangooPrestations.UNITS[0];
+      document.getElementById('form-available').checked = service.available;
+      currentImageData = service.image || '';
+      if (currentImageData) {
+        const preview = document.getElementById('form-image-preview');
+        preview.src = currentImageData;
+        preview.classList.remove('hidden');
+      }
+      title.textContent = 'Modifier la prestation';
+      deleteBtn.classList.remove('hidden');
+    }
+  } else {
+    title.textContent = 'Nouvelle prestation';
+    deleteBtn.classList.add('hidden');
+  }
+
+  overlay.classList.remove('hidden');
+  lucide.createIcons();
+  document.body.style.overflow = 'hidden';
+}
+
+function closeServiceForm(event) {
+  if (event && event.target !== document.getElementById('service-form-overlay')) return;
+  document.getElementById('service-form-overlay').classList.add('hidden');
+  document.body.style.overflow = '';
+  editingId = null;
+}
+
+// ===== SAVE SERVICE =====
+function saveService() {
+  const id = document.getElementById('form-service-id').value || null;
+  const name = document.getElementById('form-name').value.trim();
+  const description = document.getElementById('form-description').value.trim();
+  const price = parseInt(document.getElementById('form-price').value) || 0;
+  const duration = parseInt(document.getElementById('form-duration').value) || 0;
+  const category = document.getElementById('form-category').value;
+  const unit = document.getElementById('form-unit').value;
+  const available = document.getElementById('form-available').checked;
+  const image = currentImageData;
+
+  if (!name) {
+    alert('Veuillez saisir le nom de la prestation.');
+    return;
+  }
+  if (price <= 0) {
+    alert('Veuillez saisir un prix valide.');
+    return;
+  }
+
+  const payload = {
+    id: id || undefined,
+    name: name,
+    description: description,
+    price: price,
+    duration: duration,
+    category: category,
+    unit: unit,
+    available: available,
+    image: image,
+    vendorId: VENDOR_ID,
+    vendorName: VENDOR_NAME
+  };
+
+  document.getElementById('service-form-overlay').classList.add('hidden');
+  document.body.style.overflow = '';
+  editingId = null;
+
+  MangooPrestations.api.save(payload)
+    .then(function (res) {
+      if (res && res.ok === false) throw new Error(res.error || 'Erreur serveur');
+      return loadServices();
+    })
+    .catch(function (e) {
+      console.warn('Sauvegarde impossible, mise à jour locale.', e);
+      if (id) {
+        const idx = services.findIndex(s => s.id === id);
+        if (idx !== -1) services[idx] = Object.assign({}, services[idx], payload, { id: id });
+        else services.push(Object.assign({}, payload, { id: id }));
+      } else {
+        services.push(Object.assign({}, payload, { id: 'local-' + Date.now() }));
+      }
+      renderServices();
+    });
+}
+
+// ===== EDIT SERVICE =====
+function editService(id) {
+  openServiceForm(id);
+}
+
+// ===== DELETE SERVICE =====
+function deleteService(id) {
+  const service = services.find(s => s.id === id);
+  if (!service) return;
+  if (confirm('Supprimer définitivement "' + service.name + '" ? Cette action est irréversible.')) {
+    MangooPrestations.api.remove(id)
+      .then(function () { return loadServices(); })
+      .catch(function (e) {
+        console.warn('Suppression impossible, suppression locale.', e);
+        services = services.filter(s => s.id !== id);
+        renderServices();
+      });
+  }
+}
+
+function deleteServiceFromForm() {
+  if (!editingId) return;
+  deleteService(editingId);
+  document.getElementById('service-form-overlay').classList.add('hidden');
+  document.body.style.overflow = '';
+  editingId = null;
+}
+
+// ===== TOGGLE AVAILABILITY =====
+function toggleAvailability(id, checked) {
+  const service = services.find(s => s.id === id);
+  if (!service) return;
+  service.available = checked;
+  MangooPrestations.api.save(service)
+    .then(function () { renderServices(); })
+    .catch(function (e) {
+      console.warn('Bascule de disponibilité impossible.', e);
+      renderServices();
+    });
+}
+
+// ===== IMAGE PREVIEW =====
+function handleImagePreview(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const preview = document.getElementById('form-image-preview');
+    preview.src = e.target.result;
+    preview.classList.remove('hidden');
+    currentImageData = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ===== ESC TO CLOSE =====
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const overlay = document.getElementById('service-form-overlay');
+    if (overlay && !overlay.classList.contains('hidden')) {
+      overlay.classList.add('hidden');
+      document.body.style.overflow = '';
+      editingId = null;
+    }
+  }
+});
+
+// ===== HELPERS =====
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ===== INITIALISATION =====
+populateFormSelects();
+renderCategoryPills();
+loadServices();
+    </script>
+<!-- Mobile responsive navigation & layout -->
+<style id="mgt-mobile-responsive">
+@media (max-width: 768px) {
+  .dashboard-layout { flex-direction: column !important; }
+  .dashboard-sidebar { position: fixed !important; top: 0; left: 0; z-index: 1000; width: 260px !important; height: 100vh !important; transform: translateX(-100%); transition: transform .3s ease; overflow-y: auto; }
+  .dashboard-sidebar.open { transform: translateX(0); }
+  .dashboard-sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999; }
+  .dashboard-sidebar-overlay.show { display: block; }
+  .dashboard-main { margin-left: 0 !important; width: 100% !important; }
+  .dashboard-topbar { position: sticky; top: 0; z-index: 100; }
+  .mobile-menu-btn { display: flex !important; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: pointer; color: inherit; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .services-grid, .favorites-grid, .features-grid, .booster-grid { grid-template-columns: 1fr !important; }
+  .data-table { display: block !important; }
+  .data-table thead { display: none !important; }
+  .data-table tbody, .data-table tr { display: block !important; }
+  .data-table td { display: flex !important; justify-content: space-between; align-items: center; padding: 8px 12px !important; border-bottom: 1px solid rgb(var(--mgt-border)) !important; }
+  .data-table td::before { content: attr(data-label); font-weight: 600; font-size: 12px; color: rgb(var(--mgt-muted-foreground)); text-transform: uppercase; margin-right: 8px; flex-shrink: 0; }
+  .topbar-search { display: none !important; }
+  .topbar-title { font-size: 18px !important; }
+  .hero-section { padding: 40px 16px !important; text-align: center; }
+  .hero-section h1, .hero-section .h-display { font-size: 28px !important; }
+  .hero-section h1 + p { font-size: 15px !important; }
+  .hero-ctas { flex-direction: column !important; align-items: center !important; gap: 12px !important; }
+  .auth-split { flex-direction: column !important; }
+  .auth-branding { min-height: 200px !important; padding: 32px 16px !important; }
+  .auth-form-area { padding: 24px 16px !important; }
+  .checkout-layout { flex-direction: column !important; }
+  .checkout-main { width: 100% !important; }
+  .checkout-sidebar { width: 100% !important; }
+  .chat-layout { flex-direction: column !important; height: auto !important; }
+  .chat-sidebar { width: 100% !important; max-height: 200px !important; }
+  .chat-main { width: 100% !important; }
+  .filter-pills { flex-wrap: nowrap !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+  .drawer-panel { width: 100% !important; max-width: 100% !important; }
+  .content-section { padding-left: 16px !important; padding-right: 16px !important; }
+  .section-padding { padding: 32px 16px !important; }
+  .form-grid { grid-template-columns: 1fr !important; }
+  .form-actions { flex-direction: column !important; }
+  .desktop-only { display: none !important; }
+  .map-container { height: 300px !important; }
+}
+@media (min-width: 769px) {
+  .mobile-menu-btn { display: none !important; }
+  .mobile-only { display: none !important; }
+}
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr !important; }
+  .stats-row { grid-template-columns: 1fr !important; }
+}
+</style>
+<script>
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    var sidebar = document.querySelector('.dashboard-sidebar');
+    if (!sidebar) return;
+    var overlay = document.createElement('div');
+    overlay.className = 'dashboard-sidebar-overlay';
+    overlay.addEventListener('click', function(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); });
+    document.body.appendChild(overlay);
+    var topbar = document.querySelector('.dashboard-topbar');
+    if (topbar) {
+      var btn = document.createElement('button');
+      btn.className = 'mobile-menu-btn';
+      btn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+      btn.addEventListener('click', function(){ sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
+      topbar.insertBefore(btn, topbar.firstChild);
+    }
+    sidebar.querySelectorAll('a').forEach(function(link){
+      link.addEventListener('click', function(){
+        if (window.innerWidth <= 768) { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+      });
+    });
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  function __mgtSidebarScrollFix(){
+    var active = document.querySelector('nav a[class*="bg-white/15"]');
+    if (!active) return;
+    var nav = active.closest('nav');
+    if (!nav) return;
+    var navRect = nav.getBoundingClientRect();
+    var linkRect = active.getBoundingClientRect();
+    var target = nav.scrollTop + (linkRect.top - navRect.top) - (navRect.height - linkRect.height) / 2;
+    nav.scrollTop = Math.max(0, target);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', __mgtSidebarScrollFix);
+  } else {
+    __mgtSidebarScrollFix();
+  }
+})();
+</script>
+<script src="../assets/mangoo-dashboard-shell.js"></script>
+</body>
+</html>

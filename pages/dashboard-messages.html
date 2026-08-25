@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Messagerie</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  /* --- Radius Scale (root-level for preflight) --- */
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  /* --- Brand Primary: Dark Green --- */
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  /* --- Orange Accent (CTAs, highlights) --- */
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  /* --- Neutral Surface & Text Scale --- */
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  /* --- State Colors --- */
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  /* --- Shadows --- */
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  /* --- Typography --- */
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* --- Semantic Tailwind Aliases --- */
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+/* --- Typography Classes --- */
+.h-display {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.h1 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(28px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.h2 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h3 {
+  font-family: var(--mgt-font-sans);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.body-l {
+  font-family: var(--mgt-font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--mgt-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--mgt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--radius-sm);
+    --radius-md: var(--radius-md);
+    --radius-lg: var(--radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+      .typing-dots span {
+        width: 5px; height: 5px; border-radius: 50%;
+        background: rgb(var(--mgt-muted-foreground));
+        display: inline-block;
+        animation: typingBlink 1.2s infinite ease-in-out;
+      }
+      .typing-dots span:nth-child(2) { animation-delay: .15s; }
+      .typing-dots span:nth-child(3) { animation-delay: .3s; }
+      @keyframes typingBlink {
+        0%, 60%, 100% { opacity: .25; transform: translateY(0); }
+        30% { opacity: 1; transform: translateY(-3px); }
+      }
+    </style>
+</head>
+<body class="h-screen overflow-hidden antialiased flex bg-[rgb(var(--mgt-muted))]">
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-[rgb(var(--mgt-primary))] text-[rgb(var(--mgt-primary-foreground))]">
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+        <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+        <div>
+          <span class="font-semibold text-base tracking-tight">Mangoo</span><span class="font-light text-base tracking-tight text-white/70">Tech</span>
+        </div>
+      </div>
+      <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <a href="./dashboard-overview.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+          Vue d'ensemble
+        </a>
+        <a href="./dashboard-performance.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bar-chart-3" class="w-4.5 h-4.5"></i>
+          Performance
+        </a>
+        <a href="./dashboard-reviews.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="star" class="w-4.5 h-4.5"></i>
+          Avis clients
+        </a>
+        <a href="./dashboard-agenda.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="calendar-days" class="w-4.5 h-4.5"></i>
+          Rendez-vous
+        </a>
+        <a href="./dashboard-finances.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wallet" class="w-4.5 h-4.5"></i>
+          Finances
+        </a>
+        <a href="./dashboard-notifications.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+          Notifications
+        </a>
+        <a href="./dashboard-orders.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shopping-bag" class="w-4.5 h-4.5"></i>
+          Commandes
+        </a>
+        <a href="./dashboard-clients.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users" class="w-4.5 h-4.5"></i>
+          Clients
+        </a>
+        <a href="./dashboard-team.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users-round" class="w-4.5 h-4.5"></i>
+          Équipe
+        </a>
+        <a href="./dashboard-messages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-medium transition-colors">
+          <i data-lucide="message-square" class="w-4.5 h-4.5"></i>
+          Messagerie
+        </a>
+        <a href="./dashboard-live.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="radio" class="w-4.5 h-4.5"></i>
+          Live
+        </a>
+        <a href="./dashboard-services.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="briefcase" class="w-4.5 h-4.5"></i>
+          Prestations
+        </a>
+        <a href="./dashboard-catalogue.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="package" class="w-4.5 h-4.5"></i>
+          Catalogue
+        </a>
+        <a href="./dashboard-inventaire.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="boxes" class="w-4.5 h-4.5"></i>
+          Inventaire
+        </a>
+        <a href="./dashboard-gallery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="images" class="w-4.5 h-4.5"></i>
+          Galerie
+        </a>
+        <a href="./dashboard-boosters.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="zap" class="w-4.5 h-4.5"></i>
+          Boosters
+        </a>
+        <a href="./dashboard-delivery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="truck" class="w-4.5 h-4.5"></i>
+          Livraisons
+        </a>
+        <a href="./dashboard-promotions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="badge-percent" class="w-4.5 h-4.5"></i>
+          Promotions
+        </a>
+        <a href="./dashboard-fidelite.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="award" class="w-4.5 h-4.5"></i>
+          Fidélité
+        </a>
+        <a href="./dashboard-parrainage.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="gift" class="w-4.5 h-4.5"></i>
+          Parrainage
+        </a>
+        <a href="./dashboard-classement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="trophy" class="w-4.5 h-4.5"></i>
+          Classement
+        </a>
+        <a href="./dashboard-verification.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shield-check" class="w-4.5 h-4.5"></i>
+          Vérification
+        </a>
+        <a href="./dashboard-recommandation.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="compass" class="w-4.5 h-4.5"></i>
+          Découverte
+        </a>
+        <a href="./dashboard-hors-ligne.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wifi-off" class="w-4.5 h-4.5"></i>
+          Hors-ligne
+        </a>
+        <a href="./dashboard-rapports.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
+          Rapports
+        </a>
+        <a href="./dashboard-support.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="life-buoy" class="w-4.5 h-4.5"></i>
+          Support
+        </a>
+        <a href="./dashboard-offres.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="tag" class="w-4.5 h-4.5"></i>
+          Offres & Tarifs
+        </a>
+        <a href="./dashboard-abonnement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="credit-card" class="w-4.5 h-4.5"></i>
+          Abonnement
+        </a>
+        <a href="./dashboard-settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="settings" class="w-4.5 h-4.5"></i>
+          Parametres
+        </a>
+      </nav>
+      <div class="border-t border-white/10 px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>CA</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate" data-vendor-name>DAN Boutique</p>
+            <p class="text-xs text-white/60 truncate" data-vendor-role>Prestataire certifié</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div id="app-main" class="flex-1 ml-60 h-full min-h-0 overflow-hidden flex flex-col">
+      <header class="sticky top-0 z-30 flex items-center justify-between gap-4 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] px-4 py-3.5">
+        <div class="flex items-center gap-3">
+          <button id="btn-app-menu" class="mobile-menu-btn" title="Menu" aria-label="Ouvrir le menu">
+            <i data-lucide="menu" class="w-5 h-5"></i>
+          </button>
+          <h1 class="text-lg font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">Messagerie</h1>
+          <span id="msg-unread-badge" class="text-xs text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">4 non lus</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <button id="btn-new-message" title="Nouveau message" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[rgb(var(--mgt-primary))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-primary-700))] transition-colors">
+            <i data-lucide="pen-square" class="w-4 h-4"></i>
+            Nouveau message
+          </button>
+          <button id="btn-notifications" class="relative p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))]" aria-label="Notifications">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="btn-notifications-badge" class="absolute top-1 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-[10px] font-bold leading-4 text-center" style="display:none;"></span>
+          </button>
+          <div id="btn-account" class="flex items-center gap-3 pl-2 border-l border-[rgb(var(--mgt-border))] cursor-pointer" role="button" tabindex="0">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>CA</div>
+            <div class="hidden sm:block text-right">
+              <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]" data-vendor-name>DAN Boutique</p>
+              <div class="flex items-center gap-1 text-xs text-[rgb(var(--mgt-accent))]">
+                <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                <span data-vendor-rating>4.8</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- ===== LAYOUT MESSAGERIE (liste + conversation) ===== -->
+      <div id="msg-layout" class="flex-1 flex overflow-hidden">
+        <!-- Liste des conversations -->
+        <div id="msg-list" class="w-80 border-r border-[rgb(var(--mgt-border))] bg-[rgb(var(--mgt-background))] flex flex-col">
+          <div class="p-4 border-b border-[rgb(var(--mgt-border))]">
+            <div class="relative">
+              <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[rgb(var(--mgt-muted-foreground))]"></i>
+              <input id="msg-search" type="text" placeholder="Rechercher une conversation…" class="w-full pl-9 pr-3 py-2 rounded-lg border border-[rgb(var(--mgt-input))] text-sm text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring))]/30 focus:border-[rgb(var(--mgt-ring))]">
+            </div>
+          </div>
+          <div id="msg-conv-list" class="flex-1 overflow-y-auto">
+            <!-- Conversation active -->
+            <div class="msg-conv flex items-start gap-3 px-4 py-3 hover:bg-[rgb(var(--mgt-muted))]" data-name="Awa S." data-unread="false" data-online="true">
+              <div class="relative flex-shrink-0">
+                <div class="w-10 h-10 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] flex items-center justify-center font-semibold text-xs">AS</div>
+                <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[rgb(var(--mgt-success))] border-2 border-[rgb(var(--mgt-background))]"></span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-2">
+                  <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Awa S.</p>
+                  <span class="text-xs text-[rgb(var(--mgt-muted-foreground))] flex-shrink-0">09:42</span>
+                </div>
+                <p class="text-sm text-[rgb(var(--mgt-foreground))] truncate">Parfait, à demain !</p>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-0.5">Tresse box braids</p>
+              </div>
+            </div>
+            <!-- Conversation non lue 1 -->
+            <div class="msg-conv flex items-start gap-3 px-4 py-3 hover:bg-[rgb(var(--mgt-muted))]" data-name="Fatou K." data-unread="true">
+              <div class="relative flex-shrink-0">
+                <div class="w-10 h-10 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] flex items-center justify-center font-semibold text-xs">FK</div>
+                <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[rgb(var(--mgt-accent))] border-2 border-[rgb(var(--mgt-background))]"></span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-2">
+                  <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Fatou K.</p>
+                  <span class="text-xs text-[rgb(var(--mgt-muted-foreground))] flex-shrink-0">09:15</span>
+                </div>
+                <p class="text-sm text-[rgb(var(--mgt-foreground))] truncate">Bonjour, avez-vous un créneau ce week-end ?</p>
+                <span class="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-[rgb(var(--mgt-accent))] text-white">2</span>
+              </div>
+            </div>
+            <!-- Conversation non lue 2 -->
+            <div class="msg-conv flex items-start gap-3 px-4 py-3 hover:bg-[rgb(var(--mgt-muted))]" data-name="Dida DANSO" data-unread="true" data-real="true" data-peer-id="cli-66b551e17c29">
+              <div class="relative flex-shrink-0">
+                <div class="w-10 h-10 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] flex items-center justify-center font-semibold text-xs">DD</div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-2">
+                  <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Dida DANSO</p>
+                  <span class="text-xs text-[rgb(var(--mgt-muted-foreground))] flex-shrink-0">Hier</span>
+                </div>
+                <p class="text-sm text-[rgb(var(--mgt-foreground))] truncate">Bonjour, j'ai bien reçu ma commande, merci !</p>
+                <span class="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-[rgb(var(--mgt-accent))] text-white">1</span>
+              </div>
+            </div>
+            <!-- Conversation lue -->
+            <div class="msg-conv flex items-start gap-3 px-4 py-3 hover:bg-[rgb(var(--mgt-muted))]" data-name="Ndeye B." data-unread="false">
+              <div class="relative flex-shrink-0">
+                <div class="w-10 h-10 rounded-full bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))] flex items-center justify-center font-semibold text-xs">NB</div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-2">
+                  <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Ndeye B.</p>
+                  <span class="text-xs text-[rgb(var(--mgt-muted-foreground))] flex-shrink-0">Lun.</span>
+                </div>
+                <p class="text-sm text-[rgb(var(--mgt-muted-foreground))] truncate">Quels produits utilisez-vous ?</p>
+              </div>
+            </div>
+            <!-- Conversation lue -->
+            <div class="msg-conv flex items-start gap-3 px-4 py-3 hover:bg-[rgb(var(--mgt-muted))]" data-name="Sokhna D." data-unread="false">
+              <div class="relative flex-shrink-0">
+                <div class="w-10 h-10 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] flex items-center justify-center font-semibold text-xs">SD</div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-2">
+                  <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Sokhna D.</p>
+                  <span class="text-xs text-[rgb(var(--mgt-muted-foreground))] flex-shrink-0">Lun.</span>
+                </div>
+                <p class="text-sm text-[rgb(var(--mgt-muted-foreground))] truncate">C'est noté, merci.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Zone de conversation -->
+        <div id="msg-thread-wrap" class="flex-1 flex flex-col bg-[rgb(var(--mgt-background))]">
+          <!-- En-tête conversation -->
+          <div class="flex items-center justify-between gap-3 px-4 py-3.5 border-b border-[rgb(var(--mgt-border))]">
+            <div class="flex items-center gap-3">
+              <button id="btn-msg-back" class="msg-back-btn" title="Retour" aria-label="Retour à la liste">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+              </button>
+              <div id="conv-avatar" class="w-10 h-10 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] flex items-center justify-center font-semibold text-xs">AS</div>
+              <div>
+                <div class="flex items-center gap-1.5">
+                  <p id="conv-name" class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Awa S.</p>
+                  <span id="conv-client-badge" class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] border border-[rgb(var(--mgt-primary))]" style="display:none;">Client</span>
+                </div>
+                <p id="conv-status" class="text-xs text-[rgb(var(--mgt-muted-foreground))] flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-success))]"></span> En ligne</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="btn-call" title="Appeler" class="p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))] transition-colors"><i data-lucide="phone" class="w-4.5 h-4.5"></i></button>
+              <button id="btn-video-call" title="Appel vidéo" class="p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))] transition-colors"><i data-lucide="video" class="w-4.5 h-4.5"></i></button>
+              <button id="btn-schedule" title="Planifier un rendez-vous" class="p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))] transition-colors"><i data-lucide="calendar" class="w-4.5 h-4.5"></i></button>
+              <div class="relative">
+                <button id="btn-more" title="Plus d'actions" class="msg-mobile-hide p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))] transition-colors"><i data-lucide="more-vertical" class="w-4.5 h-4.5"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Messages -->
+          <div id="msg-thread" class="flex-1 min-h-0 overflow-y-auto p-6 space-y-4">
+            <div class="flex items-end justify-center">
+              <span class="text-xs text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-3 py-1 rounded-full">Aujourd'hui</span>
+            </div>
+
+            <!-- Message client -->
+            <div class="flex items-end gap-2 max-w-[70%]">
+              <div class="w-7 h-7 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] flex items-center justify-center font-semibold text-[10px] flex-shrink-0">AS</div>
+              <div class="bg-[rgb(var(--mgt-muted))] rounded-2xl rounded-bl-md px-4 py-2.5">
+                <p class="text-sm text-[rgb(var(--mgt-foreground))]">Bonjour ! J'aimerais savoir si le motif « box braids » est disponible jeudi prochain.</p>
+                <span class="text-[10px] text-[rgb(var(--mgt-muted-foreground))] mt-1 block">09:38</span>
+              </div>
+            </div>
+
+            <!-- Message vendeur -->
+            <div class="flex items-end justify-end gap-2 max-w-[70%] ml-auto">
+              <div class="bg-[rgb(var(--mgt-primary))] rounded-2xl rounded-br-md px-4 py-2.5 text-white">
+                <p class="text-sm">Bonjour Awa ! Oui, j'ai un créneau disponible jeudi à 10 h. Je peux vous le réserver si vous le souhaitez.</p>
+                <span class="text-[10px] text-white/70 mt-1 block text-right">09:40</span>
+              </div>
+            </div>
+
+            <!-- Message client -->
+            <div class="flex items-end gap-2 max-w-[70%]">
+              <div class="w-7 h-7 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] flex items-center justify-center font-semibold text-[10px] flex-shrink-0">AS</div>
+              <div class="bg-[rgb(var(--mgt-muted))] rounded-2xl rounded-bl-md px-4 py-2.5">
+                <p class="text-sm text-[rgb(var(--mgt-foreground))]">Parfait, je prends ! Merci beaucoup.</p>
+                <span class="text-[10px] text-[rgb(var(--mgt-muted-foreground))] mt-1 block">09:41</span>
+              </div>
+            </div>
+
+            <!-- Message vendeur -->
+            <div class="flex items-end justify-end gap-2 max-w-[70%] ml-auto">
+              <div class="bg-[rgb(var(--mgt-primary))] rounded-2xl rounded-br-md px-4 py-2.5 text-white">
+                <p class="text-sm">C'est réservé, à jeudi alors ! 😊</p>
+                <span class="text-[10px] text-white/70 mt-1 block text-right">09:42</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Indicateur « en train d'écrire » -->
+          <div id="msg-typing" class="shrink-0" style="display:none;align-items:center;gap:8px;padding:4px 20px;background:rgb(var(--mgt-background));">
+            <span id="msg-typing-name" style="font-size:12px;font-weight:500;color:rgb(var(--mgt-muted-foreground));">Dida DANSO</span>
+            <span class="typing-dots" style="display:inline-flex;gap:3px;"><span></span><span></span><span></span></span>
+          </div>
+
+          <!-- Zone de saisie -->
+          <div class="p-4 border-t border-[rgb(var(--mgt-border))]">
+            <div id="msg-attachments" class="flex flex-wrap gap-2 mb-2"></div>
+            <div class="flex items-end gap-3">
+              <button id="btn-attach" title="Joindre un fichier" class="p-2.5 rounded-lg hover:bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))] transition-colors"><i data-lucide="paperclip" class="w-5 h-5"></i></button>
+              <input id="input-file" type="file" multiple class="hidden">
+              <div class="flex-1 relative">
+                <textarea id="msg-input" rows="1" placeholder="Écrivez votre message…" class="w-full resize-none rounded-lg border border-[rgb(var(--mgt-input))] px-4 py-2.5 text-sm text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring))]/30 focus:border-[rgb(var(--mgt-ring))]"></textarea>
+                <button id="btn-emoji" title="Insérer un émoji" class="absolute right-2 bottom-2 p-1.5 rounded-md hover:bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))] transition-colors"><i data-lucide="smile" class="w-4.5 h-4.5"></i></button>
+              </div>
+              <button id="msg-send" title="Envoyer" class="p-2.5 rounded-lg bg-[rgb(var(--mgt-primary))] text-white hover:bg-[rgb(var(--mgt-primary-700))] transition-colors"><i data-lucide="send" class="w-5 h-5"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="../assets/mangoo-connect-plus.js"></script>
+    <script>lucide.createIcons();</script>
+
+    <style id="mgt-dash-mobile">
+      .mobile-menu-btn { display: none; }
+      .msg-back-btn { display: none; }
+      .app-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 35; }
+      .app-overlay.show { display: block; }
+      @media (max-width: 768px) {
+        .mobile-menu-btn { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: pointer; color: rgb(var(--mgt-foreground)); border-radius: 10px; flex-shrink: 0; }
+        .mobile-menu-btn:active { background: rgb(var(--mgt-muted)); }
+        .msg-back-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: none; background: none; cursor: pointer; color: rgb(var(--mgt-foreground)); border-radius: 10px; flex-shrink: 0; }
+        .msg-back-btn:active { background: rgb(var(--mgt-muted)); }
+        .msg-mobile-hide { display: none !important; }
+        #app-sidebar { transform: translateX(-100%); transition: transform .25s ease; }
+        #app-sidebar.open { transform: translateX(0); box-shadow: 0 0 60px rgba(0,0,0,.4); }
+        #app-main { margin-left: 0 !important; }
+        #msg-list { width: 100% !important; border-right: none !important; }
+        #msg-thread-wrap { display: none !important; }
+        #msg-layout.thread-open #msg-list { display: none !important; }
+        #msg-layout.thread-open #msg-thread-wrap { display: flex !important; }
+      }
+    </style>
+    <script>
+    (function () {
+      // Navigation mobile : menu hamburger (sidebar) + bascule liste/thread.
+      var sidebar = document.getElementById('app-sidebar');
+      var menuBtn = document.getElementById('btn-app-menu');
+      var backBtn = document.getElementById('btn-msg-back');
+      var layout = document.getElementById('msg-layout');
+      var overlay = document.createElement('div');
+      overlay.className = 'app-overlay';
+      document.body.appendChild(overlay);
+
+      function closeSidebar() { if (sidebar) sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+      function openSidebar() { if (sidebar) sidebar.classList.add('open'); overlay.classList.add('show'); }
+      if (menuBtn) menuBtn.addEventListener('click', openSidebar);
+      overlay.addEventListener('click', closeSidebar);
+      if (sidebar) {
+        sidebar.querySelectorAll('a').forEach(function (a) {
+          a.addEventListener('click', function () { if (window.innerWidth <= 768) closeSidebar(); });
+        });
+      }
+      if (backBtn) backBtn.addEventListener('click', function () {
+        if (layout) layout.classList.remove('thread-open');
+      });
+    })();
+    </script>
+
+    <!-- ===== Overlay "Nouveau message" ===== -->
+    <div id="modal-new-message" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:9000;align-items:center;justify-content:center;padding:16px;">
+      <div style="background:rgb(var(--mgt-background));border-radius:16px;box-shadow:var(--mgt-shadow-lg);width:100%;max-width:440px;font-family:var(--mgt-font-sans);">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgb(var(--mgt-border));">
+          <h3 style="font-size:16px;font-weight:600;color:rgb(var(--mgt-foreground));margin:0;">Nouveau message</h3>
+          <button data-close="modal-new-message" style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:22px;line-height:1;cursor:pointer;">&times;</button>
+        </div>
+        <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+          <div>
+            <label for="nm-recipient" style="display:block;font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));margin-bottom:6px;">Destinataire</label>
+            <input id="nm-recipient" type="text" placeholder="Nom du client…" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;font-size:14px;color:rgb(var(--mgt-foreground));background:rgb(var(--mgt-background));">
+          </div>
+          <div>
+            <label for="nm-first" style="display:block;font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));margin-bottom:6px;">Premier message</label>
+            <textarea id="nm-first" rows="3" placeholder="Bonjour…" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;font-size:14px;color:rgb(var(--mgt-foreground));background:rgb(var(--mgt-background));resize:vertical;font-family:var(--mgt-font-sans);"></textarea>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button data-close="modal-new-message" style="padding:10px 16px;border:1px solid rgb(var(--mgt-border));border-radius:10px;background:transparent;color:rgb(var(--mgt-foreground));font-size:14px;font-weight:600;cursor:pointer;">Annuler</button>
+            <button id="nm-send" style="padding:10px 16px;border:none;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Envoyer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    (function () {
+      // Comportement de production de la messagerie : tous les contrôles
+      // (appel, planification, menu, nouveau message, notifications, pièce
+      // jointe, émojis, envoi, recherche, marquage "lu") sont interconnectés.
+      var EMOJIS = ['😊', '👍', '🙏', '❤️', '🎉', '😂', '✅', '👌'];
+
+      // ---- Helpers ----
+      function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+      function fmtSize(bytes) {
+        if (!bytes && bytes !== 0) return '';
+        if (bytes < 1024) return bytes + ' o';
+        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' Ko';
+        return (bytes / 1048576).toFixed(1) + ' Mo';
+      }
+      function nowTime() {
+        var d = new Date();
+        return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+      }
+      // Identité stable du client Android (chat.html) pour le temps réel.
+      var livePeers = [];
+      function normalizeName(s) { return (s || '').toLowerCase().replace(/[^a-z0-9]+/g, ''); }
+      function realPeerFor(name) {
+        name = name || '';
+        // 1. Correspondance avec un client réellement connecté (présence serveur).
+        var norm = normalizeName(name);
+        for (var i = 0; i < livePeers.length; i++) {
+          var p = livePeers[i];
+          if (p.role !== 'client') continue;
+          var pn = normalizeName(p.name);
+          if (pn && (norm === pn || norm.indexOf(pn) === 0 || pn.indexOf(norm) === 0)) {
+            return { id: p.id, name: p.name, role: 'client' };
+          }
+        }
+        // 2. Repli : identifiants déduits du libellé.
+        if (name === 'Dida DANSO' || name === 'Dida') return { id: 'cli-66b551e17c29', name: 'Dida DANSO', role: 'client' };
+        var slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        return { id: 'client-' + (slug || 'inconnu'), name: name, role: 'client' };
+      }
+      // Identité de routage de la conversation active : si la conversation a été
+      // créée depuis un message entrant (invité/client réel), on privilégie le
+      // `data-peer-id` réel plutôt qu'un identifiant déduit du libellé. Sans cela,
+      // répondre à un visiteur inconnu partait vers un faux id « client-visiteur ».
+      function activePeer() {
+        if (!currentConv) return null;
+        var pid = currentConv.getAttribute('data-peer-id');
+        var name = currentConv.getAttribute('data-name') || '';
+        if (pid) return { id: pid, name: name, role: 'client' };
+        return realPeerFor(name);
+      }
+      // Indicateur « en train d'écrire » : affichage/masquage côté professionnel.
+      function showTypingFor(name) {
+        var el = document.getElementById('msg-typing');
+        var nameEl = document.getElementById('msg-typing-name');
+        if (el) el.style.display = 'flex';
+        if (nameEl) nameEl.textContent = (name || 'Quelqu\'un') + ' est en train d\'écrire…';
+      }
+      function hideTyping() {
+        var el = document.getElementById('msg-typing');
+        if (el) el.style.display = 'none';
+      }
+      function toast(msg) {
+        var t = document.getElementById('msg-toast');
+        if (!t) {
+          t = document.createElement('div');
+          t.id = 'msg-toast';
+          t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translate(-50%,16px);background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;font-family:var(--mgt-font-sans);z-index:9999;opacity:0;transition:all .25s ease;pointer-events:none;';
+          document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        requestAnimationFrame(function () { t.style.opacity = '1'; t.style.transform = 'translate(-50%,0)'; });
+        clearTimeout(t._timer);
+        t._timer = setTimeout(function () { t.style.opacity = '0'; t.style.transform = 'translate(-50%,16px)'; }, 2400);
+      }
+      function openModal(id) {
+        var m = document.getElementById(id);
+        if (m) { m.style.display = 'flex'; }
+      }
+      function closeModal(id) {
+        var m = document.getElementById(id);
+        if (m) { m.style.display = 'none'; }
+      }
+
+      // ---- État conversation active ----
+      var convo = document.querySelectorAll('.msg-conv');
+      var currentConv = null;
+
+      function initials(name) {
+        var parts = (name || '').trim().split(/\s+/);
+        var a = (parts[0] || '?').charAt(0);
+        var b = parts.length > 1 ? parts[parts.length - 1].charAt(0) : '';
+        return (a + b).toUpperCase();
+      }
+      function renderPresenceStatus(el, online) {
+        if (!el) return;
+        if (online) {
+          el.innerHTML = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))]"><span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-success))]"></span>En ligne</span>';
+        } else {
+          el.innerHTML = '<span class="inline-flex items-center gap-1 text-[11px] text-[rgb(var(--mgt-muted-foreground))]"><span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-muted-foreground))]"></span>Hors ligne</span>';
+        }
+      }
+      function liveConvs() { return document.querySelectorAll('.msg-conv'); }
+      function convList() {
+        var c = document.querySelector('.msg-conv');
+        return c ? c.parentNode : null;
+      }
+      function setActive(conv) {
+        hideTyping();
+        liveConvs().forEach(function (c) {
+          c.classList.remove('border-l-2', 'border-[rgb(var(--mgt-primary))]', 'bg-[rgb(var(--mgt-primary-50))]');
+          c.setAttribute('data-active', 'false');
+        });
+        conv.classList.add('border-l-2', 'border-[rgb(var(--mgt-primary))]', 'bg-[rgb(var(--mgt-primary-50))]');
+        conv.setAttribute('data-active', 'true');
+        currentConv = conv;
+        var layout = document.getElementById('msg-layout');
+        if (layout) layout.classList.add('thread-open');
+        var name = conv.getAttribute('data-name') || 'Awa S.';
+        var online = conv.getAttribute('data-online') === 'true';
+        var real = conv.getAttribute('data-real') === 'true';
+        var avatar = document.getElementById('conv-avatar');
+        var nameEl = document.getElementById('conv-name');
+        var statusEl = document.getElementById('conv-status');
+        var clientBadge = document.getElementById('conv-client-badge');
+        var callBtn = document.getElementById('btn-call');
+        var videoBtn = document.getElementById('btn-video-call');
+        var scheduleBtn = document.getElementById('btn-schedule');
+        if (avatar) avatar.textContent = initials(name);
+        if (nameEl) nameEl.textContent = name;
+        if (clientBadge) clientBadge.style.display = real ? 'inline-flex' : 'none';
+        renderPresenceStatus(statusEl, online);
+        // Tous les clients sont joignables en production (l'appel audio reste
+        // toujours disponible ; la vidéo dépend de HTTPS + temps réel).
+        if (callBtn) callBtn.style.display = '';
+        refreshVideoButton();
+        if (scheduleBtn) {
+          scheduleBtn.disabled = false;
+          scheduleBtn.style.opacity = '1';
+          scheduleBtn.style.cursor = 'pointer';
+          scheduleBtn.title = 'Planifier un rendez-vous';
+        }
+      }
+      function markRead(conv, silent) {
+        if (conv.getAttribute('data-unread') !== 'true') return;
+        conv.setAttribute('data-unread', 'false');
+        // Ne retire que le badge de comptage (chiffre), pas la pastille de présence.
+        conv.querySelectorAll('span.text-\\[10px\\].bg-\\[rgb\\(var\\(--mgt-accent\\)\\)\\]').forEach(function (b) { b.remove(); });
+        if (!silent) toast('Conversation marquée comme lue.');
+        updateUnreadBadge();
+      }
+      function addUnreadBadge(conv) {
+        if (!conv) return;
+        if (!conv.querySelector('span.text-\\[10px\\].bg-\\[rgb\\(var\\(--mgt-accent\\)\\)\\]')) {
+          var container = conv.querySelector('.flex-1.min-w-0');
+          if (container) {
+            var badge = document.createElement('span');
+            badge.className = 'inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-[rgb(var(--mgt-accent))] text-white';
+            badge.textContent = '1';
+            container.appendChild(badge);
+          }
+        }
+      }
+      function updateUnreadBadge() {
+        var n = 0;
+        liveConvs().forEach(function (c) { if (c.getAttribute('data-unread') === 'true') n++; });
+        var b = document.getElementById('msg-unread-badge');
+        if (b) b.textContent = n + ' non lu' + (n > 1 ? 's' : '');
+      }
+      function injectTypeBadges() {
+        liveConvs().forEach(function (conv) {
+          var isReal = conv.getAttribute('data-real') === 'true';
+          if (!isReal) return;
+          var row = conv.querySelector('.flex.items-center.justify-between');
+          if (!row) return;
+          var nameP = row.querySelector('p');
+          if (!nameP || row.querySelector('.type-badge')) return;
+          var group = document.createElement('div');
+          group.className = 'flex items-center gap-1.5 min-w-0';
+          var badge = document.createElement('span');
+          badge.className = 'type-badge inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] border border-[rgb(var(--mgt-primary))]';
+          badge.textContent = 'Client';
+          row.insertBefore(group, nameP);
+          group.appendChild(nameP);
+          group.appendChild(badge);
+        });
+      }
+
+      injectTypeBadges();
+
+      // Init : ouvre la conversation du client réellement connecté (Dida DANSO),
+      // sinon la première de la liste.
+      var first = document.querySelector('.msg-conv[data-name="Dida DANSO"]') || convo[0];
+      if (first) setActive(first);
+      updateUnreadBadge();
+
+      // ---- Clic sur conversation : activer + marquer lu ----
+      convo.forEach(function (conv) {
+        conv.addEventListener('click', function () { setActive(conv); markRead(conv, false); });
+      });
+
+      // ---- Envoi de message ----
+      var input = document.getElementById('msg-input');
+      var sendBtn = document.getElementById('msg-send');
+      var thread = document.getElementById('msg-thread');
+      var attachments = document.getElementById('msg-attachments');
+
+      function appendVendorBubble(html, attachList) {
+        if (!thread) return null;
+        var wrap = document.createElement('div');
+        wrap.className = 'flex flex-col items-end gap-1.5 max-w-[70%] ml-auto';
+        var bubble = document.createElement('div');
+        bubble.className = 'bg-[rgb(var(--mgt-primary))] rounded-2xl rounded-br-md px-4 py-2.5 text-white';
+        bubble.innerHTML = html;
+        wrap.appendChild(bubble);
+        thread.appendChild(wrap);
+        thread.scrollTop = thread.scrollHeight;
+        var filesEl = null;
+        if (attachList && attachList.length) {
+          filesEl = document.createElement('div');
+          filesEl.className = 'flex flex-col gap-1.5 items-end';
+          attachList.forEach(function (f, i) {
+            var url = null;
+            try { if (f.file) url = URL.createObjectURL(f.file); } catch (e) {}
+            var card = document.createElement('div');
+            card.className = 'bg-[rgb(var(--mgt-primary))] rounded-2xl rounded-br-md px-4 py-2.5 text-white';
+            card.setAttribute('data-idx', String(i));
+            card.style.cssText = 'display:flex;align-items:center;gap:10px;min-width:200px;max-width:280px;';
+            card.innerHTML =
+              '<i data-lucide="paperclip" class="w-4 h-4 shrink-0" style="opacity:.9"></i>' +
+              '<div style="text-align:left;min-width:0;flex:1;">' +
+                '<p class="text-sm" style="margin:0;word-break:normal;overflow-wrap:anywhere;line-height:1.4;">' + esc(f.name || 'fichier') + '</p>' +
+                '<p class="text-xs" style="margin:2px 0 0;opacity:.85;">' + (f.file && f.file.size ? fmtSize(f.file.size) : '') + '</p>' +
+                '<div class="vendor-attach-progress" style="height:3px;border-radius:999px;background:rgba(255,255,255,.3);overflow:hidden;margin-top:6px;display:none;">' +
+                  '<div class="vendor-attach-fill" style="height:100%;width:0%;background:#fff;border-radius:999px;transition:width .12s linear;"></div>' +
+                '</div>' +
+                '<p class="vendor-attach-status text-xs" style="margin:4px 0 0;opacity:.9;display:none;">Envoi… 0%</p>' +
+              '</div>' +
+              (url ? '<a href="' + url + '" download="' + esc(f.name || 'fichier') + '" style="flex-shrink:0;color:#fff;display:inline-flex;align-items:center;" title="Télécharger"><i data-lucide="download" class="w-4 h-4"></i></a>' : '');
+            filesEl.appendChild(card);
+          });
+          thread.appendChild(filesEl);
+          thread.scrollTop = thread.scrollHeight;
+        }
+        if (window.lucide) window.lucide.createIcons();
+        return filesEl;
+      }
+      // ---- Réponse automatique du client ----
+      // Activée pour que l'envoi d'un message produise une réponse (hors temps
+      // réel) et que la page ne paraisse plus « statique ».
+      var autoReplyEnabled = true;
+      var autoReplyTimer = null;
+      var autoReplyPool = [
+        'D\'accord, merci !',
+        'Parfait, je vous confirme rapidement.',
+        'Super, à très vite !',
+        'Pouvez-vous m\'en dire un peu plus ?',
+        'Merci beaucoup, c\'est noté.'
+      ];
+      function scheduleAutoReply() {
+        clearTimeout(autoReplyTimer);
+        var delay = 900 + Math.floor(Math.random() * 900);
+        autoReplyTimer = setTimeout(function () {
+          if (!autoReplyEnabled) return;
+          var name = currentConv ? currentConv.getAttribute('data-name') : 'Awa S.';
+          var conv = currentConv;
+          // Si la conversation n'est plus active, elle redevient non lue.
+          if (conv && conv.getAttribute('data-active') !== 'true') {
+            conv.setAttribute('data-unread', 'true');
+            addUnreadBadge(conv);
+            updateUnreadBadge();
+          }
+          var reply = autoReplyPool[Math.floor(Math.random() * autoReplyPool.length)];
+          appendIncomingBubble(reply);
+          if (conv) {
+            var last = conv.querySelector('p.truncate');
+            if (last) last.textContent = reply;
+            var time = conv.querySelector('.flex.items-center.justify-between span');
+            if (time) time.textContent = nowTime();
+          }
+          toast('Réponse de ' + name);
+        }, delay);
+      }
+
+      function sendMessage() {
+        if (!input) return;
+        var val = input.value.trim();
+        var pending = pendingFiles.slice();
+        if (!val && !pending.length) return;
+        var parts = [];
+        if (val) parts.push('<p class="text-sm">' + esc(val) + '</p>');
+        parts.push('<span class="text-[10px] text-white/70 mt-1 block text-right">' + nowTime() + '</span>');
+        var chipsEl = appendVendorBubble(parts.join(''), pending);
+        var lastText = val;
+        if (!lastText && pending.length) {
+          lastText = '📎 ' + pending[0].name + (pending.length > 1 ? ' (+' + (pending.length - 1) + ')' : '');
+        }
+        if (currentConv && lastText) {
+          var last = currentConv.querySelector('p.truncate');
+          if (last) last.textContent = lastText;
+          var time = currentConv.querySelector('.flex.items-center.justify-between span');
+          if (time) time.textContent = nowTime();
+        }
+        input.value = '';
+        clearAttachments();
+        input.focus();
+        // Envoi temps réel vers le client connecté (serveur /webrtc-ws).
+        // L'appel est systématique : le module met l'envoi en file tant que
+        // l'identité WS n'est pas encore enregistrée (enqueueOutbox), ce qui
+        // garantit le transfert des pièces jointes professionnel → client même
+        // si la connexion temps réel n'est pas prête au moment de l'envoi.
+        var rtNow = window.MangooConnect;
+        var realOnline = rtNow && typeof rtNow.isReal === 'function' && rtNow.isReal();
+        var peer = activePeer();
+        if (peer && rtNow) {
+          if (val && typeof rtNow.sendMessage === 'function') rtNow.sendMessage(peer.id, val);
+          if (typeof rtNow.sendFile === 'function') {
+            pending.forEach(function (f, i) {
+              var fid = rtNow.sendFile(peer.id, f.file);
+              if (chipsEl && fid) {
+                var block = chipsEl.querySelector('[data-idx="' + i + '"]');
+                if (block) {
+                  block.setAttribute('data-fileid', fid);
+                  var bar = block.querySelector('.vendor-attach-progress');
+                  var status = block.querySelector('.vendor-attach-status');
+                  if (bar) bar.style.display = 'block';
+                  if (status) { status.style.display = 'block'; status.textContent = 'Envoi… 0%'; }
+                }
+              }
+            });
+          }
+        }
+        toast('Message envoyé.');
+        // Réponse automatique du client (uniquement hors temps réel).
+        if (autoReplyEnabled && val && !realOnline) {
+          scheduleAutoReply();
+        }
+      }
+      if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+      if (input) input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+      });
+
+      // ---- Pièce jointe ----
+      var attachBtn = document.getElementById('btn-attach');
+      var fileInput = document.getElementById('input-file');
+      var pendingFiles = [];
+      function renderAttachments() {
+        if (!attachments) return;
+        attachments.innerHTML = '';
+        pendingFiles.forEach(function (f, i) {
+          var chip = document.createElement('span');
+          chip.className = 'inline-flex items-center gap-1.5 text-xs bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-foreground))] px-2.5 py-1 rounded-full';
+          chip.innerHTML = '<i data-lucide="paperclip" class="w-3.5 h-3.5"></i>' + esc(f.name) + '<button type="button" class="text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-error))]" data-idx="' + i + '" style="font-size:14px;line-height:1;cursor:pointer;">&times;</button>';
+          attachments.appendChild(chip);
+        });
+        lucide.createIcons();
+      }
+      function clearAttachments() { pendingFiles = []; renderAttachments(); }
+      if (attachBtn && fileInput) {
+        attachBtn.addEventListener('click', function () { fileInput.click(); });
+        fileInput.addEventListener('change', function () {
+          Array.prototype.forEach.call(fileInput.files, function (f) { pendingFiles.push({ name: f.name, file: f }); });
+          fileInput.value = '';
+          renderAttachments();
+          toast(pendingFiles.length + ' fichier(s) prêt(s) à joindre.');
+        });
+      }
+      if (attachments) {
+        attachments.addEventListener('click', function (e) {
+          var b = e.target.closest('button[data-idx]');
+          if (!b) return;
+          pendingFiles.splice(Number(b.getAttribute('data-idx')), 1);
+          renderAttachments();
+        });
+      }
+
+      // ---- Émojis ----
+      var emojiBtn = document.getElementById('btn-emoji');
+      if (emojiBtn) {
+        emojiBtn.addEventListener('click', function () {
+          var existing = document.getElementById('emoji-pop');
+          if (existing) { existing.remove(); return; }
+          var pop = document.createElement('div');
+          pop.id = 'emoji-pop';
+          pop.style.cssText = 'position:absolute;right:0;bottom:44px;display:flex;gap:4px;background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:12px;padding:8px;box-shadow:var(--mgt-shadow-md);z-index:60;';
+          EMOJIS.forEach(function (em) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.textContent = em;
+            b.style.cssText = 'width:32px;height:32px;font-size:18px;border:none;background:transparent;cursor:pointer;border-radius:8px;';
+            b.addEventListener('mouseenter', function () { b.style.background = 'rgb(var(--mgt-muted))'; });
+            b.addEventListener('mouseleave', function () { b.style.background = 'transparent'; });
+            b.addEventListener('click', function () { if (input) { input.value += em; input.focus(); } pop.remove(); });
+            pop.appendChild(b);
+          });
+          emojiBtn.parentElement.appendChild(pop);
+        });
+      }
+
+      // ---- Bouton appel (via Mangoo Connect+) ----
+      var callBtn = document.getElementById('btn-call');
+      var videoCallBtn = document.getElementById('btn-video-call');
+      function callTarget(mode) {
+        var name = currentConv ? currentConv.getAttribute('data-name') : 'Awa S.';
+        var target = activePeer() || realPeerFor(name);
+        if (window.MangooConnect && typeof window.MangooConnect.call === 'function') {
+          window.MangooConnect.call(target, { mode: mode || 'audio' });
+        } else {
+          toast('Appel vers ' + name + ' (Mangoo Connect+ indisponible).');
+        }
+      }
+      // La vidéo exige HTTPS + caméra/micro ET une connexion temps réel active.
+      function refreshVideoButton() {
+        var MC = window.MangooConnect;
+        if (!videoCallBtn) return;
+        var canVideo = !!(MC && typeof MC.canVideo === 'function' && MC.canVideo());
+        var real = !!(MC && typeof MC.isReal === 'function' && MC.isReal());
+        videoCallBtn.style.display = (canVideo && real) ? '' : 'none';
+      }
+      refreshVideoButton();
+      if (window.MangooConnect && typeof window.MangooConnect.onStatus === 'function') {
+        window.MangooConnect.onStatus(function () { refreshVideoButton(); });
+      }
+      if (callBtn) callBtn.addEventListener('click', function () { callTarget('audio'); });
+      if (videoCallBtn) videoCallBtn.addEventListener('click', function () { callTarget('video'); });
+
+      // ---- Bouton calendrier : ouvre la modale de rendez-vous ----
+      var scheduleBtn = document.getElementById('btn-schedule');
+
+      function openAppointmentModal() {
+        var old = document.getElementById('msg-appt-modal');
+        if (old) old.remove();
+        var clientName = currentConv ? currentConv.getAttribute('data-name') : 'Awa S.';
+        var modal = document.createElement('div');
+        modal.id = 'msg-appt-modal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:9200;display:flex;align-items:center;justify-content:center;padding:20px;';
+        modal.innerHTML =
+          '<div style="background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:16px;width:100%;max-width:440px;padding:24px;font-family:var(--mgt-font-sans);max-height:90vh;overflow:auto;box-shadow:var(--mgt-shadow-lg);">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
+          '<h3 style="font-size:16px;font-weight:600;color:rgb(var(--mgt-foreground));margin:0;">Nouveau rendez-vous</h3>' +
+          '<button id="msg-appt-close" style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:20px;line-height:1;cursor:pointer;">&times;</button></div>' +
+          '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Cliente</label>' +
+          '<input id="msg-appt-client" value="' + esc(clientName) + '" style="width:100%;box-sizing:border-box;height:42px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:12px;">' +
+          '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Prestation</label>' +
+          '<input id="msg-appt-service" placeholder="Ex. Tresse, Coloration…" style="width:100%;box-sizing:border-box;height:42px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:12px;">' +
+          '<div style="display:flex;gap:10px;margin-bottom:12px;">' +
+          '<div style="flex:1;"><label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Jour</label>' +
+          '<select id="msg-appt-day" style="width:100%;height:42px;padding:0 10px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;"><option>Aujourd\'hui</option><option>Demain</option><option>Mercredi</option><option>Jeudi</option><option>Vendredi</option></select></div>' +
+          '<div style="flex:1;"><label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Heure</label>' +
+          '<input id="msg-appt-time" type="time" value="10:00" style="width:100%;box-sizing:border-box;height:42px;padding:0 10px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;"></div></div>' +
+          '<div style="display:flex;gap:10px;margin-top:12px;">' +
+          '<button id="msg-appt-cancel" style="flex:1;height:42px;border:1px solid rgb(var(--mgt-border));border-radius:10px;background:transparent;color:rgb(var(--mgt-foreground));font-size:14px;font-weight:600;cursor:pointer;">Annuler</button>' +
+          '<button id="msg-appt-save" style="flex:1;height:42px;border:none;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Ajouter</button></div></div>';
+        document.body.appendChild(modal);
+        function close() { modal.remove(); }
+        modal.querySelector('#msg-appt-close').onclick = close;
+        modal.querySelector('#msg-appt-cancel').onclick = close;
+        modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+        modal.querySelector('#msg-appt-save').onclick = function () {
+          var client = modal.querySelector('#msg-appt-client').value.trim();
+          var service = modal.querySelector('#msg-appt-service').value.trim();
+          if (!client || !service) { modal.querySelector('#msg-appt-service').focus(); return; }
+          var day = modal.querySelector('#msg-appt-day').value;
+          var time = modal.querySelector('#msg-appt-time').value;
+          // Proposition de RDV envoyée en temps réel au client connecté.
+          var rtAppt = window.MangooConnect;
+          if (rtAppt && typeof rtAppt.isReal === 'function' && rtAppt.isReal()) {
+            var peer = activePeer();
+            if (peer) rtAppt.sendAppointment(peer.id, { service: service, day: day, time: time, note: '' });
+          }
+          close();
+          toast('Rendez-vous ajouté : ' + client + ' · ' + service + ' (' + day + ' · ' + time + ').');
+        };
+        setTimeout(function () { modal.querySelector('#msg-appt-service').focus(); }, 50);
+      }
+      if (scheduleBtn) scheduleBtn.addEventListener('click', openAppointmentModal);
+
+      // ---- Menu "plus d'actions" (réel) ----
+      var moreBtn = document.getElementById('btn-more');
+
+      function togglePin(conv) {
+        var pinned = conv.getAttribute('data-pinned') === 'true';
+        if (pinned) {
+          conv.setAttribute('data-pinned', 'false');
+          var p = conv.querySelector('.msg-pin');
+          if (p) p.remove();
+          toast('Conversation désépinglée.');
+        } else {
+          conv.setAttribute('data-pinned', 'true');
+          if (!conv.querySelector('.msg-pin')) {
+            var nameEl = conv.querySelector('p.font-semibold, p.font-medium');
+            if (nameEl) nameEl.insertAdjacentHTML('afterbegin', '<i data-lucide="pin" class="msg-pin w-3 h-3 inline-block mr-1 text-[rgb(var(--mgt-accent))]"></i>');
+            lucide.createIcons();
+          }
+          var list = convList();
+          if (list && list.firstChild !== conv) list.insertBefore(conv, list.firstChild);
+          toast('Conversation épinglée.');
+        }
+      }
+      function archiveConv(conv) {
+        var wasActive = conv.getAttribute('data-active') === 'true';
+        conv.remove();
+        var remaining = liveConvs();
+        if (wasActive && remaining.length) setActive(remaining[0]);
+        updateUnreadBadge();
+        toast('Conversation archivée.');
+      }
+      function blockConv(conv) {
+        conv.setAttribute('data-blocked', 'true');
+        markRead(conv, true);
+        conv.style.opacity = '0.45';
+        toast('Contact bloqué.');
+      }
+      if (moreBtn) {
+        moreBtn.addEventListener('click', function () {
+          var existing = document.getElementById('more-pop');
+          if (existing) { existing.remove(); return; }
+          var pop = document.createElement('div');
+          pop.id = 'more-pop';
+          pop.style.cssText = 'position:absolute;right:0;top:42px;min-width:200px;background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:12px;box-shadow:var(--mgt-shadow-md);z-index:60;overflow:hidden;';
+          [
+            { label: 'Marquer comme lu', run: function () { if (currentConv) markRead(currentConv, false); } },
+            { label: function () { return currentConv && currentConv.getAttribute('data-pinned') === 'true' ? 'Désépingler la conversation' : 'Épingler la conversation'; },
+              run: function () { if (currentConv) togglePin(currentConv); } },
+            { label: 'Archiver', run: function () { if (currentConv) archiveConv(currentConv); } },
+            { label: 'Bloquer', run: function () { if (currentConv) blockConv(currentConv); } }
+          ].forEach(function (a) {
+            var item = document.createElement('button');
+            item.type = 'button';
+            item.textContent = typeof a.label === 'function' ? a.label() : a.label;
+            item.style.cssText = 'display:block;width:100%;text-align:left;padding:10px 14px;font-size:13px;font-weight:500;color:rgb(var(--mgt-foreground));background:transparent;border:none;cursor:pointer;';
+            item.addEventListener('mouseenter', function () { item.style.background = 'rgb(var(--mgt-muted))'; });
+            item.addEventListener('mouseleave', function () { item.style.background = 'transparent'; });
+            item.addEventListener('click', function () { pop.remove(); a.run(); });
+            pop.appendChild(item);
+          });
+          moreBtn.parentElement.appendChild(pop);
+        });
+      }
+
+      // Fermer les menus flottants au clic extérieur.
+      document.addEventListener('click', function (e) {
+        var pop = document.getElementById('more-pop');
+        if (pop && moreBtn && !moreBtn.contains(e.target) && !pop.contains(e.target)) pop.remove();
+        var em = document.getElementById('emoji-pop');
+        if (em && emojiBtn && !emojiBtn.contains(e.target) && !em.contains(e.target)) em.remove();
+        var np = document.getElementById('notif-panel');
+        if (np && notifBtn && !notifBtn.contains(e.target)) np.remove();
+      });
+
+      // ---- Nouveau message ----
+      var newMsgBtn = document.getElementById('btn-new-message');
+      if (newMsgBtn) newMsgBtn.addEventListener('click', function () { openModal('modal-new-message'); });
+
+      // Fermeture / soumission de la modale nouveau message.
+      document.querySelectorAll('#modal-new-message [data-close]').forEach(function (b) {
+        b.addEventListener('click', function () { closeModal('modal-new-message'); });
+      });
+      var nmSend = document.getElementById('nm-send');
+      if (nmSend) {
+        nmSend.addEventListener('click', function () {
+          var recipient = document.getElementById('nm-recipient');
+          var body = document.getElementById('nm-first');
+          var name = recipient ? recipient.value.trim() : '';
+          var msg = body ? body.value.trim() : '';
+          if (!name) { toast('Saisissez un destinataire.'); return; }
+          closeModal('modal-new-message');
+
+          // Crée réellement une conversation dans la liste.
+          var list = document.getElementById('msg-conv-list');
+          var conv = document.createElement('div');
+          conv.className = 'msg-conv flex items-start gap-3 px-4 py-3 hover:bg-[rgb(var(--mgt-muted))]';
+          conv.setAttribute('data-name', name);
+          conv.setAttribute('data-unread', 'false');
+          conv.setAttribute('data-online', 'false');
+          conv.setAttribute('data-real', 'true');
+          conv.innerHTML =
+            '<div class="relative flex-shrink-0">' +
+              '<div class="w-10 h-10 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] flex items-center justify-center font-semibold text-xs">' + initials(name) + '</div>' +
+            '</div>' +
+            '<div class="flex-1 min-w-0">' +
+              '<div class="flex items-center justify-between gap-2">' +
+                '<p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">' + esc(name) + '</p>' +
+                '<span class="text-xs text-[rgb(var(--mgt-muted-foreground))] flex-shrink-0">' + nowTime() + '</span>' +
+              '</div>' +
+              '<p class="text-sm text-[rgb(var(--mgt-foreground))] truncate">' + esc(msg || 'Nouvelle conversation') + '</p>' +
+            '</div>';
+          list.insertBefore(conv, list.firstElementChild);
+          conv.addEventListener('click', function () { setActive(conv); markRead(conv, false); });
+
+          // Active la nouvelle conversation et vide le fil.
+          setActive(conv);
+          var t = document.getElementById('msg-thread');
+          if (t) t.innerHTML = '';
+
+          // Ajoute le premier message comme bulle envoyée.
+          if (msg) {
+            appendVendorBubble('<p class="text-sm">' + esc(msg) + '</p><span class="text-[10px] text-white/70 mt-1 block text-right">' + nowTime() + '</span>', []);
+          }
+
+          toast('Conversation créée avec ' + name + '.');
+          if (recipient) recipient.value = '';
+          if (body) body.value = '';
+          if (window.lucide) window.lucide.createIcons();
+        });
+      }
+
+      // ---- Notifications (panneau déroulant) ----
+      var notifBtn = document.getElementById('btn-notifications');
+      var notifDot = notifBtn ? notifBtn.querySelector('span') : null;
+
+      var notifStore = [
+        { icon: 'message-square', bg: 'rgb(var(--mgt-primary-50))', fg: 'rgb(var(--mgt-primary-700))', title: 'Nouveau message de Fatou K.', desc: 'Bonjour, avez-vous un créneau ce week-end ?', time: 'Il y a 10 min', unread: true, conv: 'Fatou K.' },
+        { icon: 'message-square', bg: 'rgb(var(--mgt-primary-50))', fg: 'rgb(var(--mgt-primary-700))', title: 'Nouveau message de Dida DANSO', desc: 'Bonjour, j\'ai bien reçu ma commande, merci !', time: 'Hier', unread: true, conv: 'Dida DANSO' },
+        { icon: 'calendar-days', bg: 'rgb(var(--mgt-accent-50))', fg: 'rgb(var(--mgt-accent-700))', title: 'Rendez-vous demain', desc: 'Awa S. · Tresse box braids · 10:00', time: 'Il y a 2 h', unread: false },
+        { icon: 'star', bg: 'rgb(var(--mgt-warning))', fg: 'rgb(var(--mgt-foreground))', title: 'Nouvel avis 5 étoiles', desc: '« Service impeccable, je recommande ! »', time: 'Il y a 5 h', unread: false },
+        { icon: 'shopping-bag', bg: 'rgb(var(--mgt-info))', fg: '#ffffff', title: 'Nouvelle commande reçue', desc: 'Commande #MT-2048 · 2 prestations', time: 'Hier', unread: false }
+      ];
+
+      function unreadNotifCount() { return notifStore.filter(function (n) { return n.unread; }).length; }
+      function syncNotifDot() { if (notifDot) notifDot.style.display = unreadNotifCount() > 0 ? '' : 'none'; }
+      function markAllReadMessages() {
+        liveConvs().forEach(function (c) { markRead(c, true); });
+        updateUnreadBadge();
+      }
+      function closeNotifPanel() {
+        var p = document.getElementById('notif-panel');
+        if (p) p.remove();
+      }
+
+      function renderNotifList(listEl) {
+        listEl.innerHTML = '';
+        if (!notifStore.length) {
+          var empty = document.createElement('div');
+          empty.style.cssText = 'padding:32px 16px;text-align:center;color:rgb(var(--mgt-muted-foreground));font-size:13px;';
+          empty.textContent = 'Aucune notification.';
+          listEl.appendChild(empty);
+          return;
+        }
+        notifStore.forEach(function (n) {
+          var item = document.createElement('div');
+          item.style.cssText = 'display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid rgb(var(--mgt-border));cursor:pointer;' + (n.unread ? 'background:rgb(var(--mgt-muted));' : '');
+          item.addEventListener('mouseenter', function () { item.style.background = 'rgb(var(--mgt-muted))'; });
+          item.addEventListener('mouseleave', function () { if (!n.unread) item.style.background = ''; });
+          item.innerHTML =
+            '<div style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:' + n.bg + ';color:' + n.fg + ';"><i data-lucide="' + n.icon + '" style="width:18px;height:18px;"></i></div>' +
+            '<div style="flex:1;min-width:0;">' +
+              '<p style="margin:0;font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));line-height:1.3;">' + esc(n.title) + '</p>' +
+              '<p style="margin:2px 0 0;font-size:12px;color:rgb(var(--mgt-muted-foreground));line-height:1.4;">' + esc(n.desc) + '</p>' +
+              '<p style="margin:4px 0 0;font-size:11px;color:rgb(var(--mgt-muted-foreground));">' + esc(n.time) + '</p>' +
+            '</div>' +
+            (n.unread ? '<span style="width:8px;height:8px;border-radius:50%;background:rgb(var(--mgt-accent));flex-shrink:0;align-self:center;"></span>' : '');
+          item.addEventListener('click', function () {
+            if (n.conv) {
+              var target = document.querySelector('.msg-conv[data-name="' + n.conv + '"]');
+              if (target) { setActive(target); markRead(target, false); }
+            }
+            if (n.unread) { n.unread = false; renderNotifList(listEl); syncNotifDot(); }
+            closeNotifPanel();
+            toast(n.title);
+          });
+          listEl.appendChild(item);
+        });
+        lucide.createIcons();
+      }
+
+      function buildNotifPanel() {
+        var panel = document.createElement('div');
+        panel.id = 'notif-panel';
+        panel.style.cssText = 'position:absolute;right:0;top:calc(100% + 10px);width:360px;max-width:calc(100vw - 32px);background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:16px;box-shadow:var(--mgt-shadow-lg);z-index:9500;overflow:hidden;font-family:var(--mgt-font-sans);';
+        var head = document.createElement('div');
+        head.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgb(var(--mgt-border));';
+        head.innerHTML = '<span style="font-size:14px;font-weight:600;color:rgb(var(--mgt-foreground));">Notifications</span>';
+        var markAll = document.createElement('button');
+        markAll.type = 'button';
+        markAll.textContent = 'Tout marquer comme lu';
+        markAll.style.cssText = 'background:none;border:none;font-size:12px;font-weight:600;color:rgb(var(--mgt-primary));cursor:pointer;';
+        markAll.addEventListener('click', function () {
+          notifStore.forEach(function (n) { n.unread = false; });
+          markAllReadMessages();
+          renderNotifList(listEl);
+          syncNotifDot();
+          toast('Toutes les notifications sont lues.');
+        });
+        head.appendChild(markAll);
+        panel.appendChild(head);
+        var listEl = document.createElement('div');
+        listEl.style.cssText = 'max-height:360px;overflow-y:auto;';
+        panel.appendChild(listEl);
+        renderNotifList(listEl);
+        return panel;
+      }
+
+      if (notifBtn) {
+        notifBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var existing = document.getElementById('notif-panel');
+          if (existing) closeNotifPanel();
+          else {
+            closeNotifPanel();
+            var panel = buildNotifPanel();
+            notifBtn.appendChild(panel);
+            panel.addEventListener('click', function (ev) { ev.stopPropagation(); });
+          }
+        });
+        syncNotifDot();
+      }
+
+      function appendIncomingBubble(text) {
+        if (!thread) return;
+        var name = currentConv ? currentConv.getAttribute('data-name') : 'Awa S.';
+        var bubble = document.createElement('div');
+        bubble.className = 'flex items-end gap-2 max-w-[70%]';
+        bubble.innerHTML =
+          '<div class="w-7 h-7 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] flex items-center justify-center font-semibold text-[10px] flex-shrink-0">' + esc(initials(name)) + '</div>' +
+          '<div class="bg-[rgb(var(--mgt-muted))] rounded-2xl rounded-bl-md px-4 py-2.5">' +
+            '<p class="text-sm text-[rgb(var(--mgt-foreground))]">' + esc(text) + '</p>' +
+            '<span class="text-[10px] text-[rgb(var(--mgt-muted-foreground))] mt-1 block">' + nowTime() + '</span>' +
+          '</div>';
+        thread.appendChild(bubble);
+        thread.scrollTop = thread.scrollHeight;
+        // Fiabilise le défilement (les polices/images peuvent modifier la hauteur après coup).
+        requestAnimationFrame(function () { thread.scrollTop = thread.scrollHeight; });
+        return bubble;
+      }
+      function appendIncomingFile(name, size, blob) {
+        if (!thread) return;
+        var url = null;
+        try { url = URL.createObjectURL(blob); } catch (e) { url = null; }
+        var bubble = document.createElement('div');
+        bubble.className = 'flex items-end gap-2 max-w-[85%]';
+        bubble.innerHTML =
+          '<div class="w-7 h-7 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] flex items-center justify-center font-semibold text-[10px] flex-shrink-0">CL</div>' +
+          '<div class="bg-[rgb(var(--mgt-muted))] rounded-2xl rounded-bl-md px-3 py-2.5" style="max-width:270px;box-sizing:border-box;min-width:0;">' +
+            '<div style="display:flex;align-items:flex-start;gap:8px;min-width:0;">' +
+              '<i data-lucide="paperclip" class="w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]" style="flex-shrink:0;margin-top:2px;"></i>' +
+              '<div style="flex:1;min-width:0;text-align:left;">' +
+                '<p class="text-sm text-[rgb(var(--mgt-foreground))]" style="margin:0;word-break:break-word;overflow-wrap:anywhere;line-height:1.4;">' + esc(name) + '</p>' +
+                '<p class="text-xs text-[rgb(var(--mgt-muted-foreground))]" style="margin:3px 0 0;">' + esc(size) + '</p>' +
+              '</div>' +
+            '</div>' +
+            '<div style="display:flex;align-items:center;gap:8px;margin-top:6px;padding-left:24px;min-width:0;">' +
+              (url ? '<a href="' + url + '" download="' + esc(name) + '" style="flex-shrink:0;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:rgb(var(--mgt-primary));text-decoration:none;"><i data-lucide="download" class="w-4 h-4"></i>Télécharger</a>' : '') +
+              '<span class="text-[10px] text-[rgb(var(--mgt-muted-foreground))]" style="flex-shrink:0;margin-left:auto;">' + nowTime() + '</span>' +
+            '</div>' +
+          '</div>';
+        thread.appendChild(bubble);
+        if (window.lucide) window.lucide.createIcons();
+        thread.scrollTop = thread.scrollHeight;
+        requestAnimationFrame(function () { thread.scrollTop = thread.scrollHeight; });
+      }
+      // ---- Recherche de conversations ----
+      var search = document.getElementById('msg-search');
+      if (search) {
+        search.addEventListener('input', function () {
+          var q = search.value.toLowerCase().trim();
+          liveConvs().forEach(function (conv) {
+            var name = (conv.getAttribute('data-name') || '').toLowerCase();
+            conv.style.display = (!q || name.indexOf(q) !== -1) ? '' : 'none';
+          });
+        });
+      }
+
+      // ---- Temps réel (serveur /webrtc-ws) ----
+      // Identité du professionnel réellement connecté (session mgt_user) plutôt
+      // qu'un identifiant codé en dur, pour que la présence et l'envoi temps réel
+      // concernent bien le bon vendeur/prestataire.
+      function connectedVendorIdentity() {
+        try {
+          var raw = localStorage.getItem('mgt_user');
+          if (raw) {
+            var u = JSON.parse(raw);
+            if (u && (u.role === 'vendeur' || u.role === 'prestataire')) {
+              return { id: u.vendorId || u.id || '', name: u.enseigne || u.name || '' };
+            }
+          }
+        } catch (e) {}
+        try {
+          var raw2 = localStorage.getItem('mgt_vendor_identity_v1');
+          if (raw2) {
+            var v = JSON.parse(raw2);
+            if (v && v.vendorId) return { id: v.vendorId, name: v.name || '' };
+          }
+        } catch (e) {}
+        // Source canonique partagée (mangoo-vendor.js) : identifie sans ambiguïté
+        // le professionnel réel (DAN Coiffure → pro-eb10536cd12d). Évite tout
+        // repli codé en dur sur une boutique précise.
+        try {
+          if (window.MangooVendor && typeof window.MangooVendor.connectedVendorId === 'function') {
+            var vid = window.MangooVendor.connectedVendorId();
+            if (vid) {
+              var cur = window.MangooVendor.current();
+              return { id: vid, name: (cur && cur.name) || vid };
+            }
+          }
+        } catch (e) {}
+        return { id: '', name: '' };
+      }
+      var RT = window.MangooConnect;
+      if (RT && typeof RT.register === 'function') {
+        var cv = connectedVendorIdentity();
+        if (cv.id) {
+          RT.register('vendor', cv.id, cv.name || cv.id);
+        } else {
+          // Identité professionnelle introuvable : on refuse de s'enregistrer
+          // sous une identité fantôme (ex. DAN Boutique). Le shell se chargera
+          // de l'enregistrement réel dès que la session `mgt_user` est présente.
+          console.warn('[messages] Identité professionnelle introuvable, enregistrement temps réel différé.');
+        }
+        if (typeof RT.onPresence === 'function') {
+          RT.onPresence(function (peers) { livePeers = peers || []; syncOnlineStatus(); });
+        }
+
+        function findConvByName(name) {
+          var list = document.querySelectorAll('.msg-conv');
+          for (var i = 0; i < list.length; i++) {
+            if (list[i].getAttribute('data-name') === name) return list[i];
+          }
+          return null;
+        }
+        function convNameForPeer(from, fromName) {
+          if (from === 'cli-66b551e17c29' || fromName === 'Dida') return 'Dida DANSO';
+          return fromName || from || 'Client';
+        }
+        function syncOnlineStatus() {
+          var onlineNames = {};
+          livePeers.forEach(function (p) {
+            if (p.role === 'client') onlineNames[normalizeName(p.name)] = true;
+          });
+          convo.forEach(function (conv) {
+            var name = conv.getAttribute('data-name') || '';
+            var cn = normalizeName(name);
+            var isOnline = false;
+            for (var key in onlineNames) {
+              if (key && (cn === key || cn.indexOf(key) === 0 || key.indexOf(cn) === 0)) { isOnline = true; break; }
+            }
+            conv.setAttribute('data-online', isOnline ? 'true' : 'false');
+          });
+          if (currentConv) {
+            var online = currentConv.getAttribute('data-online') === 'true';
+            var statusEl = document.getElementById('conv-status');
+            renderPresenceStatus(statusEl, online);
+          }
+        }
+        function buildConversationRow(name, peerId) {
+          var list = document.getElementById('msg-conv-list');
+          var conv = document.createElement('div');
+          conv.className = 'msg-conv flex items-start gap-3 px-4 py-3 hover:bg-[rgb(var(--mgt-muted))]';
+          conv.setAttribute('data-name', name);
+          conv.setAttribute('data-unread', 'false');
+          conv.setAttribute('data-online', 'true');
+          conv.setAttribute('data-real', 'true');
+          if (peerId) conv.setAttribute('data-peer-id', peerId);
+          conv.innerHTML =
+            '<div class="relative flex-shrink-0">' +
+              '<div class="w-10 h-10 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] flex items-center justify-center font-semibold text-xs">' + initials(name) + '</div>' +
+            '</div>' +
+            '<div class="flex-1 min-w-0">' +
+              '<div class="flex items-center justify-between gap-2">' +
+                '<p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">' + esc(name) + '</p>' +
+                '<span class="text-xs text-[rgb(var(--mgt-muted-foreground))] flex-shrink-0">' + nowTime() + '</span>' +
+              '</div>' +
+              '<p class="text-sm text-[rgb(var(--mgt-foreground))] truncate"></p>' +
+            '</div>';
+          list.insertBefore(conv, list.firstElementChild);
+          conv.addEventListener('click', function () { setActive(conv); markRead(conv, false); });
+          return conv;
+        }
+        function ensureConversation(name, peerId) {
+          var conv = findConvByName(name);
+          if (!conv) conv = buildConversationRow(name, peerId);
+          else if (peerId && !conv.getAttribute('data-peer-id')) conv.setAttribute('data-peer-id', peerId);
+          return conv;
+        }
+        function showIncoming(from, fromName, text) {
+          var name = convNameForPeer(from, fromName);
+          var conv = ensureConversation(name, from);
+          // Remonte la conversation en tête de liste (comportement type messagerie).
+          var list = document.getElementById('msg-conv-list');
+          if (list && conv.parentNode === list && list.firstElementChild !== conv) {
+            list.insertBefore(conv, list.firstElementChild);
+          }
+          var active = currentConv && currentConv === conv;
+          if (active) {
+            appendIncomingBubble(text);
+          } else {
+            conv.setAttribute('data-unread', 'true');
+            addUnreadBadge(conv);
+            var time = conv.querySelector('.flex.items-center.justify-between span');
+            if (time) time.textContent = nowTime();
+            updateUnreadBadge();
+            toast('Nouveau message de ' + name);
+          }
+          var last = conv.querySelector('p.truncate');
+          if (last) last.textContent = text;
+        }
+
+        RT.onMessage(function (m) {
+          showIncoming(m.from, m.fromName, m.text);
+        });
+
+        // ---- Indicateur « en train d'écrire » (bidirectionnel) ----
+        var peerTypingTimers = {};
+        var myTypingTimer = null;
+        var myTypingSentAt = 0;
+        function receiveTyping(t) {
+          var from = t.from || '';
+          var isTyping = !!t.isTyping;
+          var peer = activePeer();
+          var isActive = peer && peer.id === from;
+          if (peerTypingTimers[from]) { clearTimeout(peerTypingTimers[from]); delete peerTypingTimers[from]; }
+          if (isTyping) {
+            if (isActive) showTypingFor(t.fromName || (peer && peer.name) || 'Client');
+            peerTypingTimers[from] = setTimeout(function () {
+              delete peerTypingTimers[from];
+              var p = activePeer();
+              if (p && p.id === from) hideTyping();
+            }, 3000);
+          } else if (isActive) {
+            hideTyping();
+          }
+        }
+        if (typeof RT.onTyping === 'function') {
+          RT.onTyping(function (t) { receiveTyping(t); });
+        }
+        function onUserTyping() {
+          var peer = activePeer();
+          if (!peer || !peer.id || typeof RT.sendTyping !== 'function') return;
+          if (myTypingTimer) { clearTimeout(myTypingTimer); myTypingTimer = null; }
+          var now = Date.now();
+          if (now - myTypingSentAt > 2000) {
+            myTypingSentAt = now;
+            RT.sendTyping(peer.id, true);
+          }
+          myTypingTimer = setTimeout(function () {
+            var p = activePeer();
+            if (p && p.id) RT.sendTyping(p.id, false);
+          }, 2500);
+        }
+        if (input) input.addEventListener('input', onUserTyping);
+
+        RT.onFile(function (f) {
+          if (f && f.error) {
+            toast('Pièce jointe impossible (' + (f.reason === 'taille' ? 'fichier trop volumineux' : 'destinataire indisponible') + ')');
+            return;
+          }
+          if (!f || !f.blob) return;
+          var conv = ensureConversation(convNameForPeer(f.from, f.fromName), f.from);
+          if (currentConv !== conv) { conv.setAttribute('data-unread', 'true'); addUnreadBadge(conv); updateUnreadBadge(); }
+          setActive(conv);
+          appendIncomingFile(f.name, fmtSize(f.size), f.blob);
+          var last = conv.querySelector('p.truncate');
+          if (last) last.textContent = '📎 ' + f.name;
+          var time = conv.querySelector('.flex.items-center.justify-between span');
+          if (time) time.textContent = nowTime();
+        });
+
+        RT.onFileSendProgress(function (p) {
+          var block = document.querySelector('[data-fileid="' + p.fileId + '"]');
+          if (!block) return;
+          var fill = block.querySelector('.vendor-attach-fill');
+          var status = block.querySelector('.vendor-attach-status');
+          if (fill) fill.style.width = p.pct + '%';
+          if (status) status.textContent = p.done ? 'Envoyé ✓' : 'Envoi… ' + p.pct + '%';
+        });
+
+        RT.onIncomingCall(function (c) {
+          toast('Appel entrant de ' + (c.fromName || c.from));
+        });
+
+        RT.onAppointment(function (a) {
+          var conv = ensureConversation(convNameForPeer(a.from, a.fromName), a.from);
+          if (currentConv !== conv) { conv.setAttribute('data-unread', 'true'); addUnreadBadge(conv); updateUnreadBadge(); }
+          setActive(conv);
+          appendAppointmentRequestReal(a);
+        });
+
+        RT.onAppointmentReply(function (r) {
+          var declined = r.type === 'appointment-declined';
+          toast('Le client a ' + (declined ? 'refusé' : 'accepté') + ' le rendez-vous.');
+        });
+
+        RT.onPresence(function (peers) {
+          var online = (peers || []).some(function (p) { return p.id === 'cli-66b551e17c29'; });
+          var st = document.getElementById('conv-status');
+          if (currentConv && currentConv.getAttribute('data-name') === 'Dida DANSO' && st) {
+            renderPresenceStatus(st, online);
+          }
+        });
+
+        function appendAppointmentRequestReal(a) {
+          if (!thread) return;
+          var name = a.fromName || a.from || 'Client';
+          var card = document.createElement('div');
+          card.className = 'flex items-end gap-2 max-w-[75%]';
+          card.innerHTML =
+            '<div class="w-7 h-7 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] flex items-center justify-center font-semibold text-[10px] flex-shrink-0">' + esc(initials(name)) + '</div>' +
+            '<div class="bg-[rgb(var(--mgt-muted))] rounded-2xl rounded-bl-md px-4 py-3">' +
+              '<p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Demande de rendez-vous</p>' +
+              '<p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1">' + esc(a.service || 'Prestation') + ' · ' + esc(a.day || '') + ' · ' + esc(a.time || '') + '</p>' +
+              '<div class="flex gap-2 mt-2.5 js-appt-actions">' +
+                '<button data-appt="accept" style="flex:1;height:34px;border:none;border-radius:8px;background:rgb(var(--mgt-primary));color:#fff;font-size:12px;font-weight:600;cursor:pointer;">Accepter</button>' +
+                '<button data-appt="refuse" style="flex:1;height:34px;border:1px solid rgb(var(--mgt-border));border-radius:8px;background:transparent;color:rgb(var(--mgt-foreground));font-size:12px;font-weight:600;cursor:pointer;">Refuser</button>' +
+              '</div>' +
+              '<span class="text-[10px] text-[rgb(var(--mgt-muted-foreground))] mt-2 block">' + nowTime() + '</span>' +
+            '</div>';
+          thread.appendChild(card);
+          thread.scrollTop = thread.scrollHeight;
+          var actions = card.querySelector('.js-appt-actions');
+          card.querySelector('[data-appt="accept"]').addEventListener('click', function () {
+            if (RT && typeof RT.replyAppointment === 'function') RT.replyAppointment(a.apptId, true);
+            actions.innerHTML = '<span style="font-size:12px;font-weight:600;color:rgb(var(--mgt-success));">Rendez-vous confirmé ✓</span>';
+            toast('Rendez-vous confirmé avec ' + name + '.');
+          });
+          card.querySelector('[data-appt="refuse"]').addEventListener('click', function () {
+            if (RT && typeof RT.replyAppointment === 'function') RT.replyAppointment(a.apptId, false);
+            actions.innerHTML = '<span style="font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));">Demande refusée</span>';
+            toast('Demande de rendez-vous refusée.');
+          });
+        }
+      }
+    })();
+    </script>
+
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      .tabular-nums { font-variant-numeric: tabular-nums; }
+      body { font-family: var(--mgt-font-sans); }
+    </style>
+
+<script>
+(function(){
+  function __mgtSidebarScrollFix(){
+    var active = document.querySelector('nav a[class*="bg-white/15"]');
+    if (!active) return;
+    var nav = active.closest('nav');
+    if (!nav) return;
+    var navRect = nav.getBoundingClientRect();
+    var linkRect = active.getBoundingClientRect();
+    var target = nav.scrollTop + (linkRect.top - navRect.top) - (navRect.height - linkRect.height) / 2;
+    nav.scrollTop = Math.max(0, target);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', __mgtSidebarScrollFix);
+  } else {
+    __mgtSidebarScrollFix();
+  }
+})();
+</script>
+
+<script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+<script src="../assets/mangoo-dashboard-shell.js"></script>
+</body>
+</html>

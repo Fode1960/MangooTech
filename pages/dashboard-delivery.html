@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard - Livraisons</title>
+<style id="theme-vars">
+:root { --mgt-radius-sm: 4px; --mgt-radius-md: 8px; --mgt-radius-lg: 16px; --mgt-radius-full: 9999px; }
+:root, html.light {
+  --mgt-primary: 26 92 42; --mgt-primary-50: 232 245 233; --mgt-primary-100: 200 230 201; --mgt-primary-200: 165 214 168; --mgt-primary-300: 129 199 134; --mgt-primary-400: 102 183 108; --mgt-primary-500: 76 168 82; --mgt-primary-600: 56 142 60; --mgt-primary-700: 38 112 42; --mgt-primary-800: 26 92 42; --mgt-primary-900: 13 71 18; --mgt-primary-foreground: 255 255 255;
+  --mgt-accent: 232 97 12; --mgt-accent-50: 255 243 224; --mgt-accent-100: 255 224 178; --mgt-accent-200: 255 204 128; --mgt-accent-300: 255 183 77; --mgt-accent-400: 255 153 31; --mgt-accent-500: 232 97 12; --mgt-accent-600: 209 78 0; --mgt-accent-700: 163 61 0; --mgt-accent-800: 130 49 0; --mgt-accent-900: 97 36 0; --mgt-accent-foreground: 255 255 255;
+  --mgt-background: 255 255 255; --mgt-foreground: 15 23 42; --mgt-card: 255 255 255; --mgt-card-foreground: 15 23 42; --mgt-popover: 255 255 255; --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252; --mgt-muted-foreground: 100 116 139; --mgt-border: 226 232 240; --mgt-input: 226 232 240; --mgt-ring: 26 92 42;
+  --mgt-success: 129 199 134; --mgt-success-foreground: 255 255 255; --mgt-warning: 255 183 77; --mgt-warning-foreground: 15 23 42; --mgt-error: 239 68 68; --mgt-error-foreground: 255 255 255; --mgt-info: 59 130 246; --mgt-info-foreground: 255 255 255;
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03); --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18); --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif; --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+:root { --background: 255 255 255; --foreground: 15 23 42; --card: 255 255 255; --card-foreground: 15 23 42; --popover: 255 255 255; --popover-foreground: 15 23 42; --primary: 26 92 42; --primary-foreground: 255 255 255; --muted: 248 250 252; --muted-foreground: 100 116 139; --border: 226 232 240; --input: 226 232 240; --ring: 26 92 42; --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px; --radius-full: 9999px; --state-success: 129 199 134; --state-success-foreground: 255 255 255; --state-warning: 255 183 77; --state-warning-foreground: 15 23 42; --state-error: 239 68 68; --state-error-foreground: 255 255 255; --state-info: 59 130 246; --state-info-foreground: 255 255 255; }
+html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-card: 20 20 26; --mgt-card-foreground: 248 250 252; --mgt-popover: 20 20 26; --mgt-popover-foreground: 248 250 252; --mgt-muted: 30 30 38; --mgt-muted-foreground: 148 163 184; --mgt-border: 40 40 50; --mgt-input: 40 40 50; --mgt-ring: 76 168 82; --background: 11 11 15; --foreground: 248 250 252; --card: 20 20 26; --card-foreground: 248 250 252; --popover: 20 20 26; --popover-foreground: 248 250 252; --primary: 76 168 82; --primary-foreground: 255 255 255; --muted: 30 30 38; --muted-foreground: 148 163 184; --border: 40 40 50; --input: 40 40 50; --ring: 76 168 82; }
+.h1 { font-family: var(--mgt-font-sans); font-size: clamp(24px, 3vw, 32px); line-height: 1.15; font-weight: 700; letter-spacing: -0.02em; }
+.h3 { font-family: var(--mgt-font-sans); font-size: 18px; line-height: 1.3; font-weight: 600; letter-spacing: -0.01em; }
+.body { font-family: var(--mgt-font-sans); font-size: 15px; line-height: 1.6; font-weight: 400; }
+.caption { font-family: var(--mgt-font-sans); font-size: 13px; line-height: 1.5; font-weight: 400; letter-spacing: 0.005em; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<style type="text/tailwindcss">
+  @theme inline { --color-background: var(--background); --color-foreground: var(--foreground); --color-card: var(--card); --color-card-foreground: var(--card-foreground); --color-popover: var(--popover); --color-popover-foreground: var(--popover-foreground); --color-primary: var(--primary); --color-primary-foreground: var(--primary-foreground); --color-muted: var(--muted); --color-muted-foreground: var(--muted-foreground); --color-border: var(--border); --color-input: var(--input); --color-ring: var(--ring); --radius-sm: var(--mgt-radius-sm); --radius-md: var(--mgt-radius-md); --radius-lg: var(--mgt-radius-lg); }
+  @layer base { body { background: var(--background); color: var(--foreground); } td, th { word-break: break-word; } th { white-space: nowrap; } }
+</style>
+<style>
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .sidebar { width: 260px; min-height: 100vh; flex-shrink: 0; position: fixed; top: 0; left: 0; z-index: 40; display: flex; flex-direction: column; }
+  .main-wrap { margin-left: 260px; min-width: 0; }
+  @media (max-width: 768px) { .sidebar { transform: translateX(-100%); transition: transform .25s ease; } .sidebar.open { transform: translateX(0); box-shadow: 0 0 60px rgba(0,0,0,.4); } .main-wrap { margin-left: 0; } }
+</style>
+</head>
+<body class="min-h-screen font-sans antialiased bg-[rgb(var(--mgt-muted))]">
+
+<aside id="sidebar" class="sidebar" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground));">
+  <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+    <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+    <div><span class="font-semibold text-base tracking-tight">Mangoo</span><span class="font-light text-base tracking-tight text-white/70">Tech</span></div>
+  </div>
+  <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5 no-scrollbar">
+    <a href="./dashboard-overview.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i> Vue d'ensemble</a>
+    <a href="./dashboard-orders.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="shopping-bag" class="w-4.5 h-4.5"></i> Commandes</a>
+    <a href="./dashboard-delivery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-semibold transition-colors"><i data-lucide="truck" class="w-4.5 h-4.5"></i> Livraisons</a>
+    <a href="./dashboard-live.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="radio" class="w-4.5 h-4.5"></i> Live</a>
+    <a href="./dashboard-notifications.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="bell" class="w-4.5 h-4.5"></i> Notifications</a>
+    <a href="./dashboard-settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="settings" class="w-4.5 h-4.5"></i> Paramètres</a>
+  </nav>
+  <div class="border-t border-white/10 px-4 py-4">
+    <div class="flex items-center gap-3">
+      <div class="flex items-center justify-center w-9 h-9 rounded-full font-semibold text-sm" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground));" data-vendor-initials>—</div>
+      <div class="flex-1 min-w-0"><p class="text-sm font-medium truncate text-white" data-vendor-name>Mon compte</p><p class="text-xs text-white/60 truncate" data-vendor-role>Vendeur</p></div>
+    </div>
+  </div>
+</aside>
+
+<div class="main-wrap min-h-screen">
+  <header class="sticky top-0 z-30 flex items-center justify-between gap-4 border-b px-6 py-3.5" style="background-color: rgb(var(--mgt-background)); border-color: rgb(var(--mgt-border));">
+    <div class="flex items-center gap-3">
+      <button id="menu-btn" class="mobile-menu-btn hidden md:hidden w-10 h-10 items-center justify-center rounded-lg" style="color: rgb(var(--mgt-foreground));"><i data-lucide="menu" class="w-5 h-5"></i></button>
+      <div><h1 class="text-xl font-semibold" style="color: rgb(var(--mgt-foreground));">Livraisons</h1><p class="text-sm" style="color: rgb(var(--mgt-muted-foreground));" id="subtitle">Chargement…</p></div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="conn-badge" class="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold" style="background-color: rgb(var(--mgt-warning)/.15); color: rgb(var(--mgt-warning));"><span class="w-2 h-2 rounded-full" style="background-color: currentColor;"></span> Connexion…</span>
+      <button id="btn-new" class="inline-flex items-center gap-2 h-10 px-4 rounded-lg text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground));"><i data-lucide="plus" class="w-4 h-4"></i> Nouvelle livraison</button>
+    </div>
+  </header>
+
+  <main class="p-6 space-y-6 max-w-[1200px]">
+    <!-- KPI -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="rounded-xl p-5 border" style="background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border));"><p class="caption mb-1" style="color: rgb(var(--mgt-muted-foreground));">En attente de livreur</p><p class="text-2xl font-bold tabular-nums" id="kpi-available" style="color: rgb(var(--mgt-warning));">0</p></div>
+      <div class="rounded-xl p-5 border" style="background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border));"><p class="caption mb-1" style="color: rgb(var(--mgt-muted-foreground));">En cours</p><p class="text-2xl font-bold tabular-nums" id="kpi-active" style="color: rgb(var(--mgt-info));">0</p></div>
+      <div class="rounded-xl p-5 border" style="background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border));"><p class="caption mb-1" style="color: rgb(var(--mgt-muted-foreground));">Livrées</p><p class="text-2xl font-bold tabular-nums" id="kpi-delivered" style="color: rgb(var(--mgt-success));">0</p></div>
+      <div class="rounded-xl p-5 border" style="background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border));"><p class="caption mb-1" style="color: rgb(var(--mgt-muted-foreground));">Annulées</p><p class="text-2xl font-bold tabular-nums" id="kpi-cancelled" style="color: rgb(var(--mgt-muted-foreground));">0</p></div>
+    </div>
+
+    <!-- Créer une livraison -->
+    <section id="create-card" class="rounded-xl p-6 border hidden" style="background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border));">
+      <div class="flex items-center justify-between mb-5"><h2 class="h3" style="color: rgb(var(--mgt-foreground));">Créer une livraison</h2><button id="btn-close-form" class="text-sm" style="color: rgb(var(--mgt-muted-foreground));">Fermer</button></div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Adresse de ramassage *</label><input id="f-pickup" type="text" placeholder="Ex. Boutique DAN, Plateau" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));"></div>
+        <div><label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Adresse de livraison *</label><input id="f-delivery" type="text" placeholder="Ex. Médina, Dakar" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));"></div>
+        <div><label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Ville de ramassage</label><input id="f-pickup-city" type="text" placeholder="Ex. Dakar" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));"></div>
+        <div><label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Ville de livraison</label><input id="f-delivery-city" type="text" placeholder="Ex. Dakar" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));"></div>
+        <div><label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Zone de ramassage <span style="color: rgb(var(--mgt-muted-foreground));">(optionnel)</span></label><input id="f-pickup-zone" type="text" placeholder="Ex. Plateau" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));"></div>
+        <div><label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Zone de livraison <span style="color: rgb(var(--mgt-muted-foreground));">(optionnel)</span></label><input id="f-delivery-zone" type="text" placeholder="Ex. Médina" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));"></div>
+        <div><label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Nom du client</label><input id="f-client" type="text" placeholder="Ex. Fatou Diop" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));"></div>
+        <div><label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Téléphone du client</label><input id="f-phone" type="tel" placeholder="+221 77 000 00 00" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));"></div>
+        <div><label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Colis (séparés par des virgules)</label><input id="f-items" type="text" placeholder="Ex. Thieboudienne x2, Boisson" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));"></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Montant (FCFA)</label><input id="f-amount" type="number" min="0" placeholder="0" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));"></div>
+          <div><label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Véhicule</label><select id="f-vehicle" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));"><option value="moto">Moto</option><option value="velo">Vélo</option><option value="voiture">Voiture</option><option value="van">Fourgon</option><option value="camion">Camion</option><option value="semi">Semi-remorque</option></select></div>
+        </div>
+        <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div><label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Type de fret</label><select id="f-freight" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));"></select></div>
+          <div id="f-subproduct-wrap" class="hidden"><label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Sous-produit</label><select id="f-subproduct" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));"></select></div>
+          <div id="f-package-wrap" class="hidden"><label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Nombre de colis</label><input id="f-package" type="number" min="0" placeholder="Ex. 5" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));"></div>
+        </div>
+        <div id="f-weighing-wrap" class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4" style="display:none;">
+          <div><label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Poids net (tonnes)</label><input id="f-weight" type="number" min="0" step="0.1" placeholder="Ex. 2.5" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));"></div>
+          <div><label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Volume (m³)</label><input id="f-volume" type="number" min="0" step="0.1" placeholder="Ex. 6" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));"></div>
+        </div>
+        <div class="md:col-span-2"><label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Notes / instructions</label><textarea id="f-notes" rows="2" placeholder="Ex. Appeler à l'arrivée, 3e étage…" class="w-full px-3 py-2 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));"></textarea></div>
+      </div>
+      <div class="flex items-center gap-3 mt-5">
+        <button id="btn-create" class="inline-flex items-center gap-2 h-11 px-5 rounded-lg text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground));"><i data-lucide="send" class="w-4 h-4"></i> Publier la course</button>
+        <p id="create-msg" class="caption hidden"></p>
+      </div>
+    </section>
+
+    <!-- En cours -->
+    <section class="rounded-xl border overflow-hidden" style="background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border));">
+      <div class="flex items-center justify-between p-5 pb-4"><h2 class="h3" style="color: rgb(var(--mgt-foreground));">Livraisons en cours</h2><span class="caption" style="color: rgb(var(--mgt-muted-foreground));" id="active-count">0 active(s)</span></div>
+      <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-left text-xs font-semibold uppercase tracking-wide border-b" style="color: rgb(var(--mgt-muted-foreground)); border-color: rgb(var(--mgt-border));"><th class="px-5 py-3">Réf</th><th class="px-5 py-3">Client</th><th class="px-5 py-3">Livraison</th><th class="px-5 py-3">Statut</th><th class="px-5 py-3">Livreur</th><th class="px-5 py-3 text-right">Actions</th></tr></thead><tbody id="active-body"></tbody></table></div>
+    </section>
+
+    <!-- Historique -->
+    <section class="rounded-xl border overflow-hidden" style="background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border));">
+      <div class="flex items-center justify-between p-5 pb-4"><h2 class="h3" style="color: rgb(var(--mgt-foreground));">Historique</h2><span class="caption" style="color: rgb(var(--mgt-muted-foreground));">Livrées &amp; annulées</span></div>
+      <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-left text-xs font-semibold uppercase tracking-wide border-b" style="color: rgb(var(--mgt-muted-foreground)); border-color: rgb(var(--mgt-border));"><th class="px-5 py-3">Réf</th><th class="px-5 py-3">Client</th><th class="px-5 py-3">Statut</th><th class="px-5 py-3">Livreur</th><th class="px-5 py-3">Date</th><th class="px-5 py-3 text-right">Montant</th></tr></thead><tbody id="history-body"></tbody></table></div>
+    </section>
+  </main>
+</div>
+
+<!-- Modal d'assignation -->
+<div id="assign-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background: rgba(15 23 42 / .5);">
+  <div class="rounded-xl w-full max-w-md p-6 slide-in" style="background-color: rgb(var(--mgt-card));">
+    <div class="flex items-center justify-between mb-4"><h3 class="h3" style="color: rgb(var(--mgt-foreground));">Assigner un livreur</h3><button id="assign-close" class="text-sm" style="color: rgb(var(--mgt-muted-foreground));">Fermer</button></div>
+    <p class="caption mb-3" style="color: rgb(var(--mgt-muted-foreground));">Choisissez un livreur en ligne (modèle « assignation directe »).</p>
+    <div id="courier-list" class="space-y-2 max-h-[50vh] overflow-y-auto"></div>
+  </div>
+</div>
+
+<script>lucide.createIcons();</script>
+<script>
+(function () {
+  'use strict';
+  var token = localStorage.getItem('mgt_token') || '';
+  var me = null;            // user connecté (vendeur)
+  var myDeliveries = {};    // id -> delivery
+  var couriers = [];        // livreurs en ligne
+  var ws = null, wsRetry = null, wsAttempt = 0;
+
+  var STATUS_LABELS = { available: 'En attente de livreur', dispatched: 'Livreur assigné', accepted: 'Acceptée', picked_up: 'Colis récupéré', en_route: 'En cours de livraison', delivered: 'Livrée', cancelled: 'Annulée' };
+  var STATUS_COLORS = { available: 'rgb(var(--mgt-warning))', dispatched: 'rgb(var(--mgt-info))', accepted: 'rgb(var(--mgt-primary))', picked_up: 'rgb(var(--mgt-info))', en_route: 'rgb(var(--mgt-accent))', delivered: 'rgb(var(--mgt-success))', cancelled: 'rgb(var(--mgt-muted-foreground))' };
+  var VEHICLE_LABELS = { moto: 'Moto', velo: 'Vélo', voiture: 'Voiture', van: 'Fourgon', camion: 'Camion', semi: 'Semi-remorque' };
+  var CATALOG = {};          // catalogue de fret depuis /api/delivery/catalog
+  var FREIGHT_ORDER = ['nourriture', 'produits', 'materiaux', 'agricole', 'vrac'];
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function money(n) { n = Number(n) || 0; return n.toLocaleString('fr-FR') + ' FCFA'; }
+  function num(n) { return (Number(n) || 0).toLocaleString('fr-FR'); }
+  function dateFR(iso) { if (!iso) return '—'; var d = new Date(iso); if (isNaN(d)) return '—'; return d.toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+  function initials(name) { name = String(name || '?').trim(); var p = name.split(/\s+/); return p.length === 1 ? p[0].slice(0, 2).toUpperCase() : (p[0][0] + p[p.length - 1][0]).toUpperCase(); }
+
+  function apiGet(path) { return fetch(path, { headers: { 'Authorization': 'Bearer ' + token } }).then(function (r) { return r.json().catch(function(){return{};}).then(function (d) { return { ok: r.ok, status: r.status, data: d }; }); }); }
+  function apiPost(path, payload) { return fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(payload || {}) }).then(function (r) { return r.json().catch(function(){return{};}).then(function (d) { return { ok: r.ok, status: r.status, data: d }; }); }); }
+
+  function setConn(connected) {
+    var b = $('conn-badge');
+    if (connected) { b.textContent = 'Temps réel actif'; b.style.backgroundColor = 'rgb(var(--mgt-success)/.15)'; b.style.color = 'rgb(var(--mgt-success))'; }
+    else { b.textContent = 'Reconnexion…'; b.style.backgroundColor = 'rgb(var(--mgt-warning)/.15)'; b.style.color = 'rgb(var(--mgt-warning))'; }
+  }
+
+  function loadMe() {
+    return apiGet('/api/auth/me').then(function (res) {
+      if (!res.ok || !res.data.ok) { redirectLogin(); return; }
+      me = res.data.user;
+      if (me.role !== 'vendeur' && me.role !== 'prestataire' && me.role !== 'admin') { redirectLogin(); return; }
+      renderIdentity();
+    });
+  }
+  function renderIdentity() {
+    var name = (me && (me.enseigne || me.name)) || 'Mon compte';
+    var role = (me && me.role === 'admin') ? 'Administrateur' : 'Vendeur';
+    document.querySelectorAll('[data-vendor-name]').forEach(function (el) { el.textContent = name; });
+    document.querySelectorAll('[data-vendor-role]').forEach(function (el) { el.textContent = role; });
+    document.querySelectorAll('[data-vendor-initials]').forEach(function (el) { el.textContent = initials(name); });
+    $('subtitle').textContent = name + ' · gestion des livraisons';
+  }
+  function redirectLogin() { window.location.href = './auth.html'; }
+
+  function loadAll() {
+    return Promise.all([ apiGet('/api/delivery/orders'), apiGet('/api/delivery/couriers') ]).then(function (res) {
+      var o = res[0], c = res[1];
+      if (o.ok && o.data.ok) { myDeliveries = {}; (o.data.deliveries || []).forEach(function (d) { myDeliveries[d.id] = d; }); }
+      if (c.ok && c.data.ok) { couriers = (c.data.couriers || []).filter(function (x) { return x.status === 'online'; }); }
+      renderAll();
+    });
+  }
+
+  function wsUrl() { var proto = location.protocol === 'https:' ? 'wss:' : 'ws:'; return proto + '//' + location.host + '/delivery-ws?token=' + encodeURIComponent(token); }
+  function connectWS() {
+    if (!token) return;
+    if (wsRetry) clearTimeout(wsRetry);
+    try { ws = new WebSocket(wsUrl()); } catch (e) { schedule(); return; }
+    ws.onopen = function () { wsAttempt = 0; setConn(true); };
+    ws.onmessage = function (ev) { var m; try { m = JSON.parse(ev.data); } catch (e) { return; } handleWs(m); };
+    ws.onclose = function () { setConn(false); schedule(); };
+    ws.onerror = function () { try { ws.close(); } catch (e) {} };
+  }
+  function schedule() { if (wsRetry) clearTimeout(wsRetry); var delay = Math.min(1000 * Math.pow(2, wsAttempt), 16000); wsAttempt++; wsRetry = setTimeout(connectWS, delay); }
+  function handleWs(m) {
+    if (!m || !m.type) return;
+    if (m.type === 'delivery-updated' && m.delivery) { myDeliveries[m.delivery.id] = m.delivery; renderAll(); }
+    if (m.type === 'delivery-ready') { setConn(true); loadAll(); }
+  }
+
+  function renderAll() {
+    var list = Object.keys(myDeliveries).map(function (k) { return myDeliveries[k]; });
+    list.sort(function (a, b) { return String(b.createdAt || '').localeCompare(String(a.createdAt || '')); });
+    var active = list.filter(function (d) { return ['available', 'dispatched', 'accepted', 'picked_up', 'en_route'].indexOf(d.status) >= 0; });
+    var history = list.filter(function (d) { return d.status === 'delivered' || d.status === 'cancelled'; });
+
+    $('kpi-available').textContent = num(list.filter(function (d) { return d.status === 'available'; }).length);
+    $('kpi-active').textContent = num(list.filter(function (d) { return ['dispatched', 'accepted', 'picked_up', 'en_route'].indexOf(d.status) >= 0; }).length);
+    $('kpi-delivered').textContent = num(list.filter(function (d) { return d.status === 'delivered'; }).length);
+    $('kpi-cancelled').textContent = num(list.filter(function (d) { return d.status === 'cancelled'; }).length);
+    $('active-count').textContent = active.length + ' active(s)';
+
+    $('active-body').innerHTML = active.length ? active.map(activeRow).join('') : emptyRow(6, 'Aucune livraison en cours.');
+    $('history-body').innerHTML = history.length ? history.map(historyRow).join('') : emptyRow(6, 'Aucune livraison terminée.');
+    lucide.createIcons();
+  }
+
+  function statusPill(s) { return '<span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full" style="background-color:' + STATUS_COLORS[s] + '/.15;color:' + STATUS_COLORS[s] + ';"><span class="w-1.5 h-1.5 rounded-full" style="background-color:' + STATUS_COLORS[s] + ';"></span>' + esc(STATUS_LABELS[s] || s) + '</span>'; }
+
+  function proofCodes(d) {
+    var html = '';
+    if (d.pickupCode) html += '<div class="caption mt-1">Ramassage <span class="font-mono font-semibold" style="color: rgb(var(--mgt-primary));">' + esc(d.pickupCode) + '</span></div>';
+    if (d.deliveryCode) html += '<div class="caption">Remise <span class="font-mono font-semibold" style="color: rgb(var(--mgt-accent));">' + esc(d.deliveryCode) + '</span></div>';
+    return html;
+  }
+
+  function freightLine(d) {
+    var parts = [];
+    if (d.freight && d.freight.label) parts.push(d.freight.label);
+    if (d.subproduct) parts.push(d.subproduct);
+    if (d.weightTons != null) parts.push(d.weightTons + ' t');
+    if (d.packageCount) parts.push(d.packageCount + ' colis');
+    if (!parts.length) return '';
+    return '<div class="caption" style="color: rgb(var(--mgt-muted-foreground));">' + esc(parts.join(' · ')) + '</div>';
+  }
+
+  function activeRow(d) {
+    var canDispatch = d.status === 'available';
+    var canCancel = d.status === 'available' || d.status === 'dispatched';
+    var actions = '';
+    if (canDispatch) actions += '<button data-assign="' + esc(d.id) + '" class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground));">Assigner</button> ';
+    if (canCancel) actions += '<button data-cancel="' + esc(d.id) + '" class="px-3 py-1.5 rounded-md text-xs font-semibold transition-colors" style="background-color: rgb(var(--mgt-error)/.1); color: rgb(var(--mgt-error));">Annuler</button>';
+    if (!actions) actions = '<span class="text-xs" style="color: rgb(var(--mgt-muted-foreground));">—</span>';
+    var items = (d.items || []).map(function (it) { return esc(it.name) + (it.qty > 1 ? ' ×' + it.qty : ''); }).join(', ');
+    return '<tr class="border-b" style="border-color: rgb(var(--mgt-border));">' +
+      '<td class="px-5 py-3.5"><div class="font-semibold" style="color: rgb(var(--mgt-foreground));">' + esc(d.ref) + '</div>' + freightLine(d) + '<div class="caption" style="color: rgb(var(--mgt-muted-foreground));">' + money(d.amount) + '</div></td>' +
+      '<td class="px-5 py-3.5" style="color: rgb(var(--mgt-foreground));">' + esc(d.clientName || 'Client') + (d.clientPhone ? '<div class="caption" style="color: rgb(var(--mgt-muted-foreground));">' + esc(d.clientPhone) + '</div>' : '') + '</td>' +
+      '<td class="px-5 py-3.5" style="color: rgb(var(--mgt-foreground));">' + esc(d.deliveryAddress || '—') + (items ? '<div class="caption" style="color: rgb(var(--mgt-muted-foreground));">' + items + '</div>' : '') + proofCodes(d) + '</td>' +
+      '<td class="px-5 py-3.5">' + statusPill(d.status) + '</td>' +
+      '<td class="px-5 py-3.5" style="color: rgb(var(--mgt-foreground));">' + (d.courierName ? esc(d.courierName) : '<span style="color: rgb(var(--mgt-muted-foreground));">—</span>') + '</td>' +
+      '<td class="px-5 py-3.5 text-right whitespace-nowrap">' + actions + '</td></tr>';
+  }
+
+  function historyRow(d) {
+    return '<tr class="border-b" style="border-color: rgb(var(--mgt-border));">' +
+      '<td class="px-5 py-3.5 font-semibold" style="color: rgb(var(--mgt-foreground));">' + esc(d.ref) + '</td>' +
+      '<td class="px-5 py-3.5" style="color: rgb(var(--mgt-foreground));">' + esc(d.clientName || 'Client') + '</td>' +
+      '<td class="px-5 py-3.5">' + statusPill(d.status) + '</td>' +
+      '<td class="px-5 py-3.5" style="color: rgb(var(--mgt-foreground));">' + (d.courierName ? esc(d.courierName) : '—') + '</td>' +
+      '<td class="px-5 py-3.5" style="color: rgb(var(--mgt-muted-foreground));">' + esc(dateFR(d.updatedAt || d.createdAt)) + '</td>' +
+      '<td class="px-5 py-3.5 text-right font-semibold tabular-nums" style="color: rgb(var(--mgt-foreground));">' + money(d.amount) + '</td></tr>';
+  }
+
+  function emptyRow(cols, msg) { return '<tr><td colspan="' + cols + '" class="text-center py-10 caption" style="color: rgb(var(--mgt-muted-foreground));">' + esc(msg) + '</td></tr>'; }
+
+  // ===== Catalogue de fret (multi-livraison) =====
+  function loadCatalog() {
+    return apiGet('/api/delivery/catalog').then(function (res) {
+      if (res.ok && res.data.ok) { CATALOG = res.data.catalog || {}; populateFreight(); }
+    });
+  }
+  function populateFreight() {
+    var sel = $('f-freight');
+    sel.innerHTML = FREIGHT_ORDER.filter(function (k) { return CATALOG[k]; }).map(function (k) {
+      return '<option value="' + esc(k) + '">' + esc(CATALOG[k].label) + '</option>';
+    }).join('');
+    onFreightChange();
+  }
+  function onFreightChange() {
+    var type = $('f-freight').value;
+    var cfg = CATALOG[type];
+    var subWrap = $('f-subproduct-wrap');
+    var pkgWrap = $('f-package-wrap');
+    var weighWrap = $('f-weighing-wrap');
+    var subSel = $('f-subproduct');
+    if (!cfg) { subWrap.classList.add('hidden'); pkgWrap.classList.add('hidden'); weighWrap.style.display = 'none'; return; }
+    if (cfg.subproducts && cfg.subproducts.length) {
+      subWrap.classList.remove('hidden');
+      subSel.innerHTML = '<option value="">— Choisir —</option>' + cfg.subproducts.map(function (s) { return '<option value="' + esc(s.name) + '">' + esc(s.name) + ' (' + s.density + ' t/m³)</option>'; }).join('');
+    } else { subWrap.classList.add('hidden'); subSel.innerHTML = ''; }
+    if (cfg.extra) { pkgWrap.classList.remove('hidden'); }
+    else { pkgWrap.classList.add('hidden'); $('f-package').value = ''; }
+    if (cfg.weighing) { weighWrap.style.display = 'grid'; }
+    else { weighWrap.style.display = 'none'; $('f-weight').value = ''; $('f-volume').value = ''; }
+    var vehSel = $('f-vehicle');
+    if (cfg.vehicle && vehSel) vehSel.value = cfg.vehicle;
+  }
+
+  // ===== Créer une livraison =====
+  function showCreate() { $('create-card').classList.remove('hidden'); $('create-card').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  function hideCreate() { $('create-card').classList.add('hidden'); $('create-msg').classList.add('hidden'); }
+  function createDelivery() {
+    var msgEl = $('create-msg');
+    msgEl.classList.add('hidden');
+    var pickup = $('f-pickup').value.trim();
+    var deliveryAddr = $('f-delivery').value.trim();
+    if (!pickup || !deliveryAddr) { msgEl.textContent = 'Adresse de ramassage et de livraison requises.'; msgEl.style.color = 'rgb(var(--mgt-error))'; msgEl.classList.remove('hidden'); return; }
+    var itemsRaw = $('f-items').value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    var payload = {
+      pickupAddress: pickup,
+      pickupCity: $('f-pickup-city').value.trim(),
+      pickupZone: $('f-pickup-zone').value.trim(),
+      deliveryAddress: deliveryAddr,
+      deliveryCity: $('f-delivery-city').value.trim(),
+      deliveryZone: $('f-delivery-zone').value.trim(),
+      clientName: $('f-client').value.trim(),
+      clientPhone: $('f-phone').value.trim(),
+      items: itemsRaw.map(function (name) { return { name: name, qty: 1 }; }),
+      amount: Number($('f-amount').value) || 0,
+      vehicle: $('f-vehicle').value,
+      deliveryType: $('f-freight').value,
+      subproduct: $('f-subproduct').value.trim(),
+      packageCount: Number($('f-package').value) || 0,
+      weightTons: Number($('f-weight').value) || null,
+      volumeM3: Number($('f-volume').value) || null,
+      notes: $('f-notes').value.trim()
+    };
+    $('btn-create').disabled = true; $('btn-create').style.opacity = '.6';
+    apiPost('/api/delivery/orders', payload).then(function (res) {
+      $('btn-create').disabled = false; $('btn-create').style.opacity = '1';
+      if (res.ok && res.data.ok) {
+        myDeliveries[res.data.delivery.id] = res.data.delivery;
+        renderAll();
+        msgEl.textContent = 'Course publiée — les livreurs en ligne sont notifiés.'; msgEl.style.color = 'rgb(var(--mgt-success))'; msgEl.classList.remove('hidden');
+        ['f-pickup','f-pickup-city','f-pickup-zone','f-delivery','f-delivery-city','f-delivery-zone','f-client','f-phone','f-items','f-amount','f-subproduct','f-package','f-weight','f-volume','f-notes'].forEach(function (id) { $(id).value = ''; });
+        setTimeout(hideCreate, 1600);
+      } else {
+        msgEl.textContent = (res.data && res.data.error) || 'Échec de création.'; msgEl.style.color = 'rgb(var(--mgt-error))'; msgEl.classList.remove('hidden');
+      }
+    }).catch(function () {
+      $('btn-create').disabled = false; $('btn-create').style.opacity = '1';
+      msgEl.textContent = 'Serveur injoignable.'; msgEl.style.color = 'rgb(var(--mgt-error))'; msgEl.classList.remove('hidden');
+    });
+  }
+
+  // ===== Annuler =====
+  function cancelDelivery(id) {
+    if (!confirm('Annuler cette livraison ?')) return;
+    apiPost('/api/delivery/orders/' + encodeURIComponent(id) + '/status', { status: 'cancelled' }).then(function (res) {
+      if (res.ok && res.data.ok) { myDeliveries[id] = res.data.delivery; renderAll(); }
+      else { alert((res.data && res.data.error) || 'Annulation impossible.'); }
+    });
+  }
+
+  // ===== Assigner =====
+  var assignId = null;
+  function openAssign(id) {
+    assignId = id;
+    couriers = couriers.filter(function (x) { return x.status === 'online'; });
+    $('courier-list').innerHTML = couriers.length
+      ? couriers.map(function (c) { return '<button data-pick-courier="' + esc(c.id) + '" class="w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-colors hover:bg-[rgb(var(--mgt-muted))]" style="border-color: rgb(var(--mgt-border));">' + '<div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm" style="background-color: rgb(var(--mgt-primary-50)); color: rgb(var(--mgt-primary));">' + esc(initials(c.name)) + '</div>' + '<div class="flex-1 min-w-0"><div class="text-sm font-semibold" style="color: rgb(var(--mgt-foreground));">' + esc(c.name) + '</div><div class="caption" style="color: rgb(var(--mgt-muted-foreground));">' + esc(VEHICLE_LABELS[c.vehicle] || c.vehicle) + (c.zone ? ' · ' + esc(c.zone) : '') + '</div></div>' + '<span class="w-2 h-2 rounded-full" style="background-color: rgb(var(--mgt-success));"></span></button>'; }).join('')
+      : '<p class="caption text-center py-6" style="color: rgb(var(--mgt-muted-foreground));">Aucun livreur en ligne. La course reste visible pour les livreurs qui se connectent.</p>';
+    lucide.createIcons();
+    $('assign-modal').classList.remove('hidden');
+    $('assign-modal').classList.add('flex');
+  }
+  function closeAssign() { $('assign-modal').classList.add('hidden'); $('assign-modal').classList.remove('flex'); assignId = null; }
+  function dispatchTo(courierId) {
+    if (!assignId) return;
+    apiPost('/api/delivery/orders/' + encodeURIComponent(assignId) + '/dispatch', { courierId: courierId }).then(function (res) {
+      if (res.ok && res.data.ok) { myDeliveries[assignId] = res.data.delivery; renderAll(); closeAssign(); }
+      else { alert((res.data && res.data.error) || 'Assignation impossible.'); }
+    });
+  }
+
+  // ===== Événements =====
+  $('btn-new').addEventListener('click', showCreate);
+  $('btn-close-form').addEventListener('click', hideCreate);
+  $('btn-create').addEventListener('click', createDelivery);
+  $('f-freight').addEventListener('change', onFreightChange);
+  $('assign-close').addEventListener('click', closeAssign);
+  $('assign-modal').addEventListener('click', function (e) { if (e.target === this) closeAssign(); });
+  $('menu-btn').addEventListener('click', function () { $('sidebar').classList.toggle('open'); });
+  document.body.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-cancel]'); if (t) { cancelDelivery(t.getAttribute('data-cancel')); return; }
+    t = e.target.closest('[data-assign]'); if (t) { openAssign(t.getAttribute('data-assign')); return; }
+    t = e.target.closest('[data-pick-courier]'); if (t) { dispatchTo(t.getAttribute('data-pick-courier')); return; }
+  });
+
+  // ===== Démarrage =====
+  if (!token) { redirectLogin(); }
+  else { loadMe().then(function () { return loadCatalog(); }).then(function () { return loadAll(); }).then(function () { connectWS(); }); }
+})();
+</script>
+</body>
+</html>

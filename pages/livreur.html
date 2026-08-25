@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mangoo Express+ — Livreur</title>
+<style id="theme-vars">
+:root { --mgt-radius-sm: 4px; --mgt-radius-md: 8px; --mgt-radius-lg: 16px; --mgt-radius-full: 9999px; }
+:root, html.light {
+  --mgt-primary: 26 92 42; --mgt-primary-50: 232 245 233; --mgt-primary-100: 200 230 201; --mgt-primary-200: 165 214 168; --mgt-primary-300: 129 199 134; --mgt-primary-400: 102 183 108; --mgt-primary-500: 76 168 82; --mgt-primary-600: 56 142 60; --mgt-primary-700: 38 112 42; --mgt-primary-800: 26 92 42; --mgt-primary-900: 13 71 18; --mgt-primary-foreground: 255 255 255;
+  --mgt-accent: 232 97 12; --mgt-accent-50: 255 243 224; --mgt-accent-100: 255 224 178; --mgt-accent-200: 255 204 128; --mgt-accent-300: 255 183 77; --mgt-accent-400: 255 153 31; --mgt-accent-500: 232 97 12; --mgt-accent-600: 209 78 0; --mgt-accent-700: 163 61 0; --mgt-accent-800: 130 49 0; --mgt-accent-900: 97 36 0; --mgt-accent-foreground: 255 255 255;
+  --mgt-background: 255 255 255; --mgt-foreground: 15 23 42; --mgt-card: 255 255 255; --mgt-card-foreground: 15 23 42; --mgt-popover: 255 255 255; --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252; --mgt-muted-foreground: 100 116 139; --mgt-border: 226 232 240; --mgt-input: 226 232 240; --mgt-ring: 26 92 42;
+  --mgt-success: 129 199 134; --mgt-success-foreground: 255 255 255; --mgt-warning: 255 183 77; --mgt-warning-foreground: 15 23 42; --mgt-error: 239 68 68; --mgt-error-foreground: 255 255 255; --mgt-info: 59 130 246; --mgt-info-foreground: 255 255 255;
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03); --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18); --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif; --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+:root { --background: 255 255 255; --foreground: 15 23 42; --card: 255 255 255; --card-foreground: 15 23 42; --popover: 255 255 255; --popover-foreground: 15 23 42; --primary: 26 92 42; --primary-foreground: 255 255 255; --muted: 248 250 252; --muted-foreground: 100 116 139; --border: 226 232 240; --input: 226 232 240; --ring: 26 92 42; --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px; --radius-full: 9999px; --state-success: 129 199 134; --state-success-foreground: 255 255 255; --state-warning: 255 183 77; --state-warning-foreground: 15 23 42; --state-error: 239 68 68; --state-error-foreground: 255 255 255; --state-info: 59 130 246; --state-info-foreground: 255 255 255; }
+html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-card: 20 20 26; --mgt-card-foreground: 248 250 252; --mgt-popover: 20 20 26; --mgt-popover-foreground: 248 250 252; --mgt-muted: 30 30 38; --mgt-muted-foreground: 148 163 184; --mgt-border: 40 40 50; --mgt-input: 40 40 50; --mgt-ring: 76 168 82; --background: 11 11 15; --foreground: 248 250 252; --card: 20 20 26; --card-foreground: 248 250 252; --popover: 20 20 26; --popover-foreground: 248 250 252; --primary: 76 168 82; --primary-foreground: 255 255 255; --muted: 30 30 38; --muted-foreground: 148 163 184; --border: 40 40 50; --input: 40 40 50; --ring: 76 168 82; }
+.h1 { font-family: var(--mgt-font-sans); font-size: clamp(24px, 3vw, 32px); line-height: 1.15; font-weight: 700; letter-spacing: -0.02em; }
+.h3 { font-family: var(--mgt-font-sans); font-size: 18px; line-height: 1.3; font-weight: 600; letter-spacing: -0.01em; }
+.body { font-family: var(--mgt-font-sans); font-size: 15px; line-height: 1.6; font-weight: 400; }
+.caption { font-family: var(--mgt-font-sans); font-size: 13px; line-height: 1.5; font-weight: 400; letter-spacing: 0.005em; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<style type="text/tailwindcss">
+  @theme inline { --color-background: var(--background); --color-foreground: var(--foreground); --color-card: var(--card); --color-card-foreground: var(--card-foreground); --color-popover: var(--popover); --color-popover-foreground: var(--popover-foreground); --color-primary: var(--primary); --color-primary-foreground: var(--primary-foreground); --color-muted: var(--muted); --color-muted-foreground: var(--muted-foreground); --color-border: var(--border); --color-input: var(--input); --color-ring: var(--ring); --radius-sm: var(--mgt-radius-sm); --radius-md: var(--mgt-radius-md); --radius-lg: var(--mgt-radius-lg); }
+  @layer base { body { background: var(--background); color: var(--foreground); } }
+</style>
+<style>
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  @keyframes mgt-pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(232 97 12 / .45); } 70% { box-shadow: 0 0 0 14px rgba(232 97 12 / 0); } 100% { box-shadow: 0 0 0 0 rgba(232 97 12 / 0); } }
+  .pulse-cta { animation: mgt-pulse-ring 1.6s ease-out infinite; }
+  @keyframes mgt-slide-in { from { transform: translateY(-12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .slide-in { animation: mgt-slide-in .28s ease-out; }
+</style>
+</head>
+<body class="min-h-screen font-sans antialiased bg-[rgb(var(--mgt-muted))]">
+
+<!-- ===== ÉCRAN AUTH (inscription / connexion livreur) ===== -->
+<div id="auth-view" class="min-h-screen hidden">
+  <header class="sticky top-0 z-40" style="background-color: rgb(var(--mgt-primary));">
+    <div class="mx-auto max-w-[520px] flex items-center gap-3 px-5 py-4">
+      <img src="../assets/favicon.png" alt="MangooTech" class="w-10 h-10 rounded-lg object-cover" style="border-radius: var(--mgt-radius-md);">
+      <div class="leading-tight">
+        <div class="text-white font-semibold">Mangoo <span class="font-light text-white/70">Express+</span></div>
+        <div class="text-[11px] font-semibold uppercase tracking-wider" style="color: rgb(var(--mgt-accent-300));">Devenez livreur</div>
+      </div>
+    </div>
+  </header>
+  <main class="mx-auto max-w-[520px] px-5 py-6">
+    <div class="rounded-2xl p-6" style="background-color: rgb(var(--mgt-card)); border: 1px solid rgb(var(--mgt-border)); box-shadow: var(--mgt-shadow-sm);">
+      <div class="flex gap-2 mb-6 p-1 rounded-xl" style="background-color: rgb(var(--mgt-muted));">
+        <button id="tab-login" class="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground));">Connexion</button>
+        <button id="tab-register" class="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all" style="color: rgb(var(--mgt-muted-foreground));">Inscription</button>
+      </div>
+
+      <div id="panel-login">
+        <h1 class="h1 mb-1" style="color: rgb(var(--mgt-foreground));">Bon retour</h1>
+        <p class="caption mb-5" style="color: rgb(var(--mgt-muted-foreground));">Connectez-vous avec votre téléphone ou votre PIN à 4 chiffres.</p>
+        <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Téléphone ou PIN</label>
+        <input id="login-identifier" type="text" inputmode="text" autocomplete="username" placeholder="+221 77 000 00 00  ou  1234" class="w-full h-12 px-4 rounded-lg body outline-none" style="border: 1px solid rgb(var(--mgt-input)); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground));">
+        <button id="btn-login" class="mt-4 w-full h-12 rounded-lg text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground));">Se connecter</button>
+        <p id="login-msg" class="caption mt-3 text-center hidden"></p>
+      </div>
+
+      <div id="panel-register" class="hidden">
+        <h1 class="h1 mb-1" style="color: rgb(var(--mgt-foreground));">Créer un compte livreur</h1>
+        <p class="caption mb-5" style="color: rgb(var(--mgt-muted-foreground));">Recevez des courses en temps réel près de chez vous.</p>
+        <div class="space-y-3.5">
+          <div>
+            <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Nom complet</label>
+            <input id="reg-name" type="text" autocomplete="name" placeholder="Ex. Moussa Ndiaye" class="w-full h-11 px-4 rounded-lg body outline-none" style="border: 1px solid rgb(var(--mgt-input)); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground));">
+          </div>
+          <div>
+            <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Téléphone</label>
+            <input id="reg-phone" type="tel" autocomplete="tel" placeholder="+221 77 000 00 00" class="w-full h-11 px-4 rounded-lg body outline-none" style="border: 1px solid rgb(var(--mgt-input)); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground));">
+          </div>
+          <div>
+            <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">PIN à 4 chiffres</label>
+            <input id="reg-pin" type="password" inputmode="numeric" maxlength="4" autocomplete="new-password" placeholder="••••" class="w-full h-11 px-4 rounded-lg body outline-none" style="border: 1px solid rgb(var(--mgt-input)); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground)); letter-spacing:.3em; font-weight:700;">
+          </div>
+          <div>
+            <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Email <span class="font-normal" style="color: rgb(var(--mgt-muted-foreground));">(optionnel)</span></label>
+            <input id="reg-email" type="email" autocomplete="email" placeholder="vous@exemple.com" class="w-full h-11 px-4 rounded-lg body outline-none" style="border: 1px solid rgb(var(--mgt-input)); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground));">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Ville</label>
+              <select id="reg-city" class="w-full h-11 px-3 rounded-lg body outline-none" style="border: 1px solid rgb(var(--mgt-input)); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground));">
+                <option value="Dakar">Dakar</option>
+                <option value="Pikine">Pikine</option>
+                <option value="Guédiawaye">Guédiawaye</option>
+                <option value="Rufisque">Rufisque</option>
+                <option value="Thiès">Thiès</option>
+                <option value="Saint-Louis">Saint-Louis</option>
+                <option value="Abidjan">Abidjan</option>
+              </select>
+            </div>
+            <div>
+              <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Véhicule</label>
+              <select id="reg-vehicle" class="w-full h-11 px-3 rounded-lg body outline-none" style="border: 1px solid rgb(var(--mgt-input)); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground));">
+                <option value="moto">Moto</option>
+                <option value="velo">Vélo</option>
+                <option value="voiture">Voiture</option>
+                <option value="camion">Camion</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Zone de travail <span class="font-normal" style="color: rgb(var(--mgt-muted-foreground));">(optionnel)</span></label>
+            <input id="reg-zone" type="text" placeholder="Ex. Plateau, Médina, Almadies" class="w-full h-11 px-4 rounded-lg body outline-none" style="border: 1px solid rgb(var(--mgt-input)); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground));">
+          </div>
+          <button id="btn-register" class="w-full h-12 rounded-lg text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground));">Créer mon compte livreur</button>
+          <p id="reg-msg" class="caption text-center hidden"></p>
+        </div>
+      </div>
+    </div>
+    <p class="caption text-center mt-5" style="color: rgb(var(--mgt-muted-foreground));">En continuant, vous acceptez les conditions générales d'utilisation de Mangoo Express+.</p>
+  </main>
+</div>
+
+<!-- ===== APPLICATION LIVREUR ===== -->
+<div id="app-view" class="min-h-screen hidden">
+  <header class="sticky top-0 z-40" style="background-color: rgb(var(--mgt-primary));">
+    <div class="mx-auto max-w-[820px] flex items-center justify-between gap-3 px-5 py-3.5">
+      <div class="flex items-center gap-3 min-w-0">
+        <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 rounded-lg object-cover flex-shrink-0" style="border-radius: var(--mgt-radius-md);">
+        <div class="min-w-0 leading-tight">
+          <div class="text-white font-semibold truncate" id="app-name">Livreur</div>
+          <div class="text-[11px] flex items-center gap-1.5" style="color: rgb(var(--mgt-primary-200));"><span id="app-meta-vehicle">Moto</span> · <span id="app-meta-zone">Dakar</span></div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <button id="btn-toggle" class="h-10 px-4 rounded-full text-sm font-semibold inline-flex items-center gap-2 transition-all" style="background-color: rgb(var(--mgt-muted)); color: rgb(var(--mgt-muted-foreground));">
+          <span id="toggle-dot" class="w-2.5 h-2.5 rounded-full" style="background-color: rgb(var(--mgt-muted-foreground));"></span>
+          <span id="toggle-label">Hors ligne</span>
+        </button>
+        <button id="btn-logout" class="w-10 h-10 rounded-lg inline-flex items-center justify-center transition-colors" style="color: rgb(var(--mgt-primary-200));" title="Déconnexion"><i data-lucide="log-out" class="w-5 h-5"></i></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-[820px] px-4 py-5 pb-16">
+    <!-- Bandeau de connexion temps réel -->
+    <div id="conn-banner" class="rounded-lg px-4 py-2.5 mb-4 text-sm font-medium" style="background-color: rgb(var(--mgt-warning)/.15); color: rgb(var(--mgt-warning));">Connexion au flux temps réel…</div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-3 gap-3 mb-5">
+      <div class="rounded-xl p-4" style="background-color: rgb(var(--mgt-card)); border: 1px solid rgb(var(--mgt-border));">
+        <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Disponibles</p>
+        <p class="text-2xl font-bold tabular-nums" id="stat-available" style="color: rgb(var(--mgt-primary));">0</p>
+      </div>
+      <div class="rounded-xl p-4" style="background-color: rgb(var(--mgt-card)); border: 1px solid rgb(var(--mgt-border));">
+        <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Livrées</p>
+        <p class="text-2xl font-bold tabular-nums" id="stat-completed" style="color: rgb(var(--mgt-accent));">0</p>
+      </div>
+      <div class="rounded-xl p-4" style="background-color: rgb(var(--mgt-card)); border: 1px solid rgb(var(--mgt-border));">
+        <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Statut</p>
+        <p class="text-sm font-bold mt-1 truncate" id="stat-status" style="color: rgb(var(--mgt-foreground));">—</p>
+      </div>
+    </div>
+
+    <!-- Course en cours -->
+    <section id="active-section" class="mb-6 hidden">
+      <h2 class="caption font-semibold uppercase tracking-wide mb-3" style="color: rgb(var(--mgt-muted-foreground));">Course en cours</h2>
+      <div id="active-card"></div>
+    </section>
+
+    <!-- Onglets -->
+    <div class="flex gap-2 mb-4 p-1 rounded-xl" style="background-color: rgb(var(--mgt-muted));">
+      <button data-tab="available" class="tab-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all">Courses disponibles</button>
+      <button data-tab="history" class="tab-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all">Mes courses</button>
+    </div>
+
+    <section id="tab-available" class="space-y-3"></section>
+    <section id="tab-history" class="space-y-3 hidden"></section>
+  </main>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-3 rounded-lg text-sm font-semibold max-w-[90vw] hidden slide-in" style="box-shadow: var(--mgt-shadow-lg);"></div>
+
+<!-- Modal preuve de remise (code de scan / signature) -->
+<div id="proof-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background: rgba(15 23 42 / .55);">
+  <div class="rounded-2xl w-full max-w-sm p-5 slide-in" style="background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-lg);">
+    <div class="flex items-start justify-between mb-1">
+      <h3 id="proof-title" class="h3" style="color: rgb(var(--mgt-foreground));">Confirmation</h3>
+      <button id="proof-close" class="text-sm" style="color: rgb(var(--mgt-muted-foreground));">Fermer</button>
+    </div>
+    <p id="proof-subtitle" class="caption mb-4" style="color: rgb(var(--mgt-muted-foreground));"></p>
+    <div id="proof-code-wrap" class="mb-4">
+      <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Code à 6 chiffres</label>
+      <input id="proof-code" type="text" inputmode="numeric" maxlength="6" placeholder="000000" class="w-full h-12 px-4 rounded-lg body text-center font-bold outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground)); letter-spacing:.3em; font-size:20px;">
+    </div>
+    <div id="proof-sign-wrap" class="mb-4 hidden">
+      <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Signature du client</label>
+      <canvas id="proof-canvas" width="320" height="160" class="w-full rounded-lg" style="border:1px solid rgb(var(--mgt-border)); background-color: rgb(var(--mgt-background)); touch-action: none;"></canvas>
+      <button id="proof-clear" type="button" class="caption mt-2" style="color: rgb(var(--mgt-primary));">Effacer la signature</button>
+    </div>
+    <div id="proof-freight-wrap" class="mb-4 hidden">
+      <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Pesée du chargement</label>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block caption mb-1" style="color: rgb(var(--mgt-muted-foreground));">Poids net (t)</label><input id="proof-weight" type="number" min="0" step="0.1" placeholder="Ex. 2.5" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));"></div>
+        <div><label class="block caption mb-1" style="color: rgb(var(--mgt-muted-foreground));">Volume (m³)</label><input id="proof-volume" type="number" min="0" step="0.1" placeholder="Ex. 6" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));"></div>
+      </div>
+    </div>
+    <p id="proof-msg" class="caption mb-3 hidden"></p>
+    <div class="flex gap-2.5">
+      <button id="proof-cancel" class="flex-1 h-12 rounded-lg text-sm font-semibold" style="background-color: rgb(var(--mgt-muted)); color: rgb(var(--mgt-foreground));">Annuler</button>
+      <button id="proof-confirm" class="flex-1 h-12 rounded-lg text-sm font-semibold" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground));">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<script>lucide.createIcons();</script>
+<script>
+(function () {
+  'use strict';
+  var TOKEN_KEY = 'mgt_token';
+  var USER_KEY = 'mgt_user';
+  var token = localStorage.getItem(TOKEN_KEY) || '';
+  var me = null;          // courier profile
+  var myUser = null;      // user record
+  var ws = null;
+  var wsRetry = null;
+  var wsAttempt = 0;      // backoff progressif de reconnexion
+  var myDeliveries = {};  // id -> delivery (available + assigned)
+  var statusNow = 'offline';
+
+  var VEHICLE_LABELS = { moto: 'Moto', velo: 'Vélo', voiture: 'Voiture', van: 'Fourgon', camion: 'Camion', semi: 'Semi-remorque' };
+  var STATUS_LABELS = {
+    available: 'En attente de livreur', dispatched: 'Livreur assigné', accepted: 'Acceptée',
+    picked_up: 'Colis récupéré', en_route: 'En cours de livraison', delivered: 'Livrée', cancelled: 'Annulée'
+  };
+  var STATUS_COLORS = {
+    available: 'rgb(var(--mgt-warning))', dispatched: 'rgb(var(--mgt-info))', accepted: 'rgb(var(--mgt-primary))',
+    picked_up: 'rgb(var(--mgt-info))', en_route: 'rgb(var(--mgt-accent))', delivered: 'rgb(var(--mgt-success))', cancelled: 'rgb(var(--mgt-muted-foreground))'
+  };
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function money(n) { n = Number(n) || 0; return n.toLocaleString('fr-FR') + ' FCFA'; }
+  function num(n) { return (Number(n) || 0).toLocaleString('fr-FR'); }
+  function dateFR(iso) { if (!iso) return '—'; var d = new Date(iso); if (isNaN(d)) return '—'; return d.toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+  function initials(name) { name = String(name || '?').trim(); var p = name.split(/\s+/); return p.length === 1 ? p[0].slice(0, 2).toUpperCase() : (p[0][0] + p[p.length - 1][0]).toUpperCase(); }
+
+  function showToast(msg, type) {
+    var el = $('toast');
+    var colors = { ok: ['rgb(var(--mgt-success))', 'rgb(var(--mgt-success-foreground))'], err: ['rgb(var(--mgt-error))', 'rgb(var(--mgt-error-foreground))'], info: ['rgb(var(--mgt-primary))', 'rgb(var(--mgt-primary-foreground))'], offer: ['rgb(var(--mgt-accent))', 'rgb(var(--mgt-accent-foreground))'] };
+    var c = colors[type] || colors.info;
+    el.style.backgroundColor = c[0]; el.style.color = c[1];
+    el.textContent = msg;
+    el.classList.remove('hidden');
+    el.classList.remove('slide-in'); void el.offsetWidth; el.classList.add('slide-in');
+    clearTimeout(el._t);
+    el._t = setTimeout(function () { el.classList.add('hidden'); }, 3200);
+  }
+
+  // ===== Auth helpers =====
+  function setBusy(btn, busy, label) {
+    if (busy) { btn.disabled = true; btn.style.opacity = '.6'; btn.textContent = label || 'Patientez…'; }
+    else { btn.disabled = false; btn.style.opacity = '1'; }
+  }
+  function apiGet(path) {
+    return fetch(path, { headers: { 'Authorization': 'Bearer ' + token } }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (data) { return { ok: r.ok, status: r.status, data: data }; });
+    });
+  }
+  function apiPost(path, payload) {
+    return fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(payload || {}) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (data) { return { ok: r.ok, status: r.status, data: data }; }); });
+  }
+
+  function saveSession(t, u) {
+    token = t;
+    localStorage.setItem(TOKEN_KEY, t);
+    localStorage.setItem(USER_KEY, JSON.stringify(u));
+  }
+  function clearSession() {
+    token = '';
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    if (ws) { try { ws.close(); } catch (e) {} ws = null; }
+  }
+
+  // ===== Auth view logic =====
+  // L'inscription/connexion des livreurs est désormais unifiée dans auth.html.
+  // Cette page est réservée à l'application : toute session invalide renvoie
+  // vers la page d'authentification unique.
+  function goToAuth() { window.location.href = './auth.html'; }
+  function showAuth() { goToAuth(); }
+  function switchAuthTab(which) {
+    var isLogin = which === 'login';
+    $('tab-login').style.backgroundColor = isLogin ? 'rgb(var(--mgt-primary))' : 'transparent';
+    $('tab-login').style.color = isLogin ? 'rgb(var(--mgt-primary-foreground))' : 'rgb(var(--mgt-muted-foreground))';
+    $('tab-register').style.backgroundColor = !isLogin ? 'rgb(var(--mgt-primary))' : 'transparent';
+    $('tab-register').style.color = !isLogin ? 'rgb(var(--mgt-primary-foreground))' : 'rgb(var(--mgt-muted-foreground))';
+    $('panel-login').classList.toggle('hidden', !isLogin);
+    $('panel-register').classList.toggle('hidden', isLogin);
+    $('login-msg').classList.add('hidden');
+    $('reg-msg').classList.add('hidden');
+  }
+  function doLogin() {
+    var identifier = $('login-identifier').value.trim();
+    var msgEl = $('login-msg');
+    msgEl.classList.add('hidden');
+    if (!identifier) { msgEl.textContent = 'Renseignez votre téléphone ou votre PIN.'; msgEl.style.color = 'rgb(var(--mgt-error))'; msgEl.classList.remove('hidden'); return; }
+    setBusy($('btn-login'), true, 'Connexion…');
+    apiPost('/api/auth/login', { mode: 'auto', identifier: identifier }).then(function (res) {
+      setBusy($('btn-login'), false, 'Se connecter');
+      if (res.ok && res.data.ok) {
+        var u = res.data.user;
+        if (u.role !== 'livreur') { msgEl.textContent = 'Ce compte n\'est pas un compte livreur.'; msgEl.style.color = 'rgb(var(--mgt-error))'; msgEl.classList.remove('hidden'); return; }
+        saveSession(res.data.token, u);
+        enterApp();
+      } else {
+        msgEl.textContent = (res.data && res.data.error) || 'Échec de connexion.'; msgEl.style.color = 'rgb(var(--mgt-error))'; msgEl.classList.remove('hidden');
+      }
+    }).catch(function () {
+      setBusy($('btn-login'), false, 'Se connecter');
+      msgEl.textContent = 'Impossible de joindre le serveur.'; msgEl.style.color = 'rgb(var(--mgt-error))'; msgEl.classList.remove('hidden');
+    });
+  }
+  function doRegister() {
+    var msgEl = $('reg-msg');
+    msgEl.classList.add('hidden');
+    var name = $('reg-name').value.trim();
+    var phone = $('reg-phone').value.trim();
+    var pin = $('reg-pin').value.trim();
+    var email = $('reg-email').value.trim();
+    var city = $('reg-city').value;
+    var vehicle = $('reg-vehicle').value;
+    var zone = $('reg-zone').value.trim();
+    if (!name) { regError('Renseignez votre nom complet.'); return; }
+    if (!phone) { regError('Renseignez votre numéro de téléphone.'); return; }
+    if (!/^\d{4}$/.test(pin)) { regError('Le PIN doit contenir exactement 4 chiffres.'); return; }
+    setBusy($('btn-register'), true, 'Création…');
+    apiPost('/api/auth/register', { role: 'livreur', name: name, phone: phone, pin: pin, email: email, city: city, vehicle: vehicle, zone: zone }).then(function (res) {
+      setBusy($('btn-register'), false, 'Créer mon compte livreur');
+      if (res.ok && res.data.ok) {
+        saveSession(res.data.token, res.data.user);
+        enterApp();
+      } else {
+        regError((res.data && res.data.error) || 'Échec de la création.');
+      }
+    }).catch(function () {
+      setBusy($('btn-register'), false, 'Créer mon compte livreur');
+      regError('Impossible de joindre le serveur.');
+    });
+    function regError(m) { msgEl.textContent = m; msgEl.style.color = 'rgb(var(--mgt-error))'; msgEl.classList.remove('hidden'); }
+  }
+
+  // ===== App =====
+  function enterApp() {
+    $('auth-view').classList.add('hidden');
+    $('app-view').classList.remove('hidden');
+    loadProfile().then(function () { connectWS(); loadOrders(); });
+  }
+
+  function loadProfile() {
+    return apiGet('/api/delivery/courier/me').then(function (res) {
+      if (!res.ok || !res.data.ok) {
+        if (res.status === 403) { showToast('Compte livreur requis.', 'err'); showAuth(); return; }
+        showToast('Profil introuvable.', 'err');
+        return;
+      }
+      me = res.data.courier;
+      myUser = res.data.user;
+      statusNow = (me && me.status) || 'offline';
+      renderProfile();
+      renderStatusToggle();
+    }).catch(function () { showToast('Serveur injoignable.', 'err'); });
+  }
+
+  function renderProfile() {
+    if (!me) return;
+    $('app-name').textContent = me.name || 'Livreur';
+    $('app-meta-vehicle').textContent = VEHICLE_LABELS[me.vehicle] || me.vehicle || '—';
+    $('app-meta-zone').textContent = me.zone || me.city || '—';
+    $('stat-completed').textContent = num(me.completedDeliveries || 0);
+  }
+
+  function renderStatusToggle() {
+    var online = statusNow === 'online';
+    var busy = statusNow === 'busy';
+    var dot = $('toggle-dot'), label = $('toggle-label');
+    if (busy) {
+      dot.style.backgroundColor = 'rgb(var(--mgt-accent))';
+      label.textContent = 'En course';
+      $('btn-toggle').style.backgroundColor = 'rgb(var(--mgt-accent))';
+      $('btn-toggle').style.color = 'rgb(var(--mgt-accent-foreground))';
+      $('btn-toggle').disabled = true; $('btn-toggle').style.opacity = '.7';
+    } else if (online) {
+      dot.style.backgroundColor = 'rgb(var(--mgt-success))';
+      label.textContent = 'En ligne';
+      $('btn-toggle').style.backgroundColor = 'rgb(var(--mgt-success))';
+      $('btn-toggle').style.color = 'rgb(var(--mgt-success-foreground))';
+      $('btn-toggle').disabled = false; $('btn-toggle').style.opacity = '1';
+    } else {
+      dot.style.backgroundColor = 'rgb(var(--mgt-muted-foreground))';
+      label.textContent = 'Hors ligne';
+      $('btn-toggle').style.backgroundColor = 'rgb(var(--mgt-muted))';
+      $('btn-toggle').style.color = 'rgb(var(--mgt-muted-foreground))';
+      $('btn-toggle').disabled = false; $('btn-toggle').style.opacity = '1';
+    }
+    $('stat-status').textContent = busy ? 'En course' : (online ? 'En ligne' : 'Hors ligne');
+  }
+
+  function toggleOnline() {
+    var target = statusNow === 'online' ? 'offline' : 'online';
+    apiPost('/api/delivery/courier/status', { status: target }).then(function (res) {
+      if (res.ok && res.data.ok) {
+        me = res.data.courier; statusNow = me.status;
+        renderStatusToggle();
+        sendWsStatus(statusNow);
+        showToast(target === 'online' ? 'Vous êtes en ligne.' : 'Vous êtes hors ligne.', 'ok');
+      } else { showToast((res.data && res.data.error) || 'Impossible de changer de statut.', 'err'); }
+    }).catch(function () { showToast('Serveur injoignable.', 'err'); });
+  }
+
+  function loadOrders() {
+    apiGet('/api/delivery/orders').then(function (res) {
+      if (!res.ok || !res.data.ok) return;
+      myDeliveries = {};
+      (res.data.deliveries || []).forEach(function (d) { myDeliveries[d.id] = d; });
+      renderAll();
+    });
+  }
+
+  // ===== WebSocket =====
+  function wsUrl() {
+    var proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    return proto + '//' + location.host + '/delivery-ws?token=' + encodeURIComponent(token);
+  }
+  function setConn(msg, color) {
+    var b = $('conn-banner');
+    b.textContent = msg;
+    b.style.backgroundColor = color + '/.15';
+    b.style.color = color;
+  }
+  function connectWS() {
+    if (!token) return;
+    if (wsRetry) clearTimeout(wsRetry);
+    try { ws = new WebSocket(wsUrl()); } catch (e) { scheduleReconnect(); return; }
+    ws.onopen = function () { wsAttempt = 0; setConn('Connecté au flux temps réel', 'rgb(var(--mgt-success))'); };
+    ws.onmessage = function (ev) { var m; try { m = JSON.parse(ev.data); } catch (e) { return; } handleWs(m); };
+    ws.onclose = function () { setConn('Connexion perdue. Reconnexion…', 'rgb(var(--mgt-warning))'); scheduleReconnect(); };
+    ws.onerror = function () { try { ws.close(); } catch (e) {} };
+  }
+  function scheduleReconnect() { if (wsRetry) clearTimeout(wsRetry); var delay = Math.min(1000 * Math.pow(2, wsAttempt), 16000); wsAttempt++; wsRetry = setTimeout(connectWS, delay); }
+  function sendWsStatus(status) { if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'courier-status', status: status })); }
+
+  function handleWs(m) {
+    if (!m || !m.type) return;
+    if (m.type === 'delivery-ready') {
+      if (m.courier) { me = m.courier; statusNow = me.status; renderProfile(); renderStatusToggle(); }
+    } else if (m.type === 'delivery-offer') {
+      if (m.delivery) {
+        myDeliveries[m.delivery.id] = m.delivery;
+        renderAll();
+        notifyOffer(m.delivery);
+        showToast('Nouvelle course disponible · ' + esc(m.delivery.ref || ''), 'offer');
+      }
+    } else if (m.type === 'delivery-assigned') {
+      if (m.delivery) { myDeliveries[m.delivery.id] = m.delivery; renderAll(); showToast('Course assignée · ' + esc(m.delivery.ref || ''), 'info'); }
+    } else if (m.type === 'delivery-taken') {
+      if (m.deliveryId) { delete myDeliveries[m.deliveryId]; renderAll(); }
+    } else if (m.type === 'delivery-updated') {
+      if (m.delivery) { myDeliveries[m.delivery.id] = m.delivery; renderAll(); }
+    } else if (m.type === 'courier-status-ack') {
+      statusNow = m.status; renderStatusToggle();
+    }
+  }
+
+  function notifyOffer(d) {
+    // Notification navigateur si autorisée.
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try { new Notification('Nouvelle course — ' + (d.ref || ''), { body: 'Ramassage : ' + (d.pickupAddress || '') + ' → ' + (d.deliveryAddress || '') }); } catch (e) {}
+    }
+  }
+
+  // ===== Rendu =====
+  function renderAll() {
+    var list = Object.keys(myDeliveries).map(function (k) { return myDeliveries[k]; });
+    list.sort(function (a, b) { return String(b.createdAt || '').localeCompare(String(a.createdAt || '')); });
+
+    var active = list.filter(function (d) { return d.courierId === (me && me.id) && ['accepted', 'picked_up', 'en_route', 'dispatched'].indexOf(d.status) >= 0; });
+    var available = list.filter(function (d) { return d.status === 'available'; });
+    var history = list.filter(function (d) { return d.status === 'delivered' || d.status === 'cancelled' || (d.courierId === (me && me.id) && d.status === 'available'); });
+
+    $('stat-available').textContent = num(available.length);
+
+    // Course en cours
+    if (active.length) {
+      $('active-section').classList.remove('hidden');
+      $('active-card').innerHTML = renderActiveCard(active[0]);
+    } else {
+      $('active-section').classList.add('hidden');
+    }
+
+    // Disponibles
+    $('tab-available').innerHTML = available.length
+      ? available.map(renderOfferCard).join('')
+      : emptyState('Aucune course disponible pour le moment.', 'inbox', 'Restez en ligne : vous serez notifié dès qu\'une course est créée.');
+
+    // Historique
+    $('tab-history').innerHTML = history.length
+      ? history.map(renderHistoryCard).join('')
+      : emptyState('Aucune course terminée.', 'history', 'Vos courses livrées apparaîtront ici.');
+  }
+
+  function renderOfferCard(d) {
+    var items = (d.items || []).map(function (it) { return esc(it.name) + (it.qty > 1 ? ' ×' + it.qty : ''); }).join(', ');
+    return '<div class="rounded-xl p-4 slide-in" style="background-color: rgb(var(--mgt-card)); border: 1px solid rgb(var(--mgt-border)); box-shadow: var(--mgt-shadow-sm);">' +
+      '<div class="flex items-start justify-between gap-3 mb-3">' +
+        '<div class="min-w-0"><div class="flex items-center gap-2"><span class="text-sm font-bold" style="color: rgb(var(--mgt-foreground));">' + esc(d.ref || 'Course') + '</span><span class="text-xs px-2 py-0.5 rounded-full" style="background-color:' + STATUS_COLORS[d.status] + '/.15;color:' + STATUS_COLORS[d.status] + ';">' + esc(STATUS_LABELS[d.status]) + '</span></div>' +
+        '<div class="caption mt-0.5" style="color: rgb(var(--mgt-muted-foreground));">' + esc(d.vendorName || 'Vendeur') + ' · ' + esc(dateFR(d.createdAt)) + '</div></div>' +
+        '<span class="text-base font-bold tabular-nums flex-shrink-0" style="color: rgb(var(--mgt-accent));">' + money(d.amount) + '</span>' +
+      '</div>' +
+      '<div class="space-y-2 mb-3">' +
+        '<div class="flex items-start gap-2 caption"><i data-lucide="map-pin" class="w-4 h-4 mt-0.5 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i><span style="color: rgb(var(--mgt-foreground));"><strong>Ramassage :</strong> ' + esc(d.pickupAddress || '—') + '</span></div>' +
+        '<div class="flex items-start gap-2 caption"><i data-lucide="flag" class="w-4 h-4 mt-0.5 flex-shrink-0" style="color: rgb(var(--mgt-accent));"></i><span style="color: rgb(var(--mgt-foreground));"><strong>Livraison :</strong> ' + esc(d.deliveryAddress || '—') + '</span></div>' +
+        (d.clientName || d.clientPhone ? '<div class="flex items-start gap-2 caption"><i data-lucide="user" class="w-4 h-4 mt-0.5 flex-shrink-0" style="color: rgb(var(--mgt-muted-foreground));"></i><span style="color: rgb(var(--mgt-muted-foreground));">' + esc(d.clientName || 'Client') + (d.clientPhone ? ' · ' + esc(d.clientPhone) : '') + '</span></div>' : '') +
+        (items ? '<div class="flex items-start gap-2 caption"><i data-lucide="package" class="w-4 h-4 mt-0.5 flex-shrink-0" style="color: rgb(var(--mgt-muted-foreground));"></i><span style="color: rgb(var(--mgt-muted-foreground));">' + items + '</span></div>' : '') +
+        (d.notes ? '<div class="caption px-2 py-1 rounded" style="background-color: rgb(var(--mgt-muted)); color: rgb(var(--mgt-muted-foreground));">' + esc(d.notes) + '</div>' : '') +
+      '</div>' +
+      '<button data-accept="' + esc(d.id) + '" class="accept-btn pulse-cta w-full h-11 rounded-lg text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground));">Accepter la course</button>' +
+    '</div>';
+  }
+
+  function renderActiveCard(d) {
+    var step = d.status;
+    var next = nextAction(d.status);
+    var items = (d.items || []).map(function (it) { return esc(it.name) + (it.qty > 1 ? ' ×' + it.qty : ''); }).join(', ');
+    var freightParts = [];
+    if (d.freight && d.freight.label) freightParts.push(d.freight.label);
+    if (d.subproduct) freightParts.push(d.subproduct);
+    if (d.weightTons != null) freightParts.push(d.weightTons + ' t');
+    if (d.packageCount) freightParts.push(d.packageCount + ' colis');
+    var freightHtml = freightParts.length
+      ? '<div class="flex items-start gap-2 body"><i data-lucide="truck" class="w-4 h-4 mt-1 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i><div style="color: rgb(var(--mgt-foreground));">' + esc(freightParts.join(' · ')) + ' <span class="caption" style="color: rgb(var(--mgt-muted-foreground));">(' + esc(VEHICLE_LABELS[(d.freight && d.freight.vehicle) || d.vehicle] || ((d.freight && d.freight.vehicle) || d.vehicle || '')) + ')</span></div></div>'
+      : '';
+    var timeline = (d.timeline || []).slice().reverse();
+    var codesHtml = '';
+    if (d.pickupCode || d.deliveryCode) {
+      codesHtml = '<div class="mb-4 grid grid-cols-2 gap-2">' +
+        (d.pickupCode ? '<div class="rounded-lg p-2.5 text-center" style="background-color: rgb(var(--mgt-muted));"><div class="caption" style="color: rgb(var(--mgt-muted-foreground));">Code ramassage</div><div class="font-mono text-lg font-bold tracking-widest" style="color: rgb(var(--mgt-foreground));">' + esc(d.pickupCode) + '</div></div>' : '') +
+        (d.deliveryCode ? '<div class="rounded-lg p-2.5 text-center" style="background-color: rgb(var(--mgt-muted));"><div class="caption" style="color: rgb(var(--mgt-muted-foreground));">Code livraison</div><div class="font-mono text-lg font-bold tracking-widest" style="color: rgb(var(--mgt-foreground));">' + esc(d.deliveryCode) + '</div></div>' : '') +
+        '</div>';
+    }
+    return '<div class="rounded-xl p-5 slide-in" style="background-color: rgb(var(--mgt-card)); border: 1px solid rgb(var(--mgt-border)); box-shadow: var(--mgt-shadow-md);">' +
+      '<div class="flex items-center justify-between gap-3 mb-4">' +
+        '<div><div class="text-base font-bold" style="color: rgb(var(--mgt-foreground));">' + esc(d.ref || 'Course en cours') + '</div>' +
+        '<div class="caption" style="color: rgb(var(--mgt-muted-foreground));">' + esc(d.vendorName || '') + '</div></div>' +
+        '<span class="text-xs px-2.5 py-1 rounded-full font-semibold" style="background-color:' + STATUS_COLORS[d.status] + '/.15;color:' + STATUS_COLORS[d.status] + ';">' + esc(STATUS_LABELS[d.status]) + '</span>' +
+      '</div>' +
+      '<div class="space-y-2.5 mb-4">' +
+        '<div class="flex items-start gap-2 body"><i data-lucide="map-pin" class="w-4 h-4 mt-1 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i><div><div class="caption" style="color: rgb(var(--mgt-muted-foreground));">Ramassage</div><div style="color: rgb(var(--mgt-foreground));">' + esc(d.pickupAddress || '—') + '</div></div></div>' +
+        '<div class="flex items-start gap-2 body"><i data-lucide="flag" class="w-4 h-4 mt-1 flex-shrink-0" style="color: rgb(var(--mgt-accent));"></i><div><div class="caption" style="color: rgb(var(--mgt-muted-foreground));">Livraison</div><div style="color: rgb(var(--mgt-foreground));">' + esc(d.deliveryAddress || '—') + '</div></div></div>' +
+        '<div class="flex items-start gap-2 body"><i data-lucide="user" class="w-4 h-4 mt-1 flex-shrink-0" style="color: rgb(var(--mgt-muted-foreground));"></i><div><div class="caption" style="color: rgb(var(--mgt-muted-foreground));">Client</div><div style="color: rgb(var(--mgt-foreground));">' + esc(d.clientName || 'Client') + (d.clientPhone ? ' · <a href="tel:' + esc(d.clientPhone) + '" style="color:rgb(var(--mgt-primary));">' + esc(d.clientPhone) + '</a>' : '') + '</div></div></div>' +
+        (items ? '<div class="flex items-start gap-2 body"><i data-lucide="package" class="w-4 h-4 mt-1 flex-shrink-0" style="color: rgb(var(--mgt-muted-foreground));"></i><div style="color: rgb(var(--mgt-foreground));">' + items + '</div></div>' : '') +
+        freightHtml +
+        (d.amount ? '<div class="flex items-center gap-2 body"><i data-lucide="banknote" class="w-4 h-4 flex-shrink-0" style="color: rgb(var(--mgt-accent));"></i><span class="font-bold" style="color: rgb(var(--mgt-accent));">' + money(d.amount) + '</span></div>' : '') +
+      '</div>' +
+      codesHtml +
+      (timeline.length ? '<div class="mb-4 space-y-1.5">' + timeline.map(function (t) { return '<div class="flex items-center gap-2 caption"><span class="w-1.5 h-1.5 rounded-full" style="background-color:' + STATUS_COLORS[t.status] + ';"></span><span style="color: rgb(var(--mgt-muted-foreground));">' + esc(STATUS_LABELS[t.status]) + ' — ' + esc(dateFR(t.at)) + '</span></div>'; }).join('') + '</div>' : '') +
+      '<div class="flex flex-col sm:flex-row gap-2.5">' +
+        (next ? '<button data-advance="' + esc(d.id) + '" data-to="' + esc(next.status) + '" class="flex-1 h-12 rounded-lg text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground));">' + esc(next.label) + '</button>' : '') +
+        '<button data-cancel="' + esc(d.id) + '" class="h-12 px-4 rounded-lg text-sm font-semibold transition-colors" style="background-color: rgb(var(--mgt-error)/.1); color: rgb(var(--mgt-error));">Annuler</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderHistoryCard(d) {
+    var done = d.status === 'delivered';
+    return '<div class="rounded-xl p-4 flex items-center gap-3" style="background-color: rgb(var(--mgt-card)); border: 1px solid rgb(var(--mgt-border));">' +
+      '<div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color:' + STATUS_COLORS[d.status] + '/.15;color:' + STATUS_COLORS[d.status] + ';"><i data-lucide="' + (done ? 'check' : 'x') + '" class="w-5 h-5"></i></div>' +
+      '<div class="flex-1 min-w-0"><div class="text-sm font-semibold" style="color: rgb(var(--mgt-foreground));">' + esc(d.ref || 'Course') + '</div><div class="caption truncate" style="color: rgb(var(--mgt-muted-foreground));">' + esc(d.deliveryAddress || '') + '</div></div>' +
+      '<div class="text-right flex-shrink-0"><div class="text-sm font-bold tabular-nums" style="color: rgb(var(--mgt-foreground));">' + money(d.amount) + '</div><div class="caption" style="color: rgb(var(--mgt-muted-foreground));">' + esc(dateFR(d.updatedAt || d.createdAt)) + '</div></div>' +
+    '</div>';
+  }
+
+  function emptyState(title, icon, sub) {
+    return '<div class="text-center py-12 rounded-xl" style="background-color: rgb(var(--mgt-card)); border: 1px solid rgb(var(--mgt-border));">' +
+      '<i data-lucide="' + icon + '" class="w-10 h-10 mx-auto mb-3" style="color: rgb(var(--mgt-muted-foreground));"></i>' +
+      '<p class="body font-semibold" style="color: rgb(var(--mgt-foreground));">' + esc(title) + '</p>' +
+      '<p class="caption mt-1" style="color: rgb(var(--mgt-muted-foreground));">' + esc(sub) + '</p></div>';
+  }
+
+  function nextAction(status) {
+    if (status === 'accepted') return { status: 'picked_up', label: 'J\'ai récupéré le colis' };
+    if (status === 'picked_up') return { status: 'en_route', label: 'Je suis en route' };
+    if (status === 'en_route') return { status: 'delivered', label: 'Marquer comme livrée' };
+    return null;
+  }
+
+  function acceptCourse(id) {
+    var btn = document.querySelector('[data-accept="' + id + '"]');
+    if (btn) { btn.disabled = true; btn.textContent = 'Acceptation…'; btn.classList.remove('pulse-cta'); }
+    apiPost('/api/delivery/orders/' + encodeURIComponent(id) + '/accept').then(function (res) {
+      if (res.ok && res.data.ok) {
+        myDeliveries[id] = res.data.delivery;
+        // Passe le livreur en « en course » côté UI.
+        if (me) { me.status = 'busy'; statusNow = 'busy'; renderProfile(); renderStatusToggle(); }
+        renderAll();
+        showToast('Course acceptée. Bonne route !', 'ok');
+      } else {
+        if (res.status === 409) { delete myDeliveries[id]; loadOrders(); }
+        showToast((res.data && res.data.error) || 'Course déjà prise.', 'err');
+      }
+    }).catch(function () { showToast('Serveur injoignable.', 'err'); });
+  }
+
+  function advanceCourse(id, to) {
+    if (to === 'picked_up') { openProofModal(id, 'picked_up'); return; }
+    if (to === 'delivered') { openProofModal(id, 'delivered'); return; }
+    postStatus(id, to, {});
+  }
+
+  function postStatus(id, to, extra) {
+    var payload = Object.assign({ status: to }, extra || {});
+    apiPost('/api/delivery/orders/' + encodeURIComponent(id) + '/status', payload).then(function (res) {
+      if (res.ok && res.data.ok) {
+        myDeliveries[id] = res.data.delivery;
+        if (to === 'delivered') { if (me) { me.status = 'online'; me.completedDeliveries = (me.completedDeliveries || 0) + 1; statusNow = 'online'; renderProfile(); renderStatusToggle(); } loadOrders(); }
+        renderAll();
+        showToast(to === 'delivered' ? 'Livraison terminée ✓' : 'Statut mis à jour.', 'ok');
+      } else { showToast((res.data && res.data.error) || 'Action impossible.', 'err'); }
+    }).catch(function () { showToast('Serveur injoignable.', 'err'); });
+  }
+
+  // ===== Preuve de remise (scan / signature) =====
+  var proofForId = null, proofForStatus = null;
+  var sigCtx = null, sigDrawing = false, sigDirty = false;
+
+  function initSignature() {
+    var c = $('proof-canvas');
+    if (!c) return;
+    sigCtx = c.getContext('2d');
+    sigCtx.lineWidth = 2.5;
+    sigCtx.lineCap = 'round';
+    sigCtx.lineJoin = 'round';
+    sigCtx.strokeStyle = '#0f172a';
+    clearSignature();
+    c.addEventListener('pointerdown', function (e) { sigDrawing = true; sigDirty = true; var p = sigPos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x, p.y); try { c.setPointerCapture(e.pointerId); } catch (err) {} });
+    c.addEventListener('pointermove', function (e) { if (!sigDrawing) return; var p = sigPos(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); });
+    c.addEventListener('pointerup', function () { sigDrawing = false; });
+    c.addEventListener('pointerleave', function () { sigDrawing = false; });
+    function sigPos(e) { var r = c.getBoundingClientRect(); return { x: (e.clientX - r.left) * (c.width / r.width), y: (e.clientY - r.top) * (c.height / r.height) }; }
+  }
+  function clearSignature() {
+    var c = $('proof-canvas');
+    if (sigCtx && c) { sigCtx.fillStyle = '#ffffff'; sigCtx.fillRect(0, 0, c.width, c.height); }
+    sigDirty = false;
+  }
+  function getSignature() { return sigDirty ? $('proof-canvas').toDataURL('image/png') : ''; }
+
+  function openProofModal(id, status) {
+    proofForId = id; proofForStatus = status;
+    var isDelivery = status === 'delivered';
+    var d = myDeliveries[id];
+    var hasWeighing = !!(d && d.freight && d.freight.weighing);
+    $('proof-title').textContent = isDelivery ? 'Remise au client' : 'Ramassage du colis';
+    $('proof-subtitle').textContent = isDelivery
+      ? 'Saisissez le code fourni par le client, ou faites-le signer ci-dessous.'
+      : 'Saisissez le code de ramassage fourni par le vendeur.';
+    $('proof-code').value = '';
+    $('proof-weight').value = '';
+    $('proof-volume').value = '';
+    $('proof-msg').classList.add('hidden');
+    $('proof-code-wrap').classList.toggle('hidden', false);
+    $('proof-sign-wrap').classList.toggle('hidden', !isDelivery);
+    $('proof-freight-wrap').classList.toggle('hidden', !(status === 'picked_up' && hasWeighing));
+    clearSignature();
+    $('proof-modal').classList.remove('hidden');
+    $('proof-modal').classList.add('flex');
+    setTimeout(function () { $('proof-code').focus(); }, 50);
+  }
+  function closeProofModal() {
+    $('proof-modal').classList.add('hidden');
+    $('proof-modal').classList.remove('flex');
+    proofForId = null; proofForStatus = null;
+  }
+  function proofError(m) { var el = $('proof-msg'); el.textContent = m; el.style.color = 'rgb(var(--mgt-error))'; el.classList.remove('hidden'); }
+  function confirmProof() {
+    var code = $('proof-code').value.trim();
+    var sig = getSignature();
+    var extra = {};
+    if (proofForStatus === 'picked_up') {
+      if (!/^\d{6}$/.test(code)) { proofError('Entrez le code de ramassage à 6 chiffres.'); return; }
+      extra.pickupCode = code;
+      var w = Number($('proof-weight').value);
+      var v = Number($('proof-volume').value);
+      if (w) extra.weightTons = w;
+      if (v) extra.volumeM3 = v;
+      var sub = (myDeliveries[proofForId] && myDeliveries[proofForId].subproduct) || '';
+      if (sub) extra.subproduct = sub;
+    } else if (proofForStatus === 'delivered') {
+      if (/^\d{6}$/.test(code)) { extra.deliveryCode = code; }
+      else if (sig) { extra.signature = sig; }
+      else { proofError('Entrez le code de livraison à 6 chiffres ou faites signer le client.'); return; }
+    }
+    var id = proofForId, status = proofForStatus;
+    closeProofModal();
+    postStatus(id, status, extra);
+  }
+
+  function cancelCourse(id) {
+    if (!confirm('Annuler cette course ?')) return;
+    apiPost('/api/delivery/orders/' + encodeURIComponent(id) + '/status', { status: 'cancelled' }).then(function (res) {
+      if (res.ok && res.data.ok) {
+        myDeliveries[id] = res.data.delivery;
+        if (me) { me.status = 'online'; statusNow = 'online'; renderProfile(); renderStatusToggle(); }
+        renderAll();
+        showToast('Course annulée.', 'info');
+      } else { showToast((res.data && res.data.error) || 'Annulation impossible.', 'err'); }
+    }).catch(function () { showToast('Serveur injoignable.', 'err'); });
+  }
+
+  // ===== Tabs =====
+  function switchTab(which) {
+    $('tab-available').classList.toggle('hidden', which !== 'available');
+    $('tab-history').classList.toggle('hidden', which !== 'history');
+    document.querySelectorAll('.tab-btn').forEach(function (b) {
+      var on = b.dataset.tab === which;
+      b.style.backgroundColor = on ? 'rgb(var(--mgt-primary))' : 'transparent';
+      b.style.color = on ? 'rgb(var(--mgt-primary-foreground))' : 'rgb(var(--mgt-muted-foreground))';
+    });
+  }
+
+  // ===== Événements =====
+  $('tab-login').addEventListener('click', function () { switchAuthTab('login'); });
+  $('tab-register').addEventListener('click', function () { switchAuthTab('register'); });
+  $('btn-login').addEventListener('click', doLogin);
+  $('btn-register').addEventListener('click', doRegister);
+  $('login-identifier').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
+  $('btn-toggle').addEventListener('click', toggleOnline);
+  $('btn-logout').addEventListener('click', function () { clearSession(); showAuth(); showToast('Déconnecté.', 'info'); });
+  document.querySelectorAll('.tab-btn').forEach(function (b) { b.addEventListener('click', function () { switchTab(b.dataset.tab); }); });
+
+  // Preuve de remise
+  $('proof-close').addEventListener('click', closeProofModal);
+  $('proof-cancel').addEventListener('click', closeProofModal);
+  $('proof-confirm').addEventListener('click', confirmProof);
+  $('proof-clear').addEventListener('click', clearSignature);
+  $('proof-modal').addEventListener('click', function (e) { if (e.target === this) closeProofModal(); });
+  initSignature();
+
+  // Délégation pour les boutons générés dynamiquement.
+  document.body.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-accept]');
+    if (t) { acceptCourse(t.getAttribute('data-accept')); return; }
+    t = e.target.closest('[data-advance]');
+    if (t) { advanceCourse(t.getAttribute('data-advance'), t.getAttribute('data-to')); return; }
+    t = e.target.closest('[data-cancel]');
+    if (t) { cancelCourse(t.getAttribute('data-cancel')); return; }
+  });
+
+  // Demande d'autorisation de notifications (optionnelle, à l'initiative de l'utilisateur).
+  if ('Notification' in window && Notification.permission === 'default') {
+    // Ne demande pas automatiquement : on attend une action explicite (bouton En ligne).
+  }
+
+  // ===== Démarrage =====
+  var saved = localStorage.getItem(USER_KEY);
+  if (token && saved) {
+    try { var su = JSON.parse(saved); if (su && su.role === 'livreur') { myUser = su; enterApp(); } else { goToAuth(); } }
+    catch (e) { goToAuth(); }
+  } else {
+    goToAuth();
+  }
+})();
+</script>
+</body>
+</html>

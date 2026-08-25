@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Livraisons</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+:root {
+  --background: rgb(255 255 255);
+  --foreground: rgb(15 23 42);
+  --card: rgb(255 255 255);
+  --card-foreground: rgb(15 23 42);
+  --popover: rgb(255 255 255);
+  --popover-foreground: rgb(15 23 42);
+  --primary: rgb(26 92 42);
+  --primary-foreground: rgb(255 255 255);
+  --muted: rgb(248 250 252);
+  --muted-foreground: rgb(100 116 139);
+  --border: rgb(226 232 240);
+  --input: rgb(226 232 240);
+  --ring: rgb(26 92 42);
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: rgb(129 199 134);
+  --state-success-foreground: rgb(255 255 255);
+  --state-warning: rgb(255 183 77);
+  --state-warning-foreground: rgb(15 23 42);
+  --state-error: rgb(239 68 68);
+  --state-error-foreground: rgb(255 255 255);
+  --state-info: rgb(59 130 246);
+  --state-info-foreground: rgb(255 255 255);
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: rgb(11 11 15);
+  --foreground: rgb(248 250 252);
+  --card: rgb(20 20 26);
+  --card-foreground: rgb(248 250 252);
+  --popover: rgb(20 20 26);
+  --popover-foreground: rgb(248 250 252);
+  --primary: rgb(76 168 82);
+  --primary-foreground: rgb(255 255 255);
+  --muted: rgb(30 30 38);
+  --muted-foreground: rgb(148 163 184);
+  --border: rgb(40 40 50);
+  --input: rgb(40 40 50);
+  --ring: rgb(76 168 82);
+}
+
+.h-display { font-family: var(--mgt-font-sans); font-size: clamp(40px, 6vw, 88px); line-height: 1.02; font-weight: 600; letter-spacing: -0.03em; text-wrap: balance; }
+.h1 { font-family: var(--mgt-font-sans); font-size: clamp(28px, 3.5vw, 48px); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+.h2 { font-family: var(--mgt-font-sans); font-size: clamp(22px, 2.4vw, 32px); line-height: 1.2; font-weight: 600; letter-spacing: -0.015em; }
+.h3 { font-family: var(--mgt-font-sans); font-size: 20px; line-height: 1.3; font-weight: 600; letter-spacing: -0.01em; }
+.body-l { font-family: var(--mgt-font-sans); font-size: 18px; line-height: 1.55; font-weight: 400; }
+.body { font-family: var(--mgt-font-sans); font-size: 15px; line-height: 1.6; font-weight: 400; }
+.caption { font-family: var(--mgt-font-sans); font-size: 13px; line-height: 1.5; font-weight: 400; letter-spacing: 0.005em; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+      .map-pin {
+        width: 18px; height: 18px; border-radius: 50%;
+        border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.25);
+        position: relative;
+      }
+      .map-pin::after {
+        content: ''; position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+        background: rgba(0,0,0,.75); color: #fff; font-size: 9px; padding: 1px 4px;
+        border-radius: 3px; white-space: nowrap;
+      }
+      .map-pin[data-name]::after { content: attr(data-name); }
+      .filter-chip { padding: 4px 12px; border-radius: 9999px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid rgb(var(--mgt-border)); background: transparent; color: rgb(var(--mgt-foreground)); transition: all .15s; }
+      .filter-chip.active { background: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-color: rgb(var(--mgt-primary)); }
+      .filter-chip:hover:not(.active) { background: rgb(var(--mgt-muted)); }
+    </style>
+    <style id="critical-layout">
+      .admin-layout { display: flex; min-height: 100vh; }
+      .admin-sidebar { width: 260px; min-height: 100vh; flex-shrink: 0; position: fixed; top: 0; left: 0; z-index: 40; }
+      .admin-main { flex: 1; margin-left: 260px; min-width: 0; }
+      @media (max-width: 768px) {
+        .admin-sidebar { transform: translateX(-100%); transition: transform .25s ease; }
+        .admin-sidebar.open { transform: translateX(0); box-shadow: 0 0 60px rgba(0,0,0,.4); }
+        .admin-main { margin-left: 0; }
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased bg-muted text-foreground">
+    <div class="admin-layout">
+
+        <!-- ===== ADMIN SIDEBAR ===== -->
+        <aside id="admin-nav" class="admin-sidebar" style="background-color: rgb(var(--mgt-primary-900));">
+            <div class="flex items-center gap-3 px-5 py-5 border-b" style="border-color: rgb(var(--mgt-primary-700) / .5);">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color: rgb(var(--mgt-accent));">
+                    <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+                </div>
+                <div>
+                    <span class="text-white font-semibold text-base leading-tight block">MangooTech</span>
+                    <span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded tracking-wider uppercase" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground));">Admin</span>
+                </div>
+            </div>
+
+            <nav class="flex-1 py-4 px-3 overflow-y-auto no-scrollbar">
+                <a href="./admin.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white">
+                    <i data-lucide="layout-dashboard" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Tableau de bord</span>
+                </a>
+                <a href="./admin-boutiques.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white">
+                    <i data-lucide="store" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Boutiques</span>
+                </a>
+                <a href="./admin-vendors.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white">
+                    <i data-lucide="users" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Prestataires</span>
+                </a>
+                <a href="./admin-commissions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white">
+                    <i data-lucide="percent" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Commissions</span>
+                </a>
+                <a href="./admin-transactions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white">
+                    <i data-lucide="receipt" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Transactions</span>
+                </a>
+                <a href="./admin-boosts.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white">
+                    <i data-lucide="rocket" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Boosters</span>
+                </a>
+                <a href="./admin-delivery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors bg-white/12 text-white">
+                    <i data-lucide="truck" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Livraisons</span>
+                </a>
+                <a href="./admin-packs.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white">
+                    <i data-lucide="tags" class="w-4.5 h-4.5 flex-shrink-0"></i>
+                    <span>Packs &amp; Tarifs</span>
+                </a>
+            </nav>
+
+            <div class="p-4 border-t flex items-center gap-3" style="border-color: rgb(var(--mgt-primary-700) / .5);">
+                <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0" style="background-color: rgb(var(--mgt-primary-500)); color: rgb(var(--mgt-primary-foreground));">DF</div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-white text-sm font-medium truncate">DANSOKO Fodé</div>
+                    <div class="text-xs truncate" style="color: rgb(var(--mgt-primary-300));">Administrateur</div>
+                </div>
+                <button class="text-white/50 hover:text-white transition-colors">
+                    <i data-lucide="settings" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <div class="admin-main">
+
+            <header class="sticky top-0 z-30 bg-card border-b border-border">
+                <div class="flex items-center justify-between px-6 py-3">
+                    <div class="flex items-center gap-3">
+                        <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-muted transition-colors">
+                            <i data-lucide="menu" class="w-5 h-5 text-foreground"></i>
+                        </button>
+                        <div>
+                            <h1 class="text-xl font-semibold text-foreground">Gestion des livraisons</h1>
+                            <p class="text-sm text-muted-foreground">Suivi en temps réel · Dakar</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button class="relative p-2 rounded-lg hover:bg-muted transition-colors">
+                            <i data-lucide="bell" class="w-5 h-5 text-muted-foreground"></i>
+                            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style="background-color: rgb(var(--mgt-accent));"></span>
+                        </button>
+                        <button id="btn-export" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground));">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Exporter</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <main class="p-6 space-y-6">
+
+                <!-- ===== KPI CARDS ===== -->
+                <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Aujourd'hui</span>
+                            <i data-lucide="truck" class="w-4 h-4" style="color: rgb(var(--mgt-primary));"></i>
+                        </div>
+                        <div class="text-2xl font-bold tabular-nums" style="color: rgb(var(--mgt-primary));">47</div>
+                        <div class="text-xs text-muted-foreground">livraisons au total</div>
+                    </div>
+                    <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">En cours</span>
+                            <i data-lucide="navigation" class="w-4 h-4" style="color: rgb(var(--mgt-info));"></i>
+                        </div>
+                        <div class="text-2xl font-bold tabular-nums" style="color: rgb(var(--mgt-info));">12</div>
+                        <div class="text-xs text-muted-foreground">livreurs actifs</div>
+                    </div>
+                    <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Livrées</span>
+                            <i data-lucide="check-circle" class="w-4 h-4" style="color: rgb(var(--mgt-success));"></i>
+                        </div>
+                        <div class="text-2xl font-bold tabular-nums" style="color: rgb(var(--mgt-success));">32</div>
+                        <div class="text-xs text-muted-foreground">colis remis</div>
+                    </div>
+                    <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Retard</span>
+                            <i data-lucide="clock" class="w-4 h-4" style="color: rgb(var(--mgt-error));"></i>
+                        </div>
+                        <div class="text-2xl font-bold tabular-nums" style="color: rgb(var(--mgt-error));">3</div>
+                        <div class="text-xs text-muted-foreground">à surveiller</div>
+                    </div>
+                    <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Annulées</span>
+                            <i data-lucide="x-circle" class="w-4 h-4" style="color: rgb(var(--mgt-muted-foreground));"></i>
+                        </div>
+                        <div class="text-2xl font-bold tabular-nums" style="color: rgb(var(--mgt-muted-foreground));">0</div>
+                        <div class="text-xs text-muted-foreground">aucune annulation</div>
+                    </div>
+                </div>
+
+                <!-- ===== MAP + ACTIVE DELIVERIES ===== -->
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+                    <!-- Carte simulée Dakar -->
+                    <div class="lg:col-span-3 bg-card border border-border rounded-xl overflow-hidden">
+                        <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+                            <h3 class="text-base font-semibold text-foreground flex items-center gap-2">
+                                <i data-lucide="map-pin" class="w-4 h-4" style="color: rgb(var(--mgt-accent));"></i>
+                                Suivi en direct — Dakar
+                            </h3>
+                            <span class="text-xs text-muted-foreground">12 livreurs actifs</span>
+                        </div>
+                        <div class="relative h-[380px] overflow-hidden" style="background:linear-gradient(135deg,#d4e8d4 0%,#c8e0c8 25%,#dce8dc 50%,#c4dcc4 75%,#d0e4d0 100%)">
+                            <svg class="absolute inset-0 w-full h-full" viewBox="0 0 600 340" preserveAspectRatio="none">
+                                <line x1="0" y1="170" x2="600" y2="170" stroke="#b0c8b0" stroke-width="3" stroke-dasharray="8,4"/>
+                                <line x1="0" y1="100" x2="600" y2="100" stroke="#c0d4c0" stroke-width="1.5"/>
+                                <line x1="0" y1="240" x2="600" y2="240" stroke="#c0d4c0" stroke-width="1.5"/>
+                                <line x1="300" y1="0" x2="300" y2="340" stroke="#b0c8b0" stroke-width="3" stroke-dasharray="8,4"/>
+                                <line x1="150" y1="0" x2="150" y2="340" stroke="#c0d4c0" stroke-width="1.5"/>
+                                <line x1="450" y1="0" x2="450" y2="340" stroke="#c0d4c0" stroke-width="1.5"/>
+                                <rect x="50" y="30" width="100" height="80" fill="rgba(26,92,42,0.08)" stroke="#a0c0a0" stroke-width="1" rx="2"/>
+                                <rect x="200" y="50" width="180" height="80" fill="rgba(26,92,42,0.05)" stroke="#a0c0a0" stroke-width="1" rx="2"/>
+                                <rect x="420" y="20" width="130" height="100" fill="rgba(232,97,12,0.05)" stroke="#d0b0a0" stroke-width="1" rx="2"/>
+                                <rect x="30" y="150" width="140" height="90" fill="rgba(26,92,42,0.04)" stroke="#a0c0a0" stroke-width="1" rx="2"/>
+                                <rect x="400" y="140" width="170" height="80" fill="rgba(26,92,42,0.06)" stroke="#a0c0a0" stroke-width="1" rx="2"/>
+                                <rect x="50" y="260" width="120" height="60" fill="rgba(26,92,42,0.05)" stroke="#a0c0a0" stroke-width="1" rx="2"/>
+                                <rect x="220" y="240" width="200" height="80" fill="rgba(26,92,42,0.07)" stroke="#a0c0a0" stroke-width="1" rx="2"/>
+                            </svg>
+                            <svg class="absolute inset-0 w-full h-full z-[5]" viewBox="0 0 600 340" preserveAspectRatio="none">
+                                <polyline points="168,75 240,100 320,120" fill="none" stroke="rgb(129,199,134)" stroke-width="2" stroke-dasharray="5,3" opacity="0.7"/>
+                                <polyline points="330,119 380,90 432,61" fill="none" stroke="rgb(232,97,12)" stroke-width="2" stroke-dasharray="5,3" opacity="0.7"/>
+                                <polyline points="108,163 160,140 168,75" fill="none" stroke="rgb(129,199,134)" stroke-width="2" stroke-dasharray="5,3" opacity="0.6"/>
+                                <polyline points="240,102 250,135 240,163" fill="none" stroke="rgb(239,68,68)" stroke-width="2" stroke-dasharray="5,3" opacity="0.8"/>
+                                <polyline points="360,187 390,170 432,61" fill="none" stroke="rgb(59,130,246)" stroke-width="2" stroke-dasharray="5,3" opacity="0.6"/>
+                            </svg>
+
+                            <div class="absolute z-10" style="top:22%;left:28%"><div class="map-pin" data-name="Moussa D." style="background:rgb(var(--mgt-success))"></div></div>
+                            <div class="absolute z-10" style="top:35%;left:55%"><div class="map-pin" data-name="Fatou S." style="background:rgb(var(--mgt-success))"></div></div>
+                            <div class="absolute z-10" style="top:18%;left:72%"><div class="map-pin" data-name="Omar K." style="background:rgb(var(--mgt-accent))"></div></div>
+                            <div class="absolute z-10" style="top:48%;left:18%"><div class="map-pin" data-name="Awa N." style="background:rgb(var(--mgt-success))"></div></div>
+                            <div class="absolute z-10" style="top:30%;left:40%"><div class="map-pin" data-name="Ibrahima T." style="background:rgb(var(--mgt-error))"></div></div>
+                            <div class="absolute z-10" style="top:55%;left:60%"><div class="map-pin" data-name="Saliou B." style="background:rgb(var(--mgt-info))"></div></div>
+
+                            <div class="absolute" style="top:8%;left:18%;font-size:10px;color:rgb(var(--mgt-primary-800) / .6);font-weight:600">Plateau</div>
+                            <div class="absolute" style="top:14%;left:52%;font-size:10px;color:rgb(var(--mgt-primary-800) / .6);font-weight:600">Medina</div>
+                            <div class="absolute" style="top:50%;left:12%;font-size:10px;color:rgb(var(--mgt-primary-800) / .6);font-weight:600">Almadies</div>
+                            <div class="absolute" style="top:40%;left:72%;font-size:10px;color:rgb(var(--mgt-primary-800) / .6);font-weight:600">Yoff</div>
+
+                            <div class="absolute bottom-2 right-2 bg-white/85 px-3 py-1.5 rounded-md text-[10px] flex flex-wrap gap-2 z-[15]">
+                                <span class="inline-flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-full" style="background:rgb(var(--mgt-success))"></span>En cours</span>
+                                <span class="inline-flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-full" style="background:rgb(var(--mgt-accent))"></span>Retard</span>
+                                <span class="inline-flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-full" style="background:rgb(var(--mgt-error))"></span>Incident</span>
+                                <span class="inline-flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-full" style="background:rgb(var(--mgt-info))"></span>En route</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Livraisons actives -->
+                    <div class="lg:col-span-2 bg-card border border-border rounded-xl overflow-hidden flex flex-col">
+                        <div class="flex items-center justify-between px-5 py-4 border-b border-border flex-wrap gap-2">
+                            <h3 class="text-base font-semibold text-foreground">Livraisons actives</h3>
+                            <div class="flex flex-wrap gap-1.5" id="delivery-filters">
+                                <button class="filter-chip active" data-f="all">Tous</button>
+                                <button class="filter-chip" data-f="en_cours">En cours</button>
+                                <button class="filter-chip" data-f="retard">Retard</button>
+                                <button class="filter-chip" data-f="en_route">En route</button>
+                            </div>
+                        </div>
+                        <div class="flex-1 overflow-x-auto max-h-[380px]">
+                            <table class="w-full">
+                                <thead class="sticky top-0 bg-muted">
+                                    <tr>
+                                        <th class="text-left px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">ID</th>
+                                        <th class="text-left px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Prestataire</th>
+                                        <th class="text-left px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Client</th>
+                                        <th class="text-left px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Livreur</th>
+                                        <th class="text-left px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Statut</th>
+                                        <th class="text-left px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">ETA</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="deliveries-tbody" class="divide-y divide-border"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== PERFORMANCE ===== -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div class="lg:col-span-2 bg-card border border-border rounded-xl p-5">
+                        <h3 class="text-base font-semibold text-foreground mb-5 flex items-center gap-2">
+                            <i data-lucide="bar-chart-3" class="w-4 h-4" style="color: rgb(var(--mgt-primary));"></i>
+                            Livraisons / jour — Cette semaine
+                        </h3>
+                        <div class="flex items-end gap-3 h-[170px]">
+                            <div class="flex-1 flex flex-col items-center gap-1.5"><span class="text-xs font-semibold tabular-nums">38</span><div class="w-full max-w-[48px] rounded-t" style="height:95px;background:linear-gradient(180deg,rgb(var(--mgt-primary-500)),rgb(var(--mgt-primary-300)))"></div><span class="text-[11px] text-muted-foreground">Lun</span></div>
+                            <div class="flex-1 flex flex-col items-center gap-1.5"><span class="text-xs font-semibold tabular-nums">42</span><div class="w-full max-w-[48px] rounded-t" style="height:105px;background:linear-gradient(180deg,rgb(var(--mgt-primary-500)),rgb(var(--mgt-primary-300)))"></div><span class="text-[11px] text-muted-foreground">Mar</span></div>
+                            <div class="flex-1 flex flex-col items-center gap-1.5"><span class="text-xs font-semibold tabular-nums">47</span><div class="w-full max-w-[48px] rounded-t" style="height:118px;background:linear-gradient(180deg,rgb(var(--mgt-primary-500)),rgb(var(--mgt-primary-300)))"></div><span class="text-[11px] text-muted-foreground">Mer</span></div>
+                            <div class="flex-1 flex flex-col items-center gap-1.5"><span class="text-xs font-semibold tabular-nums">44</span><div class="w-full max-w-[48px] rounded-t" style="height:110px;background:linear-gradient(180deg,rgb(var(--mgt-accent-400)),rgb(var(--mgt-accent-300)))"></div><span class="text-[11px] text-muted-foreground">Jeu</span></div>
+                            <div class="flex-1 flex flex-col items-center gap-1.5"><span class="text-xs font-semibold tabular-nums">51</span><div class="w-full max-w-[48px] rounded-t" style="height:128px;background:linear-gradient(180deg,rgb(var(--mgt-accent-400)),rgb(var(--mgt-accent-300)))"></div><span class="text-[11px] text-muted-foreground">Ven</span></div>
+                            <div class="flex-1 flex flex-col items-center gap-1.5"><span class="text-xs font-semibold tabular-nums">29</span><div class="w-full max-w-[48px] rounded-t" style="height:72px;background:linear-gradient(180deg,rgb(var(--mgt-primary-400)),rgb(var(--mgt-primary-200)))"></div><span class="text-[11px] text-muted-foreground">Sam</span></div>
+                            <div class="flex-1 flex flex-col items-center gap-1.5"><span class="text-xs font-semibold tabular-nums" style="color:rgb(var(--mgt-accent))">20</span><div class="w-full max-w-[48px] rounded-t" style="height:50px;background:linear-gradient(180deg,rgb(var(--mgt-accent-500)),rgb(var(--mgt-accent-400)))"></div><span class="text-[11px] font-bold" style="color:rgb(var(--mgt-accent))">Dim</span></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="bg-card border border-border rounded-xl p-5 text-center">
+                            <div class="text-3xl font-bold tabular-nums" style="color: rgb(var(--mgt-primary));">42 min</div>
+                            <div class="text-xs text-muted-foreground mt-1">Temps moyen de livraison</div>
+                            <div class="text-[11px] text-muted-foreground mt-1">−3 min vs. semaine dernière</div>
+                        </div>
+                        <div class="bg-card border border-border rounded-xl p-5 text-center">
+                            <div class="text-3xl font-bold tabular-nums" style="color: rgb(var(--mgt-error));">3,2%</div>
+                            <div class="text-xs text-muted-foreground mt-1">Taux de retard</div>
+                            <div class="text-[11px] text-muted-foreground mt-1">Objectif &lt; 5%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== COURIERS TABLE ===== -->
+                <div class="bg-card border border-border rounded-xl overflow-hidden">
+                    <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+                        <h3 class="text-base font-semibold text-foreground flex items-center gap-2">
+                            <i data-lucide="users" class="w-4 h-4" style="color: rgb(var(--mgt-primary));"></i>
+                            Livreurs
+                        </h3>
+                        <button id="btn-view-all-couriers" class="text-xs font-medium px-3 py-1.5 rounded-lg border border-border hover:bg-muted transition-colors">Voir tous</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="bg-muted/50">
+                                    <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nom</th>
+                                    <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Véhicule</th>
+                                    <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Zone</th>
+                                    <th class="text-right px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Auj.</th>
+                                    <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Note</th>
+                                    <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Statut</th>
+                                    <th class="text-right px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="couriers-tbody" class="divide-y divide-border"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ===== DELIVERY DISPUTES ===== -->
+                <div class="bg-card border border-border rounded-xl overflow-hidden">
+                    <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+                        <h3 class="text-base font-semibold text-foreground flex items-center gap-2">
+                            <i data-lucide="alert-triangle" class="w-4 h-4" style="color: rgb(var(--mgt-accent));"></i>
+                            Litiges livraison
+                        </h3>
+                        <span class="text-xs text-muted-foreground" id="disputes-count">3 en attente</span>
+                    </div>
+                    <div id="disputes-list" class="divide-y divide-border"></div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+      'use strict';
+
+      var DELIVERY_STATUS = {
+        en_cours: { label: 'En cours',  bg: 'rgb(var(--mgt-info) / .12)',   fg: 'rgb(var(--mgt-info))' },
+        en_attente:{ label: 'En attente',bg: 'rgb(var(--mgt-accent-50) / .2)', fg: 'rgb(var(--mgt-accent))' },
+        en_route:  { label: 'En route',  bg: 'rgb(var(--mgt-info) / .12)',   fg: 'rgb(var(--mgt-info))' },
+        livree:    { label: 'Livrée',    bg: 'rgb(var(--mgt-success) / .15)',fg: 'rgb(var(--mgt-success))' },
+        retard:    { label: 'Retard',    bg: 'rgb(var(--mgt-error) / .1)',   fg: 'rgb(var(--mgt-error))' },
+        annulee:   { label: 'Annulée',   bg: 'rgb(100 116 139 / .1)',        fg: 'rgb(100 116 139)' }
+      };
+
+      var DELIVERIES_KEY = 'mgt_admin_deliveries_v1';
+      var COURIERS_KEY = 'mgt_admin_couriers_v1';
+      var DISPUTES_KEY = 'mgt_admin_disputes_v1';
+
+      var deliveries = [];
+      var couriers = [];
+      var disputes = [];
+
+      var DELIVERIES_SEED = [
+        { id: '#DL-1047', shop: "Rapid'Shop", client: 'Marieme F.', courier: 'Moussa D.', status: 'en_cours', eta: '14:32' },
+        { id: '#DL-1048', shop: 'MarchéSaaS', client: 'Koudous S.', courier: 'Fatou S.', status: 'en_cours', eta: '14:45' },
+        { id: '#DL-1051', shop: 'QuickLivre', client: 'Adama B.', courier: 'Omar K.', status: 'retard', eta: '15:10' },
+        { id: '#DL-1053', shop: "Rapid'Shop", client: 'Ndèye G.', courier: 'Awa N.', status: 'en_cours', eta: '14:55' },
+        { id: '#DL-1056', shop: 'SamaLivre', client: 'Cheikh T.', courier: 'Ibrahima T.', status: 'livree', eta: '14:10' },
+        { id: '#DL-1058', shop: 'MarchéSaaS', client: 'Fatim B.', courier: 'Saliou B.', status: 'en_cours', eta: '15:20' },
+        { id: '#DL-1060', shop: 'QuickLivre', client: 'Moussa K.', courier: 'Moussa D.', status: 'en_attente', eta: '15:35' },
+        { id: '#DL-1062', shop: 'SamaLivre', client: 'Aïssatou S.', courier: 'Omar K.', status: 'en_cours', eta: '15:50' }
+      ];
+
+      var COURIERS_SEED = [
+        { name: 'Moussa Diallo', vehicle: 'Moto', zone: 'Plateau', count: 12, rating: '4.9', stars: 5, status: 'actif' },
+        { name: 'Fatou Sow', vehicle: 'Scooter', zone: 'Médina', count: 9, rating: '4.8', stars: 5, status: 'actif' },
+        { name: 'Omar Kane', vehicle: 'Voiture', zone: 'Yoff', count: 7, rating: '4.6', stars: 4, status: 'retard' },
+        { name: 'Awa Ndiaye', vehicle: 'Moto', zone: 'Almadies', count: 11, rating: '4.9', stars: 5, status: 'actif' },
+        { name: 'Ibrahima Tall', vehicle: 'Vélo', zone: 'Plateau', count: 8, rating: '4.3', stars: 4, status: 'actif' },
+        { name: 'Saliou Ba', vehicle: 'Scooter', zone: 'Médina', count: 6, rating: '4.1', stars: 4, status: 'inactif' }
+      ];
+
+      var DISPUTES_SEED = [
+        { id: '#DL-1042', badge: 'Retard', badgeBg: 'rgb(var(--mgt-accent-50))', badgeFg: 'rgb(var(--mgt-accent))', icon: 'clock', iconBg: 'rgb(var(--mgt-accent-50))', iconFg: 'rgb(var(--mgt-accent))', text: 'Client signale un retard de 45 min. Livraison prévue 13:00, arrivée 13:45.', actions: [['Contacter livreur', 'primary'], ['Dédommager', 'outline'], ['Escalader', 'danger']] },
+        { id: '#DL-1038', badge: 'Colis endommagé', badgeBg: 'rgb(var(--mgt-error) / .1)', badgeFg: 'rgb(var(--mgt-error))', icon: 'package-x', iconBg: 'rgb(var(--mgt-error) / .1)', iconFg: 'rgb(var(--mgt-error))', text: "Colis arrivé avec emballage déchiré. Client refuse la réception.", actions: [['Rembourser', 'primary'], ['Enquête', 'outline'], ['Remplacer', 'outline']] },
+        { id: '#DL-1045', badge: 'Adresse erronée', badgeBg: 'rgb(var(--mgt-info) / .1)', badgeFg: 'rgb(var(--mgt-info))', icon: 'map-pin-off', iconBg: 'rgb(var(--mgt-info) / .1)', iconFg: 'rgb(var(--mgt-info))', text: 'Adresse de livraison introuvable. Livreur a tenté 3 fois sans succès.', actions: [['Contacter client', 'primary'], ['Mettre à jour adresse', 'outline'], ['Retour expéditeur', 'outline']] }
+      ];
+
+      var COURIER_NAMES = [];
+
+      function readJSON(key) {
+        try { var v = JSON.parse(localStorage.getItem(key)); return Array.isArray(v) ? v : null; } catch (e) { return null; }
+      }
+      function persist(key, v) {
+        try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) { /* ignore */ }
+      }
+
+      // Livraisons : aucune API dédiée côté serveur → persistance locale,
+      // enrichie avec le flux réel de commandes Live pour rester connecté.
+      function loadDeliveries() {
+        deliveries = readJSON(DELIVERIES_KEY) || DELIVERIES_SEED;
+        couriers = readJSON(COURIERS_KEY) || COURIERS_SEED;
+        disputes = readJSON(DISPUTES_KEY) || DISPUTES_SEED;
+        COURIER_NAMES = couriers.map(function (c) { return c.name; });
+
+        fetch('/orders/live', { headers: { 'Accept': 'application/json' }, cache: 'no-store' })
+          .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+          .then(function (data) {
+            var live = (data && Array.isArray(data.orders)) ? data.orders : [];
+            if (!live.length) { renderAll(); return; }
+            live.forEach(function (o) {
+              if (deliveries.some(function (d) { return d.id === o.orderId; })) return;
+              var eta = o.createdAt ? new Date(o.createdAt) : null;
+              deliveries.unshift({
+                id: o.orderId,
+                shop: 'Live Shopping',
+                client: o.clientName || 'Client',
+                courier: 'À assigner',
+                status: 'en_attente',
+                eta: eta ? String(eta.getHours()).padStart(2, '0') + ':' + String(eta.getMinutes()).padStart(2, '0') : '—'
+              });
+            });
+            persist(DELIVERIES_KEY, deliveries);
+            renderAll();
+          })
+          .catch(renderAll);
+      }
+
+      function renderAll() {
+        renderDeliveries();
+        renderCouriers();
+        renderDisputes();
+      }
+
+      function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+      function statusPill(s) {
+        var m = DELIVERY_STATUS[s] || DELIVERY_STATUS.en_cours;
+        return '<span class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full" style="background-color:' + m.bg + ';color:' + m.fg + '"><span class="w-1.5 h-1.5 rounded-full" style="background-color:' + m.fg + '"></span>' + m.label + '</span>';
+      }
+
+      var currentFilter = 'all';
+
+      function renderDeliveries() {
+        var tbody = document.getElementById('deliveries-tbody');
+        var list = deliveries.filter(function (d) {
+          if (currentFilter === 'all') return true;
+          return d.status === currentFilter;
+        });
+        tbody.innerHTML = list.map(function (d) {
+          var isLate = d.status === 'retard';
+          var opts = Object.keys(DELIVERY_STATUS).map(function (k) {
+            return '<option value="' + k + '"' + (k === d.status ? ' selected' : '') + '>' + DELIVERY_STATUS[k].label + '</option>';
+          }).join('');
+          return '<tr class="hover:bg-muted/30 transition-colors">'
+            + '<td class="px-4 py-2.5 text-xs tabular-nums text-muted-foreground" style="font-family:var(--mgt-font-mono)">' + esc(d.id) + '</td>'
+            + '<td class="px-4 py-2.5 text-sm text-foreground">' + esc(d.shop) + '</td>'
+            + '<td class="px-4 py-2.5 text-sm text-foreground">' + esc(d.client) + '</td>'
+            + '<td class="px-4 py-2.5 text-sm text-foreground whitespace-nowrap">' + esc(d.courier) + ' <button class="assign-delivery-btn text-[11px] font-semibold px-2 py-0.5 rounded border border-border hover:bg-muted transition-colors ml-1" data-id="' + esc(d.id) + '">Assigner</button></td>'
+            + '<td class="px-4 py-2.5"><select class="delivery-status-select text-xs font-semibold px-2 py-1 rounded-full border bg-card text-foreground cursor-pointer" style="border-color:rgb(var(--mgt-border))" data-id="' + esc(d.id) + '">' + opts + '</select></td>'
+            + '<td class="px-4 py-2.5 text-xs tabular-nums" style="font-family:var(--mgt-font-mono);color:' + (isLate ? 'rgb(var(--mgt-error))' : 'rgb(var(--mgt-foreground))') + '">' + esc(d.eta) + '</td>'
+            + '</tr>';
+        }).join('');
+      }
+
+      function renderCouriers() {
+        var tbody = document.getElementById('couriers-tbody');
+        tbody.innerHTML = couriers.map(function (c, i) {
+          var stars = '';
+          for (var j = 0; j < 5; j++) stars += j < c.stars ? '★' : '☆';
+          var statusMeta = c.status === 'actif' ? { label: 'Actif', bg: 'rgb(var(--mgt-success) / .15)', fg: 'rgb(var(--mgt-success))' }
+            : c.status === 'retard' ? { label: 'Retard', bg: 'rgb(var(--mgt-error) / .1)', fg: 'rgb(var(--mgt-error))' }
+            : { label: 'Inactif', bg: 'rgb(100 116 139 / .1)', fg: 'rgb(100 116 139)' };
+          var ratingColor = c.rating >= 4.5 ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))';
+          return '<tr class="hover:bg-muted/30 transition-colors">'
+            + '<td class="px-5 py-3.5 text-sm font-medium text-foreground">' + esc(c.name) + '</td>'
+            + '<td class="px-5 py-3.5 text-sm text-muted-foreground">' + esc(c.vehicle) + '</td>'
+            + '<td class="px-5 py-3.5 text-sm text-muted-foreground">' + esc(c.zone) + '</td>'
+            + '<td class="px-5 py-3.5 text-sm tabular-nums text-right font-medium text-foreground">' + c.count + '</td>'
+            + '<td class="px-5 py-3.5"><span class="inline-flex items-center gap-1"><span class="text-sm font-semibold" style="color:' + ratingColor + '">' + c.rating + '</span><span class="text-xs" style="color:' + ratingColor + '">' + stars + '</span></span></td>'
+            + '<td class="px-5 py-3.5"><span class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full" style="background-color:' + statusMeta.bg + ';color:' + statusMeta.fg + '"><span class="w-1.5 h-1.5 rounded-full" style="background-color:' + statusMeta.fg + '"></span>' + statusMeta.label + '</span></td>'
+            + '<td class="px-5 py-3.5 text-right"><button class="courier-detail-btn text-xs font-medium px-2.5 py-1 rounded border border-border hover:bg-muted transition-colors" data-idx="' + i + '">Détails</button></td>'
+            + '</tr>';
+        }).join('');
+      }
+
+      function renderDisputes() {
+        var el = document.getElementById('disputes-list');
+        el.innerHTML = disputes.map(function (dp) {
+          var actionHtml = dp.actions.map(function (a) {
+            if (a[1] === 'primary') return '<button class="dispute-action text-xs font-semibold px-2.5 py-1 rounded-md transition-all hover:brightness-110" data-action="' + esc(a[0]) + '" style="background-color:rgb(var(--mgt-accent));color:rgb(var(--mgt-accent-foreground))">' + esc(a[0]) + '</button>';
+            if (a[1] === 'danger') return '<button class="dispute-action text-xs font-medium px-2.5 py-1 rounded-md border transition-colors" data-action="' + esc(a[0]) + '" style="border-color:rgb(var(--mgt-error));color:rgb(var(--mgt-error))">' + esc(a[0]) + '</button>';
+            return '<button class="dispute-action text-xs font-medium px-2.5 py-1 rounded-md border border-border hover:bg-muted transition-colors" data-action="' + esc(a[0]) + '">' + esc(a[0]) + '</button>';
+          }).join('');
+          return '<div class="flex items-start gap-3 px-5 py-4" data-dispute-id="' + esc(dp.id) + '">'
+            + '<div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color:' + dp.iconBg + '"><i data-lucide="' + dp.icon + '" class="w-4.5 h-4.5" style="color:' + dp.iconFg + '"></i></div>'
+            + '<div class="flex-1 min-w-0">'
+            + '<div class="flex items-center gap-2 mb-1"><span class="text-sm font-semibold text-foreground">' + esc(dp.id) + '</span><span class="text-[10px] font-semibold px-2 py-0.5 rounded-full" style="background-color:' + dp.badgeBg + ';color:' + dp.badgeFg + '">' + esc(dp.badge) + '</span></div>'
+            + '<p class="text-sm text-muted-foreground mb-2">' + esc(dp.text) + '</p>'
+            + '<div class="flex flex-wrap gap-2">' + actionHtml + '</div>'
+            + '</div></div>';
+        }).join('');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function toast(msg) {
+        var t = document.getElementById('mgt-toast');
+        if (!t) {
+          t = document.createElement('div');
+          t.id = 'mgt-toast';
+          t.setAttribute('style', 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);z-index:9999;padding:10px 18px;border-radius:999px;background-color:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));font-size:13px;font-weight:600;box-shadow:var(--mgt-shadow-md);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;max-width:90vw;text-align:center;');
+          document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        requestAnimationFrame(function () { t.style.opacity = '1'; t.style.transform = 'translateX(-50%) translateY(0)'; });
+        clearTimeout(t._h);
+        t._h = setTimeout(function () { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(16px)'; }, 2200);
+      }
+
+      document.getElementById('deliveries-tbody').addEventListener('change', function (e) {
+        var sel = e.target.closest('.delivery-status-select');
+        if (!sel) return;
+        var d = deliveries.find(function (x) { return x.id === sel.getAttribute('data-id'); });
+        if (!d) return;
+        d.status = sel.value;
+        toast('Livraison ' + d.id + ' : statut « ' + DELIVERY_STATUS[d.status].label + ' »');
+        persist(DELIVERIES_KEY, deliveries);
+        renderDeliveries();
+      });
+
+      document.getElementById('deliveries-tbody').addEventListener('click', function (e) {
+        var btn = e.target.closest('.assign-delivery-btn');
+        if (!btn) return;
+        var d = deliveries.find(function (x) { return x.id === btn.getAttribute('data-id'); });
+        if (!d) return;
+        var idx = COURIER_NAMES.indexOf(d.courier);
+        var next = COURIER_NAMES[(idx + 1) % COURIER_NAMES.length];
+        d.courier = next;
+        toast('Livraison ' + d.id + ' assignée à ' + next);
+        persist(DELIVERIES_KEY, deliveries);
+        renderDeliveries();
+      });
+
+      document.getElementById('delivery-filters').addEventListener('click', function (e) {
+        var chip = e.target.closest('.filter-chip');
+        if (!chip) return;
+        currentFilter = chip.getAttribute('data-f');
+        document.querySelectorAll('#delivery-filters .filter-chip').forEach(function (c) { c.classList.toggle('active', c === chip); });
+        renderDeliveries();
+      });
+
+      document.getElementById('mobile-menu-btn').addEventListener('click', function () {
+        document.getElementById('admin-nav').classList.toggle('open');
+      });
+
+      function downloadCSV() {
+        var rows = [['ID', 'Boutique', 'Client', 'Livreur', 'Statut', 'ETA']];
+        deliveries.forEach(function (d) {
+          rows.push([d.id, d.shop, d.client, d.courier, DELIVERY_STATUS[d.status].label, d.eta]);
+        });
+        var csv = rows.map(function (r) {
+          return r.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(';');
+        }).join('\r\n');
+        var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'livraisons-' + new Date().toISOString().slice(0, 10) + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast('Export CSV téléchargé (' + deliveries.length + ' lignes)');
+      }
+
+      document.getElementById('btn-export').addEventListener('click', downloadCSV);
+
+      document.getElementById('btn-view-all-couriers').addEventListener('click', function () {
+        var actif = couriers.filter(function (c) { return c.status === 'actif'; }).length;
+        var retard = couriers.filter(function (c) { return c.status === 'retard'; }).length;
+        var inactif = couriers.filter(function (c) { return c.status === 'inactif'; }).length;
+        toast(couriers.length + ' livreurs · ' + actif + ' actifs · ' + retard + ' en retard · ' + inactif + ' inactifs');
+      });
+
+      document.getElementById('couriers-tbody').addEventListener('click', function (e) {
+        var btn = e.target.closest('.courier-detail-btn');
+        if (!btn) return;
+        var c = couriers[Number(btn.getAttribute('data-idx'))];
+        if (!c) return;
+        toast(c.name + ' · ' + c.vehicle + ' · ' + c.zone + ' · ' + c.count + ' livraisons · note ' + c.rating + '/5');
+      });
+
+      document.getElementById('disputes-list').addEventListener('click', function (e) {
+        var btn = e.target.closest('.dispute-action');
+        if (!btn) return;
+        var item = e.target.closest('[data-dispute-id]');
+        var id = item ? item.getAttribute('data-dispute-id') : '';
+        var action = btn.getAttribute('data-action');
+        disputes = disputes.filter(function (d) { return d.id !== id; });
+        var countEl = document.getElementById('disputes-count');
+        if (countEl) countEl.textContent = disputes.length + ' en attente';
+        persist(DISPUTES_KEY, disputes);
+        renderDisputes();
+        toast('Litige ' + id + ' : « ' + action + ' » enregistré');
+      });
+
+      loadDeliveries();
+    })();
+    </script>
+
+    <script src="../assets/mangoo-admin-shell.js"></script>
+</body>
+</html>

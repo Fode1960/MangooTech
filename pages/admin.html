@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Tableau de bord</title>
+<style id="theme-vars">
+:root { --mgt-radius-sm: 4px; --mgt-radius-md: 8px; --mgt-radius-lg: 16px; --mgt-radius-full: 9999px; }
+:root, html.light {
+  --mgt-primary: 26 92 42; --mgt-primary-50: 232 245 233; --mgt-primary-100: 200 230 201; --mgt-primary-200: 165 214 168; --mgt-primary-300: 129 199 134; --mgt-primary-400: 102 183 108; --mgt-primary-500: 76 168 82; --mgt-primary-600: 56 142 60; --mgt-primary-700: 38 112 42; --mgt-primary-800: 26 92 42; --mgt-primary-900: 13 71 18; --mgt-primary-foreground: 255 255 255;
+  --mgt-accent: 232 97 12; --mgt-accent-50: 255 243 224; --mgt-accent-100: 255 224 178; --mgt-accent-200: 255 204 128; --mgt-accent-300: 255 183 77; --mgt-accent-400: 255 153 31; --mgt-accent-500: 232 97 12; --mgt-accent-600: 209 78 0; --mgt-accent-700: 163 61 0; --mgt-accent-800: 130 49 0; --mgt-accent-900: 97 36 0; --mgt-accent-foreground: 255 255 255;
+  --mgt-background: 255 255 255; --mgt-foreground: 15 23 42; --mgt-card: 255 255 255; --mgt-card-foreground: 15 23 42; --mgt-popover: 255 255 255; --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252; --mgt-muted-foreground: 100 116 139; --mgt-border: 226 232 240; --mgt-input: 226 232 240; --mgt-ring: 26 92 42;
+  --mgt-success: 129 199 134; --mgt-success-foreground: 255 255 255; --mgt-warning: 255 183 77; --mgt-warning-foreground: 15 23 42; --mgt-error: 239 68 68; --mgt-error-foreground: 255 255 255; --mgt-info: 59 130 246; --mgt-info-foreground: 255 255 255;
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03); --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18); --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif; --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+:root { --background: rgb(255 255 255); --foreground: rgb(15 23 42); --card: rgb(255 255 255); --card-foreground: rgb(15 23 42); --popover: rgb(255 255 255); --popover-foreground: rgb(15 23 42); --primary: rgb(26 92 42); --primary-foreground: rgb(255 255 255); --muted: rgb(248 250 252); --muted-foreground: rgb(100 116 139); --border: rgb(226 232 240); --input: rgb(226 232 240); --ring: rgb(26 92 42); --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px; --radius-full: 9999px; --state-success: rgb(129 199 134); --state-success-foreground: rgb(255 255 255); --state-warning: rgb(255 183 77); --state-warning-foreground: rgb(15 23 42); --state-error: rgb(239 68 68); --state-error-foreground: rgb(255 255 255); --state-info: rgb(59 130 246); --state-info-foreground: rgb(255 255 255); }
+html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-card: 20 20 26; --mgt-card-foreground: 248 250 252; --mgt-popover: 20 20 26; --mgt-popover-foreground: 248 250 252; --mgt-muted: 30 30 38; --mgt-muted-foreground: 148 163 184; --mgt-border: 40 40 50; --mgt-input: 40 40 50; --mgt-ring: 76 168 82; --background: rgb(11 11 15); --foreground: rgb(248 250 252); --card: rgb(20 20 26); --card-foreground: rgb(248 250 252); --popover: rgb(20 20 26); --popover-foreground: rgb(248 250 252); --primary: rgb(76 168 82); --primary-foreground: rgb(255 255 255); --muted: rgb(30 30 38); --muted-foreground: rgb(148 163 184); --border: rgb(40 40 50); --input: rgb(40 40 50); --ring: rgb(76 168 82); }
+.h-display { font-family: var(--mgt-font-sans); font-size: clamp(40px, 6vw, 88px); line-height: 1.02; font-weight: 600; letter-spacing: -0.03em; text-wrap: balance; }
+.h1 { font-family: var(--mgt-font-sans); font-size: clamp(28px, 3.5vw, 48px); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+.h2 { font-family: var(--mgt-font-sans); font-size: clamp(22px, 2.4vw, 32px); line-height: 1.2; font-weight: 600; letter-spacing: -0.015em; }
+.h3 { font-family: var(--mgt-font-sans); font-size: 20px; line-height: 1.3; font-weight: 600; letter-spacing: -0.01em; }
+.body-l { font-family: var(--mgt-font-sans); font-size: 18px; line-height: 1.55; font-weight: 400; }
+.body { font-family: var(--mgt-font-sans); font-size: 15px; line-height: 1.6; font-weight: 400; }
+.caption { font-family: var(--mgt-font-sans); font-size: 13px; line-height: 1.5; font-weight: 400; letter-spacing: 0.005em; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<style type="text/tailwindcss">
+  @theme inline { --color-background: var(--background); --color-foreground: var(--foreground); --color-card: var(--card); --color-card-foreground: var(--card-foreground); --color-popover: var(--popover); --color-popover-foreground: var(--popover-foreground); --color-primary: var(--primary); --color-primary-foreground: var(--primary-foreground); --color-muted: var(--muted); --color-muted-foreground: var(--muted-foreground); --color-border: var(--border); --color-input: var(--input); --color-ring: var(--ring); --radius-sm: var(--mgt-radius-sm); --radius-md: var(--mgt-radius-md); --radius-lg: var(--mgt-radius-lg); }
+  @layer base { body { background: var(--background); color: var(--foreground); } td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; } th { @apply whitespace-nowrap; } }
+</style>
+<style id="semantic-token-fallback">
+  .bg-background { background-color: var(--background); } .text-background { color: var(--background); } .border-background { border-color: var(--background); } .ring-background { --tw-ring-color: var(--background); }
+  .bg-foreground { background-color: var(--foreground); } .text-foreground { color: var(--foreground); } .border-foreground { border-color: var(--foreground); } .ring-foreground { --tw-ring-color: var(--foreground); }
+  .bg-card { background-color: var(--card); } .text-card { color: var(--card); } .border-card { border-color: var(--card); } .ring-card { --tw-ring-color: var(--card); }
+  .bg-card-foreground { background-color: var(--card-foreground); } .text-card-foreground { color: var(--card-foreground); } .border-card-foreground { border-color: var(--card-foreground); } .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+  .bg-popover { background-color: var(--popover); } .text-popover { color: var(--popover); } .border-popover { border-color: var(--popover); } .ring-popover { --tw-ring-color: var(--popover); }
+  .bg-popover-foreground { background-color: var(--popover-foreground); } .text-popover-foreground { color: var(--popover-foreground); } .border-popover-foreground { border-color: var(--popover-foreground); } .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+  .bg-primary { background-color: var(--primary); } .text-primary { color: var(--primary); } .border-primary { border-color: var(--primary); } .ring-primary { --tw-ring-color: var(--primary); }
+  .bg-primary-foreground { background-color: var(--primary-foreground); } .text-primary-foreground { color: var(--primary-foreground); } .border-primary-foreground { border-color: var(--primary-foreground); } .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+  .bg-muted { background-color: var(--muted); } .text-muted { color: var(--muted); } .border-muted { border-color: var(--muted); } .ring-muted { --tw-ring-color: var(--muted); }
+  .bg-muted-foreground { background-color: var(--muted-foreground); } .text-muted-foreground { color: var(--muted-foreground); } .border-muted-foreground { border-color: var(--muted-foreground); } .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+  .bg-border { background-color: var(--border); } .text-border { color: var(--border); } .border-border { border-color: var(--border); } .ring-border { --tw-ring-color: var(--border); }
+  .bg-input { background-color: var(--input); } .text-input { color: var(--input); } .border-input { border-color: var(--input); } .ring-input { --tw-ring-color: var(--input); }
+  .bg-ring { background-color: var(--ring); } .text-ring { color: var(--ring); } .border-ring { border-color: var(--ring); } .ring-ring { --tw-ring-color: var(--ring); }
+</style>
+<style>
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  [data-icon] { display: inline-flex; align-items: center; justify-content: center; -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; background-color: currentColor; }
+</style>
+<style id="critical-layout">
+  .admin-layout { display: flex; min-height: 100vh; }
+  .admin-sidebar { width: 260px; min-height: 100vh; flex-shrink: 0; position: fixed; top: 0; left: 0; z-index: 40; display: flex; flex-direction: column; }
+  .admin-main { flex: 1; margin-left: 260px; min-width: 0; }
+  @media (max-width: 768px) { .admin-sidebar { transform: translateX(-100%); transition: transform .25s ease; } .admin-sidebar.open { transform: translateX(0); box-shadow: 0 0 60px rgba(0,0,0,.4); } .admin-main { margin-left: 0; } }
+</style>
+</head>
+<body class="min-h-screen font-sans antialiased bg-muted text-foreground">
+<div class="admin-layout">
+  <aside id="admin-nav" class="admin-sidebar" style="background-color: rgb(var(--mgt-primary-900));">
+    <div class="flex items-center gap-3 px-5 py-5 border-b" style="border-color: rgb(var(--mgt-primary-700) / .5);">
+      <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color: rgb(var(--mgt-accent));"><img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;"></div>
+      <div><span class="text-white font-semibold text-base leading-tight block">MangooTech</span><span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded tracking-wider uppercase" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground));">Admin</span></div>
+    </div>
+    <nav class="flex-1 py-4 px-3 overflow-y-auto no-scrollbar">
+      <a href="./admin.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors bg-white/12 text-white"><i data-lucide="layout-dashboard" class="w-4.5 h-4.5 flex-shrink-0"></i><span>Tableau de bord</span></a>
+      <a href="./admin-boutiques.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white"><i data-lucide="store" class="w-4.5 h-4.5 flex-shrink-0"></i><span>Boutiques</span></a>
+      <a href="./admin-vendors.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white"><i data-lucide="users" class="w-4.5 h-4.5 flex-shrink-0"></i><span>Prestataires</span></a>
+      <a href="./admin-commissions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white"><i data-lucide="percent" class="w-4.5 h-4.5 flex-shrink-0"></i><span>Commissions</span></a>
+      <a href="./admin-transactions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white"><i data-lucide="receipt" class="w-4.5 h-4.5 flex-shrink-0"></i><span>Transactions</span></a>
+      <a href="./admin-boosts.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white"><i data-lucide="rocket" class="w-4.5 h-4.5 flex-shrink-0"></i><span>Boosters</span></a>
+      <a href="./admin-delivery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white"><i data-lucide="truck" class="w-4.5 h-4.5 flex-shrink-0"></i><span>Livraisons</span></a>
+      <a href="./admin-packs.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white"><i data-lucide="tags" class="w-4.5 h-4.5 flex-shrink-0"></i><span>Packs &amp; Tarifs</span></a>
+    </nav>
+    <div class="p-4 border-t flex items-center gap-3" style="border-color: rgb(var(--mgt-primary-700) / .5);">
+      <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0" style="background-color: rgb(var(--mgt-primary-500)); color: rgb(var(--mgt-primary-foreground));">DF</div>
+      <div class="flex-1 min-w-0"><div class="text-white text-sm font-medium truncate">DANSOKO Fodé</div><div class="text-xs truncate" style="color: rgb(var(--mgt-primary-300));">Administrateur</div></div>
+      <button id="btn-change-password" type="button" title="Changer le mot de passe" class="text-white/50 hover:text-white transition-colors"><i data-lucide="settings" class="w-4 h-4"></i></button>
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="sticky top-0 z-30 bg-card border-b border-border">
+      <div class="flex items-center justify-between px-6 py-3">
+        <div><h1 class="text-xl font-semibold text-foreground">Tableau de bord</h1><p class="text-sm text-muted-foreground" id="subtitle">Chargement des indicateurs…</p></div>
+        <div class="flex items-center gap-4">
+          <div class="relative hidden md:block"><i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"></i><input type="text" placeholder="Rechercher..." class="pl-9 pr-4 py-2 rounded-lg bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring w-56 transition-shadow"></div>
+          <button class="relative p-2 rounded-lg hover:bg-muted transition-colors"><i data-lucide="bell" class="w-5 h-5 text-muted-foreground"></i><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style="background-color: rgb(var(--mgt-accent));"></span></button>
+          <div class="flex items-center gap-2 pl-2 border-l border-border"><div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold" style="background-color: rgb(var(--mgt-primary-500)); color: rgb(var(--mgt-primary-foreground));">DF</div><i data-lucide="chevron-down" class="w-4 h-4 text-muted-foreground"></i></div>
+        </div>
+      </div>
+    </header>
+
+    <main class="p-6 space-y-6">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <a href="./admin-boutiques.html" class="bg-card border border-border rounded-xl p-4 flex items-center gap-3 hover:shadow-md transition-shadow"><span class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color: rgb(var(--mgt-primary-50));"><i data-lucide="store" class="w-5 h-5" style="color: rgb(var(--mgt-primary));"></i></span><div class="min-w-0"><div class="text-sm font-semibold text-foreground">Boutiques</div><div class="text-xs text-muted-foreground">Approuver &amp; gérer</div></div></a>
+        <a href="./admin-vendors.html" class="bg-card border border-border rounded-xl p-4 flex items-center gap-3 hover:shadow-md transition-shadow"><span class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color: rgb(var(--mgt-accent-50));"><i data-lucide="users" class="w-5 h-5" style="color: rgb(var(--mgt-accent));"></i></span><div class="min-w-0"><div class="text-sm font-semibold text-foreground">Prestataires</div><div class="text-xs text-muted-foreground">Approuver &amp; gérer</div></div></a>
+        <a href="./admin-commissions.html" class="bg-card border border-border rounded-xl p-4 flex items-center gap-3 hover:shadow-md transition-shadow"><span class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color: rgb(var(--mgt-primary-50));"><i data-lucide="percent" class="w-5 h-5" style="color: rgb(var(--mgt-primary));"></i></span><div class="min-w-0"><div class="text-sm font-semibold text-foreground">Commissions</div><div class="text-xs text-muted-foreground">Taux &amp; reversements</div></div></a>
+        <a href="./admin-packs.html" class="bg-card border border-border rounded-xl p-4 flex items-center gap-3 hover:shadow-md transition-shadow"><span class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color: rgb(var(--mgt-accent-50));"><i data-lucide="tags" class="w-5 h-5" style="color: rgb(var(--mgt-accent));"></i></span><div class="min-w-0"><div class="text-sm font-semibold text-foreground">Packs</div><div class="text-xs text-muted-foreground">Tarifs &amp; abonnements</div></div></a>
+      </div>
+
+      <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
+        <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2"><div class="flex items-center justify-between"><span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Boutiques</span><span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-primary-50));"><i data-lucide="store" class="w-4 h-4" style="color: rgb(var(--mgt-primary));"></i></span></div><div class="text-xl font-bold tabular-nums" style="color: rgb(var(--mgt-primary));" id="kpi-boutiques">—</div><div class="text-xs text-muted-foreground">vendeurs-boutiques</div></div>
+        <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2"><div class="flex items-center justify-between"><span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Prestataires</span><span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-accent-50));"><i data-lucide="users" class="w-4 h-4" style="color: rgb(var(--mgt-accent));"></i></span></div><div class="text-xl font-bold tabular-nums" style="color: rgb(var(--mgt-accent));" id="kpi-prestataires">—</div><div class="text-xs text-muted-foreground">prestataires de service</div></div>
+        <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2"><div class="flex items-center justify-between"><span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Produits</span><span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-info) / .12);"><i data-lucide="package" class="w-4 h-4" style="color: rgb(var(--mgt-info));"></i></span></div><div class="text-xl font-bold tabular-nums" style="color: rgb(var(--mgt-info));" id="kpi-produits">—</div><div class="text-xs text-muted-foreground">références au catalogue</div></div>
+        <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2"><div class="flex items-center justify-between"><span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Commandes</span><span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-primary-50));"><i data-lucide="shopping-cart" class="w-4 h-4" style="color: rgb(var(--mgt-primary));"></i></span></div><div class="text-xl font-bold tabular-nums" style="color: rgb(var(--mgt-primary));" id="kpi-commandes">—</div><div class="text-xs text-muted-foreground">volume cumulé</div></div>
+        <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2"><div class="flex items-center justify-between"><span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">CA</span><span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-accent-50));"><i data-lucide="banknote" class="w-4 h-4" style="color: rgb(var(--mgt-accent));"></i></span></div><div class="text-xl font-bold tabular-nums" style="color: rgb(var(--mgt-accent));" id="kpi-ca">—</div><div class="text-xs text-muted-foreground">boutiques + prestataires</div></div>
+        <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2"><div class="flex items-center justify-between"><span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Commission</span><span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-primary-50));"><i data-lucide="percent" class="w-4 h-4" style="color: rgb(var(--mgt-primary));"></i></span></div><div class="text-xl font-bold tabular-nums" style="color: rgb(var(--mgt-primary));" id="kpi-commission">—</div><div class="text-xs text-muted-foreground">estimation (10 %)</div></div>
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-4">
+        <div class="bg-card border border-border rounded-xl p-5">
+          <div class="flex items-center justify-between mb-4"><h2 class="font-semibold text-foreground">Répartition des comptes</h2><span class="text-xs text-muted-foreground">Boutiques vs Prestataires</span></div>
+          <div class="flex items-center justify-center py-2"><div class="relative w-40 h-40"><svg viewBox="0 0 100 100" class="w-full h-full -rotate-90"><circle cx="50" cy="50" r="40" fill="none" stroke="rgb(var(--mgt-muted))" stroke-width="14"></circle><circle id="donut-b" cx="50" cy="50" r="40" fill="none" stroke="rgb(var(--mgt-primary))" stroke-width="14" stroke-dasharray="0 251.2"></circle><circle id="donut-p" cx="50" cy="50" r="40" fill="none" stroke="rgb(var(--mgt-accent))" stroke-width="14" stroke-dasharray="0 251.2"></circle></svg><div class="absolute inset-0 flex flex-col items-center justify-center"><div class="text-2xl font-bold" id="donut-total">0</div><div class="text-[11px] text-muted-foreground">comptes</div></div></div></div>
+          <div class="space-y-2 mt-2"><div class="flex items-center justify-between text-sm"><span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full" style="background:rgb(var(--mgt-primary))"></span><span class="text-foreground">Boutiques</span></span><span class="font-semibold" id="leg-b">0</span></div><div class="flex items-center justify-between text-sm"><span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full" style="background:rgb(var(--mgt-accent))"></span><span class="text-foreground">Prestataires</span></span><span class="font-semibold" id="leg-p">0</span></div></div>
+        </div>
+        <div class="bg-card border border-border rounded-xl p-5 lg:col-span-2">
+          <div class="flex items-center justify-between mb-4"><h2 class="font-semibold text-foreground">Top prestataires</h2><a href="./admin-vendors.html" class="text-xs font-semibold" style="color: rgb(var(--mgt-primary));">Tout voir</a></div>
+          <div class="space-y-3" id="top-list"><div class="text-sm text-muted-foreground text-center py-8">Chargement…</div></div>
+        </div>
+      </div>
+
+      <div class="bg-card border border-border rounded-xl overflow-hidden">
+        <div class="flex items-center justify-between p-5 pb-4"><h2 class="font-semibold text-foreground">Derniers comptes</h2><span class="text-xs text-muted-foreground">Boutiques &amp; prestataires récents</span></div>
+        <div class="overflow-x-auto"><table class="w-full"><thead><tr class="bg-muted/50"><th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Compte</th><th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</th><th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ville</th><th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Statut</th><th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Création</th></tr></thead><tbody class="divide-y divide-border" id="recent-body"><tr><td colspan="5" class="text-center text-muted-foreground py-8">Chargement…</td></tr></tbody></table></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Modale « Changer le mot de passe » (administrateur) -->
+<div id="pwd-modal" class="fixed inset-0 z-[1300] hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="pwd-modal-title" style="background: rgba(15 23 42 / .55);">
+  <div class="bg-card border border-border rounded-2xl shadow-lg w-full max-w-md overflow-hidden" style="box-shadow: var(--mgt-shadow-lg);">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+      <div class="flex items-center gap-3">
+        <span class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color: rgb(var(--mgt-primary-50));"><i data-lucide="key-round" class="w-4.5 h-4.5" style="color: rgb(var(--mgt-primary));"></i></span>
+        <div><h2 id="pwd-modal-title" class="font-semibold text-foreground">Changer le mot de passe</h2><p class="text-xs text-muted-foreground">Compte administrateur</p></div>
+      </div>
+      <button id="pwd-close" type="button" class="p-2 rounded-lg hover:bg-muted text-muted-foreground transition-colors" aria-label="Fermer"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <form id="pwd-form" class="p-5 space-y-4" novalidate>
+      <div>
+        <label for="pwd-current" class="block text-sm font-medium text-foreground mb-1.5">Mot de passe actuel</label>
+        <div class="relative">
+          <input id="pwd-current" name="current" type="password" autocomplete="current-password" required placeholder="••••••••••" class="w-full px-3 py-2.5 rounded-lg bg-background border border-input text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow pr-10">
+          <button type="button" class="pwd-toggle absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" data-target="pwd-current" aria-label="Afficher/masquer"><i data-lucide="eye" class="w-4 h-4"></i></button>
+        </div>
+      </div>
+      <div>
+        <label for="pwd-new" class="block text-sm font-medium text-foreground mb-1.5">Nouveau mot de passe</label>
+        <div class="relative">
+          <input id="pwd-new" name="new" type="password" autocomplete="new-password" required placeholder="10+ caractères, majuscule, chiffre, symbole" class="w-full px-3 py-2.5 rounded-lg bg-background border border-input text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow pr-10">
+          <button type="button" class="pwd-toggle absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" data-target="pwd-new" aria-label="Afficher/masquer"><i data-lucide="eye" class="w-4 h-4"></i></button>
+        </div>
+      </div>
+      <div>
+        <label for="pwd-confirm" class="block text-sm font-medium text-foreground mb-1.5">Confirmer le nouveau mot de passe</label>
+        <div class="relative">
+          <input id="pwd-confirm" name="confirm" type="password" autocomplete="new-password" required placeholder="Répétez le mot de passe" class="w-full px-3 py-2.5 rounded-lg bg-background border border-input text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow pr-10">
+          <button type="button" class="pwd-toggle absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" data-target="pwd-confirm" aria-label="Afficher/masquer"><i data-lucide="eye" class="w-4 h-4"></i></button>
+        </div>
+      </div>
+      <div id="pwd-error" class="hidden text-sm rounded-lg px-3 py-2" style="background-color: rgb(var(--mgt-error) / .12); color: rgb(var(--mgt-error));"></div>
+      <div id="pwd-ok" class="hidden text-sm rounded-lg px-3 py-2" style="background-color: rgb(var(--mgt-success) / .15); color: rgb(var(--mgt-success));"></div>
+      <div class="flex items-center justify-end gap-3 pt-1">
+        <button id="pwd-cancel" type="button" class="px-4 py-2.5 rounded-lg text-sm font-medium border border-border text-foreground hover:bg-muted transition-colors">Annuler</button>
+        <button id="pwd-submit" type="submit" class="px-4 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors disabled:opacity-60" style="background-color: rgb(var(--mgt-primary));">Mettre à jour</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>lucide.createIcons();</script>
+<script>
+(function () {
+  'use strict';
+  var token = localStorage.getItem('mgt_token') || '';
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function money(n) { n = Number(n) || 0; return n.toLocaleString('fr-FR') + ' FCFA'; }
+  function num(n) { return (Number(n) || 0).toLocaleString('fr-FR'); }
+  function dateFR(iso) { if (!iso) return '—'; var d = new Date(iso); if (isNaN(d)) return '—'; return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }); }
+  function initials(name) { name = String(name || '?').trim(); var p = name.split(/\s+/); return p.length === 1 ? p[0].slice(0, 2).toUpperCase() : (p[0][0] + p[p.length - 1][0]).toUpperCase(); }
+  function setText(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+  function statusPill(s) {
+    var m = { active: ['Active', 'rgb(var(--mgt-success) / .15)', 'rgb(var(--mgt-success))'], en_attente: ['En attente', 'rgb(var(--mgt-warning) / .15)', 'rgb(var(--mgt-warning))'], suspendue: ['Suspendue', 'rgb(var(--mgt-error) / .15)', 'rgb(var(--mgt-error))'], fermee: ['Fermée', 'rgb(var(--mgt-muted-foreground) / .15)', 'rgb(var(--mgt-muted-foreground))'] };
+    var x = m[s] || ['—', 'rgb(var(--mgt-muted-foreground) / .15)', 'rgb(var(--mgt-muted-foreground))'];
+    return '<span class="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full" style="background-color:' + x[1] + ';color:' + x[2] + ';"><span class="w-1.5 h-1.5 rounded-full" style="background-color:' + x[2] + ';"></span>' + x[0] + '</span>';
+  }
+  function api(path) { return fetch(path, { headers: { 'Authorization': 'Bearer ' + token } }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }); }
+
+  Promise.all([api('/api/admin/boutiques'), api('/api/admin/prestataires')]).then(function (res) {
+    var b = res[0].boutiques || [], p = res[1].prestataires || [];
+    var nbB = b.length, nbP = p.length;
+    var products = b.reduce(function (s, x) { return s + (Number(x.stats && x.stats.products) || 0); }, 0);
+    var orders = b.reduce(function (s, x) { return s + (Number(x.stats && x.stats.orders) || 0); }, 0) + p.reduce(function (s, x) { return s + (Number(x.stats && x.stats.orders) || 0); }, 0);
+    var ca = b.reduce(function (s, x) { return s + (Number(x.stats && x.stats.ca) || 0); }, 0) + p.reduce(function (s, x) { return s + (Number(x.stats && x.stats.ca) || 0); }, 0);
+    setText('kpi-boutiques', num(nbB)); setText('kpi-prestataires', num(nbP)); setText('kpi-produits', num(products)); setText('kpi-commandes', num(orders)); setText('kpi-ca', money(ca)); setText('kpi-commission', money(Math.round(ca * 0.10)));
+    setText('subtitle', nbB + ' boutique' + (nbB > 1 ? 's' : '') + ' · ' + nbP + ' prestataire' + (nbP > 1 ? 's' : ''));
+
+    var total = nbB + nbP, C = 251.2;
+    setText('donut-total', num(total)); setText('leg-b', num(nbB)); setText('leg-p', num(nbP));
+    if (total > 0) {
+      var bFrac = nbB / total, pFrac = nbP / total;
+      document.getElementById('donut-b').setAttribute('stroke-dasharray', (bFrac * C) + ' ' + C);
+      document.getElementById('donut-p').setAttribute('stroke-dasharray', (pFrac * C) + ' ' + C);
+      document.getElementById('donut-p').setAttribute('stroke-dashoffset', String(-(bFrac * C)));
+    }
+
+    var top = p.slice().sort(function (a, b2) { return (Number(b2.stats && b2.stats.ca) || 0) - (Number(a.stats && a.stats.ca) || 0); }).slice(0, 5);
+    document.getElementById('top-list').innerHTML = top.length ? top.map(function (x, i) {
+      var caV = Number(x.stats && x.stats.ca) || 0, rating = Number(x.stats && x.stats.rating) || 0;
+      return '<div class="flex items-center gap-3">' +
+        '<span class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ' + (i === 0 ? 'text-white' : 'bg-muted text-muted-foreground') + '"' + (i === 0 ? ' style="background:rgb(var(--mgt-accent));"' : '') + '>' + (i + 1) + '</span>' +
+        '<div class="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0" style="background:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary));">' + esc(initials(x.name)) + '</div>' +
+        '<div class="min-w-0 flex-1"><div class="text-sm font-semibold text-foreground truncate">' + esc(x.name) + '</div><div class="text-xs text-muted-foreground truncate">' + esc(x.category || 'Services') + ' · ' + esc(x.city || '—') + '</div></div>' +
+        '<div class="text-right"><div class="text-sm font-bold text-foreground">' + money(caV) + '</div><div class="text-xs text-muted-foreground">' + num(rating) + '% de note</div></div>' +
+      '</div>';
+    }).join('') : '<div class="text-sm text-muted-foreground text-center py-8">Aucun prestataire pour le moment.</div>';
+
+    var all = b.map(function (x) { return Object.assign({}, x, { _type: 'Boutique' }); }).concat(p.map(function (x) { return Object.assign({}, x, { _type: 'Prestataire' }); }));
+    all.sort(function (a, b2) { return (new Date(b2.createdAt) || 0) - (new Date(a.createdAt) || 0); });
+    var recent = all.slice(0, 8);
+    document.getElementById('recent-body').innerHTML = recent.length ? recent.map(function (x) {
+      var isB = x._type === 'Boutique';
+      var typeBadge = isB ? '<span class="inline-flex items-center text-xs font-medium px-2 py-1 rounded-full" style="background:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary));">Boutique</span>' : '<span class="inline-flex items-center text-xs font-medium px-2 py-1 rounded-full" style="background:rgb(var(--mgt-accent-50));color:rgb(var(--mgt-accent));">Prestataire</span>';
+      return '<tr><td class="px-5 py-3"><div class="flex items-center gap-3"><div class="w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0" style="background:rgb(var(--mgt-muted));color:var(--foreground);">' + esc(initials(x.name)) + '</div><div><div class="font-semibold text-sm text-foreground">' + esc(x.name) + '</div><div class="text-xs text-muted-foreground">' + esc(x.owner || '') + '</div></div></div></td>' +
+        '<td class="px-5 py-3">' + typeBadge + '</td>' +
+        '<td class="px-5 py-3 text-muted-foreground">' + esc(x.city || '—') + '</td>' +
+        '<td class="px-5 py-3">' + statusPill(x.status) + '</td>' +
+        '<td class="px-5 py-3 text-muted-foreground">' + esc(dateFR(x.createdAt)) + '</td></tr>';
+    }).join('') : '<tr><td colspan="5" class="text-center text-muted-foreground py-8">Aucun compte enregistré.</td></tr>';
+  }).catch(function () {
+    setText('subtitle', 'Impossible de charger les données.');
+    document.getElementById('top-list').innerHTML = '<div class="text-sm text-center py-8" style="color:rgb(var(--mgt-error));">Erreur de chargement.</div>';
+    document.getElementById('recent-body').innerHTML = '<tr><td colspan="5" class="text-center py-8" style="color:rgb(var(--mgt-error));">Erreur de chargement.</td></tr>';
+  });
+
+  // --- Changement de mot de passe administrateur ---
+  var modal = document.getElementById('pwd-modal');
+  var form = document.getElementById('pwd-form');
+  var errBox = document.getElementById('pwd-error');
+  var okBox = document.getElementById('pwd-ok');
+  var submitBtn = document.getElementById('pwd-submit');
+  var fieldCurrent = document.getElementById('pwd-current');
+  var fieldNew = document.getElementById('pwd-new');
+  var fieldConfirm = document.getElementById('pwd-confirm');
+
+  function setErr(msg) { if (msg) { errBox.textContent = msg; errBox.classList.remove('hidden'); } else { errBox.classList.add('hidden'); errBox.textContent = ''; } }
+  function setOk(msg) { if (msg) { okBox.textContent = msg; okBox.classList.remove('hidden'); } else { okBox.classList.add('hidden'); okBox.textContent = ''; } }
+  function openModal() { setErr(''); setOk(''); fieldCurrent.value = ''; fieldNew.value = ''; fieldConfirm.value = ''; modal.classList.remove('hidden'); modal.classList.add('flex'); fieldCurrent.focus(); }
+  function closeModal() { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+
+  var openBtn = document.getElementById('btn-change-password');
+  if (openBtn) openBtn.addEventListener('click', openModal);
+  document.getElementById('pwd-close').addEventListener('click', closeModal);
+  document.getElementById('pwd-cancel').addEventListener('click', closeModal);
+  modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal(); });
+
+  Array.prototype.forEach.call(document.querySelectorAll('.pwd-toggle'), function (btn) {
+    btn.addEventListener('click', function () {
+      var input = document.getElementById(btn.getAttribute('data-target'));
+      if (!input) return;
+      var showing = input.type === 'text';
+      input.type = showing ? 'password' : 'text';
+      btn.innerHTML = showing ? '<i data-lucide="eye" class="w-4 h-4"></i>' : '<i data-lucide="eye-off" class="w-4 h-4"></i>';
+      lucide.createIcons();
+    });
+  });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    setErr(''); setOk('');
+    var current = fieldCurrent.value;
+    var next = fieldNew.value;
+    var confirm = fieldConfirm.value;
+    if (!current) { setErr('Renseignez votre mot de passe actuel.'); return; }
+    if (!next) { setErr('Renseignez le nouveau mot de passe.'); return; }
+    if (next !== confirm) { setErr('La confirmation ne correspond pas au nouveau mot de passe.'); return; }
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Mise à jour…';
+    fetch('/api/auth/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ currentPassword: current, newPassword: next })
+    }).then(function (r) {
+      return r.json().catch(function () { return { ok: false, error: 'Réponse invalide du serveur.' }; }).then(function (data) { return { status: r.status, data: data }; });
+    }).then(function (res) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Mettre à jour';
+      if (res.data && res.data.ok) {
+        setOk('Mot de passe mis à jour. Les autres sessions ont été déconnectées.');
+        fieldCurrent.value = ''; fieldNew.value = ''; fieldConfirm.value = '';
+      } else {
+        setErr((res.data && res.data.error) || 'Impossible de changer le mot de passe.');
+      }
+    }).catch(function () {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Mettre à jour';
+      setErr('Erreur réseau : impossible de contacter le serveur.');
+    });
+  });
+})();
+</script>
+<script src="../assets/mangoo-admin-shell.js"></script>
+</body>
+</html>

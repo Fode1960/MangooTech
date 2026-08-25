@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Aide & Support</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root { --mgt-radius-sm: 4px; --mgt-radius-md: 8px; --mgt-radius-lg: 16px; --mgt-radius-full: 9999px; }
+
+:root,
+html.light {
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+:root {
+  --background: 255 255 255; --foreground: 15 23 42; --card: 255 255 255; --card-foreground: 15 23 42;
+  --popover: 255 255 255; --popover-foreground: 15 23 42; --primary: 26 92 42; --primary-foreground: 255 255 255;
+  --muted: 248 250 252; --muted-foreground: 100 116 139; --border: 226 232 240; --input: 226 232 240; --ring: 26 92 42;
+  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px; --radius-full: 9999px;
+  --state-success: 129 199 134; --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77; --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68; --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246; --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-card: 20 20 26; --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26; --mgt-popover-foreground: 248 250 252; --mgt-muted: 30 30 38; --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50; --mgt-input: 40 40 50; --mgt-ring: 76 168 82;
+  --background: 11 11 15; --foreground: 248 250 252; --card: 20 20 26; --card-foreground: 248 250 252;
+  --popover: 20 20 26; --popover-foreground: 248 250 252; --primary: 76 168 82; --primary-foreground: 255 255 255;
+  --muted: 30 30 38; --muted-foreground: 148 163 184; --border: 40 40 50; --input: 40 40 50; --ring: 76 168 82;
+}
+
+.h-display { font-family: var(--mgt-font-sans); font-size: clamp(40px, 6vw, 88px); line-height: 1.02; font-weight: 600; letter-spacing: -0.03em; text-wrap: balance; }
+.h1 { font-family: var(--mgt-font-sans); font-size: clamp(28px, 3.5vw, 48px); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+.h2 { font-family: var(--mgt-font-sans); font-size: clamp(22px, 2.4vw, 32px); line-height: 1.2; font-weight: 600; letter-spacing: -0.015em; }
+.h3 { font-family: var(--mgt-font-sans); font-size: 20px; line-height: 1.3; font-weight: 600; letter-spacing: -0.01em; }
+.body-l { font-family: var(--mgt-font-sans); font-size: 18px; line-height: 1.55; font-weight: 400; }
+.body { font-family: var(--mgt-font-sans); font-size: 15px; line-height: 1.6; font-weight: 400; }
+.caption { font-family: var(--mgt-font-sans); font-size: 13px; line-height: 1.5; font-weight: 400; letter-spacing: 0.005em; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); } .text-background { color: var(--background); } .border-background { border-color: var(--background); } .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); } .text-foreground { color: var(--foreground); } .border-foreground { border-color: var(--foreground); } .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); } .text-card { color: var(--card); } .border-card { border-color: var(--card); } .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); } .text-card-foreground { color: var(--card-foreground); } .border-card-foreground { border-color: var(--card-foreground); } .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); } .text-popover { color: var(--popover); } .border-popover { border-color: var(--popover); } .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); } .text-popover-foreground { color: var(--popover-foreground); } .border-popover-foreground { border-color: var(--popover-foreground); } .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); } .text-primary { color: var(--primary); } .border-primary { border-color: var(--primary); } .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); } .text-primary-foreground { color: var(--primary-foreground); } .border-primary-foreground { border-color: var(--primary-foreground); } .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); } .text-muted { color: var(--muted); } .border-muted { border-color: var(--muted); } .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); } .text-muted-foreground { color: var(--muted-foreground); } .border-muted-foreground { border-color: var(--muted-foreground); } .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); } .text-border { color: var(--border); } .border-border { border-color: var(--border); } .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); } .text-input { color: var(--input); } .border-input { border-color: var(--input); } .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); } .text-ring { color: var(--ring); } .border-ring { border-color: var(--ring); } .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] { display: inline-flex; align-items: center; justify-content: center; -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; background-color: currentColor; }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased flex bg-[rgb(var(--mgt-muted))]">
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-[rgb(var(--mgt-primary))] text-[rgb(var(--mgt-primary-foreground))]">
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+        <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+        <div>
+          <span class="font-semibold text-base tracking-tight">Mangoo</span><span class="font-light text-base tracking-tight text-white/70">Tech</span>
+        </div>
+      </div>
+      <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <a href="./dashboard-overview.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+          Vue d'ensemble
+        </a>
+        <a href="./dashboard-performance.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bar-chart-3" class="w-4.5 h-4.5"></i>
+          Performance
+        </a>
+        <a href="./dashboard-reviews.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="star" class="w-4.5 h-4.5"></i>
+          Avis clients
+        </a>
+        <a href="./dashboard-agenda.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="calendar-days" class="w-4.5 h-4.5"></i>
+          Rendez-vous
+        </a>
+        <a href="./dashboard-finances.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wallet" class="w-4.5 h-4.5"></i>
+          Finances
+        </a>
+        <a href="./dashboard-notifications.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+          Notifications
+        </a>
+        <a href="./dashboard-orders.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shopping-bag" class="w-4.5 h-4.5"></i>
+          Commandes
+        </a>
+        <a href="./dashboard-clients.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users" class="w-4.5 h-4.5"></i>
+          Clients
+        </a>
+        <a href="./dashboard-team.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users-round" class="w-4.5 h-4.5"></i>
+          Équipe
+        </a>
+        <a href="./dashboard-messages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="message-square" class="w-4.5 h-4.5"></i>
+          Messagerie
+        </a>
+        <a href="./dashboard-live.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="radio" class="w-4.5 h-4.5"></i>
+          Live
+        </a>
+        <a href="./dashboard-services.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="briefcase" class="w-4.5 h-4.5"></i>
+          Prestations
+        </a>
+        <a href="./dashboard-catalogue.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="package" class="w-4.5 h-4.5"></i>
+          Catalogue
+        </a>
+        <a href="./dashboard-inventaire.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="boxes" class="w-4.5 h-4.5"></i>
+          Inventaire
+        </a>
+        <a href="./dashboard-gallery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="images" class="w-4.5 h-4.5"></i>
+          Galerie
+        </a>
+        <a href="./dashboard-boosters.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="zap" class="w-4.5 h-4.5"></i>
+          Boosters
+        </a>
+        <a href="./dashboard-promotions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="badge-percent" class="w-4.5 h-4.5"></i>
+          Promotions
+        </a>
+        <a href="./dashboard-fidelite.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="award" class="w-4.5 h-4.5"></i>
+          Fidélité
+        </a>
+        <a href="./dashboard-parrainage.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="gift" class="w-4.5 h-4.5"></i>
+          Parrainage
+        </a>
+        <a href="./dashboard-classement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="trophy" class="w-4.5 h-4.5"></i>
+          Classement
+        </a>
+        <a href="./dashboard-verification.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shield-check" class="w-4.5 h-4.5"></i>
+          Vérification
+        </a>
+        <a href="./dashboard-recommandation.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="compass" class="w-4.5 h-4.5"></i>
+          Découverte
+        </a>
+        <a href="./dashboard-hors-ligne.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wifi-off" class="w-4.5 h-4.5"></i>
+          Hors-ligne
+        </a>
+        <a href="./dashboard-rapports.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
+          Rapports
+        </a>
+        <a href="./dashboard-support.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-medium transition-colors">
+          <i data-lucide="life-buoy" class="w-4.5 h-4.5"></i>
+          Support
+        </a>
+        <a href="./dashboard-offres.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="tag" class="w-4.5 h-4.5"></i>
+          Offres & Tarifs
+        </a>
+        <a href="./dashboard-abonnement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="credit-card" class="w-4.5 h-4.5"></i>
+          Abonnement
+        </a>
+        <a href="./dashboard-settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="settings" class="w-4.5 h-4.5"></i>
+          Parametres
+        </a>
+      </nav>
+      <div class="border-t border-white/10 px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>CA</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate" data-vendor-name>DAN Boutique</p>
+            <p class="text-xs text-white/60 truncate" data-vendor-role>Prestataire certifié</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div id="app-main" class="flex-1 ml-60 min-h-screen flex flex-col">
+      <header class="sticky top-0 z-30 flex items-center justify-between gap-4 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] px-8 py-3.5">
+        <div class="flex items-center gap-4">
+          <h1 class="h3 tabular-nums">Aide & Support</h1>
+          <span class="inline-flex items-center gap-1.5 caption px-2.5 py-0.5 rounded-full font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+            <i data-lucide="check" class="w-3 h-3"></i>
+            Gratuit
+          </span>
+          <span class="inline-flex items-center gap-2 caption text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-success))]"></span>
+            <span id="header-open-tickets">2 tickets ouverts</span>
+          </span>
+          <span class="inline-flex items-center gap-2 caption text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-info))]"></span>
+            24 articles
+          </span>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="relative hidden sm:block">
+            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+            <input id="topbar-search" type="text" placeholder="Rechercher..." class="pl-9 pr-4 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+          </div>
+          <button id="btn-notifications" class="relative p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))]" aria-label="Notifications">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="btn-notifications-badge" class="absolute top-1 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-[10px] font-bold leading-4 text-center" style="display:none;"></span>
+          </button>
+          <div id="btn-account" class="flex items-center gap-3 pl-2 border-l border-[rgb(var(--mgt-border))] cursor-pointer" role="button" tabindex="0">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>CA</div>
+            <div class="hidden sm:block text-right">
+              <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]" data-vendor-name>DAN Boutique</p>
+              <div class="flex items-center gap-1 text-xs text-[rgb(var(--mgt-accent))]">
+                <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                <span data-vendor-rating>4.8</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="flex-1 p-8 space-y-6">
+<!-- ===== KPIs SUPPORT ===== -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
+                <i data-lucide="ticket" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-warning)/0.20)] text-[rgb(var(--mgt-accent-700))]">
+                <i data-lucide="alert-circle" class="w-3 h-3"></i> <span id="kpi-open-badge">2 ouverts</span>
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Tickets ouverts</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]" id="kpi-open-count">2</p>
+          </div>
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                <i data-lucide="check-circle" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +9
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Tickets résolus</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">18</p>
+          </div>
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                <i data-lucide="timer" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-down" class="w-3 h-3"></i> -2h
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Temps de réponse moyen</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">4<span class="text-lg font-medium text-[rgb(var(--mgt-muted-foreground))]"> h</span></p>
+          </div>
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
+                <i data-lucide="book-open" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))]">
+                <i data-lucide="sparkles" class="w-3 h-3"></i> Ressources
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Articles d'aide</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">24</p>
+          </div>
+        </div>
+
+        <!-- ===== RECHERCHE + NOUVEAU TICKET ===== -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div class="lg:col-span-1 bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-center gap-3 mb-5">
+              <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-accent-50))]">
+                <i data-lucide="message-square-plus" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+              </div>
+              <div>
+                <h2 class="h3">Nouveau ticket</h2>
+                <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Décrivez votre problème</p>
+              </div>
+            </div>
+            <form class="space-y-4" id="ticket-form">
+              <div>
+                <label class="caption font-semibold text-[rgb(var(--mgt-foreground))] block mb-1.5">Sujet</label>
+                <select id="ticket-subject" class="w-full px-3 py-2.5 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))]">
+                  <option>Problème technique</option>
+                  <option>Paiement / facturation</option>
+                  <option>Compte & accès</option>
+                  <option>Autre demande</option>
+                </select>
+              </div>
+              <div>
+                <label class="caption font-semibold text-[rgb(var(--mgt-foreground))] block mb-1.5">Message</label>
+                <textarea id="ticket-message" rows="4" placeholder="Expliquez votre problème..." class="w-full px-4 py-2.5 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))] resize-none"></textarea>
+              </div>
+              <button type="submit" id="ticket-submit" class="w-full py-2.5 rounded-lg bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm hover:bg-[rgb(var(--mgt-accent-600))] transition-colors">Envoyer le ticket</button>
+            </form>
+          </div>
+
+          <!-- ===== TICKETS RECENTS ===== -->
+          <div class="lg:col-span-2 bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-center justify-between mb-5">
+              <div>
+                <h2 class="h3">Tickets récents</h2>
+                <p class="caption text-[rgb(var(--mgt-muted-foreground))] mt-1" id="tickets-summary">18 résolus · 2 en cours</p>
+              </div>
+              <button class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[rgb(var(--mgt-border))] text-sm font-medium text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors">
+                <i data-lucide="history" class="w-4 h-4"></i>
+                Historique
+              </button>
+            </div>
+            <div class="space-y-4" id="ticket-list">
+              <div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-lg border border-[rgb(var(--mgt-border))] hover:border-[rgb(var(--mgt-primary))] transition-colors">
+                <div class="flex items-center gap-3">
+                  <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-accent-50))]">
+                    <i data-lucide="ticket" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+                  </div>
+                  <div>
+                    <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">#1042 - Paiement non reçu</p>
+                    <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Ouvert il y a 6 h</p>
+                  </div>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-warning)/0.20)] text-[rgb(var(--mgt-accent-700))]">En cours</span>
+              </div>
+              <div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-lg border border-[rgb(var(--mgt-border))] hover:border-[rgb(var(--mgt-primary))] transition-colors">
+                <div class="flex items-center gap-3">
+                  <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-primary-50))]">
+                    <i data-lucide="lock" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+                  </div>
+                  <div>
+                    <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">#1041 - Réinitialisation mot de passe</p>
+                    <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Ouvert hier</p>
+                  </div>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-warning)/0.20)] text-[rgb(var(--mgt-accent-700))]">En cours</span>
+              </div>
+              <div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-lg border border-[rgb(var(--mgt-border))] hover:border-[rgb(var(--mgt-primary))] transition-colors">
+                <div class="flex items-center gap-3">
+                  <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-primary-50))]">
+                    <i data-lucide="check-circle" class="w-5 h-5 text-[rgb(var(--mgt-success))]"></i>
+                  </div>
+                  <div>
+                    <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">#1038 - Erreur d'affichage galerie</p>
+                    <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Résolu il y a 2 j</p>
+                  </div>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">Résolu</span>
+              </div>
+              <div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-lg border border-[rgb(var(--mgt-border))] hover:border-[rgb(var(--mgt-primary))] transition-colors">
+                <div class="flex items-center gap-3">
+                  <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-primary-50))]">
+                    <i data-lucide="check-circle" class="w-5 h-5 text-[rgb(var(--mgt-success))]"></i>
+                  </div>
+                  <div>
+                    <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">#1035 - Question sur les commissions</p>
+                    <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Résolu il y a 4 j</p>
+                  </div>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">Résolu</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== FAQ ===== -->
+        <div>
+          <h2 class="h2 mb-1">Questions fréquentes</h2>
+          <p class="body text-[rgb(var(--mgt-muted-foreground))] mb-5">Retrouvez les réponses aux questions les plus posées</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+              <div class="flex items-start gap-3">
+                <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-primary-50))] shrink-0">
+                  <i data-lucide="help-circle" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+                </div>
+                <div>
+                  <h3 class="text-base font-semibold text-[rgb(var(--mgt-foreground))] mb-1">Comment sont calculées les commissions ?</h3>
+                  <p class="text-sm text-[rgb(var(--mgt-muted-foreground))]">Les commissions sont calculées sur chaque prestation selon le taux de l'équipe membre (12 à 18 %). Un bonus de +5 % s'applique au-delà de 100 000 FCFA de CA mensuel.</p>
+                </div>
+              </div>
+            </div>
+            <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+              <div class="flex items-start gap-3">
+                <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-accent-50))] shrink-0">
+                  <i data-lucide="wallet" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+                </div>
+                <div>
+                  <h3 class="text-base font-semibold text-[rgb(var(--mgt-foreground))] mb-1">Quand sont versés les paiements ?</h3>
+                  <p class="text-sm text-[rgb(var(--mgt-muted-foreground))]">Les paiements sont versés chaque vendredi pour les transactions de la semaine précédente, par Mobile Money ou virement bancaire.</p>
+                </div>
+              </div>
+            </div>
+            <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+              <div class="flex items-start gap-3">
+                <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-primary-50))] shrink-0">
+                  <i data-lucide="bell" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+                </div>
+                <div>
+                  <h3 class="text-base font-semibold text-[rgb(var(--mgt-foreground))] mb-1">Comment gérer mes notifications ?</h3>
+                  <p class="text-sm text-[rgb(var(--mgt-muted-foreground))]">Rendez-vous dans Parametres &gt; Notifications pour choisir les alertes à recevoir : nouvelles commandes, rendez-vous, avis et messages.</p>
+                </div>
+              </div>
+            </div>
+            <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+              <div class="flex items-start gap-3">
+                <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-accent-50))] shrink-0">
+                  <i data-lucide="shield" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+                </div>
+                <div>
+                  <h3 class="text-base font-semibold text-[rgb(var(--mgt-foreground))] mb-1">Comment sécuriser mon compte ?</h3>
+                  <p class="text-sm text-[rgb(var(--mgt-muted-foreground))]">Activez la double authentification dans Parametres &gt; Sécurité et utilisez un mot de passe unique et fort.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script>lucide.createIcons();</script>
+    <script>
+      (function () {
+        function showToast(message) {
+          var existing = document.getElementById('mgt-toast');
+          if (existing) existing.remove();
+          var toast = document.createElement('div');
+          toast.id = 'mgt-toast';
+          toast.textContent = message;
+          toast.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));padding:10px 18px;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);font-size:14px;font-weight:500;box-shadow:var(--mgt-shadow-md);z-index:9999;opacity:0;transition:opacity .25s ease;';
+          document.body.appendChild(toast);
+          requestAnimationFrame(function () { toast.style.opacity = '1'; });
+          setTimeout(function () {
+            toast.style.opacity = '0';
+            setTimeout(function () { toast.remove(); }, 300);
+          }, 2600);
+        }
+
+        var cfg = null;
+        var nextTicketNumber = 1043;
+
+        function setText(id, value) {
+          var el = document.getElementById(id);
+          if (el) el.textContent = value;
+        }
+
+        function renderTickets(tickets) {
+          var list = document.getElementById('ticket-list');
+          if (!list) return;
+          if (!tickets || !tickets.length) {
+            list.innerHTML = '<p class="caption text-[rgb(var(--mgt-muted-foreground))]">Aucun ticket.</p>';
+            return;
+          }
+          list.innerHTML = tickets.map(function (t) {
+            var open = t.status !== 'resolu';
+            var icon = open ? 'ticket' : 'check-circle';
+            var iconColor = open ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-success))';
+            var badgeClass = open
+              ? 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-warning)/0.20)] text-[rgb(var(--mgt-accent-700))]'
+              : 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]';
+            var badgeText = open ? 'En cours' : 'Résolu';
+            var subject = t.subject || '';
+            var when = t.updatedAt ? new Date(t.updatedAt).toLocaleDateString('fr-FR') : '';
+            return '<div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-lg border border-[rgb(var(--mgt-border))] hover:border-[rgb(var(--mgt-primary))] transition-colors">' +
+              '<div class="flex items-center gap-3">' +
+              '<div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-accent-50))]"><i data-lucide="' + icon + '" class="w-5 h-5" style="color:' + iconColor + '"></i></div>' +
+              '<div><p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">' + subject + '</p>' +
+              '<p class="caption text-[rgb(var(--mgt-muted-foreground))]">' + (open ? 'Ouvert' : 'Résolu') + (when ? ' · ' + when : '') + '</p></div></div>' +
+              '<span class="' + badgeClass + '">' + badgeText + '</span></div>';
+          }).join('');
+          if (window.lucide) lucide.createIcons();
+        }
+
+        function render() {
+          var s = (cfg && cfg.support) || {};
+          var openTickets = s.openTickets != null ? s.openTickets : 0;
+          var resolvedTickets = s.resolvedTickets != null ? s.resolvedTickets : 0;
+          var avgHours = s.avgResponseHours != null ? s.avgResponseHours : 0;
+          var articles = s.articles != null ? s.articles : 0;
+
+          setText('header-open-tickets', openTickets + ' tickets ouverts');
+          setText('kpi-open-badge', openTickets + ' ouverts');
+          setText('kpi-open-count', openTickets);
+          setText('kpi-resolved', resolvedTickets);
+          setText('tickets-summary', resolvedTickets + ' résolus · ' + openTickets + ' en cours');
+          var avgEl = document.getElementById('kpi-avg-response');
+          if (avgEl) avgEl.innerHTML = avgHours + '<span class="text-lg font-medium text-[rgb(var(--mgt-muted-foreground))]"> h</span>';
+          setText('kpi-articles', articles);
+          renderTickets(s.tickets || []);
+        }
+
+        var form = document.getElementById('ticket-form');
+        if (form) {
+          form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var subjectEl = document.getElementById('ticket-subject');
+            var messageEl = document.getElementById('ticket-message');
+            var subject = subjectEl ? subjectEl.value : 'Autre demande';
+            var message = messageEl ? messageEl.value.trim() : '';
+
+            if (!message) {
+              showToast('Veuillez décrire votre problème.');
+              return;
+            }
+
+            var ticket = {
+              id: 'tk-' + nextTicketNumber,
+              subject: subject,
+              status: 'ouvert',
+              updatedAt: new Date().toISOString()
+            };
+
+            var tickets = (cfg && cfg.support && cfg.support.tickets) || [];
+            tickets = [ticket].concat(tickets);
+            var openTickets = tickets.filter(function (t) { return t.status !== 'resolu'; }).length;
+
+            if (!cfg) cfg = {};
+            cfg.support = cfg.support || {};
+            cfg.support.tickets = tickets;
+            cfg.support.openTickets = openTickets;
+            nextTicketNumber++;
+
+            var done = function () { render(); };
+            if (window.MangooVendorConfig) {
+              MangooVendorConfig.patch('support', { tickets: tickets, openTickets: openTickets }).then(done).catch(done);
+            } else {
+              done();
+            }
+
+            if (messageEl) messageEl.value = '';
+            if (subjectEl) subjectEl.selectedIndex = 0;
+            showToast('Ticket envoyé');
+          });
+        }
+
+        if (window.MangooVendorConfig) {
+          MangooVendorConfig.get().then(function (res) {
+            if (res && res.ok) { cfg = res.config || {}; render(); }
+          }).catch(function () {});
+        }
+      })();
+    </script>
+<style id="mgt-mobile-responsive">
+@media (max-width: 768px) {
+  .dashboard-sidebar { position: fixed !important; top: 0; left: 0; z-index: 1000; width: 260px !important; height: 100vh !important; transform: translateX(-100%); transition: transform .3s ease; overflow-y: auto; }
+  .dashboard-sidebar.open { transform: translateX(0); }
+  .dashboard-sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999; }
+  .dashboard-sidebar-overlay.show { display: block; }
+  .mobile-menu-btn { display: flex !important; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: pointer; color: inherit; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+@media (min-width: 769px) { .mobile-menu-btn { display: none !important; } .mobile-only { display: none !important; } }
+@media (max-width: 480px) { .kpi-grid { grid-template-columns: 1fr !important; } }
+</style>
+<script>
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    var sidebar = document.querySelector('.dashboard-sidebar');
+    if (!sidebar) return;
+    var overlay = document.createElement('div');
+    overlay.className = 'dashboard-sidebar-overlay';
+    overlay.addEventListener('click', function(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); });
+    document.body.appendChild(overlay);
+    var topbar = document.querySelector('.dashboard-topbar');
+    if (topbar) {
+      var btn = document.createElement('button');
+      btn.className = 'mobile-menu-btn';
+      btn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+      btn.addEventListener('click', function(){ sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
+      topbar.insertBefore(btn, topbar.firstChild);
+    }
+    sidebar.querySelectorAll('a').forEach(function(link){
+      link.addEventListener('click', function(){
+        if (window.innerWidth <= 768) { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+      });
+    });
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  function __mgtSidebarScrollFix(){
+    var active = document.querySelector('nav a[class*="bg-white/15"]');
+    if (!active) return;
+    var nav = active.closest('nav');
+    if (!nav) return;
+    var navRect = nav.getBoundingClientRect();
+    var linkRect = active.getBoundingClientRect();
+    var target = nav.scrollTop + (linkRect.top - navRect.top) - (navRect.height - linkRect.height) / 2;
+    nav.scrollTop = Math.max(0, target);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', __mgtSidebarScrollFix);
+  } else {
+    __mgtSidebarScrollFix();
+  }
+})();
+</script>
+
+<script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+<script src="../assets/mangoo-vendor-config.js"></script>
+<script src="../assets/mangoo-dashboard-shell.js"></script>
+</body>
+</html>

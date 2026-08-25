@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Commandes</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  /* --- Radius Scale (root-level for preflight) --- */
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  /* --- Brand Primary: Dark Green --- */
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  /* --- Orange Accent (CTAs, highlights) --- */
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  /* --- Neutral Surface & Text Scale --- */
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  /* --- State Colors --- */
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  /* --- Shadows --- */
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  /* --- Typography --- */
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* --- Semantic Tailwind Aliases --- */
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+/* --- Typography Classes --- */
+.h-display {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.h1 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(28px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.h2 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h3 {
+  font-family: var(--mgt-font-sans);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.body-l {
+  font-family: var(--mgt-font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--mgt-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--mgt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased flex bg-[rgb(var(--mgt-muted))]">
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-[rgb(var(--mgt-primary))] text-[rgb(var(--mgt-primary-foreground))]">
+      <!-- Logo -->
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+        <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+        <div>
+          <span class="font-semibold text-base tracking-tight">Mangoo</span><span class="font-light text-base tracking-tight text-white/70">Tech</span>
+        </div>
+      </div>
+      <!-- Nav items -->
+      <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <a href="./dashboard-overview.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+          Vue d'ensemble
+        </a>
+        <a href="./dashboard-performance.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bar-chart-3" class="w-4.5 h-4.5"></i>
+          Performance
+        </a>
+        <a href="./dashboard-reviews.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="star" class="w-4.5 h-4.5"></i>
+          Avis clients
+        </a>
+        <a href="./dashboard-agenda.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="calendar-days" class="w-4.5 h-4.5"></i>
+          Rendez-vous
+        </a>
+        <a href="./dashboard-finances.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wallet" class="w-4.5 h-4.5"></i>
+          Finances
+        </a>
+        <a href="./dashboard-notifications.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+          Notifications
+        </a>
+        <a href="./dashboard-orders.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-medium transition-colors">
+          <i data-lucide="shopping-bag" class="w-4.5 h-4.5"></i>
+          Commandes
+        </a>
+        <a href="./dashboard-clients.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users" class="w-4.5 h-4.5"></i>
+          Clients
+        </a>
+        <a href="./dashboard-team.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users-round" class="w-4.5 h-4.5"></i>
+          Équipe
+        </a>
+        <a href="./dashboard-messages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="message-square" class="w-4.5 h-4.5"></i>
+          Messagerie
+        </a>
+        <a href="./dashboard-live.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="radio" class="w-4.5 h-4.5"></i>
+          Live
+        </a>
+        <a href="./dashboard-services.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="briefcase" class="w-4.5 h-4.5"></i>
+          Prestations
+        </a>
+        <a href="./dashboard-catalogue.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="package" class="w-4.5 h-4.5"></i>
+          Catalogue
+        </a>
+        <a href="./dashboard-inventaire.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="boxes" class="w-4.5 h-4.5"></i>
+          Inventaire
+        </a>
+        <a href="./dashboard-gallery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="images" class="w-4.5 h-4.5"></i>
+          Galerie
+        </a>
+        <a href="./dashboard-boosters.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="zap" class="w-4.5 h-4.5"></i>
+          Boosters
+        </a>
+        <a href="./dashboard-promotions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="badge-percent" class="w-4.5 h-4.5"></i>
+          Promotions
+        </a>
+        <a href="./dashboard-fidelite.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="award" class="w-4.5 h-4.5"></i>
+          Fidélité
+        </a>
+        <a href="./dashboard-parrainage.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="gift" class="w-4.5 h-4.5"></i>
+          Parrainage
+        </a>
+        <a href="./dashboard-classement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="trophy" class="w-4.5 h-4.5"></i>
+          Classement
+        </a>
+        <a href="./dashboard-verification.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shield-check" class="w-4.5 h-4.5"></i>
+          Vérification
+        </a>
+        <a href="./dashboard-recommandation.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="compass" class="w-4.5 h-4.5"></i>
+          Découverte
+        </a>
+        <a href="./dashboard-hors-ligne.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wifi-off" class="w-4.5 h-4.5"></i>
+          Hors-ligne
+        </a>
+        <a href="./dashboard-rapports.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
+          Rapports
+        </a>
+        <a href="./dashboard-support.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="life-buoy" class="w-4.5 h-4.5"></i>
+          Support
+        </a>
+        <a href="./dashboard-offres.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="tag" class="w-4.5 h-4.5"></i>
+          Offres & Tarifs
+        </a>
+        <a href="./dashboard-abonnement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="credit-card" class="w-4.5 h-4.5"></i>
+          Abonnement
+        </a>
+        <a href="./dashboard-settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="settings" class="w-4.5 h-4.5"></i>
+          Parametres
+        </a>
+      </nav>
+      <!-- Account info bottom -->
+      <div class="border-t border-white/10 px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>CA</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate" data-vendor-name>DAN Boutique</p>
+            <p class="text-xs text-white/60 truncate" data-vendor-role>Prestataire certifié</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div id="app-main" class="flex-1 ml-60 min-h-screen flex flex-col">
+      <!-- Header Top Bar -->
+      <header class="sticky top-0 z-30 flex items-center justify-between gap-4 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] px-8 py-3.5">
+        <div class="flex items-center gap-4">
+          <h1 class="h3 tabular-nums">Commandes</h1>
+          <span class="caption text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">Aout 2026</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="relative hidden sm:block">
+            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+            <input type="text" id="topbar-search" placeholder="Rechercher..." class="pl-9 pr-4 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+          </div>
+          <button id="btn-notifications" class="relative p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))]" aria-label="Notifications">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="btn-notifications-badge" class="absolute top-1 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-[10px] font-bold leading-4 text-center" style="display:none;"></span>
+          </button>
+          <div id="btn-account" class="flex items-center gap-3 pl-2 border-l border-[rgb(var(--mgt-border))] cursor-pointer" role="button" tabindex="0">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>CA</div>
+            <div class="hidden sm:block text-right">
+              <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]" data-vendor-name>DAN Boutique</p>
+              <div class="flex items-center gap-1 text-xs text-[rgb(var(--mgt-accent))]">
+                <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                <span data-vendor-rating>4.8</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Orders Content -->
+      <main class="flex-1 p-8 space-y-6">
+        <!-- ===== STATS SUMMARY BAR ===== -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                <i data-lucide="shopping-bag" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +12%
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Total commandes</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]" id="kpi-total">124</p>
+          </div>
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
+                <i data-lucide="clock" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-accent)/0.15)] text-[rgb(var(--mgt-accent-600))]" id="kpi-active-badge">
+                31 actives
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">En cours</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]" id="kpi-en-cours">23</p>
+          </div>
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-success)/0.15)]">
+                <i data-lucide="check-circle" class="w-5 h-5 text-[rgb(var(--mgt-primary-600))]"></i>
+              </div>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Livrees</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]" id="kpi-livrees">89</p>
+          </div>
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-error)/0.10)]">
+                <i data-lucide="x-circle" class="w-5 h-5 text-[rgb(var(--mgt-error))]"></i>
+              </div>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Annulees</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]" id="kpi-annulees">12</p>
+          </div>
+        </div>
+
+        <!-- ===== FILTERS ===== -->
+        <div id="filter-status" class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex flex-wrap items-center gap-4">
+            <!-- Status filter buttons -->
+            <div class="flex items-center gap-1.5 bg-[rgb(var(--mgt-muted))] rounded-lg p-1">
+              <button data-filter="all" class="filter-btn active px-3.5 py-1.5 rounded-md text-sm font-medium bg-[rgb(var(--mgt-primary))] text-white transition-all shadow-sm">Toutes</button>
+              <button data-filter="en-cours" class="filter-btn px-3.5 py-1.5 rounded-md text-sm font-medium text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))] hover:bg-white/60 transition-all">En cours</button>
+              <button data-filter="livrees" class="filter-btn px-3.5 py-1.5 rounded-md text-sm font-medium text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))] hover:bg-white/60 transition-all">Livrees</button>
+              <button data-filter="annulees" class="filter-btn px-3.5 py-1.5 rounded-md text-sm font-medium text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))] hover:bg-white/60 transition-all">Annulees</button>
+            </div>
+            <span class="w-px h-8 bg-[rgb(var(--mgt-border))] hidden sm:block"></span>
+            <!-- Date filter -->
+            <div class="flex items-center gap-1.5 bg-[rgb(var(--mgt-muted))] rounded-lg p-1">
+              <button data-date="all" class="date-btn active px-3 py-1.5 rounded-md text-sm font-medium bg-[rgb(var(--mgt-primary))] text-white transition-all shadow-sm">Toutes</button>
+              <button data-date="today" class="date-btn px-3 py-1.5 rounded-md text-sm font-medium text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))] hover:bg-white/60 transition-all">Aujourd'hui</button>
+              <button data-date="week" class="date-btn px-3 py-1.5 rounded-md text-sm font-medium text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))] hover:bg-white/60 transition-all">Cette semaine</button>
+              <button data-date="month" class="date-btn px-3 py-1.5 rounded-md text-sm font-medium text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))] hover:bg-white/60 transition-all">Ce mois</button>
+            </div>
+            <span class="w-px h-8 bg-[rgb(var(--mgt-border))] hidden sm:block"></span>
+            <!-- Client search -->
+            <div class="relative flex-1 min-w-[200px] max-w-xs">
+              <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+              <input type="text" id="search-client" placeholder="Rechercher un client..." class="w-full pl-9 pr-4 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+            </div>
+            <!-- Export button -->
+            <div class="ml-auto">
+              <button id="btn-export" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-[rgb(var(--mgt-accent))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-accent-600))] transition-all shadow-sm">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                Exporter
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== ORDERS TABLE ===== -->
+        <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl shadow-[var(--mgt-shadow-sm)] overflow-hidden">
+          <div class="overflow-x-auto">
+            <table id="orders-table" class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-[rgb(var(--mgt-border))] bg-[rgb(var(--mgt-muted))]">
+                  <th class="text-left px-5 py-3.5 font-semibold text-xs uppercase tracking-wider text-[rgb(var(--mgt-muted-foreground))]">ID Commande</th>
+                  <th class="text-left px-5 py-3.5 font-semibold text-xs uppercase tracking-wider text-[rgb(var(--mgt-muted-foreground))]">Client</th>
+                  <th class="text-left px-5 py-3.5 font-semibold text-xs uppercase tracking-wider text-[rgb(var(--mgt-muted-foreground))]" id="orders-col-item">Service</th>
+                  <th class="text-right px-5 py-3.5 font-semibold text-xs uppercase tracking-wider text-[rgb(var(--mgt-muted-foreground))]">Montant</th>
+                  <th class="text-left px-5 py-3.5 font-semibold text-xs uppercase tracking-wider text-[rgb(var(--mgt-muted-foreground))]">Date</th>
+                  <th class="text-left px-5 py-3.5 font-semibold text-xs uppercase tracking-wider text-[rgb(var(--mgt-muted-foreground))]">Heure</th>
+                  <th class="text-center px-5 py-3.5 font-semibold text-xs uppercase tracking-wider text-[rgb(var(--mgt-muted-foreground))]">Statut</th>
+                  <th class="text-center px-5 py-3.5 font-semibold text-xs uppercase tracking-wider text-[rgb(var(--mgt-muted-foreground))]">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-[rgb(var(--mgt-border))]">
+                <!-- Les lignes sont générées par renderOrdersTable() à partir de orderData (source unique). -->
+              </tbody>
+            </table>
+          </div>
+          <!-- Pagination -->
+          <div class="flex items-center justify-between px-5 py-3.5 border-t border-[rgb(var(--mgt-border))] bg-[rgb(var(--mgt-muted))]">
+            <span class="caption text-[rgb(var(--mgt-muted-foreground))]" id="results-count">Affichage de 9 commandes</span>
+            <div class="flex items-center gap-1">
+              <button class="flex items-center justify-center w-8 h-8 rounded-md text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-border))] transition-colors cursor-default opacity-40">
+                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+              </button>
+              <button class="flex items-center justify-center w-8 h-8 rounded-md text-sm font-semibold bg-[rgb(var(--mgt-primary))] text-white">1</button>
+              <button class="flex items-center justify-center w-8 h-8 rounded-md text-sm font-medium text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-border))] transition-colors">2</button>
+              <button class="flex items-center justify-center w-8 h-8 rounded-md text-sm font-medium text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-border))] transition-colors">3</button>
+              <span class="px-1 text-[rgb(var(--mgt-muted-foreground))]">...</span>
+              <button class="flex items-center justify-center w-8 h-8 rounded-md text-sm font-medium text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-border))] transition-colors">14</button>
+              <button class="flex items-center justify-center w-8 h-8 rounded-md text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-border))] transition-colors">
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- ===== ORDER DETAIL DRAWER OVERLAY ===== -->
+    <div id="order-drawer-overlay" class="fixed inset-0 z-50 bg-black/40 opacity-0 pointer-events-none transition-opacity duration-300" onclick="closeDrawer()"></div>
+
+    <!-- ===== ORDER DETAIL DRAWER ===== -->
+    <div id="order-drawer" class="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-[rgb(var(--mgt-background))] shadow-[var(--mgt-shadow-lg)] transform translate-x-full transition-transform duration-300 flex flex-col">
+      <!-- Drawer Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-[rgb(var(--mgt-border))]">
+        <div>
+          <h2 class="text-lg font-semibold text-[rgb(var(--mgt-foreground))]" id="drawer-order-id">#CMD-2401</h2>
+          <p class="caption text-[rgb(var(--mgt-muted-foreground))]" id="drawer-order-date">17 Aout 2026</p>
+        </div>
+        <button onclick="closeDrawer()" class="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))] transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Drawer Content -->
+      <div class="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+        <!-- Client Info -->
+        <div class="bg-[rgb(var(--mgt-muted))] rounded-xl p-4">
+          <h3 class="text-sm font-semibold text-[rgb(var(--mgt-foreground))] mb-3 flex items-center gap-2">
+            <i data-lucide="user" class="w-4 h-4 text-[rgb(var(--mgt-primary))]"></i>
+            Informations client
+          </h3>
+          <div class="flex items-center gap-3 mb-3">
+            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" id="drawer-client-avatar">FD</div>
+            <div>
+              <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]" id="drawer-client-name">Fatou Diallo</p>
+              <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]" id="drawer-client-contact">+221 77 123 45 67</p>
+            </div>
+          </div>
+          <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]" id="drawer-client-email">fatou.diallo@email.com</p>
+        </div>
+
+        <!-- Services commandes -->
+        <div class="bg-[rgb(var(--mgt-muted))] rounded-xl p-4">
+          <h3 class="text-sm font-semibold text-[rgb(var(--mgt-foreground))] mb-3 flex items-center gap-2">
+            <i data-lucide="shopping-bag" class="w-4 h-4 text-[rgb(var(--mgt-primary))]"></i>
+            Services commandes
+          </h3>
+          <div id="drawer-services" class="space-y-2.5">
+            <!-- Service 1 -->
+            <div class="flex items-center justify-between py-2 border-b border-[rgb(var(--mgt-border))] last:border-0">
+              <div>
+                <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Coiffure Mariage</p>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Duree: ~2h30</p>
+              </div>
+              <span class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">85 000 FCFA</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Montant detaille -->
+        <div class="bg-[rgb(var(--mgt-muted))] rounded-xl p-4">
+          <h3 class="text-sm font-semibold text-[rgb(var(--mgt-foreground))] mb-3 flex items-center gap-2">
+            <i data-lucide="wallet" class="w-4 h-4 text-[rgb(var(--mgt-primary))]"></i>
+            Montant detaille
+          </h3>
+          <div class="space-y-2">
+            <div class="flex justify-between text-sm">
+              <span class="text-[rgb(var(--mgt-muted-foreground))]">Sous-total</span>
+              <span class="font-medium tabular-nums text-[rgb(var(--mgt-foreground))]" id="drawer-subtotal">85 000 FCFA</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-[rgb(var(--mgt-muted-foreground))]">Frais de service (5%)</span>
+              <span class="font-medium tabular-nums text-[rgb(var(--mgt-foreground))]" id="drawer-fees">4 250 FCFA</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-[rgb(var(--mgt-muted-foreground))]">Livraison</span>
+              <span class="font-medium tabular-nums text-[rgb(var(--mgt-primary))]" id="drawer-delivery">Gratuite</span>
+            </div>
+            <div class="flex justify-between pt-2 border-t border-[rgb(var(--mgt-border))]">
+              <span class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Total</span>
+              <span class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-primary))]" id="drawer-total">89 250 FCFA</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statut Timeline -->
+        <div class="bg-[rgb(var(--mgt-muted))] rounded-xl p-4">
+          <h3 class="text-sm font-semibold text-[rgb(var(--mgt-foreground))] mb-4 flex items-center gap-2">
+            <i data-lucide="git-branch" class="w-4 h-4 text-[rgb(var(--mgt-primary))]"></i>
+            Suivi de la commande
+          </h3>
+          <div id="drawer-timeline" class="relative pl-6 space-y-0">
+            <!-- Timeline track line -->
+            <div class="absolute left-[11px] top-0 bottom-0 w-0.5 bg-[rgb(var(--mgt-border))]"></div>
+            <!-- Step 1 -->
+            <div class="relative pb-5">
+              <div class="absolute left-[-19px] top-1 flex items-center justify-center w-5 h-5 rounded-full bg-[rgb(var(--mgt-success))] border-2 border-[rgb(var(--mgt-background))]">
+                <i data-lucide="check" class="w-3 h-3 text-white"></i>
+              </div>
+              <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Commandee</p>
+              <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">17 Aout 2026, 09:30</p>
+            </div>
+            <!-- Step 2 -->
+            <div class="relative pb-5">
+              <div class="absolute left-[-19px] top-1 flex items-center justify-center w-5 h-5 rounded-full bg-[rgb(var(--mgt-success))] border-2 border-[rgb(var(--mgt-background))]">
+                <i data-lucide="check" class="w-3 h-3 text-white"></i>
+              </div>
+              <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Confirmee</p>
+              <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">17 Aout 2026, 09:45</p>
+            </div>
+            <!-- Step 3 -->
+            <div class="relative pb-5">
+              <div class="absolute left-[-19px] top-1 flex items-center justify-center w-5 h-5 rounded-full bg-[rgb(var(--mgt-accent))] border-2 border-[rgb(var(--mgt-background))]">
+                <i data-lucide="loader" class="w-3 h-3 text-white animate-spin"></i>
+              </div>
+              <p class="text-sm font-semibold text-[rgb(var(--mgt-accent))]">En preparation</p>
+              <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">En cours...</p>
+            </div>
+            <!-- Step 4 -->
+            <div class="relative pb-3">
+              <div class="absolute left-[-19px] top-1 flex items-center justify-center w-5 h-5 rounded-full bg-[rgb(var(--mgt-border))] border-2 border-[rgb(var(--mgt-background))]">
+                <span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-muted-foreground))]"></span>
+              </div>
+              <p class="text-sm font-medium text-[rgb(var(--mgt-muted-foreground))]">Livree</p>
+              <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">En attente</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Adresse de livraison -->
+        <div class="bg-[rgb(var(--mgt-muted))] rounded-xl p-4">
+          <h3 class="text-sm font-semibold text-[rgb(var(--mgt-foreground))] mb-3 flex items-center gap-2">
+            <i data-lucide="map-pin" class="w-4 h-4 text-[rgb(var(--mgt-primary))]"></i>
+            Adresse de livraison
+          </h3>
+          <p class="text-sm text-[rgb(var(--mgt-foreground))]" id="drawer-address">Villa 245, Cite Keur Gorgui, Dakar</p>
+          <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1" id="drawer-address-notes">Code porte: 1234, 2e etage</p>
+        </div>
+      </div>
+
+      <!-- Drawer Footer -->
+      <div class="px-6 py-4 border-t border-[rgb(var(--mgt-border))] flex items-center gap-3">
+        <button id="btn-cancel-order" class="px-3 py-2.5 rounded-lg text-sm font-semibold border border-[rgb(var(--mgt-error))] text-[rgb(var(--mgt-error))] hover:bg-[rgb(var(--mgt-error))] hover:text-white transition-colors">Annuler</button>
+        <button class="flex-1 py-2.5 rounded-lg text-sm font-semibold border border-[rgb(var(--mgt-border))] text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors" id="btn-contact-client">Contacter le client</button>
+        <button id="btn-update-status" class="flex-1 py-2.5 rounded-lg text-sm font-semibold bg-[rgb(var(--mgt-primary))] text-white hover:bg-[rgb(var(--mgt-primary-700))] transition-colors">Mettre à jour le statut</button>
+      </div>
+    </div>
+
+    <!-- ===== EXPORT DROPDOWN ===== -->
+    <div id="export-dropdown" class="fixed z-50 bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl shadow-[var(--mgt-shadow-md)] p-2 w-48 opacity-0 pointer-events-none scale-95 transition-all duration-200" style="top:0;left:0;">
+      <button onclick="exportData('csv')" class="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-[rgb(var(--mgt-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors text-left">
+        <i data-lucide="file-text" class="w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+        Exporter en CSV
+      </button>
+      <button onclick="exportData('pdf')" class="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-[rgb(var(--mgt-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors text-left">
+        <i data-lucide="file" class="w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+        Exporter en PDF
+      </button>
+    </div>
+
+    <div id="export-toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[rgb(var(--mgt-foreground))] text-white px-5 py-3 rounded-xl shadow-[var(--mgt-shadow-lg)] text-sm font-medium opacity-0 translate-y-2 pointer-events-none transition-all duration-300">
+      <span id="export-toast-msg">Export en cours...</span>
+    </div>
+
+    <script>
+      /* ===== Libellé métier selon le rôle (prestataire = services, vendeur = produits) ===== */
+      var __mgtItemMetaLabel = 'Duree: ';
+
+      /* ===== Filter Logic ===== */
+      const filterBtns = document.querySelectorAll('.filter-btn');
+      const dateBtns = document.querySelectorAll('.date-btn');
+      const searchClient = document.getElementById('search-client');
+      const resultsCount = document.getElementById('results-count');
+
+      const MOIS_FR = { janvier:0, fevrier:1, mars:2, avril:3, mai:4, juin:5, juillet:6, aout:7, 'août':7, septembre:8, octobre:9, novembre:10, decembre:11 };
+      function parseDateFr(text) {
+        const m = String(text || '').trim().match(/(\d{1,2})\s+([A-Za-zÀ-ÿ]+)\s+(\d{4})/);
+        if (!m) return null;
+        const mon = MOIS_FR[(m[2] || '').toLowerCase()];
+        if (mon === undefined) return null;
+        return new Date(parseInt(m[3], 10), mon, parseInt(m[1], 10));
+      }
+      function activeValue(selector, attr) {
+        const el = document.querySelector(selector + '.active');
+        return el ? el.getAttribute(attr) : 'all';
+      }
+      function inDateRange(d, range) {
+        if (!d) return true;
+        const now = new Date();
+        const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        if (range === 'today') return d.getTime() === today0.getTime();
+        if (range === 'week') {
+          const start = new Date(today0);
+          const dow = (today0.getDay() + 6) % 7; // lundi = 0
+          start.setDate(today0.getDate() - dow);
+          const end = new Date(start);
+          end.setDate(start.getDate() + 7);
+          return d >= start && d < end;
+        }
+        if (range === 'month') return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+        return true;
+      }
+
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterBtns.forEach(b => { b.classList.remove('active','bg-[rgb(var(--mgt-primary))]','text-white','shadow-sm'); b.classList.add('text-[rgb(var(--mgt-muted-foreground))]'); });
+          btn.classList.add('active','bg-[rgb(var(--mgt-primary))]','text-white','shadow-sm');
+          btn.classList.remove('text-[rgb(var(--mgt-muted-foreground))]');
+          applyFilters();
+        });
+      });
+
+      dateBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          dateBtns.forEach(b => { b.classList.remove('active','bg-[rgb(var(--mgt-primary))]','text-white','shadow-sm'); b.classList.add('text-[rgb(var(--mgt-muted-foreground))]'); });
+          btn.classList.add('active','bg-[rgb(var(--mgt-primary))]','text-white','shadow-sm');
+          btn.classList.remove('text-[rgb(var(--mgt-muted-foreground))]');
+          applyFilters();
+        });
+      });
+
+      if (searchClient) searchClient.addEventListener('input', applyFilters);
+
+      function applyFilters() {
+        const filter = activeValue('.filter-btn', 'data-filter') || 'all';
+        const range = activeValue('.date-btn', 'data-date') || 'all';
+        const clientQ = searchClient ? searchClient.value.trim().toLowerCase() : '';
+        let visible = 0;
+
+        const tbody = document.querySelector('#orders-table tbody');
+        let oldEmpty = document.getElementById('orders-empty-row');
+        if (oldEmpty) oldEmpty.remove();
+
+        document.querySelectorAll('#orders-table tbody tr').forEach(row => {
+          const status = row.getAttribute('data-status');
+          const dateText = (row.querySelector('td:nth-child(5)') || {}).textContent || '';
+          const date = parseDateFr(dateText);
+          const client = (row.querySelector('td:nth-child(2)') || {}).textContent || '';
+          const idText = (row.querySelector('td:nth-child(1)') || {}).textContent || '';
+          const service = (row.querySelector('td:nth-child(3)') || {}).textContent || '';
+          const clientL = client.toLowerCase();
+          const idL = idText.toLowerCase();
+          const serviceL = service.toLowerCase();
+
+          let show = true;
+          if (filter !== 'all' && status !== filter) show = false;
+          if (show && !inDateRange(date, range)) show = false;
+          if (show && clientQ && clientL.indexOf(clientQ) === -1) show = false;
+
+          row.style.display = show ? '' : 'none';
+          if (show) visible++;
+        });
+
+        if (resultsCount) {
+          resultsCount.textContent = visible === 0
+            ? 'Aucune commande ne correspond à vos filtres'
+            : 'Affichage de ' + visible + ' commande' + (visible > 1 ? 's' : '');
+        }
+
+        if (visible === 0) {
+          const empty = document.createElement('tr');
+          empty.id = 'orders-empty-row';
+          empty.innerHTML = '<td colspan="8" class="px-5 py-10 text-center text-sm text-[rgb(var(--mgt-muted-foreground))]">Aucune commande ne correspond à vos filtres.</td>';
+          tbody.appendChild(empty);
+        }
+      }
+
+      /* ===== Drawer Logic ===== */
+      const orderData = {
+        'CMD-2401': { id:'#CMD-2401', date:'17 Aout 2026', avatar:'FD', name:'Fatou Diallo', contact:'+221 77 123 45 67', email:'fatou.diallo@email.com', services:[{name:'Coiffure Mariage', duration:'~2h30', price:'85 000 FCFA'}], subtotal:'85 000 FCFA', fees:'4 250 FCFA', delivery:'Gratuite', total:'89 250 FCFA', address:'Villa 245, Cite Keur Gorgui, Dakar', addressNotes:'Code porte: 1234, 2e etage' },
+        'CMD-2398': { id:'#CMD-2398', date:'17 Aout 2026', avatar:'AB', name:'Aissatou Ba', contact:'+221 76 234 56 78', email:'aissatou.ba@email.com', services:[{name:'Tresse Senegalaises', duration:'~3h00', price:'45 000 FCFA'}], subtotal:'45 000 FCFA', fees:'2 250 FCFA', delivery:'Gratuite', total:'47 250 FCFA', address:'Rue 12, Point E, Dakar', addressNotes:'' },
+        'CMD-2395': { id:'#CMD-2395', date:'18 Aout 2026', avatar:'KS', name:'Kadija Sow', contact:'+221 70 345 67 89', email:'kadija.sow@email.com', services:[{name:'Maquillage Pro', duration:'~1h30', price:'35 000 FCFA'}], subtotal:'35 000 FCFA', fees:'1 750 FCFA', delivery:'Gratuite', total:'36 750 FCFA', address:'Appt 12, Sacre Coeur 3, Dakar', addressNotes:'Sonner a l interphone' },
+        'CMD-2389': { id:'#CMD-2389', date:'19 Aout 2026', avatar:'MB', name:'Mariama Balde', contact:'+221 78 456 78 90', email:'mariama.balde@email.com', services:[{name:'Manucure', duration:'~45min', price:'15 000 FCFA'}], subtotal:'15 000 FCFA', fees:'750 FCFA', delivery:'Gratuite', total:'15 750 FCFA', address:'Cite Biagui, Rufisque', addressNotes:'' },
+        'CMD-2384': { id:'#CMD-2384', date:'20 Aout 2026', avatar:'RN', name:'Ramatoulaye Ndiaye', contact:'+221 77 567 89 01', email:'rama.ndiaye@email.com', services:[{name:'Coiffure Enfant', duration:'~1h00', price:'25 000 FCFA'}], subtotal:'25 000 FCFA', fees:'1 250 FCFA', delivery:'Gratuite', total:'26 250 FCFA', address:'Grand Yoff, Dakar', addressNotes:'Pres de la mosquee' },
+        'CMD-2380': { id:'#CMD-2380', date:'21 Aout 2026', avatar:'DC', name:'Djenaba Coulibaly', contact:'+221 76 678 90 12', email:'djenaba.c@email.com', services:[{name:'Coiffure', duration:'~1h30', price:'30 000 FCFA'},{name:'Maquillage', duration:'~1h00', price:'35 000 FCFA'}], subtotal:'65 000 FCFA', fees:'3 250 FCFA', delivery:'Gratuite', total:'68 250 FCFA', address:'Almadies, Dakar', addressNotes:'' },
+        'CMD-2375': { id:'#CMD-2375', date:'22 Aout 2026', avatar:'SK', name:'Saliou Kane', contact:'+221 70 789 01 23', email:'saliou.kane@email.com', services:[{name:'Coiffure Homme', duration:'~30min', price:'10 000 FCFA'}], subtotal:'10 000 FCFA', fees:'500 FCFA', delivery:'Gratuite', total:'10 500 FCFA', address:'Medina, Dakar', addressNotes:'' },
+        'CMD-2370': { id:'#CMD-2370', date:'23 Aout 2026', avatar:'OF', name:'Oumou Fall', contact:'+221 78 890 12 34', email:'oumou.fall@email.com', services:[{name:'Tresse', duration:'~2h00', price:'30 000 FCFA'},{name:'Meches', duration:'~1h00', price:'25 000 FCFA'}], subtotal:'55 000 FCFA', fees:'2 750 FCFA', delivery:'Gratuite', total:'57 750 FCFA', address:'Yoff, Dakar', addressNotes:'' },
+        'CMD-2365': { id:'#CMD-2365', date:'04 Aout 2026', avatar:'MT', name:'Maimouna Toure', contact:'+221 77 901 23 45', email:'maimouna.toure@email.com', services:[{name:'Pediculure', duration:'~45min', price:'12 000 FCFA'}], subtotal:'12 000 FCFA', fees:'600 FCFA', delivery:'Gratuite', total:'12 600 FCFA', address:'Parcelles Assainies, Dakar', addressNotes:'Villa 89' }
+      };
+
+      /* ===== MACHINE À ÉTATS DES STATUTS (comportement de production) ===== */
+      const STATUS_ORDER = ['commandee', 'confirmee', 'en-preparation', 'en-livraison', 'livree'];
+      const STATUS_META = {
+        'commandee':       { label: 'Commandée',       kind: 'active' },
+        'confirmee':       { label: 'Confirmée',       kind: 'active' },
+        'en-preparation':  { label: 'En préparation',  kind: 'active' },
+        'en-livraison':    { label: 'En livraison',    kind: 'active' },
+        'livree':          { label: 'Livrée',          kind: 'done' },
+        'annulee':         { label: 'Annulée',         kind: 'cancel' }
+      };
+      const STATUS_COARSE = {
+        'commandee': 'en-cours',
+        'confirmee': 'en-cours',
+        'en-preparation': 'en-cours',
+        'en-livraison': 'en-cours',
+        'livree': 'livrees',
+        'annulee': 'annulees'
+      };
+      // Statut initial de chaque commande affichée.
+      const INITIAL_STATUS = {
+        'CMD-2401': 'en-livraison',
+        'CMD-2398': 'livree',
+        'CMD-2395': 'en-preparation',
+        'CMD-2389': 'annulee',
+        'CMD-2384': 'livree',
+        'CMD-2380': 'en-preparation',
+        'CMD-2375': 'livree',
+        'CMD-2370': 'confirmee',
+        'CMD-2365': 'annulee'
+      };
+      let currentOrderId = null;
+
+      function statusBadgeHTML(status) {
+        const meta = STATUS_META[status];
+        if (status === 'annulee') {
+          return '<span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold" style="background:rgba(var(--mgt-error),0.15);color:rgb(var(--mgt-error));">' + meta.label + '</span>';
+        }
+        if (status === 'livree') {
+          return '<span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold" style="background:rgba(var(--mgt-success),0.15);color:rgb(var(--mgt-primary-600));">' + meta.label + '</span>';
+        }
+        return '<span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold" style="background:rgba(var(--mgt-accent),0.15);color:rgb(var(--mgt-accent));">' + meta.label + '</span>';
+      }
+
+      function nextStatus(status) {
+        if (status === 'livree' || status === 'annulee') return null;
+        const i = STATUS_ORDER.indexOf(status);
+        return i >= 0 && i < STATUS_ORDER.length - 1 ? STATUS_ORDER[i + 1] : null;
+      }
+
+      function updateOrderRow(orderId) {
+        const row = document.querySelector('#orders-table tbody tr[data-order="#' + orderId + '"]') || document.querySelector('#orders-table tbody tr[data-order="' + orderId + '"]');
+        if (!row) return;
+        const st = orderData[orderId].status;
+        row.setAttribute('data-status', STATUS_COARSE[st]);
+        const cell = row.querySelector('td:nth-child(7)');
+        if (cell) cell.innerHTML = statusBadgeHTML(st);
+        lucide.createIcons();
+      }
+
+      function renderTimeline(status) {
+        const container = document.getElementById('drawer-timeline');
+        if (!container) return;
+        if (status === 'annulee') {
+          container.innerHTML = '<div class="relative pb-1"><div class="flex items-center gap-3"><div class="flex items-center justify-center w-6 h-6 rounded-full" style="background:rgb(var(--mgt-error));"><i data-lucide="x" class="w-3 h-3 text-white"></i></div><div><p class="text-sm font-semibold text-[rgb(var(--mgt-error))]">Commande annulée</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Cette commande ne sera pas traitée.</p></div></div></div>';
+          lucide.createIcons();
+          return;
+        }
+        const idx = STATUS_ORDER.indexOf(status);
+        let html = '<div class="absolute left-[11px] top-0 bottom-0 w-0.5 bg-[rgb(var(--mgt-border))]"></div>';
+        STATUS_ORDER.forEach(function(s, i) {
+          const meta = STATUS_META[s];
+          let dot, sub, colorCls, weight;
+          if (i < idx) {
+            dot = '<div class="absolute left-[-19px] top-1 flex items-center justify-center w-5 h-5 rounded-full bg-[rgb(var(--mgt-success))] border-2 border-[rgb(var(--mgt-background))]"><i data-lucide="check" class="w-3 h-3 text-white"></i></div>';
+            sub = 'Terminée';
+            colorCls = 'text-[rgb(var(--mgt-foreground))]';
+            weight = 'font-semibold';
+          } else if (i === idx) {
+            dot = '<div class="absolute left-[-19px] top-1 flex items-center justify-center w-5 h-5 rounded-full bg-[rgb(var(--mgt-accent))] border-2 border-[rgb(var(--mgt-background))]"><i data-lucide="loader" class="w-3 h-3 text-white animate-spin"></i></div>';
+            sub = 'En cours...';
+            colorCls = 'text-[rgb(var(--mgt-accent))]';
+            weight = 'font-semibold';
+          } else {
+            dot = '<div class="absolute left-[-19px] top-1 flex items-center justify-center w-5 h-5 rounded-full bg-[rgb(var(--mgt-border))] border-2 border-[rgb(var(--mgt-background))]"><span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-muted-foreground))]"></span></div>';
+            sub = 'En attente';
+            colorCls = 'text-[rgb(var(--mgt-muted-foreground))]';
+            weight = 'font-medium';
+          }
+          html += '<div class="relative pb-5">' + dot + '<p class="text-sm ' + weight + ' ' + colorCls + '">' + meta.label + '</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">' + sub + '</p></div>';
+        });
+        container.innerHTML = html;
+        lucide.createIcons();
+      }
+
+      function updateFooter() {
+        if (!currentOrderId) return;
+        const st = orderData[currentOrderId].status;
+        const btn = document.getElementById('btn-update-status');
+        const cancel = document.getElementById('btn-cancel-order');
+        const terminal = st === 'livree' || st === 'annulee';
+        if (btn) {
+          btn.disabled = terminal;
+          btn.textContent = st === 'livree' ? 'Livrée' : (st === 'annulee' ? 'Commande annulée' : (nextStatus(st) === 'livree' ? 'Marquer comme livrée' : 'Mettre à jour le statut'));
+          btn.classList.toggle('opacity-50', terminal);
+          btn.classList.toggle('cursor-not-allowed', terminal);
+        }
+        if (cancel) {
+          cancel.disabled = terminal;
+          cancel.classList.toggle('opacity-50', terminal);
+          cancel.classList.toggle('cursor-not-allowed', terminal);
+        }
+      }
+
+      // Compteurs KPI : on conserve les agrégats métier (23 / 89 / 12) et on
+      // ajuste par incréments à chaque changement de statut, comme en production.
+      const KPI_STATE = { en: 23, li: 89, an: 12 };
+      function renderKpis() {
+        const set = function(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; };
+        set('kpi-en-cours', KPI_STATE.en);
+        set('kpi-livrees', KPI_STATE.li);
+        set('kpi-annulees', KPI_STATE.an);
+      }
+      function bumpKpi(from, to) {
+        const f = STATUS_COARSE[from];
+        const t = STATUS_COARSE[to];
+        if (f === t) return;
+        if (f === 'en-cours') KPI_STATE.en--; else if (f === 'livrees') KPI_STATE.li--; else if (f === 'annulees') KPI_STATE.an--;
+        if (t === 'en-cours') KPI_STATE.en++; else if (t === 'livrees') KPI_STATE.li++; else if (t === 'annulees') KPI_STATE.an++;
+        renderKpis();
+      }
+
+      function openDrawer(orderId) {
+        const data = orderData[orderId];
+        if (!data) return;
+
+        document.getElementById('drawer-order-id').textContent = data.id;
+        document.getElementById('drawer-order-date').textContent = data.date + (data.time ? ' · ' + data.time : '');
+        document.getElementById('drawer-client-avatar').textContent = data.avatar;
+        document.getElementById('drawer-client-name').textContent = data.name;
+        document.getElementById('drawer-client-contact').textContent = data.contact;
+        document.getElementById('drawer-client-email').textContent = data.email;
+
+        const servicesContainer = document.getElementById('drawer-services');
+        servicesContainer.innerHTML = data.services.map((s, i) =>
+          `<div class="flex items-center justify-between py-2 border-b border-[rgb(var(--mgt-border))] ${i === data.services.length - 1 ? 'border-0' : ''}">
+            <div><p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">${s.name}</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">${__mgtItemMetaLabel}${s.duration}</p></div>
+            <span class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">${s.price}</span>
+          </div>`
+        ).join('');
+
+        document.getElementById('drawer-subtotal').textContent = data.subtotal;
+        document.getElementById('drawer-fees').textContent = data.fees;
+        document.getElementById('drawer-delivery').textContent = data.delivery;
+        document.getElementById('drawer-total').textContent = data.total;
+        document.getElementById('drawer-address').textContent = data.address;
+        document.getElementById('drawer-address-notes').textContent = data.addressNotes;
+
+        document.getElementById('order-drawer').classList.remove('translate-x-full');
+        document.getElementById('order-drawer-overlay').classList.remove('opacity-0','pointer-events-none');
+        currentOrderId = orderId;
+        renderTimeline(data.status || 'commandee');
+        updateFooter();
+        lucide.createIcons();
+      }
+
+      function closeDrawer() {
+        document.getElementById('order-drawer').classList.add('translate-x-full');
+        document.getElementById('order-drawer-overlay').classList.add('opacity-0','pointer-events-none');
+      }
+
+      /* ===== Export Logic ===== */
+      const btnExport = document.getElementById('btn-export');
+      const exportDropdown = document.getElementById('export-dropdown');
+      const exportToast = document.getElementById('export-toast');
+      const exportToastMsg = document.getElementById('export-toast-msg');
+      let exportOpen = false;
+
+      btnExport.addEventListener('click', (e) => {
+        e.stopPropagation();
+        exportOpen = !exportOpen;
+        if (exportOpen) {
+          const rect = btnExport.getBoundingClientRect();
+          exportDropdown.style.top = (rect.bottom + 8) + 'px';
+          exportDropdown.style.left = (rect.right - 192) + 'px';
+          exportDropdown.classList.remove('opacity-0','pointer-events-none','scale-95');
+          lucide.createIcons();
+        } else {
+          exportDropdown.classList.add('opacity-0','pointer-events-none','scale-95');
+        }
+      });
+
+      document.addEventListener('click', (e) => {
+        if (exportOpen && !exportDropdown.contains(e.target) && e.target !== btnExport) {
+          exportOpen = false;
+          exportDropdown.classList.add('opacity-0','pointer-events-none','scale-95');
+        }
+      });
+
+      function orderRows() {
+        return Object.keys(orderData).map(function (id) {
+          const o = orderData[id];
+          return {
+            id: o.id,
+            date: o.date,
+            client: o.name,
+            contact: o.contact,
+            email: o.email,
+            services: (o.services || []).map(function (s) { return s.name; }).join(' ; '),
+            montant: o.total,
+            statut: (STATUS_META[o.status] ? STATUS_META[o.status].label : o.status),
+            adresse: o.address
+          };
+        });
+      }
+
+      function csvEscape(v) {
+        v = String(v == null ? '' : v);
+        if (/[",\n\r;]/.test(v)) return '"' + v.replace(/"/g, '""') + '"';
+        return v;
+      }
+
+      function showToast(msg) {
+        exportToastMsg.textContent = msg;
+        exportToast.classList.remove('opacity-0','translate-y-2','pointer-events-none');
+        setTimeout(function () {
+          exportToast.classList.add('opacity-0','translate-y-2','pointer-events-none');
+        }, 2600);
+      }
+
+      function downloadText(filename, text, mime) {
+        const blob = new Blob([text], { type: mime || 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      }
+
+      function exportCsv() {
+        const rows = orderRows();
+        const header = ['Numero', 'Date', 'Client', 'Telephone', 'Email', 'Services', 'Montant total', 'Statut', 'Adresse de livraison'];
+        const lines = [header.map(csvEscape).join(';')];
+        rows.forEach(function (r) {
+          lines.push([r.id, r.date, r.client, r.contact, r.email, r.services, r.montant, r.statut, r.adresse].map(csvEscape).join(';'));
+        });
+        downloadText('commandes-chez-amina.csv', '\uFEFF' + lines.join('\r\n'), 'text/csv;charset=utf-8');
+        showToast('Export CSV telecharge (' + rows.length + ' commandes)');
+      }
+
+      function exportPdf() {
+        const rows = orderRows();
+        let trs = '';
+        rows.forEach(function (r) {
+          trs += '<tr><td>' + r.id + '</td><td>' + r.date + '</td><td>' + r.client + '</td><td>' + r.services + '</td><td>' + r.montant + '</td><td>' + r.statut + '</td></tr>';
+        });
+        const html = '<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Commandes - DAN Boutique</title>' +
+          '<style>body{font-family:Arial,sans-serif;margin:32px;color:#111}h1{font-size:20px;margin-bottom:4px}.sub{color:#555;font-size:13px;margin-bottom:20px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #ddd;padding:8px 10px;text-align:left}th{background:#f5f5f5}tr:nth-child(even) td{background:#fafafa}</style></head><body>' +
+          '<h1>Commandes - DAN Boutique</h1><div class="sub">Export du ' + new Date().toLocaleDateString('fr-FR') + ' - ' + rows.length + ' commandes</div>' +
+          '<table><thead><tr><th>Numero</th><th>Date</th><th>Client</th><th>Services</th><th>Total</th><th>Statut</th></tr></thead><tbody>' + trs + '</tbody></table>' +
+          '</body></html>';
+        const w = window.open('', '_blank');
+        if (!w) { showToast('Autorisez les popups pour exporter en PDF'); return; }
+        w.document.open();
+        w.document.write(html);
+        w.document.close();
+        showToast('Ouverture de l apercu PDF - utilisez Imprimer > Enregistrer en PDF');
+        setTimeout(function () { w.focus(); w.print(); }, 400);
+      }
+
+      function exportData(format) {
+        exportOpen = false;
+        exportDropdown.classList.add('opacity-0','pointer-events-none','scale-95');
+        if (format === 'csv') exportCsv();
+        else exportPdf();
+      }
+
+      /* ===== Keyboard shortcut: Escape to close drawer ===== */
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeDrawer();
+      });
+
+      /* ===== RENDU DU TABLEAU DES COMMANDES (source unique : orderData) ===== */
+      function renderOrdersTable() {
+        const tbody = document.querySelector('#orders-table tbody');
+        if (!tbody) return;
+        tbody.innerHTML = Object.keys(orderData).map(function(id) {
+          const o = orderData[id];
+          const st = o.status || INITIAL_STATUS[id] || 'commandee';
+          const serviceText = (o.services || []).map(function(s){ return s.name; }).join(' ; ');
+          const amount = o.total || '—';
+          return '<tr class="hover:bg-[rgb(var(--mgt-muted))] transition-colors" data-status="' + (STATUS_COARSE[st] || 'en-cours') + '" data-order="' + o.id + '">'
+            + '<td class="px-5 py-3.5 font-mono text-xs font-semibold text-[rgb(var(--mgt-primary))]">' + escHtml(o.id) + '</td>'
+            + '<td class="px-5 py-3.5"><div class="flex items-center gap-2.5"><div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent))] font-semibold text-xs">' + escHtml(o.avatar) + '</div><span class="font-medium text-[rgb(var(--mgt-foreground))]">' + escHtml(o.name) + '</span></div></td>'
+            + '<td class="px-5 py-3.5 text-[rgb(var(--mgt-muted-foreground))]">' + escHtml(serviceText) + '</td>'
+            + '<td class="px-5 py-3.5 text-right font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">' + escHtml(amount) + '</td>'
+            + '<td class="px-5 py-3.5 text-[rgb(var(--mgt-muted-foreground))]">' + escHtml(o.date) + '</td>'
+            + '<td class="px-5 py-3.5 tabular-nums text-[rgb(var(--mgt-muted-foreground))]">' + escHtml(o.time || '—') + '</td>'
+            + '<td class="px-5 py-3.5 text-center">' + statusBadgeHTML(st) + '</td>'
+            + '<td class="px-5 py-3.5 text-center"><button onclick="openDrawer(\'' + id + '\')" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-[rgb(var(--mgt-primary))] bg-[rgb(var(--mgt-primary-50))] hover:bg-[rgb(var(--mgt-primary-100))] transition-colors"><i data-lucide="eye" class="w-3.5 h-3.5"></i> Voir detail</button></td>'
+            + '</tr>';
+        }).join('');
+        if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+      }
+
+      /* ===== INITIALISATION DES STATUTS + ACTIONS ===== */
+      // Statuts initiaux appliqués avant le premier rendu (source unique : orderData).
+      Object.keys(INITIAL_STATUS).forEach(function(id) {
+        if (orderData[id]) orderData[id].status = INITIAL_STATUS[id];
+      });
+      renderOrdersTable();
+      renderKpis();
+
+      const btnUpdate = document.getElementById('btn-update-status');
+      const btnCancel = document.getElementById('btn-cancel-order');
+      if (btnUpdate) {
+        btnUpdate.addEventListener('click', function() {
+          if (!currentOrderId) return;
+          const st = orderData[currentOrderId].status;
+          const next = nextStatus(st);
+          if (!next) return;
+          orderData[currentOrderId].status = next;
+          updateOrderRow(currentOrderId);
+          renderTimeline(next);
+          updateFooter();
+          bumpKpi(st, next);
+        });
+      }
+      if (btnCancel) {
+        btnCancel.addEventListener('click', function() {
+          if (!currentOrderId) return;
+          const st = orderData[currentOrderId].status;
+          if (st === 'livree' || st === 'annulee') return;
+          orderData[currentOrderId].status = 'annulee';
+          updateOrderRow(currentOrderId);
+          renderTimeline('annulee');
+          updateFooter();
+          bumpKpi(st, 'annulee');
+        });
+      }
+
+      // Bouton « Contacter le client » : ouvre la messagerie avec ce client.
+      const btnContact = document.getElementById('btn-contact-client');
+      if (btnContact) {
+        btnContact.addEventListener('click', function() {
+          if (!currentOrderId || !orderData[currentOrderId]) return;
+          const client = encodeURIComponent(orderData[currentOrderId].name);
+          showToast('Ouverture de la messagerie avec ' + orderData[currentOrderId].name + '…');
+          setTimeout(function () {
+            window.location.href = './dashboard-messages.html?client=' + client;
+          }, 500);
+        });
+      }
+
+      /* -------- Pont des commandes Live -> module Commandes -------- */
+      function escHtml(s) {
+        return String(s == null ? '' : s)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+
+      function formatLiveDate(iso) {
+        if (!iso) return 'Aujourd\'hui';
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return 'Aujourd\'hui';
+        if (window.MangooVendor && window.MangooVendor.formatDate) return window.MangooVendor.formatDate(iso);
+        const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+        return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+      }
+
+      function formatLiveTime(iso) {
+        if (!iso) return '—';
+        if (window.MangooVendor && window.MangooVendor.formatTime) return window.MangooVendor.formatTime(iso);
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return '—';
+        const pad = (n) => (n < 10 ? '0' : '') + n;
+        return pad(d.getHours()) + ':' + pad(d.getMinutes());
+      }
+
+      function addLiveOrder(o) {
+        if (!o) return;
+        const key = String(o.orderId || ('LIVE-' + Date.now())).replace('#', '');
+        if (orderData[key]) return;
+        const name = o.clientName || 'Client live';
+        const product = o.product || 'Produit';
+        const price = o.price || '';
+        const qty = Math.max(1, parseInt(o.quantity, 10) || 1);
+        const delivery = o.delivery || 'Livraison';
+        const serviceLabel = qty > 1 ? (product + ' × ' + qty) : product;
+        const initial = (name.charAt(0) || 'C').toUpperCase();
+        const dateStr = formatLiveDate(o.createdAt);
+
+        orderData[key] = {
+          id: '#' + key,
+          date: dateStr,
+          time: formatLiveTime(o.createdAt),
+          avatar: initial,
+          name: name,
+          contact: 'Non renseigné',
+          email: 'Non renseigné',
+          services: [{ name: serviceLabel, duration: '—', price: price || '—' }],
+          subtotal: price || '—',
+          fees: '—',
+          delivery: delivery === 'Retrait' ? 'Retrait en boutique' : 'Livraison',
+          total: price || '—',
+          address: 'Via Live Shopping',
+          addressNotes: '',
+          status: 'commandee',
+          live: true
+        };
+        INITIAL_STATUS[key] = 'commandee';
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-[rgb(var(--mgt-muted))] transition-colors';
+        tr.setAttribute('data-status', 'en-cours');
+        tr.setAttribute('data-order', '#' + key);
+        tr.innerHTML =
+          '<td class="px-5 py-3.5 font-mono text-xs font-semibold text-[rgb(var(--mgt-primary))]">#' + key + '</td>' +
+          '<td class="px-5 py-3.5"><div class="flex items-center gap-2.5">' +
+            '<div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent))] font-semibold text-xs">' + initial + '</div>' +
+            '<span class="font-medium text-[rgb(var(--mgt-foreground))]">' + escHtml(name) + '</span>' +
+          '</div></td>' +
+          '<td class="px-5 py-3.5 text-[rgb(var(--mgt-muted-foreground))]">' + escHtml(serviceLabel) + '</td>' +
+          '<td class="px-5 py-3.5 text-right font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">' + escHtml(price || '—') + '</td>' +
+          '<td class="px-5 py-3.5 text-[rgb(var(--mgt-muted-foreground))]">' + escHtml(dateStr) + '</td>' +
+          '<td class="px-5 py-3.5 tabular-nums text-[rgb(var(--mgt-muted-foreground))]">' + escHtml(formatLiveTime(o.createdAt)) + '</td>' +
+          '<td class="px-5 py-3.5 text-center"><span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-accent)/0.15)] text-[rgb(var(--mgt-accent))]"><span class="w-1.5 h-1.5 rounded-full bg-[rgb(var(--mgt-accent))]"></span>Live · En cours</span></td>' +
+          '<td class="px-5 py-3.5 text-center"><button onclick="openDrawer(\'' + key + '\')" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-[rgb(var(--mgt-primary))] bg-[rgb(var(--mgt-primary-50))] hover:bg-[rgb(var(--mgt-primary-100))] transition-colors"><i data-lucide="eye" class="w-3.5 h-3.5"></i> Voir detail</button></td>';
+
+        const tbody = document.querySelector('#orders-table tbody');
+        if (tbody) tbody.insertBefore(tr, tbody.firstChild);
+        KPI_STATE.en += 1;
+        renderKpis();
+        applyFilters();
+        showToast('Nouvelle commande live : ' + name + ' — ' + product);
+      }
+
+      (function initLiveOrdersBridge() {
+        // 1) Hydratation des commandes déjà passées en live (persistées côté serveur).
+        fetch('/orders/live')
+          .then(function (r) { return r.json(); })
+          .then(function (data) { (data.orders || []).forEach(addLiveOrder); })
+          .catch(function () {});
+
+        // 2) Écoute en direct des nouvelles commandes live via WebSocket.
+        function connectOrders() {
+          const url = (location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + location.host + '/webrtc-ws';
+          let sock;
+          try { sock = new WebSocket(url); }
+          catch (e) { setTimeout(connectOrders, 2500); return; }
+          sock.onopen = function () {
+            sock.send(JSON.stringify({ type: 'register', id: 'vendor-orders', role: 'vendor', name: 'Commandes' }));
+            sock.send(JSON.stringify({ type: 'live-state-request' }));
+          };
+          sock.onmessage = function (ev) {
+            let msg; try { msg = JSON.parse(ev.data); } catch (e) { return; }
+            if (msg.type === 'live-order' && msg.liveOrder) addLiveOrder(msg.liveOrder);
+          };
+          sock.onclose = function () { setTimeout(connectOrders, 3000); };
+        }
+        connectOrders();
+      })();
+
+      // Applique les filtres par défaut (statut + période + recherche) au chargement.
+      applyFilters();
+    </script>
+    <script>lucide.createIcons();</script>
+<!-- Mobile responsive navigation & layout -->
+<style id="mgt-mobile-responsive">
+@media (max-width: 768px) {
+  .dashboard-layout { flex-direction: column !important; }
+  .dashboard-sidebar { position: fixed !important; top: 0; left: 0; z-index: 1000; width: 260px !important; height: 100vh !important; transform: translateX(-100%); transition: transform .3s ease; overflow-y: auto; }
+  .dashboard-sidebar.open { transform: translateX(0); }
+  .dashboard-sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999; }
+  .dashboard-sidebar-overlay.show { display: block; }
+  .dashboard-main { margin-left: 0 !important; width: 100% !important; }
+  .dashboard-topbar { position: sticky; top: 0; z-index: 100; }
+  .mobile-menu-btn { display: flex !important; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: pointer; color: inherit; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .services-grid, .favorites-grid, .features-grid, .booster-grid { grid-template-columns: 1fr !important; }
+  .data-table { display: block !important; }
+  .data-table thead { display: none !important; }
+  .data-table tbody, .data-table tr { display: block !important; }
+  .data-table td { display: flex !important; justify-content: space-between; align-items: center; padding: 8px 12px !important; border-bottom: 1px solid rgb(var(--mgt-border)) !important; }
+  .data-table td::before { content: attr(data-label); font-weight: 600; font-size: 12px; color: rgb(var(--mgt-muted-foreground)); text-transform: uppercase; margin-right: 8px; flex-shrink: 0; }
+  .topbar-search { display: none !important; }
+  .topbar-title { font-size: 18px !important; }
+  .hero-section { padding: 40px 16px !important; text-align: center; }
+  .hero-section h1, .hero-section .h-display { font-size: 28px !important; }
+  .hero-section h1 + p { font-size: 15px !important; }
+  .hero-ctas { flex-direction: column !important; align-items: center !important; gap: 12px !important; }
+  .auth-split { flex-direction: column !important; }
+  .auth-branding { min-height: 200px !important; padding: 32px 16px !important; }
+  .auth-form-area { padding: 24px 16px !important; }
+  .checkout-layout { flex-direction: column !important; }
+  .checkout-main { width: 100% !important; }
+  .checkout-sidebar { width: 100% !important; }
+  .chat-layout { flex-direction: column !important; height: auto !important; }
+  .chat-sidebar { width: 100% !important; max-height: 200px !important; }
+  .chat-main { width: 100% !important; }
+  .filter-pills { flex-wrap: nowrap !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+  .drawer-panel { width: 100% !important; max-width: 100% !important; }
+  .content-section { padding-left: 16px !important; padding-right: 16px !important; }
+  .section-padding { padding: 32px 16px !important; }
+  .form-grid { grid-template-columns: 1fr !important; }
+  .form-actions { flex-direction: column !important; }
+  .desktop-only { display: none !important; }
+  .map-container { height: 300px !important; }
+}
+@media (min-width: 769px) {
+  .mobile-menu-btn { display: none !important; }
+  .mobile-only { display: none !important; }
+}
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr !important; }
+  .stats-row { grid-template-columns: 1fr !important; }
+}
+</style>
+<script>
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    var sidebar = document.querySelector('.dashboard-sidebar');
+    if (!sidebar) return;
+    var overlay = document.createElement('div');
+    overlay.className = 'dashboard-sidebar-overlay';
+    overlay.addEventListener('click', function(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); });
+    document.body.appendChild(overlay);
+    var topbar = document.querySelector('.dashboard-topbar');
+    if (topbar) {
+      var btn = document.createElement('button');
+      btn.className = 'mobile-menu-btn';
+      btn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+      btn.addEventListener('click', function(){ sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
+      topbar.insertBefore(btn, topbar.firstChild);
+    }
+    sidebar.querySelectorAll('a').forEach(function(link){
+      link.addEventListener('click', function(){
+        if (window.innerWidth <= 768) { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+      });
+    });
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  function __mgtSidebarScrollFix(){
+    var active = document.querySelector('nav a[class*="bg-white/15"]');
+    if (!active) return;
+    var nav = active.closest('nav');
+    if (!nav) return;
+    var navRect = nav.getBoundingClientRect();
+    var linkRect = active.getBoundingClientRect();
+    var target = nav.scrollTop + (linkRect.top - navRect.top) - (navRect.height - linkRect.height) / 2;
+    nav.scrollTop = Math.max(0, target);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', __mgtSidebarScrollFix);
+  } else {
+    __mgtSidebarScrollFix();
+  }
+})();
+</script>
+<script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+<script src="../assets/mangoo-dashboard-shell.js"></script>
+<script>
+/* Commandes différenciées : boutiquier-vendeur = produits, prestataire = services */
+(function(){
+  function run(){
+    try {
+      var vendor = (window.MangooVendor && window.MangooVendor.current) ? window.MangooVendor.current() : null;
+      if (!vendor || vendor.role !== 'vendeur') return;
+
+      // 1) Libellés métier
+      if (typeof __mgtItemMetaLabel !== 'undefined') __mgtItemMetaLabel = 'Quantité: ';
+      var col = document.getElementById('orders-col-item');
+      if (col) col.textContent = 'Produit';
+      var head = document.getElementById('drawer-items-heading');
+      if (head) head.textContent = 'Produits commandés';
+      var badge = document.querySelector('header span.caption');
+      if (badge) badge.textContent = 'Boutique vendeuse';
+
+      // 2) Données produits de la boutique
+      var P = [
+        { id:'CMD-1042', date:'19 Août 2026', time:'14:25', avatar:'FD', name:'Fatou Diop', contact:'+221 77 123 45 67', email:'fatou.diop@email.com', product:'Robe en wax', qty:'×1', price:'35 000 FCFA', status:'en-livraison', address:'Médina, Dakar', notes:'' },
+        { id:'CMD-1039', date:'18 Août 2026', time:'11:40', avatar:'AM', name:'Awa Mbaye', contact:'+221 76 234 56 78', email:'awa.mbaye@email.com', product:'Sandales en cuir', qty:'×1', price:'22 000 FCFA', status:'livree', address:'Parcelles Assainies, Dakar', notes:'' },
+        { id:'CMD-1036', date:'18 Août 2026', time:'09:15', avatar:'MN', name:'Moussa Ndiaye', contact:'+221 70 345 67 89', email:'moussa.ndiaye@email.com', product:'Sac à main', qty:'×1', price:'48 000 FCFA', status:'en-preparation', address:'Point E, Dakar', notes:'Sonner au portail' },
+        { id:'CMD-1033', date:'17 Août 2026', time:'16:05', avatar:'KS', name:'Khady Sarr', contact:'+221 78 456 78 90', email:'khady.sarr@email.com', product:'Tissu bazin', qty:'×3 m', price:'30 000 FCFA', status:'livree', address:'Grand Yoff, Dakar', notes:'' },
+        { id:'CMD-1029', date:'17 Août 2026', time:'10:30', avatar:'AB', name:'Aminata Bâ', contact:'+221 77 567 89 01', email:'aminata.ba@email.com', product:'Boubou brodé', qty:'×1', price:'65 000 FCFA', status:'en-preparation', address:'Almadies, Dakar', notes:'' },
+        { id:'CMD-1026', date:'16 Août 2026', time:'13:50', avatar:'OD', name:'Ousmane Diallo', contact:'+221 76 678 90 12', email:'ousmane.diallo@email.com', product:'Chemise wax', qty:'×2', price:'25 000 FCFA', status:'livree', address:'Yoff, Dakar', notes:'' },
+        { id:'CMD-1023', date:'15 Août 2026', time:'17:20', avatar:'MS', name:'Mariama Sow', contact:'+221 70 789 01 23', email:'mariama.sow@email.com', product:'Pagne tissé', qty:'×2', price:'18 000 FCFA', status:'annulee', address:'Rufisque', notes:'' },
+        { id:'CMD-1020', date:'14 Août 2026', time:'12:10', avatar:'DF', name:'Doudou Fall', contact:'+221 78 890 12 34', email:'doudou.fall@email.com', product:'Escarpins', qty:'×1', price:'40 000 FCFA', status:'livree', address:'Sacre Coeur 3, Dakar', notes:'' },
+        { id:'CMD-1017', date:'13 Août 2026', time:'15:45', avatar:'AN', name:'Adja Ndiaye', contact:'+221 77 901 23 45', email:'adja.ndiaye@email.com', product:'Ensemble bazin', qty:'×1', price:'55 000 FCFA', status:'annulee', address:'Médina, Dakar', notes:'' }
+      ];
+
+      // 2bis) Fusion des commandes réellement passées par les clients (localStorage)
+      //       afin que la boutique voie ses nouvelles commandes dans sa liste.
+      var realOrders = (window.MangooVendor && window.MangooVendor.ordersForVendor) ? window.MangooVendor.ordersForVendor(vendor) : [];
+      function clientInitials(name) {
+        var p = String(name || '').trim().split(/\s+/).filter(Boolean);
+        if (!p.length) return 'CL';
+        return p.length === 1 ? p[0].slice(0, 2) : (p[0][0] + p[p.length - 1][0]);
+      }
+      var STATUS_FROM_CLIENT = { 'en-cours': 'commandee', 'livree': 'livree', 'annulee': 'annulee' };
+      var realEnCours = 0, realLivrees = 0, realAnnulees = 0;
+      realOrders.forEach(function (o) {
+        if (!o || !o.id) return;
+        if (o.status === 'livree') realLivrees++; else if (o.status === 'annulee') realAnnulees++; else realEnCours++;
+        P.unshift({
+          id: o.id,
+          date: o.date || '',
+          time: o.time || '',
+          avatar: clientInitials(o.clientName || o.provider || 'Client').toUpperCase(),
+          name: o.clientName || 'Client',
+          contact: o.clientPhone || 'Non renseigné',
+          email: o.clientEmail || 'Non renseigné',
+          product: o.service || 'Produit',
+          qty: '×1',
+          price: o.amount || '',
+          status: STATUS_FROM_CLIENT[o.status] || 'commandee',
+          address: o.address || 'Non renseigné',
+          notes: ''
+        });
+      });
+
+      // 3) Réécriture des données métier (orderData & INITIAL_STATUS sont en portée globale)
+      Object.keys(orderData).forEach(function(k){ delete orderData[k]; });
+      Object.keys(INITIAL_STATUS).forEach(function(k){ delete INITIAL_STATUS[k]; });
+      P.forEach(function(o){
+        orderData[o.id] = {
+          id: '#' + o.id, date: o.date, time: o.time || '', avatar: o.avatar, name: o.name,
+          contact: o.contact, email: o.email,
+          services: [{ name: o.product, duration: o.qty, price: o.price }],
+          subtotal: o.price, fees: '—', delivery: 'Livraison', total: o.price,
+          address: o.address, addressNotes: o.notes
+        };
+        INITIAL_STATUS[o.id] = o.status;
+      });
+
+      // 4) Reconstruction du tableau
+      var tbody = document.querySelector('#orders-table tbody');
+      if (tbody) {
+        tbody.innerHTML = P.map(function(o){
+          return '<tr class="hover:bg-[rgb(var(--mgt-muted))] transition-colors" data-status="' + STATUS_COARSE[o.status] + '" data-order="#' + o.id + '">'
+            + '<td class="px-5 py-3.5 font-mono text-xs font-semibold text-[rgb(var(--mgt-primary))]">#' + o.id + '</td>'
+            + '<td class="px-5 py-3.5"><div class="flex items-center gap-2.5"><div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent))] font-semibold text-xs">' + o.avatar + '</div><span class="font-medium text-[rgb(var(--mgt-foreground))]">' + o.name + '</span></div></td>'
+            + '<td class="px-5 py-3.5 text-[rgb(var(--mgt-muted-foreground))]">' + o.product + '</td>'
+            + '<td class="px-5 py-3.5 text-right font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">' + o.price + '</td>'
+            + '<td class="px-5 py-3.5 text-[rgb(var(--mgt-muted-foreground))]">' + o.date + '</td>'
+            + '<td class="px-5 py-3.5 tabular-nums text-[rgb(var(--mgt-muted-foreground))]">' + (o.time || '—') + '</td>'
+            + '<td class="px-5 py-3.5 text-center"></td>'
+            + '<td class="px-5 py-3.5 text-center"><button onclick="openDrawer(\'' + o.id + '\')" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-[rgb(var(--mgt-primary))] bg-[rgb(var(--mgt-primary-50))] hover:bg-[rgb(var(--mgt-primary-100))] transition-colors"><i data-lucide="eye" class="w-3.5 h-3.5"></i> Voir detail</button></td>'
+            + '</tr>';
+        }).join('');
+      }
+
+      // 5) Réinitialisation (même logique que le chargement initial)
+      document.querySelectorAll('#orders-table tbody tr').forEach(function(row){
+        var first = row.querySelector('td');
+        if (first) row.setAttribute('data-order', first.textContent.trim());
+      });
+      Object.keys(INITIAL_STATUS).forEach(function(id){
+        if (orderData[id]) { orderData[id].status = INITIAL_STATUS[id]; updateOrderRow(id); }
+      });
+
+      // 6) KPIs boutique (les commandes réelles passées par les clients sont ajoutées)
+      KPI_STATE.en = 8 + realEnCours;
+      KPI_STATE.li = 114 + realLivrees;
+      KPI_STATE.an = 6 + realAnnulees;
+      var kt = document.getElementById('kpi-total'); if (kt) kt.textContent = String(128 + realOrders.length);
+      var ab = document.getElementById('kpi-active-badge'); if (ab) ab.textContent = (8 + realEnCours) + ' actives';
+      renderKpis();
+      applyFilters();
+      if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+    } catch (e) { /* non bloquant */ }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+  else run();
+})();
+</script>
+<script>
+/* Prestataire (DAN Boutique) : fusion des commandes clients réelles (localStorage). */
+(function(){
+  function runPresta(){
+    try {
+      var vendor = (window.MangooVendor && window.MangooVendor.current) ? window.MangooVendor.current() : null;
+      if (!vendor || vendor.role === 'vendeur') return; // le vendeur est traité dans le script précédent
+      if (!window.MangooVendor || !window.MangooVendor.ordersForVendor) return;
+
+      var real = window.MangooVendor.ordersForVendor(vendor);
+      if (!real.length) return;
+
+      var STATUS_FROM_CLIENT = { 'en-cours': 'commandee', 'livree': 'livree', 'annulee': 'annulee' };
+      var DELIVERY_FROM_FULFILLMENT = { livraison: 'Livraison', retrait: 'Retrait', domicile: 'À domicile' };
+      function initials(name) {
+        var p = String(name || '').trim().split(/\s+/).filter(Boolean);
+        if (!p.length) return 'CL';
+        return p.length === 1 ? p[0].slice(0, 2).toUpperCase() : (p[0][0] + p[p.length - 1][0]).toUpperCase();
+      }
+      function escHtml(s) {
+        return String(s == null ? '' : s)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+
+      var tbody = document.querySelector('#orders-table tbody');
+      real.forEach(function (o) {
+        if (!o || !o.id) return;
+        var key = String(o.id).replace('#', '');
+        if (orderData[key]) return; // déjà présent
+        var st = STATUS_FROM_CLIENT[o.status] || 'commandee';
+        var name = o.clientName || 'Fatou Diop';
+        var service = o.service || 'Service';
+        var amount = o.amount || '—';
+        var delivery = DELIVERY_FROM_FULFILLMENT[o.fulfillment] || 'Livraison';
+        var ts = o.createdAt || o.ts || null;
+        var tzRef = o.clientTz || o.buyerTz || o.clientCity || o.buyerCity || o.city;
+        var realDate = o.date || '';
+        var realTime = o.time || '';
+        if (ts && window.MangooVendor && window.MangooVendor.formatDate && window.MangooVendor.formatTime) {
+          realDate = window.MangooVendor.formatDate(ts, tzRef);
+          realTime = window.MangooVendor.formatTime(ts, tzRef);
+        }
+
+        orderData[key] = {
+          id: '#' + key,
+          date: realDate || 'Aujourd\'hui',
+          time: realTime,
+          avatar: initials(name),
+          name: name,
+          contact: o.clientPhone || 'Non renseigné',
+          email: o.clientEmail || 'Non renseigné',
+          services: [{ name: service, duration: '—', price: amount }],
+          subtotal: amount,
+          fees: '—',
+          delivery: delivery,
+          total: amount,
+          address: o.address || 'Non renseigné',
+          addressNotes: '',
+          status: st
+        };
+        INITIAL_STATUS[key] = st;
+
+        if (tbody) {
+          var tr = document.createElement('tr');
+          tr.className = 'hover:bg-[rgb(var(--mgt-muted))] transition-colors';
+          tr.setAttribute('data-status', STATUS_COARSE[st] || 'en-cours');
+          tr.setAttribute('data-order', '#' + key);
+          tr.innerHTML =
+            '<td class="px-5 py-3.5 font-mono text-xs font-semibold text-[rgb(var(--mgt-primary))]">#' + key + '</td>' +
+            '<td class="px-5 py-3.5"><div class="flex items-center gap-2.5"><div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent))] font-semibold text-xs">' + initials(name) + '</div><span class="font-medium text-[rgb(var(--mgt-foreground))]">' + escHtml(name) + '</span></div></td>' +
+            '<td class="px-5 py-3.5 text-[rgb(var(--mgt-muted-foreground))]">' + escHtml(service) + '</td>' +
+            '<td class="px-5 py-3.5 text-right font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">' + escHtml(amount) + '</td>' +
+            '<td class="px-5 py-3.5 text-[rgb(var(--mgt-muted-foreground))]">' + escHtml(realDate) + '</td>' +
+            '<td class="px-5 py-3.5 tabular-nums text-[rgb(var(--mgt-muted-foreground))]">' + escHtml(realTime) + '</td>' +
+            '<td class="px-5 py-3.5 text-center">' + statusBadgeHTML(st) + '</td>' +
+            '<td class="px-5 py-3.5 text-center"><button onclick="openDrawer(\'' + key + '\')" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-[rgb(var(--mgt-primary))] bg-[rgb(var(--mgt-primary-50))] hover:bg-[rgb(var(--mgt-primary-100))] transition-colors"><i data-lucide="eye" class="w-3.5 h-3.5"></i> Voir detail</button></td>';
+          tbody.insertBefore(tr, tbody.firstChild);
+        }
+
+        if (st === 'livree') KPI_STATE.li += 1; else if (st === 'annulee') KPI_STATE.an += 1; else KPI_STATE.en += 1;
+      });
+
+      renderKpis();
+      applyFilters();
+      if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+    } catch (e) { /* non bloquant */ }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', runPresta);
+  else runPresta();
+})();
+</script>
+</body>
+</html>

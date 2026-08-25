@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  /* --- Radius Scale (root-level for preflight) --- */
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  /* --- Brand Primary: Dark Green --- */
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  /* --- Orange Accent (CTAs, highlights) --- */
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  /* --- Neutral Surface & Text Scale --- */
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  /* --- State Colors --- */
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  /* --- Shadows --- */
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  /* --- Typography --- */
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* --- Semantic Tailwind Aliases --- */
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+/* --- Typography Classes --- */
+.h-display {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.h1 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(28px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.h2 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h3 {
+  font-family: var(--mgt-font-sans);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.body-l {
+  font-family: var(--mgt-font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--mgt-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--mgt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+<header class="sticky top-0 z-50 w-full border-b shadow-sm" style="background-color: rgb(var(--mgt-primary)); border-color: rgb(var(--mgt-primary-700)); box-shadow: var(--mgt-shadow-sm);">
+  <div class="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-3">
+    <a href="./accueil.html" class="flex items-center gap-3 no-underline" style="color: rgb(var(--mgt-primary-foreground));">
+      <img src="../assets/favicon.png" alt="MangooTech Logo" class="h-10 w-10 rounded-md" style="border-radius: var(--mgt-radius-md);">
+      <span class="text-xl font-semibold tracking-tight" style="font-family: var(--mgt-font-sans);">MangooTech</span>
+    </a>
+    <nav class="hidden items-center gap-6 md:flex">
+      <a href="./carte.html" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">Boutique &amp; Prestataires</a>
+      <a href="./comparatif-prestataire-boutique.html" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">Comparatif</a>
+      <a href="./accueil.html#a-propos" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">A propos</a>
+      <a href="./auth.html" class="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Connexion</a>
+    </nav>
+  </div>
+</header>
+    <main>
+      <section class="w-full" style="background-color: rgb(var(--mgt-primary));">
+        <div class="mx-auto max-w-[1200px] px-6 py-16">
+          <h1 class="h1" style="color: rgb(var(--mgt-primary-foreground));">Le blog MangooTech</h1>
+          <p class="body-l mt-3 max-w-2xl" style="color: rgb(var(--mgt-primary-50));">Actualités, conseils et tendances du e-commerce et de l'entrepreneuriat en Afrique.</p>
+        </div>
+      </section>
+      <section class="w-full" style="background-color: rgb(var(--mgt-background));">
+        <div class="mx-auto max-w-[1200px] px-6 py-14">
+          <div class="rounded-lg border p-8 mb-10" style="background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-lg);">
+            <span class="caption inline-block rounded-md px-3 py-1 mb-4" style="background-color: rgb(var(--mgt-primary-50)); color: rgb(var(--mgt-primary-700));">À la une</span>
+            <h2 class="h2 mb-3" style="color: rgb(var(--mgt-foreground));">Le live shopping transforme le commerce de proximité en Afrique</h2>
+            <p class="body mb-4" style="color: rgb(var(--mgt-muted-foreground));">Découvrez comment les marchands locaux utilisent la vidéo en direct pour vendre plus et fidéliser leurs clients.</p>
+            <a href="#" class="text-sm font-semibold" style="color: rgb(var(--mgt-accent));">Lire l'article</a>
+          </div>
+          <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div class="rounded-lg border p-6" style="background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-lg);">
+              <h3 class="h3 mb-2" style="color: rgb(var(--mgt-foreground));">5 conseils pour booster vos ventes en ligne</h3>
+              <p class="caption mb-3" style="color: rgb(var(--mgt-muted-foreground));">12 août 2026 · Vente</p>
+              <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Des astuces concrètes pour améliorer votre boutique et convertir davantage de visiteurs.</p>
+            </div>
+            <div class="rounded-lg border p-6" style="background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-lg);">
+              <h3 class="h3 mb-2" style="color: rgb(var(--mgt-foreground));">Bien choisir son prestataire de livraison</h3>
+              <p class="caption mb-3" style="color: rgb(var(--mgt-muted-foreground));">5 août 2026 · Livraison</p>
+              <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Les critères à considérer pour offrir une expérience de livraison fiable à vos clients.</p>
+            </div>
+            <div class="rounded-lg border p-6" style="background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-lg);">
+              <h3 class="h3 mb-2" style="color: rgb(var(--mgt-foreground));">Mobile money : le moteur du e-commerce africain</h3>
+              <p class="caption mb-3" style="color: rgb(var(--mgt-muted-foreground));">28 juillet 2026 · Paiements</p>
+              <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Pourquoi les paiements mobiles sont devenus incontournables pour vendre en ligne.</p>
+            </div>
+            <div class="rounded-lg border p-6" style="background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-lg);">
+              <h3 class="h3 mb-2" style="color: rgb(var(--mgt-foreground));">Fidéliser vos clients grâce aux programmes de points</h3>
+              <p class="caption mb-3" style="color: rgb(var(--mgt-muted-foreground));">20 juillet 2026 · Marketing</p>
+              <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Transformez des acheteurs ponctuels en clients réguliers avec une stratégie simple.</p>
+            </div>
+            <div class="rounded-lg border p-6" style="background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-lg);">
+              <h3 class="h3 mb-2" style="color: rgb(var(--mgt-foreground));">Optimiser la page de votre boutique</h3>
+              <p class="caption mb-3" style="color: rgb(var(--mgt-muted-foreground));">12 juillet 2026 · Vente</p>
+              <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Photos, descriptions et disponibilité : les leviers pour inspirer confiance.</p>
+            </div>
+            <div class="rounded-lg border p-6" style="background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-lg);">
+              <h3 class="h3 mb-2" style="color: rgb(var(--mgt-foreground));">Les tendances e-commerce à surveiller en 2026</h3>
+              <p class="caption mb-3" style="color: rgb(var(--mgt-muted-foreground));">1 juillet 2026 · Tendances</p>
+              <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Ce qui façonne le commerce en ligne cette année et comment vous y préparer.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+<footer class="border-t" style="background-color: rgb(var(--mgt-muted)); border-color: rgb(var(--mgt-border));">
+  <div class="mx-auto max-w-[1200px] px-6 py-14">
+    <div class="grid grid-cols-1 gap-10 md:grid-cols-4">
+      <div class="md:col-span-1">
+        <div class="mb-4 flex items-center gap-3">
+          <img src="../assets/favicon.png" alt="MangooTech Logo" class="h-8 w-8 rounded-md" style="border-radius: var(--mgt-radius-sm);">
+          <span class="text-lg font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">MangooTech</span>
+        </div>
+        <p class="caption mb-4" style="color: rgb(var(--mgt-muted-foreground));">Plateforme e-commerce africaine connectant marchands locaux et clients.</p>
+      </div>
+      <div>
+        <h4 class="mb-4 text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Plateforme</h4>
+        <ul class="space-y-2.5">
+          <li><a href="./carte.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Carte interactive</a></li>
+          <li><a href="./live-shopping.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Live Shopping</a></li>
+          <li><a href="./paiements.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Paiements</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="mb-4 text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Ressources</h4>
+        <ul class="space-y-2.5">
+          <li><a href="./aide.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Aide et support</a></li>
+          <li><a href="./blog.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Blog</a></li>
+          <li><a href="./faq.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">FAQ</a></li>
+          <li><a href="./contact.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="mb-4 text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Legal</h4>
+        <ul class="space-y-2.5">
+          <li><a href="./conditions-utilisation.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Conditions d'utilisation</a></li>
+          <li><a href="./confidentialite.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Politique de confidentialité</a></li>
+          <li><a href="./mentions-legales.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Mentions légales</a></li>
+          <li><a href="./cgv.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">CGV</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="mt-12 border-t pt-6 text-center" style="border-color: rgb(var(--mgt-border));">
+      <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">&copy; 2026 MangooTech. Tous droits réservés.</p>
+    </div>
+  </div>
+</footer>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

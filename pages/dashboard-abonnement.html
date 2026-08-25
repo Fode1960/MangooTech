@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Abonnement & Pack</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root { --mgt-radius-sm: 4px; --mgt-radius-md: 8px; --mgt-radius-lg: 16px; --mgt-radius-full: 9999px; }
+
+:root,
+html.light {
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+:root {
+  --background: 255 255 255; --foreground: 15 23 42; --card: 255 255 255; --card-foreground: 15 23 42;
+  --popover: 255 255 255; --popover-foreground: 15 23 42; --primary: 26 92 42; --primary-foreground: 255 255 255;
+  --muted: 248 250 252; --muted-foreground: 100 116 139; --border: 226 232 240; --input: 226 232 240; --ring: 26 92 42;
+  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px; --radius-full: 9999px;
+  --state-success: 129 199 134; --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77; --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68; --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246; --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-card: 20 20 26; --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26; --mgt-popover-foreground: 248 250 252; --mgt-muted: 30 30 38; --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50; --mgt-input: 40 40 50; --mgt-ring: 76 168 82;
+  --background: 11 11 15; --foreground: 248 250 252; --card: 20 20 26; --card-foreground: 248 250 252;
+  --popover: 20 20 26; --popover-foreground: 248 250 252; --primary: 76 168 82; --primary-foreground: 255 255 255;
+  --muted: 30 30 38; --muted-foreground: 148 163 184; --border: 40 40 50; --input: 40 40 50; --ring: 76 168 82;
+}
+
+.h-display { font-family: var(--mgt-font-sans); font-size: clamp(40px, 6vw, 88px); line-height: 1.02; font-weight: 600; letter-spacing: -0.03em; text-wrap: balance; }
+.h1 { font-family: var(--mgt-font-sans); font-size: clamp(28px, 3.5vw, 48px); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+.h2 { font-family: var(--mgt-font-sans); font-size: clamp(22px, 2.4vw, 32px); line-height: 1.2; font-weight: 600; letter-spacing: -0.015em; }
+.h3 { font-family: var(--mgt-font-sans); font-size: 20px; line-height: 1.3; font-weight: 600; letter-spacing: -0.01em; }
+.body-l { font-family: var(--mgt-font-sans); font-size: 18px; line-height: 1.55; font-weight: 400; }
+.body { font-family: var(--mgt-font-sans); font-size: 15px; line-height: 1.6; font-weight: 400; }
+.caption { font-family: var(--mgt-font-sans); font-size: 13px; line-height: 1.5; font-weight: 400; letter-spacing: 0.005em; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); } .text-background { color: var(--background); } .border-background { border-color: var(--background); } .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); } .text-foreground { color: var(--foreground); } .border-foreground { border-color: var(--foreground); } .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); } .text-card { color: var(--card); } .border-card { border-color: var(--card); } .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); } .text-card-foreground { color: var(--card-foreground); } .border-card-foreground { border-color: var(--card-foreground); } .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); } .text-popover { color: var(--popover); } .border-popover { border-color: var(--popover); } .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); } .text-popover-foreground { color: var(--popover-foreground); } .border-popover-foreground { border-color: var(--popover-foreground); } .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); } .text-primary { color: var(--primary); } .border-primary { border-color: var(--primary); } .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); } .text-primary-foreground { color: var(--primary-foreground); } .border-primary-foreground { border-color: var(--primary-foreground); } .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); } .text-muted { color: var(--muted); } .border-muted { border-color: var(--muted); } .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); } .text-muted-foreground { color: var(--muted-foreground); } .border-muted-foreground { border-color: var(--muted-foreground); } .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); } .text-border { color: var(--border); } .border-border { border-color: var(--border); } .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); } .text-input { color: var(--input); } .border-input { border-color: var(--input); } .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); } .text-ring { color: var(--ring); } .border-ring { border-color: var(--ring); } .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased flex bg-[rgb(var(--mgt-muted))]">
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-[rgb(var(--mgt-primary))] text-[rgb(var(--mgt-primary-foreground))]">
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+        <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+        <div>
+          <span class="font-semibold text-base tracking-tight">Mangoo</span><span class="font-light text-base tracking-tight text-white/70">Tech</span>
+        </div>
+      </div>
+      <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <a href="./dashboard-overview.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+          Vue d'ensemble
+        </a>
+        <a href="./dashboard-performance.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bar-chart-3" class="w-4.5 h-4.5"></i>
+          Performance
+        </a>
+        <a href="./dashboard-reviews.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="star" class="w-4.5 h-4.5"></i>
+          Avis clients
+        </a>
+        <a href="./dashboard-agenda.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="calendar-days" class="w-4.5 h-4.5"></i>
+          Rendez-vous
+        </a>
+        <a href="./dashboard-finances.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wallet" class="w-4.5 h-4.5"></i>
+          Finances
+        </a>
+        <a href="./dashboard-notifications.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+          Notifications
+        </a>
+        <a href="./dashboard-orders.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shopping-bag" class="w-4.5 h-4.5"></i>
+          Commandes
+        </a>
+        <a href="./dashboard-clients.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users" class="w-4.5 h-4.5"></i>
+          Clients
+        </a>
+        <a href="./dashboard-team.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users-round" class="w-4.5 h-4.5"></i>
+          Équipe
+        </a>
+        <a href="./dashboard-messages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="message-square" class="w-4.5 h-4.5"></i>
+          Messagerie
+        </a>
+        <a href="./dashboard-live.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="radio" class="w-4.5 h-4.5"></i>
+          Live
+        </a>
+        <a href="./dashboard-services.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="briefcase" class="w-4.5 h-4.5"></i>
+          Prestations
+        </a>
+        <a href="./dashboard-catalogue.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="package" class="w-4.5 h-4.5"></i>
+          Catalogue
+        </a>
+        <a href="./dashboard-inventaire.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="boxes" class="w-4.5 h-4.5"></i>
+          Inventaire
+        </a>
+        <a href="./dashboard-gallery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="images" class="w-4.5 h-4.5"></i>
+          Galerie
+        </a>
+        <a href="./dashboard-boosters.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="zap" class="w-4.5 h-4.5"></i>
+          Boosters
+        </a>
+        <a href="./dashboard-promotions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="badge-percent" class="w-4.5 h-4.5"></i>
+          Promotions
+        </a>
+        <a href="./dashboard-fidelite.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="award" class="w-4.5 h-4.5"></i>
+          Fidélité
+        </a>
+        <a href="./dashboard-parrainage.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="gift" class="w-4.5 h-4.5"></i>
+          Parrainage
+        </a>
+        <a href="./dashboard-classement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="trophy" class="w-4.5 h-4.5"></i>
+          Classement
+        </a>
+        <a href="./dashboard-verification.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shield-check" class="w-4.5 h-4.5"></i>
+          Vérification
+        </a>
+        <a href="./dashboard-recommandation.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="compass" class="w-4.5 h-4.5"></i>
+          Découverte
+        </a>
+        <a href="./dashboard-hors-ligne.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wifi-off" class="w-4.5 h-4.5"></i>
+          Hors-ligne
+        </a>
+        <a href="./dashboard-rapports.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
+          Rapports
+        </a>
+        <a href="./dashboard-support.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="life-buoy" class="w-4.5 h-4.5"></i>
+          Support
+        </a>
+        <a href="./dashboard-offres.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="tag" class="w-4.5 h-4.5"></i>
+          Offres & Tarifs
+        </a>
+        <a href="./dashboard-abonnement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-medium transition-colors">
+          <i data-lucide="credit-card" class="w-4.5 h-4.5"></i>
+          Abonnement
+        </a>
+        <a href="./dashboard-settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="settings" class="w-4.5 h-4.5"></i>
+          Parametres
+        </a>
+      </nav>
+      <div class="border-t border-white/10 px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>CA</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate" data-vendor-name>DAN Boutique</p>
+            <p class="text-xs text-white/60 truncate" data-vendor-role>Prestataire certifié</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div id="app-main" class="flex-1 ml-60 min-h-screen flex flex-col">
+      <header class="sticky top-0 z-30 flex items-center justify-between gap-4 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] px-8 py-3.5">
+        <div class="flex items-center gap-4">
+          <h1 class="h3 tabular-nums">Abonnement & Pack</h1>
+          <span class="inline-flex items-center gap-2 caption text-[rgb(var(--mgt-primary-600))] bg-[rgb(var(--mgt-primary-50))] px-2.5 py-0.5 rounded-full font-medium">
+            <span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-success))]"></span>
+            <span id="header-pack-label">Pack Découverte actif</span>
+          </span>
+        </div>
+        <div class="flex items-center gap-4">
+          <button id="btn-notifications" class="relative p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))]" aria-label="Notifications">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="btn-notifications-badge" class="absolute top-1 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-[10px] font-bold leading-4 text-center" style="display:none;"></span>
+          </button>
+          <div id="btn-account" class="flex items-center gap-3 pl-2 border-l border-[rgb(var(--mgt-border))] cursor-pointer" role="button" tabindex="0">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>CA</div>
+            <div class="hidden sm:block text-right">
+              <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]" data-vendor-name>DAN Boutique</p>
+              <div class="flex items-center gap-1 text-xs text-[rgb(var(--mgt-accent))]">
+                <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                <span data-vendor-rating>4.8</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="flex-1 p-8 space-y-6">
+        <!-- ===== PACK ACTUEL ===== -->
+        <div class="relative overflow-hidden bg-[rgb(var(--mgt-primary))] text-white rounded-2xl p-8 shadow-[var(--mgt-shadow-md)]">
+          <div class="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-white/5"></div>
+          <div class="absolute -right-4 -bottom-24 w-72 h-72 rounded-full bg-white/5"></div>
+          <div class="relative flex flex-wrap items-end justify-between gap-6">
+            <div>
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 text-xs font-semibold mb-4">
+                <i data-lucide="badge-check" class="w-4 h-4"></i>
+                <span id="hero-pack-name">Pack Découverte</span>
+              </div>
+              <h2 class="h2 mb-2">Votre abonnement est actif</h2>
+              <p class="body-l text-white/80 max-w-xl" id="hero-pack-desc">Le pack gratuit pour bien démarrer : mini-site, mini-boutique, espace personnel, fiche visible et Mangoo Connect+.</p>
+            </div>
+            <div class="text-right">
+              <p class="text-4xl font-bold tracking-tight tabular-nums" id="hero-pack-price">Gratuit</p>
+              <p class="caption text-white/70 mt-1" id="hero-pack-caption">sans frais mensuels</p>
+            </div>
+          </div>
+          <div class="relative mt-6 flex flex-wrap items-center gap-6 pt-6 border-t border-white/15">
+            <div>
+              <p class="caption text-white/60">Prochaine facturation</p>
+              <p class="text-sm font-semibold tabular-nums" id="hero-billing">Aucune</p>
+            </div>
+            <div>
+              <p class="caption text-white/60">Date de début</p>
+              <p class="text-sm font-semibold tabular-nums" id="hero-start">—</p>
+            </div>
+            <div>
+              <p class="caption text-white/60">Statut</p>
+              <p class="inline-flex items-center gap-1.5 text-sm font-semibold" id="hero-status">
+                <span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-success))]"></span> Actif
+              </p>
+            </div>
+            <div class="ml-auto flex items-center gap-3">
+              <button id="hero-upgrade-btn" type="button" class="px-4 py-2 rounded-lg bg-white text-[rgb(var(--mgt-primary))] font-semibold text-sm hover:bg-white/90 transition-colors">Passer au Visibilité</button>
+              <button id="hero-discover-btn" type="button" class="px-4 py-2 rounded-lg border border-white/30 text-white font-semibold text-sm hover:bg-white/10 transition-colors">Découvrir les packs</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== SERVICES INCLUS + UTILISATION ===== -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div class="lg:col-span-2 bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-center justify-between mb-5">
+              <h3 class="h3">Services inclus</h3>
+              <span class="caption text-[rgb(var(--mgt-muted-foreground))]">5 services actifs</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="flex items-center gap-3 p-3 rounded-lg border border-[rgb(var(--mgt-border))]">
+                <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                  <i data-lucide="globe" class="w-4.5 h-4.5 text-[rgb(var(--mgt-primary))]"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Mini-site</p>
+                  <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Site vitrine personnel</p>
+                </div>
+                <i data-lucide="check-circle-2" class="w-4 h-4 text-[rgb(var(--mgt-success))] ml-auto"></i>
+              </div>
+              <div class="flex items-center gap-3 p-3 rounded-lg border border-[rgb(var(--mgt-border))]">
+                <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                  <i data-lucide="shopping-bag" class="w-4.5 h-4.5 text-[rgb(var(--mgt-primary))]"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Mini-boutique</p>
+                  <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Boutique en ligne simplifiée</p>
+                </div>
+                <i data-lucide="check-circle-2" class="w-4 h-4 text-[rgb(var(--mgt-success))] ml-auto"></i>
+              </div>
+              <div class="flex items-center gap-3 p-3 rounded-lg border border-[rgb(var(--mgt-border))]">
+                <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                  <i data-lucide="user" class="w-4.5 h-4.5 text-[rgb(var(--mgt-primary))]"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Espace personnel</p>
+                  <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Gestion du profil</p>
+                </div>
+                <i data-lucide="check-circle-2" class="w-4 h-4 text-[rgb(var(--mgt-success))] ml-auto"></i>
+              </div>
+              <div class="flex items-center gap-3 p-3 rounded-lg border border-[rgb(var(--mgt-border))]">
+                <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                  <i data-lucide="eye" class="w-4.5 h-4.5 text-[rgb(var(--mgt-primary))]"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Fiche visible</p>
+                  <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Profil public visible</p>
+                </div>
+                <i data-lucide="check-circle-2" class="w-4 h-4 text-[rgb(var(--mgt-success))] ml-auto"></i>
+              </div>
+              <div class="flex items-center gap-3 p-3 rounded-lg border border-[rgb(var(--mgt-border))]">
+                <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                  <i data-lucide="users" class="w-4.5 h-4.5 text-[rgb(var(--mgt-primary))]"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Mangoo Connect+</p>
+                  <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Réseautage professionnel</p>
+                </div>
+                <i data-lucide="check-circle-2" class="w-4 h-4 text-[rgb(var(--mgt-success))] ml-auto"></i>
+              </div>
+              <div class="flex items-center gap-3 p-3 rounded-lg border border-dashed border-[rgb(var(--mgt-border))] opacity-60">
+                <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-muted))]">
+                  <i data-lucide="store" class="w-4.5 h-4.5 text-[rgb(var(--mgt-muted-foreground))]"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Référencement Market</p>
+                  <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Inclus dans Visibilité</p>
+                </div>
+                <i data-lucide="lock" class="w-4 h-4 text-[rgb(var(--mgt-muted-foreground))] ml-auto"></i>
+              </div>
+              <div class="flex items-center gap-3 p-3 rounded-lg border border-dashed border-[rgb(var(--mgt-border))] opacity-60">
+                <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-muted))]">
+                  <i data-lucide="camera" class="w-4.5 h-4.5 text-[rgb(var(--mgt-muted-foreground))]"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Showroom360 simplifié</p>
+                  <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Inclus dans Visibilité</p>
+                </div>
+                <i data-lucide="lock" class="w-4 h-4 text-[rgb(var(--mgt-muted-foreground))] ml-auto"></i>
+              </div>
+              <div class="flex items-center gap-3 p-3 rounded-lg border border-dashed border-[rgb(var(--mgt-border))] opacity-60">
+                <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-muted))]">
+                  <i data-lucide="truck" class="w-4.5 h-4.5 text-[rgb(var(--mgt-muted-foreground))]"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Mangoo Express+</p>
+                  <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Inclus dans Professionnel</p>
+                </div>
+                <i data-lucide="lock" class="w-4 h-4 text-[rgb(var(--mgt-muted-foreground))] ml-auto"></i>
+              </div>
+              <div class="flex items-center gap-3 p-3 rounded-lg border border-dashed border-[rgb(var(--mgt-border))] opacity-60">
+                <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-muted))]">
+                  <i data-lucide="trending-up" class="w-4.5 h-4.5 text-[rgb(var(--mgt-muted-foreground))]"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Référencement pro</p>
+                  <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Inclus dans Professionnel</p>
+                </div>
+                <i data-lucide="lock" class="w-4 h-4 text-[rgb(var(--mgt-muted-foreground))] ml-auto"></i>
+              </div>
+              <div class="flex items-center gap-3 p-3 rounded-lg border border-dashed border-[rgb(var(--mgt-border))] opacity-60">
+                <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-muted))]">
+                  <i data-lucide="database" class="w-4.5 h-4.5 text-[rgb(var(--mgt-muted-foreground))]"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">CRM/ERP simplifié</p>
+                  <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Inclus dans Premium</p>
+                </div>
+                <i data-lucide="lock" class="w-4 h-4 text-[rgb(var(--mgt-muted-foreground))] ml-auto"></i>
+              </div>
+              <div class="flex items-center gap-3 p-3 rounded-lg border border-dashed border-[rgb(var(--mgt-border))] opacity-60">
+                <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-muted))]">
+                  <i data-lucide="vr-headset" class="w-4.5 h-4.5 text-[rgb(var(--mgt-muted-foreground))]"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Showroom360 complet</p>
+                  <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Inclus dans Premium</p>
+                </div>
+                <i data-lucide="lock" class="w-4 h-4 text-[rgb(var(--mgt-muted-foreground))] ml-auto"></i>
+              </div>
+              <div class="flex items-center gap-3 p-3 rounded-lg border border-dashed border-[rgb(var(--mgt-border))] opacity-60">
+                <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-muted))]">
+                  <i data-lucide="headphones" class="w-4.5 h-4.5 text-[rgb(var(--mgt-muted-foreground))]"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Support personnalisé</p>
+                  <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Inclus dans Premium</p>
+                </div>
+                <i data-lucide="lock" class="w-4 h-4 text-[rgb(var(--mgt-muted-foreground))] ml-auto"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <h3 class="h3 mb-5">Paiement</h3>
+            <div class="p-4 rounded-lg bg-[rgb(var(--mgt-muted))] mb-4">
+              <div class="flex items-center gap-3">
+                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary))] text-white">
+                  <i data-lucide="smartphone" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Orange Money</p>
+                  <p class="caption text-[rgb(var(--mgt-muted-foreground))]">+221 77 *** **42</p>
+                </div>
+                <i data-lucide="check-circle-2" class="w-4 h-4 text-[rgb(var(--mgt-success))] ml-auto"></i>
+              </div>
+            </div>
+            <button id="btn-edit-payment" class="w-full py-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-sm font-semibold text-[rgb(var(--mgt-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors mb-6">Modifier le mode de paiement</button>
+            <div class="p-4 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
+              <div class="flex items-start gap-3">
+                <i data-lucide="info" class="w-5 h-5 text-[rgb(var(--mgt-accent))] shrink-0 mt-0.5"></i>
+                <p class="caption text-[rgb(var(--mgt-accent-700))]">Le paiement se renouvelle automatiquement le 1er de chaque mois. Vous pouvez annuler à tout moment depuis cette page.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== COMPARATIF DES PACKS ===== -->
+        <div>
+          <div class="mb-5">
+            <h2 class="h2">Comparer les packs</h2>
+            <p class="body text-[rgb(var(--mgt-muted-foreground))] mt-1">Seul votre pack actif est en couleur. Les autres packs sont grisés : vous pouvez évoluer vers un pack supérieur ou rétrograder à tout moment.</p>
+          </div>
+          <div id="packs-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div class="bg-[rgb(var(--mgt-primary))] text-white rounded-xl p-6 shadow-[var(--mgt-shadow-md)] flex flex-col">
+              <div class="inline-flex items-center gap-1.5 self-start px-2.5 py-1 rounded-full bg-white/15 text-xs font-semibold mb-3">
+                <i data-lucide="check" class="w-3 h-3"></i> Votre pack
+              </div>
+              <h3 class="h3">Découverte</h3>
+              <p class="caption text-white/70 mb-4">Nouveaux artisans</p>
+              <p class="text-2xl font-bold tabular-nums mb-5">0 <span class="text-sm font-medium text-white/70">FCFA</span></p>
+              <ul class="space-y-2 text-sm text-white/80 flex-1">
+                <li>Mini-site & Mini-boutique</li>
+                <li>Espace personnel</li>
+                <li>Fiche visible</li>
+                <li>Mangoo Connect+</li>
+              </ul>
+              <button class="mt-5 py-2.5 rounded-lg bg-white text-[rgb(var(--mgt-primary))] text-sm font-semibold hover:bg-white/90 transition-colors">Pack actuel</button>
+            </div>
+            <div class="bg-[rgb(var(--mgt-muted))] border border-dashed border-[rgb(var(--mgt-border))] rounded-xl p-6 flex flex-col">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="h3 text-[rgb(var(--mgt-muted-foreground))]">Visibilité</h3>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[rgb(var(--mgt-border))] text-[rgb(var(--mgt-muted-foreground))]">
+                  <i data-lucide="lock" class="w-3 h-3"></i> Verrouillé
+                </span>
+              </div>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-4">Artisans en croissance</p>
+              <p class="text-2xl font-bold tabular-nums mb-5 text-[rgb(var(--mgt-muted-foreground))]">5 000 <span class="text-sm font-medium">FCFA</span></p>
+              <ul class="space-y-2 text-sm text-[rgb(var(--mgt-muted-foreground))] flex-1">
+                <li>Tout le pack Découverte</li>
+                <li>Référencement Mangoo Market</li>
+                <li>Showroom360 simplifié</li>
+              </ul>
+              <button class="mt-5 py-2.5 rounded-lg border border-[rgb(var(--mgt-accent))] text-[rgb(var(--mgt-accent))] text-sm font-semibold hover:bg-[rgb(var(--mgt-accent-50))] transition-colors">Évoluer</button>
+            </div>
+            <div class="bg-[rgb(var(--mgt-muted))] border border-dashed border-[rgb(var(--mgt-border))] rounded-xl p-6 flex flex-col">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="h3 text-[rgb(var(--mgt-muted-foreground))]">Professionnel</h3>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[rgb(var(--mgt-border))] text-[rgb(var(--mgt-muted-foreground))]">
+                  <i data-lucide="lock" class="w-3 h-3"></i> Verrouillé
+                </span>
+              </div>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-4">Artisans organisés, PME</p>
+              <p class="text-2xl font-bold tabular-nums mb-5 text-[rgb(var(--mgt-muted-foreground))]">10 000 <span class="text-sm font-medium">FCFA</span></p>
+              <ul class="space-y-2 text-sm text-[rgb(var(--mgt-muted-foreground))] flex-1">
+                <li>Tout le pack Visibilité</li>
+                <li>Mangoo Express+</li>
+                <li>Référencement pro</li>
+              </ul>
+              <button class="mt-5 py-2.5 rounded-lg border border-[rgb(var(--mgt-accent))] text-[rgb(var(--mgt-accent))] text-sm font-semibold hover:bg-[rgb(var(--mgt-accent-50))] transition-colors">Évoluer</button>
+            </div>
+            <div class="bg-[rgb(var(--mgt-muted))] border border-dashed border-[rgb(var(--mgt-border))] rounded-xl p-6 flex flex-col">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="h3 text-[rgb(var(--mgt-muted-foreground))]">Premium</h3>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[rgb(var(--mgt-border))] text-[rgb(var(--mgt-muted-foreground))]">
+                  <i data-lucide="lock" class="w-3 h-3"></i> Verrouillé
+                </span>
+              </div>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-4">PME structurées</p>
+              <p class="text-2xl font-bold tabular-nums mb-5 text-[rgb(var(--mgt-muted-foreground))]">15 000 <span class="text-sm font-medium">FCFA</span></p>
+              <ul class="space-y-2 text-sm text-[rgb(var(--mgt-muted-foreground))] flex-1">
+                <li>Tout le pack Professionnel</li>
+                <li>CRM/ERP simplifié</li>
+                <li>Showroom360 complet</li>
+                <li>Support personnalisé</li>
+              </ul>
+              <button class="mt-5 py-2.5 rounded-lg border border-[rgb(var(--mgt-accent))] text-[rgb(var(--mgt-accent))] text-sm font-semibold hover:bg-[rgb(var(--mgt-accent-50))] transition-colors">Évoluer</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== HISTORIQUE DE FACTURATION ===== -->
+        <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="h3">Historique de facturation</h3>
+            <span class="caption text-[rgb(var(--mgt-muted-foreground))]">Aucune facture</span>
+          </div>
+          <div class="flex flex-col items-center justify-center py-12 text-center">
+            <div class="flex items-center justify-center w-14 h-14 rounded-full bg-[rgb(var(--mgt-muted))] mb-4">
+              <i data-lucide="receipt" class="w-7 h-7 text-[rgb(var(--mgt-muted-foreground))]"></i>
+            </div>
+            <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))] mb-1">Aucun paiement effectué</p>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] max-w-sm" id="billing-history-desc">Les factures apparaîtront ici après chaque renouvellement de votre abonnement.</p>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script>lucide.createIcons();</script>
+
+
+<script>
+(function(){
+  function __mgtSidebarScrollFix(){
+    var active = document.querySelector('nav a[class*="bg-white/15"]');
+    if (!active) return;
+    var nav = active.closest('nav');
+    if (!nav) return;
+    var navRect = nav.getBoundingClientRect();
+    var linkRect = active.getBoundingClientRect();
+    var target = nav.scrollTop + (linkRect.top - navRect.top) - (navRect.height - linkRect.height) / 2;
+    nav.scrollTop = Math.max(0, target);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', __mgtSidebarScrollFix);
+  } else {
+    __mgtSidebarScrollFix();
+  }
+})();
+</script>
+
+<script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+<script src="../assets/mangoo-vendor-config.js"></script>
+<script src="../assets/mangoo-dashboard-shell.js"></script>
+<script>
+(function(){
+  var plans = [];
+  var currentPlanId = 'visibilite';
+  var currentConfig = null;
+
+  function fmt(n) {
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  }
+
+  function planById(id) {
+    for (var i = 0; i < plans.length; i++) {
+      if (plans[i].id === id) return plans[i];
+    }
+    return null;
+  }
+
+  function nextPlanId(id) {
+    var order = ['decouverte', 'visibilite', 'professionnel', 'premium'];
+    var idx = order.indexOf(id);
+    if (idx < 0 || idx >= order.length - 1) return null;
+    return order[idx + 1];
+  }
+
+  function fmtDate(iso) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    var dd = ('0' + d.getDate()).slice(-2);
+    var mm = ('0' + (d.getMonth() + 1)).slice(-2);
+    return dd + '/' + mm + '/' + d.getFullYear();
+  }
+
+  function setText(id, txt) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = txt;
+  }
+
+  function showToast(message) {
+    var existing = document.getElementById('mgt-toast');
+    if (existing) existing.remove();
+    var toast = document.createElement('div');
+    toast.id = 'mgt-toast';
+    toast.textContent = message;
+    toast.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));padding:10px 18px;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);font-size:14px;font-weight:500;box-shadow:var(--mgt-shadow-md);z-index:9999;opacity:0;transition:opacity .25s ease;';
+    document.body.appendChild(toast);
+    requestAnimationFrame(function () { toast.style.opacity = '1'; });
+    setTimeout(function () {
+      toast.style.opacity = '0';
+      setTimeout(function () { toast.remove(); }, 300);
+    }, 2600);
+  }
+
+  function renderHero(plan) {
+    var isFree = !plan.price;
+    var priceText = isFree ? 'Gratuit' : fmt(plan.price) + ' FCFA';
+    var caption = isFree ? 'sans frais mensuels' : 'par mois';
+    var billing = isFree ? 'Aucune' : fmt(plan.price) + ' FCFA / mois';
+    var desc = 'Les outils inclus dans ce pack : ' + (plan.features || []).join(', ') + '.';
+    setText('header-pack-label', 'Pack ' + plan.name + ' actif');
+    setText('hero-pack-name', 'Pack ' + plan.name);
+    setText('hero-pack-desc', desc);
+    setText('hero-pack-price', priceText);
+    setText('hero-pack-caption', caption);
+    setText('hero-billing', billing);
+  }
+
+  function commissionLabel(plan) {
+    return plan.commission === 0 ? '0 % de commission' : plan.commission + ' % de commission';
+  }
+
+  function cardMarkup(plan) {
+    var isCurrent = plan.id === currentPlanId;
+    var isRecommended = plan.recommended === true;
+    var isFree = !plan.price;
+    var price = isFree ? '0' : fmt(plan.price);
+    var commission = commissionLabel(plan);
+    var features = (plan.features || []).map(function (f) { return '<li>' + f + '</li>'; }).join('');
+
+    if (isCurrent) {
+      return '<div class="bg-[rgb(var(--mgt-primary))] text-white rounded-xl p-6 shadow-[var(--mgt-shadow-md)] flex flex-col" data-plan-id="' + plan.id + '">'
+        + '<div class="flex items-center gap-2 mb-3">'
+        + '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 text-xs font-semibold"><i data-lucide="check" class="w-3 h-3"></i> Votre pack</span>'
+        + (isRecommended ? '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-xs font-semibold"><i data-lucide="star" class="w-3 h-3"></i> Recommandé</span>' : '')
+        + '</div>'
+        + '<h3 class="h3">' + plan.name + '</h3>'
+        + '<p class="caption text-white/70 mb-4">' + commission + '</p>'
+        + '<p class="text-2xl font-bold tabular-nums mb-5">' + price + ' <span class="text-sm font-medium text-white/70">FCFA</span></p>'
+        + '<ul class="space-y-2 text-sm text-white/80 flex-1">' + features + '</ul>'
+        + '<button type="button" data-plan-choose="' + plan.id + '" class="mt-5 py-2.5 rounded-lg bg-white text-[rgb(var(--mgt-primary))] text-sm font-semibold hover:bg-white/90 transition-colors">Pack actuel</button>'
+        + '</div>';
+    }
+
+    var badge = isRecommended
+      ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))]"><i data-lucide="star" class="w-3 h-3"></i> Recommandé</span>'
+      : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[rgb(var(--mgt-border))] text-[rgb(var(--mgt-muted-foreground))]"><i data-lucide="lock" class="w-3 h-3"></i> Verrouillé</span>';
+
+    return '<div class="bg-[rgb(var(--mgt-muted))] border border-dashed border-[rgb(var(--mgt-border))] rounded-xl p-6 flex flex-col" data-plan-id="' + plan.id + '">'
+      + '<div class="flex items-center justify-between mb-3">'
+      + '<h3 class="h3 text-[rgb(var(--mgt-muted-foreground))]">' + plan.name + '</h3>'
+      + badge
+      + '</div>'
+      + '<p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-4">' + commission + '</p>'
+      + '<p class="text-2xl font-bold tabular-nums mb-5 text-[rgb(var(--mgt-muted-foreground))]">' + price + ' <span class="text-sm font-medium">FCFA</span></p>'
+      + '<ul class="space-y-2 text-sm text-[rgb(var(--mgt-muted-foreground))] flex-1">' + features + '</ul>'
+      + '<button type="button" data-plan-choose="' + plan.id + '" class="mt-5 py-2.5 rounded-lg border border-[rgb(var(--mgt-accent))] text-[rgb(var(--mgt-accent))] text-sm font-semibold hover:bg-[rgb(var(--mgt-accent-50))] transition-colors">Évoluer</button>'
+      + '</div>';
+  }
+
+  function renderPacks() {
+    var grid = document.getElementById('packs-grid');
+    if (!grid) return;
+    grid.innerHTML = plans.map(cardMarkup).join('');
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function renderHeroActions() {
+    var sub = (currentConfig && currentConfig.subscription) || {};
+    setText('hero-start', sub.startedAt ? fmtDate(sub.startedAt) : '—');
+
+    var statusEl = document.getElementById('hero-status');
+    if (statusEl) {
+      var isActive = sub.status === 'actif';
+      var dot = isActive ? 'rgb(var(--mgt-success))' : 'rgb(var(--mgt-warning))';
+      var label = isActive ? 'Actif' : (sub.status === 'expire' ? 'Expiré' : (sub.status === 'suspendu' ? 'Suspendu' : (sub.status || 'Inactif')));
+      statusEl.innerHTML = '<span class="w-2 h-2 rounded-full" style="background:' + dot + '"></span> ' + label;
+    }
+
+    var upBtn = document.getElementById('hero-upgrade-btn');
+    if (upBtn) {
+      var nextId = nextPlanId(currentPlanId);
+      var next = nextId ? planById(nextId) : null;
+      if (next) {
+        upBtn.setAttribute('data-plan-upgrade', next.id);
+        upBtn.textContent = 'Passer au ' + next.name;
+        upBtn.style.opacity = '1';
+        upBtn.style.pointerEvents = 'auto';
+      } else {
+        upBtn.removeAttribute('data-plan-upgrade');
+        upBtn.textContent = 'Pack maximal atteint';
+        upBtn.style.opacity = '0.55';
+        upBtn.style.pointerEvents = 'none';
+      }
+    }
+  }
+
+  function render() {
+    var plan = planById(currentPlanId) || plans[0];
+    if (plan) renderHero(plan);
+    renderHeroActions();
+    renderPacks();
+  }
+
+  function choose(id) {
+    if (id === currentPlanId) {
+      var current = planById(id);
+      showToast('Le pack ' + (current ? current.name : id) + ' est déjà actif');
+      return;
+    }
+    MangooVendorConfig.setPlan(id).then(function (res) {
+      if (res && res.ok) {
+        currentPlanId = (res.config && res.config.subscription && res.config.subscription.plan) || id;
+        render();
+        var plan = planById(id);
+        showToast('Pack ' + (plan ? plan.name : id) + ' activé');
+      } else {
+        showToast('Erreur lors du changement de pack');
+      }
+    }).catch(function () {
+      showToast('Erreur lors du changement de pack');
+    });
+  }
+
+  function hydrate(res) {
+    plans = res.plans || [];
+    currentConfig = res.config || {};
+    currentPlanId = (currentConfig.subscription && currentConfig.subscription.plan) || 'visibilite';
+    render();
+  }
+
+  var grid = document.getElementById('packs-grid');
+  if (grid) {
+    grid.addEventListener('click', function (e) {
+      var target = e.target;
+      while (target && target !== grid) {
+        if (target.getAttribute && target.getAttribute('data-plan-choose')) {
+          choose(target.getAttribute('data-plan-choose'));
+          return;
+        }
+        target = target.parentNode;
+      }
+    });
+  }
+
+  var upBtn = document.getElementById('hero-upgrade-btn');
+  if (upBtn) {
+    upBtn.addEventListener('click', function () {
+      var id = upBtn.getAttribute('data-plan-upgrade');
+      if (id) { choose(id); }
+    });
+  }
+
+  var discoverBtn = document.getElementById('hero-discover-btn');
+  if (discoverBtn) {
+    discoverBtn.addEventListener('click', function () {
+      var el = document.getElementById('packs-grid');
+      if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    });
+  }
+
+  var payBtn = document.getElementById('btn-edit-payment');
+  if (payBtn) {
+    payBtn.addEventListener('click', function () {
+      window.location.href = './dashboard-settings.html#paiements';
+    });
+  }
+
+  if (window.MangooVendorConfig) {
+    MangooVendorConfig.get().then(function (res) {
+      if (res && res.ok) hydrate(res);
+    }).catch(function () {});
+  }
+})();
+</script>
+</body>
+</html>

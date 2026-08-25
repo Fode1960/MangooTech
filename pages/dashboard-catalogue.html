@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Catalogue</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+.h-display { font-family: var(--mgt-font-sans); font-size: clamp(40px, 6vw, 88px); line-height: 1.02; font-weight: 600; letter-spacing: -0.03em; text-wrap: balance; }
+.h1 { font-family: var(--mgt-font-sans); font-size: clamp(28px, 3.5vw, 48px); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+.h2 { font-family: var(--mgt-font-sans); font-size: clamp(22px, 2.4vw, 32px); line-height: 1.2; font-weight: 600; letter-spacing: -0.015em; }
+.h3 { font-family: var(--mgt-font-sans); font-size: 20px; line-height: 1.3; font-weight: 600; letter-spacing: -0.01em; }
+.body-l { font-family: var(--mgt-font-sans); font-size: 18px; line-height: 1.55; font-weight: 400; }
+.body { font-family: var(--mgt-font-sans); font-size: 15px; line-height: 1.6; font-weight: 400; }
+.caption { font-family: var(--mgt-font-sans); font-size: 13px; line-height: 1.5; font-weight: 400; letter-spacing: 0.005em; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] { display: inline-flex; align-items: center; justify-content: center; -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; background-color: currentColor; }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased flex bg-[rgb(var(--mgt-muted))]">
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-[rgb(var(--mgt-primary))] text-[rgb(var(--mgt-primary-foreground))]">
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+        <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+        <div>
+          <span class="font-semibold text-base tracking-tight">Mangoo</span><span class="font-light text-base tracking-tight text-white/70">Tech</span>
+        </div>
+      </div>
+      <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <a href="./dashboard-overview.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+          Vue d'ensemble
+        </a>
+        <a href="./dashboard-performance.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bar-chart-3" class="w-4.5 h-4.5"></i>
+          Performance
+        </a>
+        <a href="./dashboard-reviews.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="star" class="w-4.5 h-4.5"></i>
+          Avis clients
+        </a>
+        <a href="./dashboard-agenda.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="calendar-days" class="w-4.5 h-4.5"></i>
+          Rendez-vous
+        </a>
+        <a href="./dashboard-finances.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wallet" class="w-4.5 h-4.5"></i>
+          Finances
+        </a>
+        <a href="./dashboard-notifications.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+          Notifications
+        </a>
+        <a href="./dashboard-orders.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shopping-bag" class="w-4.5 h-4.5"></i>
+          Commandes
+        </a>
+        <a href="./dashboard-clients.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users" class="w-4.5 h-4.5"></i>
+          Clients
+        </a>
+        <a href="./dashboard-team.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users-round" class="w-4.5 h-4.5"></i>
+          Équipe
+        </a>
+        <a href="./dashboard-messages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="message-square" class="w-4.5 h-4.5"></i>
+          Messagerie
+        </a>
+        <a href="./dashboard-live.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="radio" class="w-4.5 h-4.5"></i>
+          Live
+        </a>
+        <a href="./dashboard-services.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="briefcase" class="w-4.5 h-4.5"></i>
+          Prestations
+        </a>
+        <a href="./dashboard-catalogue.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-medium transition-colors">
+          <i data-lucide="package" class="w-4.5 h-4.5"></i>
+          Catalogue
+        </a>
+        <a href="./dashboard-inventaire.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="boxes" class="w-4.5 h-4.5"></i>
+          Inventaire
+        </a>
+        <a href="./dashboard-gallery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="images" class="w-4.5 h-4.5"></i>
+          Galerie
+        </a>
+        <a href="./dashboard-boosters.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="zap" class="w-4.5 h-4.5"></i>
+          Boosters
+        </a>
+        <a href="./dashboard-promotions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="badge-percent" class="w-4.5 h-4.5"></i>
+          Promotions
+        </a>
+        <a href="./dashboard-fidelite.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="award" class="w-4.5 h-4.5"></i>
+          Fidélité
+        </a>
+        <a href="./dashboard-parrainage.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="gift" class="w-4.5 h-4.5"></i>
+          Parrainage
+        </a>
+        <a href="./dashboard-classement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="trophy" class="w-4.5 h-4.5"></i>
+          Classement
+        </a>
+        <a href="./dashboard-verification.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shield-check" class="w-4.5 h-4.5"></i>
+          Vérification
+        </a>
+        <a href="./dashboard-recommandation.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="compass" class="w-4.5 h-4.5"></i>
+          Découverte
+        </a>
+        <a href="./dashboard-hors-ligne.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wifi-off" class="w-4.5 h-4.5"></i>
+          Hors-ligne
+        </a>
+        <a href="./dashboard-rapports.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
+          Rapports
+        </a>
+        <a href="./dashboard-support.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="life-buoy" class="w-4.5 h-4.5"></i>
+          Support
+        </a>
+        <a href="./dashboard-offres.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="tag" class="w-4.5 h-4.5"></i>
+          Offres & Tarifs
+        </a>
+        <a href="./dashboard-abonnement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="credit-card" class="w-4.5 h-4.5"></i>
+          Abonnement
+        </a>
+        <a href="./dashboard-settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="settings" class="w-4.5 h-4.5"></i>
+          Parametres
+        </a>
+      </nav>
+      <div class="border-t border-white/10 px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>CA</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate" data-vendor-name>DAN Boutique</p>
+            <p class="text-xs text-white/60 truncate" data-vendor-role>Prestataire certifié</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div id="app-main" class="flex-1 ml-60 min-h-screen flex flex-col">
+      <header class="sticky top-0 z-30 flex items-center justify-between gap-4 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] px-8 py-3.5">
+        <div class="flex items-center gap-4">
+          <h1 class="h3 tabular-nums">Catalogue</h1>
+          <span id="catalogue-count" class="inline-flex items-center gap-2 caption text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-success))]"></span>
+            42 produits
+          </span>
+          <span id="catalogue-low-stock" class="inline-flex items-center gap-2 caption text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-error))]"></span>
+            3 stock bas
+          </span>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="relative hidden sm:block">
+            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+            <input id="catalogue-search" type="text" placeholder="Rechercher..." class="pl-9 pr-4 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+          </div>
+          <button id="btn-notifications" class="relative p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))]" aria-label="Notifications">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="btn-notifications-badge" class="absolute top-1 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-[10px] font-bold leading-4 text-center" style="display:none;"></span>
+          </button>
+          <div id="btn-account" class="flex items-center gap-3 pl-2 border-l border-[rgb(var(--mgt-border))] cursor-pointer" role="button" tabindex="0">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>CA</div>
+            <div class="hidden sm:block text-right">
+              <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]" data-vendor-name>DAN Boutique</p>
+              <div class="flex items-center gap-1 text-xs text-[rgb(var(--mgt-accent))]">
+                <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                <span data-vendor-rating>4.8</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="flex-1 p-8 space-y-6">
+        <!-- Barre de recherche (mobile / tablette) -->
+        <div class="relative sm:hidden">
+          <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+          <input id="catalogue-search-mobile" type="text" placeholder="Rechercher un produit..." class="w-full pl-9 pr-4 py-2.5 text-sm bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+        </div>
+<!-- ===== KPIs CATALOGUE ===== -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                <i data-lucide="package" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +6
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Produits en vente</p>
+            <p id="kpi-products" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">42</p>
+          </div>
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
+                <i data-lucide="box" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +9%
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Valeur du stock</p>
+            <p id="kpi-stock-value" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">1 480 000 <span class="text-sm font-medium text-[rgb(var(--mgt-muted-foreground))]">FCFA</span></p>
+          </div>
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                <i data-lucide="alert-triangle" class="w-5 h-5 text-[rgb(var(--mgt-warning))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-error)/0.15)] text-[rgb(var(--mgt-error))]">
+                <i data-lucide="alert-circle" class="w-3 h-3"></i> Action requise
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Stock bas / rupture</p>
+            <p id="kpi-low-stock" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">3</p>
+          </div>
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
+                <i data-lucide="shopping-cart" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +14%
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Ventes produits (30j)</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">118</p>
+          </div>
+        </div>
+
+        <!-- ===== FILTRES CATEGORIES + AJOUT ===== -->
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div id="catalogue-filters" class="flex flex-wrap items-center gap-2"></div>
+          <button id="catalogue-add" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[rgb(var(--mgt-accent))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-accent-600))] transition-colors">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            Ajouter un produit
+          </button>
+        </div>
+
+        <!-- ===== ALERTES STOCK BAS ===== -->
+        <div>
+          <h2 class="h2 mb-1">Alertes de stock</h2>
+          <p class="body text-[rgb(var(--mgt-muted-foreground))] mb-5">Réapprovisionnez ces produits avant épuisement</p>
+          <div id="catalogue-alerts" class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+              <div class="flex items-start justify-between mb-3">
+                <div class="flex items-center gap-3">
+                  <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-accent-50))]">
+                    <i data-lucide="spray-can" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Shampoing hydratant</h3>
+                    <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Cheveux · 250 ml</p>
+                  </div>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-error)/0.15)] text-[rgb(var(--mgt-error))]">Rupture</span>
+              </div>
+              <div class="flex items-center justify-between text-xs text-[rgb(var(--mgt-muted-foreground))]">
+                <span>Stock restant : 0</span>
+                <span class="font-semibold text-[rgb(var(--mgt-error))]">0 / 30</span>
+              </div>
+              <div class="w-full h-2 bg-[rgb(var(--mgt-muted))] rounded-full overflow-hidden mt-2"><div class="h-full bg-[rgb(var(--mgt-error))] rounded-full" style="width: 0%;"></div></div>
+            </div>
+            <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+              <div class="flex items-start justify-between mb-3">
+                <div class="flex items-center gap-3">
+                  <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-primary-50))]">
+                    <i data-lucide="droplets" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Huile de karité</h3>
+                    <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Cosmétiques · 100 ml</p>
+                  </div>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-warning)/0.20)] text-[rgb(var(--mgt-accent-700))]">Stock bas</span>
+              </div>
+              <div class="flex items-center justify-between text-xs text-[rgb(var(--mgt-muted-foreground))]">
+                <span>Stock restant : 4</span>
+                <span class="font-semibold text-[rgb(var(--mgt-warning))]">4 / 25</span>
+              </div>
+              <div class="w-full h-2 bg-[rgb(var(--mgt-muted))] rounded-full overflow-hidden mt-2"><div class="h-full bg-[rgb(var(--mgt-warning))] rounded-full" style="width: 16%;"></div></div>
+            </div>
+            <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+              <div class="flex items-start justify-between mb-3">
+                <div class="flex items-center gap-3">
+                  <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-accent-50))]">
+                    <i data-lucide="brush" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Vernis gel rose</h3>
+                    <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Ongles · 10 ml</p>
+                  </div>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-warning)/0.20)] text-[rgb(var(--mgt-accent-700))]">Stock bas</span>
+              </div>
+              <div class="flex items-center justify-between text-xs text-[rgb(var(--mgt-muted-foreground))]">
+                <span>Stock restant : 6</span>
+                <span class="font-semibold text-[rgb(var(--mgt-warning))]">6 / 30</span>
+              </div>
+              <div class="w-full h-2 bg-[rgb(var(--mgt-muted))] rounded-full overflow-hidden mt-2"><div class="h-full bg-[rgb(var(--mgt-warning))] rounded-full" style="width: 20%;"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== GRILLE PRODUITS ===== -->
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="h2">Tous les produits</h2>
+              <p id="catalogue-grid-count" class="caption text-[rgb(var(--mgt-muted-foreground))] mt-1">42 références · triées par les plus vendues</p>
+            </div>
+            <button id="catalogue-sort-btn" type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[rgb(var(--mgt-border))] text-sm font-medium text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors">
+              <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+              Filtrer
+            </button>
+          </div>
+          <div id="catalogue-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div class="col-span-full py-16 text-center text-[rgb(var(--mgt-muted-foreground))]">
+              Chargement du catalogue…
+            </div>
+          </div>
+          <div class="flex justify-center mt-6">
+            <button id="catalogue-load-more" type="button" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-sm font-medium text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors" style="display:none;">
+              <i data-lucide="chevron-down" class="w-4 h-4"></i>
+              <span>Charger plus de produits</span>
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script>lucide.createIcons();</script>
+<script src="../assets/mangoo-catalogue.js"></script>
+<script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+<script src="../assets/mangoo-negotiation.js"></script>
+<script>
+
+(function(){
+  var MC = window.MangooCatalogue;
+
+  // Domaine dérivé du rôle connecté : « commerce » pour un vendeur-boutique
+  // (ex. DAN Boutique), « salon » pour un prestataire de services.
+  function roleDomain() {
+    var v = (window.MangooVendor && MangooVendor.current) ? MangooVendor.current() : {};
+    return v.role === 'vendeur' ? 'commerce' : 'salon';
+  }
+  var DOMAIN = roleDomain();
+  var DOMAIN_CATEGORIES = (MC && MC.categoriesFor) ? MC.categoriesFor(DOMAIN) : (MC ? MC.CATEGORIES : []);
+
+  var CAT_ID = {};
+  var GRADIENTS = {};
+  var GRADIENT_POOL = [
+    'linear-gradient(135deg, rgb(var(--mgt-primary-100)), rgb(var(--mgt-primary-500)))',
+    'linear-gradient(135deg, rgb(var(--mgt-accent-100)), rgb(var(--mgt-accent-500)))',
+    'linear-gradient(135deg, rgb(var(--mgt-primary-50)), rgb(var(--mgt-primary-300)))',
+    'linear-gradient(135deg, rgb(var(--mgt-accent-50)), rgb(var(--mgt-accent-300)))',
+    'linear-gradient(135deg, rgb(var(--mgt-accent-50)), rgb(var(--mgt-primary-200)))',
+    'linear-gradient(135deg, rgb(var(--mgt-primary-50)), rgb(var(--mgt-accent-200)))'
+  ];
+  DOMAIN_CATEGORIES.forEach(function (c, i) {
+    CAT_ID[c.label] = c.id;
+    GRADIENTS[c.id] = GRADIENT_POOL[i % GRADIENT_POOL.length];
+  });
+
+  var grid = document.getElementById('catalogue-grid');
+  var searchInput = document.getElementById('catalogue-search');
+  var searchInputMobile = document.getElementById('catalogue-search-mobile');
+  var filterWrap = document.getElementById('catalogue-filters');
+  var addBtn = document.getElementById('catalogue-add');
+  var countBadge = document.getElementById('catalogue-count');
+  var lowBadge = document.getElementById('catalogue-low-stock');
+  var gridCount = document.getElementById('catalogue-grid-count');
+  var kpiProducts = document.getElementById('kpi-products');
+  var kpiStockValue = document.getElementById('kpi-stock-value');
+  var kpiLowStock = document.getElementById('kpi-low-stock');
+  var alertsWrap = document.getElementById('catalogue-alerts');
+  var sortBtn = document.getElementById('catalogue-sort-btn');
+  var loadMoreBtn = document.getElementById('catalogue-load-more');
+
+  var products = [];
+  var floorMap = {};
+  var activeCategory = 'all';
+  var sortMode = 'pertinence';
+  var PAGE_SIZE = 8;
+  var visibleCount = PAGE_SIZE;
+
+  function vendorId() {
+    if (window.MangooVendor && MangooVendor.current) {
+      var v = MangooVendor.current();
+      if (v && v.vendorId) return v.vendorId;
+    }
+    return 'pro-41cafa4bcb31';
+  }
+  function vendorName() {
+    if (window.MangooVendor && MangooVendor.current) {
+      var v = MangooVendor.current();
+      if (v && v.name) return v.name;
+    }
+    return 'DAN Boutique';
+  }
+
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  function fold(s){ return String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+  function floorOf(p) {
+    var f = floorMap[p.id];
+    if (f && f.floorPrice != null) return f.floorPrice;
+    return (p.floorPrice != null) ? p.floorPrice : null;
+  }
+  function negotiableOf(p) {
+    var f = floorMap[p.id];
+    if (f) return f.negotiable !== false;
+    return p.negotiable !== false;
+  }
+  function loadFloors() {
+    if (!window.MangooNegotiation || typeof window.MangooNegotiation.floors !== 'function') return;
+    window.MangooNegotiation.floors().then(function (res) {
+      if (!res || !res.ok || !Array.isArray(res.products)) return;
+      var map = {};
+      res.products.forEach(function (p) { map[p.id] = p; });
+      floorMap = map;
+      renderGrid();
+    }).catch(function () {});
+  }
+  function currentSearchTerm(){
+    var t = '';
+    if (searchInput && searchInput.value) t = searchInput.value;
+    if (searchInputMobile && searchInputMobile.value) t = searchInputMobile.value;
+    return fold(t.trim());
+  }
+
+  function sortProducts(list){
+    var arr = list.slice();
+    if (sortMode === 'price-asc') arr.sort(function(a, b){ return a.price - b.price; });
+    else if (sortMode === 'price-desc') arr.sort(function(a, b){ return b.price - a.price; });
+    else if (sortMode === 'stock-asc') arr.sort(function(a, b){ return a.stock - b.stock; });
+    else if (sortMode === 'stock-desc') arr.sort(function(a, b){ return b.stock - a.stock; });
+    else if (sortMode === 'name') arr.sort(function(a, b){ return String(a.name || '').localeCompare(String(b.name || '')); });
+    return arr;
+  }
+
+  var SORT_OPTIONS = [
+    { id: 'pertinence', label: 'Pertinence' },
+    { id: 'name', label: 'Nom (A → Z)' },
+    { id: 'price-asc', label: 'Prix croissant' },
+    { id: 'price-desc', label: 'Prix décroissant' },
+    { id: 'stock-asc', label: 'Stock faible d\'abord' },
+    { id: 'stock-desc', label: 'Stock élevé d\'abord' }
+  ];
+
+  function statusOf(p) {
+    if (p.stock <= 0) return { label: 'Rupture', bg: 'rgb(var(--mgt-error))', fg: 'rgb(var(--mgt-error-foreground))' };
+    if (p.stock <= 5) return { label: 'Stock bas', bg: 'rgb(var(--mgt-warning))', fg: 'rgb(var(--mgt-foreground))' };
+    return { label: 'En stock', bg: 'rgb(var(--mgt-success))', fg: 'rgb(var(--mgt-success-foreground))' };
+  }
+
+  function floorLine(p) {
+    if (!negotiableOf(p)) {
+      return '<span style="display:inline-flex;align-items:center;gap:4px;margin-top:6px;font-size:11px;font-weight:600;color:rgb(var(--mgt-muted-foreground));"><i data-lucide="ban" style="width:12px;height:12px;"></i>Non négociable</span>';
+    }
+    var f = floorOf(p);
+    return '<span style="display:inline-flex;align-items:center;gap:4px;margin-top:6px;font-size:11px;font-weight:600;color:rgb(var(--mgt-primary-700));"><i data-lucide="scale" style="width:12px;height:12px;"></i>Négociable' + (f != null ? ' · plancher ' + f.toLocaleString('fr-FR') : '') + '</span>';
+  }
+
+  function showToast(message){
+    var toast = document.createElement('div');
+    toast.textContent = message;
+    toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:80;padding:10px 16px;border-radius:9999px;background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));font-size:14px;font-weight:500;box-shadow:var(--mgt-shadow-md);opacity:0;transition:opacity .25s ease;';
+    document.body.appendChild(toast);
+    requestAnimationFrame(function(){ toast.style.opacity = '1'; });
+    setTimeout(function(){ toast.style.opacity = '0'; }, 2200);
+    setTimeout(function(){ if (toast.parentNode) toast.parentNode.removeChild(toast); }, 2600);
+  }
+
+  function cardHTML(p) {
+    var cat = MC.categoryById(p.category);
+    var st = statusOf(p);
+    var grad = GRADIENTS[p.category] || GRADIENT_POOL[0];
+    return '<div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl overflow-hidden shadow-[var(--mgt-shadow-sm)] hover:shadow-[var(--mgt-shadow-md)] transition-shadow" data-id="' + esc(p.id) + '">'
+      + '<div class="relative h-36 overflow-hidden">'
+      + '<div style="position:absolute;inset:0;background:' + grad + ';"></div>'
+      + '<i data-lucide="' + esc(cat.icon) + '" style="position:absolute;right:12px;bottom:12px;width:40px;height:40px;color:rgba(255,255,255,.5);"></i>'
+      + '<span style="position:absolute;top:8px;left:8px;display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:600;background:rgba(0,0,0,.4);color:#fff;backdrop-filter:blur(4px);">' + esc(cat.label) + '</span>'
+      + '<span style="position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:600;background:' + st.bg + ';color:' + st.fg + ';">' + st.label + '</span>'
+      + '</div>'
+      + '<div class="p-3">'
+      + '<p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))] truncate">' + esc(p.name) + '</p>'
+      + '<p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Stock : ' + p.stock + (p.unit ? ' · ' + esc(p.unit) : '') + '</p>'
+      + '<p class="text-base font-bold tabular-nums text-[rgb(var(--mgt-primary))] mt-1">' + p.price.toLocaleString('fr-FR') + ' <span class="text-xs font-medium text-[rgb(var(--mgt-muted-foreground))]">FCFA</span></p>'
+      + floorLine(p)
+      + '<div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:10px;">'
+      + '<button type="button" data-action="floor" title="Prix plancher" style="padding:6px;border-radius:8px;border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary-700));cursor:pointer;line-height:0;"><i data-lucide="scale" style="width:14px;height:14px;"></i></button>'
+      + '<button type="button" data-action="edit" style="padding:6px;border-radius:8px;border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-muted));color:rgb(var(--mgt-foreground));cursor:pointer;line-height:0;"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>'
+      + '<button type="button" data-action="delete" style="padding:6px;border-radius:8px;border:none;background:rgb(var(--mgt-error));color:rgb(var(--mgt-error-foreground));cursor:pointer;line-height:0;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>'
+      + '</div>'
+      + '</div>'
+      + '</div>';
+  }
+
+  function renderGrid(){
+    var term = currentSearchTerm();
+    var filtered = products.filter(function(p){
+      var okCat = activeCategory === 'all' || p.category === activeCategory;
+      var catLabel = MC ? MC.categoryLabel(p.category) : '';
+      var okSearch = !term || fold(p.name).indexOf(term) !== -1 || fold(p.description || '').indexOf(term) !== -1 || fold(catLabel).indexOf(term) !== -1;
+      return okCat && okSearch;
+    });
+    var sorted = sortProducts(filtered);
+    var list = sorted.slice(0, visibleCount);
+    if (!list.length) {
+      grid.innerHTML = '<div class="col-span-full py-16 text-center text-[rgb(var(--mgt-muted-foreground))]">Aucun produit trouvé.</div>';
+    } else {
+      grid.innerHTML = list.map(cardHTML).join('');
+    }
+    if (loadMoreBtn) {
+      var remaining = sorted.length - visibleCount;
+      if (remaining > 0) {
+        loadMoreBtn.style.display = 'inline-flex';
+        loadMoreBtn.querySelector('span').textContent = 'Charger plus de produits (' + remaining + ' restants)';
+      } else {
+        loadMoreBtn.style.display = 'none';
+      }
+    }
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function renderKPIs(){
+    var n = products.length;
+    var totalValue = products.reduce(function(s, p){ return s + (p.price * p.stock); }, 0);
+    var low = products.filter(function(p){ return p.stock <= 5; }).length;
+    if (kpiProducts) kpiProducts.textContent = n;
+    if (kpiStockValue) kpiStockValue.innerHTML = totalValue.toLocaleString('fr-FR') + ' <span class="text-sm font-medium text-[rgb(var(--mgt-muted-foreground))]">FCFA</span>';
+    if (kpiLowStock) kpiLowStock.textContent = low;
+    if (countBadge) countBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-success))]"></span> ' + n + ' produits';
+    if (lowBadge) lowBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-error))]"></span> ' + low + ' stock bas';
+    if (gridCount) gridCount.textContent = n + ' références · triées par les plus vendues';
+  }
+
+  function renderAlerts(){
+    var low = products.filter(function(p){ return p.stock <= 5; });
+    if (!low.length) {
+      alertsWrap.innerHTML = '<div class="col-span-full bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 text-center text-[rgb(var(--mgt-muted-foreground))]">Aucune alerte de stock pour le moment.</div>';
+      return;
+    }
+    alertsWrap.innerHTML = low.map(function(p){
+      var cat = MC.categoryById(p.category);
+      var st = statusOf(p);
+      var pct = p.stock <= 0 ? 0 : Math.min(100, Math.round((p.stock / 25) * 100));
+      var bar = p.stock <= 0 ? 'rgb(var(--mgt-error))' : 'rgb(var(--mgt-warning))';
+      return '<div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">'
+        + '<div class="flex items-start justify-between mb-3">'
+        + '<div class="flex items-center gap-3">'
+        + '<div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-accent-50))]"><i data-lucide="' + esc(cat.icon) + '" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i></div>'
+        + '<div><h3 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">' + esc(p.name) + '</h3><p class="caption text-[rgb(var(--mgt-muted-foreground))]">' + esc(cat.label) + (p.unit ? ' · ' + esc(p.unit) : '') + '</p></div>'
+        + '</div>'
+        + '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:9999px;font-size:12px;font-weight:600;background:' + st.bg + ';color:' + st.fg + ';">' + st.label + '</span>'
+        + '</div>'
+        + '<div class="flex items-center justify-between text-xs text-[rgb(var(--mgt-muted-foreground))]"><span>Stock restant : ' + p.stock + '</span><span class="font-semibold" style="color:' + bar + ';">' + p.stock + ' / 25</span></div>'
+        + '<div class="w-full h-2 bg-[rgb(var(--mgt-muted))] rounded-full overflow-hidden mt-2"><div class="h-full rounded-full" style="width:' + pct + '%;background:' + bar + ';"></div></div>'
+        + '</div>';
+    }).join('');
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function renderAll(){ renderGrid(); renderKPIs(); renderAlerts(); }
+
+  var SEED_COMMERCE = [
+    { id:'c-dan-1', vendorId:'pro-41cafa4bcb31', vendorName:'DAN Boutique', name:'Robe wax élégante', description:'Robe en wax authentique, coupe moderne.', price:12500, stock:8, unit:'unité', category:'mode', available:true, image:'' },
+    { id:'c-dan-2', vendorId:'pro-41cafa4bcb31', vendorName:'DAN Boutique', name:'Chemise homme premium', description:'Chemise coton, coupe ajustée.', price:9000, stock:15, unit:'unité', category:'mode', available:true, image:'' },
+    { id:'c-dan-3', vendorId:'pro-41cafa4bcb31', vendorName:'DAN Boutique', name:'Baskets tendance', description:'Baskets légères, semelle confort.', price:15000, stock:6, unit:'paire', category:'chaussures', available:true, image:'' },
+    { id:'c-dan-4', vendorId:'pro-41cafa4bcb31', vendorName:'DAN Boutique', name:'Sandales cuir', description:'Sandales en cuir véritable.', price:11000, stock:0, unit:'paire', category:'chaussures', available:false, image:'' },
+    { id:'c-dan-5', vendorId:'pro-41cafa4bcb31', vendorName:'DAN Boutique', name:'Sac à main cuir', description:'Sac à main en cuir, finitions soignées.', price:22000, stock:4, unit:'unité', category:'sacs', available:true, image:'' },
+    { id:'c-dan-6', vendorId:'pro-41cafa4bcb31', vendorName:'DAN Boutique', name:'Smartphone 128 Go', description:'Smartphone débloqué, double SIM.', price:145000, stock:3, unit:'unité', category:'electronique', available:true, image:'' },
+    { id:'c-dan-7', vendorId:'pro-41cafa4bcb31', vendorName:'DAN Boutique', name:'Lampe déco LED', description:'Lampe d\'ambiance à intensité variable.', price:8500, stock:20, unit:'unité', category:'maison', available:true, image:'' },
+    { id:'c-dan-8', vendorId:'pro-41cafa4bcb31', vendorName:'DAN Boutique', name:'Parfum boisé 50 ml', description:'Parfum boisé longue tenue.', price:18000, stock:9, unit:'flacon', category:'beaute', available:true, image:'' }
+  ];
+
+  var SEED_PRODUCTS = SEED_COMMERCE;
+
+  function load(){
+    if (!grid) return;
+    grid.innerHTML = '<div class="col-span-full py-16 text-center text-[rgb(var(--mgt-muted-foreground))]">Chargement du catalogue…</div>';
+    MC.api.list({ vendor: vendorId() }).then(function(list){
+      products = (list && list.length) ? list : SEED_PRODUCTS;
+      renderAll();
+    }).catch(function(){
+      products = SEED_PRODUCTS;
+      renderAll();
+    });
+  }
+
+  function closeOverlay(overlay){ if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+
+  function openForm(product){
+    var data = product || { name: '', price: '', stock: 0, unit: '', category: (DOMAIN_CATEGORIES[0] && DOMAIN_CATEGORIES[0].id) || 'cheveux' };
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.5);';
+    var catOptions = DOMAIN_CATEGORIES.map(function(c){ return '<option value="' + c.id + '"' + (data.category === c.id ? ' selected' : '') + '>' + c.label + '</option>'; }).join('');
+    overlay.innerHTML =
+      '<div style="width:100%;max-width:460px;max-height:90vh;overflow:auto;background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:16px;padding:24px;box-shadow:var(--mgt-shadow-lg);">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
+          '<h3 style="font-size:20px;font-weight:600;color:rgb(var(--mgt-foreground));">' + (product ? 'Modifier le produit' : 'Ajouter un produit') + '</h3>' +
+          '<button type="button" data-close style="padding:6px;border:none;background:transparent;color:rgb(var(--mgt-muted-foreground));cursor:pointer;line-height:0;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>' +
+        '</div>' +
+        '<label style="display:block;margin-top:14px;font-size:13px;font-weight:500;color:rgb(var(--mgt-foreground));">Nom du produit</label>' +
+        '<input data-field="name" type="text" value="' + esc(data.name) + '" style="width:100%;box-sizing:border-box;padding:9px 12px;margin-top:6px;border:1px solid rgb(var(--mgt-border));border-radius:8px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;">' +
+        '<label style="display:block;margin-top:14px;font-size:13px;font-weight:500;color:rgb(var(--mgt-foreground));">Prix (FCFA)</label>' +
+        '<input data-field="price" type="number" min="0" value="' + data.price + '" style="width:100%;box-sizing:border-box;padding:9px 12px;margin-top:6px;border:1px solid rgb(var(--mgt-border));border-radius:8px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;">' +
+        '<label style="display:block;margin-top:14px;font-size:13px;font-weight:500;color:rgb(var(--mgt-foreground));">Stock (quantité)</label>' +
+        '<input data-field="stock" type="number" min="0" value="' + data.stock + '" style="width:100%;box-sizing:border-box;padding:9px 12px;margin-top:6px;border:1px solid rgb(var(--mgt-border));border-radius:8px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;">' +
+        '<label style="display:block;margin-top:14px;font-size:13px;font-weight:500;color:rgb(var(--mgt-foreground));">Unité</label>' +
+        '<input data-field="unit" type="text" value="' + esc(data.unit) + '" placeholder="ex. 250 ml, lot de 6…" style="width:100%;box-sizing:border-box;padding:9px 12px;margin-top:6px;border:1px solid rgb(var(--mgt-border));border-radius:8px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;">' +
+        '<label style="display:block;margin-top:14px;font-size:13px;font-weight:500;color:rgb(var(--mgt-foreground));">Catégorie</label>' +
+        '<select data-field="category" style="width:100%;box-sizing:border-box;padding:9px 12px;margin-top:6px;border:1px solid rgb(var(--mgt-border));border-radius:8px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;">' + catOptions + '</select>' +
+        '<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">' +
+          '<button type="button" data-cancel style="padding:9px 16px;border-radius:8px;border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-card));color:rgb(var(--mgt-muted-foreground));font-size:14px;font-weight:500;cursor:pointer;">Annuler</button>' +
+          '<button type="button" data-save style="padding:9px 16px;border-radius:8px;border:none;background:rgb(var(--mgt-accent));color:rgb(var(--mgt-accent-foreground));font-size:14px;font-weight:600;cursor:pointer;">Enregistrer</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    if (window.lucide) lucide.createIcons();
+
+    function close(){ closeOverlay(overlay); }
+    overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+    overlay.querySelector('[data-close]').addEventListener('click', close);
+    overlay.querySelector('[data-cancel]').addEventListener('click', close);
+    overlay.querySelector('[data-save]').addEventListener('click', function(){
+      var name = overlay.querySelector('[data-field="name"]').value.trim();
+      var price = parseInt(overlay.querySelector('[data-field="price"]').value, 10);
+      var stock = parseInt(overlay.querySelector('[data-field="stock"]').value, 10);
+      var unit = overlay.querySelector('[data-field="unit"]').value.trim();
+      var category = overlay.querySelector('[data-field="category"]').value;
+      if (!name){ showToast('Veuillez saisir un nom de produit.'); return; }
+      if (isNaN(price) || price < 0){ showToast('Veuillez saisir un prix valide.'); return; }
+      if (isNaN(stock) || stock < 0){ showToast('Veuillez saisir un stock valide.'); return; }
+      var payload = { name: name, description: (product && product.description) || '', price: price, stock: stock, unit: unit || 'unité', category: category, available: true, image: (product && product.image) || '', vendorId: vendorId(), vendorName: vendorName() };
+      if (product && product.id) payload.id = product.id;
+      var saveBtn = overlay.querySelector('[data-save]');
+      saveBtn.disabled = true; saveBtn.textContent = 'Enregistrement…';
+      MC.api.save(payload).then(function(){
+        close();
+        showToast(product ? 'Produit modifié.' : 'Produit ajouté.');
+        load();
+      }).catch(function(){
+        saveBtn.disabled = false; saveBtn.textContent = 'Enregistrer';
+        showToast('Erreur lors de l\'enregistrement.');
+      });
+    });
+  }
+
+  function openDelete(product){
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.5);';
+    overlay.innerHTML =
+      '<div style="width:100%;max-width:400px;background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:16px;padding:24px;box-shadow:var(--mgt-shadow-lg);">' +
+        '<h3 style="font-size:18px;font-weight:600;color:rgb(var(--mgt-foreground));">Supprimer le produit</h3>' +
+        '<p style="margin-top:8px;font-size:14px;color:rgb(var(--mgt-muted-foreground));line-height:1.5;">Voulez-vous vraiment supprimer « ' + esc(product.name) + ' » ? Cette action est irréversible.</p>' +
+        '<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">' +
+          '<button type="button" data-cancel style="padding:9px 16px;border-radius:8px;border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-card));color:rgb(var(--mgt-muted-foreground));font-size:14px;font-weight:500;cursor:pointer;">Annuler</button>' +
+          '<button type="button" data-confirm style="padding:9px 16px;border-radius:8px;border:none;background:rgb(var(--mgt-error));color:rgb(var(--mgt-error-foreground));font-size:14px;font-weight:600;cursor:pointer;">Supprimer</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    if (window.lucide) lucide.createIcons();
+    function close(){ closeOverlay(overlay); }
+    overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+    overlay.querySelector('[data-cancel]').addEventListener('click', close);
+    overlay.querySelector('[data-confirm]').addEventListener('click', function(){
+      MC.api.remove(product.id).then(function(){
+        close();
+        showToast('Produit supprimé.');
+        load();
+      }).catch(function(){
+        showToast('Erreur lors de la suppression.');
+      });
+    });
+  }
+
+  function openFloor(product) {
+    var listed = Math.round(Number(product.price) || 0);
+    var curNego = negotiableOf(product);
+    var curFloor = floorOf(product);
+    if (curFloor == null) curFloor = Math.round((listed * 0.85) / 100) * 100;
+
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.5);';
+    overlay.innerHTML =
+      '<div style="width:100%;max-width:420px;max-height:90vh;overflow:auto;background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:16px;padding:24px;box-shadow:var(--mgt-shadow-lg);">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
+          '<h3 style="font-size:20px;font-weight:600;color:rgb(var(--mgt-foreground));">Négociation & prix plancher</h3>' +
+          '<button type="button" data-close style="padding:6px;border:none;background:transparent;color:rgb(var(--mgt-muted-foreground));cursor:pointer;line-height:0;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>' +
+        '</div>' +
+        '<p style="margin-top:4px;font-size:13px;color:rgb(var(--mgt-muted-foreground));line-height:1.5;">Le prix plancher reste secret pour les clients : il fixe le minimum sous lequel vous ne descendez jamais lors d\'une négociation.</p>' +
+        '<div style="margin-top:16px;padding:12px 14px;border-radius:10px;background:rgb(var(--mgt-muted));">' +
+          '<p style="font-size:14px;font-weight:600;color:rgb(var(--mgt-foreground));">' + esc(product.name) + '</p>' +
+          '<p style="margin-top:2px;font-size:13px;color:rgb(var(--mgt-muted-foreground));">Prix affiché : <span style="font-weight:600;color:rgb(var(--mgt-primary));">' + listed.toLocaleString('fr-FR') + ' FCFA</span></p>' +
+        '</div>' +
+        '<label style="display:flex;align-items:center;gap:8px;margin-top:16px;font-size:14px;font-weight:500;color:rgb(var(--mgt-foreground));cursor:pointer;">' +
+          '<input data-field="negotiable" type="checkbox" ' + (curNego ? 'checked' : '') + ' style="width:16px;height:16px;accent-color:rgb(var(--mgt-primary));">' +
+          'Autoriser la négociation sur ce produit' +
+        '</label>' +
+        '<label style="display:block;margin-top:16px;font-size:13px;font-weight:500;color:rgb(var(--mgt-foreground));">Prix plancher (FCFA)</label>' +
+        '<input data-field="floor" type="number" min="1" value="' + curFloor + '" style="width:100%;box-sizing:border-box;padding:9px 12px;margin-top:6px;border:1px solid rgb(var(--mgt-border));border-radius:8px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;">' +
+        '<p style="margin-top:6px;font-size:12px;color:rgb(var(--mgt-muted-foreground));">Conseillé : 85% du prix affiché = ' + Math.round((listed * 0.85) / 100 * 100).toLocaleString('fr-FR') + ' FCFA</p>' +
+        '<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">' +
+          '<button type="button" data-cancel style="padding:9px 16px;border-radius:8px;border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-card));color:rgb(var(--mgt-muted-foreground));font-size:14px;font-weight:500;cursor:pointer;">Annuler</button>' +
+          '<button type="button" data-save style="padding:9px 16px;border-radius:8px;border:none;background:rgb(var(--mgt-accent));color:rgb(var(--mgt-accent-foreground));font-size:14px;font-weight:600;cursor:pointer;">Enregistrer</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    if (window.lucide) lucide.createIcons();
+
+    function close() { closeOverlay(overlay); }
+    overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+    overlay.querySelector('[data-close]').addEventListener('click', close);
+    overlay.querySelector('[data-cancel]').addEventListener('click', close);
+    overlay.querySelector('[data-save]').addEventListener('click', function () {
+      if (!window.MangooNegotiation || typeof window.MangooNegotiation.floor !== 'function') {
+        showToast('Module de négociation indisponible.');
+        return;
+      }
+      var nego = overlay.querySelector('[data-field="negotiable"]').checked;
+      var floor = parseInt(overlay.querySelector('[data-field="floor"]').value, 10);
+      if (isNaN(floor) || floor <= 0) { showToast('Prix plancher invalide.'); return; }
+      if (floor > listed) { showToast('Le plancher ne peut pas dépasser le prix affiché (' + listed.toLocaleString('fr-FR') + ' FCFA).'); return; }
+      var saveBtn = overlay.querySelector('[data-save]');
+      saveBtn.disabled = true; saveBtn.textContent = 'Enregistrement…';
+      window.MangooNegotiation.floor({ productId: product.id, floorPrice: floor, negotiable: nego }).then(function (res) {
+        if (res && res.ok) {
+          close();
+          showToast('Prix plancher enregistré.');
+          loadFloors();
+          load();
+        } else {
+          saveBtn.disabled = false; saveBtn.textContent = 'Enregistrer';
+          showToast((res && res.error) || 'Erreur lors de l\'enregistrement.');
+        }
+      });
+    });
+  }
+
+  function buildSortMenu(){
+    if (!sortBtn) return;
+    sortBtn.style.position = 'relative';
+    var menu = document.createElement('div');
+    menu.className = 'mgt-sort-menu';
+    menu.style.cssText = 'position:absolute;top:calc(100% + 8px);right:0;min-width:200px;background:rgb(var(--mgt-popover));border:1px solid rgb(var(--mgt-border));border-radius:12px;box-shadow:var(--mgt-shadow-lg);z-index:1200;display:none;overflow:hidden;';
+    sortBtn.appendChild(menu);
+
+    function renderMenu(){
+      menu.innerHTML = SORT_OPTIONS.map(function(o){
+        var active = o.id === sortMode;
+        return '<button type="button" data-sort="' + o.id + '" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:10px 14px;border:none;background:' + (active ? 'rgb(var(--mgt-muted))' : 'transparent') + ';color:' + (active ? 'rgb(var(--mgt-primary))' : 'rgb(var(--mgt-foreground))') + ';font-size:13px;font-weight:' + (active ? '600' : '500') + ';cursor:pointer;text-align:left;font-family:var(--mgt-font-sans);">'
+          + o.label + (active ? '<i data-lucide="check" style="width:14px;height:14px;"></i>' : '') + '</button>';
+      }).join('');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    sortBtn.addEventListener('click', function(e){
+      e.stopPropagation();
+      if (menu.style.display === 'block') { menu.style.display = 'none'; return; }
+      renderMenu();
+      menu.style.display = 'block';
+    });
+    menu.addEventListener('click', function(e){
+      var b = e.target.closest('[data-sort]');
+      if (!b) return;
+      sortMode = b.getAttribute('data-sort');
+      visibleCount = PAGE_SIZE;
+      menu.style.display = 'none';
+      renderGrid();
+    });
+    document.addEventListener('click', function(e){
+      if (menu.style.display === 'block' && !sortBtn.contains(e.target)) menu.style.display = 'none';
+    });
+  }
+
+  function renderFilters(){
+    if (!filterWrap) return;
+    var cats = [{ id: 'all', label: 'Tout' }].concat(DOMAIN_CATEGORIES);
+    filterWrap.innerHTML = cats.map(function(c){
+      return '<button type="button" data-category="' + esc(c.id) + '">' + esc(c.label) + '</button>';
+    }).join('');
+    refreshFilters();
+  }
+  function refreshFilters(){
+    if (!filterWrap) return;
+    var buttons = filterWrap.querySelectorAll('[data-category]');
+    Array.prototype.forEach.call(buttons, function(b){
+      var on = b.getAttribute('data-category') === activeCategory;
+      b.style.cssText = on
+        ? 'padding:8px 16px;border-radius:9999px;font-size:14px;font-weight:600;background:rgb(var(--mgt-primary));color:rgb(var(--mgt-primary-foreground));border:none;cursor:pointer;transition:all .15s ease;'
+        : 'padding:8px 16px;border-radius:9999px;font-size:14px;font-weight:500;background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));color:rgb(var(--mgt-muted-foreground));cursor:pointer;transition:all .15s ease;';
+    });
+  }
+
+  function bind(){
+    if (addBtn) addBtn.addEventListener('click', function(){ openForm(null); });
+    if (searchInput) searchInput.addEventListener('input', function(){ visibleCount = PAGE_SIZE; renderGrid(); });
+    if (searchInputMobile) searchInputMobile.addEventListener('input', function(){ visibleCount = PAGE_SIZE; renderGrid(); });
+    if (filterWrap){
+      filterWrap.addEventListener('click', function(e){
+        var button = e.target && e.target.closest ? e.target.closest('[data-category]') : null;
+        if (!button) return;
+        var id = button.getAttribute('data-category');
+        activeCategory = (id === 'all' || id === 'Tout') ? 'all' : id;
+        visibleCount = PAGE_SIZE;
+        refreshFilters();
+        renderGrid();
+      });
+    }
+    if (loadMoreBtn) loadMoreBtn.addEventListener('click', function(){ visibleCount += PAGE_SIZE; renderGrid(); });
+    buildSortMenu();
+    if (grid){
+      grid.addEventListener('click', function(e){
+        var btn = e.target && e.target.closest ? e.target.closest('[data-action]') : null;
+        if (!btn) return;
+        var card = btn.closest('[data-id]');
+        if (!card) return;
+        var id = card.getAttribute('data-id');
+        var p = products.filter(function(x){ return x.id === id; })[0];
+        if (!p) return;
+        if (btn.getAttribute('data-action') === 'edit') openForm(p);
+        else if (btn.getAttribute('data-action') === 'delete') openDelete(p);
+      });
+    }
+  }
+
+  function start(){
+    if (!MC) MC = window.MangooCatalogue;
+    if (!MC) {
+      if (grid) grid.innerHTML = '<div class="col-span-full py-16 text-center text-[rgb(var(--mgt-error))]">Module catalogue non chargé.</div>';
+      return;
+    }
+    renderFilters();
+    bind();
+    load();
+    loadFloors();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
+  }
+})();
+
+
+</script>
+<style id="mgt-mobile-responsive">
+@media (max-width: 768px) {
+  .dashboard-sidebar { position: fixed !important; top: 0; left: 0; z-index: 1000; width: 260px !important; height: 100vh !important; transform: translateX(-100%); transition: transform .3s ease; overflow-y: auto; }
+  .dashboard-sidebar.open { transform: translateX(0); }
+  .dashboard-sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999; }
+  .dashboard-sidebar-overlay.show { display: block; }
+  .mobile-menu-btn { display: flex !important; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: pointer; color: inherit; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+@media (min-width: 769px) { .mobile-menu-btn { display: none !important; } .mobile-only { display: none !important; } }
+@media (max-width: 480px) { .kpi-grid { grid-template-columns: 1fr !important; } }
+</style>
+<script>
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    var sidebar = document.querySelector('.dashboard-sidebar');
+    if (!sidebar) return;
+    var overlay = document.createElement('div');
+    overlay.className = 'dashboard-sidebar-overlay';
+    overlay.addEventListener('click', function(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); });
+    document.body.appendChild(overlay);
+    var topbar = document.querySelector('.dashboard-topbar');
+    if (topbar) {
+      var btn = document.createElement('button');
+      btn.className = 'mobile-menu-btn';
+      btn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+      btn.addEventListener('click', function(){ sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
+      topbar.insertBefore(btn, topbar.firstChild);
+    }
+    sidebar.querySelectorAll('a').forEach(function(link){
+      link.addEventListener('click', function(){
+        if (window.innerWidth <= 768) { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+      });
+    });
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  function __mgtSidebarScrollFix(){
+    var active = document.querySelector('nav a[class*="bg-white/15"]');
+    if (!active) return;
+    var nav = active.closest('nav');
+    if (!nav) return;
+    var navRect = nav.getBoundingClientRect();
+    var linkRect = active.getBoundingClientRect();
+    var target = nav.scrollTop + (linkRect.top - navRect.top) - (navRect.height - linkRect.height) / 2;
+    nav.scrollTop = Math.max(0, target);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', __mgtSidebarScrollFix);
+  } else {
+    __mgtSidebarScrollFix();
+  }
+})();
+</script>
+
+<script src="../assets/mangoo-dashboard-shell.js"></script>
+</body>
+</html>

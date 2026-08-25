@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Boosters</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  /* --- Radius Scale (root-level for preflight) --- */
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  /* --- Brand Primary: Dark Green --- */
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  /* --- Orange Accent (CTAs, highlights) --- */
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  /* --- Neutral Surface & Text Scale --- */
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  /* --- State Colors --- */
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  /* --- Shadows --- */
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  /* --- Typography --- */
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* --- Semantic Tailwind Aliases --- */
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+/* --- Typography Classes --- */
+.h-display {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.h1 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(28px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.h2 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h3 {
+  font-family: var(--mgt-font-sans);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.body-l {
+  font-family: var(--mgt-font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--mgt-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--mgt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased flex bg-[rgb(var(--mgt-muted))]">
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-[rgb(var(--mgt-primary))] text-[rgb(var(--mgt-primary-foreground))]">
+      <!-- Logo -->
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+        <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+        <div>
+          <span class="font-semibold text-base tracking-tight">Mangoo</span><span class="font-light text-base tracking-tight text-white/70">Tech</span>
+        </div>
+      </div>
+      <!-- Nav items -->
+      <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <a href="./dashboard-overview.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+          Vue d'ensemble
+        </a>
+        <a href="./dashboard-performance.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bar-chart-3" class="w-4.5 h-4.5"></i>
+          Performance
+        </a>
+        <a href="./dashboard-reviews.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="star" class="w-4.5 h-4.5"></i>
+          Avis clients
+        </a>
+        <a href="./dashboard-agenda.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="calendar-days" class="w-4.5 h-4.5"></i>
+          Rendez-vous
+        </a>
+        <a href="./dashboard-finances.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wallet" class="w-4.5 h-4.5"></i>
+          Finances
+        </a>
+        <a href="./dashboard-notifications.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+          Notifications
+        </a>
+        <a href="./dashboard-orders.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shopping-bag" class="w-4.5 h-4.5"></i>
+          Commandes
+        </a>
+        <a href="./dashboard-clients.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users" class="w-4.5 h-4.5"></i>
+          Clients
+        </a>
+        <a href="./dashboard-team.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users-round" class="w-4.5 h-4.5"></i>
+          Équipe
+        </a>
+        <a href="./dashboard-messages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="message-square" class="w-4.5 h-4.5"></i>
+          Messagerie
+        </a>
+        <a href="./dashboard-live.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="radio" class="w-4.5 h-4.5"></i>
+          Live
+        </a>
+        <a href="./dashboard-services.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="briefcase" class="w-4.5 h-4.5"></i>
+          Prestations
+        </a>
+        <a href="./dashboard-catalogue.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="package" class="w-4.5 h-4.5"></i>
+          Catalogue
+        </a>
+        <a href="./dashboard-inventaire.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="boxes" class="w-4.5 h-4.5"></i>
+          Inventaire
+        </a>
+        <a href="./dashboard-gallery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="images" class="w-4.5 h-4.5"></i>
+          Galerie
+        </a>
+        <a href="./dashboard-boosters.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-medium transition-colors">
+          <i data-lucide="zap" class="w-4.5 h-4.5"></i>
+          Boosters
+        </a>
+        <a href="./dashboard-promotions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="badge-percent" class="w-4.5 h-4.5"></i>
+          Promotions
+        </a>
+        <a href="./dashboard-fidelite.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="award" class="w-4.5 h-4.5"></i>
+          Fidélité
+        </a>
+        <a href="./dashboard-parrainage.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="gift" class="w-4.5 h-4.5"></i>
+          Parrainage
+        </a>
+        <a href="./dashboard-classement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="trophy" class="w-4.5 h-4.5"></i>
+          Classement
+        </a>
+        <a href="./dashboard-verification.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shield-check" class="w-4.5 h-4.5"></i>
+          Vérification
+        </a>
+        <a href="./dashboard-recommandation.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="compass" class="w-4.5 h-4.5"></i>
+          Découverte
+        </a>
+        <a href="./dashboard-hors-ligne.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wifi-off" class="w-4.5 h-4.5"></i>
+          Hors-ligne
+        </a>
+        <a href="./dashboard-rapports.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
+          Rapports
+        </a>
+        <a href="./dashboard-support.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="life-buoy" class="w-4.5 h-4.5"></i>
+          Support
+        </a>
+        <a href="./dashboard-offres.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="tag" class="w-4.5 h-4.5"></i>
+          Offres & Tarifs
+        </a>
+        <a href="./dashboard-abonnement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="credit-card" class="w-4.5 h-4.5"></i>
+          Abonnement
+        </a>
+        <a href="./dashboard-settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="settings" class="w-4.5 h-4.5"></i>
+          Parametres
+        </a>
+      </nav>
+      <!-- Account info bottom -->
+      <div class="border-t border-white/10 px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>CA</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate" data-vendor-name>DAN Boutique</p>
+            <p class="text-xs text-white/60 truncate" data-vendor-role>Prestataire certifié</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div id="app-main" class="flex-1 ml-60 min-h-screen flex flex-col">
+      <!-- Header Top Bar -->
+      <header class="sticky top-0 z-30 flex items-center justify-between gap-4 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] px-8 py-3.5">
+        <div class="flex items-center gap-4">
+          <h1 class="h3 tabular-nums">Boosters</h1>
+          <span class="inline-flex items-center gap-1.5 caption px-2.5 py-0.5 rounded-full font-semibold bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))]">
+            <i data-lucide="coins" class="w-3 h-3"></i>
+            Payant à l'acte
+          </span>
+          <span class="inline-flex items-center gap-2 caption text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-success))]"></span>
+            <span data-boost-active-count>0</span> actifs
+          </span>
+          <span class="inline-flex items-center gap-2 caption text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-border))]"></span>
+            <span data-boost-pending-count>0</span> en attente
+          </span>
+        </div>
+        <div class="flex items-center gap-4">
+          <!-- Search -->
+          <div class="relative hidden sm:block">
+            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+            <input id="boosters-search" type="text" placeholder="Rechercher un badge..." class="pl-9 pr-4 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+          </div>
+          <!-- Notifications -->
+          <button id="btn-notifications" class="relative p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))]" aria-label="Notifications">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="btn-notifications-badge" class="absolute top-1 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-[10px] font-bold leading-4 text-center" style="display:none;"></span>
+          </button>
+          <!-- Avatar -->
+          <div id="btn-account" class="flex items-center gap-3 pl-2 border-l border-[rgb(var(--mgt-border))] cursor-pointer" role="button" tabindex="0">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>CA</div>
+            <div class="hidden sm:block text-right">
+              <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]" data-vendor-name>DAN Boutique</p>
+              <div class="flex items-center gap-1 text-xs text-[rgb(var(--mgt-accent))]">
+                <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                <span data-vendor-rating>4.8</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Dashboard Content -->
+      <main class="flex-1 p-8 space-y-6">
+        <!-- ===== KPIs BOOSTER ROW ===== -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <!-- KPI Vues supplementaires -->
+          <div id="kpi-vues" class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                <i data-lucide="eye" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +18%
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Vues supplementaires ce mois</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]"><span data-kpi-views>—</span></p>
+          </div>
+
+          <!-- KPI Clics -->
+          <div id="kpi-clics" class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
+                <i data-lucide="mouse-pointer-click" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +22%
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Clics</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]"><span data-kpi-clicks>—</span></p>
+          </div>
+
+          <!-- KPI Commandes issues boosters -->
+          <div id="kpi-commandes-booster" class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                <i data-lucide="shopping-cart" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +15%
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Commandes issues boosters</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]"><span data-kpi-orders>—</span></p>
+          </div>
+
+          <!-- KPI ROI -->
+          <div id="kpi-roi" class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
+                <i data-lucide="chart-line" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +8%
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">ROI</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]"><span data-kpi-roi>—</span><span class="text-lg font-medium text-[rgb(var(--mgt-muted-foreground))]">%</span></p>
+          </div>
+        </div>
+
+        <!-- ===== BADGES DE VISIBILITE (3 types) ===== -->
+        <div>
+          <h2 class="h2 mb-1">Badges de visibilité</h2>
+          <p class="body text-[rgb(var(--mgt-muted-foreground))] mb-5">Mettez votre fiche en avant en 2 clics : choisissez un badge, puis payez</p>
+          <div id="boosters-offers" class="grid grid-cols-1 md:grid-cols-3 gap-5"></div>
+        </div>
+
+        <!-- ===== BADGES ACTIFS ===== -->
+        <div>
+          <h2 class="h2 mb-1">Badges actifs</h2>
+          <p class="body text-[rgb(var(--mgt-muted-foreground))] mb-5">Suivez la durée et les performances de vos badges en cours</p>
+          <div id="boosters-active" class="grid grid-cols-1 lg:grid-cols-2 gap-5"></div>
+        </div>
+
+        <!-- ===== MESSAGES VOCAUX DES BADGES (Promotion / Nouveau) ===== -->
+        <div id="badge-voice-section">
+          <h2 class="h2 mb-1">Messages vocaux des badges</h2>
+          <p class="body text-[rgb(var(--mgt-muted-foreground))] mb-5">Enregistrez un message personnalisé pour les badges « Promotion » et « Nouveau ». À défaut, un message par défaut est lu automatiquement. L'enregistrement est limité à 30 secondes et disparaît avec le badge.</p>
+          <div id="badge-voice-cards" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
+        </div>
+
+        <!-- ===== HISTORIQUE BADGES ===== -->
+        <div id="table-historique" class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h2 class="h2">Historique des badges</h2>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))] mt-1"><span data-boost-history-count>0</span> dernières activations</p>
+            </div>
+            <button id="boosters-export" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[rgb(var(--mgt-border))] text-sm font-medium text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              Exporter
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-[rgb(var(--mgt-border))]">
+                  <th class="text-left py-3 px-4 font-semibold text-[rgb(var(--mgt-muted-foreground))] caption">Badge</th>
+                  <th class="text-left py-3 px-4 font-semibold text-[rgb(var(--mgt-muted-foreground))] caption">Activé le</th>
+                  <th class="text-left py-3 px-4 font-semibold text-[rgb(var(--mgt-muted-foreground))] caption">Expire le</th>
+                  <th class="text-left py-3 px-4 font-semibold text-[rgb(var(--mgt-muted-foreground))] caption">Statut</th>
+                  <th class="text-right py-3 px-4 font-semibold text-[rgb(var(--mgt-muted-foreground))] caption">Dépenses</th>
+                </tr>
+              </thead>
+              <tbody id="boosters-history" class="divide-y divide-[rgb(var(--mgt-border))]"></tbody>
+            </table>
+          </div>
+          <!-- Résumé dépenses -->
+          <div class="flex items-center justify-between mt-5 pt-4 border-t border-[rgb(var(--mgt-border))]">
+            <span class="caption text-[rgb(var(--mgt-muted-foreground))]">Total dépenses badges (30 derniers jours)</span>
+            <span class="text-base font-bold tabular-nums text-[rgb(var(--mgt-foreground))]"><span data-boost-total-spend>—</span> <span class="text-sm font-medium text-[rgb(var(--mgt-muted-foreground))]">FCFA</span></span>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script>lucide.createIcons();</script>
+<!-- Mobile responsive navigation & layout -->
+<style id="mgt-mobile-responsive">
+@media (max-width: 768px) {
+  .dashboard-layout { flex-direction: column !important; }
+  .dashboard-sidebar { position: fixed !important; top: 0; left: 0; z-index: 1000; width: 260px !important; height: 100vh !important; transform: translateX(-100%); transition: transform .3s ease; overflow-y: auto; }
+  .dashboard-sidebar.open { transform: translateX(0); }
+  .dashboard-sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999; }
+  .dashboard-sidebar-overlay.show { display: block; }
+  .dashboard-main { margin-left: 0 !important; width: 100% !important; }
+  .dashboard-topbar { position: sticky; top: 0; z-index: 100; }
+  .mobile-menu-btn { display: flex !important; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: pointer; color: inherit; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .services-grid, .favorites-grid, .features-grid, .booster-grid { grid-template-columns: 1fr !important; }
+  .data-table { display: block !important; }
+  .data-table thead { display: none !important; }
+  .data-table tbody, .data-table tr { display: block !important; }
+  .data-table td { display: flex !important; justify-content: space-between; align-items: center; padding: 8px 12px !important; border-bottom: 1px solid rgb(var(--mgt-border)) !important; }
+  .data-table td::before { content: attr(data-label); font-weight: 600; font-size: 12px; color: rgb(var(--mgt-muted-foreground)); text-transform: uppercase; margin-right: 8px; flex-shrink: 0; }
+  .topbar-search { display: none !important; }
+  .topbar-title { font-size: 18px !important; }
+  .hero-section { padding: 40px 16px !important; text-align: center; }
+  .hero-section h1, .hero-section .h-display { font-size: 28px !important; }
+  .hero-section h1 + p { font-size: 15px !important; }
+  .hero-ctas { flex-direction: column !important; align-items: center !important; gap: 12px !important; }
+  .auth-split { flex-direction: column !important; }
+  .auth-branding { min-height: 200px !important; padding: 32px 16px !important; }
+  .auth-form-area { padding: 24px 16px !important; }
+  .checkout-layout { flex-direction: column !important; }
+  .checkout-main { width: 100% !important; }
+  .checkout-sidebar { width: 100% !important; }
+  .chat-layout { flex-direction: column !important; height: auto !important; }
+  .chat-sidebar { width: 100% !important; max-height: 200px !important; }
+  .chat-main { width: 100% !important; }
+  .filter-pills { flex-wrap: nowrap !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+  .drawer-panel { width: 100% !important; max-width: 100% !important; }
+  .content-section { padding-left: 16px !important; padding-right: 16px !important; }
+  .section-padding { padding: 32px 16px !important; }
+  .form-grid { grid-template-columns: 1fr !important; }
+  .form-actions { flex-direction: column !important; }
+  .desktop-only { display: none !important; }
+  .map-container { height: 300px !important; }
+}
+@media (min-width: 769px) {
+  .mobile-menu-btn { display: none !important; }
+  .mobile-only { display: none !important; }
+}
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr !important; }
+  .stats-row { grid-template-columns: 1fr !important; }
+}
+</style>
+<script>
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    var sidebar = document.querySelector('.dashboard-sidebar');
+    if (!sidebar) return;
+    var overlay = document.createElement('div');
+    overlay.className = 'dashboard-sidebar-overlay';
+    overlay.addEventListener('click', function(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); });
+    document.body.appendChild(overlay);
+    var topbar = document.querySelector('.dashboard-topbar');
+    if (topbar) {
+      var btn = document.createElement('button');
+      btn.className = 'mobile-menu-btn';
+      btn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+      btn.addEventListener('click', function(){ sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
+      topbar.insertBefore(btn, topbar.firstChild);
+    }
+    sidebar.querySelectorAll('a').forEach(function(link){
+      link.addEventListener('click', function(){
+        if (window.innerWidth <= 768) { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+      });
+    });
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  function __mgtSidebarScrollFix(){
+    var active = document.querySelector('nav a[class*="bg-white/15"]');
+    if (!active) return;
+    var nav = active.closest('nav');
+    if (!nav) return;
+    var navRect = nav.getBoundingClientRect();
+    var linkRect = active.getBoundingClientRect();
+    var target = nav.scrollTop + (linkRect.top - navRect.top) - (navRect.height - linkRect.height) / 2;
+    nav.scrollTop = Math.max(0, target);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', __mgtSidebarScrollFix);
+  } else {
+    __mgtSidebarScrollFix();
+  }
+})();
+</script>
+
+<script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+<script src="../assets/mangoo-welcome-audio.js"></script>
+<script src="../assets/mangoo-boosters.js"></script>
+<script src="../assets/mangoo-payment.js"></script>
+<script src="../assets/mangoo-dashboard-shell.js"></script>
+<script>
+(function () {
+  'use strict';
+  var MB = window.MangooBoosters;
+  if (!MB) return;
+
+  var state = {
+    offers: [],
+    active: [],
+    history: [],
+    stats: null,
+    vendorId: null,
+    vendorName: 'DAN Boutique',
+    query: ''
+  };
+
+  // Teintes visuelles par type (chip + barre + icône).
+  function chipClass(type) {
+    switch (type) {
+      case 'sponsorise': return 'bg-[rgb(var(--mgt-accent))] text-white';
+      case 'promo':      return 'bg-[rgb(var(--mgt-primary))] text-white';
+      default:           return 'bg-[rgb(var(--mgt-primary-300))] text-white';
+    }
+  }
+  function iconToneClass(type) {
+    switch (type) {
+      case 'sponsorise': return 'bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent))]';
+      case 'promo':      return 'bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary))]';
+      default:           return 'bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary))]';
+    }
+  }
+  function barClass(type) {
+    switch (type) {
+      case 'sponsorise': return 'bg-[rgb(var(--mgt-accent))]';
+      case 'promo':      return 'bg-[rgb(var(--mgt-primary))]';
+      default:           return 'bg-[rgb(var(--mgt-primary))]';
+    }
+  }
+  function activateBtnClass(type) {
+    switch (type) {
+      case 'sponsorise': return 'bg-[rgb(var(--mgt-accent))] text-white hover:bg-[rgb(var(--mgt-accent-600))]';
+      case 'promo':      return 'bg-[rgb(var(--mgt-primary))] text-white hover:bg-[rgb(var(--mgt-primary-700))]';
+      default:           return 'border-2 border-[rgb(var(--mgt-accent))] text-[rgb(var(--mgt-accent))] bg-transparent hover:bg-[rgb(var(--mgt-accent))] hover:text-white';
+    }
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function el(id) { return document.getElementById(id); }
+  function setText(attr, value) {
+    var node = document.querySelector('[' + attr + ']');
+    if (node) node.textContent = value;
+  }
+  // Date/heure lisible en français : « 22 août 2026 · 14:15 ». Utilisée dans
+  // l'historique des badges pour lever toute ambiguïté (au lieu de « À l'instant »).
+  var MOIS_FR = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+  function fmtDateTime(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';
+    var hh = ('0' + d.getHours()).slice(-2);
+    var mm = ('0' + d.getMinutes()).slice(-2);
+    return d.getDate() + ' ' + MOIS_FR[d.getMonth()] + ' ' + d.getFullYear() + ' · ' + hh + ':' + mm;
+  }
+  // Normalisation insensible aux accents (français) pour la recherche.
+  function norm(s) {
+    try {
+      return String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    } catch (e) {
+      return String(s == null ? '' : s).toLowerCase();
+    }
+  }
+  function matchesQuery(item) {
+    var q = norm(state.query.trim());
+    if (!q) return true;
+    var hay = norm((item.name || '') + ' ' + (item.type || '') + ' ' + (item.title || '') + ' ' + (item.desc || ''));
+    return hay.indexOf(q) !== -1;
+  }
+
+  function resolveVendor() {
+    var v = null;
+    try {
+      if (window.MangooVendor && typeof window.MangooVendor.current === 'function') {
+        v = window.MangooVendor.current();
+      }
+    } catch (e) {}
+    state.vendorId = (v && v.vendorId) || 'pro-41cafa4bcb31';
+    state.vendorName = (v && v.name) || 'DAN Boutique';
+  }
+
+  function renderKPIs(stats) {
+    setText('data-kpi-views', MB.formatNumber(stats.monthViews));
+    setText('data-kpi-clicks', MB.formatNumber(stats.clicks));
+    setText('data-kpi-orders', MB.formatNumber(stats.orders));
+    setText('data-kpi-roi', MB.formatNumber(stats.roi));
+    setText('data-boost-active-count', String(stats.activeCount));
+    setText('data-boost-pending-count', String(stats.pendingCount));
+  }
+
+  function renderOffers() {
+    var box = el('boosters-offers');
+    if (!box) return;
+    var items = state.offers.filter(matchesQuery);
+    if (!items.length) {
+      box.innerHTML = '<div class="col-span-full text-center py-10 text-[rgb(var(--mgt-muted-foreground))]">Aucune offre ne correspond à votre recherche.</div>';
+      return;
+    }
+    box.innerHTML = items.map(function (o) {
+      var recommended = o.recommended
+        ? '<span class="absolute -top-2.5 right-4 inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success))] text-white shadow-md"><i data-lucide="check" class="w-3 h-3"></i> Recommandé</span>'
+        : '';
+      var border = o.recommended
+        ? 'border-2 border-[rgb(var(--mgt-primary))] shadow-[var(--mgt-shadow-md)]'
+        : 'border border-[rgb(var(--mgt-border))] shadow-[var(--mgt-shadow-sm)] hover:shadow-[var(--mgt-shadow-md)]';
+      var features = (o.features || []).map(function (f) {
+        return '<li class="flex items-start gap-2.5 text-sm text-[rgb(var(--mgt-foreground))]"><i data-lucide="check-circle" class="w-4 h-4 text-[rgb(var(--mgt-success))] mt-0.5 shrink-0"></i>' + esc(f) + '</li>';
+      }).join('');
+      var mt = o.recommended ? 'mt-1' : '';
+      return '' +
+        '<div class="relative bg-[rgb(var(--mgt-card))] ' + border + ' rounded-xl p-6 transition-shadow flex flex-col">' +
+          recommended +
+          '<div class="mb-4 ' + mt + '">' +
+            '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ' + chipClass(o.type) + '">' +
+              '<i data-lucide="' + MB.boosterIcon(o.type) + '" class="w-3.5 h-3.5"></i> ' + esc(o.name) +
+            '</span>' +
+          '</div>' +
+          '<h3 class="text-lg font-semibold text-[rgb(var(--mgt-foreground))]">' + esc(o.title) + '</h3>' +
+          '<p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-4">' + esc(o.desc) + '</p>' +
+          '<div class="flex items-baseline gap-1 mb-4">' +
+            '<span class="text-2xl font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">' + MB.formatPrice(o.price) + '</span>' +
+            '<span class="text-sm font-medium text-[rgb(var(--mgt-muted-foreground))]">' + esc(o.priceLabel) + '</span>' +
+          '</div>' +
+          '<ul class="space-y-2.5 mb-6 flex-1">' + features + '</ul>' +
+          '<button data-act="activate" data-offer="' + esc(o.id) + '" class="w-full py-2.5 rounded-lg ' + activateBtnClass(o.type) + ' font-semibold text-sm transition-colors">Activer ' + MB.formatPrice(o.price) + ' F</button>' +
+        '</div>';
+    }).join('');
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function renderActive() {
+    var box = el('boosters-active');
+    if (!box) return;
+    if (!state.active.length) {
+      box.innerHTML = '<div class="col-span-full text-center py-10 text-[rgb(var(--mgt-muted-foreground))]">Aucun badge actif pour le moment.</div>';
+      return;
+    }
+    var items = state.active.filter(matchesQuery);
+    if (!items.length) {
+      box.innerHTML = '<div class="col-span-full text-center py-10 text-[rgb(var(--mgt-muted-foreground))]">Aucun badge actif ne correspond à votre recherche.</div>';
+      return;
+    }
+    box.innerHTML = items.map(function (b) {
+      return '' +
+        '<div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">' +
+          '<div class="flex items-start justify-between mb-4">' +
+            '<div class="flex items-center gap-3">' +
+              '<div class="flex items-center justify-center w-11 h-11 rounded-xl ' + iconToneClass(b.type) + '"><i data-lucide="' + MB.boosterIcon(b.type) + '" class="w-5 h-5"></i></div>' +
+              '<div>' +
+                '<h3 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">' + esc(b.name) + '</h3>' +
+                '<p class="caption text-[rgb(var(--mgt-muted-foreground))]">Activé ' + esc(b.startLabel) + '</p>' +
+              '</div>' +
+            '</div>' +
+            '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><span class="w-1.5 h-1.5 rounded-full bg-[rgb(var(--mgt-success))]"></span> Actif</span>' +
+          '</div>' +
+          '<div class="mb-4">' +
+            '<div class="flex items-center justify-between mb-1.5"><span class="caption text-[rgb(var(--mgt-muted-foreground))]">Durée restante</span><span class="caption font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">' + esc(b.remainingLabel) + '</span></div>' +
+            '<div class="w-full h-2.5 bg-[rgb(var(--mgt-muted))] rounded-full overflow-hidden"><div class="h-full ' + barClass(b.type) + ' rounded-full transition-all" style="width: ' + (Number(b.remainingPct) || 0) + '%;"></div></div>' +
+          '</div>' +
+          '<div class="grid grid-cols-3 gap-3 p-4 bg-[rgb(var(--mgt-muted))] rounded-lg">' +
+            '<div class="text-center"><p class="text-lg font-bold tabular-nums text-[rgb(var(--mgt-primary))]">' + MB.formatNumber(b.views) + '</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Vues</p></div>' +
+            '<div class="text-center border-x border-[rgb(var(--mgt-border))]"><p class="text-lg font-bold tabular-nums text-[rgb(var(--mgt-accent))]">' + MB.formatNumber(b.clicks) + '</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Clics</p></div>' +
+            '<div class="text-center"><p class="text-lg font-bold tabular-nums text-[rgb(var(--mgt-primary-600))]">' + MB.formatNumber(b.orders) + '</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Commandes</p></div>' +
+          '</div>' +
+          '<div class="flex items-center gap-3 mt-4">' +
+            '<button data-act="renew" data-id="' + esc(b.id) + '" class="flex-1 py-2 rounded-lg bg-[rgb(var(--mgt-primary))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-primary-700))] transition-colors">Renouveler</button>' +
+            '<button data-act="stop" data-id="' + esc(b.id) + '" class="flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg border border-[rgb(var(--mgt-border))] text-sm font-medium text-[rgb(var(--mgt-muted-foreground))] hover:border-[rgb(var(--mgt-error))] hover:text-[rgb(var(--mgt-error))] transition-colors"><i data-lucide="x" class="w-4 h-4"></i> Arreter</button>' +
+          '</div>' +
+        '</div>';
+    }).join('');
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function statusChip(status) {
+    switch (status) {
+      case 'active':
+        return '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-primary)/0.15)] text-[rgb(var(--mgt-primary-600))]">Actif</span>';
+      case 'termine':
+        return '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">Terminé</span>';
+      case 'expire':
+        return '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-error)/0.15)] text-[rgb(var(--mgt-error))]">Expiré</span>';
+      default:
+        return '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))]">Arrêté</span>';
+    }
+  }
+
+  function renderHistory() {
+    var tbody = el('boosters-history');
+    if (!tbody) return;
+    var rows = state.history.filter(matchesQuery);
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="py-8 px-4 text-center text-[rgb(var(--mgt-muted-foreground))]">Aucune activation trouvée.</td></tr>';
+    } else {
+      tbody.innerHTML = rows.map(function (b) {
+        return '' +
+          '<tr class="hover:bg-[rgb(var(--mgt-muted))] transition-colors">' +
+            '<td class="py-3.5 px-4 font-medium text-[rgb(var(--mgt-foreground))]"><div class="flex items-center gap-2.5"><div class="flex items-center justify-center w-8 h-8 rounded-lg ' + iconToneClass(b.type) + '"><i data-lucide="' + MB.boosterIcon(b.type) + '" class="w-4 h-4"></i></div> ' + esc(b.name) + '</div></td>' +
+            '<td class="py-3.5 px-4 tabular-nums text-[rgb(var(--mgt-foreground))]">' + fmtDateTime(b.createdAt) + '</td>' +
+            '<td class="py-3.5 px-4 tabular-nums text-[rgb(var(--mgt-foreground))]">' + fmtDateTime(b.expiresAt) + '</td>' +
+            '<td class="py-3.5 px-4">' + statusChip(b.status) + '</td>' +
+            '<td class="py-3.5 px-4 text-right tabular-nums font-semibold text-[rgb(var(--mgt-foreground))]">' + MB.formatPrice(b.price) + ' FCFA</td>' +
+          '</tr>';
+      }).join('');
+    }
+    setText('data-boost-history-count', String(rows.length));
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function renderAll() {
+    if (!state.stats) return;
+    renderKPIs(state.stats);
+    renderOffers();
+    renderActive();
+    renderHistory();
+    setText('data-boost-total-spend', MB.formatNumber(state.stats.totalSpend));
+  }
+
+  function reload() {
+    return MB.api.list({ vendor: state.vendorId }).then(function (data) {
+      state.offers = data.offers || [];
+      state.active = data.active || [];
+      state.history = data.history || [];
+      state.stats = data.stats || {};
+      renderAll();
+    }).catch(function (err) {
+      console.error('[Boosters] chargement impossible :', err.message);
+      setText('data-boost-active-count', '—');
+    });
+  }
+
+  function flashError(msg) {
+    var box = el('boosters-active');
+    if (!box) return;
+    var old = box.innerHTML;
+    box.insertAdjacentHTML('afterbegin', '<div style="grid-column:1/-1" class="text-sm text-[rgb(var(--mgt-error))] mb-3">' + esc(msg) + '</div>');
+  }
+
+  function onActivate(offerId) {
+    var offer = null;
+    for (var i = 0; i < state.offers.length; i++) {
+      if (state.offers[i].id === offerId) { offer = state.offers[i]; break; }
+    }
+    var amount = offer ? (Number(offer.price) || 0) : 0;
+    var title = offer ? ('Activer ' + (offer.name || offer.title || '')) : 'Activer le badge';
+
+    function doActivate(payment) {
+      MB.api.activate(state.vendorId, state.vendorName, offerId, payment).then(function () {
+        return reload();
+      }).catch(function (err) {
+        flashError('Activation impossible : ' + err.message);
+      });
+    }
+
+    // Flux de paiement mobile money (opérateur → numéro → OTP) avant activation.
+    // En mode démo, l'OTP simule le débit ; l'activation ne se fait qu'après
+    // confirmation, ce qui rend la carte active réellement « payante ».
+    var MP = window.MangooPayment;
+    if (MP && typeof MP.collect === 'function') {
+      MP.collect({ amount: amount, title: title, subtitle: 'Boosters' }).then(function (payment) {
+        doActivate(payment || null);
+      }).catch(function (err) {
+        if (err) flashError('Paiement annulé : ' + (err.message || err));
+      });
+    } else {
+      doActivate(null);
+    }
+  }
+  function onRenew(id) {
+    var badge = null;
+    for (var i = 0; i < state.active.length; i++) {
+      if (state.active[i].id === id) { badge = state.active[i]; break; }
+    }
+    var amount = badge ? (Number(badge.price) || 0) : 0;
+    var label = badge ? (badge.name || badge.type || '') : '';
+
+    function doRenew(payment) {
+      MB.api.renew(id, payment).then(function () { return reload(); }).catch(function (err) {
+        flashError('Renouvellement impossible : ' + err.message);
+      });
+    }
+
+    // Même flux de paiement mobile money que l'activation : le renouvellement
+    // ne se fait qu'après confirmation du débit (opérateur → numéro → OTP).
+    var MP = window.MangooPayment;
+    if (MP && typeof MP.collect === 'function' && amount > 0) {
+      MP.collect({ amount: amount, title: 'Renouveler ' + label, subtitle: 'Boosters' }).then(function (payment) {
+        doRenew(payment || null);
+      }).catch(function (err) {
+        if (err) flashError('Paiement annulé : ' + (err.message || err));
+      });
+    } else {
+      doRenew(null);
+    }
+  }
+  function onStop(id) {
+    MB.api.stop(id).then(function () { return reload(); }).catch(function (err) {
+      flashError('Arrêt impossible : ' + err.message);
+    });
+  }
+
+  function exportCSV() {
+    if (!state.history.length) return;
+    var head = ['Badge', 'Activé le', 'Expire le', 'Statut', 'Dépenses (FCFA)'];
+    var lines = [head.join(';')];
+    state.history.forEach(function (b) {
+      lines.push([b.name, fmtDateTime(b.createdAt), fmtDateTime(b.expiresAt), b.status, b.price].join(';'));
+    });
+    var blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'historique-boosters.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  function handleActionClick(e) {
+    var t = e.target && e.target.closest ? e.target.closest('[data-act]') : null;
+    if (!t) return;
+    var act = t.getAttribute('data-act');
+    if (act === 'activate') onActivate(t.getAttribute('data-offer'));
+    else if (act === 'renew') onRenew(t.getAttribute('data-id'));
+    else if (act === 'stop') onStop(t.getAttribute('data-id'));
+  }
+
+  function bindEvents() {
+    // Liaison directe sur les conteneurs persistants (même pattern que Catalogue).
+    var offers = el('boosters-offers');
+    var active = el('boosters-active');
+    if (offers) offers.addEventListener('click', handleActionClick);
+    if (active) active.addEventListener('click', handleActionClick);
+
+    var search = el('boosters-search');
+    if (search) {
+      search.addEventListener('input', function () {
+        state.query = search.value || '';
+        renderOffers();
+        renderActive();
+        renderHistory();
+      });
+    }
+
+    var exportBtn = el('boosters-export');
+    if (exportBtn) exportBtn.addEventListener('click', exportCSV);
+  }
+
+  function boot() {
+    resolveVendor();
+    bindEvents();
+    reload();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+})();
+</script>
+<script>
+(function () {
+  'use strict';
+  var WA = window.MangooWelcomeAudio;
+  var box = document.getElementById('badge-voice-cards');
+  if (!box) return;
+
+  var BADGES = [
+    {
+      type: 'promo',
+      name: 'Badge Promotion',
+      desc: 'Message lu quand un client clique sur le badge « Promotion » de votre fiche.',
+      defaultText: 'Promotion en cours : profitez de remises sur une sélection de nos produits, dans la limite des stocks disponibles.',
+      icon: 'tag',
+      tone: 'bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary))]'
+    },
+    {
+      type: 'new',
+      name: 'Badge Nouveau',
+      desc: 'Message lu quand un client clique sur le badge « Nouveau » de votre fiche.',
+      defaultText: 'Nouveau chez nous : découvrez nos dernières nouveautés et offres du moment.',
+      icon: 'sparkles',
+      tone: 'bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary))]'
+    }
+  ];
+
+  function resolveVendor() {
+    try {
+      if (window.MangooVendor && typeof window.MangooVendor.current === 'function') {
+        var v = window.MangooVendor.current();
+        if (v && v.vendorId) return v.vendorId;
+      }
+    } catch (e) {}
+    return 'pro-41cafa4bcb31';
+  }
+  var VENDOR = resolveVendor();
+
+  // Garde anti-course : ignore les rappels différés d'un enregistrement précédent
+  // lorsqu'un nouvel enregistrement a déjà démarré (le FileReader est asynchrone).
+  var recSeq = 0;
+  var activeRecorder = null;
+  var activeCard = null;
+  var timerId = null;
+  var elapsedMs = 0;
+
+  function key(type) { return WA.badgeKey(VENDOR, type); }
+  function hasRecording(type) { return !!(WA && WA.hasRecording(key(type))); }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function render() {
+    box.innerHTML = BADGES.map(function (b) {
+      var has = hasRecording(b.type);
+      return '' +
+        '<div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]" data-badge-card="' + esc(b.type) + '">' +
+          '<div class="flex items-start justify-between gap-3 mb-3">' +
+            '<div class="flex items-center gap-3">' +
+              '<div class="flex items-center justify-center w-11 h-11 rounded-xl ' + b.tone + '"><i data-lucide="' + esc(b.icon) + '" class="w-5 h-5"></i></div>' +
+              '<div>' +
+                '<h3 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">' + esc(b.name) + '</h3>' +
+                '<p class="caption text-[rgb(var(--mgt-muted-foreground))]">' + esc(b.desc) + '</p>' +
+              '</div>' +
+            '</div>' +
+            '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold shrink-0 ' + (has ? 'bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))]' : 'bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))]') + '">' +
+              (has ? '<i data-lucide="mic" class="w-3 h-3"></i> Personnalisé' : 'Par défaut') +
+            '</span>' +
+          '</div>' +
+          '<div class="flex items-center gap-3 mt-4">' +
+            '<button data-bv-act="record" data-type="' + esc(b.type) + '" class="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[rgb(var(--mgt-primary))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-primary-700))] transition-colors"><i data-lucide="mic" class="w-4 h-4"></i><span data-bv-record-label>Enregistrer</span></button>' +
+            '<button data-bv-act="play" data-type="' + esc(b.type) + '" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-sm font-medium text-[rgb(var(--mgt-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors" title="Écouter"><i data-lucide="play" class="w-4 h-4"></i></button>' +
+            (has ? '<button data-bv-act="delete" data-type="' + esc(b.type) + '" class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-sm font-medium text-[rgb(var(--mgt-muted-foreground))] hover:border-[rgb(var(--mgt-error))] hover:text-[rgb(var(--mgt-error))] transition-colors" title="Supprimer"><i data-lucide="trash-2" class="w-4 h-4"></i></button>' : '') +
+          '</div>' +
+          '<div data-bv-timer class="mt-3 text-center caption tabular-nums font-semibold text-[rgb(var(--mgt-accent))]" style="display:none;">0:00 / 0:30</div>' +
+        '</div>';
+    }).join('');
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function fmt(s) {
+    var m = Math.floor(s / 60);
+    var sec = Math.floor(s % 60);
+    return m + ':' + (sec < 10 ? '0' : '') + sec;
+  }
+  function maxMs() { return (WA && WA.MAX_BADGE_MS) || 30000; }
+
+  function startTimer(card) {
+    elapsedMs = 0;
+    var node = card.querySelector('[data-bv-timer]');
+    var max = maxMs();
+    if (node) { node.style.display = 'block'; node.textContent = '0:00 / ' + fmt(max / 1000); }
+    timerId = setInterval(function () {
+      elapsedMs += 1000;
+      if (node) node.textContent = fmt(elapsedMs / 1000) + ' / ' + fmt(max / 1000);
+      if (elapsedMs >= max) { clearInterval(timerId); timerId = null; }
+    }, 1000);
+  }
+  function stopTimer(card) {
+    if (timerId) { clearInterval(timerId); timerId = null; }
+    var node = card && card.querySelector('[data-bv-timer]');
+    if (node) node.style.display = 'none';
+  }
+
+  function setRecordingUI(card, recording) {
+    var label = card.querySelector('[data-bv-record-label]');
+    var btn = card.querySelector('[data-bv-act="record"]');
+    if (recording) {
+      if (label) label.textContent = 'Arrêter';
+      if (btn) btn.className = 'flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[rgb(var(--mgt-error))] text-white text-sm font-semibold hover:brightness-110 transition-colors';
+      startTimer(card);
+    } else {
+      if (label) label.textContent = 'Enregistrer';
+      if (btn) btn.className = 'flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[rgb(var(--mgt-primary))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-primary-700))] transition-colors';
+      stopTimer(card);
+    }
+  }
+
+  function onRecord(type) {
+    if (!WA) return;
+    var card = box.querySelector('[data-badge-card="' + type + '"]');
+    if (!card) return;
+
+    // Clic sur le même badge déjà en cours d'enregistrement → on arrête.
+    if (activeRecorder && activeCard === card) {
+      activeRecorder.stop();
+      return;
+    }
+    // Un autre badge est en cours → on termine le précédent (il sera conservé).
+    if (activeRecorder) {
+      try { activeRecorder.stop(); } catch (e) {}
+      if (activeCard) setRecordingUI(activeCard, false);
+      activeRecorder = null;
+      activeCard = null;
+    }
+
+    if (!WA.supported()) {
+      alert('L\u2019enregistrement n\u2019est pas disponible sur cet appareil ou ce navigateur.');
+      return;
+    }
+
+    var mySeq = ++recSeq;
+    activeCard = card;
+    var rec = WA.recorder(key(type), {
+      maxMs: maxMs(),
+      onStart: function () { if (mySeq === recSeq) setRecordingUI(card, true); },
+      onSaved: function () {
+        if (mySeq !== recSeq) return;
+        activeRecorder = null; activeCard = null;
+        setRecordingUI(card, false);
+        render();
+      },
+      onError: function (err) {
+        if (mySeq !== recSeq) return;
+        activeRecorder = null; activeCard = null;
+        setRecordingUI(card, false);
+        alert('Impossible d\u2019accéder au micro : ' + ((err && err.message) ? err.message : 'autorisation refusée'));
+      }
+    });
+    activeRecorder = rec;
+    rec.start();
+  }
+
+  function onPlay(type) {
+    if (!WA) return;
+    for (var i = 0; i < BADGES.length; i++) {
+      if (BADGES[i].type === type) { WA.playBadge(VENDOR, type, BADGES[i].defaultText); return; }
+    }
+  }
+
+  function onDelete(type) {
+    if (!WA) return;
+    WA.removeRecording(key(type));
+    render();
+  }
+
+  function handleClick(e) {
+    var t = e.target && e.target.closest ? e.target.closest('[data-bv-act]') : null;
+    if (!t) return;
+    var act = t.getAttribute('data-bv-act');
+    var type = t.getAttribute('data-type');
+    if (act === 'record') onRecord(type);
+    else if (act === 'play') onPlay(type);
+    else if (act === 'delete') onDelete(type);
+  }
+
+  box.addEventListener('click', handleClick);
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', render);
+  else render();
+})();
+</script>
+</body>
+</html>

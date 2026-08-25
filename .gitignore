@@ -1,0 +1,38 @@
+# Secrets : jamais versionnés
+.env
+.env.*
+!.env.example
+!.env.test
+CREDENTIALS.md
+
+# Clés et certificats TLS locaux : jamais versionnés
+key.pem
+key.pem.bak
+cert.pem
+cert.pem.bak
+
+# Logs d'exécution : jamais versionnés
+*.log
+
+# Configuration tunnel local (inutile en production Render)
+cloudflared-config.yml
+
+# Données sensibles d'exécution
+data/users.json
+data/sessions.json
+data/transactions.json
+data/wallets.json
+data/couriers.json
+data/deliveries.json
+
+# Données runtime contenant des données personnelles (jamais versionnées)
+data/vendor-config.json
+data/admin-config.json
+data/negotiations.json
+data/booster-stats.json
+data/inventaire-mouvements.json
+data/offres-jour.json
+
+# Sauvegardes locales (ne pas versionner)
+backups/
+

@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Équipe</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  /* --- Radius Scale (root-level for preflight) --- */
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  /* --- Brand Primary: Dark Green --- */
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  /* --- Orange Accent (CTAs, highlights) --- */
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  /* --- Neutral Surface & Text Scale --- */
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  /* --- State Colors --- */
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  /* --- Shadows --- */
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  /* --- Typography --- */
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* --- Semantic Tailwind Aliases --- */
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+/* --- Typography Classes --- */
+.h-display {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.h1 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(28px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.h2 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h3 {
+  font-family: var(--mgt-font-sans);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.body-l {
+  font-family: var(--mgt-font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--mgt-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--mgt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--radius-sm);
+    --radius-md: var(--radius-md);
+    --radius-lg: var(--radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen antialiased flex bg-[rgb(var(--mgt-muted))]">
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-[rgb(var(--mgt-primary))] text-[rgb(var(--mgt-primary-foreground))]">
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+        <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+        <div>
+          <span class="font-semibold text-base tracking-tight">Mangoo</span><span class="font-light text-base tracking-tight text-white/70">Tech</span>
+        </div>
+      </div>
+      <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <a href="./dashboard-overview.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+          Vue d'ensemble
+        </a>
+        <a href="./dashboard-performance.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bar-chart-3" class="w-4.5 h-4.5"></i>
+          Performance
+        </a>
+        <a href="./dashboard-reviews.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="star" class="w-4.5 h-4.5"></i>
+          Avis clients
+        </a>
+        <a href="./dashboard-agenda.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="calendar-days" class="w-4.5 h-4.5"></i>
+          Rendez-vous
+        </a>
+        <a href="./dashboard-finances.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wallet" class="w-4.5 h-4.5"></i>
+          Finances
+        </a>
+        <a href="./dashboard-notifications.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+          Notifications
+        </a>
+        <a href="./dashboard-orders.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shopping-bag" class="w-4.5 h-4.5"></i>
+          Commandes
+        </a>
+        <a href="./dashboard-clients.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users" class="w-4.5 h-4.5"></i>
+          Clients
+        </a>
+        <a href="./dashboard-team.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-medium transition-colors">
+          <i data-lucide="users-round" class="w-4.5 h-4.5"></i>
+          Équipe
+        </a>
+        <a href="./dashboard-messages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="message-square" class="w-4.5 h-4.5"></i>
+          Messagerie
+        </a>
+        <a href="./dashboard-live.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="radio" class="w-4.5 h-4.5"></i>
+          Live
+        </a>
+        <a href="./dashboard-services.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="briefcase" class="w-4.5 h-4.5"></i>
+          Prestations
+        </a>
+        <a href="./dashboard-catalogue.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="package" class="w-4.5 h-4.5"></i>
+          Catalogue
+        </a>
+        <a href="./dashboard-inventaire.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="boxes" class="w-4.5 h-4.5"></i>
+          Inventaire
+        </a>
+        <a href="./dashboard-gallery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="images" class="w-4.5 h-4.5"></i>
+          Galerie
+        </a>
+        <a href="./dashboard-boosters.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="zap" class="w-4.5 h-4.5"></i>
+          Boosters
+        </a>
+        <a href="./dashboard-delivery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="truck" class="w-4.5 h-4.5"></i>
+          Livraisons
+        </a>
+        <a href="./dashboard-promotions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="badge-percent" class="w-4.5 h-4.5"></i>
+          Promotions
+        </a>
+        <a href="./dashboard-fidelite.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="award" class="w-4.5 h-4.5"></i>
+          Fidélité
+        </a>
+        <a href="./dashboard-parrainage.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="gift" class="w-4.5 h-4.5"></i>
+          Parrainage
+        </a>
+        <a href="./dashboard-classement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="trophy" class="w-4.5 h-4.5"></i>
+          Classement
+        </a>
+        <a href="./dashboard-verification.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shield-check" class="w-4.5 h-4.5"></i>
+          Vérification
+        </a>
+        <a href="./dashboard-recommandation.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="compass" class="w-4.5 h-4.5"></i>
+          Découverte
+        </a>
+        <a href="./dashboard-hors-ligne.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wifi-off" class="w-4.5 h-4.5"></i>
+          Hors-ligne
+        </a>
+        <a href="./dashboard-rapports.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
+          Rapports
+        </a>
+        <a href="./dashboard-support.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="life-buoy" class="w-4.5 h-4.5"></i>
+          Support
+        </a>
+        <a href="./dashboard-offres.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="tag" class="w-4.5 h-4.5"></i>
+          Offres & Tarifs
+        </a>
+        <a href="./dashboard-abonnement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="credit-card" class="w-4.5 h-4.5"></i>
+          Abonnement
+        </a>
+        <a href="./dashboard-settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="settings" class="w-4.5 h-4.5"></i>
+          Parametres
+        </a>
+      </nav>
+      <div class="border-t border-white/10 px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>CA</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate" data-vendor-name>DAN Boutique</p>
+            <p class="text-xs text-white/60 truncate" data-vendor-role>Prestataire certifié</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div id="app-main" class="flex-1 ml-60 min-h-screen flex flex-col">
+      <header class="sticky top-0 z-30 flex items-center justify-between gap-4 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] px-8 py-3.5">
+        <div class="flex items-center gap-4">
+          <h1 class="text-lg font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">Équipe &amp; Personnel</h1>
+          <span class="text-xs text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">6 membres</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <button id="btn-add-member" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[rgb(var(--mgt-primary))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-primary-700))] transition-colors">
+            <i data-lucide="user-plus" class="w-4 h-4"></i>
+            Ajouter un membre
+          </button>
+          <button id="btn-notifications" class="relative p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))]" aria-label="Notifications">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="btn-notifications-badge" class="absolute top-1 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-[10px] font-bold leading-4 text-center" style="display:none;"></span>
+          </button>
+          <div id="btn-account" class="flex items-center gap-3 pl-2 border-l border-[rgb(var(--mgt-border))] cursor-pointer" role="button" tabindex="0">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>CA</div>
+            <div class="hidden sm:block text-right">
+              <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]" data-vendor-name>DAN Boutique</p>
+              <div class="flex items-center gap-1 text-xs text-[rgb(var(--mgt-accent))]">
+                <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                <span data-vendor-rating>4.8</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="flex-1 p-8 space-y-6">
+        <!-- ===== KPIs EQUIPE ===== -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <span class="w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))] flex items-center justify-center text-[rgb(var(--mgt-primary))]"><i data-lucide="users-round" class="w-5 h-5"></i></span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><i data-lucide="trending-up" class="w-3 h-3"></i> +1</span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Membres actifs</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">6</p>
+          </div>
+
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <span class="w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))] flex items-center justify-center text-[rgb(var(--mgt-accent))]"><i data-lucide="briefcase" class="w-5 h-5"></i></span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><i data-lucide="trending-up" class="w-3 h-3"></i> +2%</span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Prestations ce mois</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">87</p>
+          </div>
+
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <span class="w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))] flex items-center justify-center text-[rgb(var(--mgt-primary))]"><i data-lucide="gauge" class="w-5 h-5"></i></span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><i data-lucide="trending-up" class="w-3 h-3"></i> +4 pts</span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Taux d'occupation</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">78 %</p>
+          </div>
+
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <span class="w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))] flex items-center justify-center text-[rgb(var(--mgt-accent))]"><i data-lucide="clock-3" class="w-5 h-5"></i></span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><i data-lucide="trending-up" class="w-3 h-3"></i> +3%</span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Heures travaillées</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">312 <span class="text-sm font-semibold text-[rgb(var(--mgt-muted-foreground))]">h</span></p>
+          </div>
+        </div>
+
+        <!-- ===== MEMBRES (grille de cartes) ===== -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- Membre 1 -->
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="flex items-center justify-center w-12 h-12 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] font-semibold text-sm flex-shrink-0">AS</div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Aminata Sall</p>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Coiffeuse senior · 18 %</p>
+              </div>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]">Active</span>
+            </div>
+            <div class="grid grid-cols-3 gap-3 text-center border-t border-[rgb(var(--mgt-border))] pt-4">
+              <div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">34</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Prestations</p></div>
+              <div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">4,9</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Note</p></div>
+              <div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">186k</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">CA</p></div>
+            </div>
+          </div>
+
+          <!-- Membre 2 -->
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="flex items-center justify-center w-12 h-12 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] font-semibold text-sm flex-shrink-0">FD</div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Fatou Diallo</p>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Coloriste · 15 %</p>
+              </div>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]">Active</span>
+            </div>
+            <div class="grid grid-cols-3 gap-3 text-center border-t border-[rgb(var(--mgt-border))] pt-4">
+              <div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">27</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Prestations</p></div>
+              <div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">4,8</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Note</p></div>
+              <div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">121k</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">CA</p></div>
+            </div>
+          </div>
+
+          <!-- Membre 3 -->
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="flex items-center justify-center w-12 h-12 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] font-semibold text-sm flex-shrink-0">AN</div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Aïda Ndiaye</p>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Manucure · 15 %</p>
+              </div>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-warning)/0.20)] text-[rgb(var(--mgt-accent-800))]">En pause</span>
+            </div>
+            <div class="grid grid-cols-3 gap-3 text-center border-t border-[rgb(var(--mgt-border))] pt-4">
+              <div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">18</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Prestations</p></div>
+              <div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">4,7</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Note</p></div>
+              <div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">54k</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">CA</p></div>
+            </div>
+          </div>
+
+          <!-- Membre 4 -->
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="flex items-center justify-center w-12 h-12 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] font-semibold text-sm flex-shrink-0">MD</div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Moussa Diop</p>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Coiffeur</p>
+              </div>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]">Active</span>
+            </div>
+            <div class="grid grid-cols-3 gap-3 text-center border-t border-[rgb(var(--mgt-border))] pt-4">
+              <div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">14</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Prestations</p></div>
+              <div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">4,8</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Note</p></div>
+              <div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">42k</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">CA</p></div>
+            </div>
+          </div>
+
+          <!-- Membre 5 -->
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="flex items-center justify-center w-12 h-12 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] font-semibold text-sm flex-shrink-0">CT</div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Coumba Touré</p>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Esthéticienne · 12 %</p>
+              </div>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]">Active</span>
+            </div>
+            <div class="grid grid-cols-3 gap-3 text-center border-t border-[rgb(var(--mgt-border))] pt-4">
+              <div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">11</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Prestations</p></div>
+              <div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">4,6</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Note</p></div>
+              <div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">33k</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">CA</p></div>
+            </div>
+          </div>
+
+          <!-- Membre 6 (inviter) -->
+          <div class="rounded-xl border border-dashed border-[rgb(var(--mgt-border))] p-6 flex flex-col items-center justify-center text-center gap-3">
+            <span class="w-12 h-12 rounded-full bg-[rgb(var(--mgt-muted))] flex items-center justify-center text-[rgb(var(--mgt-muted-foreground))]"><i data-lucide="user-plus" class="w-6 h-6"></i></span>
+            <div>
+              <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Inviter un membre</p>
+              <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1">Ajoutez un collaborateur à votre salon</p>
+            </div>
+            <button id="btn-invite-member" class="mt-1 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-[rgb(var(--mgt-border))] text-xs font-medium text-[rgb(var(--mgt-primary))] hover:bg-[rgb(var(--mgt-primary-50))] transition-colors"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Inviter</button>
+          </div>
+        </div>
+
+        <!-- ===== PLANNING + COMMISSIONS (2-col) ===== -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <!-- Planning de la semaine -->
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Planning de la semaine</h2>
+              <button id="btn-edit-planning" class="text-xs font-medium text-[rgb(var(--mgt-primary))] hover:text-[rgb(var(--mgt-primary-700))]">Modifier</button>
+            </div>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between text-sm">
+                <span class="flex items-center gap-2 text-[rgb(var(--mgt-foreground))]"><span class="w-8 h-8 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] flex items-center justify-center text-xs font-semibold">AS</span> Aminata S.</span>
+                <span class="text-[rgb(var(--mgt-muted-foreground))]">Lun – Ven · 09:00 – 18:00</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="flex items-center gap-2 text-[rgb(var(--mgt-foreground))]"><span class="w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] flex items-center justify-center text-xs font-semibold">FD</span> Fatou D.</span>
+                <span class="text-[rgb(var(--mgt-muted-foreground))]">Mar – Sam · 10:00 – 18:00</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="flex items-center gap-2 text-[rgb(var(--mgt-foreground))]"><span class="w-8 h-8 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] flex items-center justify-center text-xs font-semibold">AN</span> Aïda N.</span>
+                <span class="text-[rgb(var(--mgt-muted-foreground))]">Lun – Ven · 10:00 – 17:00</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="flex items-center gap-2 text-[rgb(var(--mgt-foreground))]"><span class="w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] flex items-center justify-center text-xs font-semibold">MD</span> Moussa D.</span>
+                <span class="text-[rgb(var(--mgt-muted-foreground))]">Lun – Sam · 09:00 – 14:00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Règles de commission -->
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Règles de commission</h2>
+              <button id="btn-edit-commission" class="inline-flex items-center gap-1.5 text-xs font-medium text-[rgb(var(--mgt-primary))] hover:text-[rgb(var(--mgt-primary-700))]"><i data-lucide="pencil" class="w-3.5 h-3.5"></i> Modifier</button>
+            </div>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-[rgb(var(--mgt-foreground))]">Commission de base</span>
+                <span class="font-semibold text-[rgb(var(--mgt-foreground))]">15 %</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-[rgb(var(--mgt-foreground))]">Bonus performance</span>
+                <span class="font-semibold text-[rgb(var(--mgt-primary-700))]">+5 %</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-[rgb(var(--mgt-foreground))]">Seuil bonus (CA mensuel)</span>
+                <span class="font-semibold text-[rgb(var(--mgt-foreground))]">100 000 FCFA</span>
+              </div>
+            </div>
+
+            <div class="border-t border-[rgb(var(--mgt-border))] pt-4 mt-4">
+              <p class="text-xs font-semibold text-[rgb(var(--mgt-muted-foreground))] mb-3 uppercase tracking-wide">Commissions individuelles</p>
+              <div class="space-y-2.5">
+                <div class="flex items-center justify-between text-sm">
+                  <span class="flex items-center gap-2 text-[rgb(var(--mgt-foreground))]"><span class="w-6 h-6 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] flex items-center justify-center text-[10px] font-semibold">AS</span> Aminata S.</span>
+                  <span class="font-semibold text-[rgb(var(--mgt-primary-700))]">18 %</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                  <span class="flex items-center gap-2 text-[rgb(var(--mgt-foreground))]"><span class="w-6 h-6 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] flex items-center justify-center text-[10px] font-semibold">FD</span> Fatou D.</span>
+                  <span class="font-semibold text-[rgb(var(--mgt-foreground))]">15 %</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                  <span class="flex items-center gap-2 text-[rgb(var(--mgt-foreground))]"><span class="w-6 h-6 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] flex items-center justify-center text-[10px] font-semibold">MD</span> Moussa D.</span>
+                  <span class="font-semibold text-[rgb(var(--mgt-foreground))]">15 %</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                  <span class="flex items-center gap-2 text-[rgb(var(--mgt-foreground))]"><span class="w-6 h-6 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] flex items-center justify-center text-[10px] font-semibold">CT</span> Coumba T.</span>
+                  <span class="font-semibold text-[rgb(var(--mgt-foreground))]">12 %</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-3 rounded-lg bg-[rgb(var(--mgt-muted))] mt-4">
+              <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Les commissions sont calculées automatiquement à la fin de chaque mois et versées avec la paie.</p>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script>lucide.createIcons();</script>
+    <script>
+    (function () {
+      // Comportement de production de l'équipe : ajout de membre, modification
+      // de rôle et désactivation/réactivation.
+      function toast(msg) {
+        var t = document.getElementById('tm-toast');
+        if (!t) {
+          t = document.createElement('div');
+          t.id = 'tm-toast';
+          t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translate(-50%,16px);background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;font-family:var(--mgt-font-sans);z-index:9999;opacity:0;transition:all .25s ease;pointer-events:none;';
+          document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        requestAnimationFrame(function () { t.style.opacity = '1'; t.style.transform = 'translate(-50%,0)'; });
+        clearTimeout(t._timer);
+        t._timer = setTimeout(function () { t.style.opacity = '0'; t.style.transform = 'translate(-50%,16px)'; }, 2600);
+      }
+
+      var main = document.querySelector('main');
+      if (!main) return;
+      var memberGrid = main.children[1];
+      if (!memberGrid) return;
+      var cards = Array.prototype.slice.call(memberGrid.children);
+
+      // Repère les cartes "membre" (elles ont un badge Active / En pause).
+      var memberCards = cards.filter(function (c) {
+        var badge = c.querySelector('span');
+        var t = (badge && badge.textContent) || '';
+        return t.indexOf('Active') !== -1 || t.indexOf('pause') !== -1;
+      });
+
+      // Identifie chaque carte par le nom du membre.
+      memberCards.forEach(function (card) {
+        var nameEl = card.querySelector('p.text-sm.font-semibold');
+        var name = nameEl ? nameEl.textContent.trim() : 'Membre';
+        card.setAttribute('data-name', name);
+        var badge = card.querySelector('span.inline-flex');
+        card.setAttribute('data-active', badge && badge.textContent.indexOf('Active') !== -1 ? 'true' : 'false');
+
+        // Injecte les actions Modifier / Désactiver sous les statistiques.
+        var actions = document.createElement('div');
+        actions.className = 'flex items-center gap-2 mt-4 pt-3 border-t border-[rgb(var(--mgt-border))]';
+        actions.innerHTML =
+          '<button class="tm-role flex-1 h-8 rounded-md border border-[rgb(var(--mgt-border))] text-xs font-medium text-[rgb(var(--mgt-foreground))] hover:bg-[rgb(var(--mgt-muted))]">Modifier le rôle</button>' +
+          '<button class="tm-toggle flex-1 h-8 rounded-md border border-[rgb(var(--mgt-border))] text-xs font-medium text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))]">Désactiver</button>';
+        card.appendChild(actions);
+
+        actions.querySelector('.tm-role').addEventListener('click', function () {
+          openModal('role', card);
+        });
+        actions.querySelector('.tm-toggle').addEventListener('click', function () {
+          var active = card.getAttribute('data-active') === 'true';
+          setActive(card, !active);
+          toast(name + (active ? ' désactivé(e).' : ' réactivé(e).'));
+        });
+      });
+
+      function badgeEl(card) { return card.querySelector('span.inline-flex'); }
+
+      function setActive(card, active) {
+        card.setAttribute('data-active', active ? 'true' : 'false');
+        var badge = badgeEl(card);
+        if (badge) {
+          badge.textContent = active ? 'Active' : 'Désactivée';
+          badge.className = active
+            ? 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]'
+            : 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))]';
+        }
+        card.style.opacity = active ? '1' : '0.55';
+        var toggle = card.querySelector('.tm-toggle');
+        if (toggle) toggle.textContent = active ? 'Désactiver' : 'Réactiver';
+      }
+
+      var modalMode = 'add';
+      var modalTarget = null;
+      function openModal(mode, card) {
+        modalMode = mode;
+        modalTarget = card || null;
+        var old = document.getElementById('tm-modal');
+        if (old) old.remove();
+        var modal = document.createElement('div');
+        modal.id = 'tm-modal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;';
+        var isRole = mode === 'role';
+        var title = isRole ? 'Modifier le rôle' : 'Ajouter un membre';
+        var nameVal = isRole && card ? card.getAttribute('data-name') : '';
+        modal.innerHTML =
+          '<div style="background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:16px;width:100%;max-width:420px;padding:24px;font-family:var(--mgt-font-sans);">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;"><h3 style="font-size:16px;font-weight:600;color:rgb(var(--mgt-foreground));">' + title + '</h3>' +
+          '<button id="tm-close" style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:20px;cursor:pointer;">&times;</button></div>' +
+          (isRole ? '' :
+          '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Nom complet</label>' +
+          '<input id="tm-name" placeholder="Ex. Adama Sarr" style="width:100%;height:42px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:12px;">' +
+          '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Email</label>' +
+          '<input id="tm-email" type="email" placeholder="adama@exemple.com" style="width:100%;height:42px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:12px;">') +
+          (isRole ? '<p style="font-size:13px;color:rgb(var(--mgt-muted-foreground));margin-bottom:12px;">' + nameVal + '</p>' : '') +
+          '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Rôle</label>' +
+          '<select id="tm-role" style="width:100%;height:42px;padding:0 10px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:16px;">' +
+          '<option>Coiffeuse senior</option><option>Coloriste</option><option>Manucure</option><option>Esthéticienne</option><option>Coiffeur</option><option>Réceptionniste</option><option>Gérante</option></select>' +
+          '<div style="display:flex;gap:10px;"><button id="tm-cancel" style="flex:1;height:42px;border:1px solid rgb(var(--mgt-border));border-radius:10px;background:transparent;color:rgb(var(--mgt-foreground));font-size:14px;font-weight:600;cursor:pointer;">Annuler</button>' +
+          '<button id="tm-confirm" style="flex:1;height:42px;border:none;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;font-size:14px;font-weight:600;cursor:pointer;">' + (isRole ? 'Enregistrer' : 'Ajouter') + '</button></div></div>';
+        document.body.appendChild(modal);
+        function close() { modal.remove(); }
+        modal.querySelector('#tm-close').onclick = close;
+        modal.querySelector('#tm-cancel').onclick = close;
+        modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+        modal.querySelector('#tm-confirm').onclick = function () {
+          var role = modal.querySelector('#tm-role').value;
+          if (isRole && modalTarget) {
+            var sub = modalTarget.querySelector('p.text-xs.text-\\[rgb\\(var\\(--mgt-muted-foreground\\)\\)\\]');
+            if (sub) sub.textContent = role;
+            close();
+            toast('Rôle mis à jour : ' + role + '.');
+          } else {
+            var name = modal.querySelector('#tm-name').value.trim();
+            var email = modal.querySelector('#tm-email').value.trim();
+            if (!name || !email) { modal.querySelector('#tm-name').focus(); return; }
+            addMember(name, email, role);
+            close();
+          }
+        };
+        setTimeout(function () { var n = modal.querySelector('#tm-name'); if (n) n.focus(); }, 50);
+      }
+
+      function addMember(name, email, role) {
+        var ini = name.split(/\s+/).map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase();
+        var card = document.createElement('div');
+        card.className = 'bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]';
+        card.setAttribute('data-name', name);
+        card.setAttribute('data-active', 'true');
+        card.innerHTML =
+          '<div class="flex items-center gap-3 mb-4">' +
+          '<div class="flex items-center justify-center w-12 h-12 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] font-semibold text-sm flex-shrink-0">' + ini + '</div>' +
+          '<div class="flex-1 min-w-0"><p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">' + name + '</p>' +
+          '<p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">' + role + ' · 0 %</p></div>' +
+          '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]">Active</span></div>' +
+          '<div class="grid grid-cols-3 gap-3 text-center border-t border-[rgb(var(--mgt-border))] pt-4">' +
+          '<div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">0</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Prestations</p></div>' +
+          '<div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">—</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Note</p></div>' +
+          '<div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">0</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">CA</p></div></div>';
+        // Insère avant la carte "Inviter".
+        var invite = memberGrid.querySelector('div.border-dashed');
+        memberGrid.insertBefore(card, invite);
+        // Réattache les actions du nouveau membre.
+        var actions = document.createElement('div');
+        actions.className = 'flex items-center gap-2 mt-4 pt-3 border-t border-[rgb(var(--mgt-border))]';
+        actions.innerHTML =
+          '<button class="tm-role flex-1 h-8 rounded-md border border-[rgb(var(--mgt-border))] text-xs font-medium text-[rgb(var(--mgt-foreground))] hover:bg-[rgb(var(--mgt-muted))]">Modifier le rôle</button>' +
+          '<button class="tm-toggle flex-1 h-8 rounded-md border border-[rgb(var(--mgt-border))] text-xs font-medium text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))]">Désactiver</button>';
+        card.appendChild(actions);
+        actions.querySelector('.tm-role').addEventListener('click', function () { openModal('role', card); });
+        actions.querySelector('.tm-toggle').addEventListener('click', function () {
+          var active = card.getAttribute('data-active') === 'true';
+          setActive(card, !active);
+          toast(name + (active ? ' désactivé(e).' : ' réactivé(e).'));
+        });
+        lucide.createIcons();
+        toast(name + ' ajouté(e) à l\'équipe.');
+      }
+
+      var addBtn = document.getElementById('btn-add-member');
+      var inviteBtn = document.getElementById('btn-invite-member');
+      if (addBtn) addBtn.addEventListener('click', function () { openModal('add'); });
+      if (inviteBtn) inviteBtn.addEventListener('click', function () { openModal('add'); });
+
+      // --- Cloche du header -> notifications ---
+      var bellBtn = document.getElementById('btn-notifications');
+      if (bellBtn) bellBtn.addEventListener('click', function () { window.location.href = './dashboard-notifications.html'; });
+
+      // --- Modale générique (titre + contenu + bouton de confirmation) ---
+      function genericModal(title, innerHTML, confirmLabel) {
+        var old = document.getElementById('tm-generic-modal');
+        if (old) old.remove();
+        var modal = document.createElement('div');
+        modal.id = 'tm-generic-modal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;';
+        modal.innerHTML =
+          '<div style="background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:16px;width:100%;max-width:440px;padding:24px;font-family:var(--mgt-font-sans);max-height:90vh;overflow:auto;">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;"><h3 style="font-size:16px;font-weight:600;color:rgb(var(--mgt-foreground));margin:0;">' + title + '</h3>' +
+          '<button id="tm-gm-close" style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:20px;line-height:1;cursor:pointer;">&times;</button></div>' +
+          '<div id="tm-gm-body">' + innerHTML + '</div>' +
+          '<div style="display:flex;gap:10px;margin-top:20px;"><button id="tm-gm-cancel" style="flex:1;height:42px;border:1px solid rgb(var(--mgt-border));border-radius:10px;background:transparent;color:rgb(var(--mgt-foreground));font-size:14px;font-weight:600;cursor:pointer;">Annuler</button>' +
+          '<button id="tm-gm-confirm" style="flex:1;height:42px;border:none;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;font-size:14px;font-weight:600;cursor:pointer;">' + confirmLabel + '</button></div></div>';
+        document.body.appendChild(modal);
+        function close() { modal.remove(); }
+        modal.querySelector('#tm-gm-close').onclick = close;
+        modal.querySelector('#tm-gm-cancel').onclick = close;
+        modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+        return { modal: modal, confirmBtn: modal.querySelector('#tm-gm-confirm'), body: modal.querySelector('#tm-gm-body') };
+      }
+
+      function cardByHeading(text) {
+        var h2 = Array.prototype.slice.call(document.querySelectorAll('h2')).filter(function (h) { return h.textContent.trim() === text; })[0];
+        return h2 ? h2.closest('.p-6') : null;
+      }
+
+      // --- Modifier le planning de la semaine ---
+      var planningBtn = document.getElementById('btn-edit-planning');
+      if (planningBtn) planningBtn.addEventListener('click', function () {
+        var card = cardByHeading('Planning de la semaine');
+        var rows = card ? Array.prototype.slice.call(card.querySelector('.space-y-3').children) : [];
+        var inputsHtml = '';
+        rows.forEach(function (row, i) {
+          var name = row.children[0] ? row.children[0].textContent.trim() : 'Membre';
+          var sched = row.children[1] ? row.children[1].textContent.trim() : '';
+          inputsHtml += '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:4px;">' + name + '</label>' +
+            '<input data-idx="' + i + '" value="' + sched + '" style="width:100%;height:40px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:12px;">';
+        });
+        var g = genericModal('Planning de la semaine', inputsHtml, 'Enregistrer');
+        g.confirmBtn.onclick = function () {
+          g.body.querySelectorAll('input').forEach(function (inp) {
+            var i = parseInt(inp.getAttribute('data-idx'), 10);
+            var row = rows[i];
+            if (row && row.children[1]) row.children[1].textContent = inp.value.trim() || row.children[1].textContent;
+          });
+          g.modal.remove();
+          toast('Planning de la semaine mis à jour.');
+        };
+      });
+
+      // --- Modifier les règles de commission ---
+      var commissionBtn = document.getElementById('btn-edit-commission');
+      if (commissionBtn) commissionBtn.addEventListener('click', function () {
+        var card = cardByHeading('Règles de commission');
+        var box = card ? card.querySelector('.space-y-3') : null;
+        var rows = box ? Array.prototype.slice.call(box.children) : [];
+        var inputsHtml = '';
+        rows.forEach(function (row, i) {
+          var label = row.children[0] ? row.children[0].textContent.trim() : 'Règle';
+          var val = row.children[1] ? row.children[1].textContent.trim() : '';
+          inputsHtml += '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:4px;">' + label + '</label>' +
+            '<input data-idx="' + i + '" value="' + val + '" style="width:100%;height:40px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:12px;">';
+        });
+        var g = genericModal('Règles de commission', inputsHtml, 'Enregistrer');
+        g.confirmBtn.onclick = function () {
+          g.body.querySelectorAll('input').forEach(function (inp) {
+            var i = parseInt(inp.getAttribute('data-idx'), 10);
+            var row = rows[i];
+            if (row && row.children[1]) row.children[1].textContent = inp.value.trim() || row.children[1].textContent;
+          });
+          g.modal.remove();
+          toast('Règles de commission mises à jour.');
+        };
+      });
+    })();
+    </script>
+
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      .tabular-nums { font-variant-numeric: tabular-nums; }
+      body { font-family: var(--mgt-font-sans); }
+    </style>
+
+<script>
+(function(){
+  function __mgtSidebarScrollFix(){
+    var active = document.querySelector('nav a[class*="bg-white/15"]');
+    if (!active) return;
+    var nav = active.closest('nav');
+    if (!nav) return;
+    var navRect = nav.getBoundingClientRect();
+    var linkRect = active.getBoundingClientRect();
+    var target = nav.scrollTop + (linkRect.top - navRect.top) - (navRect.height - linkRect.height) / 2;
+    nav.scrollTop = Math.max(0, target);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', __mgtSidebarScrollFix);
+  } else {
+    __mgtSidebarScrollFix();
+  }
+})();
+</script>
+
+<script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+<script src="../assets/mangoo-dashboard-shell.js"></script>
+</body>
+</html>

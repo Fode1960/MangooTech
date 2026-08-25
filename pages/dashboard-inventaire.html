@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Inventaire & Stock</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root { --mgt-radius-sm: 4px; --mgt-radius-md: 8px; --mgt-radius-lg: 16px; --mgt-radius-full: 9999px; }
+
+:root,
+html.light {
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+:root {
+  --background: 255 255 255; --foreground: 15 23 42; --card: 255 255 255; --card-foreground: 15 23 42;
+  --popover: 255 255 255; --popover-foreground: 15 23 42; --primary: 26 92 42; --primary-foreground: 255 255 255;
+  --muted: 248 250 252; --muted-foreground: 100 116 139; --border: 226 232 240; --input: 226 232 240; --ring: 26 92 42;
+  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px; --radius-full: 9999px;
+  --state-success: 129 199 134; --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77; --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68; --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246; --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-card: 20 20 26; --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26; --mgt-popover-foreground: 248 250 252; --mgt-muted: 30 30 38; --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50; --mgt-input: 40 40 50; --mgt-ring: 76 168 82;
+  --background: 11 11 15; --foreground: 248 250 252; --card: 20 20 26; --card-foreground: 248 250 252;
+  --popover: 20 20 26; --popover-foreground: 248 250 252; --primary: 76 168 82; --primary-foreground: 255 255 255;
+  --muted: 30 30 38; --muted-foreground: 148 163 184; --border: 40 40 50; --input: 40 40 50; --ring: 76 168 82;
+}
+
+.h-display { font-family: var(--mgt-font-sans); font-size: clamp(40px, 6vw, 88px); line-height: 1.02; font-weight: 600; letter-spacing: -0.03em; text-wrap: balance; }
+.h1 { font-family: var(--mgt-font-sans); font-size: clamp(28px, 3.5vw, 48px); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+.h2 { font-family: var(--mgt-font-sans); font-size: clamp(22px, 2.4vw, 32px); line-height: 1.2; font-weight: 600; letter-spacing: -0.015em; }
+.h3 { font-family: var(--mgt-font-sans); font-size: 20px; line-height: 1.3; font-weight: 600; letter-spacing: -0.01em; }
+.body-l { font-family: var(--mgt-font-sans); font-size: 18px; line-height: 1.55; font-weight: 400; }
+.body { font-family: var(--mgt-font-sans); font-size: 15px; line-height: 1.6; font-weight: 400; }
+.caption { font-family: var(--mgt-font-sans); font-size: 13px; line-height: 1.5; font-weight: 400; letter-spacing: 0.005em; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); } .text-background { color: var(--background); } .border-background { border-color: var(--background); } .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); } .text-foreground { color: var(--foreground); } .border-foreground { border-color: var(--foreground); } .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); } .text-card { color: var(--card); } .border-card { border-color: var(--card); } .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); } .text-card-foreground { color: var(--card-foreground); } .border-card-foreground { border-color: var(--card-foreground); } .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); } .text-popover { color: var(--popover); } .border-popover { border-color: var(--popover); } .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); } .text-popover-foreground { color: var(--popover-foreground); } .border-popover-foreground { border-color: var(--popover-foreground); } .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); } .text-primary { color: var(--primary); } .border-primary { border-color: var(--primary); } .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); } .text-primary-foreground { color: var(--primary-foreground); } .border-primary-foreground { border-color: var(--primary-foreground); } .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); } .text-muted { color: var(--muted); } .border-muted { border-color: var(--muted); } .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); } .text-muted-foreground { color: var(--muted-foreground); } .border-muted-foreground { border-color: var(--muted-foreground); } .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); } .text-border { color: var(--border); } .border-border { border-color: var(--border); } .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); } .text-input { color: var(--input); } .border-input { border-color: var(--input); } .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); } .text-ring { color: var(--ring); } .border-ring { border-color: var(--ring); } .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] { display: inline-flex; align-items: center; justify-content: center; -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; background-color: currentColor; }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased flex bg-[rgb(var(--mgt-muted))]">
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-[rgb(var(--mgt-primary))] text-[rgb(var(--mgt-primary-foreground))]">
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+        <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+        <div>
+          <span class="font-semibold text-base tracking-tight">Mangoo</span><span class="font-light text-base tracking-tight text-white/70">Tech</span>
+        </div>
+      </div>
+      <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <a href="./dashboard-overview.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+          Vue d'ensemble
+        </a>
+        <a href="./dashboard-performance.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bar-chart-3" class="w-4.5 h-4.5"></i>
+          Performance
+        </a>
+        <a href="./dashboard-reviews.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="star" class="w-4.5 h-4.5"></i>
+          Avis clients
+        </a>
+        <a href="./dashboard-agenda.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="calendar-days" class="w-4.5 h-4.5"></i>
+          Rendez-vous
+        </a>
+        <a href="./dashboard-finances.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wallet" class="w-4.5 h-4.5"></i>
+          Finances
+        </a>
+        <a href="./dashboard-notifications.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+          Notifications
+        </a>
+        <a href="./dashboard-orders.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shopping-bag" class="w-4.5 h-4.5"></i>
+          Commandes
+        </a>
+        <a href="./dashboard-clients.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users" class="w-4.5 h-4.5"></i>
+          Clients
+        </a>
+        <a href="./dashboard-team.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users-round" class="w-4.5 h-4.5"></i>
+          Équipe
+        </a>
+        <a href="./dashboard-messages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="message-square" class="w-4.5 h-4.5"></i>
+          Messagerie
+        </a>
+        <a href="./dashboard-live.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="radio" class="w-4.5 h-4.5"></i>
+          Live
+        </a>
+        <a href="./dashboard-services.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="briefcase" class="w-4.5 h-4.5"></i>
+          Prestations
+        </a>
+        <a href="./dashboard-catalogue.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="package" class="w-4.5 h-4.5"></i>
+          Catalogue
+        </a>
+        <a href="./dashboard-inventaire.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-medium transition-colors">
+          <i data-lucide="boxes" class="w-4.5 h-4.5"></i>
+          Inventaire
+        </a>
+        <a href="./dashboard-gallery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="images" class="w-4.5 h-4.5"></i>
+          Galerie
+        </a>
+        <a href="./dashboard-boosters.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="zap" class="w-4.5 h-4.5"></i>
+          Boosters
+        </a>
+        <a href="./dashboard-promotions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="badge-percent" class="w-4.5 h-4.5"></i>
+          Promotions
+        </a>
+        <a href="./dashboard-fidelite.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="award" class="w-4.5 h-4.5"></i>
+          Fidélité
+        </a>
+        <a href="./dashboard-parrainage.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="gift" class="w-4.5 h-4.5"></i>
+          Parrainage
+        </a>
+        <a href="./dashboard-classement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="trophy" class="w-4.5 h-4.5"></i>
+          Classement
+        </a>
+        <a href="./dashboard-verification.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shield-check" class="w-4.5 h-4.5"></i>
+          Vérification
+        </a>
+        <a href="./dashboard-recommandation.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="compass" class="w-4.5 h-4.5"></i>
+          Découverte
+        </a>
+        <a href="./dashboard-hors-ligne.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wifi-off" class="w-4.5 h-4.5"></i>
+          Hors-ligne
+        </a>
+        <a href="./dashboard-rapports.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
+          Rapports
+        </a>
+        <a href="./dashboard-support.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="life-buoy" class="w-4.5 h-4.5"></i>
+          Support
+        </a>
+        <a href="./dashboard-offres.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="tag" class="w-4.5 h-4.5"></i>
+          Offres & Tarifs
+        </a>
+        <a href="./dashboard-abonnement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="credit-card" class="w-4.5 h-4.5"></i>
+          Abonnement
+        </a>
+        <a href="./dashboard-settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="settings" class="w-4.5 h-4.5"></i>
+          Parametres
+        </a>
+      </nav>
+      <div class="border-t border-white/10 px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>CA</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate" data-vendor-name>DAN Boutique</p>
+            <p class="text-xs text-white/60 truncate" data-vendor-role>Prestataire certifié</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div id="app-main" class="flex-1 ml-60 min-h-screen flex flex-col">
+      <header class="sticky top-0 z-30 flex items-center justify-between gap-4 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] px-8 py-3.5">
+        <div class="flex items-center gap-4">
+          <h1 class="h3 tabular-nums">Inventaire & Stock</h1>
+          <span class="inline-flex items-center gap-1.5 caption px-2.5 py-0.5 rounded-full font-semibold bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))]">
+            <i data-lucide="lock" class="w-3 h-3"></i>
+            Visibilité+
+          </span>
+          <span class="inline-flex items-center gap-2 caption text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-success))]"></span>
+            <span data-inv-total>—</span> références
+          </span>
+          <span class="inline-flex items-center gap-2 caption text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-error))]"></span>
+            <span data-inv-alerts>—</span> alertes stock
+          </span>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="relative hidden sm:block">
+            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+            <input id="inventory-search" type="text" placeholder="Rechercher un produit..." class="pl-9 pr-4 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+          </div>
+          <button id="btn-notifications" class="relative p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))]" aria-label="Notifications">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="btn-notifications-badge" class="absolute top-1 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-[10px] font-bold leading-4 text-center" style="display:none;"></span>
+          </button>
+          <div id="btn-account" class="flex items-center gap-3 pl-2 border-l border-[rgb(var(--mgt-border))] cursor-pointer" role="button" tabindex="0">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>CA</div>
+            <div class="hidden sm:block text-right">
+              <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]" data-vendor-name>DAN Boutique</p>
+              <div class="flex items-center gap-1 text-xs text-[rgb(var(--mgt-accent))]">
+                <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                <span data-vendor-rating>4.8</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="flex-1 p-8 space-y-6">
+        <!-- Recherche mobile -->
+        <div class="relative sm:hidden">
+          <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+          <input id="inventory-search-mobile" type="text" placeholder="Rechercher une référence..." class="w-full pl-9 pr-4 py-2.5 text-sm bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+        </div>
+<!-- ===== KPIs INVENTAIRE ===== -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                <i data-lucide="boxes" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +6
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Références suivies</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]"><span data-kpi-refs>—</span></p>
+          </div>
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
+                <i data-lucide="alert-triangle" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-warning)/0.20)] text-[rgb(var(--mgt-accent-700))]">
+                <i data-lucide="alert-circle" class="w-3 h-3"></i> À surveiller
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Stock faible</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">5</p>
+          </div>
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
+                <i data-lucide="x-circle" class="w-5 h-5 text-[rgb(var(--mgt-error))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-error)/0.15)] text-[rgb(var(--mgt-error))]">
+                <i data-lucide="alert-circle" class="w-3 h-3"></i> Urgent
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Ruptures de stock</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]"><span data-kpi-rupture>—</span></p>
+          </div>
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                <i data-lucide="banknote" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +9%
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Valeur du stock</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]"><span data-kpi-value>—</span> <span class="text-sm font-medium text-[rgb(var(--mgt-muted-foreground))]">FCFA</span></p>
+          </div>
+        </div>
+
+        <!-- ===== ALERTES + CATEGORIES ===== -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <!-- Alertes réappro -->
+          <div class="lg:col-span-2 bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div>
+                <h2 class="h3">Références & stock</h2>
+                <p class="caption text-[rgb(var(--mgt-muted-foreground))] mt-1">Ajustez le stock ou déclenchez un réapprovisionnement</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <select id="inventory-category" class="px-3 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg text-[rgb(var(--mgt-foreground))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)]">
+                  <option value="all">Toutes catégories</option>
+                </select>
+                <button id="btn-new-item" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[rgb(var(--mgt-primary))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-primary-700))] transition-colors">
+                  <i data-lucide="plus" class="w-4 h-4"></i>
+                  Nouvelle référence
+                </button>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2 mb-4" id="inventory-filters">
+              <button data-filter="all" class="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors">Toutes</button>
+              <button data-filter="alert" class="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors">En alerte</button>
+              <button data-filter="rupture" class="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors">Ruptures</button>
+              <button data-filter="bas" class="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors">Stock bas</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="text-left caption text-[rgb(var(--mgt-muted-foreground))] border-b border-[rgb(var(--mgt-border))]">
+                    <th class="pb-3 font-semibold">Produit</th>
+                    <th class="pb-3 font-semibold">Catégorie</th>
+                    <th class="pb-3 font-semibold text-right">Stock</th>
+                    <th class="pb-3 font-semibold text-right">Seuil</th>
+                    <th class="pb-3 font-semibold">Statut</th>
+                    <th class="pb-3 font-semibold text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="inventory-body" class="divide-y divide-[rgb(var(--mgt-border))]">
+                  <tr><td colspan="6" class="py-10 text-center text-[rgb(var(--mgt-muted-foreground))] text-sm">Chargement de l'inventaire…</td></tr>
+                </tbody>
+              </table>
+              <div id="inventory-empty" class="hidden py-12 text-center text-[rgb(var(--mgt-muted-foreground))] text-sm">Aucune référence ne correspond à votre recherche.</div>
+            </div>
+          </div>
+
+          <!-- Stock par catégorie -->
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <h2 class="h3 mb-5">Stock par catégorie</h2>
+            <div class="space-y-5" id="inventory-category-bars"></div>
+            <div class="mt-6 p-4 rounded-lg bg-[rgb(var(--mgt-muted))]">
+              <div class="flex items-start gap-3">
+                <i data-lucide="info" class="w-5 h-5 text-[rgb(var(--mgt-primary))] shrink-0 mt-0.5"></i>
+                <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Le niveau de stock est calculé sur les 30 derniers jours. Les alertes sont générées automatiquement sous le seuil défini par produit.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== REAPPROVISIONNEMENT LOCAL / INTERNATIONAL ===== -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <h2 class="h2">Réapprovisionnement</h2>
+            <button id="btn-new-order" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[rgb(var(--mgt-accent))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-accent-600))] transition-colors">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              Nouvelle commande
+            </button>
+          </div>
+          <p class="body text-[rgb(var(--mgt-muted-foreground))] mb-5">Choisissez votre source d'approvisionnement : local pour un réassort rapide, international pour importer en volume.</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- Local -->
+            <div class="relative bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+              <div class="flex items-start justify-between mb-4">
+                <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-[rgb(var(--mgt-primary-50))]">
+                  <i data-lucide="store" class="w-6 h-6 text-[rgb(var(--mgt-primary))]"></i>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                  <i data-lucide="clock" class="w-3 h-3"></i> 24–48 h
+                </span>
+              </div>
+              <h3 class="h3 mb-1">Approvisionnement local</h3>
+              <p class="text-sm text-[rgb(var(--mgt-muted-foreground))] mb-4">Grossistes et fournisseurs de la sous-région (Dakar, Douala, Abidjan) pour un réassort rapide de vos produits.</p>
+              <ul class="space-y-2 mb-5">
+                <li class="flex items-center gap-2.5 text-sm text-[rgb(var(--mgt-foreground))]">
+                  <i data-lucide="check" class="w-4 h-4 text-[rgb(var(--mgt-success))] shrink-0"></i>
+                  Livraison 24 à 48 h, sans frais de douane
+                </li>
+                <li class="flex items-center gap-2.5 text-sm text-[rgb(var(--mgt-foreground))]">
+                  <i data-lucide="check" class="w-4 h-4 text-[rgb(var(--mgt-success))] shrink-0"></i>
+                  Paiement Mobile Money ou à la livraison
+                </li>
+              </ul>
+              <button data-source="local" class="btn-source w-full py-2.5 rounded-lg bg-[rgb(var(--mgt-primary))] text-white font-semibold text-sm hover:bg-[rgb(var(--mgt-primary-700))] transition-colors">Commander en local</button>
+            </div>
+
+            <!-- International -->
+            <div class="relative bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+              <div class="flex items-start justify-between mb-4">
+                <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-[rgb(var(--mgt-accent-50))]">
+                  <i data-lucide="ship" class="w-6 h-6 text-[rgb(var(--mgt-accent))]"></i>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))]">
+                  <i data-lucide="clock" class="w-3 h-3"></i> 7–21 jours
+                </span>
+              </div>
+              <h3 class="h3 mb-1">Import international</h3>
+              <p class="text-sm text-[rgb(var(--mgt-muted-foreground))] mb-4">Import en volume depuis la Chine, la Turquie, Dubaï ou l'Europe, avec suivi du fret et dédouanement assisté.</p>
+              <ul class="space-y-2 mb-5">
+                <li class="flex items-center gap-2.5 text-sm text-[rgb(var(--mgt-foreground))]">
+                  <i data-lucide="check" class="w-4 h-4 text-[rgb(var(--mgt-success))] shrink-0"></i>
+                  Transport maritime ou aérien suivi
+                </li>
+                <li class="flex items-center gap-2.5 text-sm text-[rgb(var(--mgt-foreground))]">
+                  <i data-lucide="check" class="w-4 h-4 text-[rgb(var(--mgt-success))] shrink-0"></i>
+                  Frais de douane et taxes estimés à l'avance
+                </li>
+              </ul>
+              <button data-source="international" class="btn-source w-full py-2.5 rounded-lg border border-[rgb(var(--mgt-accent))] text-[rgb(var(--mgt-accent))] font-semibold text-sm hover:bg-[rgb(var(--mgt-accent-50))] transition-colors">Lancer un import</button>
+            </div>
+          </div>
+
+          <!-- Commandes en cours -->
+          <div class="mt-6 bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="h3">Commandes de réapprovisionnement en cours</h3>
+              <span class="caption text-[rgb(var(--mgt-muted-foreground))]" id="reappro-count">3 commandes actives</span>
+            </div>
+            <div class="space-y-3" id="reappro-orders"></div>
+          </div>
+        </div>
+
+        <!-- ===== MOUVEMENTS RECENTS ===== -->
+        <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h2 class="h3">Mouvements de stock récents</h2>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))] mt-1">Entrées et sorties des 7 derniers jours</p>
+            </div>
+            <button class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[rgb(var(--mgt-border))] text-sm font-medium text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors">
+              <i data-lucide="history" class="w-4 h-4"></i>
+              Historique complet
+            </button>
+          </div>
+          <div class="space-y-3" id="inventory-movements"></div>
+        </div>
+      </main>
+    </div>
+    <script>lucide.createIcons();</script>
+    <script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+    <script src="../assets/mangoo-inventory.js"></script>
+<script>
+(function () {
+  var MI = window.MangooInventory;
+  if (!MI) return;
+
+  var vendor = window.MangooVendor ? window.MangooVendor.current() : { vendorId: 'pro-41cafa4bcb31', name: 'DAN Boutique', role: 'prestataire' };
+  var vendorId = vendor.vendorId || 'pro-41cafa4bcb31';
+  var vendorName = vendor.name || 'DAN Boutique';
+  var role = vendor.role || 'prestataire';
+  var domain = role === 'vendeur' ? 'commerce' : 'salon';
+  var CATS = (MI && MI.categoriesFor) ? MI.categoriesFor(domain) : MI.CATEGORIES;
+
+  var items = [];
+  var movements = [];
+  var activeFilter = 'all';
+  var activeCategory = 'all';
+
+  var tbody = document.getElementById('inventory-body');
+  var emptyEl = document.getElementById('inventory-empty');
+  var searchInput = document.getElementById('inventory-search');
+  var searchMobile = document.getElementById('inventory-search-mobile');
+  var catSelect = document.getElementById('inventory-category');
+  var filterWrap = document.getElementById('inventory-filters');
+  var catBarsEl = document.getElementById('inventory-category-bars');
+  var movementsEl = document.getElementById('inventory-movements');
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function fold(s) { return String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+
+  function currentTerm() {
+    var t = '';
+    if (searchInput && searchInput.value) t = searchInput.value;
+    if (searchMobile && searchMobile.value) t = searchMobile.value;
+    return fold(t.trim());
+  }
+
+  function findItem(id) {
+    for (var i = 0; i < items.length; i++) if (items[i].id === id) return items[i];
+    return null;
+  }
+
+  function toast(message) {
+    var el = document.createElement('div');
+    el.textContent = message;
+    el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:100;padding:10px 16px;border-radius:9999px;background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));font-size:14px;font-weight:500;box-shadow:var(--mgt-shadow-md);opacity:0;transition:opacity .25s ease;';
+    document.body.appendChild(el);
+    requestAnimationFrame(function () { el.style.opacity = '1'; });
+    setTimeout(function () { el.style.opacity = '0'; }, 2200);
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 2600);
+  }
+
+  function setText(sel, val) {
+    var el = document.querySelector('[' + sel + ']');
+    if (el) el.textContent = val;
+  }
+
+  /* ---------- KPIs ---------- */
+  function renderKPIs() {
+    var low = 0, rupture = 0, value = 0;
+    items.forEach(function (it) {
+      var st = MI.statusFor(it);
+      if (st.key === 'rupture') rupture++;
+      else if (st.key === 'bas') low++;
+      value += (Number(it.costPrice) || 0) * (Number(it.stock) || 0);
+    });
+    setText('data-kpi-refs', MI.formatNumber(items.length));
+    setText('data-kpi-low', MI.formatNumber(low));
+    setText('data-kpi-rupture', MI.formatNumber(rupture));
+    setText('data-kpi-value', MI.formatNumber(value));
+    setText('data-inv-total', MI.formatNumber(items.length));
+    setText('data-inv-alerts', MI.formatNumber(low + rupture));
+  }
+
+  /* ---------- Catégories ---------- */
+  function renderCategoryBars() {
+    if (!catBarsEl) return;
+    if (!items.length) { catBarsEl.innerHTML = '<p class="caption text-[rgb(var(--mgt-muted-foreground))]">Aucune donnée.</p>'; return; }
+    var byCat = {};
+    CATS.forEach(function (c) { byCat[c.id] = { total: 0, available: 0 }; });
+    items.forEach(function (it) {
+      if (!byCat[it.category]) byCat[it.category] = { total: 0, available: 0 };
+      byCat[it.category].total++;
+      if (Number(it.stock) > 0) byCat[it.category].available++;
+    });
+    var html = '';
+    Object.keys(byCat).forEach(function (catId) {
+      var c = byCat[catId];
+      if (!c.total) return;
+      var pct = Math.round((c.available / c.total) * 100);
+      var color = pct >= 70 ? 'rgb(var(--mgt-success))' : (pct >= 40 ? 'rgb(var(--mgt-warning))' : 'rgb(var(--mgt-error))');
+      html += '<div>' +
+        '<div class="flex items-center justify-between mb-2">' +
+          '<span class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">' + esc(MI.categoryLabel(catId)) + '</span>' +
+          '<span class="caption tabular-nums text-[rgb(var(--mgt-muted-foreground))]">' + c.total + ' réf · ' + pct + '%</span>' +
+        '</div>' +
+        '<div class="h-2 rounded-full bg-[rgb(var(--mgt-muted))] overflow-hidden">' +
+          '<div class="h-full rounded-full" style="width:' + pct + '%;background:' + color + '"></div>' +
+        '</div>' +
+      '</div>';
+    });
+    catBarsEl.innerHTML = html;
+  }
+
+  /* ---------- Table ---------- */
+  function matchesFilters(it) {
+    if (activeCategory !== 'all' && it.category !== activeCategory) return false;
+    var st = MI.statusFor(it);
+    if (activeFilter === 'rupture' && st.key !== 'rupture') return false;
+    if (activeFilter === 'bas' && st.key !== 'bas') return false;
+    if (activeFilter === 'alert' && st.key === 'ok') return false;
+    var term = currentTerm();
+    if (term) {
+      var hay = fold(it.name + ' ' + (it.supplier || '') + ' ' + MI.categoryLabel(it.category) + ' ' + (it.unit || ''));
+      if (hay.indexOf(term) === -1) return false;
+    }
+    return true;
+  }
+
+  function statusBadge(it) {
+    var st = MI.statusFor(it);
+    var s = MI.statusStyle(st.key);
+    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold" style="background:' + s.bg + ';color:' + s.fg + ';">' + esc(st.label) + '</span>';
+  }
+
+  function renderTable() {
+    if (!tbody) return;
+    var list = items.filter(matchesFilters);
+    if (!list.length) {
+      tbody.innerHTML = '';
+      if (emptyEl) emptyEl.classList.remove('hidden');
+      return;
+    }
+    if (emptyEl) emptyEl.classList.add('hidden');
+
+    tbody.innerHTML = list.map(function (it) {
+      var cat = MI.categoryById(it.category);
+      var catStyle = MI.categoryStyle(it.category);
+      var st = MI.statusFor(it);
+      var stockColor = st.key === 'ok' ? 'rgb(var(--mgt-foreground))' : 'rgb(var(--mgt-error))';
+      return '<tr data-id="' + esc(it.id) + '">' +
+        '<td class="py-3.5">' +
+          '<div class="flex items-center gap-3">' +
+            '<div class="flex items-center justify-center w-9 h-9 rounded-lg" style="background:' + catStyle.bg + ';">' +
+              '<i data-lucide="' + esc(MI.categoryIcon(it.category)) + '" class="w-4 h-4" style="color:' + catStyle.fg + ';"></i>' +
+            '</div>' +
+            '<div class="min-w-0">' +
+              '<p class="font-medium text-[rgb(var(--mgt-foreground))] truncate">' + esc(it.name) + '</p>' +
+              '<p class="caption text-[rgb(var(--mgt-muted-foreground))] truncate">' + esc(it.supplier || '—') + '</p>' +
+            '</div>' +
+          '</div>' +
+        '</td>' +
+        '<td class="py-3.5 text-[rgb(var(--mgt-muted-foreground))]">' + esc(MI.categoryLabel(it.category)) + '</td>' +
+        '<td class="py-3.5 text-right">' +
+          '<div class="inline-flex items-center gap-1">' +
+            '<button type="button" data-act="step" data-delta="-1" data-id="' + esc(it.id) + '" class="w-6 h-6 inline-flex items-center justify-center rounded-md border border-[rgb(var(--mgt-border))] bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-foreground))] hover:bg-[rgb(var(--mgt-border))] transition-colors"><i data-lucide="minus" class="w-3.5 h-3.5"></i></button>' +
+            '<span class="min-w-[36px] text-center font-semibold tabular-nums" style="color:' + stockColor + '">' + MI.formatNumber(it.stock) + '</span>' +
+            '<button type="button" data-act="step" data-delta="1" data-id="' + esc(it.id) + '" class="w-6 h-6 inline-flex items-center justify-center rounded-md border border-[rgb(var(--mgt-border))] bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-foreground))] hover:bg-[rgb(var(--mgt-border))] transition-colors"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>' +
+          '</div>' +
+        '</td>' +
+        '<td class="py-3.5 text-right tabular-nums text-[rgb(var(--mgt-muted-foreground))]">' + MI.formatNumber(it.threshold) + '</td>' +
+        '<td class="py-3.5">' + statusBadge(it) + '</td>' +
+        '<td class="py-3.5 text-right">' +
+          '<div class="inline-flex items-center gap-1">' +
+            '<button type="button" data-act="reappro" data-id="' + esc(it.id) + '" title="Réapprovisionner" class="w-7 h-7 inline-flex items-center justify-center rounded-md text-[rgb(var(--mgt-primary))] hover:bg-[rgb(var(--mgt-primary-50))] transition-colors"><i data-lucide="package-plus" class="w-4 h-4"></i></button>' +
+            '<button type="button" data-act="edit" data-id="' + esc(it.id) + '" title="Modifier" class="w-7 h-7 inline-flex items-center justify-center rounded-md text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors"><i data-lucide="pencil" class="w-4 h-4"></i></button>' +
+            '<button type="button" data-act="del" data-id="' + esc(it.id) + '" title="Supprimer" class="w-7 h-7 inline-flex items-center justify-center rounded-md text-[rgb(var(--mgt-error))] hover:bg-[rgb(var(--mgt-error)/0.10)] transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>' +
+          '</div>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
+
+    if (window.lucide) lucide.createIcons();
+  }
+
+  /* ---------- Mouvements ---------- */
+  function renderMovements() {
+    if (!movementsEl) return;
+    if (!movements.length) { movementsEl.innerHTML = '<p class="caption text-[rgb(var(--mgt-muted-foreground))]">Aucun mouvement récent.</p>'; return; }
+    movementsEl.innerHTML = movements.slice(0, 8).map(function (m) {
+      var isIn = m.type === 'entree';
+      var color = isIn ? 'rgb(var(--mgt-success))' : 'rgb(var(--mgt-error))';
+      var icon = isIn ? 'arrow-down' : 'arrow-up';
+      var sign = isIn ? '+' : '-';
+      return '<div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-lg border border-[rgb(var(--mgt-border))]">' +
+        '<div class="flex items-center gap-3">' +
+          '<div class="flex items-center justify-center w-10 h-10 rounded-lg" style="background:' + color + ' / 0.12;">' +
+            '<i data-lucide="' + icon + '" class="w-5 h-5" style="color:' + color + ';"></i>' +
+          '</div>' +
+          '<div>' +
+            '<p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">' + (isIn ? 'Entrée' : 'Sortie') + ' - ' + esc(m.name) + '</p>' +
+            '<p class="caption text-[rgb(var(--mgt-muted-foreground))]">' + esc(m.time || 'À l\'instant') + ' · ' + esc(m.reason || '') + '</p>' +
+          '</div>' +
+        '</div>' +
+        '<span class="text-sm font-bold tabular-nums" style="color:' + color + ';">' + sign + MI.formatNumber(m.quantity) + ' ' + esc(m.unit || 'unité(s)') + '</span>' +
+      '</div>';
+    }).join('');
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function renderAll() { renderKPIs(); renderCategoryBars(); renderTable(); renderMovements(); renderReapproOrders(); }
+
+  /* ---------- Actions ---------- */
+  var SEED_COMMERCE = [
+    { id: 'inv-dan-1', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Robe wax élégante', category: 'mode', stock: 8, threshold: 5, unit: 'unité', costPrice: 7000, salePrice: 12500, supplier: 'Atelier Dakar', available: true },
+    { id: 'inv-dan-2', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Chemise homme premium', category: 'mode', stock: 2, threshold: 6, unit: 'unité', costPrice: 5000, salePrice: 9000, supplier: 'Atelier Dakar', available: true },
+    { id: 'inv-dan-3', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Baskets tendance', category: 'chaussures', stock: 6, threshold: 4, unit: 'paire', costPrice: 9000, salePrice: 15000, supplier: 'Import Chine', available: true },
+    { id: 'inv-dan-4', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Sandales cuir', category: 'chaussures', stock: 0, threshold: 5, unit: 'paire', costPrice: 6500, salePrice: 11000, supplier: 'Maroquinerie Ndiaye', available: true },
+    { id: 'inv-dan-5', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Sac à main cuir', category: 'sacs', stock: 4, threshold: 3, unit: 'unité', costPrice: 13000, salePrice: 22000, supplier: 'Maroquinerie Ndiaye', available: true },
+    { id: 'inv-dan-6', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Smartphone 128 Go', category: 'electronique', stock: 3, threshold: 5, unit: 'unité', costPrice: 120000, salePrice: 145000, supplier: 'Import Dubaï', available: true },
+    { id: 'inv-dan-7', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Lampe déco LED', category: 'maison', stock: 20, threshold: 8, unit: 'unité', costPrice: 5000, salePrice: 8500, supplier: 'Import Turquie', available: true },
+    { id: 'inv-dan-8', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Parfum boisé 50 ml', category: 'beaute', stock: 9, threshold: 4, unit: 'flacon', costPrice: 11000, salePrice: 18000, supplier: 'Import Paris', available: true }
+  ];
+
+  var REAPPRO_SALON = [
+    { id: 'CMD-2041', label: 'Huiles capillaires', supplier: 'Grossiste Aminata · Dakar', source: 'local', status: 'Livraison demain' },
+    { id: 'CMD-2038', label: 'Perruques lace front', supplier: 'Import Guangzhou · Chine', source: 'international', status: 'En transit · 9 j restants' },
+    { id: 'CMD-2035', label: 'Vernis gel & accessoires', supplier: 'Import Istanbul · Turquie', source: 'international', status: 'Dédouanement · 4 j restants' }
+  ];
+  var REAPPRO_COMMERCE = [
+    { id: 'CMD-3062', label: 'Robes wax & chemises', supplier: 'Atelier Dakar · Sénégal', source: 'local', status: 'Livraison demain' },
+    { id: 'CMD-3057', label: 'Baskets & sandales', supplier: 'Import Guangzhou · Chine', source: 'international', status: 'En transit · 11 j restants' },
+    { id: 'CMD-3049', label: 'Smartphones & accessoires', supplier: 'Import Dubaï · EAU', source: 'international', status: 'Dédouanement · 3 j restants' }
+  ];
+
+  function renderReapproOrders() {
+    var el = document.getElementById('reappro-orders');
+    if (!el) return;
+    var data = domain === 'commerce' ? REAPPRO_COMMERCE : REAPPRO_SALON;
+    el.innerHTML = data.map(function (o) {
+      var isLocal = o.source === 'local';
+      return '<div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-lg border border-[rgb(var(--mgt-border))]">' +
+        '<div class="flex items-center gap-3">' +
+          '<div class="flex items-center justify-center w-10 h-10 rounded-lg ' + (isLocal ? 'bg-[rgb(var(--mgt-primary-50))]' : 'bg-[rgb(var(--mgt-accent-50))]') + '">' +
+            '<i data-lucide="' + (isLocal ? 'store' : 'ship') + '" class="w-5 h-5 ' + (isLocal ? 'text-[rgb(var(--mgt-primary))]' : 'text-[rgb(var(--mgt-accent))]') + '"></i>' +
+          '</div>' +
+          '<div>' +
+            '<p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">' + esc(o.id) + ' · ' + esc(o.label) + '</p>' +
+            '<p class="caption text-[rgb(var(--mgt-muted-foreground))]">' + esc(o.supplier) + '</p>' +
+          '</div>' +
+        '</div>' +
+        '<div class="flex items-center gap-3">' +
+          '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ' + (isLocal ? 'bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]' : 'bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))]') + '">' + (isLocal ? 'Local' : 'International') + '</span>' +
+          '<span class="caption tabular-nums text-[rgb(var(--mgt-muted-foreground))]">' + esc(o.status) + '</span>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    var countEl = document.getElementById('reappro-count');
+    if (countEl) countEl.textContent = data.length + ' commandes actives';
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function reload() {
+    return Promise.all([
+      MI.api.list({ vendor: vendorId }),
+      MI.api.listMovements(vendorId)
+    ]).then(function (res) {
+      items = res[0] || [];
+      if (!items.length && domain === 'commerce') items = SEED_COMMERCE;
+      movements = res[1] || [];
+      renderAll();
+    });
+  }
+
+  function stepStock(id, delta) {
+    var it = findItem(id);
+    if (!it) return;
+    it.stock = Math.max(0, (Number(it.stock) || 0) + delta);
+    it.available = it.stock > 0;
+    MI.api.save(it).then(function () {
+      renderAll();
+      toast('Stock mis à jour.');
+    }).catch(function () { toast('Erreur lors de la mise à jour.'); });
+  }
+
+  function removeItem(id) {
+    var it = findItem(id);
+    if (!it) return;
+    if (!confirm('Supprimer la référence « ' + it.name + ' » ?')) return;
+    MI.api.remove(id).then(function () {
+      items = items.filter(function (x) { return x.id !== id; });
+      renderAll();
+      toast('Référence supprimée.');
+    }).catch(function () { toast('Erreur lors de la suppression.'); });
+  }
+
+  function closeModal(overlay) {
+    if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+  }
+
+  function modalShell(title, bodyHtml, submitLabel, onSubmit) {
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,23,42,0.5);';
+    overlay.innerHTML = '<div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-2xl shadow-[var(--mgt-shadow-lg))] w-full max-w-md max-h-[90vh] overflow-y-auto">' +
+      '<div class="flex items-center justify-between px-5 py-4 border-b border-[rgb(var(--mgt-border))]">' +
+        '<h3 class="h3">' + esc(title) + '</h3>' +
+        '<button type="button" data-close class="p-1.5 rounded-lg hover:bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))]"><i data-lucide="x" class="w-5 h-5"></i></button>' +
+      '</div>' +
+      '<div class="px-5 py-4 space-y-4">' + bodyHtml + '</div>' +
+      '<div class="flex items-center justify-end gap-2 px-5 py-4 border-t border-[rgb(var(--mgt-border))]">' +
+        '<button type="button" data-close class="px-4 py-2 rounded-lg border border-[rgb(var(--mgt-border))] text-sm font-medium text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors">Annuler</button>' +
+        '<button type="button" data-submit class="px-4 py-2 rounded-lg bg-[rgb(var(--mgt-primary))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-primary-700))] transition-colors">' + esc(submitLabel) + '</button>' +
+      '</div>' +
+    '</div>';
+    document.body.appendChild(overlay);
+    if (window.lucide) lucide.createIcons();
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) closeModal(overlay);
+      if (e.target && e.target.closest && e.target.closest('[data-close]')) closeModal(overlay);
+      if (e.target && e.target.closest && e.target.closest('[data-submit]')) { onSubmit(overlay); }
+    });
+    return overlay;
+  }
+
+  function field(label, inputHtml) {
+    return '<label class="block"><span class="caption font-medium text-[rgb(var(--mgt-foreground))]">' + esc(label) + '</span>' + inputHtml + '</label>';
+  }
+  function textInput(name, value, placeholder) {
+    return '<input name="' + name + '" type="text" value="' + esc(value || '') + '" placeholder="' + esc(placeholder || '') + '" class="mt-1 w-full px-3 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg text-[rgb(var(--mgt-foreground))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)]">';
+  }
+  function numberInput(name, value, placeholder) {
+    return '<input name="' + name + '" type="number" min="0" value="' + (value == null ? '' : value) + '" placeholder="' + esc(placeholder || '') + '" class="mt-1 w-full px-3 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg text-[rgb(var(--mgt-foreground))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)]">';
+  }
+  function categorySelect(name, selected) {
+    var opts = '<option value="">— Choisir —</option>';
+    CATS.forEach(function (c) { opts += '<option value="' + c.id + '"' + (c.id === selected ? ' selected' : '') + '>' + esc(c.label) + '</option>'; });
+    return '<select name="' + name + '" class="mt-1 w-full px-3 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg text-[rgb(var(--mgt-foreground))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)]">' + opts + '</select>';
+  }
+
+  function openForm(item) {
+    var isEdit = !!item;
+    var body = '<div class="grid grid-cols-1 gap-4">' +
+      field('Nom du produit', textInput('name', item ? item.name : '', 'Ex. Shampoing hydratant')) +
+      field('Catégorie', categorySelect('category', item ? item.category : '')) +
+      '<div class="grid grid-cols-2 gap-4">' +
+        field('Stock', numberInput('stock', item ? item.stock : 0, '0')) +
+        field('Seuil', numberInput('threshold', item ? item.threshold : 0, '0')) +
+      '</div>' +
+      '<div class="grid grid-cols-2 gap-4">' +
+        field('Unité', textInput('unit', item ? item.unit : 'unité', 'unité')) +
+        field('Fournisseur', textInput('supplier', item ? item.supplier : '', 'Nom du fournisseur')) +
+      '</div>' +
+      '<div class="grid grid-cols-2 gap-4">' +
+        field('Prix d\'achat (FCFA)', numberInput('costPrice', item ? item.costPrice : 0, '0')) +
+        field('Prix de vente (FCFA)', numberInput('salePrice', item ? item.salePrice : 0, '0')) +
+      '</div>' +
+    '</div>';
+
+    modalShell(isEdit ? 'Modifier la référence' : 'Nouvelle référence', body, 'Enregistrer', function (overlay) {
+      var get = function (n) { var el = overlay.querySelector('[name="' + n + '"]'); return el ? el.value : ''; };
+      var name = String(get('name')).trim();
+      if (!name) { toast('Le nom est requis.'); return; }
+      var payload = {
+        id: isEdit ? item.id : undefined,
+        name: name,
+        category: get('category') || 'accessoires',
+        stock: Math.max(0, parseInt(get('stock'), 10) || 0),
+        threshold: Math.max(0, parseInt(get('threshold'), 10) || 0),
+        unit: get('unit') || 'unité',
+        costPrice: parseFloat(get('costPrice')) || 0,
+        salePrice: parseFloat(get('salePrice')) || 0,
+        supplier: get('supplier') || '',
+        vendorId: vendorId,
+        vendorName: vendorName
+      };
+      MI.api.save(payload).then(function () {
+        closeModal(overlay);
+        reload().then(function () { toast(isEdit ? 'Référence modifiée.' : 'Référence ajoutée.'); });
+      }).catch(function () { toast('Erreur lors de l\'enregistrement.'); });
+    });
+  }
+
+  function openReappro(itemId, presetSource) {
+    var item = itemId ? findItem(itemId) : null;
+    var opts = '<option value="">— Choisir un produit —</option>';
+    items.forEach(function (x) { opts += '<option value="' + esc(x.id) + '"' + (item && x.id === item.id ? ' selected' : '') + '>' + esc(x.name) + '</option>'; });
+
+    // Source verrouillée ou laissée au choix selon le bouton d'origine.
+    var isLocked = presetSource === 'local' || presetSource === 'international';
+    var sourceField;
+    if (isLocked) {
+      var srcLabel = presetSource === 'international' ? 'Import international' : 'Approvisionnement local';
+      sourceField = '<div class="mt-1 flex items-center justify-between px-3 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg text-[rgb(var(--mgt-foreground))]">' +
+        '<span class="flex items-center gap-2"><i data-lucide="lock" class="w-3.5 h-3.5 text-[rgb(var(--mgt-muted-foreground))]"></i>' + esc(srcLabel) + '</span>' +
+        '<input type="hidden" name="source" value="' + esc(presetSource) + '">' +
+      '</div>';
+    } else {
+      sourceField = '<select name="source" class="mt-1 w-full px-3 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg text-[rgb(var(--mgt-foreground))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)]"><option value="local">Local</option><option value="international">International</option></select>';
+    }
+
+    var body = '<div class="grid grid-cols-1 gap-4">' +
+      field('Produit', '<select name="itemId" class="mt-1 w-full px-3 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg text-[rgb(var(--mgt-foreground))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)]">' + opts + '</select>') +
+      '<div class="grid grid-cols-2 gap-4">' +
+        field('Quantité', numberInput('quantity', 10, '0')) +
+        field('Source', sourceField) +
+      '</div>' +
+      field('Fournisseur', textInput('supplier', item ? item.supplier : '', 'Nom du fournisseur')) +
+    '</div>';
+
+    modalShell('Réapprovisionner', body, 'Confirmer', function (overlay) {
+      var get = function (n) { var el = overlay.querySelector('[name="' + n + '"]'); return el ? el.value : ''; };
+      var itemIdSel = get('itemId');
+      if (!itemIdSel) { toast('Choisissez un produit.'); return; }
+      var quantity = Math.max(1, parseInt(get('quantity'), 10) || 1);
+      var supplier = get('supplier') || 'Réapprovisionnement';
+      var source = get('source') === 'international' ? 'Import international' : 'Approvisionnement local';
+      MI.api.addMovement({ itemId: itemIdSel, type: 'entree', quantity: quantity, reason: supplier + ' · ' + source }).then(function () {
+        closeModal(overlay);
+        reload().then(function () { toast('Stock réapprovisionné (+' + quantity + ').'); });
+      }).catch(function () { toast('Erreur lors du réapprovisionnement.'); });
+    });
+  }
+
+  /* ---------- Bindings ---------- */
+  function refreshFilterButtons() {
+    var btns = filterWrap ? filterWrap.querySelectorAll('[data-filter]') : [];
+    Array.prototype.forEach.call(btns, function (b) {
+      var on = b.getAttribute('data-filter') === activeFilter;
+      b.style.background = on ? 'rgb(var(--mgt-primary))' : 'rgb(var(--mgt-muted))';
+      b.style.color = on ? 'rgb(var(--mgt-primary-foreground))' : 'rgb(var(--mgt-muted-foreground))';
+    });
+  }
+
+  function bind() {
+    if (filterWrap) filterWrap.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('[data-filter]') : null;
+      if (!b) return;
+      activeFilter = b.getAttribute('data-filter');
+      refreshFilterButtons();
+      renderTable();
+    });
+
+    if (catSelect) {
+      CATS.forEach(function (c) {
+        var o = document.createElement('option');
+        o.value = c.id;
+        o.textContent = c.label;
+        catSelect.appendChild(o);
+      });
+      catSelect.addEventListener('change', function () { activeCategory = catSelect.value; renderTable(); });
+    }
+
+    if (searchInput) searchInput.addEventListener('input', renderTable);
+    if (searchMobile) searchMobile.addEventListener('input', renderTable);
+
+    if (tbody) tbody.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('[data-act]') : null;
+      if (!b) return;
+      var id = b.getAttribute('data-id');
+      var act = b.getAttribute('data-act');
+      if (act === 'step') stepStock(id, parseInt(b.getAttribute('data-delta'), 10));
+      else if (act === 'reappro') openReappro(id);
+      else if (act === 'edit') openForm(findItem(id));
+      else if (act === 'del') removeItem(id);
+    });
+
+    var btnNewItem = document.getElementById('btn-new-item');
+    if (btnNewItem) btnNewItem.addEventListener('click', function () { openForm(null); });
+
+    var btnNewOrder = document.getElementById('btn-new-order');
+    if (btnNewOrder) btnNewOrder.addEventListener('click', function () { openReappro(null); });
+
+    var sourceBtns = document.querySelectorAll('.btn-source');
+    Array.prototype.forEach.call(sourceBtns, function (b) {
+      b.addEventListener('click', function () {
+        var src = b.getAttribute('data-source') === 'international' ? 'international' : 'local';
+        openReappro(null, src);
+      });
+    });
+  }
+
+  refreshFilterButtons();
+  bind();
+  renderReapproOrders();
+  reload().catch(function () {
+    if (tbody) tbody.innerHTML = '';
+    if (emptyEl) { emptyEl.classList.remove('hidden'); emptyEl.textContent = 'Impossible de charger l\'inventaire.'; }
+    if (movementsEl) movementsEl.innerHTML = '<p class="caption text-[rgb(var(--mgt-muted-foreground))]">Impossible de charger les mouvements.</p>';
+    renderReapproOrders();
+  });
+})();
+</script>
+
+<script>
+(function(){
+  function __mgtSidebarScrollFix(){
+    var active = document.querySelector('nav a[class*="bg-white/15"]');
+    if (!active) return;
+    var nav = active.closest('nav');
+    if (!nav) return;
+    var navRect = nav.getBoundingClientRect();
+    var linkRect = active.getBoundingClientRect();
+    var target = nav.scrollTop + (linkRect.top - navRect.top) - (navRect.height - linkRect.height) / 2;
+    nav.scrollTop = Math.max(0, target);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', __mgtSidebarScrollFix);
+  } else {
+    __mgtSidebarScrollFix();
+  }
+})();
+</script>
+
+<script src="../assets/mangoo-dashboard-shell.js"></script>
+</body>
+</html>

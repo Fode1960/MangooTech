@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paiement - MangooTech</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  /* --- Radius Scale (root-level for preflight) --- */
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  /* --- Brand Primary: Dark Green --- */
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  /* --- Orange Accent (CTAs, highlights) --- */
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  /* --- Neutral Surface & Text Scale --- */
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  /* --- State Colors --- */
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  /* --- Shadows --- */
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  /* --- Typography --- */
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* --- Semantic Tailwind Aliases --- */
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+/* --- Typography Classes --- */
+.h-display {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.h1 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(28px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.h2 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h3 {
+  font-family: var(--mgt-font-sans);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.body-l {
+  font-family: var(--mgt-font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--mgt-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--mgt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+
+<!-- ===== HEADER / NAVIGATION ===== -->
+<header class="sticky top-0 z-50 w-full border-b shadow-sm" style="background-color: rgb(var(--mgt-primary)); border-color: rgb(var(--mgt-primary-700)); box-shadow: var(--mgt-shadow-sm);">
+  <div class="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-3">
+    <a href="accueil.html" class="flex items-center gap-3 no-underline" style="color: rgb(var(--mgt-primary-foreground));">
+      <img src="../assets/favicon.png" alt="MangooTech Logo" class="h-10 w-10 rounded-md" style="border-radius: var(--mgt-radius-md);">
+      <span class="text-xl font-semibold tracking-tight" style="font-family: var(--mgt-font-sans);">MangooTech</span>
+    </a>
+    <nav class="hidden items-center gap-6 md:flex">
+      <a href="carte.html" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">Boutique &amp; Prestataires</a>
+      <a href="./comparatif-prestataire-boutique.html" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">Comparatif</a>
+      <a href="accueil.html#a-propos" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">A propos</a>
+      <a href="./auth.html" class="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Connexion</a>
+    </nav>
+    <button class="block md:hidden p-2 rounded-md" style="color: rgb(var(--mgt-primary-foreground));" aria-label="Menu">
+      <i data-lucide="menu" class="h-6 w-6"></i>
+    </button>
+  </div>
+</header>
+
+<!-- ===== PROGRESS STEPS BAR ===== -->
+<div class="w-full" style="background-color: rgb(var(--mgt-muted)); border-bottom: 1px solid rgb(var(--mgt-border));">
+  <div class="mx-auto max-w-[1200px] px-6 py-4">
+    <div class="flex items-center justify-center gap-0">
+      <!-- Step 1: Panier (completed) -->
+      <div class="flex items-center gap-2">
+        <span class="flex items-center justify-center w-8 h-8 rounded-full text-xs font-semibold" style="background-color: rgb(var(--mgt-success)); color: rgb(var(--mgt-success-foreground)); font-family: var(--mgt-font-sans);">
+          <i data-lucide="check" class="h-4 w-4"></i>
+        </span>
+        <span class="hidden sm:inline text-sm font-medium" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Panier</span>
+      </div>
+      <!-- Connector 1 -->
+      <div class="flex-1 mx-3 h-0.5 max-w-[80px]" style="background-color: rgb(var(--mgt-success));"></div>
+      <!-- Step 2: Livraison (completed) -->
+      <div class="flex items-center gap-2">
+        <span class="flex items-center justify-center w-8 h-8 rounded-full text-xs font-semibold" style="background-color: rgb(var(--mgt-success)); color: rgb(var(--mgt-success-foreground)); font-family: var(--mgt-font-sans);">
+          <i data-lucide="check" class="h-4 w-4"></i>
+        </span>
+        <span class="hidden sm:inline text-sm font-medium" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Livraison</span>
+      </div>
+      <!-- Connector 2 -->
+      <div class="flex-1 mx-3 h-0.5 max-w-[80px]" style="background-color: rgb(var(--mgt-accent));"></div>
+      <!-- Step 3: Paiement (active) -->
+      <div class="flex items-center gap-2">
+        <span class="flex items-center justify-center w-9 h-9 rounded-full text-xs font-semibold ring-2 ring-offset-1" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); font-family: var(--mgt-font-sans); --tw-ring-color: rgb(var(--mgt-accent)); --tw-ring-offset-color: rgb(var(--mgt-muted));">3</span>
+        <span class="hidden sm:inline text-sm font-semibold" style="color: rgb(var(--mgt-accent)); font-family: var(--mgt-font-sans);">Paiement</span>
+      </div>
+      <!-- Connector 3 -->
+      <div class="flex-1 mx-3 h-0.5 max-w-[80px]" style="background-color: rgb(var(--mgt-border));"></div>
+      <!-- Step 4: Confirmation (pending) -->
+      <div class="flex items-center gap-2">
+        <span class="flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium" style="background-color: rgb(var(--mgt-border)); color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">4</span>
+        <span class="hidden sm:inline text-sm font-medium" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Confirmation</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="mx-auto max-w-[1200px] px-6 py-10">
+  <div class="grid gap-8 lg:grid-cols-[1fr_400px]">
+
+    <!-- ===== LEFT COLUMN (60%) ===== -->
+    <div class="flex flex-col gap-8">
+
+      <!-- Shipping Address -->
+      <section class="rounded-lg p-6" style="background-color: rgb(var(--mgt-card)); border: 1px solid rgb(var(--mgt-border)); box-shadow: var(--mgt-shadow-sm); border-radius: var(--mgt-radius-md);">
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <h3 class="h3" style="color: rgb(var(--mgt-foreground));">Adresse de livraison</h3>
+          </div>
+          <button id="checkout-edit-address" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer" style="color: rgb(var(--mgt-primary)); background-color: rgb(var(--mgt-primary-50)); border: 1px solid rgb(var(--mgt-primary-200)); border-radius: var(--mgt-radius-sm); font-family: var(--mgt-font-sans);">
+            <i data-lucide="pencil" class="h-3.5 w-3.5"></i> Modifier
+          </button>
+        </div>
+        <div id="checkout-address-selector" class="mb-3 hidden">
+          <label class="block text-xs font-medium mb-1" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Adresse enregistree</label>
+          <select id="checkout-saved-address" class="h-10 px-3 rounded-md text-sm outline-none cursor-pointer" style="border: 1px solid rgb(var(--mgt-input)); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); min-width: 100%;"></select>
+        </div>
+        <div class="flex items-start gap-3 p-4 rounded-md" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-sm);">
+          <i data-lucide="map-pin" class="h-5 w-5 mt-0.5 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i>
+          <div id="checkout-address-display">
+            <p class="body font-medium" style="color: rgb(var(--mgt-foreground));">Dakar Plateau</p>
+            <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Avenue Cheikh Anta Diop, Immeuble ABC, Appt. 3B</p>
+            <p class="caption mt-1" style="color: rgb(var(--mgt-muted-foreground));">Dakar, Senegal &#xb7; 10300</p>
+            <p class="caption mt-1 flex items-center gap-1" style="color: rgb(var(--mgt-muted-foreground));">
+              <i data-lucide="clock" class="h-3.5 w-3.5"></i> Livraison prevue: <strong style="color: rgb(var(--mgt-foreground));">Samedi a 12h</strong>
+            </p>
+          </div>
+        </div>
+        <div class="mt-4 p-4 rounded-md flex items-center justify-between gap-3 flex-wrap" style="background-color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-sm);">
+          <div class="flex items-center gap-2">
+            <i data-lucide="truck" class="h-4 w-4" style="color: rgb(var(--mgt-primary));"></i>
+            <span class="caption font-semibold" style="color: rgb(var(--mgt-primary-700)); font-family: var(--mgt-font-sans);">Mode de livraison</span>
+            <span id="delivery-mode-auto-badge" class="caption" style="color: rgb(var(--mgt-primary-700)); font-family: var(--mgt-font-sans);"></span>
+          </div>
+          <select id="delivery-mode-select" class="h-10 px-3 rounded-md text-sm outline-none cursor-pointer" style="border: 1px solid rgb(var(--mgt-input)); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); min-width: 210px;"></select>
+        </div>
+      </section>
+
+      <!-- Payment Methods -->
+      <section class="rounded-lg p-6" style="background-color: rgb(var(--mgt-card)); border: 1px solid rgb(var(--mgt-border)); box-shadow: var(--mgt-shadow-sm); border-radius: var(--mgt-radius-md);">
+        <h3 class="h3 mb-5" style="color: rgb(var(--mgt-foreground));">Methode de paiement</h3>
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Orange Money (active) -->
+          <label class="relative flex flex-col items-center gap-2 p-4 rounded-lg cursor-pointer transition-all" style="border: 2px solid rgb(var(--mgt-accent)); background-color: rgb(var(--mgt-accent-50)); border-radius: var(--mgt-radius-md);">
+            <input type="radio" name="payment_method" value="orange-money" checked class="sr-only">
+            <div class="text-lg font-semibold" style="color: rgb(var(--mgt-accent-500)); font-family: var(--mgt-font-sans);">Orange Money</div>
+            <div class="flex items-center justify-center w-10 h-10 rounded-full" style="background-color: rgb(var(--mgt-accent-100));">
+              <i data-lucide="smartphone" class="h-5 w-5" style="color: rgb(var(--mgt-accent-500));"></i>
+            </div>
+            <span class="caption" style="color: rgb(var(--mgt-accent-500));">Selectionne</span>
+          </label>
+          <!-- Wave -->
+          <label class="relative flex flex-col items-center gap-2 p-4 rounded-lg cursor-pointer transition-all hover:shadow-md" style="border: 1px solid rgb(var(--mgt-border)); background-color: rgb(var(--mgt-card)); border-radius: var(--mgt-radius-md);">
+            <input type="radio" name="payment_method" value="wave" class="sr-only">
+            <div class="text-lg font-semibold" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Wave</div>
+            <div class="flex items-center justify-center w-10 h-10 rounded-full" style="background-color: rgb(var(--mgt-muted));">
+              <i data-lucide="smartphone" class="h-5 w-5" style="color: rgb(var(--mgt-muted-foreground));"></i>
+            </div>
+            <span class="caption" style="color: rgb(var(--mgt-muted-foreground));">Mobile Money</span>
+          </label>
+          <!-- MTN Mobile Money -->
+          <label class="relative flex flex-col items-center gap-2 p-4 rounded-lg cursor-pointer transition-all hover:shadow-md" style="border: 1px solid rgb(var(--mgt-border)); background-color: rgb(var(--mgt-card)); border-radius: var(--mgt-radius-md);">
+            <input type="radio" name="payment_method" value="mtn" class="sr-only">
+            <div class="text-lg font-semibold" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">MTN Mobile Money</div>
+            <div class="flex items-center justify-center w-10 h-10 rounded-full" style="background-color: rgb(var(--mgt-muted));">
+              <i data-lucide="smartphone" class="h-5 w-5" style="color: rgb(var(--mgt-muted-foreground));"></i>
+            </div>
+            <span class="caption" style="color: rgb(var(--mgt-muted-foreground));">MoMo</span>
+          </label>
+          <!-- Carte bancaire -->
+          <label class="relative flex flex-col items-center gap-2 p-4 rounded-lg cursor-pointer transition-all hover:shadow-md" style="border: 1px solid rgb(var(--mgt-border)); background-color: rgb(var(--mgt-card)); border-radius: var(--mgt-radius-md);">
+            <input type="radio" name="payment_method" value="card" class="sr-only">
+            <div class="text-lg font-semibold" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Carte bancaire</div>
+            <div class="flex items-center justify-center w-10 h-10 rounded-full" style="background-color: rgb(var(--mgt-muted));">
+              <i data-lucide="credit-card" class="h-5 w-5" style="color: rgb(var(--mgt-muted-foreground));"></i>
+            </div>
+            <span class="caption" style="color: rgb(var(--mgt-muted-foreground));">Visa / Mastercard</span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Orange Money Payment Form -->
+      <section class="rounded-lg p-6" style="background-color: rgb(var(--mgt-card)); border: 1px solid rgb(var(--mgt-border)); box-shadow: var(--mgt-shadow-sm); border-radius: var(--mgt-radius-md);">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="flex items-center justify-center w-8 h-8 rounded-full" style="background-color: rgb(var(--mgt-accent-100));">
+            <i data-lucide="smartphone" class="h-4 w-4" style="color: rgb(var(--mgt-accent-500));"></i>
+          </div>
+          <h3 class="h3" style="color: rgb(var(--mgt-foreground));">Paiement Orange Money</h3>
+        </div>
+        <div class="flex flex-col gap-5">
+          <!-- Phone Number -->
+          <div class="flex flex-col gap-1.5">
+            <label for="phone" class="body font-medium" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Numero de telephone</label>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">+221</span>
+              <input type="tel" id="phone" value="78 123 45 67" class="w-full h-11 pl-16 pr-4 rounded-md body transition-all outline-none" style="border: 1px solid rgb(var(--mgt-input)); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);" placeholder="77 123 45 67">
+            </div>
+            <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Saisissez le numero associe a votre compte Orange Money</p>
+          </div>
+          <!-- Secret Code -->
+          <div class="flex flex-col gap-1.5">
+            <label for="secret-code" class="body font-medium" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Code secret</label>
+            <div class="relative">
+              <input type="password" id="secret-code" class="w-full h-11 px-4 rounded-md body transition-all outline-none" style="border: 1px solid rgb(var(--mgt-input)); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);" placeholder="&#x2022;&#x2022;&#x2022;&#x2022;">
+              <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer" aria-label="Afficher le code" style="color: rgb(var(--mgt-muted-foreground));">
+                <i data-lucide="eye-off" class="h-4 w-4"></i>
+              </button>
+            </div>
+            <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Code secret a 4 chiffres</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===== RIGHT COLUMN (40%) ===== -->
+    <aside class="flex flex-col gap-6">
+      <!-- Order Summary -->
+      <div class="sticky top-[88px] rounded-lg p-6" style="background-color: rgb(var(--mgt-card)); border: 1px solid rgb(var(--mgt-border)); box-shadow: var(--mgt-shadow-sm); border-radius: var(--mgt-radius-md);">
+        <h3 class="h3 mb-5" style="color: rgb(var(--mgt-foreground));">Resume de la commande</h3>
+
+        <!-- Order Item -->
+        <div class="flex gap-4 pb-5 mb-5" style="border-bottom: 1px solid rgb(var(--mgt-border));">
+          <div class="flex-shrink-0 w-16 h-16 rounded-md overflow-hidden" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-sm);">
+            <div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:rgb(var(--mgt-muted));border-radius:4px"><i data-lucide="chef-hat" style="width:24px;height:24px;color:rgb(var(--mgt-primary))"></i></div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="body font-semibold truncate" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">DAN Boutique</p>
+            <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Thieboudienne royal</p>
+            <div class="flex items-center justify-between mt-1">
+              <span class="caption" style="color: rgb(var(--mgt-muted-foreground));">x6 pers.</span>
+              <span class="body font-semibold tabular-nums" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">21 000 FCFA</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Price Breakdown -->
+        <div class="flex flex-col gap-3 pb-5 mb-5" style="border-bottom: 1px solid rgb(var(--mgt-border));">
+          <div class="flex items-center justify-between">
+            <span class="body" style="color: rgb(var(--mgt-muted-foreground));">Sous-total</span>
+            <span class="body tabular-nums" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">21 000 FCFA</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="body" style="color: rgb(var(--mgt-muted-foreground));">Frais de service</span>
+            <span class="body tabular-nums" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">500 FCFA</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="body" style="color: rgb(var(--mgt-muted-foreground));">Livraison</span>
+            <span class="body tabular-nums" style="color: rgb(var(--mgt-success)); font-family: var(--mgt-font-sans);">Gratuite</span>
+          </div>
+        </div>
+
+        <!-- Total -->
+        <div class="flex items-center justify-between mb-6">
+          <span class="body-l font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Total</span>
+          <span class="body-l font-bold tabular-nums" style="color: rgb(var(--mgt-primary)); font-family: var(--mgt-font-sans);">21 500 FCFA</span>
+        </div>
+
+        <!-- Pay Button -->
+        <button id="pay-btn" class="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-md text-base font-semibold transition-all cursor-pointer hover:-translate-y-0.5" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: 0 2px 8px rgba(232 97 12 / .3);">
+          <i data-lucide="lock" class="h-4 w-4"></i> <span id="pay-btn-label">Payer 21 500 FCFA</span>
+        </button>
+
+        <!-- Security & Guarantee -->
+        <div class="flex items-center justify-center gap-6 mt-5 pt-5" style="border-top: 1px solid rgb(var(--mgt-border));">
+          <div class="flex items-center gap-1.5">
+            <i data-lucide="shield-check" class="h-4 w-4" style="color: rgb(var(--mgt-success));"></i>
+            <span class="caption" style="color: rgb(var(--mgt-muted-foreground));">Paiement securise</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <i data-lucide="rotate-ccw" class="h-4 w-4" style="color: rgb(var(--mgt-success));"></i>
+            <span class="caption" style="color: rgb(var(--mgt-muted-foreground));">Garantie remboursement</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</main>
+
+<script>lucide.createIcons();</script>
+
+<script>
+(function () {
+  'use strict';
+  var btn = document.getElementById('pay-btn');
+  var label = document.getElementById('pay-btn-label');
+  if (!btn || !label) return;
+
+  var totalText = label.textContent.replace(/^\s*Payer\s*/i, '') || 'la commande';
+  var baseLabel = 'Payer ' + totalText;
+
+  btn.addEventListener('click', function () {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    label.textContent = 'Paiement en cours…';
+
+    // Simulation de paiement (démo). En production, cette étape sera remplacée
+    // par l'appel au backend de paiement (mobile money / carte) puis la
+    // création de la commande. Ici, on enchaîne directement sur le suivi.
+    setTimeout(function () {
+      label.textContent = 'Paiement confirmé ✓';
+      btn.style.background = 'rgb(var(--mgt-primary))';
+      setTimeout(function () {
+        window.location.href = 'delivery-track.html';
+      }, 650);
+    }, 1100);
+  });
+})();
+</script>
+
+<style id="critical-layout">
+  /* Input focus ring */
+  input[type="tel"]:focus,
+  input[type="password"]:focus {
+    border-color: rgb(var(--mgt-ring));
+    box-shadow: 0 0 0 3px rgba(26, 92, 42, .12);
+  }
+  /* Payment method radio card active state via CSS */
+  .payment-radio-label:has(input:checked) {
+    border-color: rgb(var(--mgt-accent));
+    background-color: rgb(var(--mgt-accent-50));
+  }
+  /* Smooth hover transitions */
+  label[for] {
+    transition: all .2s ease;
+  }
+  /* Prevent sticky overlap on mobile */
+  @media (max-width: 1023px) {
+    aside .sticky {
+      position: static;
+    }
+  }
+</style>
+<!-- Mobile responsive navigation & layout -->
+<style id="mgt-mobile-responsive">
+@media (max-width: 768px) {
+  .dashboard-layout { flex-direction: column !important; }
+  .dashboard-sidebar { position: fixed !important; top: 0; left: 0; z-index: 1000; width: 260px !important; height: 100vh !important; transform: translateX(-100%); transition: transform .3s ease; overflow-y: auto; }
+  .dashboard-sidebar.open { transform: translateX(0); }
+  .dashboard-sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999; }
+  .dashboard-sidebar-overlay.show { display: block; }
+  .dashboard-main { margin-left: 0 !important; width: 100% !important; }
+  .dashboard-topbar { position: sticky; top: 0; z-index: 100; }
+  .mobile-menu-btn { display: flex !important; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: pointer; color: inherit; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .services-grid, .favorites-grid, .features-grid, .booster-grid { grid-template-columns: 1fr !important; }
+  .data-table { display: block !important; }
+  .data-table thead { display: none !important; }
+  .data-table tbody, .data-table tr { display: block !important; }
+  .data-table td { display: flex !important; justify-content: space-between; align-items: center; padding: 8px 12px !important; border-bottom: 1px solid rgb(var(--mgt-border)) !important; }
+  .data-table td::before { content: attr(data-label); font-weight: 600; font-size: 12px; color: rgb(var(--mgt-muted-foreground)); text-transform: uppercase; margin-right: 8px; flex-shrink: 0; }
+  .topbar-search { display: none !important; }
+  .topbar-title { font-size: 18px !important; }
+  .hero-section { padding: 40px 16px !important; text-align: center; }
+  .hero-section h1, .hero-section .h-display { font-size: 28px !important; }
+  .hero-section h1 + p { font-size: 15px !important; }
+  .hero-ctas { flex-direction: column !important; align-items: center !important; gap: 12px !important; }
+  .auth-split { flex-direction: column !important; }
+  .auth-branding { min-height: 200px !important; padding: 32px 16px !important; }
+  .auth-form-area { padding: 24px 16px !important; }
+  .checkout-layout { flex-direction: column !important; }
+  .checkout-main { width: 100% !important; }
+  .checkout-sidebar { width: 100% !important; }
+  .chat-layout { flex-direction: column !important; height: auto !important; }
+  .chat-sidebar { width: 100% !important; max-height: 200px !important; }
+  .chat-main { width: 100% !important; }
+  .filter-pills { flex-wrap: nowrap !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+  .drawer-panel { width: 100% !important; max-width: 100% !important; }
+  .content-section { padding-left: 16px !important; padding-right: 16px !important; }
+  .section-padding { padding: 32px 16px !important; }
+  .form-grid { grid-template-columns: 1fr !important; }
+  .form-actions { flex-direction: column !important; }
+  .desktop-only { display: none !important; }
+  .map-container { height: 300px !important; }
+}
+@media (min-width: 769px) {
+  .mobile-menu-btn { display: none !important; }
+  .mobile-only { display: none !important; }
+}
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr !important; }
+  .stats-row { grid-template-columns: 1fr !important; }
+}
+</style>
+<script>
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    var sidebar = document.querySelector('.dashboard-sidebar');
+    if (!sidebar) return;
+    var overlay = document.createElement('div');
+    overlay.className = 'dashboard-sidebar-overlay';
+    overlay.addEventListener('click', function(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); });
+    document.body.appendChild(overlay);
+    var topbar = document.querySelector('.dashboard-topbar');
+    if (topbar) {
+      var btn = document.createElement('button');
+      btn.className = 'mobile-menu-btn';
+      btn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+      btn.addEventListener('click', function(){ sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
+      topbar.insertBefore(btn, topbar.firstChild);
+    }
+    sidebar.querySelectorAll('a').forEach(function(link){
+      link.addEventListener('click', function(){
+        if (window.innerWidth <= 768) { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+      });
+    });
+  });
+})();
+</script>
+<script src="../assets/mangoo-connect-plus.js"></script>
+<script>
+(function () {
+  // Mode de livraison auto-détecté depuis la catégorie, mais modifiable :
+  // catégorie "restaurant" -> Mangoo Express+ · Nourriture · Moto.
+  if (!window.MangooExpress) return;
+  var select = document.getElementById('delivery-mode-select');
+  if (!select) return;
+
+  var autoType = MangooExpress.fromCategory('restaurant');
+  var TYPES = MangooExpress.TYPES;
+  select.innerHTML = '';
+  Object.keys(TYPES).forEach(function (key) {
+    var t = TYPES[key];
+    var opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = t.label + ' · ' + t.vehicle;
+    select.appendChild(opt);
+  });
+  select.value = autoType;
+
+  var badge = document.getElementById('delivery-mode-auto-badge');
+  function syncBadge() {
+    if (!badge) return;
+    if (select.value === autoType) {
+      badge.textContent = '· auto';
+      badge.style.color = 'rgb(var(--mgt-primary-700))';
+    } else {
+      badge.textContent = '· modifié';
+      badge.style.color = 'rgb(var(--mgt-accent))';
+    }
+  }
+  select.addEventListener('change', syncBadge);
+  syncBadge();
+})();
+</script>
+<script src="../assets/mangoo-client-data.js"></script>
+<script>
+(function () {
+  'use strict';
+  var MC = window.MangooClient;
+  if (!MC) return;
+
+  var display = document.getElementById('checkout-address-display');
+  var selector = document.getElementById('checkout-address-selector');
+  var select = document.getElementById('checkout-saved-address');
+  var editBtn = document.getElementById('checkout-edit-address');
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+
+  function renderAddress(a) {
+    if (!display) return;
+    if (!a) {
+      display.innerHTML = '<p class="body font-medium" style="color: rgb(var(--mgt-foreground));">Aucune adresse enregistree</p>' +
+        '<p class="caption mt-1" style="color: rgb(var(--mgt-muted-foreground));">Ajoutez une adresse depuis votre espace client.</p>';
+      return;
+    }
+    display.innerHTML =
+      '<p class="body font-medium" style="color: rgb(var(--mgt-foreground));">' + esc(a.label) + '</p>' +
+      '<p class="caption" style="color: rgb(var(--mgt-muted-foreground));">' + esc(a.line1) + '</p>' +
+      '<p class="caption mt-1" style="color: rgb(var(--mgt-muted-foreground));">' + esc(a.city) + (a.city ? ', Senegal' : '') + '</p>' +
+      '<p class="caption mt-1" style="color: rgb(var(--mgt-muted-foreground));">' + esc(a.phone) + '</p>';
+  }
+
+  function populate() {
+    var list = MC.getAddresses();
+    if (!select) return;
+    select.innerHTML = '';
+    list.forEach(function (a) {
+      var opt = document.createElement('option');
+      opt.value = a.id;
+      opt.textContent = a.label + ' — ' + a.line1 + (a.city ? ', ' + a.city : '');
+      select.appendChild(opt);
+    });
+    if (selector && list.length > 1) selector.classList.remove('hidden');
+    var def = MC.getDefaultAddress();
+    if (def) select.value = def.id;
+    renderAddress(def);
+  }
+
+  if (select) select.addEventListener('change', function () {
+    var a = MC.getAddresses().find(function (x) { return x.id === select.value; });
+    renderAddress(a);
+  });
+  if (editBtn) editBtn.addEventListener('click', function () {
+    if (selector) selector.classList.toggle('hidden');
+    if (selector && !selector.classList.contains('hidden') && select) select.focus();
+  });
+
+  populate();
+})();
+</script>
+
+<script src="../assets/mangoo-public-nav.js"></script>
+</body>
+</html>
