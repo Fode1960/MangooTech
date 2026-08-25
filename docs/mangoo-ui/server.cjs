@@ -5037,8 +5037,10 @@ function handleHttp(req, res) {
   }
 
   if (urlPath === '/') {
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(landingHtml());
+    // La page d'accueil publique est `pages/accueil.html` (elle contient déjà
+    // les liens Connexion / Inscription). Redirection permanente pour le SEO.
+    res.writeHead(301, { 'Location': '/pages/accueil.html', 'Cache-Control': 'no-store' });
+    res.end();
     return;
   }
   if (urlPath === '/favicon.ico') {

@@ -407,7 +407,7 @@ html.dark {
       <!-- Empty state : aucun résultat après filtres -->
       <div id="empty-state" class="hidden self-stretch items-center gap-3 px-4 py-3 rounded-md border" style="background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); box-shadow: var(--mgt-shadow-sm); font-family: var(--mgt-font-sans);">
         <i data-lucide="search-x" class="h-5 w-5 flex-shrink-0" style="color: rgb(var(--mgt-muted-foreground));"></i>
-        <span class="flex-1 text-sm" style="color: rgb(var(--mgt-muted-foreground));">Aucun commerce ne correspond a vos criteres.</span>
+        <span id="empty-state-text" class="flex-1 text-sm" style="color: rgb(var(--mgt-muted-foreground));">Aucun commerce ne correspond a vos criteres.</span>
         <button id="empty-reset" class="px-3 py-1.5 text-xs font-semibold rounded-full border-0 cursor-pointer transition-all hover:brightness-105 whitespace-nowrap" style="background: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Reinitialiser</button>
       </div>
     </div>
@@ -522,8 +522,18 @@ html.dark {
   // après chargement des profils réels.
   var CITIES = {};
 
+  var FALLBACK_CITIES = {
+    'Dakar': { lat: 14.7167, lng: -17.4677, country: 'Senegal' },
+    'Libreville': { lat: 0.4162, lng: 9.4673, country: 'Gabon' },
+    'Abidjan': { lat: 5.3599, lng: -4.0083, country: "Cote d'Ivoire" }
+  };
+
   function rebuildDerivedData() {
     CITIES = {};
+    // Villes de repli en premier : elles restent présentes même sans vendeurs.
+    Object.keys(FALLBACK_CITIES).forEach(function(city) {
+      CITIES[city] = FALLBACK_CITIES[city];
+    });
     vendors.forEach(function(v) {
       if (v.city && !CITIES[v.city]) CITIES[v.city] = { lat: v.lat, lng: v.lng, country: v.country };
     });
@@ -1520,17 +1530,17 @@ html.dark {
         if (detected) {
           userCity = detected.city;
           userCountry = detected.country;
-        } else {
-          userCity = null;
-          userCountry = null;
         }
+        // Si aucune ville connue n'est proche, on conserve la ville déjà
+        // sélectionnée (Dakar par défaut) plutôt que de basculer le sélecteur
+        // sur « Ma position (GPS) » et de perdre le contexte de l'utilisateur.
         lpScopeMode = 'nearby';
         resetRadiusToStart();
         placeUserMarker();
         if (opts.openPopup && userMarker) userMarker.openPopup();
 
-        // Reflète la ville détectée dans le sélecteur.
-        if (citySelect) citySelect.value = detected ? detected.city : '';
+        // Reflète la ville détectée dans le sélecteur (uniquement si connue).
+        if (citySelect && detected) citySelect.value = detected.city;
         updateCityToggleLabel();
 
         updateRadiusCircle();
@@ -1573,6 +1583,7 @@ html.dark {
   var liveOnly = false;
   var resultsCount = document.getElementById('results-count');
   var emptyState = document.getElementById('empty-state');
+  var emptyStateText = document.getElementById('empty-state-text');
   var emptyReset = document.getElementById('empty-reset');
 
   // Réinitialise tous les filtres de recherche (pas le scope ville/rayon).
@@ -1646,8 +1657,17 @@ html.dark {
       resultsCount.classList.add('hidden');
     }
 
-    // État vide : plus de marqueurs visibles après les filtres.
-    if (visibleCount === 0) {
+    // État vide : on distingue « aucun commerce enregistré » (message neutre,
+    // bouton de réinitialisation masqué car inutile) de « aucun résultat après
+    // filtres » (bouton de réinitialisation proposé pour revenir en arrière).
+    if (vendors.length === 0) {
+      if (emptyStateText) emptyStateText.textContent = 'Aucun commerce disponible pour le moment.';
+      if (emptyReset) emptyReset.classList.add('hidden');
+      emptyState.classList.remove('hidden');
+      emptyState.classList.add('flex');
+    } else if (visibleCount === 0) {
+      if (emptyStateText) emptyStateText.textContent = 'Aucun commerce ne correspond a vos criteres.';
+      if (emptyReset) emptyReset.classList.remove('hidden');
       emptyState.classList.remove('hidden');
       emptyState.classList.add('flex');
     } else {
