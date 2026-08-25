@@ -1637,6 +1637,19 @@ html.dark {
     applyFilters();
   });
 
+  // Recadre la carte pour faire apparaître un ensemble de marqueurs (utilisé
+  // lors d'une recherche : le résultat peut se trouver hors du viewport courant,
+  // par ex. une boutique à Paris alors que la carte est centrée sur Dakar).
+  function fitMapToMarkers(items) {
+    if (!items || !items.length) return;
+    var latlngs = items.map(function (it) { return [it.vendor.lat, it.vendor.lng]; });
+    if (latlngs.length === 1) {
+      map.setView(latlngs[0], Math.max(map.getZoom(), 14));
+    } else {
+      map.fitBounds(L.latLngBounds(latlngs), { padding: [60, 60], maxZoom: 15 });
+    }
+  }
+
   function applyFilters() {
     var searchTerm = searchInput.value.toLowerCase().trim();
     var catValue = filterCategory.value;
@@ -1646,6 +1659,7 @@ html.dark {
 
     var visibleCount = 0;
     var scopeCount = 0;
+    var visibleMarkers = [];
 
     markers.forEach(function(item) {
       var v = item.vendor;
@@ -1663,10 +1677,24 @@ html.dark {
       if (matchesScope && matchesSearch && matchesCategory && matchesType && matchesLive && matchesRating && matchesPrice) {
         item.marker.addTo(map);
         visibleCount++;
+        visibleMarkers.push(item);
       } else {
         item.marker.remove();
       }
     });
+
+    // Recentre la carte si au moins un résultat visible est hors du viewport
+    // courant : cas d'une recherche ciblée ou d'un scope qui n'affiche qu'un
+    // commerce éloigné du centre actuel (ex. boutique à Paris, carte à Dakar).
+    if (visibleMarkers.length) {
+      var currentBounds = map.getBounds();
+      var anyOffscreen = visibleMarkers.some(function (it) {
+        return !currentBounds.contains([it.vendor.lat, it.vendor.lng]);
+      });
+      if (anyOffscreen) {
+        fitMapToMarkers(visibleMarkers);
+      }
+    }
 
     // Découverte auto 5->10->25 km : élargit selon le nombre de commerces
     // réellement disponibles autour (indépendamment des filtres de recherche).
