@@ -480,6 +480,11 @@ html.dark {
               <label class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Email</label>
               <input class="mgt-input" type="email" data-profile="email" value="contact@chezamina.sn" readonly>
             </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Ville</label>
+              <input class="mgt-input" type="text" data-profile="city" list="mgt-city-suggestions" placeholder="Dakar" readonly>
+              <datalist id="mgt-city-suggestions"></datalist>
+            </div>
           </div>
         </section>
 
@@ -904,11 +909,39 @@ html.dark {
         });
       }
 
+      // Remplit la liste de suggestions de villes (datalist) depuis /api/cities,
+      // pour aider le vendeur/prestataire à choisir une ville géolocalisable.
+      function loadCitySuggestions() {
+        var dl = document.getElementById('mgt-city-suggestions');
+        if (!dl) return;
+        fetch('/api/cities', { headers: { 'Accept': 'application/json' }, cache: 'no-store' })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            var cities = (data && data.cities) ? data.cities : {};
+            // `value` = nom de ville seul (géolocalisable par le serveur),
+            // `label` = « Ville · Pays » pour lever les ambiguïtés à l'écran.
+            var seen = {};
+            dl.innerHTML = Object.keys(cities).map(function (k) {
+              return { city: cities[k].city, country: cities[k].country };
+            }).filter(function (c) {
+              var key = (c.city || '').toLowerCase();
+              if (!key || seen[key]) return false;
+              seen[key] = true;
+              return true;
+            }).sort(function (a, b) { return a.city.localeCompare(b.city, 'fr'); }).map(function (c) {
+              var label = (c.city + ' · ' + c.country).replace(/"/g, '&quot;');
+              return '<option value="' + c.city.replace(/"/g, '&quot;') + '" label="' + label + '"></option>';
+            }).join('');
+          })
+          .catch(function () { /* silencieux : le champ reste un texte libre */ });
+      }
+
       function syncIdentity() {
         if (!currentConfig || !currentConfig.profile) return;
         var email = currentConfig.profile.email || '';
         var logo = currentConfig.profile.logo || '';
         var enseigne = currentConfig.profile.enseigne || '';
+        var city = currentConfig.profile.city || '';
 
         // Met à jour la session réelle (mgt_user), source de vérité de current().
         try {
@@ -918,6 +951,7 @@ html.dark {
             user.email = email;
             if (enseigne) user.enseigne = enseigne;
             if (logo) user.logo = logo;
+            if (city) user.city = city;
             localStorage.setItem('mgt_user', JSON.stringify(user));
           }
         } catch (e) { /* ignore */ }
@@ -939,7 +973,7 @@ html.dark {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer ' + token
             },
-            body: JSON.stringify({ enseigne: enseigne, email: email, logo: logo })
+            body: JSON.stringify({ enseigne: enseigne, email: email, logo: logo, city: city })
           }).then(function (r) {
             return r.json().catch(function () { return {}; });
           }).then(function (data) {
@@ -1085,6 +1119,8 @@ html.dark {
       }).catch(function () {
         showToast('Impossible de charger les paramètres');
       });
+
+      loadCitySuggestions();
     })();
     </script>
 

@@ -3697,6 +3697,30 @@ function handleHttp(req, res) {
       // Le téléphone est normalisé (espaces/parenthèses supprimés).
       if (user.phone) user.phone = normalizePhone(user.phone);
 
+      // Si la ville a changé, on re-géocode pour mettre à jour les coordonnées
+      // et le pays, puis on synchronise le vendor-config. Cela permet de
+      // « déménager » un compte (ex. de Paris vers Dakar) sans le recréer, et
+      // la carte reflète le nouveau lieu immédiatement.
+      if (Object.prototype.hasOwnProperty.call(body, 'city') && user.city) {
+        const geo = geocodeCity(user.city);
+        if (geo) {
+          user.city = geo.city;
+          user.country = geo.country;
+          user.lat = geo.lat;
+          user.lng = geo.lng;
+          if (user.vendorId) {
+            const doc = vendorConfigFor(user.vendorId);
+            if (doc) {
+              doc.profile = Object.assign({}, doc.profile, {
+                city: geo.city, country: geo.country, lat: geo.lat, lng: geo.lng
+              });
+              doc.updatedAt = nowIso();
+              saveVendorConfig();
+            }
+          }
+        }
+      }
+
       if (!changed) {
         res.writeHead(200, JSON_HEADERS);
         res.end(JSON.stringify({ ok: true, user: publicUser(user) }));

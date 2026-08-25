@@ -1443,8 +1443,14 @@ html.dark {
   function renderList() {
     // vendors est deja trie par pertinence (badges payants en tete).
     // La liste respecte le scope Local+ : seuls les commerces de la ville
-    // (ou du pays, en mode country) sont affichés.
-    var scoped = vendors.filter(function(v) { return matchesScopeFor(v); });
+    // (ou du pays, en mode country) sont affichés. Une recherche active rend
+    // le filtrage global (toutes villes), cohérent avec la vue carte.
+    var searchTerm = (searchInput && searchInput.value ? searchInput.value.toLowerCase().trim() : '');
+    var scoped = vendors.filter(function(v) {
+      var inScope = matchesScopeFor(v);
+      var matchesSearch = !searchTerm || v.name.toLowerCase().includes(searchTerm) || v.city.toLowerCase().includes(searchTerm);
+      return (searchTerm ? true : inScope) && matchesSearch;
+    });
     if (!scoped.length) {
       listContent.innerHTML = '<div class="text-center py-10 text-sm" style="color:rgb(var(--mgt-muted-foreground));font-family:var(--mgt-font-sans);">Aucun commerce dans cette zone.</div>';
       return;
@@ -1664,8 +1670,8 @@ html.dark {
     markers.forEach(function(item) {
       var v = item.vendor;
       // Scope Local+ : même ville (nearby) ou tout le pays (country).
-      var matchesScope = matchesScopeFor(v);
-      if (matchesScope) scopeCount++;
+      var inScope = matchesScopeFor(v);
+      if (inScope) scopeCount++;
 
       var matchesSearch = !searchTerm || v.name.toLowerCase().includes(searchTerm) || v.city.toLowerCase().includes(searchTerm);
       var matchesCategory = !catValue || v.category === catValue;
@@ -1674,7 +1680,12 @@ html.dark {
       var matchesRating = !ratingValue || v.rating >= parseInt(ratingValue);
       var matchesPrice = !priceValue || v.price === priceValue;
 
-      if (matchesScope && matchesSearch && matchesCategory && matchesType && matchesLive && matchesRating && matchesPrice) {
+      // La recherche est globale : on ignore le scope ville/rayon pour qu'un
+      // commerce situé dans une autre ville (ex. DAN à Paris, carte sur Dakar)
+      // apparaisse dès qu'on le cherche par son nom.
+      var passesScope = searchTerm ? true : inScope;
+
+      if (passesScope && matchesSearch && matchesCategory && matchesType && matchesLive && matchesRating && matchesPrice) {
         item.marker.addTo(map);
         visibleCount++;
         visibleMarkers.push(item);
