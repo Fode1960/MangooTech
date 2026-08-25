@@ -654,6 +654,13 @@ html.dark {
             </div>
             <div class="flex items-center justify-between gap-4 py-3">
               <div>
+                <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Changer le PIN</p>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Modifier votre code de connexion à 4 chiffres</p>
+              </div>
+              <button type="button" class="danger-btn" id="btn-change-pin">Modifier</button>
+            </div>
+            <div class="flex items-center justify-between gap-4 py-3">
+              <div>
                 <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Désactiver le compte</p>
                 <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Masquer temporairement votre boutique</p>
               </div>
@@ -1077,6 +1084,101 @@ html.dark {
         hydrate(res);
       }).catch(function () {
         showToast('Impossible de charger les paramètres');
+      });
+    })();
+    </script>
+
+    <!-- ===== Modale "Changer le PIN" ===== -->
+    <div id="pin-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:10000;align-items:center;justify-content:center;padding:16px;">
+      <div style="background:rgb(var(--mgt-background));border-radius:16px;box-shadow:var(--mgt-shadow-lg);width:100%;max-width:400px;font-family:var(--mgt-font-sans);">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgb(var(--mgt-border));">
+          <h3 style="font-size:16px;font-weight:600;color:rgb(var(--mgt-foreground));margin:0;">Changer le PIN</h3>
+          <button id="pin-modal-close" type="button" style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:22px;line-height:1;cursor:pointer;">&times;</button>
+        </div>
+        <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+          <div>
+            <label for="pin-current" style="display:block;font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));margin-bottom:6px;">PIN actuel</label>
+            <input id="pin-current" type="password" inputmode="numeric" maxlength="4" class="mgt-input" placeholder="••••" style="letter-spacing:0.4em;font-weight:700;">
+          </div>
+          <div>
+            <label for="pin-new" style="display:block;font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));margin-bottom:6px;">Nouveau PIN</label>
+            <input id="pin-new" type="password" inputmode="numeric" maxlength="4" class="mgt-input" placeholder="••••" style="letter-spacing:0.4em;font-weight:700;">
+          </div>
+          <div>
+            <label for="pin-confirm" style="display:block;font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));margin-bottom:6px;">Confirmer le nouveau PIN</label>
+            <input id="pin-confirm" type="password" inputmode="numeric" maxlength="4" class="mgt-input" placeholder="••••" style="letter-spacing:0.4em;font-weight:700;">
+          </div>
+          <p id="pin-message" style="display:none;font-size:13px;margin:0;"></p>
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button id="pin-cancel" type="button" style="padding:10px 16px;border:1px solid rgb(var(--mgt-border));border-radius:10px;background:transparent;color:rgb(var(--mgt-foreground));font-size:14px;font-weight:600;cursor:pointer;">Annuler</button>
+            <button id="pin-submit" type="button" style="padding:10px 16px;border:none;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Enregistrer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    (function () {
+      var modal = document.getElementById('pin-modal');
+      var openBtn = document.getElementById('btn-change-pin');
+      var closeBtn = document.getElementById('pin-modal-close');
+      var cancelBtn = document.getElementById('pin-cancel');
+      var submitBtn = document.getElementById('pin-submit');
+      var msgEl = document.getElementById('pin-message');
+
+      function setMsg(text, isError) {
+        if (!msgEl) return;
+        msgEl.textContent = text;
+        msgEl.style.display = text ? 'block' : 'none';
+        msgEl.style.color = isError ? 'rgb(var(--mgt-error))' : 'rgb(var(--mgt-primary))';
+      }
+      function clearFields() {
+        ['pin-current', 'pin-new', 'pin-confirm'].forEach(function (id) {
+          var el = document.getElementById(id); if (el) el.value = '';
+        });
+      }
+      function open() {
+        if (!modal) return;
+        clearFields();
+        setMsg('', false);
+        modal.style.display = 'flex';
+        var cur = document.getElementById('pin-current');
+        if (cur) cur.focus();
+      }
+      function close() { if (modal) modal.style.display = 'none'; }
+
+      if (openBtn) openBtn.addEventListener('click', open);
+      if (closeBtn) closeBtn.addEventListener('click', close);
+      if (cancelBtn) cancelBtn.addEventListener('click', close);
+      if (modal) modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+
+      if (submitBtn) submitBtn.addEventListener('click', function () {
+        var cur = (document.getElementById('pin-current') || {}).value || '';
+        var nu = (document.getElementById('pin-new') || {}).value || '';
+        var cf = (document.getElementById('pin-confirm') || {}).value || '';
+        if (!/^\d{4}$/.test(cur)) { setMsg('Entrez votre PIN actuel (4 chiffres).', true); return; }
+        if (!/^\d{4}$/.test(nu)) { setMsg('Le nouveau PIN doit contenir exactement 4 chiffres.', true); return; }
+        if (nu !== cf) { setMsg('Les nouveaux PIN ne correspondent pas.', true); return; }
+        setMsg('', false);
+        var token = null;
+        try { token = localStorage.getItem('mgt_token'); } catch (e) {}
+        var headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        fetch('/api/auth/change-pin', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({ currentPin: cur, newPin: nu })
+        }).then(function (r) {
+          return r.json().catch(function () { return {}; });
+        }).then(function (d) {
+          if (d && d.ok) {
+            setMsg('PIN mis à jour avec succès.', false);
+            clearFields();
+            setTimeout(close, 900);
+          } else {
+            setMsg((d && d.error) || 'Échec de la mise à jour.', true);
+          }
+        }).catch(function () { setMsg('Erreur réseau.', true); });
       });
     })();
     </script>

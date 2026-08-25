@@ -603,19 +603,58 @@ html.dark {
             <div class="auth-input-group">
               <label class="auth-label" for="register-city">Ville</label>
               <select id="register-city" class="auth-select" required>
-                <option value="" disabled selected>Sélectionnez votre ville</option>
-                <option value="abidjan">Abidjan</option>
-                <option value="yamoussoukro">Yamoussoukro</option>
-                <option value="bouake">Bouaké</option>
-                <option value="daloa">Daloa</option>
-                <option value="san-pedro">San Pedro</option>
-                <option value="korhogo">Korhogo</option>
-                <option value="man">Man</option>
-                <option value="dakar">Dakar</option>
-                <option value="paris">Paris</option>
-                <option value="other">Autre</option>
+                <option value="" disabled selected>Chargement des villes…</option>
+                <option value="other">Autre (saisir ma ville)</option>
               </select>
+              <input type="text" id="register-city-other" class="auth-input" placeholder="Nom de votre ville" autocomplete="address-level2" style="display:none;margin-top:8px;">
             </div>
+            <script>
+              (function () {
+                var sel = document.getElementById('register-city');
+                var otherInput = document.getElementById('register-city-other');
+                var FALLBACK = [
+                  { slug: 'abidjan', city: 'Abidjan', country: "Cote d'Ivoire" },
+                  { slug: 'dakar', city: 'Dakar', country: 'Senegal' },
+                  { slug: 'paris', city: 'Paris', country: 'France' }
+                ];
+                function fill(list) {
+                  if (!sel) return;
+                  var placeholder = sel.querySelector('option[value=""]');
+                  if (placeholder) placeholder.textContent = 'Sélectionnez votre ville';
+                  sel.querySelectorAll('option[data-city]').forEach(function (o) { o.remove(); });
+                  var otherOpt = sel.querySelector('option[value="other"]');
+                  list.slice().sort(function (a, b) { return a.city.localeCompare(b.city, 'fr'); }).forEach(function (c) {
+                    var o = document.createElement('option');
+                    o.value = c.slug;
+                    o.textContent = c.city + ' · ' + c.country;
+                    o.setAttribute('data-city', '1');
+                    if (otherOpt) sel.insertBefore(o, otherOpt);
+                    else sel.appendChild(o);
+                  });
+                }
+                function apply(data) {
+                  var list = [];
+                  if (data && data.cities) {
+                    Object.keys(data.cities).forEach(function (k) {
+                      list.push({ slug: k, city: data.cities[k].city, country: data.cities[k].country });
+                    });
+                  }
+                  fill(list.length ? list : FALLBACK);
+                }
+                sel.addEventListener('change', function () {
+                  var isOther = sel.value === 'other';
+                  if (otherInput) {
+                    otherInput.style.display = isOther ? 'block' : 'none';
+                    otherInput.required = isOther;
+                    if (!isOther) otherInput.value = '';
+                  }
+                });
+                fetch('/api/cities', { headers: { 'Accept': 'application/json' }, cache: 'no-store' })
+                  .then(function (r) { return r.json(); })
+                  .then(apply)
+                  .catch(function () { apply(null); });
+              })();
+            </script>
             <div id="register-message" class="auth-message" style="display:none;padding:10px 14px;border-radius:var(--mgt-radius-md);font-size:14px;margin-bottom:16px;"></div>
             <div class="auth-checkbox-group">
               <input type="checkbox" id="register-terms" required>
@@ -902,10 +941,15 @@ html.dark {
         var pin = document.getElementById('register-pin').value.trim();
         var email = document.getElementById('register-email').value.trim();
         var city = document.getElementById('register-city').value;
+        if (city === 'other') {
+          var otherCity = document.getElementById('register-city-other');
+          city = otherCity ? otherCity.value.trim() : '';
+        }
         var terms = document.getElementById('register-terms').checked;
 
         if (!name) { showMessage('register', 'Renseignez votre nom complet.', true); return; }
         if (!phone) { showMessage('register', 'Renseignez votre numéro de téléphone.', true); return; }
+        if (!city) { showMessage('register', 'Sélectionnez ou saisissez votre ville.', true); return; }
         if (!/^\d{4}$/.test(pin)) { showMessage('register', 'Le PIN doit contenir exactement 4 chiffres.', true); return; }
         if (!terms) { showMessage('register', 'Veuillez accepter les conditions d\'utilisation.', true); return; }
 

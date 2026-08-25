@@ -978,16 +978,120 @@ function saveUsers() {
 // Permet d'enregistrer country + lat/lng au moment de la création du compte, afin
 // que la carte Local+ puisse géolocaliser chaque pro sans retomber sur Dakar.
 const GEO_CITIES = {
+  // Europe (test France)
   'paris':        { city: 'Paris',        country: 'France',        lat: 48.8566, lng: 2.3522 },
-  'dakar':        { city: 'Dakar',        country: 'Senegal',       lat: 14.7167, lng: -17.4677 },
+
+  // Afrique du Nord
+  'algiers':      { city: 'Alger',        country: 'Algeria',       lat: 36.7538, lng: 3.0588 },
+  'oran':         { city: 'Oran',         country: 'Algeria',       lat: 35.6987, lng: -0.6356 },
+  'constantine':  { city: 'Constantine',  country: 'Algeria',       lat: 36.3650, lng: 6.6147 },
+  'cairo':        { city: 'Le Caire',     country: 'Egypt',         lat: 30.0444, lng: 31.2357 },
+  'alexandria':   { city: 'Alexandrie',   country: 'Egypt',         lat: 31.2001, lng: 29.9187 },
+  'giza':         { city: 'Gizeh',        country: 'Egypt',         lat: 30.0131, lng: 31.2089 },
+  'tripoli':      { city: 'Tripoli',      country: 'Libya',         lat: 32.8872, lng: 13.1913 },
+  'benghazi':     { city: 'Benghazi',     country: 'Libya',         lat: 32.1167, lng: 20.0667 },
+  'rabat':        { city: 'Rabat',        country: 'Morocco',       lat: 34.0209, lng: -6.8416 },
+  'casablanca':   { city: 'Casablanca',   country: 'Morocco',       lat: 33.5731, lng: -7.5898 },
+  'marrakech':    { city: 'Marrakech',    country: 'Morocco',       lat: 31.6295, lng: -7.9811 },
+  'fes':          { city: 'Fès',          country: 'Morocco',       lat: 34.0181, lng: -5.0078 },
+  'tangier':      { city: 'Tanger',       country: 'Morocco',       lat: 35.7595, lng: -5.8340 },
+  'tunis':        { city: 'Tunis',        country: 'Tunisia',       lat: 36.8065, lng: 10.1815 },
+  'sfax':         { city: 'Sfax',         country: 'Tunisia',       lat: 34.7406, lng: 10.7603 },
+  'laayoune':     { city: 'Laâyoune',     country: 'Western Sahara', lat: 27.1253, lng: -13.1625 },
+
+  // Afrique de l'Ouest
+  'cotonou':      { city: 'Cotonou',      country: 'Benin',         lat: 6.3654, lng: 2.4183 },
+  'porto-novo':   { city: 'Porto-Novo',   country: 'Benin',         lat: 6.4969, lng: 2.6289 },
+  'ouagadougou':  { city: 'Ouagadougou',  country: 'Burkina Faso',  lat: 12.3714, lng: -1.5197 },
+  'bobo-dioulasso': { city: 'Bobo-Dioulasso', country: 'Burkina Faso', lat: 11.1771, lng: -4.2979 },
+  'praia':        { city: 'Praia',        country: 'Cape Verde',    lat: 14.9330, lng: -23.5133 },
+  'banjul':       { city: 'Banjul',       country: 'Gambia',        lat: 13.4549, lng: -16.5790 },
+  'accra':        { city: 'Accra',        country: 'Ghana',         lat: 5.6037, lng: -0.1870 },
+  'kumasi':       { city: 'Kumasi',       country: 'Ghana',         lat: 6.6666, lng: -1.6163 },
+  'conakry':      { city: 'Conakry',      country: 'Guinea',        lat: 9.6412, lng: -13.5784 },
+  'bissau':       { city: 'Bissau',       country: 'Guinea-Bissau', lat: 11.8817, lng: -15.6178 },
   'abidjan':      { city: 'Abidjan',      country: "Cote d'Ivoire", lat: 5.3599,  lng: -4.0083 },
-  'libreville':   { city: 'Libreville',   country: 'Gabon',         lat: 0.4162,  lng: 9.4673 },
   'yamoussoukro': { city: 'Yamoussoukro', country: "Cote d'Ivoire", lat: 6.8276,  lng: -5.2893 },
   'bouake':       { city: 'Bouaké',       country: "Cote d'Ivoire", lat: 7.6900,  lng: -5.0300 },
   'daloa':        { city: 'Daloa',        country: "Cote d'Ivoire", lat: 6.8774,  lng: -6.4502 },
   'san-pedro':    { city: 'San Pedro',    country: "Cote d'Ivoire", lat: 4.7485,  lng: -6.6363 },
   'korhogo':      { city: 'Korhogo',      country: "Cote d'Ivoire", lat: 9.4580,  lng: -5.6296 },
-  'man':          { city: 'Man',          country: "Cote d'Ivoire", lat: 7.4064,  lng: -7.5572 }
+  'man':          { city: 'Man',          country: "Cote d'Ivoire", lat: 7.4064,  lng: -7.5572 },
+  'monrovia':     { city: 'Monrovia',     country: 'Liberia',       lat: 6.2907, lng: -10.7605 },
+  'bamako':       { city: 'Bamako',       country: 'Mali',          lat: 12.6392, lng: -8.0029 },
+  'nouakchott':   { city: 'Nouakchott',   country: 'Mauritania',    lat: 18.0735, lng: -15.9582 },
+  'niamey':       { city: 'Niamey',       country: 'Niger',         lat: 13.5116, lng: 2.1254 },
+  'lagos':        { city: 'Lagos',        country: 'Nigeria',       lat: 6.5244, lng: 3.3792 },
+  'abuja':        { city: 'Abuja',        country: 'Nigeria',       lat: 9.0765, lng: 7.3986 },
+  'kano':         { city: 'Kano',         country: 'Nigeria',       lat: 12.0022, lng: 8.5920 },
+  'ibadan':       { city: 'Ibadan',       country: 'Nigeria',       lat: 7.3775, lng: 3.9470 },
+  'port-harcourt': { city: 'Port Harcourt', country: 'Nigeria',     lat: 4.8156, lng: 7.0498 },
+  'dakar':        { city: 'Dakar',        country: 'Senegal',       lat: 14.7167, lng: -17.4677 },
+  'touba':        { city: 'Touba',        country: 'Senegal',       lat: 14.8488, lng: -15.8806 },
+  'thies':        { city: 'Thiès',        country: 'Senegal',       lat: 14.7910, lng: -16.9359 },
+  'saint-louis':  { city: 'Saint-Louis',  country: 'Senegal',       lat: 16.0326, lng: -16.4818 },
+  'freetown':     { city: 'Freetown',     country: 'Sierra Leone',  lat: 8.4657, lng: -13.2317 },
+  'lome':         { city: 'Lomé',         country: 'Togo',          lat: 6.1256, lng: 1.2254 },
+
+  // Afrique centrale
+  'luanda':       { city: 'Luanda',       country: 'Angola',        lat: -8.8390, lng: 13.2894 },
+  'huambo':       { city: 'Huambo',       country: 'Angola',        lat: -12.7739, lng: 15.7346 },
+  'yaounde':      { city: 'Yaoundé',      country: 'Cameroon',      lat: 3.8480, lng: 11.5021 },
+  'douala':       { city: 'Douala',       country: 'Cameroon',      lat: 4.0511, lng: 9.7679 },
+  'bangui':       { city: 'Bangui',       country: 'Central African Republic', lat: 4.3947, lng: 18.5582 },
+  'n-djamena':    { city: "N'Djamena",    country: 'Chad',          lat: 12.1348, lng: 15.0557 },
+  'brazzaville':  { city: 'Brazzaville',  country: 'Republic of the Congo', lat: -4.2634, lng: 15.2429 },
+  'pointe-noire': { city: 'Pointe-Noire', country: 'Republic of the Congo', lat: -4.7692, lng: 11.8664 },
+  'kinshasa':     { city: 'Kinshasa',     country: 'DR Congo',      lat: -4.4419, lng: 15.2663 },
+  'lubumbashi':   { city: 'Lubumbashi',   country: 'DR Congo',      lat: -11.6876, lng: 27.5026 },
+  'goma':         { city: 'Goma',         country: 'DR Congo',      lat: -1.6585, lng: 29.2201 },
+  'kisangani':    { city: 'Kisangani',    country: 'DR Congo',      lat: 0.5153, lng: 25.1910 },
+  'malabo':       { city: 'Malabo',       country: 'Equatorial Guinea', lat: 3.7504, lng: 8.7371 },
+  'bata':         { city: 'Bata',         country: 'Equatorial Guinea', lat: 1.8639, lng: 9.7657 },
+  'libreville':   { city: 'Libreville',   country: 'Gabon',         lat: 0.4162,  lng: 9.4673 },
+  'port-gentil':  { city: 'Port-Gentil',  country: 'Gabon',         lat: -0.7193, lng: 8.7815 },
+  'sao-tome':     { city: 'São Tomé',     country: 'Sao Tome and Principe', lat: 0.3365, lng: 6.7273 },
+
+  // Afrique de l'Est
+  'bujumbura':    { city: 'Bujumbura',    country: 'Burundi',       lat: -3.3614, lng: 29.3599 },
+  'gitega':       { city: 'Gitega',       country: 'Burundi',       lat: -3.4264, lng: 29.9306 },
+  'moroni':       { city: 'Moroni',       country: 'Comoros',       lat: -11.7172, lng: 43.2473 },
+  'djibouti':     { city: 'Djibouti',     country: 'Djibouti',      lat: 11.5721, lng: 43.1456 },
+  'asmara':       { city: 'Asmara',       country: 'Eritrea',       lat: 15.3229, lng: 38.9251 },
+  'addis-ababa':  { city: 'Addis-Abeba',  country: 'Ethiopia',      lat: 9.0054, lng: 38.7636 },
+  'dire-dawa':    { city: 'Dire Dawa',    country: 'Ethiopia',      lat: 9.6000, lng: 41.8667 },
+  'nairobi':      { city: 'Nairobi',      country: 'Kenya',         lat: -1.2921, lng: 36.8219 },
+  'mombasa':      { city: 'Mombasa',      country: 'Kenya',         lat: -4.0435, lng: 39.6682 },
+  'kisumu':       { city: 'Kisumu',       country: 'Kenya',         lat: -0.0917, lng: 34.7680 },
+  'antananarivo': { city: 'Antananarivo', country: 'Madagascar',    lat: -18.8792, lng: 47.5079 },
+  'lilongwe':     { city: 'Lilongwe',     country: 'Malawi',        lat: -13.9626, lng: 33.7741 },
+  'blantyre':     { city: 'Blantyre',     country: 'Malawi',        lat: -15.7861, lng: 35.0058 },
+  'port-louis':   { city: 'Port-Louis',   country: 'Mauritius',     lat: -20.1609, lng: 57.5012 },
+  'maputo':       { city: 'Maputo',       country: 'Mozambique',    lat: -25.9692, lng: 32.5732 },
+  'beira':        { city: 'Beira',        country: 'Mozambique',    lat: -19.8436, lng: 34.8389 },
+  'kigali':       { city: 'Kigali',       country: 'Rwanda',        lat: -1.9441, lng: 30.0619 },
+  'victoria':     { city: 'Victoria',     country: 'Seychelles',    lat: -4.6191, lng: 55.4513 },
+  'mogadishu':    { city: 'Mogadiscio',   country: 'Somalia',       lat: 2.0469, lng: 45.3182 },
+  'hargeisa':     { city: 'Hargeisa',     country: 'Somalia',       lat: 9.5624, lng: 44.0770 },
+  'juba':         { city: 'Djouba',       country: 'South Sudan',   lat: 4.8594, lng: 31.5713 },
+  'dodoma':       { city: 'Dodoma',       country: 'Tanzania',      lat: -6.1630, lng: 35.7516 },
+  'dar-es-salaam': { city: 'Dar es Salaam', country: 'Tanzania',    lat: -6.7924, lng: 39.2083 },
+  'arusha':       { city: 'Arusha',       country: 'Tanzania',      lat: -3.3869, lng: 36.6830 },
+  'kampala':      { city: 'Kampala',      country: 'Uganda',        lat: 0.3476, lng: 32.5825 },
+  'lusaka':       { city: 'Lusaka',       country: 'Zambia',        lat: -15.3875, lng: 28.3228 },
+  'kitwe':        { city: 'Kitwe',        country: 'Zambia',        lat: -12.8027, lng: 28.2132 },
+  'harare':       { city: 'Harare',       country: 'Zimbabwe',      lat: -17.8252, lng: 31.0335 },
+  'bulawayo':     { city: 'Bulawayo',     country: 'Zimbabwe',      lat: -20.1325, lng: 28.6265 },
+
+  // Afrique australe
+  'gaborone':     { city: 'Gaborone',     country: 'Botswana',      lat: -24.6282, lng: 25.9231 },
+  'mbabane':      { city: 'Mbabane',      country: 'Eswatini',      lat: -26.3054, lng: 31.1367 },
+  'maseru':       { city: 'Maseru',       country: 'Lesotho',       lat: -29.3151, lng: 27.4869 },
+  'windhoek':     { city: 'Windhoek',     country: 'Namibia',       lat: -22.5597, lng: 17.0832 },
+  'pretoria':     { city: 'Pretoria',     country: 'South Africa',  lat: -25.7479, lng: 28.2293 },
+  'johannesburg': { city: 'Johannesburg', country: 'South Africa',  lat: -26.2041, lng: 28.0473 },
+  'cape-town':    { city: 'Le Cap',       country: 'South Africa',  lat: -33.9249, lng: 18.4241 },
+  'durban':       { city: 'Durban',       country: 'South Africa',  lat: -29.8587, lng: 31.0218 }
 };
 
 function normalizeCityKey(raw) {
@@ -2875,6 +2979,57 @@ function handleHttp(req, res) {
     }));
     return;
   }
+  if (urlPath === '/api/contacts') {
+    // Annuaire de contacts réels pour la messagerie du Dashboard : renvoie
+    // tous les comptes non-admin (clients, prestataires, boutiques, livreurs)
+    // à l'exception de l'utilisateur courant. Le statut en ligne est déduit de
+    // la présence temps réel (clients map), clé par id ou vendorId.
+    const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+    const user = userByToken(token);
+    if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
+    if (req.method !== 'GET') {
+      res.writeHead(405, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: false, error: 'méthode non autorisée' }));
+      return;
+    }
+    const contacts = users
+      .filter(function (u) { return u && u.role !== 'admin' && u.id !== user.id; })
+      .map(function (u) {
+        const c = clients.get(u.id) || clients.get(u.vendorId);
+        return {
+          id: u.id,
+          vendorId: u.vendorId || u.id,
+          role: u.role,
+          name: u.enseigne || u.name || u.fullName || u.phone || u.email || 'Contact',
+          enseigne: u.enseigne || '',
+          phone: u.phone || '',
+          email: u.email || '',
+          city: u.city || '',
+          logo: u.logo || '',
+          category: u.category || '',
+          online: !!(c && c.online),
+          createdAt: u.createdAt || ''
+        };
+      })
+      .sort(function (a, b) { return String(a.name).localeCompare(String(b.name)); });
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate' });
+    res.end(JSON.stringify({ ok: true, contacts: contacts }));
+    return;
+  }
+
+  if (urlPath === '/api/cities') {
+    // Liste complète des villes (Afrique + Europe test). Source unique partagée
+    // par le formulaire d'inscription et le sélecteur de ville de la carte.
+    if (req.method !== 'GET') {
+      res.writeHead(405, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: false, error: 'méthode non autorisée' }));
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'public, max-age=3600' });
+    res.end(JSON.stringify({ ok: true, cities: GEO_CITIES }));
+    return;
+  }
+
   if (urlPath === '/api/carte') {
     if (req.method === 'GET') {
       // Désactive le cache : la carte doit toujours refléter les profils réels
