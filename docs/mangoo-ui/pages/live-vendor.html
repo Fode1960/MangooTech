@@ -98,9 +98,9 @@ html.dark {
     <!-- ===== HEADER ===== -->
     <header class="shrink-0 flex items-center justify-between gap-3 px-4 py-3 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))]">
         <div class="flex items-center gap-2.5 min-w-0">
-            <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-primary))] text-white font-bold text-sm shrink-0">CA</div>
+            <div id="vendor-avatar" class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-primary))] text-white font-bold text-sm shrink-0">CA</div>
             <div class="min-w-0">
-                <p class="text-sm font-semibold leading-tight truncate">DAN Boutique</p>
+                <p id="vendor-name" class="text-sm font-semibold leading-tight truncate">DAN Boutique</p>
                 <p class="text-[11px] text-[rgb(var(--mgt-muted-foreground))] leading-tight">Live vendeur</p>
             </div>
         </div>
@@ -267,8 +267,12 @@ html.dark {
       let screenStream = null, screenTrack = null, shareOn = false;
 
       let ws = null, wsReady = false;
-      const MY_ID = 'pro-41cafa4bcb31';
-      const MY_NAME = 'DAN Boutique';
+      // Identité du vendeur paramétrable via l'URL (?id=...&name=...) : permet
+      // de lancer PLUSIEURS vendeurs en parallèle (un onglet par vendeur) pour
+      // tester le multi-salles, chacun créant sa propre salle côté serveur.
+      const _vqp = new URLSearchParams(location.search);
+      const MY_ID = _vqp.get('id') || _vqp.get('vendorId') || 'pro-41cafa4bcb31';
+      const MY_NAME = _vqp.get('name') || 'DAN Boutique';
 
       // Appel privé (réception client -> vendeur)
       let callPc = null, callStream = null, callId = null, callState = 'idle'; // idle | ringing | connected
@@ -394,7 +398,7 @@ html.dark {
       function startLive() {
         if (isLive) return;
         if (!wsReady) { toast('Connexion au serveur en cours...'); return; }
-        send({ type: 'live-start', title: 'Live Shopping — DAN Boutique' });
+        send({ type: 'live-start', title: 'Live Shopping — ' + MY_NAME });
       }
       function stopLive() { if (wsReady) send({ type: 'live-stop' }); exitLiveState(); }
 
@@ -840,6 +844,8 @@ html.dark {
       }
 
       function init() {
+        document.getElementById('vendor-name').textContent = MY_NAME;
+        document.getElementById('vendor-avatar').textContent = (MY_NAME || 'V').charAt(0).toUpperCase();
         document.getElementById('btn-start-stream').addEventListener('click', startLive);
         document.getElementById('btn-stop-stream').addEventListener('click', stopLive);
         // Les boutons d'appel vivent dans l'overlay placé APRÈS ce script :

@@ -296,7 +296,7 @@ html.dark {
     <header class="sticky top-0 z-30 flex items-center gap-3 px-4 py-3 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))]">
       <div class="flex items-center justify-center w-10 h-10 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-bold text-sm shrink-0">CA</div>
       <div class="flex-1 min-w-0">
-        <p class="text-sm font-bold text-[rgb(var(--mgt-foreground))] truncate">DAN Boutique</p>
+        <p id="vendor-name" class="text-sm font-bold text-[rgb(var(--mgt-foreground))] truncate">DAN Boutique</p>
         <p id="live-status-badge" class="text-xs text-[rgb(var(--mgt-muted-foreground))] flex items-center gap-1">
           <span class="w-1.5 h-1.5 rounded-full bg-[rgb(var(--mgt-muted-foreground))]"></span> En attente du direct
         </p>
@@ -437,7 +437,16 @@ html.dark {
     const _qp = new URLSearchParams(location.search);
     const MY_ID = _qp.get('id') || 'cli-66b551e17c29';
     const MY_NAME = _qp.get('name') || 'Dida DANSO';
-    const VENDOR_NAME = 'DAN Boutique';
+    // Ciblage précis de la salle : depuis l'annuaire on reçoit vendorId (et/ou
+    // room sous la forme « room-<vendorId> »). Si présent, le client rejoint
+    // CETTE salle au lieu de la première active.
+    const TARGET_ROOM = _qp.get('vendorId') || (function () {
+      var r = _qp.get('room');
+      if (r && r.indexOf('room-') === 0) return r.slice(5);
+      return r || null;
+    })();
+    const TARGET_NAME = _qp.get('vendorName') || 'DAN Boutique';
+    let VENDOR_NAME = TARGET_NAME;
 
     let ws = null;
     let wsReady = false;
@@ -456,7 +465,7 @@ html.dark {
     let orderDelivery = 'Livraison';
 
     // Appel privé (négociation client <-> vendeur)
-    let vendorId = 'pro-41cafa4bcb31';
+    let vendorId = TARGET_ROOM || 'pro-41cafa4bcb31';
     let callPc = null;
     let callStream = null;
     let callId = null;
@@ -548,7 +557,11 @@ html.dark {
       ws.onopen = function () {
         wsReady = true;
         ws.send(JSON.stringify({ type: 'register', id: MY_ID, role: 'client', name: MY_NAME }));
-        ws.send(JSON.stringify({ type: 'live-join' }));
+        // Rejoint une salle PRÉCISE si un vendorId/room a été fourni via l'URL
+        // (depuis l'annuaire), sinon le serveur choisit la première active.
+        var joinMsg = { type: 'live-join' };
+        if (TARGET_ROOM) joinMsg.vendorId = TARGET_ROOM;
+        ws.send(JSON.stringify(joinMsg));
       };
       ws.onmessage = function (ev) {
         let msg; try { msg = JSON.parse(ev.data); } catch (e) { return; }
@@ -641,11 +654,21 @@ html.dark {
       // que l'appel privé « client → vendeur » parte vers la bonne personne,
       // pas vers le vendeur codé en dur par défaut.
       if (s.vendorId) vendorId = s.vendorId;
+      if (s.vendorName) setVendorName(s.vendorName);
       setViewers(s.viewers);
       $('stat-likes').textContent = s.likes;
       $('stat-orders').textContent = s.orders;
       if (s.pinnedProduct && s.pinnedProduct.name) setPinned(s.pinnedProduct);
       (s.chat || []).forEach(function (m) { appendChat(m.fromName, m.text, m.from === MY_ID); });
+    }
+
+    function setVendorName(name) {
+      if (!name) return;
+      VENDOR_NAME = name;
+      var h = $('vendor-name');
+      if (h) h.textContent = name;
+      var peer = $('call-peer-name');
+      if (peer) peer.textContent = name;
     }
 
     function showLive() {
@@ -740,7 +763,11 @@ html.dark {
 
     function joinVideo() {
       if (!wsReady || !isLive) return;
-      send({ type: 'live-video-join' });
+      // Cible la même salle que le live-join pour que le flux WebRTC provienne
+      // du bon vendeur (plusieurs lives pouvant diffuser en parallèle).
+      var msg = { type: 'live-video-join' };
+      if (TARGET_ROOM) msg.vendorId = TARGET_ROOM;
+      send(msg);
     }
 
     function handleVideoOffer(sdp) {
@@ -963,7 +990,7 @@ html.dark {
     function handleCallRejected(msg) {
       if (msg.callId !== callId) return;
       resetCall();
-      toast('DAN Boutique a refusé l\'appel');
+      toast(VENDOR_NAME + ' a refusé l\'appel');
     }
 
     function handleCallEnded(msg) {
@@ -1128,6 +1155,7 @@ html.dark {
       $('delivery-retrait').addEventListener('click', function () { setDelivery('Retrait'); });
 
       connect();
+      setVendorName(TARGET_NAME);
       lucide.createIcons();
     }
 

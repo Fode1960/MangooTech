@@ -224,6 +224,20 @@ function createRoom(vendorId, vendorName, vendorWs) {
 
 function roomById(vendorId) { return liveRooms.get(roomKey(vendorId)) || null; }
 
+// Accepte indifféremment un vendorId brut (« dan-boutique ») ou un roomId
+// préfixé (« room-dan-boutique ») : l'annuaire transmet un roomId, les clients
+// et le vendeur utilisent un vendorId. Cette normalisation garantit que le
+// spectateur rejoint bien la salle qu'il a choisie, jamais la première au hasard.
+function roomByRef(ref) {
+  if (ref == null) return null;
+  const raw = String(ref).trim();
+  if (!raw) return null;
+  const direct = roomById(raw);
+  if (direct) return direct;
+  if (raw.indexOf('room-') === 0) return roomById(raw.slice(5));
+  return null;
+}
+
 // Salle dont l'utilisateur (socket) est le vendeur.
 function vendorRoom(ws) {
   return (ws && ws.meta && ws.meta.id) ? roomById(ws.meta.id) : null;
@@ -2924,7 +2938,7 @@ function stopRoom(room) {
 
 function handleLiveJoin(ws, msg) {
   const requested = String((msg && (msg.vendorId || msg.roomId)) || '').trim();
-  let room = requested ? roomById(requested) : null;
+  let room = requested ? roomByRef(requested) : null;
   if (!room || !room.active) room = activeRooms()[0] || null;
   console.log('[LIVE] join', { id: ws.meta && ws.meta.id, roomId: room ? room.roomId : null, time: new Date().toLocaleTimeString() });
   if (!room) { send(ws, liveSnapshot()); return; }
@@ -3026,7 +3040,7 @@ function handleLiveStateRequest(ws) {
 
 /* --- Live Shopping : diffusion vidéo (WebRTC, un vendeur -> N spectateurs) --- */
 function handleLiveVideoJoin(ws, msg) {
-  const room = (msg && msg.vendorId) ? roomById(String(msg.vendorId)) : roomForWs(ws);
+  const room = (msg && (msg.vendorId || msg.roomId)) ? roomByRef(msg.vendorId || msg.roomId) : roomForWs(ws);
   if (!room || !room.active) { send(ws, { type: 'live-video-unavailable' }); return; }
   if (!ws.meta || ws.meta.id === room.vendorId) return; // le vendeur ne regarde pas son propre flux
   const vws = vendorWsOf(room);
