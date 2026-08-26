@@ -744,58 +744,59 @@
       links = nav.querySelectorAll('a');
     }
 
-    // 2) Badge « En direct » + redirection intelligente sur le lien Live.
+    // 2) Le lien « Live » reste TOUJOURS la page de diffusion du pro
+    //    (dashboard-live). Un vendeur/prestataire doit pouvoir lancer SON
+    //    propre live même quand d'autres pros diffusent en parallèle : on ne
+    //    détourne donc PLUS ce lien vers live-client (réservé aux spectateurs).
+    //    On ajoute à la place un lien séparé « Lives en direct » (porteur du
+    //    badge « En direct ») pour découvrir/rejoindre les lives des autres.
     var liveLink = null;
     for (var k = 0; k < links.length; k++) {
       if ((links[k].getAttribute('href') || '').indexOf('dashboard-live.html') >= 0) { liveLink = links[k]; break; }
     }
+
+    // Lien « Lives en direct » (liste multi-salles), injecté juste après « Live ».
+    var hasDir = false;
+    for (var li = 0; li < links.length; li++) {
+      if ((links[li].getAttribute('href') || '').indexOf('lives-en-direct.html') >= 0) hasDir = true;
+    }
+    var dirLink = null;
+    if (!hasDir) {
+      var dla = document.createElement('a');
+      dla.href = './lives-en-direct.html';
+      dla.className = NAV_LINK_CLASS;
+      dla.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"/></svg><span>Lives en direct</span>';
+      if (liveLink && liveLink.parentNode) {
+        liveLink.parentNode.insertBefore(dla, liveLink.nextSibling);
+      } else {
+        nav.appendChild(dla);
+      }
+      links = nav.querySelectorAll('a');
+    }
+    for (var lj = 0; lj < links.length; lj++) {
+      if ((links[lj].getAttribute('href') || '').indexOf('lives-en-direct.html') >= 0) { dirLink = links[lj]; break; }
+    }
+
+    // Badge « En direct » porté par le lien « Lives en direct ».
     var badge = null;
-    if (liveLink) {
-      badge = liveLink.querySelector('.mgt-live-badge');
+    if (dirLink) {
+      badge = dirLink.querySelector('.mgt-live-badge');
       if (!badge) {
         badge = document.createElement('span');
         badge.className = 'mgt-live-badge';
         badge.style.cssText = 'display:none;margin-left:auto;align-items:center;gap:4px;font-size:10px;font-weight:700;line-height:1;padding:2px 7px;border-radius:9999px;background:#ef4444;color:#fff;';
         badge.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:#fff;animation:mgt-pulse 1.6s infinite;"></span>En direct';
-        liveLink.appendChild(badge);
+        dirLink.appendChild(badge);
       }
     }
 
-    // Destination par défaut du lien Live (page de diffusion du pro).
-    var BASE_LIVE_HREF = liveLink ? liveLink.getAttribute('href') : './dashboard-live.html';
-
-    function myVendorId() {
-      if (global.MangooVendor && typeof global.MangooVendor.connectedVendorId === 'function') {
-        return global.MangooVendor.connectedVendorId() || '';
-      }
-      return '';
-    }
-    function myName() {
-      var v = global.MangooVendor ? global.MangooVendor.current() : null;
-      return v ? (v.name || '') : '';
-    }
-
-    // Met à jour le badge ET la destination du lien « Live ». Quand un live est
-    // actif et qu'il n'est PAS le nôtre, le lien rejoint le live (live-client) ;
-    // sinon il conserve sa page de diffusion (dashboard-live).
+    // Met à jour uniquement le badge : le lien « Live » (diffusion) ne change
+    // JAMAIS de destination, et « Lives en direct » pointe toujours vers la
+    // liste multi-salles. C'est ce qui garantit qu'un pro peut toujours lancer
+    // son live, quel que soit l'état des lives des autres.
     function setLiveState(st) {
       var active = !!(st && st.active);
-      var liveVendorId = String((st && st.vendorId) || '');
-      var mine = liveVendorId && liveVendorId === myVendorId();
-      if (badge) {
-        badge.style.display = active ? 'inline-flex' : 'none';
-        if (liveLink) liveLink.style.color = active ? '#fff' : '';
-      }
-      if (liveLink) {
-        if (active && !mine) {
-          var params = '?id=' + encodeURIComponent(myVendorId() || 'cli-66b551e17c29');
-          var nm = myName();
-          if (nm) params += '&name=' + encodeURIComponent(nm);
-          liveLink.setAttribute('href', './live-client.html' + params);
-        } else {
-          liveLink.setAttribute('href', BASE_LIVE_HREF);
-        }
-      }
+      if (badge) badge.style.display = active ? 'inline-flex' : 'none';
     }
     function poll() {
       fetch('/live-status', { cache: 'no-store' })

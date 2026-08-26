@@ -1154,11 +1154,14 @@
     var filename = (location.pathname.split('/').pop() || '').toLowerCase();
     if (!filename) return;
     // Pages de diffusion / visionnage du direct : le bandeau « Rejoindre » n'y a
-    // pas sa place (on est déjà dans le live). Les dashboards pro restent
-    // éligibles afin que les AUTRES vendeurs voient le direct ; c'est apply()
-    // qui masque le bandeau lorsque le live est celui du vendeur connecté.
+    // pas sa place (on est déjà dans le live).
     if (filename === 'live-client.html' || filename === 'live-shopping.html' || filename === 'live-vendor.html') return;
-    if (filename === 'dashboard-live.html') return;
+    // Dashboards pro (dashboard-*.html) : le pro a déjà, dans sa sidebar, les
+    // deux entrées « Live » (lancer son propre live) et « Lives en direct »
+    // (voir les autres). Le bandeau « Rejoindre » est réservé aux pages
+    // publiques / clients, sinon il détourne le vendeur vers le live d'un autre
+    // et l'empêche de lancer le sien.
+    if (filename.indexOf('dashboard-') === 0) return;
 
     var pagesBase = location.pathname.indexOf('/pages/') >= 0 ? './' : 'pages/';
 

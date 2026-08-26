@@ -903,6 +903,7 @@ html.dark {
             toast('Live démarré — en direct');
             break;
           case 'live-ended':
+            if (msg.vendorId && msg.vendorId !== MY_ID) break;
             exitLiveState();
             break;
           case 'live-state':
