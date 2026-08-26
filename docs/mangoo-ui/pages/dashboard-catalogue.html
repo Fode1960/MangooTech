@@ -704,7 +704,7 @@ html.dark {
     return '<div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl overflow-hidden shadow-[var(--mgt-shadow-sm)] hover:shadow-[var(--mgt-shadow-md)] transition-shadow" data-id="' + esc(p.id) + '">'
       + '<div class="relative h-36 overflow-hidden">'
       + '<div style="position:absolute;inset:0;background:' + grad + ';"></div>'
-      + (p.image ? '<img src="' + esc(p.image) + '" alt="' + esc(p.name) + '" loading="lazy" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">' : '')
+      + (p.image ? '<img src="' + esc(p.image) + '" alt="' + esc(p.name) + '" loading="lazy" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;">' : '')
       + '<i data-lucide="' + esc(cat.icon) + '" style="position:absolute;right:12px;bottom:12px;width:40px;height:40px;color:rgba(255,255,255,.5);"></i>'
       + '<span style="position:absolute;top:8px;left:8px;display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:600;background:rgba(0,0,0,.4);color:#fff;backdrop-filter:blur(4px);">' + esc(cat.label) + '</span>'
       + '<span style="position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:600;background:' + st.bg + ';color:' + st.fg + ';">' + st.label + '</span>'
@@ -870,7 +870,7 @@ html.dark {
         '<label style="display:block;margin-top:14px;font-size:13px;font-weight:500;color:rgb(var(--mgt-foreground));">Catégorie</label>' +
         '<select data-field="category" style="width:100%;box-sizing:border-box;padding:9px 12px;margin-top:6px;border:1px solid rgb(var(--mgt-border));border-radius:8px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;">' + catOptions + '</select>' +
         '<label style="display:block;margin-top:14px;font-size:13px;font-weight:500;color:rgb(var(--mgt-foreground));">Photo du produit</label>' +
-        '<div data-image-preview style="margin-top:6px;' + (imageDataUrl ? '' : 'display:none;') + 'overflow:hidden;border-radius:8px;border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-muted));"><img src="' + (imageDataUrl || '') + '" alt="" style="display:block;width:100%;height:160px;object-fit:cover;"></div>' +
+        '<div data-image-preview style="margin-top:6px;' + (imageDataUrl ? '' : 'display:none;') + 'overflow:hidden;border-radius:8px;border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-muted));"><img src="' + (imageDataUrl || '') + '" alt="" style="display:block;width:100%;height:160px;object-fit:contain;"></div>' +
         '<input data-field="image" type="file" accept="image/*" style="display:block;width:100%;box-sizing:border-box;margin-top:8px;padding:8px;border:1px dashed rgb(var(--mgt-border));border-radius:8px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-muted-foreground));font-size:13px;">' +
         '<button type="button" data-image-clear style="display:' + (imageDataUrl ? 'inline-block' : 'none') + ';margin-top:6px;padding:4px 10px;border-radius:8px;border:1px solid rgb(var(--mgt-border));background:transparent;color:rgb(var(--mgt-error));font-size:12px;font-weight:500;cursor:pointer;">Supprimer la photo</button>' +
         '<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">' +
