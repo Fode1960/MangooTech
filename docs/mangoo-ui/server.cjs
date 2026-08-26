@@ -1271,11 +1271,23 @@ function carteVendors() {
     // Coordonnées + ville normalisées : les comptes « other » (ancienne option
     // « Autre ») sont ré-affectés à une vraie ville pour ne pas disparaître de
     // la carte alors qu'ils sont géolocalisés (par défaut Dakar).
-    const lat = (profile.lat != null) ? Number(profile.lat) : (u.lat != null ? Number(u.lat) : 14.7167);
-    const lng = (profile.lng != null) ? Number(profile.lng) : (u.lng != null ? Number(u.lng) : -17.4677);
+    let lat = (profile.lat != null) ? Number(profile.lat) : (u.lat != null ? Number(u.lat) : 14.7167);
+    let lng = (profile.lng != null) ? Number(profile.lng) : (u.lng != null ? Number(u.lng) : -17.4677);
     let city = profile.city || u.city || '';
     let country = profile.country || u.country || '';
-    if (!city || normalizeCityKey(city) === 'other' || normalizeCityKey(city) === 'autre') {
+
+    // Défense en profondeur : si le libellé de ville correspond à une ville du
+    // dictionnaire géographique, on aligne SYSTÉMATIQUEMENT les coordonnées sur
+    // cette ville. Corrige à la lecture tout compte dont la ville a été modifiée
+    // sans mise à jour des coordonnées (ex. « Paris » avec lat/lng restés sur
+    // Dakar), afin que la carte, la liste et l'annuaire reflètent le même lieu.
+    const cityGeo = geocodeCity(city);
+    if (cityGeo) {
+      city = cityGeo.city;
+      country = cityGeo.country;
+      lat = cityGeo.lat;
+      lng = cityGeo.lng;
+    } else if (!city || normalizeCityKey(city) === 'other' || normalizeCityKey(city) === 'autre') {
       const resolved = resolveVendorCity(lat, lng, country);
       city = resolved.city;
       if (!country) country = resolved.country;
