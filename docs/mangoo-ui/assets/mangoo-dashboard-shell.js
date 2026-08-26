@@ -698,6 +698,30 @@
     if (!nav) return;
     var links = nav.querySelectorAll('a');
 
+    // 0) Lien « Annuaire des pros » : présent uniquement sur certaines pages.
+    // On le réinjecte ici pour qu'il soit visible sur TOUS les dashboards,
+    // sinon les utilisateurs ne peuvent plus ouvrir l'annuaire depuis le menu.
+    var hasAnnuaire = false;
+    for (var ai = 0; ai < links.length; ai++) {
+      if ((links[ai].getAttribute('href') || '').indexOf('annuaire-prestataires.html') >= 0) hasAnnuaire = true;
+    }
+    if (!hasAnnuaire) {
+      var annAnchor = null;
+      for (var aj = 0; aj < links.length; aj++) {
+        if ((links[aj].getAttribute('href') || '').indexOf('dashboard-live.html') >= 0) { annAnchor = links[aj]; break; }
+      }
+      var ann = document.createElement('a');
+      ann.href = './annuaire-prestataires.html';
+      ann.className = NAV_LINK_CLASS;
+      ann.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M17 18a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2"/><rect x="3" y="4" width="18" height="18" rx="2"/><circle cx="12" cy="10" r="2"/><line x1="8" x2="8" y1="2" y2="4"/><line x1="16" x2="16" y1="2" y2="4"/></svg><span>Annuaire des pros</span>';
+      if (annAnchor && annAnchor.parentNode) {
+        annAnchor.parentNode.insertBefore(ann, annAnchor);
+      } else {
+        nav.appendChild(ann);
+      }
+      links = nav.querySelectorAll('a');
+    }
+
     // 1) Lien « Carte Local+ » injecté après « Annuaire des pros ».
     var hasCarte = false;
     for (var i = 0; i < links.length; i++) {

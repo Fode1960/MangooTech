@@ -598,6 +598,7 @@ html.dark {
           send({ type: 'live-join' });
           break;
         case 'live-ended':
+          joined = false;
           endCall();
           showOffline();
           closeVideo();
