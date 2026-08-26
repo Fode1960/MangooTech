@@ -197,38 +197,7 @@ html.dark {
                     <button id="btn-manage-products" class="text-xs text-[rgb(var(--mgt-accent))] font-medium">Gérer</button>
                 </div>
                 <div class="flex gap-3 overflow-x-auto pb-1 no-scrollbar" id="live-products-list">
-                    <div class="product-card flex-shrink-0 w-36 bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl overflow-hidden" data-name="Coiffure Mariage Complète" data-price="85 000 FCFA" data-image="../assets/products/coiffure-mariage.svg">
-                        <img src="../assets/products/coiffure-mariage.svg" alt="Coiffure Mariage Complète" class="h-24 w-full object-cover">
-                        <div class="p-2">
-                            <p class="text-[11px] font-semibold leading-tight line-clamp-2">Coiffure Mariage Complète</p>
-                            <p class="text-xs font-bold text-[rgb(var(--mgt-accent))] mt-0.5 tabular-nums">85 000 FCFA</p>
-                            <button class="btn-pin-product w-full mt-1.5 py-1.5 rounded-lg bg-[rgb(var(--mgt-accent))] text-white text-[11px] font-semibold">Partager</button>
-                        </div>
-                    </div>
-                    <div class="product-card flex-shrink-0 w-36 bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl overflow-hidden" data-name="Tresses Sénégalaises" data-price="45 000 FCFA" data-image="../assets/products/tresses-senegalaises.svg">
-                        <img src="../assets/products/tresses-senegalaises.svg" alt="Tresses Sénégalaises" class="h-24 w-full object-cover">
-                        <div class="p-2">
-                            <p class="text-[11px] font-semibold leading-tight line-clamp-2">Tresses Sénégalaises</p>
-                            <p class="text-xs font-bold text-[rgb(var(--mgt-accent))] mt-0.5 tabular-nums">45 000 FCFA</p>
-                            <button class="btn-pin-product w-full mt-1.5 py-1.5 rounded-lg bg-[rgb(var(--mgt-accent))] text-white text-[11px] font-semibold">Partager</button>
-                        </div>
-                    </div>
-                    <div class="product-card flex-shrink-0 w-36 bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl overflow-hidden" data-name="Maquillage Professionnel" data-price="35 000 FCFA" data-image="../assets/products/maquillage-professionnel.svg">
-                        <img src="../assets/products/maquillage-professionnel.svg" alt="Maquillage Professionnel" class="h-24 w-full object-cover">
-                        <div class="p-2">
-                            <p class="text-[11px] font-semibold leading-tight line-clamp-2">Maquillage Professionnel</p>
-                            <p class="text-xs font-bold text-[rgb(var(--mgt-accent))] mt-0.5 tabular-nums">35 000 FCFA</p>
-                            <button class="btn-pin-product w-full mt-1.5 py-1.5 rounded-lg bg-[rgb(var(--mgt-accent))] text-white text-[11px] font-semibold">Partager</button>
-                        </div>
-                    </div>
-                    <div class="product-card flex-shrink-0 w-36 bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl overflow-hidden" data-name="Manucure Gel" data-price="15 000 FCFA" data-image="../assets/products/manucure-gel.svg">
-                        <img src="../assets/products/manucure-gel.svg" alt="Manucure Gel" class="h-24 w-full object-cover">
-                        <div class="p-2">
-                            <p class="text-[11px] font-semibold leading-tight line-clamp-2">Manucure Gel</p>
-                            <p class="text-xs font-bold text-[rgb(var(--mgt-accent))] mt-0.5 tabular-nums">15 000 FCFA</p>
-                            <button class="btn-pin-product w-full mt-1.5 py-1.5 rounded-lg bg-[rgb(var(--mgt-accent))] text-white text-[11px] font-semibold">Partager</button>
-                        </div>
-                    </div>
+                    <p class="w-full py-6 text-center text-xs text-[rgb(var(--mgt-muted-foreground))]">Chargement de vos produits…</p>
                 </div>
             </div>
 
@@ -496,6 +465,52 @@ html.dark {
         setPinned({ name: name, price: price, image: image });
         if (wsReady && isLive) send({ type: 'live-pin-product', name: name, price: price, image: image });
         toast('Produit partagé : ' + name);
+      }
+
+      // Charge les vrais produits du catalogue du vendeur et remplace les cartes
+      // de démonstration figées. Les produits ajoutés dans Catalogue
+      // (dashboard-catalogue.html) sont exposés par GET /catalogue?vendor=<id>
+      // avec leur vraie photo (base64). On les affiche ici pour pouvoir les
+      // partager en direct.
+      function loadLiveProducts() {
+        var list = document.getElementById('live-products-list');
+        if (!list) return;
+        function showMsg(msg) {
+          list.innerHTML = '<p class="w-full py-6 text-center text-xs text-[rgb(var(--mgt-muted-foreground))]">' + escHtml(msg) + '</p>';
+        }
+        var vid = MY_ID;
+        if (!vid) { showMsg('Connectez-vous à votre boutique pour voir vos produits.'); return; }
+
+        fetch('/catalogue?vendor=' + encodeURIComponent(vid), { cache: 'no-store' })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            var items = (d && d.catalogue) || [];
+            if (!items.length) { showMsg('Aucun produit dans votre catalogue. Ajoutez-en via « Gérer ».'); return; }
+            list.innerHTML = '';
+            items.forEach(function (p) {
+              var name = p.name || 'Produit';
+              var priceLabel = (Number(p.price) || 0).toLocaleString('fr-FR') + ' FCFA';
+              var img = p.image || '';
+              var card = document.createElement('div');
+              card.className = 'product-card flex-shrink-0 w-36 bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl overflow-hidden';
+              card.setAttribute('data-name', name);
+              card.setAttribute('data-price', priceLabel);
+              card.setAttribute('data-image', img);
+              var media = img
+                ? '<img src="' + escHtml(img) + '" alt="' + escHtml(name) + '" class="h-24 w-full object-contain" style="background:#fafaf9;">'
+                : '<div class="h-24 w-full flex items-center justify-center" style="background:linear-gradient(135deg,rgb(var(--mgt-primary-50)),rgb(var(--mgt-accent-50)));"><i data-lucide="package" class="w-7 h-7 text-[rgb(var(--mgt-muted-foreground))]"></i></div>';
+              card.innerHTML =
+                media +
+                '<div class="p-2">' +
+                  '<p class="text-[11px] font-semibold leading-tight line-clamp-2">' + escHtml(name) + '</p>' +
+                  '<p class="text-xs font-bold text-[rgb(var(--mgt-accent))] mt-0.5 tabular-nums">' + escHtml(priceLabel) + '</p>' +
+                  '<button class="btn-pin-product w-full mt-1.5 py-1.5 rounded-lg bg-[rgb(var(--mgt-accent))] text-white text-[11px] font-semibold">Partager</button>' +
+                '</div>';
+              list.appendChild(card);
+            });
+            lucide.createIcons();
+          })
+          .catch(function () { showMsg('Impossible de charger vos produits pour le moment.'); });
       }
 
       function setToggle(btn, active) {
@@ -886,8 +901,12 @@ html.dark {
 
         document.getElementById('btn-manage-products').addEventListener('click', function () { window.location.href = './dashboard-catalogue.html'; });
 
-        document.querySelectorAll('.btn-pin-product').forEach(function (btn) {
-          btn.addEventListener('click', function () { pinProduct(btn.closest('.product-card')); });
+        // Délégation : couvre aussi les cartes produits chargées dynamiquement
+        // depuis le catalogue.
+        var productsList = document.getElementById('live-products-list');
+        if (productsList) productsList.addEventListener('click', function (e) {
+          var btn = e.target && e.target.closest ? e.target.closest('.btn-pin-product') : null;
+          if (btn) pinProduct(btn.closest('.product-card'));
         });
 
         // Chat
@@ -902,6 +921,7 @@ html.dark {
         document.getElementById('chat-send').addEventListener('click', sendChat);
         input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); sendChat(); } });
 
+        loadLiveProducts();
         connect();
         applyFitMode();
         setInterval(pollNetworkQuality, 2000);
