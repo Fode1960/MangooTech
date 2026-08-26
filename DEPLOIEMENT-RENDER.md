@@ -123,6 +123,35 @@ Implémentation actuelle : `backup-data.cjs` (script autonome, aucune dépendanc
 
 ---
 
+## F2. Notifications Web Push (VAPID)
+
+**Fonctionnalité : recevoir appels, messages et notifications de Live Shopping même lorsque le Dashboard est FERMÉ** (simple connexion internet + navigateur actif en arrière-plan). Architecture standard Service Worker + VAPID.
+
+- Service Worker : `/sw.js` (réception, affichage, ouverture de la page au clic).
+- Abonnement côté client : `/assets/mangoo-push.js` (chargé automatiquement via `mangoo-connect-plus.js`).
+- Côté serveur : `web-push` (ajouté à `package.json`, installé par `npm install --omit=dev`), abonnements persistés dans `data/push-subscriptions.json`.
+- Déclenchements : appel entrant (destinataire hors ligne), nouveau message (destinataire hors ligne), démarrage d'un live (tous les clients abonnés).
+
+**Clés VAPID — génération automatique.** Au premier démarrage, le serveur génère les clés et les persiste dans `DATA_DIR/vapid.json` (Persistent Disk). Elles sont donc stables entre redémarrages et AUCUNE variable n'est obligatoire.
+
+**Optionnel (recommandé en production).** Pour figer les clés et ne jamais les perdre (p. ex. si le Persistent Disk est recréé), définissez dans Render → *Environment* :
+
+| Variable | Rôle |
+|---|---|
+| `VAPID_PUBLIC_KEY` | Clé publique VAPID (base64url) |
+| `VAPID_PRIVATE_KEY` | Clé privée VAPID (base64url) |
+| `VAPID_SUBJECT` | `mailto:contact@mangootech.com` (défaut) |
+
+Générer une paire une fois : `node -e "console.log(require('web-push').generateVAPIDKeys())"`, puis copier les deux valeurs. Si ces variables sont définies, elles priment sur `vapid.json`.
+
+**Limites à connaître.**
+
+- Fiable lorsque le navigateur tourne (onglet fermé ou en arrière-plan).
+- iOS : nécessite l'app installée en PWA (Safari iOS 16.4+) ; pas de notification si l'app native est totalement quittée.
+- L'appel entrant est éphémère : la notification « réveille » l'utilisateur et ouvre son espace ; la sonnerie WebRTC ne se poursuit que si l'appelant rappelle ou que l'onglet est rouvert assez vite.
+
+---
+
 ## G. Évolution future (à planifier)
 
 | Aujourd'hui | Demain |
