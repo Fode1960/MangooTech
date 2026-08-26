@@ -1296,7 +1296,7 @@ function carteVendors() {
     list.push({
       id: nextId++,
       vendorId: u.vendorId || u.id,
-      name: profile.enseigne || u.enseigne || u.name,
+      name: profile.enseigne || u.enseigne || u.name || 'Professionnel',
       type: type,
       category: category,
       city: city,

@@ -1031,7 +1031,7 @@ html.dark {
     var countBadge = count > 1
       ? '<span style="position:absolute;bottom:-4px;right:-4px;min-width:16px;height:16px;padding:0 3px;border-radius:9999px;background:' + grad + ';color:#fff;font-size:9px;font-weight:700;line-height:16px;text-align:center;border:2px solid #fff;box-sizing:content-box;">' + count + '</span>'
       : '';
-    var initial = '<span style="font-weight:700;font-size:14px;line-height:1;color:#fff;">' + vendor.name.charAt(0) + '</span>';
+    var initial = '<span style="font-weight:700;font-size:14px;line-height:1;color:#fff;">' + (vendor.name ? vendor.name.charAt(0) : '?') + '</span>';
     // Badges nommés sous l'épingle : boost payant + « Live » (local). Ils sont
     // empilés verticalement, chacun nommé et clignotant pour rester lisible.
     var labels = [];
@@ -1169,17 +1169,27 @@ html.dark {
     vendors.sort(function(a, b) { return relevanceScore(b) - relevanceScore(a); });
 
     vendors.forEach(function(vendor) {
-      var zOffset = boostRank(vendor) * 100 + (vendor.live ? 50 : 0);
-      var marker = L.marker([vendor.lat, vendor.lng], { icon: buildMarkerIcon(vendor), zIndexOffset: zOffset })
-        .addTo(map);
+      // Un vendeur défectueux (nom absent ou coordonnées invalides) ne doit pas
+      // faire disparaître tous les autres marqueurs : on l'ignore proprement.
+      if (!vendor.name || typeof vendor.lat !== 'number' || typeof vendor.lng !== 'number' ||
+          !isFinite(vendor.lat) || !isFinite(vendor.lng)) {
+        return;
+      }
+      try {
+        var zOffset = boostRank(vendor) * 100 + (vendor.live ? 50 : 0);
+        var marker = L.marker([vendor.lat, vendor.lng], { icon: buildMarkerIcon(vendor), zIndexOffset: zOffset })
+          .addTo(map);
 
-      // Le clic ouvre uniquement le panneau latéral (pas de popup Leaflet),
-      // pour éviter le petit encart qui restait coincé à l'écran.
-      marker.on('click', function() {
-        document.dispatchEvent(new CustomEvent('vendor-click', { detail: vendor.id }));
-      });
+        // Le clic ouvre uniquement le panneau latéral (pas de popup Leaflet),
+        // pour éviter le petit encart qui restait coincé à l'écran.
+        marker.on('click', function() {
+          document.dispatchEvent(new CustomEvent('vendor-click', { detail: vendor.id }));
+        });
 
-      markers.push({ marker: marker, vendor: vendor });
+        markers.push({ marker: marker, vendor: vendor });
+      } catch (e) {
+        // Ignore ce marqueur pour ne pas casser le rendu des autres.
+      }
     });
   }
 
