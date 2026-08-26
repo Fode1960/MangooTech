@@ -2056,6 +2056,19 @@ html.dark {
 
   // Initialise la carte une fois les profils réels chargés depuis /api/carte.
   function initCarte(data) {
+    // Migration unique v2 : purge l'ancienne ville mémorisée (lp_user_city) si
+    // elle a pu être écrite par la géolocalisation automatique (bug de
+    // persistance corrigé plus haut). Sans cela, un utilisateur déjà bloqué sur
+    // une ancienne ville (ex. Dakar mémorisé alors qu'il est désormais à Paris)
+    // resterait bloqué malgré le correctif. On ne purge qu'UNE fois, pour ne
+    // jamais effacer les choix manuels ultérieurs de l'utilisateur.
+    try {
+      if (!localStorage.getItem('lp_scope_v2')) {
+        localStorage.removeItem('lp_user_city');
+        localStorage.setItem('lp_scope_v2', '1');
+      }
+    } catch (e) {}
+
     vendors = (data && data.vendors) ? data.vendors : [];
     rebuildDerivedData();
     renderMarkers();
