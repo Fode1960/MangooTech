@@ -318,8 +318,8 @@ html.dark {
         <div class="mx-auto max-w-[1200px] px-6 py-12">
           <div class="flex flex-wrap items-end justify-between gap-4">
             <div class="max-w-2xl">
-              <div class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold mb-4" style="background-color: rgb(var(--mgt-error)); color: rgb(var(--mgt-error-foreground)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">
-                <span class="live-dot inline-block h-2 w-2 rounded-full" style="background-color: rgb(var(--mgt-error-foreground));"></span>
+              <div class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold mb-4" style="background-color: rgb(var(--mgt-primary-600)); color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">
+                <span class="live-dot inline-block h-2 w-2 rounded-full" style="background-color: rgb(var(--mgt-primary-foreground));"></span>
                 <span id="hero-live-count">0 lives actifs</span>
               </div>
               <h1 class="h1" style="color: rgb(var(--mgt-primary-foreground));">Lives en direct</h1>
@@ -526,6 +526,8 @@ html.dark {
 
   function populateCategories() {
     var container = document.getElementById('lives-category-chips');
+    if (!container) return;
+    container.innerHTML = '';
     var seen = {};
     // Puce « Toutes »
     var allChip = document.createElement('button');
@@ -622,8 +624,8 @@ html.dark {
         '<div class="relative h-32">' +
           thumbBlock +
           '<div class="absolute inset-0" style="background: linear-gradient(180deg, rgb(var(--mgt-primary-900) / 0.45) 0%, transparent 55%);"></div>' +
-          '<span class="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold" style="background-color: rgb(var(--mgt-error)); color: rgb(var(--mgt-error-foreground)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">' +
-            '<span class="live-dot inline-block h-2 w-2 rounded-full" style="background-color: rgb(var(--mgt-error-foreground));"></span>EN DIRECT' +
+          '<span class="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold" style="background-color: rgb(var(--mgt-primary-600)); color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">' +
+            '<span class="live-dot inline-block h-2 w-2 rounded-full" style="background-color: rgb(var(--mgt-primary-foreground));"></span>EN DIRECT' +
           '</span>' +
           '<span class="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold" style="background-color: rgb(var(--mgt-primary-900) / 0.72); color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">' +
             '<i data-lucide="eye" class="h-3 w-3"></i><span class="tabular-nums">' + formatViewers(l.viewers) + '</span>' +
@@ -634,7 +636,7 @@ html.dark {
           '<div class="flex items-start gap-3">' +
             '<div class="relative flex-shrink-0">' +
               '<div class="flex items-center justify-center w-11 h-11 rounded-full text-white font-semibold text-sm" style="background-color: rgb(var(--mgt-primary));">' + l.ini + '</div>' +
-              '<span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2" style="background-color: rgb(var(--mgt-error)); border-color: rgb(var(--mgt-card));"></span>' +
+              '<span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2" style="background-color: rgb(var(--mgt-primary-500)); border-color: rgb(var(--mgt-card));"></span>' +
             '</div>' +
             '<div class="flex-1 min-w-0">' +
               '<div class="flex items-center justify-between gap-2">' +
@@ -753,11 +755,57 @@ html.dark {
 
   function boot() {
     loadLives().then(function () {
+      lastCategoryKey = categoryKey();
       populateCategories();
       refreshSellerTypeStyles();
       applyFilter();
+      // Rafraîchissement périodique : les lives terminés disparaissent de la
+      // grille, et les nouveaux apparaissent, sans rechargement manuel.
+      setInterval(refreshLives, 4000);
+      document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) refreshLives();
+      });
     });
   }
+
+  // Signature compacte de l'état des lives : permet de ne re-rendre la grille
+  // que si quelque chose a réellement changé (départ/arrêt, spectateurs, durée).
+  function signatureOf(list) {
+    return (list || []).map(function (l) {
+      return [l.vendorId || '', l.roomId || '', l.viewers || 0, l.startedAt || 0].join('~');
+    }).sort().join('|');
+  }
+
+  function categoryKey() {
+    var cats = {};
+    LIVES.forEach(function (l) { cats[l.category] = true; });
+    return Object.keys(cats).sort().join('|');
+  }
+
+  var lastCategoryKey = null;
+  var polling = false;
+
+  function refreshLives() {
+    if (polling) return;
+    polling = true;
+    fetch('/api/lives', { headers: { 'Accept': 'application/json' }, cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (data) {
+        polling = false;
+        var next = normalizeRooms((data && data.rooms) ? data.rooms : []);
+        if (signatureOf(next) === signatureOf(LIVES)) return; // rien de changé
+        LIVES = next;
+        var key = categoryKey();
+        if (key !== lastCategoryKey) {
+          lastCategoryKey = key;
+          populateCategories();
+          refreshChipStyles();
+        }
+        applyFilter();
+      })
+      .catch(function () { polling = false; });
+  }
+
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 })();
