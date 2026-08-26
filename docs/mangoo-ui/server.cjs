@@ -2862,7 +2862,7 @@ function handleLivePin(ws, msg) {
   live.pinnedProduct = {
     name: String(msg.name || '').slice(0, 120),
     price: String(msg.price || '').slice(0, 40),
-    image: String(msg.image || '').slice(0, 500)
+    image: String(msg.image || '')
   };
   broadcastLive({ type: 'live-pinned', name: live.pinnedProduct.name, price: live.pinnedProduct.price, image: live.pinnedProduct.image }, ws);
 }
