@@ -720,7 +720,7 @@
       links = nav.querySelectorAll('a');
     }
 
-    // 2) Badge « En direct » sur le lien Live.
+    // 2) Badge « En direct » + redirection intelligente sur le lien Live.
     var liveLink = null;
     for (var k = 0; k < links.length; k++) {
       if ((links[k].getAttribute('href') || '').indexOf('dashboard-live.html') >= 0) { liveLink = links[k]; break; }
@@ -737,22 +737,52 @@
       }
     }
 
-    function setLiveBadge(active) {
+    // Destination par défaut du lien Live (page de diffusion du pro).
+    var BASE_LIVE_HREF = liveLink ? liveLink.getAttribute('href') : './dashboard-live.html';
+
+    function myVendorId() {
+      if (global.MangooVendor && typeof global.MangooVendor.connectedVendorId === 'function') {
+        return global.MangooVendor.connectedVendorId() || '';
+      }
+      return '';
+    }
+    function myName() {
+      var v = global.MangooVendor ? global.MangooVendor.current() : null;
+      return v ? (v.name || '') : '';
+    }
+
+    // Met à jour le badge ET la destination du lien « Live ». Quand un live est
+    // actif et qu'il n'est PAS le nôtre, le lien rejoint le live (live-client) ;
+    // sinon il conserve sa page de diffusion (dashboard-live).
+    function setLiveState(st) {
+      var active = !!(st && st.active);
+      var liveVendorId = String((st && st.vendorId) || '');
+      var mine = liveVendorId && liveVendorId === myVendorId();
       if (badge) {
         badge.style.display = active ? 'inline-flex' : 'none';
         if (liveLink) liveLink.style.color = active ? '#fff' : '';
+      }
+      if (liveLink) {
+        if (active && !mine) {
+          var params = '?id=' + encodeURIComponent(myVendorId() || 'cli-66b551e17c29');
+          var nm = myName();
+          if (nm) params += '&name=' + encodeURIComponent(nm);
+          liveLink.setAttribute('href', './live-client.html' + params);
+        } else {
+          liveLink.setAttribute('href', BASE_LIVE_HREF);
+        }
       }
     }
     function poll() {
       fetch('/live-status', { cache: 'no-store' })
         .then(function (r) { return r.json(); })
-        .then(function (d) { setLiveBadge(!!(d && d.active)); })
+        .then(function (d) { setLiveState({ active: !!(d && d.active), vendorId: (d && d.vendorId) || '' }); })
         .catch(function () { /* ignore */ });
     }
     // 1) Réaction immédiate aux événements WebSocket (live-started / live-ended),
     //    quand MangooConnect est disponible (chargé ci-dessus ou par la page).
     if (global.MangooConnect && typeof global.MangooConnect.onLive === 'function') {
-      global.MangooConnect.onLive(function (st) { setLiveBadge(!!(st && st.active)); });
+      global.MangooConnect.onLive(function (st) { setLiveState(st); });
     }
     // 2) Filet de sécurité : sondage /live-status toutes les 15 s.
     poll();
