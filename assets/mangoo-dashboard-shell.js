@@ -755,6 +755,22 @@
       if ((links[k].getAttribute('href') || '').indexOf('dashboard-live.html') >= 0) { liveLink = links[k]; break; }
     }
 
+    // Renomme le lien de diffusion en « Lancer mon Live » pour lever toute
+    // ambiguïté avec « Lives en direct » (la liste des directs des autres).
+    // On conserve l'icône (radio) et on remplace uniquement le texte. Le
+    // libellé d'origine varie selon les pages (« Live », « Live actif »…).
+    if (liveLink) {
+      var _iconEl = liveLink.querySelector('i[data-lucide], svg');
+      var _newLabel = document.createElement('span');
+      _newLabel.textContent = 'Lancer mon Live';
+      liveLink.innerHTML = '';
+      if (_iconEl) liveLink.appendChild(_iconEl);
+      liveLink.appendChild(_newLabel);
+      if (global.lucide && typeof global.lucide.createIcons === 'function') {
+        global.lucide.createIcons();
+      }
+    }
+
     // Lien « Lives en direct » (liste multi-salles), injecté juste après « Live ».
     var hasDir = false;
     for (var li = 0; li < links.length; li++) {
