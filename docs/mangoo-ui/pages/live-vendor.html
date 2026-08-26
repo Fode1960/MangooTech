@@ -324,9 +324,14 @@ html.dark {
 
       function handleLiveMessage(msg) {
         switch (msg.type) {
-          case 'live-started': enterLiveState(); setViewers(msg.viewers || 0); setLikes(msg.likes || 0); setOrders(msg.orders || 0); toast('Live démarré — en direct'); break;
-          case 'live-ended': exitLiveState(); break;
+          case 'live-started':
+            if (msg.vendorId && msg.vendorId !== MY_ID) break;
+            enterLiveState(); setViewers(msg.viewers || 0); setLikes(msg.likes || 0); setOrders(msg.orders || 0); toast('Live démarré — en direct'); break;
+          case 'live-ended':
+            if (msg.vendorId && msg.vendorId !== MY_ID) break;
+            exitLiveState(); break;
           case 'live-state':
+            if (msg.vendorId && msg.vendorId !== MY_ID) break;
             if (msg.active) {
               enterLiveState(); setViewers(msg.viewers || 0); setLikes(msg.likes || 0); setOrders(msg.orders || 0);
               if (msg.pinnedProduct && msg.pinnedProduct.name) setPinned(msg.pinnedProduct);

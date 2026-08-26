@@ -3059,7 +3059,7 @@ function handleLiveLike(ws) {
 }
 
 function handleLiveStateRequest(ws) {
-  send(ws, liveSnapshot(roomForWs(ws)));
+  send(ws, liveStateForWs(ws));
 }
 
 /* --- Live Shopping : diffusion vidéo (WebRTC, un vendeur -> N spectateurs) --- */
