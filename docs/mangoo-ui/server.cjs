@@ -109,11 +109,96 @@ const MIME = {
 /* ------------------------------------------------------------------ *
  *  État temps réel (en mémoire)
  * ------------------------------------------------------------------ */
-const clients = new Map();        // id -> { ws, role, name, online, lastSeen }
+const clients = new Map();        // id -> Array<{ ws, role, name, online, lastSeen }>
 const calls = new Map();          // callId -> { callerId, calleeId, callerWs, calleeWs, mode }
 const chatLog = [];               // { msgId, convId, from, to, text, sentAt }
 const appointmentLog = [];        // { apptId, from, fromName, to, service, day, time, note, status }
 const fileTransfers = new Map();  // fileId -> { fileId, from, to, name, size, mime, received, createdAt }
+
+/* ------------------------------------------------------------------ *
+ *  Connexions multi-socket : une identité peut avoir plusieurs onglets
+ *  (dashboard, messagerie, live…). On conserve donc un tableau de
+ *  connexions par identité pour ne plus écraser la socket active.
+ * ------------------------------------------------------------------ */
+function addClient(id, ws, role, name) {
+  const list = clients.get(id) || [];
+  const idx = list.findIndex((c) => c.ws === ws);
+  if (idx !== -1) list.splice(idx, 1);
+  list.push({ ws, role, name, online: true, lastSeen: Date.now() });
+  clients.set(id, list);
+  return list;
+}
+
+function removeClient(id, ws) {
+  const list = clients.get(id);
+  if (!list) return;
+  const idx = list.findIndex((c) => c.ws === ws);
+  if (idx !== -1) list.splice(idx, 1);
+  if (list.length === 0) clients.delete(id);
+}
+
+// Connexions encore ouvertes pour une identité donnée.
+function onlineSockets(id) {
+  const list = clients.get(id);
+  if (!list) return [];
+  return list.filter((c) => c.online && c.ws && c.ws.readyState === 1);
+}
+
+function isOnline(id) {
+  return onlineSockets(id).length > 0;
+}
+
+// Socket de live réelle du spectateur (parmi les ws de liveViewers).
+function liveViewerWs(viewerId) {
+  let found = null;
+  liveViewers.forEach((vws) => {
+    if (!found && vws.meta && vws.meta.id === viewerId) found = vws;
+  });
+  return found;
+}
+
+// Résout la meilleure socket pour un flux 1:1 (appel / fichier) : la socket
+// de live du vendeur ou du spectateur quand un live est actif, sinon la
+// connexion la plus récente.
+function resolvePeer(id) {
+  if (!id) return null;
+  const list = onlineSockets(id);
+  if (list.length === 0) return null;
+  if (live.active && live.vendorId === id) {
+    const vws = vendorWs();
+    if (vws) {
+      const found = list.find((c) => c.ws === vws);
+      if (found) return found;
+    }
+  }
+  if (live.active) {
+    const lws = liveViewerWs(id);
+    if (lws) {
+      const found = list.find((c) => c.ws === lws);
+      if (found) return found;
+    }
+  }
+  return list[list.length - 1];
+}
+
+// Diffuse un message à toutes les connexions ouvertes d'une identité.
+function broadcastToPeer(id, obj, exceptWs) {
+  onlineSockets(id).forEach((c) => {
+    if (c.ws && c.ws !== exceptWs) send(c.ws, obj);
+  });
+}
+
+// Liste des pairs en ligne, dédupliquée par identité.
+function peersList() {
+  const peers = [];
+  clients.forEach((list, id) => {
+    const online = list.filter((c) => c.online);
+    if (online.length === 0) return;
+    const last = online[online.length - 1];
+    peers.push({ id, role: last.role, name: last.name });
+  });
+  return peers;
+}
 
 /* --- État Live Shopping (vendeur -> spectateurs) --- */
 const live = {
@@ -2481,8 +2566,10 @@ function liveSnapshot() {
 }
 
 function broadcastLive(obj, exceptWs) {
-  clients.forEach((c) => {
-    if (c.ws && c.ws !== exceptWs) send(c.ws, obj);
+  clients.forEach((list) => {
+    list.forEach((c) => {
+      if (c.ws && c.ws !== exceptWs) send(c.ws, obj);
+    });
   });
 }
 
@@ -2494,9 +2581,8 @@ function send(ws, obj) { try { if (ws && ws.readyState === 1) ws.send(JSON.strin
  *  Présence
  * ------------------------------------------------------------------ */
 function broadcastPresence() {
-  const peers = [];
-  clients.forEach((c, id) => { if (c.online) peers.push({ id, role: c.role, name: c.name }); });
-  clients.forEach((c) => send(c.ws, { type: 'presence', peers }));
+  const peers = peersList();
+  clients.forEach((list) => list.forEach((c) => send(c.ws, { type: 'presence', peers })));
 }
 
 /* ------------------------------------------------------------------ *
@@ -2542,7 +2628,7 @@ function handleRegister(ws, msg) {
   const role = String(msg.role || 'client').trim();
   const name = String(msg.name || id || 'Inconnu').trim();
   ws.meta = { id, role, name };
-  clients.set(id, { ws, role, name, online: true, lastSeen: Date.now() });
+  addClient(id, ws, role, name);
   console.log('[WS] register', { id, role, name, time: new Date().toLocaleTimeString() });
   send(ws, { type: 'registered', id, role, name });
   broadcastPresence();
@@ -2552,7 +2638,7 @@ function handleRegister(ws, msg) {
 function handleCallOffer(ws, msg) {
   const callId = msg.callId || rand();
   const to = String(msg.to || '').trim();
-  const target = clients.get(to);
+  const target = resolvePeer(to);
   if (!target || !target.online) {
     send(ws, { type: 'call-error', callId, reason: 'offline' });
     return;
@@ -2611,25 +2697,19 @@ function handleChatMessage(ws, msg) {
   };
   chatLog.push(entry);
   send(ws, { type: 'chat-ack', msgId: entry.msgId, sentAt: entry.sentAt });
-  const target = clients.get(to);
-  if (target && target.online) {
-    send(target.ws, {
-      type: 'chat-new', msgId: entry.msgId, convId: entry.convId,
-      from, fromName: ws.meta.name, text, sentAt: entry.sentAt
-    });
-  }
+  broadcastToPeer(to, {
+    type: 'chat-new', msgId: entry.msgId, convId: entry.convId,
+    from, fromName: ws.meta.name, text, sentAt: entry.sentAt
+  });
 }
 
 function handleTyping(ws, msg) {
   const from = ws.meta && ws.meta.id;
   const to = String(msg.to || '').trim();
   if (!from || !to) return;
-  const target = clients.get(to);
-  if (target && target.online) {
-    send(target.ws, {
-      type: 'typing', from, fromName: ws.meta.name, isTyping: !!msg.isTyping
-    });
-  }
+  broadcastToPeer(to, {
+    type: 'typing', from, fromName: ws.meta.name, isTyping: !!msg.isTyping
+  });
 }
 
 function handleChatHistory(ws, msg) {
@@ -2649,14 +2729,11 @@ function handleApptRequest(ws, msg) {
     status: 'requested', createdAt: nowIso()
   };
   appointmentLog.push(appt);
-  const target = clients.get(to);
-  if (target && target.online) {
-    send(target.ws, {
-      type: 'appointment-new', apptId: appt.apptId,
-      from: appt.from, fromName: appt.fromName,
-      service: appt.service, day: appt.day, time: appt.time, note: appt.note
-    });
-  }
+  broadcastToPeer(to, {
+    type: 'appointment-new', apptId: appt.apptId,
+    from: appt.from, fromName: appt.fromName,
+    service: appt.service, day: appt.day, time: appt.time, note: appt.note
+  });
   send(ws, { type: 'appointment-ack', apptId: appt.apptId });
 }
 
@@ -2665,13 +2742,10 @@ function handleApptReply(ws, msg) {
   if (!appt) return;
   const accepted = msg.type === 'appointment-confirm';
   appt.status = accepted ? 'confirmed' : 'declined';
-  const requester = clients.get(appt.from);
-  if (requester && requester.online) {
-    send(requester.ws, {
-      type: accepted ? 'appointment-accepted' : 'appointment-declined',
-      apptId: appt.apptId, name: ws.meta.name
-    });
-  }
+  broadcastToPeer(appt.from, {
+    type: accepted ? 'appointment-accepted' : 'appointment-declined',
+    apptId: appt.apptId, name: ws.meta.name
+  });
 }
 
 /* --- Live Shopping --- */
@@ -2680,6 +2754,7 @@ function handleLiveStart(ws, msg) {
   live.active = true;
   live.vendorId = ws.meta.id;
   live.vendorName = ws.meta.name || 'Vendeur';
+  live.vendorWs = ws;
   live.title = String(msg.title || 'Live Shopping').slice(0, 120);
   live.startedAt = Date.now();
   live.viewers = 0;
@@ -2704,6 +2779,7 @@ function handleLiveStop(ws) {
   broadcastLive({ type: 'live-ended' });
   live.vendorId = null;
   live.vendorName = null;
+  live.vendorWs = null;
   live.pinnedProduct = null;
   live.chat = [];
   liveViewers.clear();
@@ -2739,10 +2815,12 @@ function handleLiveLeave(ws) {
 function handleLiveVendorClose(ws) {
   if (!ws.meta || ws.meta.id !== live.vendorId) return;
   if (!live.active) return;
+  if (live.vendorWs !== ws) return; // seule la socket du live arrête le live
   live.active = false;
   broadcastLive({ type: 'live-ended' });
   live.vendorId = null;
   live.vendorName = null;
+  live.vendorWs = null;
   live.pinnedProduct = null;
   live.chat = [];
   liveViewers.clear();
@@ -2750,9 +2828,8 @@ function handleLiveVendorClose(ws) {
 }
 
 function vendorWs() {
-  if (!live.active || !live.vendorId) return null;
-  const v = clients.get(live.vendorId);
-  return (v && v.online && v.ws) ? v.ws : null;
+  const ws = live.vendorWs;
+  return (ws && ws.readyState === 1) ? ws : null;
 }
 
 // Liste des spectateurs actuellement connectés au live (id + nom), pour que
@@ -2838,9 +2915,9 @@ function handleLiveVideoJoin(ws) {
 function handleLiveVideoOffer(ws, msg) {
   if (!live.active || !ws.meta || ws.meta.id !== live.vendorId) return;
   const viewerId = String(msg.viewerId || '').trim();
-  const target = clients.get(viewerId);
-  if (!target || !target.online || !target.ws) return;
-  send(target.ws, { type: 'live-video-offer', from: live.vendorId, sdp: msg.sdp });
+  const target = liveViewerWs(viewerId);
+  if (!target) return;
+  send(target, { type: 'live-video-offer', from: live.vendorId, sdp: msg.sdp });
 }
 
 function handleLiveVideoAnswer(ws, msg) {
@@ -2853,9 +2930,9 @@ function handleLiveVideoAnswer(ws, msg) {
 function handleLiveVideoIce(ws, msg) {
   if (!live.active || !ws.meta) return;
   if (ws.meta.id === live.vendorId) {
-    const target = clients.get(String(msg.viewerId || '').trim());
-    if (target && target.online && target.ws) {
-      send(target.ws, { type: 'live-video-ice', from: live.vendorId, candidate: msg.candidate });
+    const target = liveViewerWs(String(msg.viewerId || '').trim());
+    if (target) {
+      send(target, { type: 'live-video-ice', from: live.vendorId, candidate: msg.candidate });
     }
   } else {
     const vws = vendorWs();
@@ -2876,7 +2953,7 @@ function handleFileStart(ws, msg) {
     send(ws, { type: 'file-error', fileId, reason: 'taille' });
     return;
   }
-  const target = clients.get(to);
+  const target = resolvePeer(to);
   if (!target || !target.online) {
     send(ws, { type: 'file-error', fileId, reason: 'offline' });
     return;
@@ -2884,7 +2961,7 @@ function handleFileStart(ws, msg) {
 
   fileTransfers.set(fileId, {
     fileId, from: ws.meta.id, to, name, size, mime,
-    received: 0, createdAt: nowIso()
+    received: 0, createdAt: nowIso(), targetWs: target.ws
   });
   // Un seul transfert actif à la fois par connexion émettrice.
   ws.fileMeta = { fileId, to, received: 0, size };
@@ -2904,8 +2981,7 @@ function handleFileChunk(ws, buf) {
 
   const len = buf ? buf.length : 0;
   if (t.received + len > MAX_FILE_SIZE) {
-    const target = clients.get(meta.to);
-    if (target && target.online) send(target.ws, { type: 'file-error', fileId: meta.fileId, reason: 'taille' });
+    if (t.targetWs) send(t.targetWs, { type: 'file-error', fileId: meta.fileId, reason: 'taille' });
     send(ws, { type: 'file-error', fileId: meta.fileId, reason: 'taille' });
     ws.fileMeta = null;
     fileTransfers.delete(meta.fileId);
@@ -2915,9 +2991,8 @@ function handleFileChunk(ws, buf) {
   t.received += len;
   meta.received += len;
 
-  const target = clients.get(meta.to);
-  if (target && target.online && target.ws) {
-    try { target.ws.send(buf, { binary: true }); } catch (e) {}
+  if (t.targetWs && t.targetWs.readyState === 1) {
+    try { t.targetWs.send(buf, { binary: true }); } catch (e) {}
   }
 }
 
@@ -2928,9 +3003,8 @@ function handleFileEnd(ws, msg) {
   ws.fileMeta = null;
   if (!t) return;
 
-  const target = clients.get(meta.to);
-  if (target && target.online) {
-    send(target.ws, {
+  if (t.targetWs) {
+    send(t.targetWs, {
       type: 'file-end', fileId: meta.fileId,
       name: t.name, size: t.received, mime: t.mime
     });
@@ -3113,8 +3187,7 @@ function handleHttp(req, res) {
     return;
   }
   if (urlPath === '/status') {
-    const peers = [];
-    clients.forEach((c, id) => { if (c.online) peers.push({ id, role: c.role, name: c.name }); });
+    const peers = peersList();
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ ok: true, peers, chat: chatLog.length, appointments: appointmentLog.length }));
     return;
@@ -3156,7 +3229,6 @@ function handleHttp(req, res) {
     const contacts = users
       .filter(function (u) { return u && u.role !== 'admin' && u.id !== user.id; })
       .map(function (u) {
-        const c = clients.get(u.id) || clients.get(u.vendorId);
         return {
           id: u.id,
           vendorId: u.vendorId || u.id,
@@ -3168,7 +3240,7 @@ function handleHttp(req, res) {
           city: u.city || '',
           logo: u.logo || '',
           category: u.category || '',
-          online: !!(c && c.online),
+          online: isOnline(u.id) || isOnline(u.vendorId),
           createdAt: u.createdAt || ''
         };
       })
@@ -5559,8 +5631,7 @@ function handleRealtimeConnection(ws, req, label) {
     handleLiveLeave(ws);
     handleLiveVendorClose(ws);
     if (ws.meta && ws.meta.id) {
-      const c = clients.get(ws.meta.id);
-      if (c && c.ws === ws) { c.online = false; }
+      removeClient(ws.meta.id, ws);
     }
     broadcastPresence();
   });

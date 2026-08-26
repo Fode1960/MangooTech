@@ -700,6 +700,15 @@ html.dark {
                 <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-0.5">Diffusez vos prestations en direct</p>
               </div>
             </a>
+            <a id="join-live-card" href="./live-client.html" class="flex items-center gap-4 p-4 rounded-xl border border-[rgb(var(--mgt-border))] hover:border-[rgb(var(--mgt-accent))] hover:bg-[rgb(var(--mgt-accent-50))] transition-all group text-left">
+              <div class="flex items-center justify-center w-11 h-11 rounded-xl text-white group-hover:scale-105 transition-transform" style="background:#ef4444">
+                <i data-lucide="play-circle" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Rejoindre le live</p>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-0.5">Regarder un direct en cours</p>
+              </div>
+            </a>
             <a href="./dashboard-services.html" class="flex items-center gap-4 p-4 rounded-xl border border-[rgb(var(--mgt-border))] hover:border-[rgb(var(--mgt-primary))] hover:bg-[rgb(var(--mgt-primary-50))] transition-all group text-left">
               <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-primary))] text-white group-hover:scale-105 transition-transform">
                 <i data-lucide="plus-circle" class="w-5 h-5"></i>
@@ -980,6 +989,29 @@ html.dark {
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
   else run();
+})();
+</script>
+<script>
+/* Câble le bouton « Rejoindre le live » vers le client Live avec l'identité
+   de l'utilisateur connecté (pour être reconnu dans le chat et les appels). */
+(function () {
+  try {
+    var el = document.getElementById('join-live-card');
+    if (!el) return;
+    var u = null;
+    try { var raw = localStorage.getItem('mgt_user'); if (raw) u = JSON.parse(raw); } catch (e) {}
+    var vid = null, vname = null;
+    if (u && u.id) { vid = u.id; vname = u.enseigne || u.name || u.fullName || ''; }
+    else if (window.MangooVendor && window.MangooVendor.current) {
+      var v = window.MangooVendor.current();
+      if (v) { vid = v.vendorId; vname = v.name; }
+    }
+    if (vid) {
+      var params = 'id=' + encodeURIComponent(vid);
+      if (vname) params += '&name=' + encodeURIComponent(vname);
+      el.setAttribute('href', './live-client.html?' + params);
+    }
+  } catch (e) { /* non bloquant */ }
 })();
 </script>
 <script>
