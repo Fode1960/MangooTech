@@ -545,6 +545,21 @@ html.dark {
       if (v.city && !CITIES[v.city]) CITIES[v.city] = { lat: v.lat, lng: v.lng, country: v.country };
     });
 
+    // Filet de sécurité : recale les coordonnées GPS de chaque vendeur sur
+    // celles, canoniques, de sa ville (source /api/cities). Corrige tout compte
+    // dont la ville a été modifiée sans mise à jour des coordonnées (ex. « Paris »
+    // avec lat/lng restés sur Dakar). Garantit que la carte, la liste et
+    // l'annuaire affichent le même lieu, même si le serveur renvoie des
+    // coordonnées obsolètes (cache, données non migrées, etc.).
+    vendors.forEach(function(v) {
+      var canon = (v.city && CITIES[v.city]) ? CITIES[v.city] : null;
+      if (canon && typeof canon.lat === 'number' && typeof canon.lng === 'number') {
+        v.lat = canon.lat;
+        v.lng = canon.lng;
+        if (canon.country) v.country = canon.country;
+      }
+    });
+
     // Lives « démo » statiques (définis dans les données) : ils restent
     // locaux à leur ville, indépendamment du live diffusé en temps réel.
     vendors.forEach(function(v) {
@@ -591,7 +606,7 @@ html.dark {
   // Le scope d'affichage : même ville (nearby) ou tout le pays (country).
   function matchesScopeFor(v) {
     if (lpScopeMode === 'country') {
-      return !userCountry || v.country === userCountry;
+      return !userCountry || normalizeText(v.country) === normalizeText(userCountry);
     }
     if (userCity) {
       // Un compte « other » (ancienne option « Autre ») ou sans ville n'a pas
@@ -599,7 +614,9 @@ html.dark {
       // l'exclure (il est géolocalisé par défaut sur Dakar).
       var cityKey = normalizeText(v.city);
       var cityKnown = cityKey !== '' && cityKey !== 'other' && cityKey !== 'autre';
-      var matchesCity = cityKnown ? (v.city === userCity) : true;
+      // Comparaison insensible à la casse/aux accents pour éviter tout faux
+      // négatif (ex. « Yaoundé » vs « yaounde »).
+      var matchesCity = cityKnown ? (cityKey === normalizeText(userCity)) : true;
       return matchesCity && vendorDistanceKm(v) <= maxDistanceKm;
     }
     return vendorDistanceKm(v) <= maxDistanceKm;
