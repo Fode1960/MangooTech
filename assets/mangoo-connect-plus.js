@@ -1153,8 +1153,12 @@
   function injectLiveBanner() {
     var filename = (location.pathname.split('/').pop() || '').toLowerCase();
     if (!filename) return;
-    if (filename.indexOf('dashboard') === 0) return;             // espace pro
-    if (filename === 'live-client.html' || filename === 'live-shopping.html') return;
+    // Pages de diffusion / visionnage du direct : le bandeau « Rejoindre » n'y a
+    // pas sa place (on est déjà dans le live). Les dashboards pro restent
+    // éligibles afin que les AUTRES vendeurs voient le direct ; c'est apply()
+    // qui masque le bandeau lorsque le live est celui du vendeur connecté.
+    if (filename === 'live-client.html' || filename === 'live-shopping.html' || filename === 'live-vendor.html') return;
+    if (filename === 'dashboard-live.html') return;
 
     var pagesBase = location.pathname.indexOf('/pages/') >= 0 ? './' : 'pages/';
 
@@ -1169,12 +1173,11 @@
     el.href = pagesBase + 'live-client.html';
     el.setAttribute('aria-label', 'Rejoindre le live en cours');
     el.style.cssText =
-      'position:fixed;right:16px;bottom:16px;z-index:9999;display:none;' +
-      'align-items:center;gap:8px;padding:11px 18px;border-radius:9999px;' +
-      'background:#ef4444;color:#fff;font-weight:700;font-size:14px;line-height:1;' +
-      'box-shadow:0 8px 24px rgba(239,68,68,.42);text-decoration:none;' +
-      'font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;' +
-      'animation:mgt-live-float 1.6s ease-in-out infinite;';
+      'position:fixed;top:16px;right:16px;z-index:9999;display:none;' +
+      'align-items:center;gap:7px;padding:8px 14px;border-radius:9999px;' +
+      'background:#ef4444;color:#fff;font-weight:600;font-size:13px;line-height:1;' +
+      'box-shadow:0 4px 14px rgba(0,0,0,.18);text-decoration:none;' +
+      'font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;';
     el.innerHTML = '<span style="width:8px;height:8px;border-radius:50%;background:#fff;animation:mgt-live-dot 1.6s infinite;"></span>En direct · Rejoindre';
     document.body.appendChild(el);
 
