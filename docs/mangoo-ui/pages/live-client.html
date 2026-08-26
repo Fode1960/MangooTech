@@ -637,6 +637,10 @@ html.dark {
     }
 
     function applySnapshot(s) {
+      // Le vendeur réellement en direct (déduit du serveur) : nécessaire pour
+      // que l'appel privé « client → vendeur » parte vers la bonne personne,
+      // pas vers le vendeur codé en dur par défaut.
+      if (s.vendorId) vendorId = s.vendorId;
       setViewers(s.viewers);
       $('stat-likes').textContent = s.likes;
       $('stat-orders').textContent = s.orders;
