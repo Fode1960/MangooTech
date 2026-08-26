@@ -15,6 +15,26 @@
 (function (global) {
   'use strict';
 
+  // Charge MangooConnect (messagerie + appels temps réel) sur toutes les pages
+  // du dashboard qui n'en disposent pas encore, SAUF dashboard-live.html qui
+  // gère son propre WebSocket. Sans ce module, les pages sans script ne reçoivent
+  // ni les messages ni les appels (le chat auto ne s'ouvre que si le WS est là).
+  // Chargement synchrone pour que MangooConnect soit disponible avant le
+  // registerRT() de MangooVendor appelé plus bas dans init().
+  (function ensureConnectPlus() {
+    if (global.MangooConnect) return;
+    var page = (location.pathname.split('/').pop() || '').toLowerCase();
+    if (page === 'dashboard-live.html') return;
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '../assets/mangoo-connect-plus.js', false);
+      xhr.send(null);
+      if (xhr.status >= 200 && xhr.status < 300) {
+        (0, eval)(xhr.responseText);
+      }
+    } catch (e) { /* non bloquant */ }
+  })();
+
   // ---- Garde d'accès par rôle (espace prestataire) ----
   function readSession() {
     try {
@@ -717,18 +737,24 @@
       }
     }
 
+    function setLiveBadge(active) {
+      if (badge) {
+        badge.style.display = active ? 'inline-flex' : 'none';
+        if (liveLink) liveLink.style.color = active ? '#fff' : '';
+      }
+    }
     function poll() {
       fetch('/live-status', { cache: 'no-store' })
         .then(function (r) { return r.json(); })
-        .then(function (d) {
-          var active = !!(d && d.active);
-          if (badge) {
-            badge.style.display = active ? 'inline-flex' : 'none';
-            if (liveLink && active) liveLink.style.color = '#fff';
-          }
-        })
+        .then(function (d) { setLiveBadge(!!(d && d.active)); })
         .catch(function () { /* ignore */ });
     }
+    // 1) Réaction immédiate aux événements WebSocket (live-started / live-ended),
+    //    quand MangooConnect est disponible (chargé ci-dessus ou par la page).
+    if (global.MangooConnect && typeof global.MangooConnect.onLive === 'function') {
+      global.MangooConnect.onLive(function (st) { setLiveBadge(!!(st && st.active)); });
+    }
+    // 2) Filet de sécurité : sondage /live-status toutes les 15 s.
     poll();
     setInterval(poll, 15000);
   }

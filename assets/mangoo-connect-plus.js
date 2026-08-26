@@ -373,6 +373,7 @@
   var fileSendProgressCbs = [];
   var statusCbs = [];
   var typingCbs = [];
+  var liveCbs = [];
 
   function emit(list, arg) { list.forEach(function (cb) { try { cb(arg); } catch (e) {} }); }
 
@@ -449,6 +450,9 @@
       case 'file-start': onFileStart(msg); break;
       case 'file-end': onFileEnd(msg); break;
       case 'file-error': emit(fileCbs, { error: true, fileId: msg.fileId, reason: msg.reason }); break;
+      case 'live-started': emit(liveCbs, { active: true, vendorId: msg.vendorId, vendorName: msg.vendorName, title: msg.title }); break;
+      case 'live-ended': emit(liveCbs, { active: false }); break;
+      case 'live-state': emit(liveCbs, { active: !!msg.active, vendorId: msg.vendorId, vendorName: msg.vendorName, title: msg.title }); break;
       case 'pong': break;
     }
   }
@@ -977,6 +981,7 @@
     onPresence: function (cb) { presenceCbs.push(cb); },
     onMessage: function (cb) { messageCbs.push(cb); },
     onTyping: function (cb) { typingCbs.push(cb); },
+    onLive: function (cb) { liveCbs.push(cb); },
     onIncomingCall: function (cb) { incomingCallCbs.push(cb); },
     onCallEnded: function (cb) { callEndedCbs.push(cb); },
     onAppointment: function (cb) { appointmentCbs.push(cb); },
