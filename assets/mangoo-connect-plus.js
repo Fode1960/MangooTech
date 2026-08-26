@@ -452,7 +452,7 @@
       case 'file-error': emit(fileCbs, { error: true, fileId: msg.fileId, reason: msg.reason }); break;
       case 'live-started': emit(liveCbs, { active: true, vendorId: msg.vendorId, vendorName: msg.vendorName, title: msg.title }); break;
       case 'live-ended': emit(liveCbs, { active: false }); break;
-      case 'live-state': emit(liveCbs, { active: !!msg.active, vendorId: msg.vendorId, vendorName: msg.vendorName, title: msg.title }); break;
+      case 'live-state': emit(liveCbs, { active: !!msg.active, vendorId: msg.vendorId, vendorName: msg.vendorName, title: msg.title, rooms: msg.rooms || [] }); break;
       case 'pong': break;
     }
   }
@@ -1181,7 +1181,7 @@
       'background:#ef4444;color:#fff;font-weight:600;font-size:13px;line-height:1;' +
       'box-shadow:0 4px 14px rgba(0,0,0,.18);text-decoration:none;' +
       'font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;';
-    el.innerHTML = '<span style="width:8px;height:8px;border-radius:50%;background:#fff;animation:mgt-live-dot 1.6s infinite;"></span>En direct · Rejoindre';
+    el.innerHTML = '<span style="width:8px;height:8px;border-radius:50%;background:#fff;animation:mgt-live-dot 1.6s infinite;flex-shrink:0;"></span><span id="mgt-live-banner-label">En direct</span>';
     document.body.appendChild(el);
 
     function myVendorId() {
@@ -1201,17 +1201,38 @@
 
     function apply(st) {
       var active = !!(st && st.active);
+      var rooms = (st && Array.isArray(st.rooms)) ? st.rooms : [];
       var liveVendorId = String((st && st.vendorId) || '');
-      var mine = !!(liveVendorId && myVendorId() && liveVendorId === myVendorId());
-      el.style.display = (active && !mine) ? 'inline-flex' : 'none';
-      if (active && !mine) {
-        var c = readStoredClient();
-        if (c && c.id) {
-          el.href = pagesBase + 'live-client.html?id=' + encodeURIComponent(c.id) + '&name=' + encodeURIComponent(c.name || '');
-        } else if (myVendorId()) {
-          el.href = pagesBase + 'live-client.html?id=' + encodeURIComponent(myVendorId()) + '&name=' + encodeURIComponent(myName() || '');
-        }
+      var label = document.getElementById('mgt-live-banner-label');
+
+      // Un seul live actif, et c'est le nôtre : on ne montre pas le bandeau.
+      if (rooms.length <= 1 && liveVendorId && myVendorId() && liveVendorId === myVendorId()) {
+        el.style.display = 'none';
+        return;
       }
+      if (!active) { el.style.display = 'none'; return; }
+
+      // Plusieurs lives simultanés : on renvoie vers la liste « Lives en
+      // direct » pour que le client CHOISISSE lequel rejoindre, au lieu de
+      // l'envoyer aveuglément vers un seul direct.
+      if (rooms.length > 1) {
+        if (label) label.textContent = rooms.length + ' lives en direct';
+        el.href = pagesBase + 'lives-en-direct.html';
+        el.style.display = 'inline-flex';
+        return;
+      }
+
+      // Un seul live : redirection directe vers la salle du vendeur.
+      if (label) label.textContent = 'En direct · Rejoindre';
+      var c = readStoredClient();
+      if (c && c.id) {
+        el.href = pagesBase + 'live-client.html?id=' + encodeURIComponent(c.id) + '&name=' + encodeURIComponent(c.name || '');
+      } else if (myVendorId()) {
+        el.href = pagesBase + 'live-client.html?id=' + encodeURIComponent(myVendorId()) + '&name=' + encodeURIComponent(myName() || '');
+      } else {
+        el.href = pagesBase + 'live-client.html';
+      }
+      el.style.display = 'inline-flex';
     }
 
     // 1) Instantané via le WebSocket (pages déjà connectées via MangooConnect).
@@ -1222,7 +1243,7 @@
     function poll() {
       fetch('/live-status', { cache: 'no-store' })
         .then(function (r) { return r.json(); })
-        .then(function (d) { apply({ active: !!(d && d.active), vendorId: (d && d.vendorId) || '' }); })
+        .then(function (d) { apply({ active: !!(d && d.active), vendorId: (d && d.vendorId) || '', rooms: (d && d.rooms) || [] }); })
         .catch(function () { /* ignore */ });
     }
     poll();
