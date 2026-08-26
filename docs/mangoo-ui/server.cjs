@@ -2629,6 +2629,20 @@ function liveSnapshot(room) {
   };
 }
 
+// État du live adapté à la socket : un pro (vendeur/prestataire) reçoit SA
+// propre salle (ou « inactif » s'il n'a rien lancé), jamais la salle d'un
+// autre. Un client/spectateur reçoit l'état général (première salle active),
+// afin de pouvoir rejoindre un direct dès la connexion.
+function liveStateForWs(ws) {
+  const room = roomForWs(ws);
+  if (room) return liveSnapshot(room);
+  const role = (ws && ws.meta && ws.meta.role) || '';
+  if (role === 'vendor' || role === 'prestataire') {
+    return { type: 'live-state', active: false, rooms: activeRooms().map(roomSnapshot) };
+  }
+  return liveSnapshot(null);
+}
+
 // Vue publique d'une salle (consommée par /api/lives et la liste `rooms`).
 function roomSnapshot(room) {
   return {
@@ -2734,8 +2748,10 @@ function handleRegister(ws, msg) {
   send(ws, { type: 'registered', id, role, name });
   // État du live immédiat : permet à tout client qui se connecte (ou se
   // reconnecte) de connaître l'état courant du Live Shopping instantanément,
-  // sans attendre le prochain sondage /live-status côté navigateur.
-  send(ws, liveSnapshot());
+  // sans attendre le prochain sondage /live-status côté navigateur. Adapté à la
+  // socket : un pro reçoit sa propre salle (ou « inactif »), jamais celle d'un
+  // autre vendeur.
+  send(ws, liveStateForWs(ws));
   broadcastPresence();
 }
 
