@@ -36,6 +36,21 @@
 
   if (global.MangooClientShell && global.MangooClientShell.__ready) return;
 
+  // Charge le module Web Push (mangoo-push.js) : gère le bouton
+  // « Notifications » de la cloche et le réglage « suivi des vendeurs ».
+  (function ensurePush() {
+    if (global.MangooPush) return;
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '../assets/mangoo-push.js', false);
+      xhr.send(null);
+      if (xhr.status >= 200 && xhr.status < 300) (0, eval)(xhr.responseText);
+    } catch (e) { /* non bloquant */ }
+    if (global.MangooPush && global.MangooPush.autoSubscribe) {
+      global.MangooPush.autoSubscribe();
+    }
+  })();
+
   var NOTIF_KEY = 'mgt_client_notifications_v1';
   var NOTIF_SEED = [];
 
@@ -236,6 +251,9 @@
       var notifs = getNotifs();
       var unread = notifs.filter(function (n) { return n.unread; }).length;
       var html = '<div class="mgt-pop-header">Notifications <span class="mgt-pop-count">' + unread + '</span></div>';
+      if (global.MangooPush && global.MangooPush.bellRowHTML) {
+        html += global.MangooPush.bellRowHTML();
+      }
       if (!notifs.length) {
         html += '<div class="mgt-pop-empty">Aucune notification</div>';
       } else {
@@ -243,7 +261,7 @@
           return '<div class="mgt-pop-item"><span class="dot ' + (n.unread ? '' : 'read') + '"></span><div style="flex:1;min-width:0;"><b>' + esc(n.title) + '</b><p>' + esc(n.body) + '</p><time>' + esc(n.time) + '</time></div></div>';
         }).join('') + '</div>';
       }
-      html += '<div class="mgt-pop-footer"><button data-act="markall">Tout marquer comme lu</button></div>';
+      html += '<div class="mgt-pop-footer"><button data-act="follow">Suivi des vendeurs</button><button data-act="markall">Tout marquer comme lu</button></div>';
       return html;
     }
     var pop = makePopover(bell, render);
@@ -252,8 +270,16 @@
       if (e.target.closest('[data-act="markall"]')) {
         setAllRead();
         pop.open();
+      } else if (e.target.closest('[data-act="follow"]')) {
+        pop.close();
+        if (global.MangooPush && global.MangooPush.openFollowSettings) {
+          global.MangooPush.openFollowSettings();
+        }
       }
     });
+    if (global.MangooPush && global.MangooPush.bindBellRow) {
+      global.MangooPush.bindBellRow(pop.el, function () { pop.open(); });
+    }
   }
 
   function clientName() {
