@@ -1137,41 +1137,112 @@ function resolveVendorCity(lat, lng, country) {
   return { city: 'Dakar', country: 'Senegal' };
 }
 
-// Migration au démarrage : normalise les comptes dont la ville vaut « other » /
-// « autre » (ancienne option « Autre » du formulaire, non géolocalisée) ou est
-// vide, en ville géolocalisée valide. Corrige à la fois users.json (source de
-// vérité du compte) et vendor-config.json (profil du pro), afin que la carte
-// Local+ et l'annuaire reflètent un lieu réel au lieu de « other ».
+// Compare deux coordonnées numériques avec une petite tolérance (évite de
+// réécrire des données déjà correctes à cause d'un écart d'arrondi).
+function numEq(a, b) {
+  function norm(x) {
+    if (x == null) return null;
+    const n = Number(x);
+    return Number.isFinite(n) ? n : null;
+  }
+  const na = norm(a);
+  const nb = norm(b);
+  if (na == null && nb == null) return true;
+  if (na == null || nb == null) return false;
+  return Math.abs(na - nb) < 1e-4;
+}
+
+// Migration au démarrage : réconcilie la ville, le pays, les coordonnées et la
+// zone de couverture de chaque vendeur/prestataire, en s'appuyant sur le
+// dictionnaire géographique (GEO_CITIES). Corrige trois cas récurrents :
+//   1. ville vide / « other » (ancienne option non géolocalisée) ;
+//   2. ville valide mais coordonnées incohérentes (ex. « Paris » avec des
+//      lat/lng restées sur Dakar après un changement de ville) ;
+//   3. zone de couverture « Villes desservies » qui ne reflète plus la ville
+//      du profil (ex. une seule ville erronée comme « Paris » pour un pro basé
+//      à Dakar).
 function normalizeVendorCities() {
   let changedUsers = false;
+  let changedConfig = false;
   users.forEach(function (u) {
     if (!u || (u.role !== 'prestataire' && u.role !== 'vendeur')) return;
-    const ck = normalizeCityKey(u.city);
-    if (ck && ck !== 'other' && ck !== 'autre') return; // ville déjà valide
-    const lat = (u.lat != null) ? Number(u.lat) : null;
-    const lng = (u.lng != null) ? Number(u.lng) : null;
-    const resolved = resolveVendorCity(lat, lng, u.country);
-    const geo = geocodeCity(resolved.city);
-    u.city = resolved.city;
-    u.country = resolved.country;
-    if (geo) { u.lat = geo.lat; u.lng = geo.lng; }
-    changedUsers = true;
-    // Synchronise aussi le profil vendor-config pour que la carte et le
-    // dashboard affichent la même ville, sans ressaisie.
-    if (u.vendorId) {
-      const doc = vendorConfigFor(u.vendorId);
-      if (doc) {
-        doc.profile = Object.assign({}, doc.profile, {
-          city: u.city, country: u.country, lat: u.lat, lng: u.lng
-        });
+    const doc = u.vendorId ? vendorConfigFor(u.vendorId) : null;
+    const profile = (doc && doc.profile) || {};
+
+    // Ville de référence : le profil du pro d'abord, sinon le compte.
+    let city = profile.city || u.city || '';
+    let country = profile.country || u.country || '';
+    let lat = (profile.lat != null) ? Number(profile.lat) : (u.lat != null ? Number(u.lat) : null);
+    let lng = (profile.lng != null) ? Number(profile.lng) : (u.lng != null ? Number(u.lng) : null);
+
+    const ck = normalizeCityKey(city);
+    const needsResolve = !ck || ck === 'other' || ck === 'autre';
+    let geo = geocodeCity(city);
+
+    if (geo) {
+      // Ville connue : on force des coordonnées canoniques pour corriger les
+      // incohérences (ville ≠ coordonnées).
+      city = geo.city;
+      country = geo.country;
+      lat = geo.lat;
+      lng = geo.lng;
+    } else if (needsResolve) {
+      // Ville vide / « other » : on la dérive de la position GPS.
+      const resolved = resolveVendorCity(lat, lng, country);
+      city = resolved.city;
+      country = resolved.country;
+      geo = geocodeCity(city);
+      if (geo) { lat = geo.lat; lng = geo.lng; }
+    } else if (lat == null || lng == null) {
+      // Ville inconnue du dictionnaire et sans coordonnées : repli Dakar.
+      geo = geocodeCity('Dakar');
+      if (geo) { city = geo.city; country = geo.country; lat = geo.lat; lng = geo.lng; }
+    }
+
+    const latNum = (lat == null) ? null : Number(lat);
+    const lngNum = (lng == null) ? null : Number(lng);
+
+    // users.json (source de vérité du compte).
+    if (u.city !== city || u.country !== country || !numEq(u.lat, latNum) || !numEq(u.lng, lngNum)) {
+      u.city = city;
+      u.country = country;
+      u.lat = latNum;
+      u.lng = lngNum;
+      changedUsers = true;
+    }
+
+    // vendor-config.json (profil du pro).
+    if (doc) {
+      doc.profile = doc.profile || {};
+      const p = doc.profile;
+      if (p.city !== city || p.country !== country || !numEq(p.lat, latNum) || !numEq(p.lng, lngNum)) {
+        doc.profile = Object.assign({}, p, { city: city, country: country, lat: latNum, lng: lngNum });
         doc.updatedAt = nowIso();
+        changedConfig = true;
+      }
+      // Zone de couverture : réaligne une ville unique erronée et complète une
+      // zone vide, sans jamais écraser une liste multi-villes délibérée.
+      if (city) {
+        const dec = doc.decouverte || {};
+        const villes = Array.isArray(dec.villes) ? dec.villes.slice() : [];
+        if (villes.length === 1 && normalizeCityKey(villes[0]) !== normalizeCityKey(city)) {
+          villes[0] = city;
+          doc.decouverte = Object.assign({}, dec, { villes: villes });
+          doc.updatedAt = nowIso();
+          changedConfig = true;
+        } else if (villes.length === 0) {
+          villes.push(city);
+          doc.decouverte = Object.assign({}, dec, { villes: villes });
+          doc.updatedAt = nowIso();
+          changedConfig = true;
+        }
       }
     }
   });
-  if (changedUsers) {
-    saveUsers();
-    saveVendorConfig();
-    console.log('[Migration] villes "other" normalisées vers des villes géolocalisées.');
+  if (changedUsers) saveUsers();
+  if (changedConfig) saveVendorConfig();
+  if (changedUsers || changedConfig) {
+    console.log('[Migration] villes et zones de couverture des vendeurs réconciliées.');
   }
 }
 
@@ -4451,7 +4522,12 @@ function handleHttp(req, res) {
 
   if (urlPath === '/api/vendor-config') {
     if (req.method === 'GET') {
-      const vendor = queryParam(req, 'vendor') || 'pro-41cafa4bcb31';
+      // Résout le vendeur depuis le paramètre explicite, puis depuis la session
+      // authentifiée : évite de servir par défaut la config d'un autre pro
+      // lorsque le client omet le paramètre `vendor`.
+      const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || cookieFromReq(req, 'mgt_session');
+      const authedUser = userByToken(token);
+      const vendor = queryParam(req, 'vendor') || (authedUser && authedUser.vendorId) || 'pro-41cafa4bcb31';
       const doc = vendorConfigFor(vendor);
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ ok: true, config: doc, plans: ABONNEMENT_PLANS }));
@@ -4473,7 +4549,35 @@ function handleHttp(req, res) {
           return;
         }
         if (action === 'save' && body.config) {
-          vendorConfig[vendor] = Object.assign({}, doc, body.config, { vendorId: vendor, updatedAt: new Date().toISOString() });
+          const merged = Object.assign({}, doc, body.config, { vendorId: vendor, updatedAt: new Date().toISOString() });
+          // Re-géocode la ville du profil et réaligne la zone de couverture pour
+          // que ville, coordonnées et « villes desservies » restent cohérentes.
+          // Corrige aussi le compte users.json (source de vérité de la carte).
+          if (merged.profile && merged.profile.city) {
+            const geo = geocodeCity(merged.profile.city);
+            if (geo) {
+              merged.profile = Object.assign({}, merged.profile, { city: geo.city, country: geo.country, lat: geo.lat, lng: geo.lng });
+            }
+            merged.decouverte = merged.decouverte || {};
+            const villes = Array.isArray(merged.decouverte.villes) ? merged.decouverte.villes.slice() : [];
+            const profCity = merged.profile.city;
+            if (!villes.length) {
+              villes.push(profCity);
+            } else if (villes.length === 1 && normalizeCityKey(villes[0]) !== normalizeCityKey(profCity)) {
+              villes[0] = profCity;
+            }
+            merged.decouverte.villes = villes;
+
+            const owner = users.find(function (x) { return (x.vendorId && x.vendorId === vendor) || x.id === vendor; });
+            if (owner && geo) {
+              owner.city = geo.city;
+              owner.country = geo.country;
+              owner.lat = geo.lat;
+              owner.lng = geo.lng;
+              saveUsers();
+            }
+          }
+          vendorConfig[vendor] = merged;
           saveVendorConfig();
           res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
           res.end(JSON.stringify({ ok: true, config: vendorConfig[vendor] }));
