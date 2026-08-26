@@ -2929,17 +2929,41 @@ function handleLiveStop(ws) {
 
 function stopRoom(room) {
   room.active = false;
-  room.viewers.forEach(function (vws) { if (vws.liveRoomId === room.vendorId) delete vws.liveRoomId; });
+  const endedMsg = { type: 'live-ended', roomId: room.roomId, vendorId: room.vendorId };
+  // 1) Notifie immédiatement le vendeur et CHAQUE spectateur de CETTE salle,
+  //    AVANT de vider/supprimer la salle, pour que personne ne reste bloqué
+  //    sur « EN DIRECT » après l'arrêt du vendeur. La diffusion globale seule
+  //    n'est pas fiable : les spectateurs qui ont rejoint sans passer par
+  //    « register » ne sont pas dans la map `clients`.
+  const vws = vendorWsOf(room);
+  if (vws) send(vws, endedMsg);
+  room.viewers.forEach(function (specWs) {
+    if (specWs && specWs.readyState === 1) send(specWs, endedMsg);
+    if (specWs && specWs.liveRoomId === room.vendorId) delete specWs.liveRoomId;
+  });
   room.viewers.clear();
   room.vendorWs = null;
   liveRooms.delete(roomKey(room.vendorId));
-  broadcastLive({ type: 'live-ended', roomId: room.roomId, vendorId: room.vendorId });
+  // 2) Diffusion globale de secours (badges sidebar, pages d'accueil, etc.).
+  broadcastLive(endedMsg);
 }
 
 function handleLiveJoin(ws, msg) {
   const requested = String((msg && (msg.vendorId || msg.roomId)) || '').trim();
   let room = requested ? roomByRef(requested) : null;
-  if (!room || !room.active) room = activeRooms()[0] || null;
+  if (!room || !room.active) {
+    // Si un client a demandé UNE salle précise et qu'elle n'existe plus (ou
+    // est terminée), on ne le fait PAS basculer sur une autre salle active :
+    // sinon, après la fin du live qu'il regardait, il se retrouverait sur le
+    // live d'un autre vendeur. On lui répond « hors ligne » pour sa cible.
+    if (requested) {
+      console.log('[LIVE] join (cible absente)', { id: ws.meta && ws.meta.id, requested, time: new Date().toLocaleTimeString() });
+      delete ws.liveRoomId;
+      send(ws, { type: 'live-ended', roomId: requested.indexOf('room-') === 0 ? requested : ('room-' + requested), vendorId: requested.indexOf('room-') === 0 ? requested.slice(5) : requested });
+      return;
+    }
+    room = activeRooms()[0] || null;
+  }
   console.log('[LIVE] join', { id: ws.meta && ws.meta.id, roomId: room ? room.roomId : null, time: new Date().toLocaleTimeString() });
   if (!room) { send(ws, liveSnapshot()); return; }
   // Quitte toute autre salle avant de rejoindre celle-ci.
