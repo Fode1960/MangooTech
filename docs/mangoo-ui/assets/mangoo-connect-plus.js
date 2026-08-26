@@ -1098,6 +1098,28 @@
   global.MangooConnect = api;
 
   /* ------------------------------------------------------------------ *
+   *  Notifications Web Push — abonnement silencieux
+   * ------------------------------------------------------------------ *
+   * Charge le module d'abonnement push puis, si la permission est déjà
+   * accordée, re-synchronise l'abonnement auprès du serveur. Aucun prompt
+   * n'est affiché ici : la demande de permission est déclenchée par un
+   * geste explicite (bouton « Activer les notifications »).
+   * ------------------------------------------------------------------ */
+  (function ensurePush() {
+    if (!global.MangooPush) {
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/assets/mangoo-push.js', false);
+        xhr.send(null);
+        if (xhr.status >= 200 && xhr.status < 300) (0, eval)(xhr.responseText);
+      } catch (e) { /* non bloquant */ }
+    }
+    if (global.MangooPush && global.MangooPush.autoSubscribe) {
+      global.MangooPush.autoSubscribe();
+    }
+  })();
+
+  /* ------------------------------------------------------------------ *
    *  Mangoo Express+ — taxonomie des types de livraison
    * ------------------------------------------------------------------ */
   global.MangooExpress = {

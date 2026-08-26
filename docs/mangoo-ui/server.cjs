@@ -20,6 +20,16 @@ const os = require('os');
 const crypto = require('crypto');
 const { WebSocketServer } = require('ws');
 
+// Module de notifications Web Push (VAPID). Chargé de façon défensive : si la
+// dépendance n'est pas installée (npm install non exécuté), le reste du serveur
+// continue de fonctionner, seul le push est désactivé.
+let webpush = null;
+try {
+  webpush = require('web-push');
+} catch (e) {
+  console.warn('[Push] module `web-push` indisponible — notifications web désactivées :', e.message);
+}
+
 const ROOT = __dirname;
 const HOST = '0.0.0.0';
 const HTTP_PORT = Number(process.env.PORT || 8080);
@@ -367,6 +377,166 @@ function isSensitiveFile(filePath) {
   // Fichiers temporaires d'écriture atomique (*.tmp-*).
   if (base.indexOf('.tmp-') !== -1) return true;
   return false;
+}
+
+/* ------------------------------------------------------------------ *
+ *  Notifications Web Push (Service Worker + VAPID)
+ * ------------------------------------------------------------------ *
+ *  Permet à un utilisateur de recevoir appels, messages et notifications de
+ *  Live Shopping même lorsque son Dashboard est FERMÉ (simple connexion
+ *  internet + navigateur actif en arrière-plan). Architecture standard :
+ *    - /sw.js                    : service worker (réception + clic)
+ *    - web-push + clés VAPID     : chiffrement côté serveur
+ *    - data/push-subscriptions.json : abonnements persistés (par identité)
+ *  Les clés VAPID sont stables entre redémarrages : elles proviennent des
+ *  variables d'environnement si définies, sinon elles sont générées une fois
+ *  puis persistées dans DATA_DIR (Render Persistent Disk).
+ * ------------------------------------------------------------------ */
+const PUSH_SUBSCRIPTIONS_FILE = 'push-subscriptions.json';
+const PUSH_VAPID_FILE = 'vapid.json';
+
+let pushVapid = null;         // { publicKey, privateKey, subject }
+let pushSubscriptions = {};   // routingId -> Array<{ endpoint, keys, role, name, userAgent, createdAt }>
+
+// Id de routage = même identifiant que le WebSocket :
+//   - pro (vendeur/prestataire/livreur) → vendorId (slug boutique)
+//   - client                             → id du compte
+function routingIdForUser(u) {
+  if (!u) return '';
+  const role = String(u.role || '').toLowerCase();
+  if (role === 'vendeur' || role === 'prestataire' || role === 'livreur') return u.vendorId || u.id || '';
+  return u.id || '';
+}
+
+function displayNameForUser(u) {
+  if (!u) return '';
+  return u.enseigne || u.name || u.fullName || u.email || u.phone || '';
+}
+
+function userByRoutingId(rid) {
+  if (!rid) return null;
+  return users.find((u) => u && (u.id === rid || u.vendorId === rid)) || null;
+}
+
+function applyVapidDetails() {
+  if (!webpush || !pushVapid) return false;
+  try {
+    webpush.setVapidDetails(pushVapid.subject, pushVapid.publicKey, pushVapid.privateKey);
+    return true;
+  } catch (e) {
+    console.warn('[Push] configuration VAPID invalide :', e.message);
+    return false;
+  }
+}
+
+function ensureVapidKeys() {
+  if (!webpush) return null;
+  const publicKey = process.env.VAPID_PUBLIC_KEY || '';
+  const privateKey = process.env.VAPID_PRIVATE_KEY || '';
+  const subject = process.env.VAPID_SUBJECT || 'mailto:contact@mangootech.com';
+  if (publicKey && privateKey) {
+    pushVapid = { publicKey, privateKey, subject };
+  } else {
+    let stored = readJsonFile(PUSH_VAPID_FILE, null);
+    if (stored && stored.publicKey && stored.privateKey) {
+      pushVapid = { publicKey: stored.publicKey, privateKey: stored.privateKey, subject };
+    } else {
+      const generated = webpush.generateVAPIDKeys();
+      stored = { publicKey: generated.publicKey, privateKey: generated.privateKey, createdAt: nowIso() };
+      writeJsonAtomic(PUSH_VAPID_FILE, stored);
+      pushVapid = { publicKey: stored.publicKey, privateKey: stored.privateKey, subject };
+      console.log('[Push] clés VAPID générées et persistées dans ' + PUSH_VAPID_FILE);
+    }
+  }
+  applyVapidDetails();
+  return pushVapid;
+}
+
+function loadPushSubscriptions() {
+  const stored = readJsonFile(PUSH_SUBSCRIPTIONS_FILE, {});
+  pushSubscriptions = (stored && typeof stored === 'object' && !Array.isArray(stored)) ? stored : {};
+}
+
+function savePushSubscriptions() {
+  writeJsonAtomic(PUSH_SUBSCRIPTIONS_FILE, pushSubscriptions);
+}
+
+function pushListFor(routingId) {
+  if (!routingId) return [];
+  const list = pushSubscriptions[String(routingId)] || [];
+  return Array.isArray(list) ? list : [];
+}
+
+function setPushSubscriptions(routingId, list) {
+  pushSubscriptions[String(routingId)] = list;
+  savePushSubscriptions();
+}
+
+function removeSubscriptionByEndpoint(routingId, endpoint) {
+  const list = pushListFor(routingId);
+  const next = list.filter((s) => s.endpoint !== endpoint);
+  if (next.length !== list.length) setPushSubscriptions(routingId, next);
+}
+
+// Envoie UNE notification à un abonnement donné (retire les abonnements morts).
+function sendPushOne(sub, payload) {
+  if (!webpush || !pushVapid || !sub || !sub.endpoint) return false;
+  const p = {
+    title: payload.title || 'MangooTech',
+    body: payload.body || '',
+    url: payload.url || '/',
+    tag: payload.tag || '',
+    icon: payload.icon || '/assets/favicon.png',
+    data: payload.data || {}
+  };
+  webpush.sendNotification(
+    { endpoint: sub.endpoint, keys: sub.keys },
+    JSON.stringify(p),
+    { TTL: payload.ttl || 300 }
+  ).then(function () {
+    // OK
+  }).catch(function (err) {
+    if (err && (err.statusCode === 404 || err.statusCode === 410)) {
+      removeSubscriptionByEndpoint(sub.routingId, sub.endpoint);
+    } else {
+      console.warn('[Push] échec envoi :', err && err.statusCode, err && err.body);
+    }
+  });
+  return true;
+}
+
+// Envoie à tous les appareils abonnés d'une identité donnée. Retourne true si
+// au moins un abonnement existait (le serveur a donc été « réveillé »).
+function sendPush(routingId, payload) {
+  const subs = pushListFor(routingId);
+  if (subs.length === 0) return false;
+  subs.forEach(function (sub) { sub.routingId = sub.routingId || routingId; sendPushOne(sub, payload); });
+  return true;
+}
+
+// Diffuse à tous les CLIENTS abonnés (utilisé pour le démarrage d'un live).
+function sendPushToClients(payload) {
+  if (!webpush || !pushVapid) return 0;
+  let n = 0;
+  Object.keys(pushSubscriptions).forEach(function (routingId) {
+    (pushSubscriptions[routingId] || []).forEach(function (sub) {
+      const role = String(sub.role || '').toLowerCase();
+      if (role === 'client' || role === 'cliente') {
+        sub.routingId = sub.routingId || routingId;
+        if (sendPushOne(sub, payload)) n++;
+      }
+    });
+  });
+  return n;
+}
+
+// Page d'atterrissage selon le rôle (ouverte au clic sur la notification).
+function pushLandingFor(routingId) {
+  const u = userByRoutingId(routingId);
+  const role = (u && u.role) || '';
+  if (role === 'client' || role === 'cliente') return '/pages/client-dashboard.html';
+  if (role === 'vendeur' || role === 'prestataire' || role === 'livreur') return '/pages/dashboard-overview.html';
+  return '/pages/accueil.html';
 }
 
 const PRESTATIONS_FILE = dataPath('prestations.json');
@@ -2761,7 +2931,17 @@ function handleCallOffer(ws, msg) {
   const to = String(msg.to || '').trim();
   const target = resolvePeer(to);
   if (!target || !target.online) {
-    send(ws, { type: 'call-error', callId, reason: 'offline' });
+    // Dashboard fermé (ou hors ligne) : on tente de réveiller le destinataire
+    // par notification Web Push native (même sans onglet ouvert).
+    const callerName = (ws.meta && ws.meta.name) || 'Quelqu\'un';
+    const pushed = sendPush(to, {
+      title: 'Appel entrant',
+      body: callerName + ' souhaite vous joindre',
+      url: pushLandingFor(to),
+      tag: 'call-' + callId,
+      ttl: 60
+    });
+    send(ws, { type: 'call-error', callId, reason: 'offline', pushed: pushed });
     return;
   }
   calls.set(callId, {
@@ -2822,6 +3002,16 @@ function handleChatMessage(ws, msg) {
     type: 'chat-new', msgId: entry.msgId, convId: entry.convId,
     from, fromName: ws.meta.name, text, sentAt: entry.sentAt
   });
+  // Destinataire hors ligne (Dashboard fermé) : notification Web Push native.
+  if (!isOnline(to)) {
+    sendPush(to, {
+      title: (ws.meta && ws.meta.name) || 'Nouveau message',
+      body: text.slice(0, 200),
+      url: pushLandingFor(to),
+      tag: 'msg-' + entry.msgId,
+      data: { from: from, convId: entry.convId }
+    });
+  }
 }
 
 function handleTyping(ws, msg) {
@@ -2935,6 +3125,15 @@ function handleLiveStart(ws, msg) {
     viewers: 0, likes: 0, orders: 0,
     startedAt: room.startedAt
   });
+  // Notifie les CLIENTS abonnés (même Dashboard fermé) qu'un live démarre.
+  const pushed = sendPushToClients({
+    title: 'En direct maintenant',
+    body: room.vendorName + ' lance un live : ' + room.title,
+    url: '/pages/live-client.html?vendorId=' + encodeURIComponent(room.vendorId),
+    tag: 'live-' + room.vendorId,
+    ttl: 600
+  });
+  if (pushed) console.log('[Push] live notifié à', pushed, 'client(s)');
 }
 
 function handleLiveStop(ws) {
@@ -5714,6 +5913,60 @@ function handleHttp(req, res) {
     return;
   }
 
+  if (urlPath === '/push/vapid-public-key') {
+    const v = ensureVapidKeys();
+    res.writeHead(200, JSON_HEADERS);
+    res.end(JSON.stringify({ ok: true, publicKey: v ? v.publicKey : '' }));
+    return;
+  }
+  if (urlPath === '/push/subscribe') {
+    if (!webpush || !ensureVapidKeys()) {
+      res.writeHead(503, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: false, error: 'Notifications push indisponibles sur ce serveur.' }));
+      return;
+    }
+    const user = userFromReq(req);
+    if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
+    if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non autorisée' })); return; }
+    readJsonBody(req, function (err, body) {
+      if (err || !body || !body.subscription || !body.subscription.endpoint) {
+        res.writeHead(400, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: false, error: 'Abonnement push invalide.' }));
+        return;
+      }
+      const sub = body.subscription;
+      const routingId = routingIdForUser(user);
+      const list = pushListFor(routingId).filter(function (s) { return s.endpoint !== sub.endpoint; });
+      list.push({
+        endpoint: sub.endpoint,
+        keys: (sub.keys && sub.keys.p256dh && sub.keys.auth) ? sub.keys : null,
+        role: user.role || body.role || '',
+        name: displayNameForUser(user) || body.name || '',
+        userAgent: String(req.headers['user-agent'] || '').slice(0, 200),
+        createdAt: nowIso()
+      });
+      setPushSubscriptions(routingId, list);
+      console.log('[Push] abonnement', { id: routingId, total: list.length, time: new Date().toLocaleTimeString() });
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true, count: list.length }));
+    });
+    return;
+  }
+  if (urlPath === '/push/unsubscribe') {
+    const user = userFromReq(req);
+    if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
+    readJsonBody(req, function (err, body) {
+      const endpoint = body && body.endpoint;
+      const routingId = routingIdForUser(user);
+      const before = pushListFor(routingId).length;
+      const next = pushListFor(routingId).filter(function (s) { return s.endpoint !== endpoint; });
+      if (next.length !== before) setPushSubscriptions(routingId, next);
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true }));
+    });
+    return;
+  }
+
   if (urlPath === '/') {
     // La page d'accueil publique est `pages/accueil.html` (elle contient déjà
     // les liens Connexion / Inscription). Redirection permanente pour le SEO.
@@ -5778,6 +6031,8 @@ loadAdminConfig();
 loadCouriers();
 loadDeliveries();
 loadNegotiations();
+loadPushSubscriptions();
+ensureVapidKeys();
 
 const httpServer = http.createServer(handleHttp);
 
