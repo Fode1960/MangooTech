@@ -394,9 +394,11 @@ function isSensitiveFile(filePath) {
  * ------------------------------------------------------------------ */
 const PUSH_SUBSCRIPTIONS_FILE = 'push-subscriptions.json';
 const PUSH_VAPID_FILE = 'vapid.json';
+const PUSH_PREFS_FILE = 'push-preferences.json';
 
 let pushVapid = null;         // { publicKey, privateKey, subject }
 let pushSubscriptions = {};   // routingId -> Array<{ endpoint, keys, role, name, userAgent, createdAt }>
+let pushPrefs = {};           // routingId -> { followMode: 'all'|'selected', vendorIds: [] }
 
 // Id de routage = même identifiant que le WebSocket :
 //   - pro (vendeur/prestataire/livreur) → vendorId (slug boutique)
@@ -478,6 +480,51 @@ function removeSubscriptionByEndpoint(routingId, endpoint) {
   if (next.length !== list.length) setPushSubscriptions(routingId, next);
 }
 
+// --- Préférences de notification (suivi des vendeurs) ---
+function loadPushPrefs() {
+  const stored = readJsonFile(PUSH_PREFS_FILE, {});
+  pushPrefs = (stored && typeof stored === 'object' && !Array.isArray(stored)) ? stored : {};
+}
+
+function savePushPrefs() {
+  writeJsonAtomic(PUSH_PREFS_FILE, pushPrefs);
+}
+
+function getPushPrefs(routingId) {
+  const p = pushPrefs[String(routingId)];
+  if (!p) return { followMode: 'all', vendorIds: [] };
+  return {
+    followMode: p.followMode === 'selected' ? 'selected' : 'all',
+    vendorIds: Array.isArray(p.vendorIds) ? p.vendorIds : []
+  };
+}
+
+function setPushPrefs(routingId, prefs) {
+  const mode = (prefs && prefs.followMode === 'selected') ? 'selected' : 'all';
+  let vendorIds = [];
+  if (mode === 'selected' && Array.isArray(prefs.vendorIds)) {
+    vendorIds = prefs.vendorIds.map(function (v) { return String(v).trim(); }).filter(Boolean);
+  }
+  pushPrefs[String(routingId)] = { followMode: mode, vendorIds: vendorIds };
+  savePushPrefs();
+  return getPushPrefs(routingId);
+}
+
+// Liste des vendeurs/prestataires (pour le réglage « suivi des vendeurs »).
+function vendorsForFollow() {
+  return users
+    .filter(function (u) { return u && (u.role === 'vendeur' || u.role === 'prestataire'); })
+    .map(function (u) {
+      return {
+        vendorId: u.vendorId || u.id,
+        name: u.enseigne || u.name || u.fullName || u.email || u.phone || 'Boutique',
+        category: u.category || '',
+        city: u.city || ''
+      };
+    })
+    .sort(function (a, b) { return String(a.name).localeCompare(String(b.name)); });
+}
+
 // Envoie UNE notification à un abonnement donné (retire les abonnements morts).
 function sendPushOne(sub, payload) {
   if (!webpush || !pushVapid || !sub || !sub.endpoint) return false;
@@ -514,17 +561,25 @@ function sendPush(routingId, payload) {
   return true;
 }
 
-// Diffuse à tous les CLIENTS abonnés (utilisé pour le démarrage d'un live).
-function sendPushToClients(payload) {
+// Diffuse aux CLIENTS abonnés (démarrage d'un live), en respectant le réglage
+// « suivi des vendeurs » : followMode 'all' (tous les lives) ou 'selected'
+// (uniquement les vendeurs suivis, filtrés par `vendorId`).
+function sendPushToClients(payload, vendorId) {
   if (!webpush || !pushVapid) return 0;
   let n = 0;
   Object.keys(pushSubscriptions).forEach(function (routingId) {
+    const u = userByRoutingId(routingId);
+    if (!u) return;
+    const role = String(u.role || '').toLowerCase();
+    if (role !== 'client' && role !== 'cliente') return;
+    const prefs = getPushPrefs(routingId);
+    if (prefs.followMode === 'selected') {
+      const followed = prefs.vendorIds || [];
+      if (vendorId && followed.indexOf(String(vendorId)) === -1) return;
+    }
     (pushSubscriptions[routingId] || []).forEach(function (sub) {
-      const role = String(sub.role || '').toLowerCase();
-      if (role === 'client' || role === 'cliente') {
-        sub.routingId = sub.routingId || routingId;
-        if (sendPushOne(sub, payload)) n++;
-      }
+      sub.routingId = routingId;
+      if (sendPushOne(sub, payload)) n++;
     });
   });
   return n;
@@ -3125,14 +3180,15 @@ function handleLiveStart(ws, msg) {
     viewers: 0, likes: 0, orders: 0,
     startedAt: room.startedAt
   });
-  // Notifie les CLIENTS abonnés (même Dashboard fermé) qu'un live démarre.
+  // Notifie les CLIENTS abonnés (même Dashboard fermé) qu'un live démarre,
+  // selon leur réglage « suivi des vendeurs ».
   const pushed = sendPushToClients({
     title: 'En direct maintenant',
     body: room.vendorName + ' lance un live : ' + room.title,
     url: '/pages/live-client.html?vendorId=' + encodeURIComponent(room.vendorId),
     tag: 'live-' + room.vendorId,
     ttl: 600
-  });
+  }, room.vendorId);
   if (pushed) console.log('[Push] live notifié à', pushed, 'client(s)');
 }
 
@@ -5966,6 +6022,27 @@ function handleHttp(req, res) {
     });
     return;
   }
+  if (urlPath === '/push/preferences') {
+    const user = userFromReq(req);
+    if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
+    const routingId = routingIdForUser(user);
+    if (req.method === 'GET') {
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true, prefs: getPushPrefs(routingId), vendors: vendorsForFollow() }));
+      return;
+    }
+    if (req.method === 'POST') {
+      readJsonBody(req, function (err, body) {
+        const saved = setPushPrefs(routingId, body || {});
+        res.writeHead(200, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: true, prefs: saved }));
+      });
+      return;
+    }
+    res.writeHead(405, JSON_HEADERS);
+    res.end(JSON.stringify({ ok: false, error: 'méthode non autorisée' }));
+    return;
+  }
 
   if (urlPath === '/') {
     // La page d'accueil publique est `pages/accueil.html` (elle contient déjà
@@ -6032,6 +6109,7 @@ loadCouriers();
 loadDeliveries();
 loadNegotiations();
 loadPushSubscriptions();
+loadPushPrefs();
 ensureVapidKeys();
 
 const httpServer = http.createServer(handleHttp);

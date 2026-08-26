@@ -330,6 +330,9 @@
       var notifs = getNotifs();
       var unread = notifs.filter(function (n) { return n.unread; }).length;
       var html = '<div class="mgt-pop-header">Notifications <span class="mgt-pop-count">' + unread + '</span></div>';
+      if (global.MangooPush && global.MangooPush.bellRowHTML) {
+        html += global.MangooPush.bellRowHTML();
+      }
       if (!notifs.length) {
         html += '<div class="mgt-pop-empty">Aucune notification</div>';
       } else {
@@ -350,6 +353,9 @@
         updateBellBadge();
       }
     });
+    if (global.MangooPush && global.MangooPush.bindBellRow) {
+      global.MangooPush.bindBellRow(pop.el, function () { pop.open(); });
+    }
     updateBellBadge();
   }
 
